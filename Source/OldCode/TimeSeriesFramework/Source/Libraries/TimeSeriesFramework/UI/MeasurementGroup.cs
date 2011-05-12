@@ -23,13 +23,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using TVA.Data;
-using System.ComponentModel;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
@@ -49,7 +46,7 @@ namespace TimeSeriesFramework.UI.DataModels
         private string m_createdBy;
         private DateTime m_updatedOn;
         private string m_updatedBy;
-      
+
         #endregion
 
         #region[properties]
@@ -269,7 +266,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Saves <see cref="MeasurementGroup"/> information to database.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="MeasurementGroup">Information about <see cref="MeasurementGroup"/>.</param>        
+        /// <param name="measurementGroup">Information about <see cref="MeasurementGroup"/>.</param>        
         /// <returns>String, for display use, indicating success.</returns>
         public static string Save(AdoDataConnection database, MeasurementGroup measurementGroup)
         {

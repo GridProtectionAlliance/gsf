@@ -129,11 +129,11 @@ namespace TimeSeriesFramework.UI.DataModels
         {
             get
             {
-                return m_type;
+                return m_category;
             }
             set
             {
-                m_type = value;
+                m_category = value;
                 OnPropertyChanged("Category");
             }
         }
@@ -143,7 +143,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         [Required(ErrorMessage = "Protocol AssemblyName is a required field, please provide value.")]
         [DefaultValue("TVA.PhasorProtocols.dll")]
-        public string  AssemblyName
+        public string AssemblyName
         {
             get
             {

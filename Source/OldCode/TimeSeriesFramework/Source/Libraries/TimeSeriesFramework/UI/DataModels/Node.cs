@@ -51,10 +51,10 @@ namespace TimeSeriesFramework.UI.DataModels
         private decimal? m_longitude;
         private decimal? m_latitude;
         private string m_description;
-        private string m_imagePath;   
-        private string m_settings;   
-        private string m_menuType;  
-        private string m_menuData;  
+        private string m_imagePath;
+        private string m_settings;
+        private string m_menuType;
+        private string m_menuData;
         private bool m_master;
         private int m_loadOrder;
         private bool m_enabled;
@@ -459,7 +459,7 @@ namespace TimeSeriesFramework.UI.DataModels
                             Description = row.Field<string>("Description"),
                             ImagePath = row.Field<string>("ImagePath"),
                             Settings = row.Field<string>("Settings"),
-                            MenuType =row.Field<string>("MenuType"),
+                            MenuType = row.Field<string>("MenuType"),
                             MenuData = row.Field<string>("MenuData"),
                             Master = Convert.ToBoolean(row.Field<object>("Master")),
                             LoadOrder = row.Field<int>("LoadOrder"),
@@ -529,7 +529,7 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                if (node.ID == Guid.Empty)
+                if (node.ID == null || node.ID == Guid.Empty)
                     database.Connection.ExecuteNonQuery("INSERT INTO Node (Name, CompanyID, Longitude, Latitude, Description, ImagePath, Settings, MenuType, MenuData, Master, LoadOrder, " +
                         "Enabled, RemoteStatusServiceUrl, RealTimeStatisticServiceUrl, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@name, @companyID, " +
                         "@longitude, @latitude, @description, @ImagePath, @Settings, @DataType, @DataMenu, @master, @loadOrder, @enabled, @remoteStatusServiceUrl, @realTimeStatisticServiceUrl, " +

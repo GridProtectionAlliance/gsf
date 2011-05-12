@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  CompanyUserControl.xaml.cs - Gbtc
+//  DeviceUserControl.xaml.cs - Gbtc
 //
 //  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,33 +16,44 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  03/31/2011 - Mehulbhai P Thakkar
+//  05/08/2011 - Mehulbhai P Thakkar
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
+using TimeSeriesFramework.UI.DataModels;
 using TimeSeriesFramework.UI.ViewModels;
 
 namespace TimeSeriesFramework.UI.UserControls
 {
     /// <summary>
-    /// Interaction logic for CompanyUserControl.xaml
+    /// Interaction logic for DeviceUserControl.xaml
     /// </summary>
-    public partial class CompanyUserControl : UserControl
+    public partial class DeviceUserControl : UserControl
     {
         #region [ Constructor ]
 
         /// <summary>
-        /// Creates a new instance of <see cref="CompanyUserControl"/>.
+        /// Creates an instance of <see cref="DeviceUserControl"/> class.
         /// </summary>
-        public CompanyUserControl()
+        public DeviceUserControl()
+            : this(null)
+        {
+        }
+
+        /// <summary>
+        /// Creates an instance of <see cref="DeviceUserControl"/> class.
+        /// </summary>
+        /// <param name="device"><see cref="Device"/> to be edited.</param>
+        public DeviceUserControl(Device device)
         {
             InitializeComponent();
-            this.Unloaded += new RoutedEventHandler(CompanyUserControl_Unloaded);
-            this.DataContext = new Companies(18, false);
+            this.Unloaded += new System.Windows.RoutedEventHandler(DeviceUserControl_Unloaded);
+            if (device == null)
+                this.DataContext = new Devices(0, false);
+            else
+                this.DataContext = new Devices(0, false, device);
         }
 
         #endregion
@@ -50,31 +61,13 @@ namespace TimeSeriesFramework.UI.UserControls
         #region [ Methods ]
 
         /// <summary>
-        /// Handles unload event of the <see cref="CompanyUserControl"/>.
+        /// Handles unload event of the <see cref="DeviceUserControl"/>.
         /// </summary>
         /// <param name="sender">Source of the event.</param>
         /// <param name="e">Arguments for the event.</param>
-        void CompanyUserControl_Unloaded(object sender, RoutedEventArgs e)
+        void DeviceUserControl_Unloaded(object sender, System.Windows.RoutedEventArgs e)
         {
-            (this.DataContext as Companies).ProcessPropertyChange();
-        }
-
-        /// <summary>
-        /// Handles PreviewKeyDown event on the datagrid.
-        /// </summary>
-        /// <param name="sender">Source of the event.</param>
-        /// <param name="e">Arguments for the event.</param>
-        private void DataGrid_PreviewKeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Delete)
-            {
-                DataGrid dataGrid = sender as DataGrid;
-                if (dataGrid.SelectedItems.Count > 0)
-                {
-                    if (MessageBox.Show("Are you sure you want to delete " + dataGrid.SelectedItems.Count + " selected item(s)?", "Delete Selected Items", MessageBoxButton.YesNo) == MessageBoxResult.No)
-                        e.Handled = true;
-                }
-            }
+            (this.DataContext as Devices).ProcessPropertyChange();
         }
 
         #endregion

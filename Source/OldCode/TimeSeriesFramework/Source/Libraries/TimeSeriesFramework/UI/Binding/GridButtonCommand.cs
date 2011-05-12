@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  DataOperation.cs - Gbtc
+//  GridButton.cs - Gbtc
 //
 //  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,40 +16,31 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  04/12/2011 - mthakkar
+//  05/09/2011 - Mehulbhai P Thakkar
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using System.Windows.Data;
-using TimeSeriesFramework.UI.Converters;
 
+using System.Windows.Controls;
+using System.Windows.Data;
 namespace TimeSeriesFramework.UI.Binding
 {
     /// <summary>
     /// Represents a custom <see cref="Binding"/> class.
     /// </summary>
-    public class DataOperation : System.Windows.Data.Binding
+    public class GridButtonCommand : System.Windows.Data.Binding
     {
         #region [ Constructor ]
 
         /// <summary>
-        /// Creates a new instance of <see cref="DataOperation"/> class.
+        /// Creates a new instance of <see cref="Column"/> class.
         /// </summary>
-        public DataOperation()
-            : this("GridDetailView")
+        public GridButtonCommand()
         {
-        }
-
-        /// <summary>
-        /// Creates a new instance of <see cref="DataOperation"/> class.
-        /// </summary>
-        public DataOperation(string elementName)
-        {
-            ElementName = elementName;
-            Converter = new NotConverter();
-            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
-            NotifyOnValidationError = true;
+            RelativeSource src = new RelativeSource(RelativeSourceMode.FindAncestor);
+            src.AncestorType = typeof(DataGrid);
+            this.RelativeSource = src;
         }
 
         #endregion

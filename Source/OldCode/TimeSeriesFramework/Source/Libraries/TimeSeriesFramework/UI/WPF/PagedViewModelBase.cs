@@ -71,7 +71,10 @@ namespace TimeSeriesFramework.UI
         {
             m_itemsPerPage = itemsPerPage;
             m_autoSave = autoSave;
-            Load();
+            if (itemsPerPage > 0)   // i.e. User wants to display list along with input form so we call Load() method.
+                Load();
+            else                    // otherwise, user does not want to display list and just dealing with form alone.
+                ItemsSource = null;
         }
 
         #endregion
@@ -122,10 +125,7 @@ namespace TimeSeriesFramework.UI
         {
             get
             {
-                if (m_itemsPerPage > 0)
-                    return m_itemsPerPage;
-                else
-                    return 20;  //default value.
+                return m_itemsPerPage;
             }
             set
             {
@@ -145,6 +145,7 @@ namespace TimeSeriesFramework.UI
             set
             {
                 m_itemsSource = value;
+                OnPropertyChanged("ItemsSource");
                 GeneratePages();
             }
         }
@@ -172,6 +173,9 @@ namespace TimeSeriesFramework.UI
                     m_currentItem.PropertyChanged += m_currentItem_PropertyChanged;
 
                 OnPropertyChanged("CurrentItem");
+                // If CurrentItem changes then raise OnPropertyChanged on CanDelete property.
+                // This will help us display or hide certain item based on IsNewItem property value.                
+                OnPropertyChanged("CanDelete");
             }
         }
 
@@ -575,6 +579,8 @@ namespace TimeSeriesFramework.UI
         // this change notification to CanSave
         private void m_currentItem_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+            // Change Save button appearance based on IsValid property value.
+            // If value of IsValid is changed then raise OnPropertyChanged for CanSave to enable or disable Save button.
             if (string.Compare(e.PropertyName, "IsValid", true) == 0)
                 OnPropertyChanged("CanSave");
 
@@ -602,31 +608,34 @@ namespace TimeSeriesFramework.UI
         {
             if (ItemsSource != null && ItemsSource.Count > 0)
             {
-                PageCount = (int)Math.Ceiling(ItemsSource.Count / (double)ItemsPerPage);
-                m_pages = new ObservableCollection<ObservableCollection<TDataModel>>();
-
-                for (int i = 0; i < m_pageCount; i++)
+                if (ItemsPerPage > 0)
                 {
-                    ObservableCollection<TDataModel> page = new ObservableCollection<TDataModel>();
-                    for (int j = 0; j < ItemsPerPage; j++)
+                    PageCount = (int)Math.Ceiling(ItemsSource.Count / (double)ItemsPerPage);
+                    m_pages = new ObservableCollection<ObservableCollection<TDataModel>>();
+
+                    for (int i = 0; i < m_pageCount; i++)
                     {
-                        if (i * ItemsPerPage + j > ItemsSource.Count - 1)
-                            break;
-                        page.Add(ItemsSource[i * ItemsPerPage + j]);
+                        ObservableCollection<TDataModel> page = new ObservableCollection<TDataModel>();
+                        for (int j = 0; j < ItemsPerPage; j++)
+                        {
+                            if (i * ItemsPerPage + j > ItemsSource.Count - 1)
+                                break;
+                            page.Add(ItemsSource[i * ItemsPerPage + j]);
+                        }
+                        m_pages.Add(page);
                     }
-                    m_pages.Add(page);
-                }
 
-                if (CurrentPage == null || CurrentPageNumber == 0)
-                {
-                    CurrentPage = m_pages[0];
-                    CurrentPageNumber = 1;
-                }
-                else
-                {
-                    // Retain current page when user deletes any record from the collection
-                    CurrentPageNumber = (CurrentPageNumber + 1) > m_pageCount ? m_pageCount : CurrentPageNumber;
-                    CurrentPage = m_pages[CurrentPageNumber - 1];
+                    if (CurrentPage == null || CurrentPageNumber == 0)
+                    {
+                        CurrentPage = m_pages[0];
+                        CurrentPageNumber = 1;
+                    }
+                    else
+                    {
+                        // Retain current page when user deletes any record from the collection
+                        CurrentPageNumber = (CurrentPageNumber + 1) > m_pageCount ? m_pageCount : CurrentPageNumber;
+                        CurrentPage = m_pages[CurrentPageNumber - 1];
+                    }
                 }
             }
             else

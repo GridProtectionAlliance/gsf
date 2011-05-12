@@ -138,5 +138,17 @@
 
     <conv:NotConverter x:Key="NotConverter"/>
     <conv:DictionaryToKeyValuePairConverter x:Key="DictionaryToKeyValuePairConverter"/>
+    <conv:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
+    <ControlTemplate x:Key="HyperlinkStyleButtonTemplate" TargetType="Button">
+        <TextBlock Text="{TemplateBinding Content}" TextDecorations="Underline" Cursor="Hand" HorizontalAlignment="Center" Width="Auto"/>
+    </ControlTemplate>
+
+    <ControlTemplate x:Key="ImageButtonTemplate" TargetType="Button">
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <Image Source="{TemplateBinding Content}" Width="16" Height="16" Margin="2" />
+            <TextBlock Text="{TemplateBinding Tag}" />
+        </StackPanel>
+    </ControlTemplate>
 
 </ResourceDictionary>

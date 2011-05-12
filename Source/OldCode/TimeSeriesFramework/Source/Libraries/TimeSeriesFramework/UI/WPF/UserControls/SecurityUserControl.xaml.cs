@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  DataOperation.cs - Gbtc
+//  SecurityUserControl.xaml.cs - Gbtc
 //
 //  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,40 +16,32 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  04/12/2011 - mthakkar
+//  05/10/2011 - Mehulbhai P Thakkar
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using System.Windows.Data;
-using TimeSeriesFramework.UI.Converters;
+using System.Windows.Controls;
+using TimeSeriesFramework.UI.ViewModels;
 
-namespace TimeSeriesFramework.UI.Binding
+namespace TimeSeriesFramework.UI.UserControls
 {
     /// <summary>
-    /// Represents a custom <see cref="Binding"/> class.
+    /// Interaction logic for SecurityUserControl.xaml
     /// </summary>
-    public class DataOperation : System.Windows.Data.Binding
+    public partial class SecurityUserControl : UserControl
     {
         #region [ Constructor ]
 
         /// <summary>
-        /// Creates a new instance of <see cref="DataOperation"/> class.
+        /// Creates an instance of <see cref="SecurityUserControl"/> class.
         /// </summary>
-        public DataOperation()
-            : this("GridDetailView")
+        public SecurityUserControl()
         {
-        }
-
-        /// <summary>
-        /// Creates a new instance of <see cref="DataOperation"/> class.
-        /// </summary>
-        public DataOperation(string elementName)
-        {
-            ElementName = elementName;
-            Converter = new NotConverter();
-            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
-            NotifyOnValidationError = true;
+            InitializeComponent();
+            GroupBoxManageUsers.DataContext = new UserAccounts(1, false);
+            GroupBoxManageGroups.DataContext = new SecurityGroups(1, false);
+            GroupBoxManageRoles.DataContext = new ApplicationRoles(1, true);
         }
 
         #endregion

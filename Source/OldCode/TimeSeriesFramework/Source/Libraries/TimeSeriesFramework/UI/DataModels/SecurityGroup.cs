@@ -30,6 +30,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using TVA.Data;
@@ -51,8 +52,8 @@ namespace TimeSeriesFramework.UI.DataModels
         private string m_createdBy;
         private DateTime m_updatedOn;
         private string m_updatedBy;
-        private ObservableCollection<SecurityGroup> m_currentGroupUsers;
-        private ObservableCollection<SecurityGroup> m_possibleGroupUsers;
+        private Dictionary<Guid, string> m_currentUsers;
+        private Dictionary<Guid, string> m_possibleUsers;
 
         #endregion
 
@@ -80,6 +81,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         [Required(ErrorMessage = " Security group name is a required field, please provide value.")]
         [StringLength(200, ErrorMessage = "Security group name cannot exceed 200 characters.")]
+        [DefaultValue("Add New Group")]
         public string Name
         {
             get
@@ -179,15 +181,16 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets the current SecurityGroup CurrentGroupUsers
         /// </summary>
         // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
-        public ObservableCollection<SecurityGroup> CurrentGroupUsers
+        public Dictionary<Guid, string> CurrentUsers
         {
             get
             {
-                return m_currentGroupUsers;
+                return m_currentUsers;
             }
             set
             {
-                m_currentGroupUsers = value;
+                m_currentUsers = value;
+                OnPropertyChanged("CurrentUsers");
             }
         }
 
@@ -195,15 +198,16 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets the current SecurityGroup PossibleGroupUsers
         /// </summary>
         // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
-        public ObservableCollection<SecurityGroup> PossibleGroupUsers
+        public Dictionary<Guid, string> PossibleUsers
         {
             get
             {
-                return m_possibleGroupUsers;
+                return m_possibleUsers;
             }
             set
             {
-                m_possibleGroupUsers = value;
+                m_possibleUsers = value;
+                OnPropertyChanged("PossibleUsers");
             }
         }
 
@@ -227,21 +231,25 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 ObservableCollection<SecurityGroup> securityGroupList = new ObservableCollection<SecurityGroup>();
-                DataTable securityGroupTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym, MapAcronym, Name, URL, LoadOrder FROM SecurityGroup ORDER BY LoadOrder");
+                DataTable securityGroupTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM SecurityGroup ORDER BY Name");
 
                 foreach (DataRow row in securityGroupTable.Rows)
                 {
                     securityGroupList.Add(new SecurityGroup()
                     {
-                        ID = Guid.Parse(row.Field<string>("ID")),
+                        ID = Guid.Parse(row.Field<object>("ID").ToString()),
                         Name = row.Field<string>("Name"),
                         Description = row.Field<object>("Description") == null ? string.Empty : row.Field<string>("Description"),
                         CreatedOn = Convert.ToDateTime(row.Field<object>("CreatedOn")),
                         CreatedBy = row.Field<string>("CreatedBy"),
                         UpdatedOn = Convert.ToDateTime(row.Field<object>("UpdatedOn")),
-                        UpdatedBy = row.Field<string>("UpdatedBy")
+                        UpdatedBy = row.Field<string>("UpdatedBy"),
+                        CurrentUsers = GetCurrentUsers(database, Guid.Parse(row.Field<object>("ID").ToString())),
+                        PossibleUsers = GetPossibleUsers(database, Guid.Parse(row.Field<object>("ID").ToString()))
                     });
                 }
+
+                securityGroupList.Insert(0, new SecurityGroup() { ID = Guid.Empty });
 
                 return securityGroupList;
             }
@@ -252,6 +260,116 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Retrieves collection of <see cref="UserAccount"/>s currently assinged to security group.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="groupID">ID of <see cref="SecurityGroup"/> to filter users.</param>
+        /// <returns><see cref="Dictionary{T1,T2}"/> type collection of <see cref="UserAccount"/>s currently assigned to <see cref="SecurityGroup"/>.</returns>
+        public static Dictionary<Guid, string> GetCurrentUsers(AdoDataConnection database, Guid groupID)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                Dictionary<Guid, string> currentUsers = new Dictionary<Guid, string>();
+                DataTable currentUsersTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM SecurityGroupUserAccountDetail WHERE SecurityGroupID = @groupID ORDER BY UserName", groupID);
+
+                foreach (DataRow row in currentUsersTable.Rows)
+                    currentUsers[Guid.Parse(row.Field<string>("UserAccountID"))] = row.Field<string>("UserName");
+
+                return currentUsers;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Retrieves collection of <see cref="UserAccount"/>s currently NOT assinged to security group.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="groupID">ID of <see cref="SecurityGroup"/> to filter users.</param>
+        /// <returns><see cref="Dictionary{T1,T2}"/> type collection of <see cref="UserAccount"/>s currently NOT assigned to <see cref="SecurityGroup"/>.</returns>
+        public static Dictionary<Guid, string> GetPossibleUsers(AdoDataConnection database, Guid groupID)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+                Dictionary<Guid, string> possibleGroupUsers = new Dictionary<Guid, string>();
+                DataTable possibleUsersTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM UserAccount WHERE ID NOT IN (SELECT UserAccountID FROM SecurityGroupUserAccount WHERE SecurityGroupID = @groupID) ORDER BY Name", groupID);
+
+                foreach (DataRow row in possibleUsersTable.Rows)
+                    possibleGroupUsers[Guid.Parse(row.Field<string>("ID"))] = row.Field<string>("Name");
+
+                return possibleGroupUsers;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Adds <see cref="UserAccount"/> to <see cref="SecurityGroup"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="groupID">ID of <see cref="SecurityGroup"/> to which <see cref="UserAccount"/>s are being added.</param>
+        /// <param name="usersToBeAdded">List of <see cref="UserAccount"/> IDs to be added.</param>
+        /// <returns>string, for display use, indicating success.</returns>
+        public static string AddUsers(AdoDataConnection database, Guid groupID, List<Guid> usersToBeAdded)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+                foreach (Guid id in usersToBeAdded)
+                {
+                    database.Connection.ExecuteNonQuery("INSERT INTO SecurityGroupUserAccount (SecurityGroupID, UserAccountID) VALUES (@groupID, @userID)", DefaultTimeout,
+                        database.Guid(groupID), database.Guid(id));
+                }
+
+                return "User accounts added to group successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Deletes <see cref="UserAccount"/> from <see cref="SecurityGroup"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="groupID">ID of <see cref="SecurityGroup"/> from which <see cref="UserAccount"/>s are being deleted.</param>
+        /// <param name="usersToBeDeleted">List of <see cref="UserAccount"/> IDs to be deleted.</param>
+        /// <returns>string, for display use, indicating success.</returns>
+        public static string RemoveUsers(AdoDataConnection database, Guid groupID, List<Guid> usersToBeDeleted)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+                foreach (Guid id in usersToBeDeleted)
+                {
+                    database.Connection.ExecuteNonQuery("DELETE FROM SecurityGroupUserAccount WHERE SecurityGroupID = @groupID AND UserAccountID = @userID", DefaultTimeout,
+                        database.Guid(groupID), database.Guid(id));
+                }
+
+                return "User accounts deleted from group successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
 
         /// <summary>
         /// Gets a <see cref="Dictionary{T1,T2}"/> style list of <see cref="SecurityGroup"/> information.
@@ -301,8 +419,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 if (securityGroup.ID == Guid.Empty)
-                    database.Connection.ExecuteNonQuery("INSERT INTO SecurityGroup (Name, Description, CreatedBy, CreatedOn) Values (@name, @description, @createdBy, @createdOn)", DefaultTimeout,
-                        securityGroup.Name, securityGroup.Description.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow());
+                    database.Connection.ExecuteNonQuery("INSERT INTO SecurityGroup (Name, Description, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@name, @description, " +
+                        "@updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, securityGroup.Name, securityGroup.Description.ToNotNull(),
+                        CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("UPDATE SecurityGroup SET Name = @name, Description = @description, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout,
                              securityGroup.Name, securityGroup.Description.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(securityGroup.ID));
@@ -345,5 +464,6 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         #endregion
+
     }
 }

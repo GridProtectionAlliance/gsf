@@ -85,6 +85,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         [Required(ErrorMessage = " User account name is a required field, please provide value.")]
         [StringLength(200, ErrorMessage = "User account name cannot exceed 200 characters.")]
+        [DefaultValue("Add New User")]
         public string Name
         {
             get
@@ -358,6 +359,8 @@ namespace TimeSeriesFramework.UI.DataModels
                     });
                 }
 
+                userAccountList.Insert(0, new UserAccount() { ID = Guid.Empty, ChangePasswordOn = DateTime.Now.AddDays(90) });
+
                 return userAccountList;
             }
             finally
@@ -402,10 +405,9 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Saves <see cref="UserAccount"/> information to database.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="userAccount">Information about <see cref="UserAccount"/>.</param>
-        /// <param name="isNew">Indicates if save is a new addition or an update to an existing record.</param>
+        /// <param name="userAccount">Information about <see cref="UserAccount"/>.</param>        
         /// <returns>String, for display use, indicating success.</returns>
-        public static string Save(AdoDataConnection database, UserAccount userAccount, bool isNew)
+        public static string Save(AdoDataConnection database, UserAccount userAccount)
         {
             bool createdConnection = false;
             try
@@ -423,7 +425,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 else if (database.IsJetEngine())
                     changePasswordOn = userAccount.ChangePasswordOn.ToOADate();
 
-                if (userAccount.ID == Guid.Empty)
+                if (userAccount.ID == null || userAccount.ID == Guid.Empty)
                     database.Connection.ExecuteNonQuery("INSERT INTO UserAccount (Name, " + passwordColumn + ", FirstName, LastName, DefaultNodeID, Phone, Email, LockedOut, UseADAuthentication, " +
                         "ChangePasswordOn, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@name, @password, @firstName, @lastName, @defaultNodeID, @phone, " +
                         "@email, @lockedOut, @useADAuthentication, @changePasswordOn, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, userAccount.Name,

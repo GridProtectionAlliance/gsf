@@ -1,0 +1,194 @@
+﻿<UserControl x:Class="TimeSeriesFramework.UI.UserControls.DeviceUserControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" d:DesignHeight="550" d:DesignWidth="750"
+             xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:uc="clr-namespace:TimeSeriesFramework.UI.UserControls"
+             xmlns:tsfBinding="clr-namespace:TimeSeriesFramework.UI.Binding;assembly=TimeSeriesFramework.UI"
+             Background="Transparent">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/TimeSeriesFramework.UI.WPF;Component/Resources/CommonResource.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel Orientation="Vertical">
+
+        <StackPanel.Resources>
+            <CollectionViewSource Source="{Binding Path=NodeLookupList}" x:Key="NodeLookupList"/>
+            <CollectionViewSource Source="{Binding Path=ConcentratorDeviceLookupList}" x:Key="ConcentratorDeviceLookupList"/>
+            <CollectionViewSource Source="{Binding Path=CompanyLookupList}" x:Key="CompanyLookupList"/>
+            <CollectionViewSource Source="{Binding Path=HistorianLookupList}" x:Key="HistorianLookupList"/>
+            <CollectionViewSource Source="{Binding Path=InterconnectionLookupList}" x:Key="InterconnectionLookupList"/>
+            <CollectionViewSource Source="{Binding Path=ProtocolLookupList}" x:Key="ProtocolLookupList"/>
+            <CollectionViewSource Source="{Binding Path=VendorDeviceLookupList}" x:Key="VendorDeviceLookupList"/>
+            <CollectionViewSource Source="{Binding Path=TimezoneLookupList}" x:Key="TimezoneLookupList"/>
+        </StackPanel.Resources>
+
+        <Grid x:Name="GridDetailView" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="5" DataContext="{Binding Path=CurrentItem, Mode=TwoWay}">
+            <Grid.BindingGroup >
+                <BindingGroup Name="input"/>
+            </Grid.BindingGroup>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="Node" Grid.Row="0" Grid.Column="0" />
+            <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding Source={StaticResource NodeLookupList}}" DisplayMemberPath="Value"
+                      SelectedItem="{tsfBinding:Column Path=NodeID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource NodeLookupList}}"/>
+
+            <TextBlock Text="Concentrator" Grid.Row="0" Grid.Column="2" />            
+            <ComboBox Grid.Row="0" Grid.Column="3" ItemsSource="{Binding Source={StaticResource ConcentratorDeviceLookupList}}" DisplayMemberPath="Value"
+                      SelectedItem="{tsfBinding:Column Path=ParentID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource ConcentratorDeviceLookupList}}"/>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right">
+                <TextBlock Text="Acronym" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Style="{StaticResource RequiredMarker}" />
+            </StackPanel>            
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{tsfBinding:Column Path=Acronym}" MaxLength="50"/>
+            
+            <TextBlock Text="Name" Grid.Row="1" Grid.Column="2"/>
+            <TextBox Grid.Row="1" Grid.Column="3" Text="{tsfBinding:Column Path=Name}" MaxLength="100" />
+
+            <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right">
+                <TextBlock Text="ID Code (Access ID)" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Style="{StaticResource RequiredMarker}" />
+            </StackPanel>
+            <TextBox Grid.Row="2" Grid.Column="1" Text="{tsfBinding:Column Path=AccessID}"/>
+
+            <TextBlock Text="Frames Per Second" Grid.Row="2" Grid.Column="2" />
+            <TextBox Grid.Row="2" Grid.Column="3" Text="{tsfBinding:Column Path=FramesPerSecond}"/>
+
+            <TextBlock Text="Company" Grid.Row="3" Grid.Column="0" />
+            <ComboBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding Source={StaticResource CompanyLookupList}}" DisplayMemberPath="Value"
+                      SelectedItem="{tsfBinding:Column Path=CompanyID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource CompanyLookupList}}"/>
+
+            <TextBlock Text="Historian" Grid.Row="3" Grid.Column="2" />
+            <ComboBox Grid.Row="3" Grid.Column="3" ItemsSource="{Binding Source={StaticResource HistorianLookupList}}" DisplayMemberPath="Value"
+                      SelectedItem="{tsfBinding:Column Path=HistorianID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource HistorianLookupList}}"/>
+
+            <TextBlock Text="Protocol" Grid.Row="4" Grid.Column="0" />
+            <ComboBox Grid.Row="4" Grid.Column="1" ItemsSource="{Binding Source={StaticResource ProtocolLookupList}}" DisplayMemberPath="Value"
+                      SelectedItem="{tsfBinding:Column Path=ProtocolID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource ProtocolLookupList}}"/>
+
+            <TextBlock Text="Device Vendor" Grid.Row="4" Grid.Column="2" />
+            <ComboBox Grid.Row="4" Grid.Column="3" ItemsSource="{Binding Source={StaticResource VendorDeviceLookupList}}" DisplayMemberPath="Value"
+                      SelectedItem="{tsfBinding:Column Path=VendorDeviceID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource VendorDeviceLookupList}}"/>
+
+            <TextBlock Text="Connection String" Grid.Row="5" Grid.Column="0" />
+            <TextBox Grid.Row="5" Grid.Column="1" Text="{tsfBinding:Column Path=ConnectionString}" Height="50" TextWrapping="Wrap"/>
+
+            <TextBlock Text="Alternate Command Channel" Grid.Row="5" Grid.Column="2"/>
+            <TextBox Grid.Row="5" Grid.Column="3" Text="{tsfBinding:Column Path=AlternateCommandChannel}" Height="50" TextWrapping="Wrap"/>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="6" Grid.Column="0" HorizontalAlignment="Right">
+                <TextBlock Text="Data Loss Interval" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Style="{StaticResource RequiredMarker}" />
+            </StackPanel>
+            <TextBox Grid.Row="6" Grid.Column="1" Text="{tsfBinding:Column Path=DataLossInterval}" MaxLength="50"/>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="6" Grid.Column="2" HorizontalAlignment="Right">
+                <TextBlock Text="Time Adjustment Ticks" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Style="{StaticResource RequiredMarker}" />
+            </StackPanel>
+            <TextBox Grid.Row="6" Grid.Column="3" Text="{tsfBinding:Column Path=TimeAdjustmentTicks}" MaxLength="50"/>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="7" Grid.Column="0" HorizontalAlignment="Right">
+                <TextBlock Text="Allowed Parsing Exception" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Style="{StaticResource RequiredMarker}" />
+            </StackPanel>
+            <TextBox Grid.Row="7" Grid.Column="1" Text="{tsfBinding:Column Path=AllowedParsingException}" MaxLength="50"/>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="7" Grid.Column="2" HorizontalAlignment="Right">
+                <TextBlock Text="Parsing Exception Window" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Style="{StaticResource RequiredMarker}" />
+            </StackPanel>
+            <TextBox Grid.Row="7" Grid.Column="3" Text="{tsfBinding:Column Path=ParsingExceptionWindow}" MaxLength="50"/>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="8" Grid.Column="0" HorizontalAlignment="Right">
+                <TextBlock Text="Delayed Connection Interval" Style="{StaticResource RequiredLabel}" TextWrapping="Wrap" />
+                <TextBlock Style="{StaticResource RequiredMarker}" />
+            </StackPanel>
+            <TextBox Grid.Row="8" Grid.Column="1" Text="{tsfBinding:Column Path=DelayedConnectionInterval}" MaxLength="50"/>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="8" Grid.Column="2" HorizontalAlignment="Right">
+                <TextBlock Text="Measurement Reporting Interval" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Style="{StaticResource RequiredMarker}" />
+            </StackPanel>
+            <TextBox Grid.Row="8" Grid.Column="3" Text="{tsfBinding:Column Path=MeasurementReportingInterval}" MaxLength="50"/>
+
+            <TextBlock Text="Longitude" Grid.Row="9" Grid.Column="0"/>
+            <TextBox Grid.Row="9" Grid.Column="1" Text="{tsfBinding:Column Path=Longitude}" />            
+
+            <TextBlock Text="Latitude" Grid.Row="9" Grid.Column="2"/>
+            <TextBox Grid.Row="9" Grid.Column="3" Text="{tsfBinding:Column Path=Latitude}" />
+            
+            <TextBlock Text="Interconnection" Grid.Row="10" Grid.Column="0" />
+            <ComboBox Grid.Row="10" Grid.Column="1" ItemsSource="{Binding Source={StaticResource InterconnectionLookupList}}" DisplayMemberPath="Value"
+                      SelectedItem="{tsfBinding:Column Path=InterconnectionID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource InterconnectionLookupList}}"/>
+
+            <TextBlock Text="Time Zone" Grid.Row="10" Grid.Column="2" />
+            <ComboBox Grid.Row="10" Grid.Column="3" ItemsSource="{Binding Source={StaticResource TimezoneLookupList}}" DisplayMemberPath="Value"
+                      SelectedItem="{tsfBinding:Column Path=TimeZone, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource TimezoneLookupList}}"/>
+            
+            <StackPanel Orientation="Horizontal" Grid.Row="11" Grid.ColumnSpan="4">
+                <CheckBox Content="Skip Disable Real-Time Data" IsChecked="{tsfBinding:Column Path=SkipDisableRealTimeData}"/>
+                <CheckBox Content="Allow Use Of Cached Configuration" IsChecked="{tsfBinding:Column Path=AllowUseOfCachedConfiguration}"/>
+                <CheckBox Content="Auto Start Data Parsing Sequence" IsChecked="{tsfBinding:Column Path=AutoStartDataParsingSequence}"/>
+                <CheckBox Content="Concentrator" IsChecked="{tsfBinding:Column Path=IsConcentrator}"/>                
+            </StackPanel>
+
+            <TextBlock Text="Runtime ID" Grid.Row="12" Grid.Column="0" />
+            <StackPanel Orientation="Horizontal" Grid.Row="12" Grid.Column="1">
+                <TextBlock Text="" />
+                <Button Content="Initialize" IsEnabled="{Binding Path=IsNewRecord, Converter={StaticResource NotConverter}}"/>
+            </StackPanel>
+
+            <CheckBox Content="Enabled" IsChecked="{tsfBinding:Column Path=Enabled}" Grid.Row="12" Grid.Column="3"/>
+
+        </Grid>
+
+        <uc:DetailViewFooterUserControl DeleteCommand="{Binding DeleteCommand}" ClearCommand="{Binding ClearCommand}" SaveCommand="{Binding SaveCommand}"
+                SaveEnabled="{tsfBinding:DataOperation Path=(Validation.HasError)}" />
+
+        <!--<sdk:DataGrid ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" 
+                      PreviewKeyDown="DataGrid_PreviewKeyDown">
+            <sdk:DataGrid.Columns>
+                <sdk:DataGridTextColumn Header="Acronym" Width="*" Binding="{tsfBinding:Column Path= Acronym}"/>
+                <sdk:DataGridTextColumn Header="Name" Width="2*" Binding="{tsfBinding:Column Path= Name}" />
+                <sdk:DataGridTextColumn Header="URL" Width="3*" Binding="{tsfBinding:Column Path= URL}" />
+            </sdk:DataGrid.Columns>
+        </sdk:DataGrid>
+
+        <uc:DataPagerUserControl CurrentPageNumber="{Binding CurrentPageNumber}" PageCount="{Binding PageCount}"
+                                 FirstCommand="{Binding FirstCommand}" PreviousCommand="{Binding PreviousCommand}"
+                                 NextCommand="{Binding NextCommand}" LastCommand="{Binding LastCommand}"/>-->
+    </StackPanel>
+</UserControl>

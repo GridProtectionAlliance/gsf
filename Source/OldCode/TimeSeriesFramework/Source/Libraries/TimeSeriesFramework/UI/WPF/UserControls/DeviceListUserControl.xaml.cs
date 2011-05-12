@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  CompanyUserControl.xaml.cs - Gbtc
+//  DeviceListUserControl.xaml.cs - Gbtc
 //
 //  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  03/31/2011 - Mehulbhai P Thakkar
+//  05/09/2011 - Mehulbhai P Thakkar
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -29,35 +29,24 @@ using TimeSeriesFramework.UI.ViewModels;
 namespace TimeSeriesFramework.UI.UserControls
 {
     /// <summary>
-    /// Interaction logic for CompanyUserControl.xaml
+    /// Interaction logic for DeviceListUserControl.xaml
     /// </summary>
-    public partial class CompanyUserControl : UserControl
+    public partial class DeviceListUserControl : UserControl
     {
         #region [ Constructor ]
 
         /// <summary>
-        /// Creates a new instance of <see cref="CompanyUserControl"/>.
+        /// Creates an instance of <see cref="DeviceListUserControl"/> class.
         /// </summary>
-        public CompanyUserControl()
+        public DeviceListUserControl()
         {
             InitializeComponent();
-            this.Unloaded += new RoutedEventHandler(CompanyUserControl_Unloaded);
-            this.DataContext = new Companies(18, false);
+            this.DataContext = new Devices(30);
         }
 
         #endregion
 
         #region [ Methods ]
-
-        /// <summary>
-        /// Handles unload event of the <see cref="CompanyUserControl"/>.
-        /// </summary>
-        /// <param name="sender">Source of the event.</param>
-        /// <param name="e">Arguments for the event.</param>
-        void CompanyUserControl_Unloaded(object sender, RoutedEventArgs e)
-        {
-            (this.DataContext as Companies).ProcessPropertyChange();
-        }
 
         /// <summary>
         /// Handles PreviewKeyDown event on the datagrid.

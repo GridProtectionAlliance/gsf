@@ -3,8 +3,8 @@
   <MenuDataItem Icon="" MenuText="Home" Description="Overall System Status" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.OverviewUserControl" />    
   <MenuDataItem Icon="" MenuText="Devices" Description="" Roles="*" UserControlAssembly="" UserControlPath="">
     <SubMenuItems>
-      <MenuDataItem Icon="" MenuText="Browse" Description="Browse Devices" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.BrowseDevicesUserControl" />
-      <MenuDataItem Icon="" MenuText="Add New" Description="Add New Device" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.AddNewDeviceUserControl" />
+      <MenuDataItem Icon="" MenuText="Browse" Description="Browse Devices" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.DeviceListUserControl" />
+      <MenuDataItem Icon="" MenuText="Add New" Description="Manage Device Configuration" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.DeviceUserControl" />
     </SubMenuItems>    
   </MenuDataItem>
   <MenuDataItem Icon="" MenuText="Adapters" Description="" Roles="*" UserControlAssembly="" UserControlPath="">
@@ -24,6 +24,8 @@
       <MenuDataItem Icon="" MenuText="" Description="" Roles="*" UserControlAssembly="" UserControlPath="" />
       <MenuDataItem Icon="" MenuText="Vendors" Description="Manage Vendors" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.VendorUserControl" />
       <MenuDataItem Icon="" MenuText="Vendor Devices" Description="Manage Vendor Devices" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.VendorDeviceUserControl" />
+      <MenuDataItem Icon="" MenuText="" Description="" Roles="*" UserControlAssembly="" UserControlPath="" />
+      <MenuDataItem Icon="" MenuText="Security" Description="Manage Application Security" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.SecurityUserControl" />
       <MenuDataItem Icon="" MenuText="Measurements" Description="Manage Measurements" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.MeasurementUserControl"/>
     </SubMenuItems>
   </MenuDataItem>

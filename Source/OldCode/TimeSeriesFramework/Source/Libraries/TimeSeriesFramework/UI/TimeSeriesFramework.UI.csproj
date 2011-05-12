@@ -65,7 +65,9 @@
   <ItemGroup>
     <Compile Include="Binding\Column.cs" />
     <Compile Include="Binding\DataOperation.cs" />
+    <Compile Include="Binding\GridButtonCommand.cs" />
     <Compile Include="CommonFunctions.cs" />
+    <Compile Include="Converters\BooleanToVisibilityConverter.cs" />
     <Compile Include="Converters\DictionaryToKeyValuePairConverter.cs" />
     <Compile Include="Converters\NotConverter.cs" />
     <Compile Include="Converters\RoleBasedVisibilityConverter.cs" />
@@ -84,7 +86,6 @@
     <Compile Include="DataModels\Protocol.cs" />
     <Compile Include="DataModels\SecurityGroup.cs" />
     <Compile Include="DataModels\SignalType.cs" />
-    <Compile Include="DataModels\SubscriberMeasurement.cs" />
     <Compile Include="DataModels\UserAccount.cs" />
     <Compile Include="DataModels\Vendor.cs" />
     <Compile Include="DataModels\VendorDevice.cs" />
@@ -94,6 +95,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Images\Copy.png" />
+    <EmbeddedResource Include="Images\EditConfiguration.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

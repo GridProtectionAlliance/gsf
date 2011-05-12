@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  Nodes.cs - Gbtc
+//  UserAccounts.cs - Gbtc
 //
 //  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,27 +16,21 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  05/02/2011 - Mehulbhai P Thakkar
+//  05/10/2011 - Mehulbhai P Thakkar
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using TimeSeriesFramework.UI.DataModels;
 
 namespace TimeSeriesFramework.UI.ViewModels
 {
-    internal class Nodes : PagedViewModelBase<Node, Guid>
+    /// <summary>
+    /// Class to hold bindable <see cref="UserAccount"/> collection.
+    /// </summary>
+    internal class UserAccounts : PagedViewModelBase<UserAccount, Guid>
     {
-        #region [ Members ]
-
-        // Fields
-
-        private Dictionary<int, string> m_companyLookupList;
-
-        #endregion
-
         #region [ Properties ]
 
         /// <summary>
@@ -50,27 +44,18 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
-        public Dictionary<int, string> CompanyLookupList
-        {
-            get
-            {
-                return m_companyLookupList;
-            }
-        }
-
         #endregion
 
         #region [ Constructor ]
 
         /// <summary>
-        /// Creates an instance of <see cref="Nodes"/> class.
+        /// Creates an instance of <see cref="UserAccounts"/> class.
         /// </summary>
         /// <param name="itemsPerPage">Integer value to determine number of items per page.</param>
         /// <param name="autoSave">Boolean value to determine is user changes should be saved automatically.</param>
-        public Nodes(int itemsPerPage, bool autoSave = true)
+        public UserAccounts(int itemsPerPage, bool autoSave = true)
             : base(itemsPerPage, autoSave)
         {
-            m_companyLookupList = Company.GetLookupList(null, true);
         }
 
         #endregion
@@ -93,6 +78,15 @@ namespace TimeSeriesFramework.UI.ViewModels
         public override string GetCurrentItemName()
         {
             return CurrentItem.Name;
+        }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="UserAccount"/> and assigns it to CurrentItem.
+        /// </summary>
+        public override void Clear()
+        {
+            base.Clear();
+            CurrentItem = ItemsSource[0];
         }
 
         #endregion

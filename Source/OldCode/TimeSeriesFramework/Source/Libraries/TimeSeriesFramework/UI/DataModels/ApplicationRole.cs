@@ -52,10 +52,10 @@ namespace TimeSeriesFramework.UI.DataModels
         private string m_createdBy;
         private DateTime m_updatedOn;
         private string m_updatedBy;
-        private ObservableCollection<ApplicationRole> m_currentRoleGroups;
-        private ObservableCollection<ApplicationRole> m_possibleRoleGroups;
-        private ObservableCollection<ApplicationRole> m_currentRoleUsers;
-        private ObservableCollection<ApplicationRole> m_possibleRoleUsers;
+        private Dictionary<Guid, string> m_currentGroups;
+        private Dictionary<Guid, string> m_possibleGroups;
+        private Dictionary<Guid, string> m_currentUsers;
+        private Dictionary<Guid, string> m_possibleUsers;
 
         #endregion
 
@@ -196,64 +196,64 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="ApplicationRole"/> CurrentRoleGroups.
         /// </summary>
-        public ObservableCollection<ApplicationRole> CurrentRoleGroups
+        public Dictionary<Guid, string> CurrentGroups
         {
             get
             {
-                return m_currentRoleGroups;
+                return m_currentGroups;
             }
             set
             {
-                m_currentRoleGroups = value;
-                OnPropertyChanged("CurrentRoleGroups");
+                m_currentGroups = value;
+                OnPropertyChanged("CurrentGroups");
             }
         }
 
         /// <summary>
         /// Gets or sets <see cref="ApplicationRole"/> PossibleRoleGroups.
         /// </summary>
-        public ObservableCollection<ApplicationRole> PossibleRoleGroups
+        public Dictionary<Guid, string> PossibleGroups
         {
             get
             {
-                return m_possibleRoleGroups;
+                return m_possibleGroups;
             }
             set
             {
-                m_possibleRoleGroups = value;
-                OnPropertyChanged("PossibleRoleGroups");
+                m_possibleGroups = value;
+                OnPropertyChanged("PossibleGroups");
             }
         }
 
         /// <summary>
         /// Gets or sets <see cref="ApplicationRole"/> CurrentRoleUsers.
         /// </summary>
-        public ObservableCollection<ApplicationRole> CurrentRoleUsers
+        public Dictionary<Guid, string> CurrentUsers
         {
             get
             {
-                return m_currentRoleUsers;
+                return m_currentUsers;
             }
             set
             {
-                m_currentRoleUsers = value;
-                OnPropertyChanged("CurrentRoleUsers");
+                m_currentUsers = value;
+                OnPropertyChanged("CurrentUsers");
             }
         }
 
         /// <summary>
         /// Gets or sets <see cref="ApplicationRole"/> PossibleRoleUsers.
         /// </summary>
-        public ObservableCollection<ApplicationRole> PossibleRoleUsers
+        public Dictionary<Guid, string> PossibleUsers
         {
             get
             {
-                return m_possibleRoleUsers;
+                return m_possibleUsers;
             }
             set
             {
-                m_possibleRoleUsers = value;
-                OnPropertyChanged("PossibleRoleUsers");
+                m_possibleUsers = value;
+                OnPropertyChanged("PossibleUsers");
             }
         }
 
@@ -277,25 +277,252 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 ObservableCollection<ApplicationRole> applicationRoleList = new ObservableCollection<ApplicationRole>();
-
-                DataTable applicationRoleTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM ApplicationRole WHERE NodeID = @nodeID ORDER BY Name");
+                DataTable applicationRoleTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM ApplicationRole WHERE NodeID = @nodeID ORDER BY Name", database.CurrentNodeID());
 
                 foreach (DataRow row in applicationRoleTable.Rows)
                 {
                     applicationRoleList.Add(new ApplicationRole()
                     {
-                        ID = Guid.Parse(row.Field<string>("ID")),
+                        ID = Guid.Parse(row.Field<object>("ID").ToString()),
                         Name = row.Field<string>("Name"),
                         Description = row.Field<string>("Description"),
                         NodeID = Guid.Parse(row.Field<string>("NodeID")),
                         CreatedOn = row.Field<DateTime>("CreatedOn"),
                         CreatedBy = row.Field<string>("CreatedBy"),
                         UpdatedOn = row.Field<DateTime>("UpdatedOn"),
-                        UpdatedBy = row.Field<string>("UpdatedBy")
+                        UpdatedBy = row.Field<string>("UpdatedBy"),
+                        CurrentUsers = GetCurrentUsers(database, Guid.Parse(row.Field<object>("ID").ToString())),
+                        PossibleUsers = GetPossibleUsers(database, Guid.Parse(row.Field<object>("ID").ToString())),
+                        CurrentGroups = GetCurrentGroups(database, Guid.Parse(row.Field<object>("ID").ToString())),
+                        PossibleGroups = GetPossibleGroups(database, Guid.Parse(row.Field<object>("ID").ToString()))
                     });
                 }
 
                 return applicationRoleList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Retrieves collection of <see cref="UserAccount"/>s assigned to <see cref="ApplicationRole"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="roleID">ID of the <see cref="ApplicationRole"/> to search for.</param>
+        /// <returns><see cref="Dictionary{T1,T2}"/> type collection of <see cref="UserAccount"/>.</returns>
+        public static Dictionary<Guid, string> GetCurrentUsers(AdoDataConnection database, Guid roleID)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                Dictionary<Guid, string> currentUsers = new Dictionary<Guid, string>();
+                DataTable currentUsersTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM ApplicationRoleUserAccountDetail WHERE ApplicationRoleID = @applicationRoleID ORDER BY UserName", roleID);
+
+                foreach (DataRow row in currentUsersTable.Rows)
+                    currentUsers[Guid.Parse(row.Field<string>("UserAccountID"))] = row.Field<string>("UserName");
+
+                return currentUsers;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Retrieves collection of <see cref="UserAccount"/>s NOT assigned to <see cref="ApplicationRole"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="roleID">ID of the <see cref="ApplicationRole"/> to search for.</param>
+        /// <returns><see cref="Dictionary{T1,T2}"/> type collection of <see cref="UserAccount"/>.</returns>
+        public static Dictionary<Guid, string> GetPossibleUsers(AdoDataConnection database, Guid roleID)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                Dictionary<Guid, string> possibleUsers = new Dictionary<Guid, string>();
+                DataTable possibleUsersTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM UserAccount WHERE ID NOT IN (SELECT UserAccountID FROM ApplicationRoleUserAccount WHERE ApplicationRoleID = @applicationRoleID) ORDER BY Name", roleID);
+
+                foreach (DataRow row in possibleUsersTable.Rows)
+                    possibleUsers[Guid.Parse(row.Field<string>("ID"))] = row.Field<string>("Name");
+
+                return possibleUsers;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Retrieves collection of <see cref="SecurityGroup"/>s assigned to <see cref="ApplicationRole"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="roleID">ID of the <see cref="ApplicationRole"/> to search for.</param>
+        /// <returns><see cref="Dictionary{T1,T2}"/> type collection of <see cref="SecurityGroup"/>.</returns>
+        public static Dictionary<Guid, string> GetCurrentGroups(AdoDataConnection database, Guid roleID)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                Dictionary<Guid, string> currentGroups = new Dictionary<Guid, string>();
+                DataTable currentGroupsTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM ApplicationRoleSecurityGroupDetail WHERE ApplicationRoleID = @applicationRoleID ORDER BY SecurityGroupName", roleID);
+
+                foreach (DataRow row in currentGroupsTable.Rows)
+                    currentGroups[Guid.Parse(row.Field<string>("SecurityGroupID"))] = row.Field<string>("SecurityGroupName");
+
+                return currentGroups;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Retrieves collection of <see cref="SecurityGroup"/>s NOT assigned to <see cref="ApplicationRole"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="roleID">ID of the <see cref="ApplicationRole"/> to search for.</param>
+        /// <returns><see cref="Dictionary{T1,T2}"/> type collection of <see cref="SecurityGroup"/>.</returns>
+        public static Dictionary<Guid, string> GetPossibleGroups(AdoDataConnection database, Guid roleID)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                Dictionary<Guid, string> possibleGroups = new Dictionary<Guid, string>();
+                DataTable possibleGroupsTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM SecurityGroup WHERE ID NOT IN (SELECT SecurityGroupID FROM ApplicationRoleSecurityGroup WHERE ApplicationRoleID = @applicationRoleID) ORDER BY Name", roleID);
+
+                foreach (DataRow row in possibleGroupsTable.Rows)
+                    possibleGroups[Guid.Parse(row.Field<string>("ID"))] = row.Field<string>("Name");
+
+                return possibleGroups;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Adds <see cref="UserAccount"/> to <see cref="ApplicationRole"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="roleID">ID of <see cref="ApplicationRole"/> to which <see cref="UserAccount"/>s are being added.</param>
+        /// <param name="usersToBeAdded">List of <see cref="UserAccount"/> IDs to be added.</param>
+        /// <returns>string, for display use, indicating success.</returns>
+        public static string AddUsers(AdoDataConnection database, Guid roleID, List<Guid> usersToBeAdded)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+                foreach (Guid id in usersToBeAdded)
+                {
+                    database.Connection.ExecuteNonQuery("INSERT INTO ApplicationRoleUserAccount (ApplicationRoleID, UserAccountID) VALUES (@roleID, @userID)", DefaultTimeout,
+                        database.Guid(roleID), database.Guid(id));
+                }
+
+                return "User accounts added to role successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Deletes <see cref="UserAccount"/> from <see cref="ApplicationRole"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="roleID">ID of <see cref="ApplicationRole"/> from which <see cref="UserAccount"/>s are being deleted.</param>
+        /// <param name="usersToBeDeleted">List of <see cref="UserAccount"/> IDs to be deleted.</param>
+        /// <returns>string, for display use, indicating success.</returns>
+        public static string RemoveUsers(AdoDataConnection database, Guid roleID, List<Guid> usersToBeDeleted)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+                foreach (Guid id in usersToBeDeleted)
+                {
+                    database.Connection.ExecuteNonQuery("DELETE FROM ApplicationRoleUserAccount WHERE ApplicationRoleID = @roleID AND UserAccountID = @userID", DefaultTimeout,
+                        database.Guid(roleID), database.Guid(id));
+                }
+
+                return "User accounts deleted from role successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Adds <see cref="SecurityGroup"/> to <see cref="ApplicationRole"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="roleID">ID of <see cref="ApplicationRole"/> to which <see cref="SecurityGroup"/>s are being added.</param>
+        /// <param name="groupsToBeAdded">List of <see cref="SecurityGroup"/> IDs to be added.</param>
+        /// <returns>string, for display use, indicating success.</returns>
+        public static string AddGroups(AdoDataConnection database, Guid roleID, List<Guid> groupsToBeAdded)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+                foreach (Guid id in groupsToBeAdded)
+                {
+                    database.Connection.ExecuteNonQuery("INSERT INTO ApplicationRoleSecurityGroup (ApplicationRoleID, SecurityGroupID) Values (@roleID, @groupID)", DefaultTimeout,
+                        database.Guid(roleID), database.Guid(id));
+                }
+
+                return "Security groups added to role successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Deletes <see cref="SecurityGroup"/> from <see cref="ApplicationRole"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="roleID">ID of <see cref="ApplicationRole"/> from which <see cref="SecurityGroup"/>s are being deleted.</param>
+        /// <param name="groupsToBeDeleted">List of <see cref="SecurityGroup"/> IDs to be deleted.</param>
+        /// <returns>string, for display use, indicating success.</returns>
+        public static string RemoveGroups(AdoDataConnection database, Guid roleID, List<Guid> groupsToBeDeleted)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+                foreach (Guid id in groupsToBeDeleted)
+                {
+                    database.Connection.ExecuteNonQuery("DELETE FROM ApplicationRoleSecurityGroup WHERE ApplicationRoleID = @roleID AND SecurityGroupID = @groupID", DefaultTimeout,
+                        database.Guid(roleID), database.Guid(id));
+                }
+
+                return "Security groups deleted from role successfully";
             }
             finally
             {
@@ -351,7 +578,7 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                if (applicationRole.ID == Guid.Empty)
+                if (applicationRole.ID == null || applicationRole.ID == Guid.Empty)
                     database.Connection.ExecuteNonQuery("INSERT INTO ApplicationRole (Name, Description, NodeID, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@name, @description, @nodeID, @updatedBy, @updatedOn, @createdBy, @createdOn)",
                         DefaultTimeout, applicationRole.Name, applicationRole.Description.ToNotNull(), applicationRole.NodeID, CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
                 else
