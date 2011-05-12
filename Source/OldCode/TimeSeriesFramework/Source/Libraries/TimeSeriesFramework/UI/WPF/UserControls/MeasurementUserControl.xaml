@@ -60,7 +60,7 @@
                 <TextBlock Text="Point Tag" Style="{StaticResource RequiredLabel}"/>
                 <TextBlock Style="{StaticResource RequiredMarker}"/>
             </StackPanel>
-            <TextBox Grid.Row="1" Grid.Column="3" Text="{tsfBinding:Column Path=PointTag}"/>
+            <TextBox Grid.Row="1" Grid.Column="3" Text="{tsfBinding:Column Path=PointTag}" CharacterCasing="Upper"/>
             
             <!--Third Row-->
             <TextBlock Grid.Row="2" Grid.Column="0" Text="Alternate Tag"/>
@@ -69,7 +69,7 @@
                 <TextBlock Text="Signal Reference" Style="{StaticResource RequiredLabel}"/>
                 <TextBlock Style="{StaticResource RequiredMarker}"/>
             </StackPanel>
-            <TextBox Grid.Row="2" Grid.Column="3" Text="{tsfBinding:Column Path=SignalReference}"/>
+            <TextBox Grid.Row="2" Grid.Column="3" Text="{tsfBinding:Column Path=SignalReference}" CharacterCasing="Upper"/>
             
             <!--Fourth Row-->
             <TextBlock Text="Phasor Source" Grid.Row="3" Grid.Column="0"/>

@@ -118,6 +118,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         [Required(ErrorMessage = "Calculated measurement acronym is a required field, please provide value.")]
         [StringLength(200, ErrorMessage = "Calculated measurement acronym cannot exceed 200 characters.")]
+        [RegularExpression("^[A-Z0-9'!'_]+$", ErrorMessage = "Only upper case letters, numbers, '!' and '_' are allowed.")]
         public string Acronym
         {
             get

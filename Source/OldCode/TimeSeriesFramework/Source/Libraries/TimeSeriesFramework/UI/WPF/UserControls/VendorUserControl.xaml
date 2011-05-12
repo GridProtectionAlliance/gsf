@@ -37,7 +37,7 @@
             </Grid.RowDefinitions>
             
             <TextBlock Text="Acronym" Grid.Row="0" Grid.Column="0"/>
-            <TextBox Grid.Row="0" Grid.Column="1" Text="{tsfBinding:Column Path=Acronym}" MaxLength="50"/>
+            <TextBox Grid.Row="0" Grid.Column="1" Text="{tsfBinding:Column Path=Acronym}" CharacterCasing="Upper"  MaxLength="50"/>
             <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="2" HorizontalAlignment="Right" >
                 <TextBlock Text="Name" Style="{StaticResource RequiredLabel}" />
                 <TextBlock Style="{StaticResource RequiredMarker}" />

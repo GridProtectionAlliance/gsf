@@ -71,6 +71,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         [Required(ErrorMessage = "Protocol acronym is a required field, please provide value.")]
         [StringLength(50, ErrorMessage = "Protocol Acronym cannot exceed 50 characters.")]
+        [RegularExpression("^[A-Z0-9'!'_]+$", ErrorMessage = "Only upper case letters, numbers, '!' and '_' are allowed.")]
         public string Acronym
         {
             get
