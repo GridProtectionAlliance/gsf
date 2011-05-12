@@ -116,6 +116,16 @@ namespace TimeSeriesFramework.UI
         }
 
         /// <summary>
+        /// Method to check if source database is MySQL.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to database.</param>
+        /// <returns>Boolean, indicating if source database is MySQL.</returns>
+        public static bool IsMySQL(this AdoDataConnection database)
+        {
+            return database.AdapterType.Name == "MySqlDataAdapter";
+        }
+
+        /// <summary>
         /// Assigns <see cref="CurrentNodeID"/> based ID of currently active node.
         /// </summary>
         /// <param name="nodeID">Current node ID <see cref="CurrentNodeID"/> to assign.</param>
@@ -149,6 +159,21 @@ namespace TimeSeriesFramework.UI
                 return "P" + guid.ToString();
 
             return guid;
+        }
+
+        /// <summary>
+        /// Retrieves <see cref="System.Guid"/> based on database type.
+        /// </summary>
+        /// <param name="database">Connected <see cref="AdoDataConnection"/>.</param>
+        /// <param name="row"><see cref="DataRow"/> from which value needs to be retrieved.</param>
+        /// <param name="fieldName">Name of the field which contains <see cref="System.Guid"/>.</param>
+        /// <returns></returns>
+        public static Guid Guid(this AdoDataConnection database, DataRow row, string fieldName)
+        {
+            if (database.IsJetEngine() || database.IsMySQL())
+                return System.Guid.Parse(row.Field<object>(fieldName).ToString());
+
+            return row.Field<Guid>(fieldName);
         }
 
         /// <summary>

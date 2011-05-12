@@ -283,7 +283,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     applicationRoleList.Add(new ApplicationRole()
                     {
-                        ID = Guid.Parse(row.Field<object>("ID").ToString()),
+                        ID = database.Guid(row, "ID"),  //Guid.Parse(row.Field<object>("ID").ToString()),
                         Name = row.Field<string>("Name"),
                         Description = row.Field<string>("Description"),
                         NodeID = Guid.Parse(row.Field<object>("NodeID").ToString()),
