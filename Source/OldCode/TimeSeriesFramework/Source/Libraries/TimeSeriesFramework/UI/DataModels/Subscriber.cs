@@ -352,12 +352,12 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 if (subscriber.ID == Guid.Empty)
                     database.Connection.ExecuteNonQuery("INSERT INTO Company (NodeID, Acronym, Name, SharedSecret, AuthKey, ValidIPAddresses, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@nodeID, @acronym)" +
-                "@name, @sharedSecret, @authKey, @validIpAddresses, @enabled, @updatedBy, @updatedOn, @createdBy, @createdOn", DefaultTimeout, subscriber.NodeID.ToNotNull(), subscriber.Acronym.ToNotNull(), subscriber.Name.ToNotNull(), subscriber.SharedSecret.ToNotNull(),
+                "@name, @sharedSecret, @authKey, @validIpAddresses, @enabled, @updatedBy, @updatedOn, @createdBy, @createdOn", DefaultTimeout, database.Guid(subscriber.NodeID), subscriber.Acronym.ToNotNull(), subscriber.Name.ToNotNull(), subscriber.SharedSecret.ToNotNull(),
                 subscriber.AuthKey.ToNotNull(), subscriber.ValidIPAddresses.ToNotNull(), subscriber.Enabled, CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("UPDATE Node SET NodeID = @nodeID, Acronym = @acronym, Name = @name, SharedSecret = @sharedSecret, AuthKey = @authKey, ValidIPAddresses = @validIpAddresses, " +
-                        "Enabled = @enabled, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, subscriber.NodeID.ToNotNull(), subscriber.Acronym.ToNotNull(), subscriber.Name.ToNotNull(),
-                        subscriber.SharedSecret.ToNotNull(), subscriber.AuthKey.ToNotNull(), subscriber.ValidIPAddresses.ToNotNull(), subscriber.Enabled, CommonFunctions.CurrentUser, database.UtcNow(), subscriber.ID);
+                        "Enabled = @enabled, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, database.Guid(subscriber.NodeID), subscriber.Acronym.ToNotNull(), subscriber.Name.ToNotNull(),
+                        subscriber.SharedSecret.ToNotNull(), subscriber.AuthKey.ToNotNull(), subscriber.ValidIPAddresses.ToNotNull(), subscriber.Enabled, CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(subscriber.ID));
 
                 return "Subscriber information saved successfully";
             }
