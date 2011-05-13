@@ -24,6 +24,8 @@
 //       Guid field related changes as well as static functions update.
 //  05/05/2011 - Mehulbhai P Thakkar
 //       Added NULL handling for Save() operation.
+// 05/13/2011 - Aniket Salver
+//                  Modified the way Guid is retrived from the Data Base.
 //
 //******************************************************************************************************
 
@@ -341,12 +343,12 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     userAccountList.Add(new UserAccount()
                     {
-                        ID = Guid.Parse(row.Field<object>("ID").ToString()),
+                        ID = database.Guid(row, "ID"), 
                         Name = row.Field<string>("Name"),
                         Password = row.Field<object>("Password") == null ? string.Empty : row.Field<string>("Password"),
                         FirstName = row.Field<object>("FirstName") == null ? string.Empty : row.Field<string>("FirstName"),
                         LastName = row.Field<object>("LastName") == null ? string.Empty : row.Field<string>("LastName"),
-                        DefaultNodeID = Guid.Parse(row.Field<object>("DefaultNodeID").ToString()),
+                        DefaultNodeID =  database.Guid(row, "DefaultNodeID"),
                         Phone = row.Field<object>("Phone") == null ? string.Empty : row.Field<string>("Phone"),
                         Email = row.Field<object>("Email") == null ? string.Empty : row.Field<string>("Email"),
                         LockedOut = Convert.ToBoolean(row.Field<object>("LockedOut")),
@@ -376,21 +378,21 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
         /// <returns><see cref="Dictionary{T1,T2}"/> containing ID and Name of user accounts defined in the database.</returns>
-        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional = false)
+        public static Dictionary<Guid, string> GetLookupList(AdoDataConnection database, bool isOptional = false)
         {
             bool createdConnection = false;
             try
             {
                 createdConnection = CreateConnection(ref database);
 
-                Dictionary<int, string> userAccountList = new Dictionary<int, string>();
+                Dictionary<Guid, string> userAccountList = new Dictionary<Guid, string>();
                 if (isOptional)
-                    userAccountList.Add(0, "Select UserAccount");
+                    userAccountList.Add(Guid.Empty , "Select UserAccount");
 
                 DataTable userAccountTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM UserAccount ORDER BY Name");
 
                 foreach (DataRow row in userAccountTable.Rows)
-                    userAccountList[row.Field<int>("ID")] = row.Field<string>("Name");
+                    userAccountList[database.Guid(row, "ID")] = row.Field<string>("Name");
 
                 return userAccountList;
             }

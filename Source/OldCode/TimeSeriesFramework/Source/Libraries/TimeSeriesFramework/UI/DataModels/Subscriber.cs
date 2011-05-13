@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  05/10/2011 - Magdiel Lorenzo
 //       Generated original version of source code.
+// 05/13/2011 - Aniket Salver
+//                  Modified the way Guid is retrived from the Data Base.
 //
 //******************************************************************************************************
 
@@ -281,8 +283,8 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     subscriberList.Add(new Subscriber()
                     {
-                        ID = Guid.Parse(row.Field<string>("ID")),
-                        NodeID = Guid.Parse(row.Field<object>("NodeID").ToString()),
+                        ID = database.Guid(row, "ID"), 
+                        NodeID = database.Guid(row, "NodeID"),
                         Acronym = row.Field<string>("Acronym"),
                         Name = row.Field<string>("Name"),
                         SharedSecret = row.Field<string>("SharedSecret"),
@@ -324,7 +326,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 foreach (DataRow row in subscriberTable.Rows)
                 {
-                    subscriberList[Guid.Parse(row.Field<object>("ID").ToString())] = row.Field<string>("Name");
+                    subscriberList[database.Guid(row, "ID")] = row.Field<string>("Name");
                 }
 
                 return subscriberList;
