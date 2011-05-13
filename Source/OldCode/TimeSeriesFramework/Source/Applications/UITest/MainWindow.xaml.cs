@@ -37,7 +37,7 @@ namespace UITest
         #region [ Members ]
 
         // Fields
-        public ObservableCollection<MenuDataItem> m_menuDataItems;
+        private ObservableCollection<MenuDataItem> m_menuDataItems;
 
         #endregion
 
@@ -61,7 +61,7 @@ namespace UITest
         /// </summary>
         /// <param name="sender">Source of the event.</param>
         /// <param name="e">Event arguments.</param>
-        void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             XmlRootAttribute xmlRootAttribute = new XmlRootAttribute("MenuDataItems");
             XmlSerializer serializer = new XmlSerializer(typeof(ObservableCollection<MenuDataItem>), xmlRootAttribute);

@@ -238,7 +238,7 @@ namespace TimeSeriesFramework.UI
 
             foreach (TimeZoneInfo timeZoneInfo in TimeZoneInfo.GetSystemTimeZones())
             {
-                if (!timeZonesList.ContainsKey(timeZoneInfo.StandardName))
+                if (!timeZonesList.ContainsKey(timeZoneInfo.Id))
                     timeZonesList.Add(timeZoneInfo.Id, timeZoneInfo.DisplayName);
             }
 
