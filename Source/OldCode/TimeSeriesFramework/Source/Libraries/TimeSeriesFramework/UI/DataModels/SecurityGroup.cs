@@ -24,6 +24,8 @@
 //       Guid field related changes as well as static functions update.
 //  05/05/2011 - Mehulbhai P Thakkar
 //       Added NULL handling for Save() operation.
+//  05/13/2011 - Aniket Salver
+//                  Modified the way Guid is retrived from the Data Base.
 //
 //******************************************************************************************************
 
@@ -237,7 +239,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     securityGroupList.Add(new SecurityGroup()
                     {
-                        ID = Guid.Parse(row.Field<object>("ID").ToString()),
+                        ID = database.Guid(row, "ID"),
                         Name = row.Field<string>("Name"),
                         Description = row.Field<object>("Description") == null ? string.Empty : row.Field<string>("Description"),
                         CreatedOn = Convert.ToDateTime(row.Field<object>("CreatedOn")),
@@ -277,7 +279,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 DataTable currentUsersTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM SecurityGroupUserAccountDetail WHERE SecurityGroupID = @groupID ORDER BY UserName", groupID);
 
                 foreach (DataRow row in currentUsersTable.Rows)
-                    currentUsers[Guid.Parse(row.Field<object>("UserAccountID").ToString())] = row.Field<string>("UserName");
+                    currentUsers[database.Guid(row, "UserAccountID")] = row.Field<string>("UserName");
 
                 return currentUsers;
             }
@@ -304,7 +306,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 DataTable possibleUsersTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM UserAccount WHERE ID NOT IN (SELECT UserAccountID FROM SecurityGroupUserAccount WHERE SecurityGroupID = @groupID) ORDER BY Name", groupID);
 
                 foreach (DataRow row in possibleUsersTable.Rows)
-                    possibleGroupUsers[Guid.Parse(row.Field<object>("ID").ToString())] = row.Field<string>("Name");
+                    possibleGroupUsers[database.Guid(row, "ID")] = row.Field<string>("Name");
 
                 return possibleGroupUsers;
             }

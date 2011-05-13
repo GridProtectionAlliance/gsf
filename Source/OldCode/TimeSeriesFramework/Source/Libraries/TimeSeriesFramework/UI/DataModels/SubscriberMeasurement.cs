@@ -212,9 +212,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     SubscriberMeasurementList.Add(new SubscriberMeasurement()
                     {
-                        NodeID =Guid.Parse(row.Field<object>("NodeID").ToString()),
-                        SubscriberID = Guid.Parse(row.Field<object>("SubscriberID").ToString()),
-                        SignalID = Guid.Parse(row.Field<object>("SignalID").ToString()),
+                        NodeID =database.Guid(row, "NodeID"),
+                        SubscriberID = database.Guid(row, "SubscriberID"),
+                        SignalID = database.Guid(row, "SignalID"),
                         Allowed = Convert.ToBoolean(row.Field<object>("Allowed")),
                         CreatedBy = row.Field<string>("CreatedBy"),
                         CreatedOn = row.Field<DateTime>("CreatedOn"),
@@ -238,30 +238,31 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
         /// <returns><see cref="Dictionary{T1,T2}"/> containing NodeID and SubscriberID of SubscriberMeasurements defined in the database.</returns>
-        public static Dictionary<string , string> GetLookupList(AdoDataConnection database, bool isOptional = true)
+        public static object GetLookupList(AdoDataConnection database, bool isOptional = true)
         {
-            bool createdConnection = false;
+            return null;
+            //bool createdConnection = false;
 
-            try
-            {
-                createdConnection = CreateConnection(ref database);
+            //try
+            //{
+            //    createdConnection = CreateConnection(ref database);
 
-                Dictionary<string, string> SubscriberMeasurementList = new Dictionary<string, string>();
-                if (isOptional)
-                    SubscriberMeasurementList.Add(" ", "Select SubscriberMeasurement");
+            //    Dictionary<string, string> SubscriberMeasurementList = new Dictionary<string, string>();
+            //    if (isOptional)
+            //        SubscriberMeasurementList.Add(" ", "Select SubscriberMeasurement");
 
-                DataTable SubscriberMeasurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT NodeID, SubscriberID FROM SubscriberMeasurement ORDER BY Allowed");
+            //    DataTable SubscriberMeasurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT NodeID, SubscriberID FROM SubscriberMeasurement ORDER BY Allowed");
 
-                foreach (DataRow row in SubscriberMeasurementTable.Rows)
-                    SubscriberMeasurementList[row.Field<string>("NodeID")] = row.Field<string>("SubscriberID");
+            //    foreach (DataRow row in SubscriberMeasurementTable.Rows)
+            //        SubscriberMeasurementList[row.Field<string>("NodeID")] = row.Field<string>("SubscriberID");
 
-                return SubscriberMeasurementList;
-            }
-            finally
-            {
-                if (createdConnection && database != null)
-                    database.Dispose();
-            }
+            //    return SubscriberMeasurementList;
+            //}
+            //finally
+            //{
+            //    if (createdConnection && database != null)
+            //        database.Dispose();
+            //}
         }
 
         /// <summary>
@@ -269,7 +270,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="subscriberMeasurement">Information about <see cref="SubscriberMeasurement"/>.</param>        
-        /// <returns>Guid, for display use, indicating success.</returns>
+        /// <returns>String, for display use, indicating success.</returns>
         public static string Save(AdoDataConnection database, SubscriberMeasurement subscriberMeasurement)
         {
             bool createdConnection = false;

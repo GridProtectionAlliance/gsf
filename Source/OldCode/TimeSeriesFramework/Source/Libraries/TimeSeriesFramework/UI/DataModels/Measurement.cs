@@ -24,6 +24,8 @@
 //       Guid field related changes as well as static functions update.
 //  05/05/2011 - Mehulbhai P Thakkar
 //       Added NULL handling for Save() operation.
+//  05/13/2011 - Aniket Salver
+//                  Modified the way Guid is retrived from the Data Base.
 //
 //******************************************************************************************************
 
@@ -588,7 +590,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 DataTable measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT PointID, SignalID FROM Measurement ORDER BY PointID");
 
                 foreach (DataRow row in measurementTable.Rows)
-                    measurementList[row.Field<int>("PointID")] = row.Field<string>("SignalID");
+                    measurementList[row.Field<int>("PointID")] = database.Guid(row, "SignalID");
 
                 return measurementList;
             }
