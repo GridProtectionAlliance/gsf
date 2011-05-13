@@ -37,7 +37,7 @@ namespace TimeSeriesFramework.UI.DataModels
     {
         #region[Members]
 
-        //Fileds
+        //Fields
         private Guid m_nodeID;
         private int m_ID;
         private string m_name;
