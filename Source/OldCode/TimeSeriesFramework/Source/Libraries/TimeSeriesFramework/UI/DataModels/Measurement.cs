@@ -578,10 +578,10 @@ namespace TimeSeriesFramework.UI.DataModels
                 if (isOptional)
                     measurementList.Add(0, "Select Measurement");
 
-                DataTable measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT PointID, SignalID FROM Measurement ORDER BY PointID");
+                DataTable measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT PointID, PointTag FROM Measurement ORDER BY PointID");
 
                 foreach (DataRow row in measurementTable.Rows)
-                    measurementList[row.Field<int>("PointID")] = database.Guid(row, "SignalID");
+                    measurementList[row.Field<int>("PointID")] = row.Field<string>("PointTag");
 
                 return measurementList;
             }
