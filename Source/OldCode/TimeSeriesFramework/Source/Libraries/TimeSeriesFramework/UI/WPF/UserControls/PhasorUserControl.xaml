@@ -51,16 +51,14 @@
                       SelectedItem="{tsfBinding:Column Path=Type, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource TypeLookupList}}"/>
             
             <!--Second Row-->
-            <TextBlock Grid.Row="1" Grid.Column="0" Text="Phase"/>
-            <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Source={StaticResource PhaseLookupList}}" DisplayMemberPath="Value"
-                      SelectedItem="{tsfBinding:Column Path=Phase, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource PhaseLookupList}}"/>
-            
-            <!--Third Row-->
-            <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="0">
+            <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="0">
                 <TextBlock Text="Source Index" Style="{StaticResource RequiredLabel}"/>
                 <TextBlock Style="{StaticResource RequiredMarker}"/>
             </StackPanel>
-            <TextBox Grid.Row="2" Grid.Column="1" Text="{tsfBinding:Column Path=SourceIndex}"/>
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{tsfBinding:Column Path=SourceIndex}"/>
+            <TextBlock Grid.Row="1" Grid.Column="2" Text="Phase"/>
+            <ComboBox Grid.Row="1" Grid.Column="3" ItemsSource="{Binding Source={StaticResource PhaseLookupList}}" DisplayMemberPath="Value"
+                      SelectedItem="{tsfBinding:Column Path=Phase, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource PhaseLookupList}}"/>
         </Grid>
 
         <uc:DetailViewFooterUserControl DeleteCommand="{Binding DeleteCommand}" ClearCommand="{Binding ClearCommand}" SaveCommand="{Binding SaveCommand}"
@@ -69,9 +67,9 @@
         <sdk:DataGrid ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" PreviewKeyDown="DataGrid_PreviewKeyDown">
             <sdk:DataGrid.Columns>
                 <sdk:DataGridTextColumn Header="Label" Width="*" Binding="{tsfBinding:Column Path=Label}"/>
-                <sdk:DataGridTextColumn Header="Type" Width="*" Binding="{tsfBinding:Column Path=Type}" />
-                <sdk:DataGridTextColumn Header="Phase" Width="2*" Binding="{tsfBinding:Column Path=Phase}" />
-                <sdk:DataGridTextColumn Header="Source Index" Width="*" Binding="{tsfBinding:Column Path=SourceIndex}"/>
+                <sdk:DataGridTextColumn Header="Type" Width="*" Binding="{tsfBinding:Column Path=Type}" CellStyle="{StaticResource CenterAlignCellStyle}" />
+                <sdk:DataGridTextColumn Header="Phase" Width="*" Binding="{tsfBinding:Column Path=Phase}" CellStyle="{StaticResource CenterAlignCellStyle}"/>
+                <sdk:DataGridTextColumn Header="Source Index" Width="*" Binding="{tsfBinding:Column Path=SourceIndex}" CellStyle="{StaticResource CenterAlignCellStyle}"/>
             </sdk:DataGrid.Columns>
         </sdk:DataGrid>
 

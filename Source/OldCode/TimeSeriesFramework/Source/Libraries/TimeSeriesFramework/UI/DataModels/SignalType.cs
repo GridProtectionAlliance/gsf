@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  05/06/2011 - Mehulbhai P Thakkar
 //       Generated original version of source code.
+//  05/13/2011 - Mehulbhai P Thakkar
+//       Added regular expression validator for Acronym.
 //
 //******************************************************************************************************
 
@@ -71,7 +73,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         [Required(ErrorMessage = "SignalType acronym is a required field, please provide value.")]
         [StringLength(4, ErrorMessage = "SignalType Acronym cannot exceed 4 characters.")]
-        [RegularExpression("^[A-Z0-9'!'_]+$", ErrorMessage = "Only upper case letters, numbers, '!' and '_' are allowed.")]
+        [RegularExpression("^[A-Z0-9-'!'_]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-' and '_' are allowed.")]
         public string Acronym
         {
             get

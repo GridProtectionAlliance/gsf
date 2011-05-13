@@ -18,6 +18,9 @@
 //  ----------------------------------------------------------------------------------------------------
 //  04/07/2011 - Mehulbhai P Thakkar
 //       Generated original version of source code.
+//  05/13/2011 - Mehulbhai P Thakkar
+//       Modified CurrentItem.PropertyChanged event handler to virtual so that it can 
+//       be overloaded by the derived classes for special handling such as by Measurements.cs
 //
 //******************************************************************************************************
 
@@ -173,6 +176,7 @@ namespace TimeSeriesFramework.UI
                     m_currentItem.PropertyChanged += m_currentItem_PropertyChanged;
 
                 OnPropertyChanged("CurrentItem");
+
                 // If CurrentItem changes then raise OnPropertyChanged on CanDelete property.
                 // This will help us display or hide certain item based on IsNewItem property value.                
                 OnPropertyChanged("CanDelete");
@@ -577,7 +581,12 @@ namespace TimeSeriesFramework.UI
 
         // We monitor for changes to IsValid property on current item so that we can propagate
         // this change notification to CanSave
-        private void m_currentItem_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        /// <summary>
+        /// Handles PropertyChanged event on CurrentItem.
+        /// </summary>
+        /// <param name="sender">Source of the event.</param>
+        /// <param name="e">Event arguments.</param>
+        protected virtual void m_currentItem_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             // Change Save button appearance based on IsValid property value.
             // If value of IsValid is changed then raise OnPropertyChanged for CanSave to enable or disable Save button.

@@ -41,7 +41,19 @@
         <GradientStop Color="#FFB3C8D6" Offset="0"/>
         <GradientStop Color="#FFE1E9EE" Offset="1"/>
     </LinearGradientBrush>
-        
+    
+    <Style x:Key="CenterAlignCellStyle" TargetType="sdk:DataGridCell">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type DataGridCell}">
+                    <Grid Background="{TemplateBinding Background}">
+                        <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center" />                        
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style TargetType="Grid">
         <Setter Property="Validation.ErrorTemplate">
             <Setter.Value>
@@ -112,7 +124,7 @@
             </Trigger>
         </Style.Triggers>
     </Style>
-
+    
     <Style TargetType="sdk:DataGrid">
         <Setter Property="SelectionUnit" Value="FullRow" />
         <Setter Property="CanUserResizeColumns" Value="True" />
@@ -141,7 +153,7 @@
     <conv:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 
     <ControlTemplate x:Key="HyperlinkStyleButtonTemplate" TargetType="Button">
-        <TextBlock Text="{TemplateBinding Content}" TextDecorations="Underline" Cursor="Hand" HorizontalAlignment="Center" Width="Auto"/>
+        <TextBlock Text="{TemplateBinding Content}" FontSize="{StaticResource TextSize}" TextDecorations="Underline" Cursor="Hand" HorizontalAlignment="Center" Width="Auto" Height="20"/>
     </ControlTemplate>
 
     <ControlTemplate x:Key="ImageButtonTemplate" TargetType="Button">

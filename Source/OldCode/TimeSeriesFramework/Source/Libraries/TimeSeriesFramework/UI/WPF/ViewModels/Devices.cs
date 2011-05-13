@@ -365,7 +365,12 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// <param name="parameter">Parameter to use for the command provided by commandparameter from UI.</param>
         private void GoToMeasurements(object parameter)
         {
-
+            Device device = (Device)parameter;
+            TextBlock textBlock = (TextBlock)Application.Current.MainWindow.FindName("TextBlockTitle");
+            System.Windows.Controls.Frame frame = (System.Windows.Controls.Frame)Application.Current.MainWindow.FindName("FrameContent");
+            MeasurementUserControl measurementUserControl = new MeasurementUserControl(device.ID);
+            textBlock.Text = Application.Current.MainWindow.Title = "Manage Measurements for " + device.Acronym;
+            frame.Navigate(measurementUserControl);
         }
 
         /// <summary>
@@ -374,7 +379,12 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// <param name="parameter">Parameter to use for the command provided by commandparameter from UI.</param>
         private void GoToPhasors(object parameter)
         {
-
+            Device device = (Device)parameter;
+            TextBlock textBlock = (TextBlock)Application.Current.MainWindow.FindName("TextBlockTitle");
+            System.Windows.Controls.Frame frame = (System.Windows.Controls.Frame)Application.Current.MainWindow.FindName("FrameContent");
+            PhasorUserControl phasorUserControl = new PhasorUserControl(device.ID);
+            textBlock.Text = Application.Current.MainWindow.Title = "Manage Phasors for " + device.Acronym;
+            frame.Navigate(phasorUserControl);
         }
 
         #endregion

@@ -95,13 +95,12 @@
     <Compile Include="DataModels\VendorDevice.cs" />
     <Compile Include="EntityPropertyAttribute.cs" />
     <Compile Include="IDataModel.cs" />
-    <Compile Include="MeasurementGroup.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <EmbeddedResource Include="Images\Copy.png" />
-    <EmbeddedResource Include="Images\EditConfiguration.png" />
+    <Resource Include="Images\Copy.png" />
+    <Resource Include="Images\EditConfiguration.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

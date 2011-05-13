@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  05/12/2011 - Magdiel Lorenzo
 //       Generated original version of source code.
+//  05/13/2011 - Mehulbhai P Thakkar
+//       Added constructor overload to handle device specific data.
 //
 //******************************************************************************************************
 
@@ -39,10 +41,19 @@ namespace TimeSeriesFramework.UI.UserControls
         /// Creates an instance of <see cref="MeasurementUserControl"/> class.
         /// </summary>
         public MeasurementUserControl()
+            : this(0)
+        {
+        }
+
+        /// <summary>
+        /// Creates an instance of <see cref="MeasurementUserControl"/> class.
+        /// </summary>
+        /// <param name="deviceID">ID of the device to filter measurements.</param>
+        public MeasurementUserControl(int deviceID)
         {
             InitializeComponent();
             this.Unloaded += new RoutedEventHandler(MeasurementUserControl_Unloaded);
-            this.DataContext = new Measurements(10);
+            this.DataContext = new Measurements(deviceID, 12);
         }
 
         #endregion

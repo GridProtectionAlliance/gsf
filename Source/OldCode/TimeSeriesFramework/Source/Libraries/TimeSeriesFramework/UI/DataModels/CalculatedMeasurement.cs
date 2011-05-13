@@ -28,6 +28,8 @@
 //       Added NULL value and Guid parameter handling for Save() operation.
 //  05/12/2011 - Aniket Salver
 //                  Modified the way Guid is retrived from the Data Base.
+//  05/13/2011 - Mehulbhai P Thakkar
+//       Added regular expression validator for Acronym.
 //
 //******************************************************************************************************
 
@@ -120,7 +122,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         [Required(ErrorMessage = "Calculated measurement acronym is a required field, please provide value.")]
         [StringLength(200, ErrorMessage = "Calculated measurement acronym cannot exceed 200 characters.")]
-        [RegularExpression("^[A-Z0-9'!'_]+$", ErrorMessage = "Only upper case letters, numbers, '!' and '_' are allowed.")]
+        [RegularExpression("^[A-Z0-9-'!'_]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-' and '_' are allowed.")]
         public string Acronym
         {
             get

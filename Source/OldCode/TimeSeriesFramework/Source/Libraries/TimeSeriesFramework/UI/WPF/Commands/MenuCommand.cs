@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  03/25/2011 - Mehulbhai P Thakkar
 //       Generated original version of source code.
+//  05/13/2011 - Mehulbhai P Thakkar
+//       Modified Execute() method to set main window's title property.
 //
 //******************************************************************************************************
 
@@ -159,6 +161,7 @@ namespace TimeSeriesFramework.UI.Commands
             {
                 frame.Navigate(userControl);
                 textBlock.Text = m_description;
+                Application.Current.MainWindow.Title = m_description;
             }
             else
                 throw new InvalidOperationException("Failed to create user control " + m_userControlPath);

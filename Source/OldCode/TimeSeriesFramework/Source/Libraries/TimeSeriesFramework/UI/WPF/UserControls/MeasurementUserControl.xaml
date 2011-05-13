@@ -98,13 +98,12 @@
 
         <sdk:DataGrid ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" PreviewKeyDown="DataGrid_PreviewKeyDown">
             <sdk:DataGrid.Columns>
-                <sdk:DataGridTextColumn Header="Signal ID" Width="*" Binding="{tsfBinding:Column Path=SignalID}"/>
-                <sdk:DataGridTextColumn Header="Point ID" Width="*" Binding="{tsfBinding:Column Path=PointID}" />
-                <sdk:DataGridTextColumn Header="Historian" Width="2*" Binding="{tsfBinding:Column Path=Historian}" />
-                <sdk:DataGridTextColumn Header="Device" Width="*" Binding="{tsfBinding:Column Path=Device}"/>
-                <sdk:DataGridTextColumn Header="Point Tag" Width="*" Binding="{tsfBinding:Column Path=PointTag}"/>
-                <sdk:DataGridTextColumn Header="Signal Reference" Width="1.5*" Binding="{tsfBinding:Column Path=SignalReference}"/>
-                <sdk:DataGridCheckBoxColumn Header="Enabled" Width="*" Binding="{tsfBinding:Column Path=Enabled}" />
+                <sdk:DataGridTextColumn Header="Signal ID" Width="3*" Binding="{tsfBinding:Column Path=SignalID}" ToolTipService.ToolTip="{tsfBinding:Column Path=PointTag}"/>
+                <sdk:DataGridTextColumn Header="Point ID" Width="*" Binding="{tsfBinding:Column Path=PointID}" CellStyle="{StaticResource CenterAlignCellStyle}"/>
+                <sdk:DataGridTextColumn Header="Historian" Width="*" Binding="{tsfBinding:Column Path=Historian}" CellStyle="{StaticResource CenterAlignCellStyle}" />
+                <sdk:DataGridTextColumn Header="Device" Width="*" Binding="{tsfBinding:Column Path=Device}" CellStyle="{StaticResource CenterAlignCellStyle}"/>                
+                <sdk:DataGridTextColumn Header="Signal Reference" Width="2*" Binding="{tsfBinding:Column Path=SignalReference}"/>
+                <sdk:DataGridCheckBoxColumn Header="Enabled" Width="*" Binding="{tsfBinding:Column Path=Enabled}" CellStyle="{StaticResource CenterAlignCellStyle}"/>
             </sdk:DataGrid.Columns>
         </sdk:DataGrid>
 

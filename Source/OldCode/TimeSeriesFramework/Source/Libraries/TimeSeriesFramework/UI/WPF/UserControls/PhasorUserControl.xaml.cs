@@ -16,24 +16,16 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  05/12/2011 - swills
+//  05/12/2011 - Magdiel Lorenzo
 //       Generated original version of source code.
+//  05/13/2011 - Mehulbhai P Thakkar
+//       Added constructor overload to handle device specific data.
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using TimeSeriesFramework.UI.ViewModels;
 
 namespace TimeSeriesFramework.UI.UserControls
@@ -46,12 +38,13 @@ namespace TimeSeriesFramework.UI.UserControls
         #region [ Constructor ]
         /// <summary>
         /// Creates an instance of <see cref="PhasorUserControl"/> class.
-        /// </summary>
-        public PhasorUserControl()
+        /// <param name="deviceID">ID of the device to filter data.</param>
+        /// </summary>        
+        public PhasorUserControl(int deviceID)
         {
             InitializeComponent();
             this.Unloaded += new RoutedEventHandler(PhasorUserControl_Unloaded);
-            this.DataContext = new Phasors(10);
+            this.DataContext = new Phasors(deviceID, 18);
         }
 
         #endregion

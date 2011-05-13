@@ -24,14 +24,13 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel.DataAnnotations;
 using System.Data;
 using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
     /// <summary>
-    /// Represents a record of <see cref="MeasurementGroupMeasurementp"/> information as defined in the database.
+    /// Represents a record of <see cref="MeasurementGroupMeasurement"/> information as defined in the database.
     /// </summary>
     class MeasurementGroupMeasurement : DataModelBase
     {
@@ -247,9 +246,9 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Saves <see cref="MeasurementGroupMeasurement"/> information to database.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="MeasurementGroupMeasurement">Information about <see cref="MeasurementGroupMeasurement"/>.</param>        
-        /// <returns>String, for display use, indicating success.</returns>
-        public static string  Save(AdoDataConnection database, MeasurementGroupMeasurement measurementGroupMeasurement)
+        /// <param name="measurementGroupMeasurement">Information about <see cref="MeasurementGroupMeasurement"/>.</param>        
+        /// <returns>string, for display use, indicating success.</returns>
+        public static string Save(AdoDataConnection database, MeasurementGroupMeasurement measurementGroupMeasurement)
         {
             bool createdConnection = false;
 
@@ -281,7 +280,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="MeasurementGroupMeasurementNodeID">ID of the record to be deleted.</param>
         /// <returns>String, for display use, indicating success.</returns>
-        public static string Delete(AdoDataConnection database, string  MeasurementGroupMeasurementNodeID)
+        public static string Delete(AdoDataConnection database, string MeasurementGroupMeasurementNodeID)
         {
             bool createdConnection = false;
 

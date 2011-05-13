@@ -26,6 +26,8 @@
 //       Added NULL handling for Save() operation.
 //  05/13/2011 - Aniket Salver
 //                  Modified the way Guid is retrived from the Data Base.
+//  05/13/2011 - Mehulbhai P Thakkar
+//       Modified static methods to filter data by device.
 //
 //******************************************************************************************************
 
@@ -73,6 +75,7 @@ namespace TimeSeriesFramework.UI.DataModels
         private string m_createdBy;
         private DateTime m_updatedOn;
         private string m_updatedBy;
+        private string m_id;
 
         #endregion
 
@@ -333,7 +336,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets or sets the current <see cref="Measurement"/>'s Historian Acronym.
+        /// Gets the current <see cref="Measurement"/>'s Historian Acronym.
         /// </summary>
         // Because of database design, no validation attributes are supplied
         public string HistorianAcronym
@@ -342,15 +345,10 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 return m_historianAcronym;
             }
-            set
-            {
-                m_historianAcronym = value;
-                OnPropertyChanged("HistorianAcronym");
-            }
         }
 
         /// <summary>
-        /// Gets or sets the current <see cref="Measurement"/>'s Device Acronym.
+        /// Gets the current <see cref="Measurement"/>'s Device Acronym.
         /// </summary>
         // Because of database design, no validation attributes are supplied
         public string DeviceAcronym
@@ -359,15 +357,10 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 return m_deviceAcronym;
             }
-            set
-            {
-                m_deviceAcronym = value;
-                OnPropertyChanged("DeviceAcronym");
-            }
         }
 
         /// <summary>
-        /// Gets or sets the current <see cref="Measurement"/>'s Frames Per Second.
+        /// Gets the current <see cref="Measurement"/>'s Frames Per Second.
         /// </summary>
         // Because of database design, no validation attributes are supplied
         public int? FramesPerSecond
@@ -376,15 +369,10 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 return m_framesPerSecond;
             }
-            set
-            {
-                m_framesPerSecond = value;
-                OnPropertyChanged("FramesPerSecond");
-            }
         }
 
         /// <summary>
-        /// Gets or sets the current <see cref="Measurement"/>'s Signal Name.
+        /// Gets the current <see cref="Measurement"/>'s Signal Name.
         /// </summary>
         // Because of database design, no validation attributes are supplied
         public string SignalName
@@ -393,15 +381,10 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 return m_signalName;
             }
-            set
-            {
-                m_signalName = value;
-                OnPropertyChanged("SignalName");
-            }
         }
 
         /// <summary>
-        /// Gets or sets the current <see cref="Measurement"/>'s Signal Acronym.
+        /// Gets the current <see cref="Measurement"/>'s Signal Acronym.
         /// </summary>
         // Because of database design, no validation attributes are supplied
         public string SignalAcronym
@@ -410,15 +393,10 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 return m_signalAcronym;
             }
-            set
-            {
-                m_signalAcronym = value;
-                OnPropertyChanged("SignalAcronym");
-            }
         }
 
         /// <summary>
-        /// Gets or sets the current <see cref="Measurement"/>'s Signal Suffix.
+        /// Gets the current <see cref="Measurement"/>'s Signal Suffix.
         /// </summary>
         // Because of database design, no validation attributes are supplied
         public string SignalSuffix
@@ -427,15 +405,10 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 return m_signalSuffix;
             }
-            set
-            {
-                m_signalSuffix = value;
-                OnPropertyChanged("SignalSuffix");
-            }
         }
 
         /// <summary>
-        /// Gets or sets the current <see cref="Measurement"/>'s Phasor Label.
+        /// Gets the current <see cref="Measurement"/>'s Phasor Label.
         /// </summary>
         // Because of database design, no validation attributes are supplied
         public string PhasorLabel
@@ -443,11 +416,6 @@ namespace TimeSeriesFramework.UI.DataModels
             get
             {
                 return m_phasorLabel;
-            }
-            set
-            {
-                m_phasorLabel = value;
-                OnPropertyChanged("PhasorLabel");
             }
         }
 
@@ -515,6 +483,18 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Gets ID of the <see cref="Measurement"/>.
+        /// </summary>
+        // Field is populated via view, so no validation attributes are applied.
+        public string ID
+        {
+            get
+            {
+                return m_id;
+            }
+        }
+
         #endregion
 
         #region [ Static ]
@@ -523,8 +503,9 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Loads <see cref="Measurement"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="deviceID">ID of the <see cref="Device"/> to filter data.</param>
         /// <returns>Collection of <see cref="Measurement"/>.</returns>
-        public static ObservableCollection<Measurement> Load(AdoDataConnection database)
+        public static ObservableCollection<Measurement> Load(AdoDataConnection database, int deviceID = 0)
         {
             bool createdConnection = false;
 
@@ -533,8 +514,14 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 ObservableCollection<Measurement> measurementList = new ObservableCollection<Measurement>();
-                DataTable measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT SignalID, HistorianID, PointID, DeviceID, PointTag, AlternateTag, SignalTypeID, PhasorSourceIndex, SignalReference, Adder, Multiplier, Description, Enabled, CreatedOn, CreatedBy, UpdatedOn, UpdatedBy " +
-                    "FROM Measurement ORDER BY PointID");
+                DataTable measurementTable;
+
+                if (deviceID > 0)
+                    measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail WHERE " +
+                        "DeviceID = @deviceID ORDER BY PointID", DefaultTimeout, deviceID);
+                else
+                    measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail WHERE " +
+                        "NodeID = @nodeID ORDER BY PointTag", DefaultTimeout, database.CurrentNodeID());
 
                 foreach (DataRow row in measurementTable.Rows)
                 {
@@ -552,11 +539,15 @@ namespace TimeSeriesFramework.UI.DataModels
                         Adder = row.Field<double>("Adder"),
                         Multiplier = row.Field<double>("Multiplier"),
                         Description = row.Field<string>("Description"),
-                        Enabled = row.Field<bool>("Enabled"),
-                        CreatedOn = row.Field<DateTime>("CreatedOn"),
-                        CreatedBy = row.Field<string>("CreatedBy"),
-                        UpdatedOn = row.Field<DateTime>("UpdatedOn"),
-                        UpdatedBy = row.Field<string>("UpdatedBy")
+                        Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
+                        m_historianAcronym = row.Field<string>("HistorianAcronym"),
+                        m_deviceAcronym = row.Field<object>("DeviceAcronym") == null ? string.Empty : row.Field<string>("DeviceAcronym"),
+                        m_signalName = row.Field<string>("SignalName"),
+                        m_signalAcronym = row.Field<string>("SignalAcronym"),
+                        m_signalSuffix = row.Field<string>("SignalTypeSuffix"),
+                        m_phasorLabel = row.Field<string>("PhasorLabel"),
+                        m_framesPerSecond = row.Field<int?>("FramesPerSecond"),
+                        m_id = row.Field<string>("ID")
                     });
                 }
 

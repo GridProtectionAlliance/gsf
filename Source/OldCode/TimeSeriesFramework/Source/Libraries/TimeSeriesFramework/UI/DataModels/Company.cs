@@ -22,6 +22,8 @@
 //       Updated for coding consistency.
 //  05/03/2011 - Mehulbhai P Thakkar
 //       Guid field related changes as well as static functions update.
+//  05/13/2011 - Mehulbhai P Thakkar
+//       Added regular expression validator for Acronym.
 //
 //******************************************************************************************************
 
@@ -79,7 +81,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         [Required(ErrorMessage = "Company acronym is a required field, please provide value.")]
         [StringLength(200, ErrorMessage = "Company acronym cannot exceed 200 characters.")]
-        [RegularExpression("^[A-Z0-9'!'_]+$", ErrorMessage = "Only upper case letters, numbers, '!' and '_' are allowed.")]
+        [RegularExpression("^[A-Z0-9-'!'_]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-' and '_' are allowed.")]
         public string Acronym
         {
             get

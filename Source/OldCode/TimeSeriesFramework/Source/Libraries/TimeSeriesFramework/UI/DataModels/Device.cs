@@ -28,6 +28,8 @@
 //       Added NULL value and Guid parameter handling for Save() operation.
 //  05/12/2011 - Aniket Salver
 //                  Modified the way Guid is retrived from the Data Base.
+//  05/13/2011 - Mehulbhai P Thakkar
+//       Added regular expression validator for Acronym.
 //
 //******************************************************************************************************
 
@@ -202,7 +204,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         [Required(ErrorMessage = "Device acronym is a required field, please provide value.")]
         [StringLength(50, ErrorMessage = "Device Acronym cannot exceed 50 characters.")]
-        [RegularExpression("^[A-Z0-9'!'_]+$", ErrorMessage = "Only upper case letters, numbers, '!' and '_' are allowed.")]
+        [RegularExpression("^[A-Z0-9-'!'_]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-' and '_' are allowed.")]
         public string Acronym
         {
             get
@@ -478,7 +480,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets <see cref="Device"/>ConnectOnDemand.
         /// </summary>
         [Required(ErrorMessage = "ConnectOnDemand is a required field, please provide value.")]
-        [DefaultValue(typeof(int), "1")]
+        [DefaultValue(false)]
         public bool ConnectOnDemand
         {
             get

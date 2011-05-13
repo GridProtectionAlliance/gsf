@@ -24,6 +24,8 @@
 //       Guid field related changes as well as static functions update.
 //  05/05/2011 - Mehulbhai P Thakkar
 //       Added NULL handling for Save() operation.
+//  05/13/2011 - Mehulbhai P Thakkar
+//       Modified static methods to filter data by device.
 //
 //******************************************************************************************************
 
@@ -304,8 +306,9 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Loads <see cref="Phasor"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="deviceID">ID of the <see cref="Device"/> to filter data.</param>
         /// <returns>Collection of <see cref="Phasor"/>.</returns>
-        public static ObservableCollection<Phasor> Load(AdoDataConnection database)
+        public static ObservableCollection<Phasor> Load(AdoDataConnection database, int deviceID)
         {
             bool createdConnection = false;
 
@@ -314,7 +317,8 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 ObservableCollection<Phasor> phasorList = new ObservableCollection<Phasor>();
-                DataTable phasorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, DeviceID, Label, Type, Phase, DestinationPhasorID, SourceIndex, CreatedBy, CreatedOn, UpdatedBy, UpdatedOn FROM Phasor ORDER BY DeviceID");
+                DataTable phasorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, DeviceID, Label, Type, Phase, DestinationPhasorID, SourceIndex, " +
+                    "CreatedBy, CreatedOn, UpdatedBy, UpdatedOn FROM Phasor WHERE DeviceID = @deviceID ORDER BY DeviceID", DefaultTimeout, deviceID);
 
                 foreach (DataRow row in phasorTable.Rows)
                 {
@@ -325,7 +329,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         Label = row.Field<string>("Label"),
                         Type = row.Field<string>("Type"),
                         Phase = row.Field<string>("Phase"),
-                        DestinationPhasorID = row.Field<int>("DestinationPhasorID"),
+                        //DestinationPhasorID = row.Field<int>("DestinationPhasorID"),
                         SourceIndex = row.Field<int>("SourceIndex"),
                         CreatedBy = row.Field<string>("CreatedBy"),
                         CreatedOn = row.Field<DateTime>("CreatedOn"),
@@ -347,9 +351,10 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets a <see cref="Dictionary{T1,T2}"/> style list of <see cref="Phasor"/> information.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="deviceID">ID of the <see cref="Device"/> to filter data.</param>
         /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
         /// <returns><see cref="Dictionary{T1,T2}"/> containing ID and Label of phasors defined in the database.</returns>
-        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional = true)
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, int deviceID, bool isOptional = true)
         {
             bool createdConnection = false;
 
@@ -361,7 +366,11 @@ namespace TimeSeriesFramework.UI.DataModels
                 if (isOptional)
                     phasorList.Add(0, "Select Phasor");
 
-                DataTable phasorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Label FROM Phasor ORDER BY SourceIndex");
+                if (deviceID == 0)
+                    return phasorList;
+
+                DataTable phasorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Label FROM Phasor WHERE DeviceID = @deviceID " +
+                    "ORDER BY SourceIndex", DefaultTimeout, deviceID);
 
                 foreach (DataRow row in phasorTable.Rows)
                     phasorList[row.Field<int>("ID")] = row.Field<string>("Label");
@@ -390,13 +399,13 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 if (phasor.ID == 0)
-                    database.Connection.ExecuteNonQuery("INSERT INTO Phasor (DeviceID, Label, Type, Phase, DestinationPhasorID, CreatedBy, CreatedOn) " +
-                        "VALUES (@DeviceID, @Label, @Type, @Phase, @DestinationPhasorID, @createdBy, @createdOn)", DefaultTimeout, phasor.DeviceID, phasor.Label,
-                        phasor.Type, phasor.Phase, phasor.DestinationPhasorID.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow());
+                    database.Connection.ExecuteNonQuery("INSERT INTO Phasor (DeviceID, Label, Type, Phase, SourceIndex, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) " +
+                        "VALUES (@DeviceID, @Label, @Type, @Phase, @sourceIndex, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, phasor.DeviceID, phasor.Label,
+                        phasor.Type, phasor.Phase, phasor.SourceIndex, CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
                 else
-                    database.Connection.ExecuteNonQuery("UPDATE Phasor SET DeviceID = @deviceID, Label = @label, Type = @type, Phase = @phase, DestinationPhasorID = @destinationPhasorID, " +
-                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, phasor.DeviceID, phasor.Label, phasor.Type, phasor.Phase,
-                        phasor.DestinationPhasorID.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow(), phasor.ID);
+                    database.Connection.ExecuteNonQuery("UPDATE Phasor SET DeviceID = @deviceID, Label = @label, Type = @type, Phase = @phase, SourceIndex = @sourceIndex, " +
+                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, phasor.DeviceID, phasor.Label, phasor.Type,
+                        phasor.Phase, phasor.SourceIndex, CommonFunctions.CurrentUser, database.UtcNow(), phasor.ID);
 
                 return "Phasor information saved successfully";
             }

@@ -18,13 +18,12 @@
 //  ----------------------------------------------------------------------------------------------------
 //  05/12/2011 - Magdiel Lorenzo
 //       Generated original version of source code.
+//  05/13/2011 - Mehulbhai P Thakkar
+//       Added constructor overload and other changes to handle device specific data.
 //
 //******************************************************************************************************
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using TimeSeriesFramework.UI.DataModels;
 
 namespace TimeSeriesFramework.UI.ViewModels
@@ -34,11 +33,12 @@ namespace TimeSeriesFramework.UI.ViewModels
     /// </summary>
     internal class Phasors : PagedViewModelBase<Phasor, int>
     {
-
         #region [ Members ]
 
+        // Fields
         private Dictionary<string, string> m_phaseLookupList;
         private Dictionary<string, string> m_typeLookupList;
+        private int m_deviceID;
 
         #endregion
 
@@ -47,11 +47,14 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// <summary>
         /// Creates an instance of <see cref="Phasors"/> class.
         /// </summary>
+        /// <param name="deviceID">ID of teh device to fileter phasors.</param>
         /// <param name="itemsPerPage">Integer value to determine number of items per page.</param>
         /// <param name="autoSave">Boolean value to determine is user changes should be saved automatically.</param>
-        public Phasors(int itemsPerPage, bool autoSave = true)
+        public Phasors(int deviceID, int itemsPerPage, bool autoSave = true)
             : base(itemsPerPage, autoSave)
         {
+            m_deviceID = deviceID;
+
             m_phaseLookupList = new Dictionary<string, string>();
             m_phaseLookupList.Add("+", "Positive Sequence");
             m_phaseLookupList.Add("-", "Negative Sequence");
@@ -63,6 +66,8 @@ namespace TimeSeriesFramework.UI.ViewModels
             m_typeLookupList = new Dictionary<string, string>();
             m_typeLookupList.Add("V", "Voltage");
             m_typeLookupList.Add("I", "Current");
+
+            Load();
         }
 
         #endregion
@@ -125,14 +130,23 @@ namespace TimeSeriesFramework.UI.ViewModels
         }
 
         /// <summary>
-        /// Creates a new instance of <see cref="Historian"/> and assigns it to CurrentItem.
+        /// Loads collection of <see cref="Phasor"/> defined in the database for a <see cref="Device"/>.
+        /// </summary>
+        public override void Load()
+        {
+            if (m_deviceID > 0)
+                ItemsSource = Phasor.Load(null, m_deviceID);
+        }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="Phasor"/> and assigns it to CurrentItem.
         /// </summary>
         public override void Clear()
         {
             base.Clear();
+            CurrentItem.DeviceID = m_deviceID;
         }
 
         #endregion
-        
     }
 }
