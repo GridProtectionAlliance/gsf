@@ -418,6 +418,27 @@ namespace TVA.Security.Cryptography
             }
 
             /// <summary>
+            /// Determines if a key and initialization vector exists for the given <paramref name="password"/>.
+            /// </summary>
+            /// <param name="password">User password used for key lookups.</param>
+            /// <param name="keySize">Specifies the desired key size.</param>
+            /// <returns><c>true</c> if a key and initialization vector exists for the given <paramref name="password"/>; otherwise <c>false</c>.</returns>
+            public bool KeyIVExists(string password, int keySize)
+            {
+                string hash = GetPasswordHash(password, keySize);
+
+                // We wait until the key and IV cache is loaded before attempting to access it
+                WaitForDataReady();
+
+                // Wait for thread level lock on key table
+                lock (m_keyIVTable)
+                {
+                    // Lookup crypto key based on password hash in persisted key table
+                    return m_keyIVTable.ContainsKey(hash);
+                }
+            }
+
+            /// <summary>
             /// Imports a key and initialization vector into the local system key cache.
             /// </summary>
             /// <param name="password">User password used for key lookups.</param>
@@ -689,6 +710,17 @@ namespace TVA.Security.Cryptography
         public static void FlushCache(int millisecondsTimeout = Timeout.Infinite)
         {
             s_keyIVCache.WaitForSave(millisecondsTimeout);
+        }
+
+        /// <summary>
+        /// Determines if a key and initialization vector exists for the given <paramref name="password"/> in the local system key cache.
+        /// </summary>
+        /// <param name="password">User password used for key lookups.</param>
+        /// <param name="keySize">Specifies the desired key size.</param>
+        /// <returns><c>true</c> if a key and initialization vector exists for the given <paramref name="password"/>; otherwise <c>false</c>.</returns>
+        public static bool KeyIVExists(string password, int keySize)
+        {
+            return s_keyIVCache.KeyIVExists(password, keySize);
         }
 
         /// <summary>
