@@ -84,7 +84,15 @@ namespace TimeSeriesFramework.Transport
         /// <summary>
         /// Data packet response.
         /// </summary>
-        DataPacket = 0xD2
+        DataPacket = 0xD2,
+        /// <summary>
+        /// Base time update.
+        /// </summary>
+        BaseTimeUpdate = 0xD3,
+        /// <summary>
+        /// Cipher key update.
+        /// </summary>
+        CipherKeyUpdate = 0xD4
     }
 
     /// <summary>
@@ -599,6 +607,7 @@ namespace TimeSeriesFramework.Transport
             /// Creates a new <see cref="ClientConnection"/> instance.
             /// </summary>
             /// <param name="clientID">Client ID of associated connection.</param>
+            /// <param name="commandChannel"><see cref="TcpServer"/> command channel used to lookup connection information.</param>
             public ClientConnection(Guid clientID, TcpServer commandChannel)
             {
                 m_clientID = clientID;

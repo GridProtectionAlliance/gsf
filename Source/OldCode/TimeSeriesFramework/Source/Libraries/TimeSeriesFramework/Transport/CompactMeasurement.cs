@@ -39,39 +39,39 @@ namespace TimeSeriesFramework.Transport
         /// <summary>
         /// Use even time index when set; odd time index when not set.
         /// </summary>
-        TimeIndex = Bits.Bit00,
+        TimeIndex = (byte)Bits.Bit00,
         /// <summary>
         /// Use even cipher index when set; off cipher index when not set.
         /// </summary>
-        CipherIndex = Bits.Bit01,
+        CipherIndex = (byte)Bits.Bit01,
         /// <summary>
         /// Value quality is good is true when set; otherwise false.
         /// </summary>
-        ValueQualityIsGood = Bits.Bit02,
+        ValueQualityIsGood = (byte)Bits.Bit02,
         /// <summary>
         /// Time quality is good is true when set; otherwise false.
         /// </summary>
-        TimeQualityIsGood = Bits.Bit03,
+        TimeQualityIsGood = (byte)Bits.Bit03,
         /// <summary>
         /// Discarded is true when set; otherwise false.
         /// </summary>
-        Discarded = Bits.Bit04,
+        Discarded = (byte)Bits.Bit04,
         /// <summary>
         /// Bit reserved for future use.
         /// </summary>
-        Reserved01 = Bits.Bit05,
+        Reserved01 = (byte)Bits.Bit05,
         /// <summary>
         /// Bit reserved for future use.
         /// </summary>
-        Reserved02 = Bits.Bit06,
+        Reserved02 = (byte)Bits.Bit06,
         /// <summary>
         /// Bit reserved for future use.
         /// </summary>
-        Reserved03 = Bits.Bit07,
+        Reserved03 = (byte)Bits.Bit07,
         /// <summary>
         /// No flags.
         /// </summary>
-        NoFlags = Bits.Nil
+        NoFlags = (byte)Bits.Nil
     }
 
     /// <summary>
