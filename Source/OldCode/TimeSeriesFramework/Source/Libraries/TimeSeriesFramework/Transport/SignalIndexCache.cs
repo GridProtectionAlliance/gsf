@@ -72,6 +72,32 @@ namespace TimeSeriesFramework.Transport
             }
         }
 
+        /// <summary>
+        /// Gets reference to array of requested input measurement keys that were authorized.
+        /// </summary>
+        public MeasurementKey[] AuthorizedKeys
+        {
+            get
+            {
+                return m_reference.Select(kvp => kvp.Value.Item2).ToArray();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets reference to array of requested input measurement keys that were unauthorized.
+        /// </summary>
+        public MeasurementKey[] UnauthorizedKeys
+        {
+            get
+            {
+                return m_unauthorizedKeys;
+            }
+            set
+            {
+                m_unauthorizedKeys = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
