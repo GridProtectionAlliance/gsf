@@ -70,6 +70,7 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AuthenticationRequest.cs" />
     <Compile Include="Commands\MenuCommand.cs" />
     <Compile Include="Commands\RelayCommand.cs" />
     <Compile Include="IViewModel.cs" />
@@ -133,6 +134,9 @@
     <Compile Include="UserControls\SecurityUserControl.xaml.cs">
       <DependentUpon>SecurityUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\SubscriberUserControl.xaml.cs">
+      <DependentUpon>SubscriberUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\VendorDeviceUserControl.xaml.cs">
       <DependentUpon>VendorDeviceUserControl.xaml</DependentUpon>
     </Compile>
@@ -150,6 +154,7 @@
     <Compile Include="ViewModels\Nodes.cs" />
     <Compile Include="ViewModels\Phasors.cs" />
     <Compile Include="ViewModels\SecurityGroups.cs" />
+    <Compile Include="ViewModels\Subscribers.cs" />
     <Compile Include="ViewModels\UserAccounts.cs" />
     <Compile Include="ViewModels\VendorDevices.cs" />
     <Compile Include="ViewModels\Vendors.cs" />
@@ -228,6 +233,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UserControls\SecurityUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\SubscriberUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

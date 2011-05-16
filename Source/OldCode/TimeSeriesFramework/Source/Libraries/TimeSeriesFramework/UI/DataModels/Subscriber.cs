@@ -276,8 +276,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 ObservableCollection<Subscriber> subscriberList = new ObservableCollection<Subscriber>();
                 DataTable subscriberTable;
 
-                subscriberTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, NodeID, Acronym, Name, SharedSecret, AuthKey, ValidIPAddresses, Enabled FROM Subscriber" + 
-                    "ORDER BY Name");
+                subscriberTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, NodeID, Acronym, Name, SharedSecret, AuthKey, ValidIPAddresses, Enabled FROM Subscriber ORDER BY Name");
 
                 foreach (DataRow row in subscriberTable.Rows)
                 {
@@ -370,6 +369,7 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+
         /// <summary>
         /// Deletes specified <see cref="Subscriber"/> record from database.
         /// </summary>
@@ -398,7 +398,6 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
-        #endregion
-        
+        #endregion        
     }
 }
