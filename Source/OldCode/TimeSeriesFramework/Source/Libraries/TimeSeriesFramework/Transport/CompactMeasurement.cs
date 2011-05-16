@@ -108,7 +108,12 @@ namespace TimeSeriesFramework.Transport
         public CompactMeasurement(SignalIndexCache signalIndexCache, long[] baseTimeOffsets, byte[][][] keyIVs)
         {
             m_signalIndexCache = signalIndexCache;
-            m_baseTimeOffsets = baseTimeOffsets;
+            
+            if (baseTimeOffsets == null)
+                m_baseTimeOffsets = new long[] { 0, 0 };
+            else
+                m_baseTimeOffsets = baseTimeOffsets;
+
             m_keyIVs = keyIVs;
         }
 
@@ -127,7 +132,12 @@ namespace TimeSeriesFramework.Transport
             this.ValueQualityIsGood = measurement.ValueQualityIsGood;
             this.TimestampQualityIsGood = measurement.TimestampQualityIsGood;
             m_signalIndexCache = signalIndexCache;
-            m_baseTimeOffsets = baseTimeOffsets;
+
+            if (baseTimeOffsets == null)
+                m_baseTimeOffsets = new long[] { 0, 0 };
+            else
+                m_baseTimeOffsets = baseTimeOffsets;
+            
             m_keyIVs = keyIVs;
             m_timeIndex = timeIndex;
             m_cipherIndex = cipherIndex;
@@ -170,7 +180,11 @@ namespace TimeSeriesFramework.Transport
 
                 // Allocate buffer to hold binary image
                 long baseTimeOffset = m_baseTimeOffsets[m_timeIndex];
-                byte[] buffer = new byte[(FixedLength + baseTimeOffset > 0 ? 2 : 0) - 1];
+                int length = (FixedLength + baseTimeOffset > 0 ? 2 : 0);
+                byte[] buffer = new byte[length];
+
+                // Added flags to beginning of buffer
+                buffer[index++] = (byte)flags;
 
                 // Encode runtime ID
                 EndianOrder.BigEndian.CopyBytes(m_signalIndexCache.GetSignalIndex(Key), buffer, index);
@@ -186,9 +200,12 @@ namespace TimeSeriesFramework.Transport
                     EndianOrder.BigEndian.CopyBytes((ushort)(Timestamp - baseTimeOffset).ToMilliseconds(), buffer, index);
                     index += 2;
                 }
-                
-                // Return buffer with unencrypted flags
-                return (new byte[] { (byte)flags }).Combine(buffer.Encrypt(m_keyIVs[m_cipherIndex][0], m_keyIVs[m_cipherIndex][1], CipherStrength.Aes256));
+
+                // If crypto keys were provided, encrypted data portion of buffer
+                if (m_keyIVs != null)
+                    Buffer.BlockCopy(buffer.Encrypt(1, length - 1, m_keyIVs[m_cipherIndex][0], m_keyIVs[m_cipherIndex][1], CipherStrength.Aes256), 0, buffer, 1, length - 1);
+
+                return buffer;
             }
         }
 
@@ -234,7 +251,11 @@ namespace TimeSeriesFramework.Transport
             if (count < length)
                 throw new InvalidOperationException("Not enough buffer available to deserialize measurement.");
 
-            buffer = buffer.Decrypt(startIndex + 1, length - 1, m_keyIVs[m_cipherIndex][0], m_keyIVs[m_cipherIndex][1], CipherStrength.Aes256);
+            // If crypto keys were provided, decrypt data portion of buffer
+            if (m_keyIVs != null)
+                buffer = buffer.Decrypt(startIndex + 1, length - 1, m_keyIVs[m_cipherIndex][0], m_keyIVs[m_cipherIndex][1], CipherStrength.Aes256);
+            else
+                index = 1;
 
             // Decode runtime ID
             ushort id = EndianOrder.BigEndian.ToUInt16(buffer, index);
