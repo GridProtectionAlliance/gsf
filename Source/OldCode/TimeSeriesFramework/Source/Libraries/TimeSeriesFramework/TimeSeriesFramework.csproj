@@ -90,7 +90,6 @@
     <Compile Include="Adapters\NamespaceDoc.cs" />
     <Compile Include="Adapters\OutputAdapterBase.cs" />
     <Compile Include="Adapters\OutputAdapterCollection.cs" />
-    <Compile Include="SerializableMeasurementSlim.cs" />
     <Compile Include="Transport\DataPublisher.cs" />
     <Compile Include="Transport\DataSubscriber.cs" />
     <Compile Include="DebugHostBase.cs">
@@ -115,6 +114,8 @@
     </Compile>
     <Compile Include="TemporalMeasurement.cs" />
     <Compile Include="TrackingFrame.cs" />
+    <Compile Include="Transport\CompactMeasurement.cs" />
+    <Compile Include="Transport\SignalIndexCache.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="DebugHostBase.resx">

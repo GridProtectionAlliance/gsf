@@ -205,13 +205,17 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>
-        /// Gets the primary key (a <see cref="MeasurementKey"/>, of this <see cref="Measurement"/>.
+        /// Gets the primary key (a <see cref="MeasurementKey"/>), of this <see cref="Measurement"/>.
         /// </summary>
         public virtual MeasurementKey Key
         {
             get
             {
                 return m_key;
+            }
+            protected set
+            {
+                m_key = value;
             }
         }
 

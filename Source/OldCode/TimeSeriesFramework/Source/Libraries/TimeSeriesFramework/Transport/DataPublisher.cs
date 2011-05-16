@@ -38,6 +38,8 @@ using TimeSeriesFramework.Adapters;
 using TVA;
 using TVA.Communication;
 using TVA.IO.Compression;
+using System.Net;
+using System.Net.Sockets;
 
 namespace TimeSeriesFramework.Transport
 {
@@ -279,7 +281,8 @@ namespace TimeSeriesFramework.Transport
                     foreach (IMeasurement measurement in frame.Measurements.Values)
                     {
                         if (useCompactMeasurementFormat)
-                            buffer = (new SerializableMeasurementSlim(measurement, false)).BinaryImage;
+                            // TODO: Establish new compact measurement based on cache and state
+                            buffer = (new CompactMeasurement(measurement, null, null, null, 0, 0)).BinaryImage;
                         else
                             buffer = (new SerializableMeasurement(measurement)).BinaryImage;
 
@@ -557,7 +560,8 @@ namespace TimeSeriesFramework.Transport
                     foreach (IMeasurement measurement in measurements)
                     {
                         if (useCompactMeasurementFormat)
-                            buffer = (new SerializableMeasurementSlim(measurement, true)).BinaryImage;
+                            // TODO: Establish new compact measurement based on cache and state
+                            buffer = (new CompactMeasurement(measurement, null, null, null, 0, 0)).BinaryImage;
                         else
                             buffer = (new SerializableMeasurement(measurement)).BinaryImage;
 
@@ -583,6 +587,7 @@ namespace TimeSeriesFramework.Transport
 
             // Fields
             private Guid m_clientID;
+            private string m_connectionID;
             private bool m_authenticated;
             private IClientSubscription m_subscription;
 
@@ -594,9 +599,46 @@ namespace TimeSeriesFramework.Transport
             /// Creates a new <see cref="ClientConnection"/> instance.
             /// </summary>
             /// <param name="clientID">Client ID of associated connection.</param>
-            public ClientConnection(Guid clientID)
+            public ClientConnection(Guid clientID, TcpServer commandChannel)
             {
                 m_clientID = clientID;
+
+                // Attempt to lookup remote connection identification for logging purposes
+                try
+                {
+                    IPEndPoint remoteEndPoint = null;
+
+                    if (commandChannel != null)
+                        remoteEndPoint = commandChannel.Client(clientID).Provider.RemoteEndPoint as IPEndPoint;
+
+                    if (remoteEndPoint != null)
+                    {
+                        if (remoteEndPoint.AddressFamily == AddressFamily.InterNetworkV6)
+                            m_connectionID = "[" + remoteEndPoint.Address + "]:" + remoteEndPoint.Port;
+                        else
+                            m_connectionID = remoteEndPoint.Address + ":" + remoteEndPoint.Port;
+
+                        try
+                        {
+                            IPHostEntry ipHost = Dns.GetHostEntry(remoteEndPoint.Address);
+
+                            if (!string.IsNullOrWhiteSpace(ipHost.HostName))
+                                m_connectionID = ipHost.HostName + " (" + m_connectionID + ")";
+                        }
+                        catch
+                        {
+                            // Just ignoring possible DNS lookup failures...
+                        }
+                    }
+                }
+                catch
+                {
+                    // At worst we'll just use the client GUID for identification
+                    m_connectionID = clientID.ToString();
+                }
+
+                if (string.IsNullOrEmpty(m_connectionID))
+                    m_connectionID = "unavailable";
             }
 
             #endregion
@@ -611,6 +653,17 @@ namespace TimeSeriesFramework.Transport
                 get
                 {
                     return m_clientID;
+                }
+            }
+
+            /// <summary>
+            /// Gets the connection identification of this <see cref="ClientConnection"/>.
+            /// </summary>
+            public string ConnectionID
+            {
+                get
+                {
+                    return m_connectionID;
                 }
             }
 
@@ -1037,7 +1090,7 @@ namespace TimeSeriesFramework.Transport
         {
             Guid clientID = e.Argument;
 
-            m_clientConnections[clientID] = new ClientConnection(clientID);
+            m_clientConnections[clientID] = new ClientConnection(clientID, m_commandChannel);
 
             OnStatusMessage("Client connected.");
         }
@@ -1087,7 +1140,7 @@ namespace TimeSeriesFramework.Transport
                     {
                         message = string.Format("Subscriber not authenticated - {0} request denied.", command);
                         SendClientResponse(clientID, ServerResponse.Failed, command, message);
-                        OnStatusMessage("WARNING: Client {0} {1} command request denied - subscriber not authenticated.", clientID, command);
+                        OnStatusMessage("WARNING: Client {0} {1} command request denied - subscriber not authenticated.", connection.ConnectionID, command);
                         return;
                     }
 
@@ -1097,8 +1150,7 @@ namespace TimeSeriesFramework.Transport
                             // Handle subscribe
                             try
                             {
-
-                                // Make sure there is enough buffer for integer that defines signal ID count
+                                // Make sure there is enough buffer for flags and connection string length
                                 if (length >= 6)
                                 {
                                     // Next byte is the data packet flags
@@ -1114,8 +1166,11 @@ namespace TimeSeriesFramework.Transport
                                     {
                                         string connectionString = Encoding.Unicode.GetString(buffer, 6, byteLength);
 
-                                        // Attempt to lookup adapter by its client ID
-                                        TryGetClientSubscription(clientID, out subscription);
+                                        // Get client subscription
+                                        if (connection.Subscription == null)
+                                            TryGetClientSubscription(clientID, out subscription);
+                                        else
+                                            subscription = connection.Subscription;
 
                                         if (subscription == null)
                                         {
@@ -1200,6 +1255,12 @@ namespace TimeSeriesFramework.Transport
                                         // Make sure adapter is started
                                         subscription.Start();
 
+                                        // Track subscription in connection information
+                                        connection.Subscription = subscription;
+
+                                        // Validate the rights of the selected input measurement keys
+
+
                                         // Send success response
                                         if (subscription.InputMeasurementKeys != null)
                                             message = string.Format("Client subscribed as {0}compact {1}synchronized with {2} signals.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un", subscription.InputMeasurementKeys.Length);
@@ -1237,12 +1298,13 @@ namespace TimeSeriesFramework.Transport
                         case ServerCommand.Unsubscribe:
                             // Handle unsubscribe
                             RemoveClientSubscription(clientID); // This does not disconnect client command channel...
+                            connection.Subscription = null;
                             message = "Client unsubscribed.";
                             SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.Unsubscribe, message);
-                            OnStatusMessage(message);
+                            OnStatusMessage(connection.ConnectionID + " unsubscribed.");
                             break;
                         case ServerCommand.MetaDataRefresh:
-                            // Handle point query
+                            // Handle meta data refresh
                             message = "Client request for query points command is not implemented yet.";
                             SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.MetaDataRefresh, message);
                             OnProcessException(new NotImplementedException(message));
@@ -1252,9 +1314,9 @@ namespace TimeSeriesFramework.Transport
                 else
                 {
                     // Handle unrecognized commands
-                    message = "Client sent an unrecognized server command: 0x" + commandByte.ToString("X").PadLeft(2, '0');
-                    SendClientResponse(clientID, (byte)ServerResponse.Failed, commandByte, Encoding.Unicode.GetBytes(message));
-                    OnProcessException(new InvalidOperationException(message));
+                    message = "sent an unrecognized server command: 0x" + commandByte.ToString("X").PadLeft(2, '0');
+                    SendClientResponse(clientID, (byte)ServerResponse.Failed, commandByte, Encoding.Unicode.GetBytes("Client " + message));
+                    OnProcessException(new InvalidOperationException("WARNING: " + connection.ConnectionID + message));
                 }
             }
         }

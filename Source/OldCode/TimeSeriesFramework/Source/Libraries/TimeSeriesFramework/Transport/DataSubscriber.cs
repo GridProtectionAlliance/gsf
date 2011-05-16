@@ -594,7 +594,7 @@ namespace TimeSeriesFramework.Transport
                             // Deserialize data packet
                             List<IMeasurement> measurements = new List<IMeasurement>();
                             SerializableMeasurement measurement;
-                            SerializableMeasurementSlim slimMeasurement;
+                            CompactMeasurement slimMeasurement;
                             DataPacketFlags flags;
                             Ticks timestamp = 0;
                             int count;
@@ -623,12 +623,14 @@ namespace TimeSeriesFramework.Transport
                                 if (compactMeasurementFormat)
                                 {
                                     // Deserialize compact measurement format
-                                    slimMeasurement = new SerializableMeasurementSlim(!synchronizedMeasurements);
+
+                                    // TODO: Establish new compact measurement passing in cache and state
+                                    slimMeasurement = null; // new CompactMeasurement(!synchronizedMeasurements);
                                     responseIndex += slimMeasurement.Initialize(buffer, responseIndex, length - responseIndex);
 
                                     // Apply timestamp from frame if not included in transmission
-                                    if (!slimMeasurement.IncludeTime)
-                                        slimMeasurement.Timestamp = timestamp;
+                                    //if (!slimMeasurement.IncludeTime)
+                                    //    slimMeasurement.Timestamp = timestamp;
 
                                     measurements.Add(slimMeasurement);
                                 }
