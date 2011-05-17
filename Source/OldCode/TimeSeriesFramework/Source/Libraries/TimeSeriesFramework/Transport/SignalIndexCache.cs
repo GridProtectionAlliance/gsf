@@ -36,6 +36,7 @@ namespace TimeSeriesFramework.Transport
         #region [ Members ]
 
         // Fields
+        private Guid m_subscriberID;
         private ConcurrentDictionary<ushort, Tuple<Guid, MeasurementKey>> m_reference;
         private MeasurementKey[] m_unauthorizedKeys;
 
@@ -52,14 +53,27 @@ namespace TimeSeriesFramework.Transport
         /// <summary>
         /// Creates a new <see cref="SignalIndexCache"/> instance.
         /// </summary>
-        public SignalIndexCache()
+        /// <param name="subscriberID"><see cref="Guid"/> based subscriber ID.</param>
+        public SignalIndexCache(Guid subscriberID)
         {
+            m_subscriberID = subscriberID;
             m_reference = new ConcurrentDictionary<ushort, Tuple<Guid, MeasurementKey>>();
         }
 
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets the <see cref="Guid"/> based subscriber ID of this <see cref="SignalIndexCache"/>.
+        /// </summary>
+        public Guid SubscriberID
+        {
+            get
+            {
+                return m_subscriberID;
+            }
+        }
 
         /// <summary>
         /// Gets integer signal index cross reference dictionary.

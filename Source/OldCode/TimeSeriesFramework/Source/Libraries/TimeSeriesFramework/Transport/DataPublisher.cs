@@ -135,9 +135,17 @@ namespace TimeSeriesFramework.Transport
         private interface IClientSubscription : IActionAdapter
         {
             /// <summary>
-            /// Gets the <see cref="Guid"/> client identifier of this <see cref="IClientSubscription"/>.
+            /// Gets the <see cref="Guid"/> client TCP connection identifier of this <see cref="IClientSubscription"/>.
             /// </summary>
             Guid ClientID
+            {
+                get;
+            }
+
+            /// <summary>
+            /// Gets the <see cref="Guid"/> based subscriber ID of this <see cref="IClientSubscription"/>.
+            /// </summary>
+            Guid SubscriberID
             {
                 get;
             }
@@ -161,6 +169,7 @@ namespace TimeSeriesFramework.Transport
             private SignalIndexCache m_signalIndexCache;
             private DataPublisher m_parent;
             private Guid m_clientID;
+            private Guid m_subscriberID;
             private bool m_useCompactMeasurementFormat;
             private bool m_disposed;
 
@@ -172,15 +181,17 @@ namespace TimeSeriesFramework.Transport
             /// Creates a new <see cref="SynchronizedClientSubscription"/>.
             /// </summary>
             /// <param name="parent">Reference to parent.</param>
-            /// <param name="clientID"></param>
-            public SynchronizedClientSubscription(DataPublisher parent, Guid clientID)
+            /// <param name="clientID"><see cref="Guid"/> based client connection ID.</param>
+            /// <param name="subscriberID"><see cref="Guid"/> based subscriber ID.</param>
+            public SynchronizedClientSubscription(DataPublisher parent, Guid clientID, Guid subscriberID)
             {
                 // Pass parent reference into base class
                 AssignParentCollection(parent);
 
                 m_parent = parent;
                 m_clientID = clientID;
-                m_signalIndexCache = new SignalIndexCache();
+                m_subscriberID = subscriberID;
+                m_signalIndexCache = new SignalIndexCache(subscriberID);
             }
 
             #endregion
@@ -188,13 +199,24 @@ namespace TimeSeriesFramework.Transport
             #region [ Properties ]
 
             /// <summary>
-            /// Gets the <see cref="Guid"/> client identifier of this <see cref="SynchronizedClientSubscription"/>.
+            /// Gets the <see cref="Guid"/> client TCP connection identifier of this <see cref="SynchronizedClientSubscription"/>.
             /// </summary>
             public Guid ClientID
             {
                 get
                 {
                     return m_clientID;
+                }
+            }
+
+            /// <summary>
+            /// Gets the <see cref="Guid"/> based subscriber ID of this <see cref="SynchronizedClientSubscription"/>.
+            /// </summary>
+            public Guid SubscriberID
+            {
+                get
+                {
+                    return m_subscriberID;
                 }
             }
 
@@ -356,6 +378,7 @@ namespace TimeSeriesFramework.Transport
             private SignalIndexCache m_signalIndexCache;
             private DataPublisher m_parent;
             private Guid m_clientID;
+            private Guid m_subscriberID;
             private bool m_useCompactMeasurementFormat;
             private long m_lastPublishTime;
             private bool m_disposed;
@@ -368,15 +391,17 @@ namespace TimeSeriesFramework.Transport
             /// Creates a new <see cref="UnsynchronizedClientSubscription"/>.
             /// </summary>
             /// <param name="parent">Reference to parent.</param>
-            /// <param name="clientID"></param>
-            public UnsynchronizedClientSubscription(DataPublisher parent, Guid clientID)
+            /// <param name="clientID"><see cref="Guid"/> based client connection ID.</param>
+            /// <param name="subscriberID"><see cref="Guid"/> based subscriber ID.</param>
+            public UnsynchronizedClientSubscription(DataPublisher parent, Guid clientID, Guid subscriberID)
             {
                 // Pass parent reference into base class
                 AssignParentCollection(parent);
 
                 m_parent = parent;
                 m_clientID = clientID;
-                m_signalIndexCache = new SignalIndexCache();
+                m_subscriberID = subscriberID;
+                m_signalIndexCache = new SignalIndexCache(subscriberID);
             }
 
             #endregion
@@ -384,13 +409,24 @@ namespace TimeSeriesFramework.Transport
             #region [ Properties ]
 
             /// <summary>
-            /// Gets the <see cref="Guid"/> client identifier of this <see cref="UnsynchronizedClientSubscription"/>.
+            /// Gets the <see cref="Guid"/> client TCP connection identifier of this <see cref="UnsynchronizedClientSubscription"/>.
             /// </summary>
             public Guid ClientID
             {
                 get
                 {
                     return m_clientID;
+                }
+            }
+
+            /// <summary>
+            /// Gets the <see cref="Guid"/> based subscriber ID of this <see cref="UnsynchronizedClientSubscription"/>.
+            /// </summary>
+            public Guid SubscriberID
+            {
+                get
+                {
+                    return m_subscriberID;
                 }
             }
 
@@ -609,6 +645,7 @@ namespace TimeSeriesFramework.Transport
 
             // Fields
             private Guid m_clientID;
+            private Guid m_subscriberID;
             private string m_connectionID;
             private bool m_authenticated;
             private IClientSubscription m_subscription;
@@ -657,7 +694,7 @@ namespace TimeSeriesFramework.Transport
                 catch
                 {
                     // At worst we'll just use the client GUID for identification
-                    m_connectionID = clientID.ToString();
+                    m_connectionID = (m_subscriberID == Guid.Empty ? clientID.ToString() : m_subscriberID.ToString());
                 }
 
                 if (string.IsNullOrEmpty(m_connectionID))
@@ -676,6 +713,21 @@ namespace TimeSeriesFramework.Transport
                 get
                 {
                     return m_clientID;
+                }
+            }
+
+            /// <summary>
+            /// Gets or sets the <see cref="Guid"/> based subscriber ID of this <see cref="ClientConnection"/>.
+            /// </summary>
+            public Guid SubscriberID
+            {
+                get
+                {
+                    return m_subscriberID;
+                }
+                set
+                {
+                    m_subscriberID = value;
                 }
             }
 
@@ -970,6 +1022,7 @@ namespace TimeSeriesFramework.Transport
         // Update signal index cache based on input measurement keys
         private void UpdateSignalIndexCache(SignalIndexCache signalIndexCache, MeasurementKey[] inputMeasurementKeys)
         {
+            List<MeasurementKey> unauthorizedKeys = new List<MeasurementKey>();
             ushort index = 0;
             Guid signalID;
 
@@ -977,9 +1030,53 @@ namespace TimeSeriesFramework.Transport
 
             foreach (MeasurementKey key in inputMeasurementKeys)
             {
-                TryLookupSignalID(key, out signalID);
-                signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(signalID, key));
+                if (m_requireClientAuthentication)
+                {
+                    // Validate that subscriber has rights to this signal
+                    if (SubcriberHasRights(signalIndexCache.SubscriberID, key, out signalID))
+                        signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(signalID, key));
+                    else
+                        unauthorizedKeys.Add(key);
+                }
+                else
+                {
+                    TryLookupSignalID(key, out signalID);
+                    signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(signalID, key));
+                }
             }
+
+            signalIndexCache.UnauthorizedKeys = unauthorizedKeys.ToArray();
+        }
+
+        /// <summary>
+        /// Determines if subscriber has rights to specified <see cref="MeasurementKey"/>.
+        /// </summary>
+        /// <param name="subscriberID"><see cref="Guid"/> based subscriber ID.</param>
+        /// <param name="key"><see cref="MeasurementKey"/> to lookup.</param>
+        /// <param name="signalID"><see cref="Guid"/> signal ID if found; otherwise an empty Guid.</param>
+        /// <returns><c>true</c> if subscriber has rights to specified <see cref="MeasurementKey"/>; otherwise <c>false</c>.</returns>
+        protected bool SubcriberHasRights(Guid subscriberID, MeasurementKey key, out Guid signalID)
+        {
+            if (TryLookupSignalID(key, out signalID))
+            {
+                try
+                {
+                    // Lookup explicit measurements
+                    DataRow[] explicitMeasurement = DataSource.Tables["SubscriberMeasurement"].Select("SignalID='" + signalID.ToString() + "'");
+
+                    if (explicitMeasurement.Length > 0)
+                        return explicitMeasurement[0]["Allowed"].ToNonNullString("0").ParseBoolean();
+
+                    // Lookup group based measurements
+                    //DataRow[] implicitMeasurements;
+                }
+                catch
+                {
+                    // Errors here are not catastrophic, this simply limits the rights of a subscriber to a measurement
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -990,6 +1087,8 @@ namespace TimeSeriesFramework.Transport
         /// <returns><c>true</c> if <see cref="Guid"/> signal ID was found for given <see cref="MeasurementKey"/>; otherwise <c>false</c>.</returns>
         protected bool TryLookupSignalID(MeasurementKey key, out Guid signalID)
         {
+            // TODO: cache this in a local concurrent dictionary for quick subsequent runtime lookups
+
             // Attempt to lookup input measurement keys for given source IDs from default measurement table, if defined
             try
             {
@@ -1198,6 +1297,13 @@ namespace TimeSeriesFramework.Transport
                     if (command == ServerCommand.Authenticate)
                     {
                         // Handle authentication request
+
+                        // If validated authenication request...
+                        if (true)
+                        {
+                            connection.Authenticated = true;
+                            connection.SubscriberID = Guid.Empty; // Should have looked up subscriber ID based on auth request and/or IP validation...
+                        }
                     }
                     else if (m_requireClientAuthentication && !connection.Authenticated)
                     {
@@ -1239,9 +1345,9 @@ namespace TimeSeriesFramework.Transport
                                         {
                                             // Client subscription not established yet, so we create a new one
                                             if (useSynchronizedSubscription)
-                                                subscription = new SynchronizedClientSubscription(this, clientID);
+                                                subscription = new SynchronizedClientSubscription(this, clientID, connection.SubscriberID);
                                             else
-                                                subscription = new UnsynchronizedClientSubscription(this, clientID);
+                                                subscription = new UnsynchronizedClientSubscription(this, clientID, connection.SubscriberID);
 
                                             addSubscription = true;
                                         }
@@ -1261,7 +1367,7 @@ namespace TimeSeriesFramework.Transport
                                                     }
 
                                                     // Create a new synchronized subscription
-                                                    subscription = new SynchronizedClientSubscription(this, clientID);
+                                                    subscription = new SynchronizedClientSubscription(this, clientID, connection.SubscriberID);
                                                     addSubscription = true;
                                                 }
                                             }
@@ -1278,7 +1384,7 @@ namespace TimeSeriesFramework.Transport
                                                     }
 
                                                     // Create a new unsynchronized subscription
-                                                    subscription = new UnsynchronizedClientSubscription(this, clientID);
+                                                    subscription = new UnsynchronizedClientSubscription(this, clientID, connection.SubscriberID);
                                                     addSubscription = true;
                                                 }
                                             }

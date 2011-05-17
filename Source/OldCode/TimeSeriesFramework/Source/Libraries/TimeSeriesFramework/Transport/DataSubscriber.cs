@@ -624,9 +624,7 @@ namespace TimeSeriesFramework.Transport
                                 if (compactMeasurementFormat)
                                 {
                                     // Deserialize compact measurement format
-
-                                    // TODO: Establish new compact measurement passing in cache and state
-                                    slimMeasurement = new CompactMeasurement(null, !synchronizedMeasurements);
+                                    slimMeasurement = new CompactMeasurement(m_signalIndexCache, !synchronizedMeasurements);
                                     responseIndex += slimMeasurement.Initialize(buffer, responseIndex, length - responseIndex);
 
                                     // Apply timestamp from frame if not included in transmission

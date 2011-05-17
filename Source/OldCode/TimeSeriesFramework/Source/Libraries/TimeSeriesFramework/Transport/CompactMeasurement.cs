@@ -177,7 +177,7 @@ namespace TimeSeriesFramework.Transport
         /// </para>
         /// <para>
         /// Constant Length = 7<br/>
-        /// Variable Length = 2 (time is optional)
+        /// Variable Length = 2 or 8 (milliseconds plus offset or full fidelity time)
         /// </para>
         /// </remarks>
         public byte[] BinaryImage
@@ -214,7 +214,7 @@ namespace TimeSeriesFramework.Transport
                 {
                     if (baseTimeOffset > 0)
                     {
-                        // Encode offset timestamp
+                        // Encode millisecond offset timestamp
                         EndianOrder.BigEndian.CopyBytes((ushort)(Timestamp - baseTimeOffset).ToMilliseconds(), buffer, index);
                         index += 2;
                     }
@@ -305,7 +305,7 @@ namespace TimeSeriesFramework.Transport
             {
                 if (baseTimeOffset > 0)
                 {
-                    // Decode offset timestamp
+                    // Decode millisecond offset timestamp
                     Timestamp = baseTimeOffset + EndianOrder.BigEndian.ToUInt16(buffer, index) * Ticks.PerMillisecond;
                     index += 2;
                 }
