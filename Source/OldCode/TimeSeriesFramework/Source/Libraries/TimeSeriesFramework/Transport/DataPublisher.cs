@@ -662,6 +662,7 @@ namespace TimeSeriesFramework.Transport
             public ClientConnection(Guid clientID, TcpServer commandChannel)
             {
                 m_clientID = clientID;
+                m_subscriberID = clientID;
 
                 // Attempt to lookup remote connection identification for logging purposes
                 try
