@@ -30,16 +30,17 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using TimeSeriesFramework.Adapters;
 using TVA;
 using TVA.Communication;
 using TVA.IO.Compression;
-using System.Net;
-using System.Net.Sockets;
 
 namespace TimeSeriesFramework.Transport
 {
@@ -86,13 +87,17 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         DataPacket = 0xD2,
         /// <summary>
+        /// Signal index cache update.
+        /// </summary>
+        SignalIndexCacheUpdate = 0xD3,
+        /// <summary>
         /// Base time update.
         /// </summary>
-        BaseTimeUpdate = 0xD3,
+        BaseTimeUpdate = 0xD4,
         /// <summary>
         /// Cipher key update.
         /// </summary>
-        CipherKeyUpdate = 0xD4
+        CipherKeyUpdate = 0xD5
     }
 
     /// <summary>
@@ -153,6 +158,7 @@ namespace TimeSeriesFramework.Transport
             #region [ Members ]
 
             // Fields
+            private SignalIndexCache m_signalIndexCache;
             private DataPublisher m_parent;
             private Guid m_clientID;
             private bool m_useCompactMeasurementFormat;
@@ -174,6 +180,7 @@ namespace TimeSeriesFramework.Transport
 
                 m_parent = parent;
                 m_clientID = clientID;
+                m_signalIndexCache = new SignalIndexCache();
             }
 
             #endregion
@@ -224,6 +231,7 @@ namespace TimeSeriesFramework.Transport
                     lock (this)
                     {
                         base.InputMeasurementKeys = value;
+                        m_parent.UpdateSignalIndexCache(m_signalIndexCache, value);
                     }
                 }
             }
@@ -289,8 +297,7 @@ namespace TimeSeriesFramework.Transport
                     foreach (IMeasurement measurement in frame.Measurements.Values)
                     {
                         if (useCompactMeasurementFormat)
-                            // TODO: Establish new compact measurement based on cache and state
-                            buffer = (new CompactMeasurement(measurement, null, null, null, 0, 0)).BinaryImage;
+                            buffer = (new CompactMeasurement(measurement, m_signalIndexCache, false)).BinaryImage;
                         else
                             buffer = (new SerializableMeasurement(measurement)).BinaryImage;
 
@@ -346,6 +353,7 @@ namespace TimeSeriesFramework.Transport
             #region [ Members ]
 
             // Fields
+            private SignalIndexCache m_signalIndexCache;
             private DataPublisher m_parent;
             private Guid m_clientID;
             private bool m_useCompactMeasurementFormat;
@@ -368,6 +376,7 @@ namespace TimeSeriesFramework.Transport
 
                 m_parent = parent;
                 m_clientID = clientID;
+                m_signalIndexCache = new SignalIndexCache();
             }
 
             #endregion
@@ -418,6 +427,7 @@ namespace TimeSeriesFramework.Transport
                     lock (this)
                     {
                         base.InputMeasurementKeys = value;
+                        m_parent.UpdateSignalIndexCache(m_signalIndexCache, value);
                     }
                 }
             }
@@ -491,23 +501,28 @@ namespace TimeSeriesFramework.Transport
             /// </remarks>
             public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
             {
-                List<IMeasurement> filteredMeasurements = new List<IMeasurement>();
-
-                lock (this)
+                if (ProcessMeasurementFilter)
                 {
-                    foreach (IMeasurement measurement in measurements)
+                    List<IMeasurement> filteredMeasurements = new List<IMeasurement>();
+
+                    lock (this)
                     {
-                        if (IsInputMeasurement(measurement.Key))
-                            filteredMeasurements.Add(measurement);
+                        foreach (IMeasurement measurement in measurements)
+                        {
+                            if (IsInputMeasurement(measurement.Key))
+                                filteredMeasurements.Add(measurement);
+                        }
                     }
+
+                    measurements = filteredMeasurements;
                 }
 
-                if (filteredMeasurements.Count > 0 && Enabled)
+                if (measurements.Count() > 0 && Enabled)
                 {
                     if (TrackLatestMeasurements)
                     {
                         // Keep track of latest measurements
-                        base.QueueMeasurementsForProcessing(filteredMeasurements);
+                        base.QueueMeasurementsForProcessing(measurements);
 
                         // See if it is time to publish
                         if (m_lastPublishTime == 0)
@@ -536,7 +551,7 @@ namespace TimeSeriesFramework.Transport
                     else
                     {
                         // Publish unsynchronized on data receipt otherwise...
-                        ThreadPool.QueueUserWorkItem(ProcessMeasurements, filteredMeasurements);
+                        ThreadPool.QueueUserWorkItem(ProcessMeasurements, measurements);
                     }
                 }
             }
@@ -568,8 +583,7 @@ namespace TimeSeriesFramework.Transport
                     foreach (IMeasurement measurement in measurements)
                     {
                         if (useCompactMeasurementFormat)
-                            // TODO: Establish new compact measurement based on cache and state
-                            buffer = (new CompactMeasurement(measurement, null, null, null, 0, 0)).BinaryImage;
+                            buffer = (new CompactMeasurement(measurement, m_signalIndexCache, true)).BinaryImage;
                         else
                             buffer = (new SerializableMeasurement(measurement)).BinaryImage;
 
@@ -951,6 +965,46 @@ namespace TimeSeriesFramework.Transport
                 return string.Format("Publishing data to {0} clients.", m_commandChannel.ClientIDs.Length).CenterText(maxLength);
 
             return "Currently not connected".CenterText(maxLength);
+        }
+
+        // Update signal index cache based on input measurement keys
+        private void UpdateSignalIndexCache(SignalIndexCache signalIndexCache, MeasurementKey[] inputMeasurementKeys)
+        {
+            ushort index = 0;
+            Guid signalID;
+
+            signalIndexCache.Reference.Clear();
+
+            foreach (MeasurementKey key in inputMeasurementKeys)
+            {
+                TryLookupSignalID(key, out signalID);
+                signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(signalID, key));
+            }
+        }
+
+        /// <summary>
+        /// Attempts to lookup <see cref="Guid"/> signal ID for given <see cref="MeasurementKey"/>.
+        /// </summary>
+        /// <param name="key"><see cref="MeasurementKey"/> to lookup.</param>
+        /// <param name="signalID"><see cref="Guid"/> signal ID if found; otherwise an empty Guid.</param>
+        /// <returns><c>true</c> if <see cref="Guid"/> signal ID was found for given <see cref="MeasurementKey"/>; otherwise <c>false</c>.</returns>
+        protected bool TryLookupSignalID(MeasurementKey key, out Guid signalID)
+        {
+            // Attempt to lookup input measurement keys for given source IDs from default measurement table, if defined
+            try
+            {
+                DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select("ID='" + key.ToString() + "'");
+
+                if (filteredRows.Length > 0 && Guid.TryParse(filteredRows[0]["SignalID"].ToString(), out signalID))
+                    return true;
+            }
+            catch
+            {
+                // Errors here are not catastrophic, this simply limits the auto-assignment of input measurement keys based on specified source ID's
+            }
+
+            signalID = Guid.Empty;
+            return false;
         }
 
         /// <summary>

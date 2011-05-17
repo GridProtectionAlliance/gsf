@@ -90,25 +90,28 @@ namespace TimeSeriesFramework.Transport
 
         // Members
         private SignalIndexCache m_signalIndexCache;
+        private bool m_includeTime;
         private long[] m_baseTimeOffsets;
         private byte[][][] m_keyIVs;
         private int m_timeIndex;
         private int m_cipherIndex;
 
         #endregion
-        
+
         #region [ Constructors ]
 
         /// <summary>
         /// Creates a new <see cref="CompactMeasurement"/>.
         /// </summary>
         /// <param name="signalIndexCache">Signal index cache used to serialize or deserialize runtime information.</param>
-        /// <param name="baseTimeOffsets">Base time offset array.</param>
-        /// <param name="keyIVs">Key and initialization vector array.</param>
-        public CompactMeasurement(SignalIndexCache signalIndexCache, long[] baseTimeOffsets, byte[][][] keyIVs)
+        /// <param name="includeTime">Set to <c>true</c> to include time in serialized packet; otherwise <c>false</c>.</param>
+        /// <param name="baseTimeOffsets">Base time offset array - set to <c>null</c> to use full fidelity measurement time.</param>
+        /// <param name="keyIVs">Key and initialization vector array - set to <c>null</c> to not use encryption.</param>
+        public CompactMeasurement(SignalIndexCache signalIndexCache, bool includeTime = true, long[] baseTimeOffsets = null, byte[][][] keyIVs = null)
         {
             m_signalIndexCache = signalIndexCache;
-            
+            m_includeTime = includeTime;
+
             if (baseTimeOffsets == null)
                 m_baseTimeOffsets = new long[] { 0, 0 };
             else
@@ -122,22 +125,24 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         /// <param name="measurement">Source <see cref="IMeasurement"/> value.</param>
         /// <param name="signalIndexCache">Signal index cache used to serialize or deserialize runtime information.</param>
-        /// <param name="baseTimeOffsets">Base time offset array.</param>
-        /// <param name="keyIVs">Key and initialization vector array.</param>
+        /// <param name="includeTime">Set to <c>true</c> to include time in serialized packet; otherwise <c>false</c>.</param>
+        /// <param name="baseTimeOffsets">Base time offset array - set to <c>null</c> to use full fidelity measurement time.</param>
+        /// <param name="keyIVs">Key and initialization vector array - set to <c>null</c> to not use encryption.</param>
         /// <param name="timeIndex">Time index to use for base offset.</param>
         /// <param name="cipherIndex">Cipher index to use for cryptography.</param>
-        public CompactMeasurement(IMeasurement measurement, SignalIndexCache signalIndexCache, long[] baseTimeOffsets, byte[][][] keyIVs, int timeIndex, int cipherIndex)
+        public CompactMeasurement(IMeasurement measurement, SignalIndexCache signalIndexCache, bool includeTime = true, long[] baseTimeOffsets = null, byte[][][] keyIVs = null, int timeIndex = 0, int cipherIndex = 0)
             : base(measurement.ID, measurement.Source, measurement.SignalID, measurement.Value, measurement.Adder, measurement.Multiplier, measurement.Timestamp)
         {
             this.ValueQualityIsGood = measurement.ValueQualityIsGood;
             this.TimestampQualityIsGood = measurement.TimestampQualityIsGood;
             m_signalIndexCache = signalIndexCache;
+            m_includeTime = includeTime;
 
             if (baseTimeOffsets == null)
                 m_baseTimeOffsets = new long[] { 0, 0 };
             else
                 m_baseTimeOffsets = baseTimeOffsets;
-            
+
             m_keyIVs = keyIVs;
             m_timeIndex = timeIndex;
             m_cipherIndex = cipherIndex;
@@ -146,6 +151,17 @@ namespace TimeSeriesFramework.Transport
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets flag that determines if time is serialized into measurement binary image.
+        /// </summary>
+        public bool IncludeTime
+        {
+            get
+            {
+                return m_includeTime;
+            }
+        }
 
         /// <summary>
         /// Gets the binary image of the <see cref="CompactMeasurement"/>.
@@ -166,13 +182,13 @@ namespace TimeSeriesFramework.Transport
         /// </remarks>
         public byte[] BinaryImage
         {
-            get 
+            get
             {
                 int index = 0;
 
                 // Encode flags
-                StateFlags flags = 
-                    (m_timeIndex == 0 ? StateFlags.NoFlags : StateFlags.TimeIndex) | 
+                StateFlags flags =
+                    (m_timeIndex == 0 ? StateFlags.NoFlags : StateFlags.TimeIndex) |
                     (m_cipherIndex == 0 ? StateFlags.NoFlags : StateFlags.CipherIndex) |
                     (ValueQualityIsGood ? StateFlags.ValueQualityIsGood : StateFlags.NoFlags) |
                     (TimestampQualityIsGood ? StateFlags.TimeQualityIsGood : StateFlags.NoFlags) |
@@ -180,7 +196,7 @@ namespace TimeSeriesFramework.Transport
 
                 // Allocate buffer to hold binary image
                 long baseTimeOffset = m_baseTimeOffsets[m_timeIndex];
-                int length = (FixedLength + baseTimeOffset > 0 ? 2 : 0);
+                int length = FixedLength + (m_includeTime ? (baseTimeOffset > 0 ? 2 : 8) : 0);
                 byte[] buffer = new byte[length];
 
                 // Added flags to beginning of buffer
@@ -194,11 +210,20 @@ namespace TimeSeriesFramework.Transport
                 EndianOrder.BigEndian.CopyBytes((float)AdjustedValue, buffer, index);
                 index += 4;
 
-                if (baseTimeOffset > 0)
+                if (m_includeTime)
                 {
-                    // Encode timestamp
-                    EndianOrder.BigEndian.CopyBytes((ushort)(Timestamp - baseTimeOffset).ToMilliseconds(), buffer, index);
-                    index += 2;
+                    if (baseTimeOffset > 0)
+                    {
+                        // Encode offset timestamp
+                        EndianOrder.BigEndian.CopyBytes((ushort)(Timestamp - baseTimeOffset).ToMilliseconds(), buffer, index);
+                        index += 2;
+                    }
+                    else
+                    {
+                        // Encode full fidelity timestamp
+                        EndianOrder.BigEndian.CopyBytes((long)Timestamp, buffer, index);
+                        index += 8;
+                    }
                 }
 
                 // If crypto keys were provided, encrypted data portion of buffer
@@ -216,11 +241,11 @@ namespace TimeSeriesFramework.Transport
         {
             get
             {
-                return FixedLength + (m_baseTimeOffsets[m_timeIndex] > 0 ? 2 : 0);
+                return FixedLength + (m_includeTime ? (m_baseTimeOffsets[m_timeIndex] > 0 ? 2 : 8) : 0);
             }
         }
 
-        #endregion        
+        #endregion
 
         #region [ Methods ]
 
@@ -245,7 +270,7 @@ namespace TimeSeriesFramework.Transport
             IsDiscarded = ((byte)(flags & StateFlags.Discarded) > 0);
 
             long baseTimeOffset = m_baseTimeOffsets[m_timeIndex];
-            int length = (FixedLength + baseTimeOffset > 0 ? 2 : 0);
+            int length = FixedLength + (m_includeTime ? (baseTimeOffset > 0 ? 2 : 8) : 0);
             int index = 0;
 
             if (count < length)
@@ -276,11 +301,20 @@ namespace TimeSeriesFramework.Transport
             Value = EndianOrder.BigEndian.ToSingle(buffer, index);
             index += 4;
 
-            if (baseTimeOffset > 0)
+            if (m_includeTime)
             {
-                // Decode timestamp
-                Timestamp = baseTimeOffset + EndianOrder.BigEndian.ToUInt16(buffer, index) * Ticks.PerMillisecond;
-                index += 2;
+                if (baseTimeOffset > 0)
+                {
+                    // Decode offset timestamp
+                    Timestamp = baseTimeOffset + EndianOrder.BigEndian.ToUInt16(buffer, index) * Ticks.PerMillisecond;
+                    index += 2;
+                }
+                else
+                {
+                    // Decode full fidelity timestamp
+                    Timestamp = EndianOrder.BigEndian.ToInt64(buffer, index);
+                    index += 8;
+                }
             }
 
             return length;

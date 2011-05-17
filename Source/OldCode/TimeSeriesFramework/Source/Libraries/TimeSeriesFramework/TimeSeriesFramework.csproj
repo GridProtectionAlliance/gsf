@@ -90,6 +90,7 @@
     <Compile Include="Adapters\NamespaceDoc.cs" />
     <Compile Include="Adapters\OutputAdapterBase.cs" />
     <Compile Include="Adapters\OutputAdapterCollection.cs" />
+    <Compile Include="Transport\Common.cs" />
     <Compile Include="Transport\DataPublisher.cs" />
     <Compile Include="Transport\DataSubscriber.cs" />
     <Compile Include="DebugHostBase.cs">

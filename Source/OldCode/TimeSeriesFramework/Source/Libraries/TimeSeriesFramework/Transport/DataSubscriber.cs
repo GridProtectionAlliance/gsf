@@ -53,6 +53,7 @@ namespace TimeSeriesFramework.Transport
         // Fields
         private TcpClient m_commandChannel;
         private UdpClient m_dataChannel;
+        private volatile SignalIndexCache m_signalIndexCache;
         private List<ServerCommand> m_requests;
         private bool m_synchronizedSubscription;
         private bool m_disposed;
@@ -558,7 +559,7 @@ namespace TimeSeriesFramework.Transport
                     bool solicited = false;
 
                     // See if this was a solicited response to a requested server command
-                    if (responseCode != ServerResponse.DataPacket)
+                    if (responseCode.IsSolicitedResponseCode())
                     {
                         lock (m_requests)
                         {
@@ -625,12 +626,12 @@ namespace TimeSeriesFramework.Transport
                                     // Deserialize compact measurement format
 
                                     // TODO: Establish new compact measurement passing in cache and state
-                                    slimMeasurement = null; // new CompactMeasurement(!synchronizedMeasurements);
+                                    slimMeasurement = new CompactMeasurement(null, !synchronizedMeasurements);
                                     responseIndex += slimMeasurement.Initialize(buffer, responseIndex, length - responseIndex);
 
                                     // Apply timestamp from frame if not included in transmission
-                                    //if (!slimMeasurement.IncludeTime)
-                                    //    slimMeasurement.Timestamp = timestamp;
+                                    if (!slimMeasurement.IncludeTime)
+                                        slimMeasurement.Timestamp = timestamp;
 
                                     measurements.Add(slimMeasurement);
                                 }
@@ -645,6 +646,10 @@ namespace TimeSeriesFramework.Transport
 
                             // Expose new measurements to consumer
                             OnNewMeasurements(measurements);
+                            break;
+                        case ServerResponse.SignalIndexCacheUpdate:
+                            // Deserialize new signal index cache
+                            m_signalIndexCache = Serialization.Deserialize<SignalIndexCache>(buffer.BlockCopy(responseIndex, responseLength), SerializationFormat.Binary);
                             break;
                     }
                 }
