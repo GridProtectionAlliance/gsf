@@ -131,6 +131,9 @@
     <Compile Include="UserControls\PhasorUserControl.xaml.cs">
       <DependentUpon>PhasorUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\ProtocolGroupUserControl.xaml.cs">
+      <DependentUpon>ProtocolGroupUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\SecurityUserControl.xaml.cs">
       <DependentUpon>SecurityUserControl.xaml</DependentUpon>
     </Compile>
@@ -153,6 +156,7 @@
     <Compile Include="ViewModels\Measurements.cs" />
     <Compile Include="ViewModels\Nodes.cs" />
     <Compile Include="ViewModels\Phasors.cs" />
+    <Compile Include="ViewModels\Protocols.cs" />
     <Compile Include="ViewModels\SecurityGroups.cs" />
     <Compile Include="ViewModels\Subscribers.cs" />
     <Compile Include="ViewModels\UserAccounts.cs" />
@@ -229,6 +233,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UserControls\PhasorUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\ProtocolGroupUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

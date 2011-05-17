@@ -41,7 +41,6 @@ namespace TimeSeriesFramework.UI.DataModels
 
         #region [ Members ]
 
-        // Fields
         private int m_id;
         private string m_acronym;
         private string m_name;
@@ -50,6 +49,7 @@ namespace TimeSeriesFramework.UI.DataModels
         private string m_category;
         private string m_assemblyName;
         private string m_typeName;
+
         #endregion
 
         #region [ Properties ]
