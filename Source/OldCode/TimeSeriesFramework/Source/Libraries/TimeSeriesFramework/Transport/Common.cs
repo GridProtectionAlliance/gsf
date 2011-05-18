@@ -17,17 +17,14 @@ namespace TimeSeriesFramework.Transport
         /// <returns><c>true</c> if <see cref="ServerResponse"/> code is for a solicited <see cref="ServerCommand"/>; otherwise <c>false</c>.</returns>
         public static bool IsSolicitedResponseCode(this ServerResponse responseCode)
         {
-            bool solicited = false;
-
             switch (responseCode)
             {
                 case ServerResponse.Succeeded:
                 case ServerResponse.Failed:
-                    solicited = true;
-                    break;
+                    return true;
             }
 
-            return solicited;
+            return false;
         }
     }
 }

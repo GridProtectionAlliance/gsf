@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Text;
 using TimeSeriesFramework.Adapters;
@@ -50,10 +51,23 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         public event EventHandler ConnectionTerminated;
 
+        /// <summary>
+        /// Occurs when client connection to the data publication server has successfully authenticated.
+        /// </summary>
+        public event EventHandler ConnectionAuthenticated;
+
+        /// <summary>
+        /// Occurs when client receives requested meta-data transmitted by data publication server.
+        /// </summary>
+        public event EventHandler<EventArgs<DataSet>> MetaDataReceived;
+
         // Fields
         private TcpClient m_commandChannel;
         private UdpClient m_dataChannel;
         private volatile SignalIndexCache m_signalIndexCache;
+        private volatile long[] m_baseTimeOffsets;
+        private volatile byte[][][] m_keyIVs;
+        private volatile bool m_authenticated;
         private List<ServerCommand> m_requests;
         private bool m_synchronizedSubscription;
         private bool m_disposed;
@@ -75,13 +89,13 @@ namespace TimeSeriesFramework.Transport
         #region [ Properties ]
 
         /// <summary>
-        /// Gets a flag that determines if this <see cref="DataSubscriber"/> uses an asynchronous connection.
+        /// Gets flag that determines if this <see cref="DataSubscriber"/> has successfully authenticated with the <see cref="DataPublisher"/>.
         /// </summary>
-        protected override bool UseAsyncConnect
+        public bool Authenticated
         {
             get
             {
-                return false;
+                return m_authenticated;
             }
         }
 
@@ -100,6 +114,8 @@ namespace TimeSeriesFramework.Transport
                 status.AppendFormat("         Subscription mode: {0}", m_synchronizedSubscription ? "Synchronized" : "Unsynchronized");
                 status.AppendLine();
                 status.AppendFormat("  Pending command requests: {0}", m_requests.Count);
+                status.AppendLine();
+                status.AppendFormat("             Authenticated: {0}", m_authenticated);
                 status.AppendLine();
 
                 if (m_dataChannel != null)
@@ -121,6 +137,17 @@ namespace TimeSeriesFramework.Transport
                 status.Append(base.Status);
 
                 return status.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Gets a flag that determines if this <see cref="DataSubscriber"/> uses an asynchronous connection.
+        /// </summary>
+        protected override bool UseAsyncConnect
+        {
+            get
+            {
+                return false;
             }
         }
 
@@ -267,12 +294,10 @@ namespace TimeSeriesFramework.Transport
         /// Authenticates subcriber to a data publisher.
         /// </summary>
         /// <param name="sharedSecret">Shared secret used to look up private crypto key and initialization vector.</param>
-        /// <param name="authenticationKey">Authentication key that publisher will use to validate subscriber.</param>
+        /// <param name="authenticationKey">Authentication key that publisher will use to validate subscriber identity.</param>
         /// <returns><c>true</c> if authentication transmission was successful; otherwise <c>false</c>.</returns>
         public virtual bool Authenticate(string sharedSecret, string authenticationKey)
         {
-            bool success = false;
-
             if (!string.IsNullOrWhiteSpace(authenticationKey))
             {
                 try
@@ -297,7 +322,7 @@ namespace TimeSeriesFramework.Transport
                     buffer.Write(bytes, 0, bytes.Length);
 
                     // Send authenticate server command with associated command buffer
-                    success = SendServerCommand(ServerCommand.Subscribe, buffer.ToArray());
+                    return SendServerCommand(ServerCommand.Authenticate, buffer.ToArray());
                 }
                 catch (Exception ex)
                 {
@@ -307,7 +332,7 @@ namespace TimeSeriesFramework.Transport
             else
                 OnProcessException(new InvalidOperationException("Cannot make authenticate subscription without a connection string."));
 
-            return success;
+            return false;
         }
 
         /// <summary>
@@ -458,8 +483,6 @@ namespace TimeSeriesFramework.Transport
         /// <returns><c>true</c> if <paramref name="commandCode"/> transmission was successful; otherwise <c>false</c>.</returns>
         protected virtual bool SendServerCommand(ServerCommand commandCode, byte[] data)
         {
-            bool success = false;
-
             if (m_commandChannel != null && m_commandChannel.CurrentState == ClientState.Connected)
             {
                 try
@@ -492,7 +515,7 @@ namespace TimeSeriesFramework.Transport
                         }
                     }
 
-                    success = true;
+                    return true;
                 }
                 catch (Exception ex)
                 {
@@ -502,7 +525,7 @@ namespace TimeSeriesFramework.Transport
             else
                 OnProcessException(new InvalidOperationException(string.Format("Subscriber is currently unconnected. Cannot send server command \"{0}\" to publisher.", commandCode)));
 
-            return success;
+            return false;
         }
 
         /// <summary>
@@ -511,6 +534,7 @@ namespace TimeSeriesFramework.Transport
         protected override void AttemptConnection()
         {
             m_commandChannel.Connect();
+            m_authenticated = false;
         }
 
         /// <summary>
@@ -581,7 +605,29 @@ namespace TimeSeriesFramework.Transport
                     {
                         case ServerResponse.Succeeded:
                             if (solicited)
-                                OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
+                            {
+                                switch (commandCode)
+                                {
+                                    case ServerCommand.Authenticate:
+                                        OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
+                                        
+                                        m_authenticated = true;
+                                        
+                                        if (ConnectionAuthenticated != null)
+                                            ConnectionAuthenticated(this, EventArgs.Empty);
+                                        break;
+                                    case ServerCommand.MetaDataRefresh:
+                                        OnStatusMessage("Success code received in response to server command \"{0}\": latest meta-data received.", commandCode);
+
+                                        if (MetaDataReceived != null)
+                                            MetaDataReceived(this, new EventArgs<DataSet>(Serialization.Deserialize<DataSet>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary)));                                        
+                                        break;
+                                    case ServerCommand.Subscribe:
+                                    case ServerCommand.Unsubscribe:
+                                        OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
+                                        break;
+                                }
+                            }
                             else
                                 OnProcessException(new InvalidOperationException("Publisher sent a success code for an unsolicited server command: " + commandCode));
                             break;
@@ -624,7 +670,7 @@ namespace TimeSeriesFramework.Transport
                                 if (compactMeasurementFormat)
                                 {
                                     // Deserialize compact measurement format
-                                    slimMeasurement = new CompactMeasurement(m_signalIndexCache, !synchronizedMeasurements);
+                                    slimMeasurement = new CompactMeasurement(m_signalIndexCache, !synchronizedMeasurements, m_baseTimeOffsets, m_keyIVs);
                                     responseIndex += slimMeasurement.Initialize(buffer, responseIndex, length - responseIndex);
 
                                     // Apply timestamp from frame if not included in transmission
@@ -647,7 +693,15 @@ namespace TimeSeriesFramework.Transport
                             break;
                         case ServerResponse.SignalIndexCacheUpdate:
                             // Deserialize new signal index cache
-                            m_signalIndexCache = Serialization.Deserialize<SignalIndexCache>(buffer.BlockCopy(responseIndex, responseLength), SerializationFormat.Binary);
+                            m_signalIndexCache = Serialization.Deserialize<SignalIndexCache>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary);
+                            break;
+                        case ServerResponse.BaseTimeUpdate:
+                            // Deserialize new base time offsets
+                            m_baseTimeOffsets = Serialization.Deserialize<long[]>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary);
+                            break;
+                        case ServerResponse.CipherKeyUpdate:
+                            // Deserialize new cipher keys
+                            m_keyIVs = Serialization.Deserialize<byte[][][]>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary);
                             break;
                     }
                 }

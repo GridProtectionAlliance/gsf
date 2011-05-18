@@ -77,27 +77,27 @@ namespace TimeSeriesFramework.Transport
         /// <summary>
         /// Command succeeded response.
         /// </summary>
-        Succeeded = 0xD0,
+        Succeeded = 0x80,
         /// <summary>
         /// Command failed response.
         /// </summary>
-        Failed = 0xD1,
+        Failed = 0x81,
         /// <summary>
         /// Data packet response.
         /// </summary>
-        DataPacket = 0xD2,
+        DataPacket = 0x82,
         /// <summary>
         /// Signal index cache update.
         /// </summary>
-        SignalIndexCacheUpdate = 0xD3,
+        SignalIndexCacheUpdate = 0x83,
         /// <summary>
         /// Base time update.
         /// </summary>
-        BaseTimeUpdate = 0xD4,
+        BaseTimeUpdate = 0x84,
         /// <summary>
         /// Cipher key update.
         /// </summary>
-        CipherKeyUpdate = 0xD5
+        CipherKeyUpdate = 0x85
     }
 
     /// <summary>
@@ -146,6 +146,14 @@ namespace TimeSeriesFramework.Transport
             /// Gets the <see cref="Guid"/> based subscriber ID of this <see cref="IClientSubscription"/>.
             /// </summary>
             Guid SubscriberID
+            {
+                get;
+            }
+
+            /// <summary>
+            /// Gets the current signal index cache of this <see cref="IClientSubscription"/>.
+            /// </summary>
+            SignalIndexCache SignalIndexCache
             {
                 get;
             }
@@ -217,6 +225,17 @@ namespace TimeSeriesFramework.Transport
                 get
                 {
                     return m_subscriberID;
+                }
+            }
+
+            /// <summary>
+            /// Gets the current signal index cache of this <see cref="SynchronizedClientSubscription"/>.
+            /// </summary>
+            public SignalIndexCache SignalIndexCache
+            {
+                get
+                {
+                    return m_signalIndexCache;
                 }
             }
 
@@ -427,6 +446,17 @@ namespace TimeSeriesFramework.Transport
                 get
                 {
                     return m_subscriberID;
+                }
+            }
+
+            /// <summary>
+            /// Gets the current signal index cache of this <see cref="UnsynchronizedClientSubscription"/>.
+            /// </summary>
+            public SignalIndexCache SignalIndexCache
+            {
+                get
+                {
+                    return m_signalIndexCache;
                 }
             }
 
@@ -783,6 +813,7 @@ namespace TimeSeriesFramework.Transport
         // Fields
         private TcpServer m_commandChannel;
         private ConcurrentDictionary<Guid, ClientConnection> m_clientConnections;
+        private ConcurrentDictionary<MeasurementKey, Guid> m_signalIDCache;
         private bool m_requireClientAuthentication;
         private bool m_disposed;
 
@@ -798,6 +829,7 @@ namespace TimeSeriesFramework.Transport
             base.Name = "Data Publisher Collection";
             base.DataMember = "[internal]";
             m_clientConnections = new ConcurrentDictionary<Guid, ClientConnection>();
+            m_signalIDCache = new ConcurrentDictionary<MeasurementKey, Guid>();
         }
 
         /// <summary>
@@ -868,7 +900,6 @@ namespace TimeSeriesFramework.Transport
                     m_commandChannel.SettingsCategory = value;
             }
         }
-
 
         /// <summary>
         /// Gets or sets reference to <see cref="TcpServer"/> command channel, attaching and/or detaching to events as needed.
@@ -1041,8 +1072,7 @@ namespace TimeSeriesFramework.Transport
                 }
                 else
                 {
-                    TryLookupSignalID(key, out signalID);
-                    signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(signalID, key));
+                    signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(LookupSignalID(key), key));
                 }
             }
 
@@ -1058,53 +1088,54 @@ namespace TimeSeriesFramework.Transport
         /// <returns><c>true</c> if subscriber has rights to specified <see cref="MeasurementKey"/>; otherwise <c>false</c>.</returns>
         protected bool SubcriberHasRights(Guid subscriberID, MeasurementKey key, out Guid signalID)
         {
-            if (TryLookupSignalID(key, out signalID))
+            signalID = LookupSignalID(key);
+
+            try
             {
-                try
-                {
-                    // Lookup explicit measurements
-                    DataRow[] explicitMeasurement = DataSource.Tables["SubscriberMeasurement"].Select("SignalID='" + signalID.ToString() + "'");
+                // Lookup explicit measurements
+                DataRow[] explicitMeasurement = DataSource.Tables["SubscriberMeasurement"].Select("SignalID='" + signalID.ToString() + "'");
 
-                    if (explicitMeasurement.Length > 0)
-                        return explicitMeasurement[0]["Allowed"].ToNonNullString("0").ParseBoolean();
+                if (explicitMeasurement.Length > 0)
+                    return explicitMeasurement[0]["Allowed"].ToNonNullString("0").ParseBoolean();
 
-                    // Lookup group based measurements
-                    //DataRow[] implicitMeasurements;
-                }
-                catch
-                {
-                    // Errors here are not catastrophic, this simply limits the rights of a subscriber to a measurement
-                }
+                // Lookup group based measurements
+                //DataRow[] implicitMeasurements;
+            }
+            catch
+            {
+                // Errors here are not catastrophic, this simply limits the rights of a subscriber to a measurement
             }
 
             return false;
         }
 
         /// <summary>
-        /// Attempts to lookup <see cref="Guid"/> signal ID for given <see cref="MeasurementKey"/>.
+        /// Looks up <see cref="Guid"/> signal ID for given <see cref="MeasurementKey"/>.
         /// </summary>
         /// <param name="key"><see cref="MeasurementKey"/> to lookup.</param>
-        /// <param name="signalID"><see cref="Guid"/> signal ID if found; otherwise an empty Guid.</param>
-        /// <returns><c>true</c> if <see cref="Guid"/> signal ID was found for given <see cref="MeasurementKey"/>; otherwise <c>false</c>.</returns>
-        protected bool TryLookupSignalID(MeasurementKey key, out Guid signalID)
+        /// <returns><see cref="Guid"/> signal ID if found; otherwise an empty Guid.</returns>
+        protected Guid LookupSignalID(MeasurementKey key)
         {
-            // TODO: cache this in a local concurrent dictionary for quick subsequent runtime lookups
-
-            // Attempt to lookup input measurement keys for given source IDs from default measurement table, if defined
-            try
+            // Attempt to lookup measurement key's signal ID that may have already been cached
+            return m_signalIDCache.GetOrAdd(key, keyParam =>
             {
-                DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select("ID='" + key.ToString() + "'");
+                Guid signalID;
 
-                if (filteredRows.Length > 0 && Guid.TryParse(filteredRows[0]["SignalID"].ToString(), out signalID))
-                    return true;
-            }
-            catch
-            {
-                // Errors here are not catastrophic, this simply limits the auto-assignment of input measurement keys based on specified source ID's
-            }
+                // Attempt to lookup input measurement keys for given source IDs from default measurement table, if defined
+                try
+                {
+                    DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select("ID='" + keyParam.ToString() + "'");
 
-            signalID = Guid.Empty;
-            return false;
+                    if (filteredRows.Length > 0 && Guid.TryParse(filteredRows[0]["SignalID"].ToString(), out signalID))
+                        return signalID;
+                }
+                catch
+                {
+                    // Errors here are not catastrophic, this simply limits the auto-assignment of input measurement keys based on specified source ID's
+                }
+
+                return Guid.Empty;
+            });
         }
 
         /// <summary>
@@ -1428,8 +1459,8 @@ namespace TimeSeriesFramework.Transport
                                         // Track subscription in connection information
                                         connection.Subscription = subscription;
 
-                                        // Validate the rights of the selected input measurement keys
-
+                                        // Send updated signal index cache to client with validated rights of the selected input measurement keys
+                                        SendClientResponse(clientID, ServerResponse.SignalIndexCacheUpdate, ServerCommand.Subscribe, Serialization.Serialize(subscription.SignalIndexCache, TVA.SerializationFormat.Binary));
 
                                         // Send success response
                                         if (subscription.InputMeasurementKeys != null)
@@ -1475,9 +1506,10 @@ namespace TimeSeriesFramework.Transport
                             break;
                         case ServerCommand.MetaDataRefresh:
                             // Handle meta data refresh
-                            message = "Client request for query points command is not implemented yet.";
-                            SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.MetaDataRefresh, message);
-                            OnProcessException(new NotImplementedException(message));
+                            DataSet metadata = new DataSet();
+                            metadata.Tables.Add(DataSource.Tables["Devices"].Copy());
+                            metadata.Tables.Add(DataSource.Tables["ActiveMeasurements"].Copy());
+                            SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.MetaDataRefresh, Serialization.Serialize(metadata, TVA.SerializationFormat.Binary));
                             break;
                     }
                 }

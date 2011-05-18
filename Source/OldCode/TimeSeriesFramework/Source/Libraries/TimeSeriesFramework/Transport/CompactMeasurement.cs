@@ -88,6 +88,10 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         public const int FixedLength = 7;
 
+        // Constants
+        internal const int KeyIndex = 0;
+        internal const int IVIndex = 1;        
+
         // Members
         private SignalIndexCache m_signalIndexCache;
         private bool m_includeTime;
@@ -228,7 +232,7 @@ namespace TimeSeriesFramework.Transport
 
                 // If crypto keys were provided, encrypted data portion of buffer
                 if (m_keyIVs != null)
-                    Buffer.BlockCopy(buffer.Encrypt(1, length - 1, m_keyIVs[m_cipherIndex][0], m_keyIVs[m_cipherIndex][1], CipherStrength.Aes256), 0, buffer, 1, length - 1);
+                    Buffer.BlockCopy(buffer.Encrypt(1, length - 1, m_keyIVs[m_cipherIndex][KeyIndex], m_keyIVs[m_cipherIndex][IVIndex], CipherStrength.Aes256), 0, buffer, 1, length - 1);
 
                 return buffer;
             }
@@ -278,7 +282,7 @@ namespace TimeSeriesFramework.Transport
 
             // If crypto keys were provided, decrypt data portion of buffer
             if (m_keyIVs != null)
-                buffer = buffer.Decrypt(startIndex + 1, length - 1, m_keyIVs[m_cipherIndex][0], m_keyIVs[m_cipherIndex][1], CipherStrength.Aes256);
+                buffer = buffer.Decrypt(startIndex + 1, length - 1, m_keyIVs[m_cipherIndex][KeyIndex], m_keyIVs[m_cipherIndex][IVIndex], CipherStrength.Aes256);
             else
                 index = 1;
 
