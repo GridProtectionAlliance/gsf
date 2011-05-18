@@ -290,17 +290,20 @@ namespace HistorianPlaybackUtility
 
         private void ShowUpdateMessage(string message, params object[] args)
         {
-            this.Invoke((ThreadStart)delegate()
+            if (this.InvokeRequired)
             {
-                StringBuilder outputText = new StringBuilder();
+                this.Invoke((ThreadStart)delegate()
+                {
+                    StringBuilder outputText = new StringBuilder();
 
-                outputText.AppendFormat("[{0}] ", DateTime.Now.ToString());
-                outputText.AppendFormat(message, args);
-                outputText.Append("\r\n");
+                    outputText.AppendFormat("[{0}] ", DateTime.Now.ToString());
+                    outputText.AppendFormat(message, args);
+                    outputText.Append("\r\n");
 
-                MessagesOutput.AppendText(outputText.ToString());
-                Application.DoEvents();
-            });
+                    MessagesOutput.AppendText(outputText.ToString());
+                    Application.DoEvents();
+                });
+            }
         }
 
         #region [ Handlers ]

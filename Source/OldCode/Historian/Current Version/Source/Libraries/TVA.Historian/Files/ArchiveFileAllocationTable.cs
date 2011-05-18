@@ -109,8 +109,19 @@ namespace TVA.Historian.Files
                 byte[] fixedFatData = new byte[FixedBinaryLength];
                 m_parent.FileData.Seek(-fixedFatData.Length, SeekOrigin.End);
                 m_parent.FileData.Read(fixedFatData, 0, fixedFatData.Length);
-                FileStartTime = new TimeTag(EndianOrder.LittleEndian.ToDouble(fixedFatData, 0));
-                FileEndTime = new TimeTag(EndianOrder.LittleEndian.ToDouble(fixedFatData, 8));
+
+                double startTime = EndianOrder.LittleEndian.ToDouble(fixedFatData, 0);
+                double stopTime = EndianOrder.LittleEndian.ToDouble(fixedFatData, 8);
+
+                // Validate file time tags
+                if (startTime < TimeTag.MinValue.Value || startTime > TimeTag.MaxValue.Value)
+                    startTime = TimeTag.MinValue.Value;
+
+                if (stopTime < TimeTag.MinValue.Value || stopTime > TimeTag.MaxValue.Value)
+                    stopTime = TimeTag.MinValue.Value;
+
+                FileStartTime = new TimeTag(startTime);
+                FileEndTime = new TimeTag(stopTime);
                 DataPointsReceived = EndianOrder.LittleEndian.ToInt32(fixedFatData, 16);
                 DataPointsArchived = EndianOrder.LittleEndian.ToInt32(fixedFatData, 20);
                 DataBlockSize = EndianOrder.LittleEndian.ToInt32(fixedFatData, 24);
@@ -120,6 +131,7 @@ namespace TVA.Historian.Files
                 byte[] variableFatData = new byte[m_dataBlockCount * ArchiveDataBlockPointer.ByteCount];
                 m_parent.FileData.Seek(-(variableFatData.Length + FixedBinaryLength), SeekOrigin.End);
                 m_parent.FileData.Read(variableFatData, 0, variableFatData.Length);
+
                 for (int i = 0; i < m_dataBlockCount; i++)
                 {
                     offset = i * ArchiveDataBlockPointer.ByteCount;
