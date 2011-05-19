@@ -1,9 +1,10 @@
 ﻿<Application x:Class="UITest.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
-             xmlns:util="clr-namespace:UITest.Utility"
+             xmlns:util="clr-namespace:UITest.Utility"   
              StartupUri="MainWindow.xaml">
     <Application.Resources>
+        
         <ResourceDictionary>
             
             <Style TargetType="{x:Type MenuItem}" x:Key="MenuSeparatorStyle">
@@ -16,8 +17,17 @@
                 </Setter>
             </Style>
 
+            <Style TargetType="{x:Type Menu}" x:Key="MenuStyle">
+                <Setter Property="Background" Value="AliceBlue"/>                
+            </Style>
+            
             <Style TargetType="{x:Type MenuItem}" x:Key="MenuItemStyle">
-                <Setter Property="Command" Value="{Binding Command}" />            
+                <Setter Property="Command" Value="{Binding Command}" /> 
+                <!--<Setter Property="Icon">
+                    <Setter.Value>
+                        <Image Source="{Binding Icon, Converter={StaticResource StringToBitmapConverter}}" />
+                    </Setter.Value>
+                </Setter>-->
             </Style>
 
             <util:MenuItemStyleSelector x:Key="MenuItemStyleSelector"/>

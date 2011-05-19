@@ -503,7 +503,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 foreach (DataRow row in nodeTable.Rows)
                 {
-                    nodeList[database.Guid(row, "NodeID")] = row.Field<string>("Name");
+                    nodeList[database.Guid(row, "ID")] = row.Field<string>("Name");
                 }
 
                 return nodeList;

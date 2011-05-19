@@ -23,20 +23,18 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using TVA.Data;
-using System.ComponentModel;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
     /// <summary>
     ///  Represents a record of <see cref="SubscriberMeasurement"/> information as defined in the database.
     /// </summary>
-    public class SubscriberMeasurement: DataModelBase
+    public class SubscriberMeasurement : DataModelBase
     {
         #region[Members]
 
@@ -49,7 +47,11 @@ namespace TimeSeriesFramework.UI.DataModels
         private string m_createdBy;
         private DateTime m_updatedOn;
         private string m_updatedBy;
-      
+        private string m_subscriberAcronym;
+        private string m_subscriberName;
+        private int m_pointID;
+        private string m_pointTag;
+
         #endregion
 
         #region[Properties]
@@ -110,20 +112,20 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         [Required(ErrorMessage = "Subscriber Measurement Allowed  is a required field, please select a value.")]
         [DefaultValue(false)]
-        public bool Allowed 
+        public bool Allowed
         {
             get
             {
-                return m_allowed ;
+                return m_allowed;
             }
             set
             {
-                m_allowed  = value;
+                m_allowed = value;
                 OnPropertyChanged("Allowed");
             }
         }
 
-         /// <summary>
+        /// <summary>
         /// Gets or sets <see cref="SubscriberMeasurement"/> CreatedOn.
         /// </summary>
         // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
@@ -187,11 +189,59 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Gets the current <see cref="SubscriberMeasurement"/>'s subscriber acronym.
+        /// </summary>
+        // Field is populated via view, so no validation attributes are applied. 
+        public string SubscriberAcronym
+        {
+            get
+            {
+                return m_subscriberAcronym;
+            }
+        }
+
+        /// <summary>
+        /// Gets the current <see cref="SubscriberMeasurement"/>'s subscriber name.
+        /// </summary>
+        // Field is populated via view, so no validation attributes are applied. 
+        public string SubscriberName
+        {
+            get
+            {
+                return m_subscriberName;
+            }
+        }
+
+        /// <summary>
+        /// Gets the current <see cref="SubscriberMeasurement"/>'s point id.
+        /// </summary>
+        // Field is populated via view, so no validation attributes are applied. 
+        public int PointID
+        {
+            get
+            {
+                return m_pointID;
+            }
+        }
+
+        /// <summary>
+        /// Gets the current <see cref="SubscriberMeasurement"/>'s point tag.
+        /// </summary>
+        // Field is populated via view, so no validation attributes are applied. 
+        public string PointTag
+        {
+            get
+            {
+                return m_pointTag;
+            }
+        }
+
         #endregion
 
         #region[Static]
-        // Static Methods
 
+        // Static Methods
         /// <summary>
         /// Loads <see cref="SubscriberMeasurement"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
@@ -206,20 +256,25 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 ObservableCollection<SubscriberMeasurement> SubscriberMeasurementList = new ObservableCollection<SubscriberMeasurement>();
-                DataTable SubscriberMeasurementTable = database.Connection.RetrieveData(database.AdapterType, "NodeID, SubscriberID, SignalID, Allowed, CreatedBy, CreatedOn, UpdatedBy, UpdatedOn FROM SubscriberMeasurement ORDER BY SubscriberID");
+                DataTable SubscriberMeasurementTable = database.Connection.RetrieveData(database.AdapterType, "NodeID, SubscriberID, SubscriberAcronym, SubscriberName, SignalID, " +
+                "PointID, PointTag, Allowed FROM SubscriberMeasurementDetail WHERE NodeID = @nodeID ORDER BY SubscriberID", DefaultTimeout, database.CurrentNodeID());
 
                 foreach (DataRow row in SubscriberMeasurementTable.Rows)
                 {
                     SubscriberMeasurementList.Add(new SubscriberMeasurement()
                     {
-                        NodeID =database.Guid(row, "NodeID"),
+                        NodeID = database.Guid(row, "NodeID"),
                         SubscriberID = database.Guid(row, "SubscriberID"),
                         SignalID = database.Guid(row, "SignalID"),
                         Allowed = Convert.ToBoolean(row.Field<object>("Allowed")),
                         CreatedBy = row.Field<string>("CreatedBy"),
                         CreatedOn = row.Field<DateTime>("CreatedOn"),
                         UpdatedBy = row.Field<string>("UpdatedBy"),
-                        UpdatedOn = row.Field<DateTime>("UpdatedOn")
+                        UpdatedOn = row.Field<DateTime>("UpdatedOn"),
+                        m_subscriberAcronym = row.Field<string>("SubscriberAcronym"),
+                        m_subscriberName = row.Field<string>("SubscriberName"),
+                        m_pointID = row.Field<int>("PointID"),
+                        m_pointTag = row.Field<string>("PointTag")
                     });
                 }
 
@@ -274,21 +329,21 @@ namespace TimeSeriesFramework.UI.DataModels
         public static string Save(AdoDataConnection database, SubscriberMeasurement subscriberMeasurement)
         {
             bool createdConnection = false;
-            
+
             try
             {
                 createdConnection = CreateConnection(ref database);
 
                 if (subscriberMeasurement.NodeID == Guid.Empty)
-                    database.Connection.ExecuteNonQuery("INSERT INTO SubscriberMeasurement (NodeID, SubscriberID, SignalID, Allowed, CreatedBy, CreatedOn) " +
-                        "VALUES (@nodeID, @subscriberID, @signalID, @allowed, @createdBy, @createdOn)", DefaultTimeout, subscriberMeasurement.NodeID, subscriberMeasurement.SubscriberID,
-                        subscriberMeasurement.SignalID, subscriberMeasurement.Allowed, CommonFunctions.CurrentUser, database.UtcNow());
+                    database.Connection.ExecuteNonQuery("INSERT INTO SubscriberMeasurement (NodeID, SubscriberID, SignalID, Allowed, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) " +
+                        "VALUES (@nodeID, @subscriberID, @signalID, @allowed, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, database.Guid(subscriberMeasurement.NodeID),
+                        database.Guid(subscriberMeasurement.SubscriberID), database.Guid(subscriberMeasurement.SignalID), subscriberMeasurement.Allowed, CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("UPDATE SubscriberMeasurement SET NodeID = @nodeID, SubscriberID = @subscriberID, SignalID = @signalID, Allowed = @allowed,  " +
-                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE NodeID = @nodeID", DefaultTimeout, subscriberMeasurement.NodeID, subscriberMeasurement.SubscriberID, subscriberMeasurement.SignalID, subscriberMeasurement.Allowed,
-                         CommonFunctions.CurrentUser, database.UtcNow(), subscriberMeasurement.NodeID);
+                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE NodeID = @nodeID", DefaultTimeout, database.Guid(subscriberMeasurement.NodeID), database.Guid(subscriberMeasurement.SubscriberID),
+                        database.Guid(subscriberMeasurement.SignalID), subscriberMeasurement.Allowed, CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(subscriberMeasurement.NodeID));
 
-                return "SubscriberMeasurement information saved successfully";
+                return "Subscriber measurement information saved successfully";
             }
             finally
             {
@@ -301,9 +356,10 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Deletes specified <see cref="SubscriberMeasurement"/> record from database.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="SubscriberMeasurementNodeID">NodeID of the record to be deleted.</param>
+        /// <param name="subscriberID">ID of the record to be deleted.</param>
+        /// <param name="signalID">ID of the measurement to be removed.</param>
         /// <returns>string, for display use, indicating success.</returns>
-        public static string Delete(AdoDataConnection database,Guid SubscriberMeasurementNodeID)
+        public static string Delete(AdoDataConnection database, Guid subscriberID, Guid signalID)
         {
             bool createdConnection = false;
 
@@ -314,9 +370,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
-                database.Connection.ExecuteNonQuery("DELETE FROM SubscriberMeasurement WHERE NodeID = @SubscriberMeasurementNodeID", DefaultTimeout, SubscriberMeasurementNodeID);
+                database.Connection.ExecuteNonQuery("DELETE FROM SubscriberMeasurement WHERE SubscriberID = @subscriberID AND SignalID = @signalID", DefaultTimeout, subscriberID, signalID);
 
-                return "SubscriberMeasurement deleted successfully";
+                return "Subscriber measurement deleted successfully";
             }
             finally
             {

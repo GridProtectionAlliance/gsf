@@ -54,6 +54,9 @@
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
+    <Reference Include="TVA.Communication, Version=4.0.2.32, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\..\Dependencies\TVA\TVA.Communication.dll</HintPath>
+    </Reference>
     <Reference Include="TVA.Core, Version=4.0.2.27, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\Dependencies\TVA\TVA.Core.dll</HintPath>
@@ -61,6 +64,9 @@
     <Reference Include="TVA.Security, Version=4.0.2.27, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\Dependencies\TVA\TVA.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="TVA.Services, Version=4.0.2.32, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\..\Dependencies\TVA\TVA.Services.dll</HintPath>
     </Reference>
     <Reference Include="TVA.Windows">
       <HintPath>..\..\..\..\Dependencies\TVA\TVA.Windows.dll</HintPath>
@@ -122,6 +128,9 @@
     <Compile Include="UserControls\HistorianUserControl.xaml.cs">
       <DependentUpon>HistorianUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\MeasurementGroupUserControl.xaml.cs">
+      <DependentUpon>MeasurementGroupUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\MeasurementUserControl.xaml.cs">
       <DependentUpon>MeasurementUserControl.xaml</DependentUpon>
     </Compile>
@@ -136,6 +145,9 @@
     </Compile>
     <Compile Include="UserControls\SecurityUserControl.xaml.cs">
       <DependentUpon>SecurityUserControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\SelectMeasurementUserControl.xaml.cs">
+      <DependentUpon>SelectMeasurementUserControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="UserControls\SubscriberUserControl.xaml.cs">
       <DependentUpon>SubscriberUserControl.xaml</DependentUpon>
@@ -153,15 +165,18 @@
     <Compile Include="ViewModels\Companies.cs" />
     <Compile Include="ViewModels\Devices.cs" />
     <Compile Include="ViewModels\Historians.cs" />
+    <Compile Include="ViewModels\MeasurementGroups.cs" />
     <Compile Include="ViewModels\Measurements.cs" />
     <Compile Include="ViewModels\Nodes.cs" />
     <Compile Include="ViewModels\Phasors.cs" />
     <Compile Include="ViewModels\Protocols.cs" />
     <Compile Include="ViewModels\SecurityGroups.cs" />
+    <Compile Include="ViewModels\SelectMeasurements.cs" />
     <Compile Include="ViewModels\Subscribers.cs" />
     <Compile Include="ViewModels\UserAccounts.cs" />
     <Compile Include="ViewModels\VendorDevices.cs" />
     <Compile Include="ViewModels\Vendors.cs" />
+    <Compile Include="WindowsServiceClient.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -224,6 +239,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="UserControls\MeasurementGroupUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UserControls\MeasurementUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -241,6 +260,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UserControls\SecurityUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\SelectMeasurementUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

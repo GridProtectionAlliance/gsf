@@ -55,11 +55,11 @@
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <Button ToolTip="Update Configuration" Width="22" Height="22">
+                                <Button ToolTip="Update Configuration" Width="Auto">
                                     <Image Source="/TimeSeriesFramework.UI;component/images/EditConfiguration.png" Height="16" Width="16" />
                                 </Button>
                                 <Button ToolTip="Make Copy" Command="{tsfBinding:GridButtonCommand Path=DataContext.CopyCommand}" 
-                                    CommandParameter="{tsfBinding:GridButtonCommand Path=DataContext.CurrentItem}" Width="22" Height="22">
+                                    CommandParameter="{tsfBinding:GridButtonCommand Path=DataContext.CurrentItem}" Width="Auto" Height="Auto">
                                 <Image Source="/TimeSeriesFramework.UI;component/images/Copy.png" Height="16" Width="16" />
                             </Button>
                             </StackPanel>

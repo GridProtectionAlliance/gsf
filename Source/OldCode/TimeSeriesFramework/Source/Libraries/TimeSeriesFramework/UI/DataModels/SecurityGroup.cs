@@ -180,7 +180,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets or sets the current SecurityGroup CurrentGroupUsers
+        /// Gets or sets the current <see cref="SecurityGroup"/>'s CurrentGroupUsers.
         /// </summary>
         // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public Dictionary<Guid, string> CurrentUsers
@@ -197,7 +197,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets or sets the current SecurityGroup PossibleGroupUsers
+        /// Gets or sets the current <see cref="SecurityGroup"/>'s PossibleGroupUsers.
         /// </summary>
         // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public Dictionary<Guid, string> PossibleUsers
@@ -303,7 +303,7 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
                 Dictionary<Guid, string> possibleGroupUsers = new Dictionary<Guid, string>();
-                DataTable possibleUsersTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM UserAccount WHERE ID NOT IN (SELECT UserAccountID FROM SecurityGroupUserAccount WHERE SecurityGroupID = @groupID) ORDER BY Name", groupID);
+                DataTable possibleUsersTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM UserAccount WHERE ID NOT IN (SELECT UserAccountID FROM SecurityGroupUserAccount WHERE SecurityGroupID = @groupID) ORDER BY Name", DefaultTimeout, groupID);
 
                 foreach (DataRow row in possibleUsersTable.Rows)
                     possibleGroupUsers[database.Guid(row, "ID")] = row.Field<string>("Name");

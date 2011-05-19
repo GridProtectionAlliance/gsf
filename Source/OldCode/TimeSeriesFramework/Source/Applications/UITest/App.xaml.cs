@@ -25,6 +25,7 @@ using System;
 using System.Security.Principal;
 using System.Windows;
 using TimeSeriesFramework.UI;
+using TVA.ErrorManagement;
 
 namespace UITest
 {
@@ -37,6 +38,8 @@ namespace UITest
 
         // Fields
         private Guid m_nodeID;
+        private ErrorLogger m_errorLogger;
+        private Func<string> m_defaultErrorText;
 
         #endregion
 
@@ -48,6 +51,17 @@ namespace UITest
         public App()
         {
             AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
+            m_errorLogger = new ErrorLogger();
+            m_defaultErrorText = m_errorLogger.ErrorTextMethod;
+            m_errorLogger.ErrorTextMethod = ErrorText;
+            m_errorLogger.ExitOnUnhandledException = false;
+            m_errorLogger.HandleUnhandledException = true;
+            m_errorLogger.LogToEmail = false;
+            m_errorLogger.LogToEventLog = true;
+            m_errorLogger.LogToFile = true;
+            m_errorLogger.LogToScreenshot = true;
+            m_errorLogger.LogToUI = true;
+            m_errorLogger.Initialize();
             NodeID = Guid.Parse("e7a5235d-cb6f-4864-a96e-a8686f36e599");
         }
 
@@ -72,5 +86,26 @@ namespace UITest
         }
 
         #endregion
+
+        #region [ Methods ]
+
+        private string ErrorText()
+        {
+            string errorMessage = m_defaultErrorText();
+            Exception ex = m_errorLogger.LastException;
+
+            if (ex != null)
+            {
+                if (string.Compare(ex.Message, "UnhandledException", true) == 0 && ex.InnerException != null)
+                    ex = ex.InnerException;
+
+                errorMessage = string.Format("{0}\r\n\r\nError details: {1}", errorMessage, ex.Message);
+            }
+
+            return errorMessage;
+        }
+
+        #endregion
+
     }
 }

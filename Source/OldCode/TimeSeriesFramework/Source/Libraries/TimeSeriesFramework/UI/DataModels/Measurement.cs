@@ -76,6 +76,7 @@ namespace TimeSeriesFramework.UI.DataModels
         private DateTime m_updatedOn;
         private string m_updatedBy;
         private string m_id;
+        private bool m_selected;  //This is added for the SelectMeasurement user control to provide check boxes.
 
         #endregion
 
@@ -495,6 +496,22 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets selected flag for <see cref="Measurement"/>.
+        /// </summary>
+        public bool Selected
+        {
+            get
+            {
+                return m_selected;
+            }
+            set
+            {
+                m_selected = value;
+                OnPropertyChanged("Selected");
+            }
+        }
+
         #endregion
 
         #region [ Static ]
@@ -546,12 +563,70 @@ namespace TimeSeriesFramework.UI.DataModels
                         m_signalAcronym = row.Field<string>("SignalAcronym"),
                         m_signalSuffix = row.Field<string>("SignalTypeSuffix"),
                         m_phasorLabel = row.Field<string>("PhasorLabel"),
-                        m_framesPerSecond = row.Field<int?>("FramesPerSecond"),
-                        m_id = row.Field<string>("ID")
+                        m_framesPerSecond = Convert.ToInt32(row.Field<object>("FramesPerSecond") ?? 30),
+                        m_id = row.Field<string>("ID"),
+                        Selected = false
                     });
                 }
 
                 return measurementList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Loads information about <see cref="Measurement"/> assigned to <see cref="MeasurementGroup"/> as <see cref="ObservableCollection{T}"/> style list.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="measurementGroupId">ID of the <see cref="MeasurementGroup"/> to filter data.</param>
+        /// <returns>Collection of <see cref="Measurement"/>.</returns>
+        public static ObservableCollection<Measurement> GetMeasurementsByGroup(AdoDataConnection database, int measurementGroupId)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                if (measurementGroupId == 0)
+                    return Load(database);
+
+                ObservableCollection<Measurement> possibleMeasurements = new ObservableCollection<Measurement>();
+                DataTable possibleMeasurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail WHERE SignalID NOT IN " +
+                    "(SELECT SignalID FROM MeasurementGroupMeasurement WHERE MeasurementGroupID = @measurementGroupID) ORDER BY PointTag", DefaultTimeout, measurementGroupId);
+
+                foreach (DataRow row in possibleMeasurementTable.Rows)
+                {
+                    possibleMeasurements.Add(new Measurement()
+                    {
+                        SignalID = database.Guid(row, "SignalID"),
+                        HistorianID = row.Field<int?>("HistorianID"),
+                        PointID = row.Field<int>("PointID"),
+                        DeviceID = row.Field<int?>("DeviceID"),
+                        PointTag = row.Field<string>("PointTag"),
+                        AlternateTag = row.Field<string>("AlternateTag"),
+                        SignalTypeID = row.Field<int>("SignalTypeID"),
+                        PhasorSourceIndex = row.Field<int?>("PhasorSourceIndex"),
+                        SignalReference = row.Field<string>("SignalReference"),
+                        Adder = row.Field<double>("Adder"),
+                        Multiplier = row.Field<double>("Multiplier"),
+                        Description = row.Field<string>("Description"),
+                        Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
+                        m_historianAcronym = row.Field<string>("HistorianAcronym"),
+                        m_deviceAcronym = row.Field<object>("DeviceAcronym") == null ? string.Empty : row.Field<string>("DeviceAcronym"),
+                        m_signalName = row.Field<string>("SignalName"),
+                        m_signalAcronym = row.Field<string>("SignalAcronym"),
+                        m_signalSuffix = row.Field<string>("SignalTypeSuffix"),
+                        m_phasorLabel = row.Field<string>("PhasorLabel"),
+                        m_id = row.Field<string>("ID"),
+                        Selected = false
+                    });
+                }
+
+                return possibleMeasurements;
             }
             finally
             {
@@ -609,10 +684,10 @@ namespace TimeSeriesFramework.UI.DataModels
                 if (measurement.PointID == 0)
                     database.Connection.ExecuteNonQuery("INSERT INTO Measurement (HistorianID, DeviceID, PointTag, AlternateTag, SignalTypeID, PhasorSourceIndex, " +
                         "SignalReference, Adder, Multiplier, Subscribed, Internal, Description, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@historianID, @deviceID, " +
-                        "@pointTag, @alternateTag, @signalTypeID, @phasorSourceIndex, @signalReference, @adder, @multiplier, @description, @enabled, @updatedBy, " +
+                        "@pointTag, @alternateTag, @signalTypeID, @phasorSourceIndex, @signalReference, @adder, @multiplier, @subscribed, @internal, @description, @enabled, @updatedBy, " +
                         "@updatedOn, @createdBy, @createdOn)", DefaultTimeout, measurement.HistorianID.ToNotNull(), measurement.DeviceID.ToNotNull(), measurement.PointTag,
                         measurement.AlternateTag.ToNotNull(), measurement.SignalTypeID, measurement.PhasorSourceIndex.ToNotNull(), measurement.SignalReference,
-                        measurement.Adder, measurement.Multiplier, measurement.Description.ToNotNull(), measurement.Subscribed, measurement.Internal, measurement.Enabled, CommonFunctions.CurrentUser,
+                        measurement.Adder, measurement.Multiplier, measurement.Subscribed, measurement.Internal, measurement.Description.ToNotNull(), measurement.Enabled, CommonFunctions.CurrentUser,
                         database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("Update Measurement Set HistorianID = @historianID, DeviceID = @deviceID, PointTag = @pointTag, " +

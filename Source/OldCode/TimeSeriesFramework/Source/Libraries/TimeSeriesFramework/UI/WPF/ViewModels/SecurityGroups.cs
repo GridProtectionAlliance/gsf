@@ -122,7 +122,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         }
 
         /// <summary>
-        /// Creates a new instance of <see cref="SecurityGroups"/> and assigns it to CurrentItem.
+        /// Creates a new instance of <see cref="SecurityGroup"/> and assigns it to CurrentItem.
         /// </summary>
         public override void Clear()
         {

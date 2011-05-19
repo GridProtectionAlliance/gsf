@@ -25,12 +25,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.ComponentModel.DataAnnotations;
 using System.Collections.ObjectModel;
-using TVA.Data;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
+using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
@@ -43,7 +41,7 @@ namespace TimeSeriesFramework.UI.DataModels
         #region [ Members ]
 
         private Guid m_nodeID;
-        private Guid m_ID;
+        private Guid m_id;
         private string m_acronym;
         private string m_name;
         private string m_sharedSecret;
@@ -62,7 +60,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Subscriber"/>'s node ID.
         /// </summary>
-        [Required(ErrorMessage="The Subscriber node ID is required, please provide value.")]
+        [Required(ErrorMessage = "The Subscriber node ID is required, please provide value.")]
         public Guid NodeID
         {
             get
@@ -83,19 +81,19 @@ namespace TimeSeriesFramework.UI.DataModels
         {
             get
             {
-                return m_ID;
+                return m_id;
             }
             set
             {
-                m_ID = value;
+                m_id = value;
             }
         }
 
         /// <summary>
         /// Gets or sets the current <see cref="Subscriber"/>'s acronym.
         /// </summary>
-        [Required(ErrorMessage="The Subscriber acronym is a required field, please provide a value.")]
-        [StringLength(200, ErrorMessage="The subscriber acronym cannot exceed 200 characters.")]
+        [Required(ErrorMessage = "The Subscriber acronym is a required field, please provide a value.")]
+        [StringLength(200, ErrorMessage = "The subscriber acronym cannot exceed 200 characters.")]
         public string Acronym
         {
             get
@@ -112,7 +110,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Subscriber"/> name.
         /// </summary>
-        [StringLength(200, ErrorMessage="The subscriber name cannot exceed 200 characters.")]
+        [StringLength(200, ErrorMessage = "The subscriber name cannot exceed 200 characters.")]
         public string Name
         {
             get
@@ -129,7 +127,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Subscriber"/>'s shared secret.
         /// </summary>
-        [Required(ErrorMessage="The Subscriber shared secret is a required field, please provide a value.")]
+        [Required(ErrorMessage = "The Subscriber shared secret is a required field, please provide a value.")]
         public string SharedSecret
         {
             get
@@ -146,7 +144,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the authorization key for the current <see cref="Subscriber"/>.
         /// </summary>
-        [Required(ErrorMessage="The subscriber authorization key is a required field, please provide value.")]
+        [Required(ErrorMessage = "The subscriber authorization key is a required field, please provide value.")]
         public string AuthKey
         {
             get
@@ -162,7 +160,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the valid IP addresses of the current <see cref="Subscriber"/>.
         /// </summary>
-        [Required(ErrorMessage="Subscriber valid IP addresses is a required field, please provide a value.")]
+        [Required(ErrorMessage = "Subscriber valid IP addresses is a required field, please provide a value.")]
         public string ValidIPAddresses
         {
             get
@@ -282,7 +280,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     subscriberList.Add(new Subscriber()
                     {
-                        ID = database.Guid(row, "ID"), 
+                        ID = database.Guid(row, "ID"),
                         NodeID = database.Guid(row, "NodeID"),
                         Acronym = row.Field<string>("Acronym"),
                         Name = row.Field<string>("Name"),
@@ -321,11 +319,12 @@ namespace TimeSeriesFramework.UI.DataModels
                 if (isOptional)
                     subscriberList.Add(Guid.Empty, "Select Subscriber");
 
-                DataTable subscriberTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM Subscriber WHERE Enabled = @enabled ORDER BY Name", DefaultTimeout, true);
+                DataTable subscriberTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM Subscriber WHERE Enabled = @enabled " +
+                "AND NodeID = @nodeID ORDER BY Name", DefaultTimeout, true, database.CurrentNodeID());
 
                 foreach (DataRow row in subscriberTable.Rows)
                 {
-                    subscriberList[database.Guid(row, "ID")] = row.Field<string>("Name");
+                    subscriberList[database.Guid(row, "ID")] = row.Field<string>("Acronym");
                 }
 
                 return subscriberList;
@@ -351,14 +350,14 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                if (subscriber.ID == Guid.Empty)
-                    database.Connection.ExecuteNonQuery("INSERT INTO Company (NodeID, Acronym, Name, SharedSecret, AuthKey, ValidIPAddresses, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@nodeID, @acronym)" +
-                "@name, @sharedSecret, @authKey, @validIpAddresses, @enabled, @updatedBy, @updatedOn, @createdBy, @createdOn", DefaultTimeout, database.Guid(subscriber.NodeID), subscriber.Acronym.ToNotNull(), subscriber.Name.ToNotNull(), subscriber.SharedSecret.ToNotNull(),
-                subscriber.AuthKey.ToNotNull(), subscriber.ValidIPAddresses.ToNotNull(), subscriber.Enabled, CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                if (subscriber.ID == Guid.Empty || subscriber.ID == null)
+                    database.Connection.ExecuteNonQuery("INSERT INTO Subscriber (NodeID, Acronym, Name, SharedSecret, AuthKey, ValidIPAddresses, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@nodeID, @acronym " +
+                "@name, @sharedSecret, @authKey, @validIpAddresses, @enabled, @updatedBy, @updatedOn, @createdBy, @createdOn", DefaultTimeout, database.Guid(subscriber.NodeID), subscriber.Acronym, subscriber.Name.ToNotNull(),
+                subscriber.SharedSecret, subscriber.AuthKey, subscriber.ValidIPAddresses, subscriber.Enabled, CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("UPDATE Node SET NodeID = @nodeID, Acronym = @acronym, Name = @name, SharedSecret = @sharedSecret, AuthKey = @authKey, ValidIPAddresses = @validIpAddresses, " +
-                        "Enabled = @enabled, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, database.Guid(subscriber.NodeID), subscriber.Acronym.ToNotNull(), subscriber.Name.ToNotNull(),
-                        subscriber.SharedSecret.ToNotNull(), subscriber.AuthKey.ToNotNull(), subscriber.ValidIPAddresses.ToNotNull(), subscriber.Enabled, CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(subscriber.ID));
+                        "Enabled = @enabled, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, database.Guid(subscriber.NodeID), subscriber.Acronym, subscriber.Name.ToNotNull(),
+                        subscriber.SharedSecret, subscriber.AuthKey, subscriber.ValidIPAddresses, subscriber.Enabled, CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(subscriber.ID));
 
                 return "Subscriber information saved successfully";
             }
@@ -374,9 +373,9 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Deletes specified <see cref="Subscriber"/> record from database.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="ID">ID of the record to be deleted.</param>
+        /// <param name="id">ID of the record to be deleted.</param>
         /// <returns>String, for display use, indicating success.</returns>
-        public static string Delete(AdoDataConnection database, Guid ID)
+        public static string Delete(AdoDataConnection database, Guid id)
         {
             bool createdConnection = false;
 
@@ -387,7 +386,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
-                database.Connection.ExecuteNonQuery("DELETE FROM Subscriber WHERE ID = @id", DefaultTimeout, database.Guid(ID));
+                database.Connection.ExecuteNonQuery("DELETE FROM Subscriber WHERE ID = @id", DefaultTimeout, database.Guid(id));
 
                 return "Subscriber deleted successfully";
             }
@@ -398,6 +397,7 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
-        #endregion        
+        #endregion
+
     }
 }

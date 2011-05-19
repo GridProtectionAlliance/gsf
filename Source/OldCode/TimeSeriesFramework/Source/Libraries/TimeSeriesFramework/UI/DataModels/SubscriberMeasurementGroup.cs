@@ -23,13 +23,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using TVA.Data;
-using System.ComponentModel;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
@@ -46,6 +44,9 @@ namespace TimeSeriesFramework.UI.DataModels
         private string m_createdBy;
         private DateTime m_updatedOn;
         private string m_updatedBy;
+        private string m_subscriberAcronym;
+        private string m_subscriberName;
+        private string m_measurementGroupName;
 
         #endregion
 
@@ -184,6 +185,30 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        public string SubscriberAcronym
+        {
+            get
+            {
+                return m_subscriberAcronym;
+            }
+        }
+
+        public string SubscriberName
+        {
+            get
+            {
+                return m_subscriberName;
+            }
+        }
+
+        public string MeasurementGroupName
+        {
+            get
+            {
+                return m_measurementGroupName;
+            }
+        }
+
         #endregion
 
         #region[Static]
@@ -204,20 +229,25 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 ObservableCollection<SubscriberMeasurementGroup> SubscriberMeasurementGroupList = new ObservableCollection<SubscriberMeasurementGroup>();
-                DataTable SubscriberMeasurementGroupTable = database.Connection.RetrieveData(database.AdapterType, "SELECT NodeID, SubscribeID, MeasurementGroupId, Allowed, Description, CreatedBy, CreatedOn, UpdatedBy, UpdatedOn FROM SubscriberMeasurementGroup ORDER BY NodeID");
+                DataTable SubscriberMeasurementGroupTable = database.Connection.RetrieveData(database.AdapterType, "SELECT NodeID, SubscribeID, SubscriberAcronym, SubscriberName, " +
+                "MeasurementGroupId, Allowed, MeasurementGroupName, CreatedBy, CreatedOn, UpdatedBy, UpdatedOn FROM SubscriberMeasurementGroupDetail WHERE NodeID = @nodeID ORDER BY SubcriberAcronym",
+                DefaultTimeout, database.CurrentNodeID());
 
                 foreach (DataRow row in SubscriberMeasurementGroupTable.Rows)
                 {
                     SubscriberMeasurementGroupList.Add(new SubscriberMeasurementGroup()
                     {
                         NodeID = database.Guid(row, "NodeID"),
-                        SubscriberID = database .Guid (row, "SubscriberID"),
+                        SubscriberID = database.Guid(row, "SubscriberID"),
                         MeasurementGroupID = row.Field<int>("MeasurementGroupID"),
                         Allowed = Convert.ToBoolean(row.Field<object>("Allowed")),
                         CreatedBy = row.Field<string>("CreatedBy"),
                         CreatedOn = row.Field<DateTime>("CreatedOn"),
                         UpdatedBy = row.Field<string>("UpdatedBy"),
-                        UpdatedOn = row.Field<DateTime>("UpdatedOn")
+                        UpdatedOn = row.Field<DateTime>("UpdatedOn"),
+                        m_subscriberAcronym = row.Field<string>("SubscriberAcronym"),
+                        m_subscriberName = row.Field<string>("SubscriberName"),
+                        m_measurementGroupName = row.Field<string>("MeasurementGroupName")
                     });
                 }
 
@@ -235,7 +265,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
-        /// <returns><see cref="object{T1,T2}"/> containing NodeID and Name of SubscriberMeasurementGroups defined in the database.</returns>
+        /// <returns><see cref="object"/> containing NodeID and Name of SubscriberMeasurementGroups defined in the database.</returns>
         public static object GetLookupList(AdoDataConnection database, bool isOptional = true)
         {
             return null;
@@ -267,7 +297,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Saves <see cref="SubscriberMeasurementGroup"/> information to database.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="SubscriberMeasurementGroup">Information about <see cref="SubscriberMeasurementGroup"/>.</param>        
+        /// <param name="subscriberMeasurementGroup">Information about <see cref="SubscriberMeasurementGroup"/>.</param>        
         /// <returns>String, for display use, indicating success.</returns>
         public static string Save(AdoDataConnection database, SubscriberMeasurementGroup subscriberMeasurementGroup)
         {
@@ -278,12 +308,14 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 if (subscriberMeasurementGroup.NodeID == Guid.Empty)
-                    database.Connection.ExecuteNonQuery("INSERT INTO SubscriberMeasurementGroup (NodeID, SubscriberID, MeasurementGroupID, Allowed, CreatedBy, CreatedOn) " +
-                        "VALUES (@nodeID, @subscriberiD, @measurementGroupID, @allowed, @createdBy, @createdOn)", DefaultTimeout, subscriberMeasurementGroup.NodeID, subscriberMeasurementGroup.SubscriberID,
-                        subscriberMeasurementGroup.MeasurementGroupID, subscriberMeasurementGroup.Allowed, CommonFunctions.CurrentUser, database.UtcNow());
-                else
+                    database.Connection.ExecuteNonQuery("INSERT INTO SubscriberMeasurementGroup (NodeID, SubscriberID, MeasurementGroupID, Allowed, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) " +
+                        "VALUES (@nodeID, @subscriberiD, @measurementGroupID, @allowed, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, database.Guid(subscriberMeasurementGroup.NodeID),
+                        database.Guid(subscriberMeasurementGroup.SubscriberID), subscriberMeasurementGroup.MeasurementGroupID, subscriberMeasurementGroup.Allowed,
+                        CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                else    // TODO: Check this query here specifically for WHERE clause.
                     database.Connection.ExecuteNonQuery("UPDATE SubscriberMeasurementGroup SET NodeID = @nodeID, SubscriberID = @subscriberID, MeasurementGroupID = @measurementGroupID, Allowed = @allowed, " +
-                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE NodeID = @NodeID", DefaultTimeout, subscriberMeasurementGroup.NodeID, subscriberMeasurementGroup.SubscriberID, subscriberMeasurementGroup.MeasurementGroupID, subscriberMeasurementGroup.Allowed,
+                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE NodeID = @NodeID", DefaultTimeout, database.Guid(subscriberMeasurementGroup.NodeID),
+                        database.Guid(subscriberMeasurementGroup.SubscriberID), subscriberMeasurementGroup.MeasurementGroupID, subscriberMeasurementGroup.Allowed,
                          CommonFunctions.CurrentUser, database.UtcNow(), subscriberMeasurementGroup.NodeID);
 
                 return "SubscriberMeasurementGroup information saved successfully";

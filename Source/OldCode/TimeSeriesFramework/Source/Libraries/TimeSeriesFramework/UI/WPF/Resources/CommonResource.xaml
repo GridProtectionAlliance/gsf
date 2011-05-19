@@ -158,7 +158,7 @@
 
     <ControlTemplate x:Key="ImageButtonTemplate" TargetType="Button">
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-            <Image Source="{TemplateBinding Content}" Width="16" Height="16" Margin="2" />
+            <Image Source="{TemplateBinding Content}" Width="16" Height="16" />
             <TextBlock Text="{TemplateBinding Tag}" />
         </StackPanel>
     </ControlTemplate>

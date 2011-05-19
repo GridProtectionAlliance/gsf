@@ -13,7 +13,7 @@
     </Window.Resources>
 
     <StackPanel Orientation="Vertical">
-        <Menu x:Name="MenuMain" ItemsSource="{Binding}" 
+        <Menu x:Name="MenuMain" ItemsSource="{Binding}" Style="{StaticResource MenuStyle}"
               ItemContainerStyleSelector="{StaticResource MenuItemStyleSelector}" 
                /> 
         <TextBlock x:Name="TextBlockTitle" HorizontalAlignment="Center" FontWeight="Bold" />
