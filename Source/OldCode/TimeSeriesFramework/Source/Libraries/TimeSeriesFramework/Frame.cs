@@ -79,7 +79,11 @@ namespace TimeSeriesFramework
         public Frame(Ticks timestamp, IDictionary<MeasurementKey, IMeasurement> measurements)
         {
             m_timestamp = timestamp;
+#if UseHighResolutionTime
+            m_receivedTimestamp = PrecisionTimer.UtcNow.Ticks;
+#else
             m_receivedTimestamp = DateTime.UtcNow.Ticks;
+#endif
             m_measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>(measurements);
             m_sortedMeasurements = -1;
         }
