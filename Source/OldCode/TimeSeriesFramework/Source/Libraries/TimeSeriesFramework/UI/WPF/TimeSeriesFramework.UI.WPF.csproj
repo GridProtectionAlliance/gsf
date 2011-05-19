@@ -149,6 +149,9 @@
     <Compile Include="UserControls\SelectMeasurementUserControl.xaml.cs">
       <DependentUpon>SelectMeasurementUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\SubscriberMeasurementUserControl.xaml.cs">
+      <DependentUpon>SubscriberMeasurementUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\SubscriberUserControl.xaml.cs">
       <DependentUpon>SubscriberUserControl.xaml</DependentUpon>
     </Compile>
@@ -264,6 +267,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UserControls\SelectMeasurementUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\SubscriberMeasurementUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

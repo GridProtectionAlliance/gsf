@@ -40,7 +40,7 @@ namespace TimeSeriesFramework.UI.UserControls
         public MeasurementGroupUserControl()
         {
             InitializeComponent();
-            GroupBoxManageMeasurementGroup.DataContext = new MeasurementGroups(1);
+            StackPanelManageMeasurementGroup.DataContext = new MeasurementGroups(1);
             this.Loaded += new System.Windows.RoutedEventHandler(MeasurementGroupUserControl_Loaded);
         }
 
@@ -65,7 +65,7 @@ namespace TimeSeriesFramework.UI.UserControls
         /// <param name="e">Event arguments</param>
         private void UpdatePossibleMeasurements(object sender, RoutedEventArgs e)
         {
-            ((MeasurementGroups)GroupBoxManageMeasurementGroup.DataContext).CurrentItem.PossibleMeasurements = UserControlSelectMeasurements.UpdatedMeasurements;
+            ((MeasurementGroups)StackPanelManageMeasurementGroup.DataContext).CurrentItem.PossibleMeasurements = UserControlSelectMeasurements.UpdatedMeasurements;
         }
 
         #endregion

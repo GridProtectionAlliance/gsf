@@ -16,8 +16,11 @@
         <Menu x:Name="MenuMain" ItemsSource="{Binding}" Style="{StaticResource MenuStyle}"
               ItemContainerStyleSelector="{StaticResource MenuItemStyleSelector}" 
                /> 
-        <TextBlock x:Name="TextBlockTitle" HorizontalAlignment="Center" FontWeight="Bold" />
-        <Frame x:Name="FrameContent" NavigationUIVisibility="Hidden" HorizontalAlignment="Center" />
+        
+        <GroupBox x:Name="GroupBoxMain" Height="Auto" Margin="2">            
+            <Frame x:Name="FrameContent" NavigationUIVisibility="Hidden" HorizontalAlignment="Center" />
+        </GroupBox>
+        
     </StackPanel>
     
 </Window>

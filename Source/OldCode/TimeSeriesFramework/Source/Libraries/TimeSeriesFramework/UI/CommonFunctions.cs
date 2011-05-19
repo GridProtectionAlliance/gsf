@@ -25,6 +25,8 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Threading;
+using System.Windows;
+using System.Windows.Media;
 using TVA;
 using TVA.Data;
 
@@ -244,5 +246,54 @@ namespace TimeSeriesFramework.UI
 
             return timeZonesList;
         }
+
+        /// <summary>
+        /// Retrieves children of an UIElement based on type.
+        /// </summary>
+        /// <param name="parent">Parent UIElement.</param>
+        /// <param name="targetType">Type of child UIElement looking for within parent UIElement.</param>
+        /// <param name="children">Reference paramter to return child collection.</param>
+        public static void GetChildren(UIElement parent, Type targetType, ref List<UIElement> children)
+        {
+            int count = VisualTreeHelper.GetChildrenCount(parent);
+            if (count > 0)
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    UIElement child = (UIElement)VisualTreeHelper.GetChild(parent, i);
+                    if (child.GetType() == targetType)
+                    {
+                        children.Add(child);
+                    }
+                    GetChildren(child, targetType, ref children);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Retrieves first child of an UIElement based on type.
+        /// </summary>
+        /// <param name="parent">Parent UIElement</param>
+        /// <param name="targetType">Type of the child UIElement.</param>
+        /// <returns>UIElement of requested type if found otherwise null.</returns>
+        public static void GetFirstChild(UIElement parent, Type targetType, ref UIElement element)
+        {
+            int count = VisualTreeHelper.GetChildrenCount(parent);
+            if (count > 0)
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    UIElement child = (UIElement)VisualTreeHelper.GetChild(parent, i);
+                    if (child.GetType() == targetType)
+                    {
+                        element = child;
+                        break;
+                    }
+
+                    GetFirstChild(child, targetType, ref element);
+                }
+            }
+        }
+
     }
 }

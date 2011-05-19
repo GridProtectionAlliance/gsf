@@ -28,7 +28,9 @@ using System.Reflection;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace TimeSeriesFramework.UI.Commands
 {
@@ -152,19 +154,36 @@ namespace TimeSeriesFramework.UI.Commands
         /// </param>
         public void Execute(object parameter)
         {
-            System.Windows.Controls.Frame frame = (System.Windows.Controls.Frame)Application.Current.MainWindow.FindName("FrameContent");
-            TextBlock textBlock = (TextBlock)Application.Current.MainWindow.FindName("TextBlockTitle");
-            Assembly assembly = Assembly.LoadFrom(m_userControlAssembly);
-            UserControl userControl = Activator.CreateInstance(assembly.GetType(m_userControlPath)) as UserControl;
+            UIElement frame = null;
+            UIElement groupBox = null;
+            CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(System.Windows.Controls.Frame), ref frame);
+            CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(GroupBox), ref groupBox);
 
-            if (userControl != null)
+            if (frame != null)
             {
-                frame.Navigate(userControl);
-                textBlock.Text = m_description;
-                Application.Current.MainWindow.Title = m_description;
+                Assembly assembly = Assembly.LoadFrom(m_userControlAssembly);
+                UserControl userControl = Activator.CreateInstance(assembly.GetType(m_userControlPath)) as UserControl;
+
+                if (userControl != null)
+                {
+                    ((System.Windows.Controls.Frame)frame).Navigate(userControl);
+
+                    Run run = new Run();
+                    run.FontWeight = FontWeights.Bold;
+                    run.Foreground = new SolidColorBrush(Color.FromArgb(255, 25, 25, 200));
+                    run.Text = m_description;
+
+                    TextBlock txt = new TextBlock();
+                    txt.Inlines.Add(run);
+
+                    if (groupBox != null)
+                        ((GroupBox)groupBox).Header = txt;
+
+                    Application.Current.MainWindow.Title = m_description;
+                }
+                else
+                    throw new InvalidOperationException("Failed to create user control " + m_userControlPath);
             }
-            else
-                throw new InvalidOperationException("Failed to create user control " + m_userControlPath);
         }
 
         /// <summary>

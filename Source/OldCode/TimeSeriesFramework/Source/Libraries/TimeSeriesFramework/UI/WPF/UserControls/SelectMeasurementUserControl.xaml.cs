@@ -80,13 +80,22 @@ namespace TimeSeriesFramework.UI.UserControls
         public SelectMeasurementUserControl()
         {
             InitializeComponent();
-            m_dataContext = new SelectMeasurements(17);
-            m_itemsSource = m_dataContext.ItemsSource;
+            // TODO: Think about the placement of try catch statement.
+            // It was added here since designed did not work without it.
+            try
+            {
+                m_dataContext = new SelectMeasurements(17);
+                m_itemsSource = m_dataContext.ItemsSource;
 
-            foreach (TimeSeriesFramework.UI.DataModels.Measurement measurement in m_itemsSource)
-                measurement.PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler(measurement_PropertyChanged);
+                foreach (TimeSeriesFramework.UI.DataModels.Measurement measurement in m_itemsSource)
+                    measurement.PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler(measurement_PropertyChanged);
 
-            this.DataContext = m_dataContext;
+                this.DataContext = m_dataContext;
+            }
+            catch
+            {
+
+            }
         }
 
         #endregion
