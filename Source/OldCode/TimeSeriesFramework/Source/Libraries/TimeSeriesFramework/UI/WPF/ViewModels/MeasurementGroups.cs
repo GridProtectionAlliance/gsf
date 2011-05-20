@@ -43,6 +43,22 @@ namespace TimeSeriesFramework.UI.ViewModels
         private RelayCommand m_addMeasurementCommand;
         private RelayCommand m_removeMeasurementCommand;
 
+        // Delegates
+
+        /// <summary>
+        /// Method signature for a function which handles MeasurementsAdded event.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public delegate void OnMeasurementsAdded(object sender, RoutedEventArgs e);
+
+        // Event
+
+        /// <summary>
+        /// Event to notify subscribers that measurements have been added to the group.
+        /// </summary>
+        public event OnMeasurementsAdded MeasurementsAdded;
+
         #endregion
 
         #region [ Properties ]
@@ -158,6 +174,9 @@ namespace TimeSeriesFramework.UI.ViewModels
                 {
                     Popup("Selected measurements already exists in group or no measurements were selected.", "Add Group Measurements", MessageBoxImage.Information);
                 }
+
+                if (MeasurementsAdded != null)
+                    MeasurementsAdded(this, null);
 
                 CurrentItem.CurrentMeasurements = MeasurementGroup.GetCurrentMeasurements(null, CurrentItem.ID);
                 CurrentItem.PossibleMeasurements = MeasurementGroup.GetPossibleMeasurements(null, CurrentItem.ID);

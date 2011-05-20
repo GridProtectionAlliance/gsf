@@ -636,6 +636,63 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
+        /// Loads information about <see cref="Measurement"/> assigned to <see cref="Subscriber"/> as <see cref="ObservableCollection{T}"/> style list.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="subscriberId">ID of the <see cref="Subscriber"/> to filter data.</param>
+        /// <returns>Collection of <see cref="Measurement"/>.</returns>
+        public static ObservableCollection<Measurement> GetMeasurementsBySubscriber(AdoDataConnection database, Guid subscriberId)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                if (subscriberId == null || subscriberId == Guid.Empty)
+                    return Load(database);
+
+                ObservableCollection<Measurement> possibleMeasurements = new ObservableCollection<Measurement>();
+                DataTable possibleMeasurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail WHERE SignalID NOT IN " +
+                    "(SELECT SignalID FROM SubscriberMeasurement WHERE SubscriberID = @subscriberID) ORDER BY PointTag", DefaultTimeout, database.Guid(subscriberId));
+
+                foreach (DataRow row in possibleMeasurementTable.Rows)
+                {
+                    possibleMeasurements.Add(new Measurement()
+                    {
+                        SignalID = database.Guid(row, "SignalID"),
+                        HistorianID = row.Field<int?>("HistorianID"),
+                        PointID = row.Field<int>("PointID"),
+                        DeviceID = row.Field<int?>("DeviceID"),
+                        PointTag = row.Field<string>("PointTag"),
+                        AlternateTag = row.Field<string>("AlternateTag"),
+                        SignalTypeID = row.Field<int>("SignalTypeID"),
+                        PhasorSourceIndex = row.Field<int?>("PhasorSourceIndex"),
+                        SignalReference = row.Field<string>("SignalReference"),
+                        Adder = row.Field<double>("Adder"),
+                        Multiplier = row.Field<double>("Multiplier"),
+                        Description = row.Field<string>("Description"),
+                        Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
+                        m_historianAcronym = row.Field<string>("HistorianAcronym"),
+                        m_deviceAcronym = row.Field<object>("DeviceAcronym") == null ? string.Empty : row.Field<string>("DeviceAcronym"),
+                        m_signalName = row.Field<string>("SignalName"),
+                        m_signalAcronym = row.Field<string>("SignalAcronym"),
+                        m_signalSuffix = row.Field<string>("SignalTypeSuffix"),
+                        m_phasorLabel = row.Field<string>("PhasorLabel"),
+                        m_id = row.Field<string>("ID"),
+                        Selected = false
+                    });
+                }
+
+                return possibleMeasurements;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
         /// Gets a <see cref="Dictionary{T1,T2}"/> style list of <see cref="Measurement"/> information.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>

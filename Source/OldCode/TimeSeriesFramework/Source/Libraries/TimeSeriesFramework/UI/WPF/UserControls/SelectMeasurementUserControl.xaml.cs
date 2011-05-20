@@ -59,6 +59,29 @@ namespace TimeSeriesFramework.UI.UserControls
 
         #region [ Properties ]
 
+        // Dependency Properties
+
+        /// <summary>
+        /// <see cref="DependencyProperty"/> to determine number of measurements per page.
+        /// </summary>
+        public static readonly DependencyProperty ItemsPerPageProperty = DependencyProperty.Register("ItemsPerPage", typeof(int),
+            typeof(SelectMeasurementUserControl), new UIPropertyMetadata(0));
+
+        /// <summary>
+        /// Gets or sets number of measurements to display on a page.
+        /// </summary>
+        public int ItemsPerPage
+        {
+            get
+            {
+                return (int)GetValue(ItemsPerPageProperty);
+            }
+            set
+            {
+                SetValue(ItemsPerPageProperty, value);
+            }
+        }
+
         /// <summary>
         /// Gets updated measurement list.
         /// </summary>
@@ -80,11 +103,16 @@ namespace TimeSeriesFramework.UI.UserControls
         public SelectMeasurementUserControl()
         {
             InitializeComponent();
+            this.Loaded += new RoutedEventHandler(SelectMeasurementUserControl_Loaded);
+        }
+
+        void SelectMeasurementUserControl_Loaded(object sender, RoutedEventArgs e)
+        {
             // TODO: Think about the placement of try catch statement.
             // It was added here since designed did not work without it.
             try
             {
-                m_dataContext = new SelectMeasurements(17);
+                m_dataContext = new SelectMeasurements(ItemsPerPage);
                 m_itemsSource = m_dataContext.ItemsSource;
 
                 foreach (TimeSeriesFramework.UI.DataModels.Measurement measurement in m_itemsSource)

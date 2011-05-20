@@ -32,6 +32,8 @@ namespace TimeSeriesFramework.UI.UserControls
     /// </summary>
     public partial class MeasurementGroupUserControl : UserControl
     {
+        private MeasurementGroups m_dataContext;
+
         #region [ Constructor ]
 
         /// <summary>
@@ -40,13 +42,25 @@ namespace TimeSeriesFramework.UI.UserControls
         public MeasurementGroupUserControl()
         {
             InitializeComponent();
-            StackPanelManageMeasurementGroup.DataContext = new MeasurementGroups(1);
+            m_dataContext = new MeasurementGroups(1);
+            m_dataContext.MeasurementsAdded += new MeasurementGroups.OnMeasurementsAdded(m_dataContext_MeasurementsAdded);
+            StackPanelManageMeasurementGroup.DataContext = m_dataContext;
             this.Loaded += new System.Windows.RoutedEventHandler(MeasurementGroupUserControl_Loaded);
         }
 
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Handles MeasurementsAdded event raised by MeasurementGroups view model class.
+        /// </summary>
+        /// <param name="sender">Source of the event.</param>
+        /// <param name="e">Event arguments.</param>
+        private void m_dataContext_MeasurementsAdded(object sender, RoutedEventArgs e)
+        {
+            UserControlSelectMeasurements.UncheckSelection();
+        }
 
         /// <summary>
         /// Hanldes Loaded event of <see cref="MeasurementGroupUserControl"/>.
@@ -65,7 +79,7 @@ namespace TimeSeriesFramework.UI.UserControls
         /// <param name="e">Event arguments</param>
         private void UpdatePossibleMeasurements(object sender, RoutedEventArgs e)
         {
-            ((MeasurementGroups)StackPanelManageMeasurementGroup.DataContext).CurrentItem.PossibleMeasurements = UserControlSelectMeasurements.UpdatedMeasurements;
+            m_dataContext.CurrentItem.PossibleMeasurements = UserControlSelectMeasurements.UpdatedMeasurements;
         }
 
         #endregion

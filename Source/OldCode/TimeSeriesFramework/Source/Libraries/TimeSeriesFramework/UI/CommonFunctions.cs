@@ -275,7 +275,7 @@ namespace TimeSeriesFramework.UI
         /// </summary>
         /// <param name="parent">Parent UIElement</param>
         /// <param name="targetType">Type of the child UIElement.</param>
-        /// <returns>UIElement of requested type if found otherwise null.</returns>
+        /// <param name="element">Reference parameter to return UIElement.</param>
         public static void GetFirstChild(UIElement parent, Type targetType, ref UIElement element)
         {
             int count = VisualTreeHelper.GetChildrenCount(parent);

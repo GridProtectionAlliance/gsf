@@ -19,7 +19,9 @@
 //  05/10/2011 - Magdiel Lorenzo
 //       Generated original version of source code.
 // 05/13/2011 - Aniket Salver
-//                  Modified the way Guid is retrived from the Data Base.
+//       Modified the way Guid is retrived from the Data Base.
+// 05/20/2011 - Mehulbhai P Thakkar
+//       Added methods to retrieve, add and remove measurements and measurement groups.
 //
 //******************************************************************************************************
 
@@ -37,8 +39,9 @@ namespace TimeSeriesFramework.UI.DataModels
     /// </summary>
     public class Subscriber : DataModelBase
     {
-
         #region [ Members ]
+
+        // Fields
 
         private Guid m_nodeID;
         private Guid m_id;
@@ -53,9 +56,118 @@ namespace TimeSeriesFramework.UI.DataModels
         private DateTime m_updatedOn;
         private string m_updatedBy;
 
+        // Fields below are used only for Subscriber Measurements screen.
+        private Dictionary<Guid, string> m_allowedMeasurements;
+        private Dictionary<Guid, string> m_deniedMeasurements;
+        private ObservableCollection<Measurement> m_availableMeasurements;
+        private Dictionary<int, string> m_allowedMeasurementGroups;
+        private Dictionary<int, string> m_deniedMeasurementGroups;
+        private Dictionary<int, string> m_availableMeasurementGroups;
+
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets <see cref="Subscriber"/>'s allowed measurements.
+        /// </summary>
+        // Field is populated by many to many database relationship with measurement table, so no validation applied.
+        public Dictionary<Guid, string> AllowedMeasurements
+        {
+            get
+            {
+                return m_allowedMeasurements;
+            }
+            set
+            {
+                m_allowedMeasurements = value;
+                OnPropertyChanged("AllowedMeasurements");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="Subscriber"/>'s denied measurements.
+        /// </summary>
+        // Field is populated by many to many database relationship with measurement table, so no validation applied.
+        public Dictionary<Guid, string> DeniedMeasurements
+        {
+            get
+            {
+                return m_deniedMeasurements;
+            }
+            set
+            {
+                m_deniedMeasurements = value;
+                OnPropertyChanged("DeniedMeasurements");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="Subscriber"/>'s available measurements.
+        /// </summary>
+        public ObservableCollection<Measurement> AvailableMeasurements
+        {
+            get
+            {
+                return m_availableMeasurements;
+            }
+            set
+            {
+                m_availableMeasurements = value;
+                OnPropertyChanged("AvailableMeasurements");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="Subscriber"/>'s allowed measurement groups.
+        /// </summary>
+        // Field is populated by many to many database relationship with measurementgroup table, so no validation applied.
+        public Dictionary<int, string> AllowedMeasurementGroups
+        {
+            get
+            {
+                return m_allowedMeasurementGroups;
+            }
+            set
+            {
+                m_allowedMeasurementGroups = value;
+                OnPropertyChanged("AllowedMeasurementGroups");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="Subscriber"/>'s denied measurement groups.
+        /// </summary>
+        // Field is populated by many to many database relationship with measurementgroup table, so no validation applied.
+        public Dictionary<int, string> DeniedMeasurementGroups
+        {
+            get
+            {
+                return m_deniedMeasurementGroups;
+            }
+            set
+            {
+                m_deniedMeasurementGroups = value;
+                OnPropertyChanged("DeniedMeasurementGroups");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="Subscriber"/>'s available measurement groups.
+        /// </summary>
+        // Field is populated by many to many database relationship with measurementgroup table, so no validation applied.
+        public Dictionary<int, string> AvailableMeasurementGroups
+        {
+            get
+            {
+                return m_availableMeasurementGroups;
+            }
+            set
+            {
+                m_availableMeasurementGroups = value;
+                OnPropertyChanged("AvailableMeasurementGroups");
+            }
+        }
 
         /// <summary>
         /// Gets or sets the current <see cref="Subscriber"/>'s node ID.
@@ -154,6 +266,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_authKey = value;
+                OnPropertyChanged("AuthKey");
             }
         }
 
@@ -274,7 +387,8 @@ namespace TimeSeriesFramework.UI.DataModels
                 ObservableCollection<Subscriber> subscriberList = new ObservableCollection<Subscriber>();
                 DataTable subscriberTable;
 
-                subscriberTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, NodeID, Acronym, Name, SharedSecret, AuthKey, ValidIPAddresses, Enabled FROM Subscriber ORDER BY Name");
+                subscriberTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, NodeID, Acronym, Name, SharedSecret, AuthKey, ValidIPAddresses, " +
+                    "Enabled FROM Subscriber WHERE NodeID = @nodeID ORDER BY Name", DefaultTimeout, database.CurrentNodeID());
 
                 foreach (DataRow row in subscriberTable.Rows)
                 {
@@ -287,11 +401,314 @@ namespace TimeSeriesFramework.UI.DataModels
                         SharedSecret = row.Field<string>("SharedSecret"),
                         AuthKey = row.Field<string>("AuthKey"),
                         ValidIPAddresses = row.Field<string>("ValidIPAddresses"),
-                        Enabled = Convert.ToBoolean(row.Field<object>("Enabled"))
+                        Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
+                        AllowedMeasurements = GetAllowedMeasurements(database, database.Guid(row, "ID")),
+                        DeniedMeasurements = GetDeniedMeasurements(database, database.Guid(row, "ID")),
+                        AvailableMeasurements = GetAvailableMeasurements(database, database.Guid(row, "ID")),
+                        AllowedMeasurementGroups = GetAllowedMeasurementGroups(database, database.Guid(row, "ID")),
+                        DeniedMeasurementGroups = GetDeniedMeasurementGroups(database, database.Guid(row, "ID")),
+                        AvailableMeasurementGroups = GetAvailableMeasurementGroups(database, database.Guid(row, "ID"))
                     });
                 }
 
                 return subscriberList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Retrieves <see cref="Dictionary{T1,T2}"/> type collection of <see cref="Measurement"/> allowed for <see cref="Subscriber"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="subscriberID">ID of the <see cref="Subscriber"/> to filter data.</param>
+        /// <returns><see cref="Dictionary{T1,T2}"/> type collection of SignalID and PointTag of <see cref="Measurement"/>.</returns>
+        public static Dictionary<Guid, string> GetAllowedMeasurements(AdoDataConnection database, Guid subscriberID)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                Dictionary<Guid, string> allowedMeasurements = new Dictionary<Guid, string>();
+                DataTable allowedMeasurementTable = database.Connection.RetrieveData(database.AdapterType,
+                    "SELECT SignalID, PointTag FROM SubscriberMeasurementDetail WHERE SubscriberID = @subscriberID AND Allowed = @allowed ORDER BY PointTag",
+                    DefaultTimeout, subscriberID, true);
+
+                foreach (DataRow row in allowedMeasurementTable.Rows)
+                    allowedMeasurements[database.Guid(row, "SignalID")] = row.Field<string>("PointTag");
+
+                return allowedMeasurements;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Retrieves <see cref="Dictionary{T1,T2}"/> type collection of <see cref="Measurement"/> denied for <see cref="Subscriber"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="subscriberID">ID of the <see cref="Subscriber"/> to filter data.</param>
+        /// <returns><see cref="Dictionary{T1,T2}"/> type collection of SignalID and PointTag of <see cref="Measurement"/>.</returns>
+        public static Dictionary<Guid, string> GetDeniedMeasurements(AdoDataConnection database, Guid subscriberID)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                Dictionary<Guid, string> deniedMeasurements = new Dictionary<Guid, string>();
+                DataTable deniedMeasurementTable = database.Connection.RetrieveData(database.AdapterType,
+                    "SELECT SignalID, PointTag FROM SubscriberMeasurementDetail WHERE SubscriberID = @subscriberID AND Allowed = @allowed ORDER BY PointTag",
+                    DefaultTimeout, subscriberID, false);
+
+                foreach (DataRow row in deniedMeasurementTable.Rows)
+                    deniedMeasurements[database.Guid(row, "SignalID")] = row.Field<string>("PointTag");
+
+                return deniedMeasurements;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Retrieves <see cref="Measurement"/> collection which are not assigned to <see cref="Subscriber"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="subscriberID">ID of the <see cref="Subscriber"/> to filter data.</param>
+        /// <returns><see cref="ObservableCollection{T}"/> style list of <see cref="Measurement"/>.</returns>
+        public static ObservableCollection<Measurement> GetAvailableMeasurements(AdoDataConnection database, Guid subscriberID)
+        {
+            return Measurement.GetMeasurementsBySubscriber(database, subscriberID);
+        }
+
+        /// <summary>
+        /// Retrieves <see cref="Dictionary{T1,T2}"/> type collection of <see cref="MeasurementGroup"/> allowed for <see cref="Subscriber"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="subscriberID">ID of the <see cref="Subscriber"/> to filter data.</param>
+        /// <returns><see cref="Dictionary{T1,T2}"/> type collection of ID and Name of <see cref="MeasurementGroup"/>.</returns>
+        public static Dictionary<int, string> GetAllowedMeasurementGroups(AdoDataConnection database, Guid subscriberID)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                Dictionary<int, string> allowedMeasurementGroups = new Dictionary<int, string>();
+                DataTable allowedMeasurementGroupTable = database.Connection.RetrieveData(database.AdapterType,
+                    "SELECT MeasurementGroupID, MeasurementGroupName FROM SubscriberMeasurementGroupDetail WHERE SubscriberID = @subscriberID AND Allowed = @allowed ORDER BY MeasurementGroupName",
+                    DefaultTimeout, subscriberID, true);
+
+                foreach (DataRow row in allowedMeasurementGroupTable.Rows)
+                    allowedMeasurementGroups[row.Field<int>("MeasurementGroupID")] = row.Field<string>("MeasurementGroupName");
+
+                return allowedMeasurementGroups;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Retrieves <see cref="Dictionary{T1,T2}"/> type collection of <see cref="MeasurementGroup"/> denied for <see cref="Subscriber"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="subscriberID">ID of the <see cref="Subscriber"/> to filter data.</param>
+        /// <returns><see cref="Dictionary{T1,T2}"/> type collection of ID and Name of <see cref="MeasurementGroup"/>.</returns>
+        public static Dictionary<int, string> GetDeniedMeasurementGroups(AdoDataConnection database, Guid subscriberID)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                Dictionary<int, string> deniedMeasurementGroups = new Dictionary<int, string>();
+                DataTable deniedMeasurementGroupTable = database.Connection.RetrieveData(database.AdapterType,
+                    "SELECT MeasurementGroupID, MeasurementGroupName FROM SubscriberMeasurementGroupDetail WHERE SubscriberID = @subscriberID AND Allowed = @allowed ORDER BY MeasurementGroupName",
+                    DefaultTimeout, subscriberID, false);
+
+                foreach (DataRow row in deniedMeasurementGroupTable.Rows)
+                    deniedMeasurementGroups[row.Field<int>("MeasurementGroupID")] = row.Field<string>("MeasurementGroupName");
+
+                return deniedMeasurementGroups;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Retrieves <see cref="Dictionary{T1,T2}"/> type collection of <see cref="MeasurementGroup"/> neither allowed nor denied for <see cref="Subscriber"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="subscriberID">ID of the <see cref="Subscriber"/> to filter data.</param>
+        /// <returns><see cref="Dictionary{T1,T2}"/> type collection of ID and Name of <see cref="MeasurementGroup"/>.</returns>
+        public static Dictionary<int, string> GetAvailableMeasurementGroups(AdoDataConnection database, Guid subscriberID)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                Dictionary<int, string> availableMeasurementGroups = new Dictionary<int, string>();
+                DataTable availableMeasurementGroupTable = database.Connection.RetrieveData(database.AdapterType,
+                    "SELECT ID, Name FROM MeasurementGroup WHERE " +
+                    "ID NOT IN (SELECT MeasurementGroupID FROM SubscriberMeasurementGroup WHERE SubscriberID = @subscriberID) ORDER BY Name",
+                    DefaultTimeout, subscriberID);
+
+                foreach (DataRow row in availableMeasurementGroupTable.Rows)
+                    availableMeasurementGroups[row.Field<int>("ID")] = row.Field<string>("Name");
+
+                return availableMeasurementGroups;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Adds measurements to <see cref="Subscriber"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="subscriberID">ID of the <see cref="Subscriber"/> to which measurements to be added.</param>
+        /// <param name="measurementsToBeAdded">List of <see cref="Measurement"/> IDs to be added.</param>
+        /// <param name="allowed">boolean flag to indicate if measurements are allowed or denied.</param>
+        /// <returns>string, indicating success for UI display.</returns>
+        public static string AddMeasurements(AdoDataConnection database, Guid subscriberID, List<Guid> measurementsToBeAdded, bool allowed)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                foreach (Guid id in measurementsToBeAdded)
+                {
+                    database.Connection.ExecuteNonQuery("INSERT INTO SubscriberMeasurement (NodeID, SubscriberID, SignalID, Allowed, UpdatedOn, UpdatedBy, CreatedOn, CreatedBy) VALUES " +
+                        "(@nodeID, @subscriberID, @signalID, @allowed, @updatedOn, @updatedBy, @createdOn, @createdBy)", DefaultTimeout, database.CurrentNodeID(),
+                        database.Guid(subscriberID), database.Guid(id), allowed, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser);
+                }
+
+                if (allowed)
+                    return "Measuremnets added to allowed measurements list for subscriber successfully";
+                else
+                    return "Measuremnets added to denied measurements list for subscriber successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Removes measurements from <see cref="Subscriber"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="subscriberID">ID of the <see cref="Subscriber"/> from which measurements to be removed.</param>
+        /// <param name="measurementsToBeRemoved">List of <see cref="Measurement"/> IDs to be removed.</param>
+        /// <returns>string, indicating success for UI display.</returns>
+        public static string RemoveMeasurements(AdoDataConnection database, Guid subscriberID, List<Guid> measurementsToBeRemoved)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                foreach (Guid id in measurementsToBeRemoved)
+                {
+                    database.Connection.ExecuteNonQuery("DELETE FROM SubscriberMeasurement WHERE SubscriberID = @subscriberID AND SignalID = @signalID", DefaultTimeout,
+                        database.Guid(subscriberID), database.Guid(id));
+                }
+
+                return "Selected measuremnets removed successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Adds measurement groups to <see cref="Subscriber"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="subscriberID">ID of the <see cref="Subscriber"/> to which measurements to be added.</param>
+        /// <param name="measurementGroupsToBeAdded">List of <see cref="MeasurementGroup"/> IDs to be added.</param>
+        /// <param name="allowed">boolean flag to indicate if measurement groups are allowed or denied.</param>
+        /// <returns>string, indicating success for UI display.</returns>
+        public static string AddMeasurementGroups(AdoDataConnection database, Guid subscriberID, List<int> measurementGroupsToBeAdded, bool allowed)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                foreach (int id in measurementGroupsToBeAdded)
+                {
+                    database.Connection.ExecuteNonQuery("INSERT INTO SubscriberMeasurementGroup (NodeID, SubscriberID, MeasurementGroupID, Allowed, UpdatedOn, UpdatedBy, CreatedOn, CreatedBy) VALUES " +
+                        "(@nodeID, @subscriberID, @measurementGroupID, @allowed, @updatedOn, @updatedBy, @createdOn, @createdBy)", DefaultTimeout, database.CurrentNodeID(),
+                        database.Guid(subscriberID), id, allowed, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser);
+                }
+
+                if (allowed)
+                    return "Measuremnet groups added to allowed measurement groups list for subscriber successfully";
+                else
+                    return "Measuremnet groups added to denied measurement groups list for subscriber successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Removed measurement groups from <see cref="Subscriber"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="subscriberID">ID of the <see cref="Subscriber"/> to which measurement groups to be removed.</param>
+        /// <param name="measurementGroupsToBeRemoved">List of <see cref="MeasurementGroup"/> IDs to be removed.</param>
+        /// <returns>string, indicating success for UI display.</returns>
+        public static string RemoveMeasurementGroups(AdoDataConnection database, Guid subscriberID, List<int> measurementGroupsToBeRemoved)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                foreach (int id in measurementGroupsToBeRemoved)
+                {
+                    database.Connection.ExecuteNonQuery("DELETE FROM SubscriberMeasurementGroup WHERE SubscriberID = @subscriberID AND MeasurementGroupID = @measurementGroupID", DefaultTimeout,
+                        database.Guid(subscriberID), id);
+                }
+
+                return "Measuremnet groups removed from allowed measurement groups list for subscriber successfully";
             }
             finally
             {
@@ -367,7 +784,6 @@ namespace TimeSeriesFramework.UI.DataModels
                     database.Dispose();
             }
         }
-
 
         /// <summary>
         /// Deletes specified <see cref="Subscriber"/> record from database.

@@ -26,6 +26,7 @@
       <MenuDataItem Icon="" MenuText="Vendor Devices" Description="Manage Vendor Devices" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.VendorDeviceUserControl" />
       <MenuDataItem Icon="" MenuText="Subscribers" Description="Manage PG Subscribers" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.SubscriberUserControl"/>
       <MenuDataItem Icon="" MenuText="Measurement Groups" Description="Manage Measurement Groups" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.MeasurementGroupUserControl"/>
+      <MenuDataItem Icon="" MenuText="Subscriber Measurement" Description="Manage Subscriber Measurements" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.SubscriberMeasurementUserControl"/>
       <MenuDataItem Icon="" MenuText="" Description="" Roles="*" UserControlAssembly="" UserControlPath="" />
       <MenuDataItem Icon="" MenuText="Security" Description="Manage Application Security" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.SecurityUserControl" />
       <MenuDataItem Icon="" MenuText="Measurements" Description="Manage Measurements" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.MeasurementUserControl"/>
