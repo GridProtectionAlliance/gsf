@@ -154,7 +154,12 @@ namespace TimeSeriesFramework.UI.ViewModels
                                             m.SignalReference.ToLower().Contains(searchText) ||
                                             m.Description.ToNonNullString().ToLower().Contains(searchText) ||
                                             m.DeviceAcronym.ToNonNullString().ToLower().Contains(searchText) ||
-                                            m.PhasorLabel.ToNonNullString().ToLower().Contains(searchText)));
+                                            m.PhasorLabel.ToNonNullString().ToLower().Contains(searchText) ||
+                                            m.SignalName.ToNonNullString().ToLower().Contains(searchText) ||
+                                            m.SignalAcronym.ToNonNullString().ToLower().Contains(searchText) ||
+                                            m.CompanyName.ToNonNullString().ToLower().Contains(searchText) ||
+                                            m.CompanyAcronym.ToNonNullString().ToLower().Contains(searchText)
+                                            ));
             }
         }
 

@@ -76,6 +76,8 @@ namespace TimeSeriesFramework.UI.DataModels
         private DateTime m_updatedOn;
         private string m_updatedBy;
         private string m_id;
+        private string m_companyAcronym;
+        private string m_companyName;
         private bool m_selected;  //This is added for the SelectMeasurement user control to provide check boxes.
 
         #endregion
@@ -497,6 +499,30 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
+        /// Gets <see cref="Measurement"/> company acronym.
+        /// </summary>
+        // Field is populated via view, so no validation attributes are applied.
+        public string CompanyAcronym
+        {
+            get
+            {
+                return m_companyAcronym;
+            }
+        }
+
+        /// <summary>
+        /// Gets <see cref="Measurement"/> company name.
+        /// </summary>
+        // Field is populated via view, so no validation attributes are applied.
+        public string CompanyName
+        {
+            get
+            {
+                return m_companyName;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets selected flag for <see cref="Measurement"/>.
         /// </summary>
         public bool Selected
@@ -565,6 +591,8 @@ namespace TimeSeriesFramework.UI.DataModels
                         m_phasorLabel = row.Field<string>("PhasorLabel"),
                         m_framesPerSecond = Convert.ToInt32(row.Field<object>("FramesPerSecond") ?? 30),
                         m_id = row.Field<string>("ID"),
+                        m_companyAcronym = row.Field<object>("CompanyAcronym") == null ? string.Empty : row.Field<string>("CompanyAcronym"),
+                        m_companyName = row.Field<object>("CompanyName") == null ? string.Empty : row.Field<string>("CompanyName"),
                         Selected = false
                     });
                 }
@@ -622,6 +650,8 @@ namespace TimeSeriesFramework.UI.DataModels
                         m_signalSuffix = row.Field<string>("SignalTypeSuffix"),
                         m_phasorLabel = row.Field<string>("PhasorLabel"),
                         m_id = row.Field<string>("ID"),
+                        m_companyAcronym = row.Field<object>("CompanyAcronym") == null ? string.Empty : row.Field<string>("CompanyAcronym"),
+                        m_companyName = row.Field<object>("CompanyName") == null ? string.Empty : row.Field<string>("CompanyName"),
                         Selected = false
                     });
                 }
@@ -679,6 +709,8 @@ namespace TimeSeriesFramework.UI.DataModels
                         m_signalSuffix = row.Field<string>("SignalTypeSuffix"),
                         m_phasorLabel = row.Field<string>("PhasorLabel"),
                         m_id = row.Field<string>("ID"),
+                        m_companyAcronym = row.Field<object>("CompanyAcronym") == null ? string.Empty : row.Field<string>("CompanyAcronym"),
+                        m_companyName = row.Field<object>("CompanyName") == null ? string.Empty : row.Field<string>("CompanyName"),
                         Selected = false
                     });
                 }
