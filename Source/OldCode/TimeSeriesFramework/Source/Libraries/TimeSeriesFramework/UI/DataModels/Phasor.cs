@@ -330,11 +330,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         Type = row.Field<string>("Type"),
                         Phase = row.Field<string>("Phase"),
                         //DestinationPhasorID = row.Field<int>("DestinationPhasorID"),
-                        SourceIndex = row.Field<int>("SourceIndex"),
-                        CreatedBy = row.Field<string>("CreatedBy"),
-                        CreatedOn = row.Field<DateTime>("CreatedOn"),
-                        UpdatedBy = row.Field<string>("UpdatedBy"),
-                        UpdatedOn = row.Field<DateTime>("UpdatedOn")
+                        SourceIndex = row.Field<int>("SourceIndex")
                     });
                 }
 
@@ -407,6 +403,38 @@ namespace TimeSeriesFramework.UI.DataModels
                         "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, phasor.DeviceID, phasor.Label, phasor.Type,
                         phasor.Phase, phasor.SourceIndex, CommonFunctions.CurrentUser, database.UtcNow(), phasor.ID);
 
+                // Get reference to the device to which phasor is being added.
+                Device device = Device.GetDevice(database, "ID = " + phasor.DeviceID);
+
+                // Get Phasor signal types.
+                ObservableCollection<SignalType> signals;
+                if (phasor.Type == "V")
+                    signals = SignalType.GetVoltagePhasorSignalTypes();
+                else
+                    signals = SignalType.GetCurrentPhasorSignalTypes();
+
+                // Get reference to phasor which has just been added.
+                Phasor addedPhasor = GetPhasor(database, "DeviceID = " + phasor.DeviceID + " AND SourceIndex = " + phasor.SourceIndex);
+
+                foreach (SignalType signal in signals)
+                {
+                    Measurement measurement = Measurement.GetMeasurement(database, "DeviceID = " + phasor.DeviceID + " AND SignalTypeSuffix = '" + signal.Suffix + "' AND PhasorSourceIndex = " + phasor.SourceIndex);
+                    if (measurement == null)
+                        measurement = new Measurement();
+
+                    measurement.HistorianID = device.HistorianID;
+                    measurement.DeviceID = device.ID;
+                    measurement.PointTag = device.CompanyAcronym + "_" + device.Acronym + "-" + signal.Suffix + addedPhasor.SourceIndex.ToString() + ":" + device.VendorAcronym + signal.Abbreviation;
+                    measurement.AlternateTag = string.Empty;
+                    measurement.SignalTypeID = signal.ID;
+                    measurement.PhasorSourceIndex = addedPhasor.SourceIndex;
+                    measurement.SignalReference = device.Acronym + "-" + signal.Suffix + addedPhasor.SourceIndex.ToString();
+                    measurement.Description = device.Name + " " + addedPhasor.Label + " " + device.VendorDeviceName + " " + addedPhasor.Phase + " " + signal.Name;
+                    measurement.Enabled = true;
+
+                    Measurement.Save(database, measurement);
+                }
+
                 return "Phasor information saved successfully";
             }
             finally
@@ -436,6 +464,44 @@ namespace TimeSeriesFramework.UI.DataModels
                 database.Connection.ExecuteNonQuery("DELETE FROM Phasor WHERE ID = @phasorID", DefaultTimeout, phasorID);
 
                 return "Phasor deleted successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Retrieves <see cref="Phasor"/> information based on query string filter.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="whereClause">query string to filter data.</param>
+        /// <returns><see cref="Phasor"/> information.</returns>
+        public static Phasor GetPhasor(AdoDataConnection database, string whereClause)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+                DataTable phasorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM PhasorDetail WHERE " + whereClause);
+
+                if (phasorTable.Rows.Count == 0)
+                    return null;
+
+                DataRow row = phasorTable.Rows[0];
+                Phasor phasor = new Phasor()
+                {
+                    ID = row.Field<int>("ID"),
+                    DeviceID = row.Field<int>("DeviceID"),
+                    Label = row.Field<string>("Label"),
+                    Type = row.Field<string>("Type"),
+                    Phase = row.Field<string>("Phase"),
+                    SourceIndex = row.Field<int>("SourceIndex")
+                };
+
+                return phasor;
             }
             finally
             {

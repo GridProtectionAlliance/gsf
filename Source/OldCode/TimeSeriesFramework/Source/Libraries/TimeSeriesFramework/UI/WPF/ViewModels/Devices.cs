@@ -296,11 +296,21 @@ namespace TimeSeriesFramework.UI.ViewModels
 
             if (ItemsPerPage == 0) // i.e. if user is on form page then go back to list page after save.
             {
-                TextBlock textBlock = (TextBlock)Application.Current.MainWindow.FindName("TextBlockTitle");
-                System.Windows.Controls.Frame frame = (System.Windows.Controls.Frame)Application.Current.MainWindow.FindName("FrameContent");
-                DeviceListUserControl deviceListUserControl = new DeviceListUserControl();
-                textBlock.Text = "Browse Devices";
-                frame.Navigate(deviceListUserControl);
+                UIElement frame = null;
+                UIElement groupBox = null;
+                CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(System.Windows.Controls.Frame), ref frame);
+                CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(GroupBox), ref groupBox);
+
+                if (frame != null)
+                {
+                    DeviceListUserControl deviceListUserControl = new DeviceListUserControl();
+                    ((System.Windows.Controls.Frame)frame).Navigate(deviceListUserControl);
+
+                    if (groupBox != null)
+                        ((GroupBox)groupBox).Header = "Browse Devices";
+
+                    Application.Current.MainWindow.Title = "Browse Devices";
+                }
             }
         }
 
@@ -311,11 +321,21 @@ namespace TimeSeriesFramework.UI.ViewModels
         private void GoToEdit(object parameter)
         {
             Device deviceToEdit = (Device)parameter;
-            TextBlock textBlock = (TextBlock)Application.Current.MainWindow.FindName("TextBlockTitle");
-            System.Windows.Controls.Frame frame = (System.Windows.Controls.Frame)Application.Current.MainWindow.FindName("FrameContent");
-            DeviceUserControl deviceUserControl = new DeviceUserControl(deviceToEdit);
-            textBlock.Text = "Manage Device Configuration";
-            frame.Navigate(deviceUserControl);
+            UIElement frame = null;
+            UIElement groupBox = null;
+            CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(System.Windows.Controls.Frame), ref frame);
+            CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(GroupBox), ref groupBox);
+
+            if (frame != null)
+            {
+                DeviceUserControl deviceUserControl = new DeviceUserControl(deviceToEdit);
+                ((System.Windows.Controls.Frame)frame).Navigate(deviceUserControl);
+
+                if (groupBox != null)
+                    ((GroupBox)groupBox).Header = "Manage Device Configuration";
+
+                Application.Current.MainWindow.Title = "Manage Device Configuration";
+            }
         }
 
         /// <summary>
@@ -341,11 +361,21 @@ namespace TimeSeriesFramework.UI.ViewModels
             ItemsPerPage = 0; // Set this so that on Save() user will be sent back to list screen.
 
             // Go to edit screen.
-            TextBlock textBlock = (TextBlock)Application.Current.MainWindow.FindName("TextBlockTitle");
-            System.Windows.Controls.Frame frame = (System.Windows.Controls.Frame)Application.Current.MainWindow.FindName("FrameContent");
-            DeviceUserControl deviceUserControl = new DeviceUserControl(deviceToCopy);
-            textBlock.Text = "Manage Device Configuration";
-            frame.Navigate(deviceUserControl);
+            UIElement frame = null;
+            UIElement groupBox = null;
+            CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(System.Windows.Controls.Frame), ref frame);
+            CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(GroupBox), ref groupBox);
+
+            if (frame != null)
+            {
+                DeviceUserControl deviceUserControl = new DeviceUserControl(deviceToCopy);
+                ((System.Windows.Controls.Frame)frame).Navigate(deviceUserControl);
+
+                if (groupBox != null)
+                    ((GroupBox)groupBox).Header = "Manage Device Configuration";
+
+                Application.Current.MainWindow.Title = "Manage Device Configuration";
+            }
         }
 
         private bool DeviceExists(string acronym)
@@ -366,11 +396,22 @@ namespace TimeSeriesFramework.UI.ViewModels
         private void GoToMeasurements(object parameter)
         {
             Device device = (Device)parameter;
-            TextBlock textBlock = (TextBlock)Application.Current.MainWindow.FindName("TextBlockTitle");
-            System.Windows.Controls.Frame frame = (System.Windows.Controls.Frame)Application.Current.MainWindow.FindName("FrameContent");
-            MeasurementUserControl measurementUserControl = new MeasurementUserControl(device.ID);
-            textBlock.Text = Application.Current.MainWindow.Title = "Manage Measurements for " + device.Acronym;
-            frame.Navigate(measurementUserControl);
+
+            UIElement frame = null;
+            UIElement groupBox = null;
+            CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(System.Windows.Controls.Frame), ref frame);
+            CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(GroupBox), ref groupBox);
+
+            if (frame != null)
+            {
+                MeasurementUserControl measurementUserControl = new MeasurementUserControl(device.ID);
+                ((System.Windows.Controls.Frame)frame).Navigate(measurementUserControl);
+
+                if (groupBox != null)
+                    ((GroupBox)groupBox).Header = "Manage Measurements for " + device.Acronym;
+
+                Application.Current.MainWindow.Title = "Manage Measurements for " + device.Acronym;
+            }
         }
 
         /// <summary>
@@ -380,11 +421,22 @@ namespace TimeSeriesFramework.UI.ViewModels
         private void GoToPhasors(object parameter)
         {
             Device device = (Device)parameter;
-            TextBlock textBlock = (TextBlock)Application.Current.MainWindow.FindName("TextBlockTitle");
-            System.Windows.Controls.Frame frame = (System.Windows.Controls.Frame)Application.Current.MainWindow.FindName("FrameContent");
-            PhasorUserControl phasorUserControl = new PhasorUserControl(device.ID);
-            textBlock.Text = Application.Current.MainWindow.Title = "Manage Phasors for " + device.Acronym;
-            frame.Navigate(phasorUserControl);
+
+            UIElement frame = null;
+            UIElement groupBox = null;
+            CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(System.Windows.Controls.Frame), ref frame);
+            CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(GroupBox), ref groupBox);
+
+            if (frame != null)
+            {
+                PhasorUserControl phasorUserControl = new PhasorUserControl(device.ID);
+                ((System.Windows.Controls.Frame)frame).Navigate(phasorUserControl);
+
+                if (groupBox != null)
+                    ((GroupBox)groupBox).Header = "Manage Phasors for " + device.Acronym;
+
+                Application.Current.MainWindow.Title = "Manage Phasors for " + device.Acronym;
+            }
         }
 
         #endregion
