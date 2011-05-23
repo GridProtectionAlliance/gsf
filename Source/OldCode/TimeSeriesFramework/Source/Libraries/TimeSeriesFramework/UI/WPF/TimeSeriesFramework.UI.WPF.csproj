@@ -152,6 +152,9 @@
     <Compile Include="UserControls\SubscriberMeasurementUserControl.xaml.cs">
       <DependentUpon>SubscriberMeasurementUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\SubscriberRequestUserControl.xaml.cs">
+      <DependentUpon>SubscriberRequestUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\SubscriberUserControl.xaml.cs">
       <DependentUpon>SubscriberUserControl.xaml</DependentUpon>
     </Compile>
@@ -274,6 +277,10 @@
     <Page Include="UserControls\SubscriberMeasurementUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\SubscriberRequestUserControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="UserControls\SubscriberUserControl.xaml">
       <SubType>Designer</SubType>
