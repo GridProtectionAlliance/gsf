@@ -206,6 +206,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         [Required(ErrorMessage = "The Subscriber acronym is a required field, please provide a value.")]
         [StringLength(200, ErrorMessage = "The subscriber acronym cannot exceed 200 characters.")]
+        [RegularExpression("^[A-Z0-9-'!'_]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-' and '_' are allowed.")]
         public string Acronym
         {
             get
@@ -768,11 +769,11 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 if (subscriber.ID == Guid.Empty || subscriber.ID == null)
-                    database.Connection.ExecuteNonQuery("INSERT INTO Subscriber (NodeID, Acronym, Name, SharedSecret, AuthKey, ValidIPAddresses, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@nodeID, @acronym " +
-                "@name, @sharedSecret, @authKey, @validIpAddresses, @enabled, @updatedBy, @updatedOn, @createdBy, @createdOn", DefaultTimeout, database.Guid(subscriber.NodeID), subscriber.Acronym, subscriber.Name.ToNotNull(),
+                    database.Connection.ExecuteNonQuery("INSERT INTO Subscriber (ID, NodeID, Acronym, Name, SharedSecret, AuthKey, ValidIPAddresses, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@nodeID, @acronym " +
+                "@name, @sharedSecret, @authKey, @validIpAddresses, @enabled, @updatedBy, @updatedOn, @createdBy, @createdOn", DefaultTimeout, database.Guid(subscriber.ID), database.Guid(subscriber.NodeID), subscriber.Acronym, subscriber.Name.ToNotNull(),
                 subscriber.SharedSecret, subscriber.AuthKey, subscriber.ValidIPAddresses, subscriber.Enabled, CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
                 else
-                    database.Connection.ExecuteNonQuery("UPDATE Node SET NodeID = @nodeID, Acronym = @acronym, Name = @name, SharedSecret = @sharedSecret, AuthKey = @authKey, ValidIPAddresses = @validIpAddresses, " +
+                    database.Connection.ExecuteNonQuery("UPDATE Subscriber SET NodeID = @nodeID, Acronym = @acronym, Name = @name, SharedSecret = @sharedSecret, AuthKey = @authKey, ValidIPAddresses = @validIpAddresses, " +
                         "Enabled = @enabled, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, database.Guid(subscriber.NodeID), subscriber.Acronym, subscriber.Name.ToNotNull(),
                         subscriber.SharedSecret, subscriber.AuthKey, subscriber.ValidIPAddresses, subscriber.Enabled, CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(subscriber.ID));
 

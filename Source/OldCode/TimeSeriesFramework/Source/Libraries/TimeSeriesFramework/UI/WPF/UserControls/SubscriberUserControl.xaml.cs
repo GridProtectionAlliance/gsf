@@ -37,13 +37,6 @@ namespace TimeSeriesFramework.UI.UserControls
     /// </summary>
     public partial class SubscriberUserControl : UserControl
     {
-        #region [ Members ]
-
-        // Fields
-        private AuthenticationRequest m_request;
-
-        #endregion
-
         #region [ Constructor ]
 
         /// <summary>
@@ -98,6 +91,7 @@ namespace TimeSeriesFramework.UI.UserControls
             AuthenticationRequest m_request = new AuthenticationRequest();
             System.Windows.Forms.OpenFileDialog dg = new System.Windows.Forms.OpenFileDialog();
             dg.DefaultExt = ".xml";
+            dg.ShowDialog();
 
             XmlRootAttribute xmlRootAttribute = new XmlRootAttribute("AuthenticationRequest");
             XmlSerializer serializer = new XmlSerializer(typeof(AuthenticationRequest), xmlRootAttribute);
