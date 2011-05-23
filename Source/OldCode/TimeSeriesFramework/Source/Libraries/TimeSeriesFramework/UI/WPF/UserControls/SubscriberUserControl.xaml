@@ -73,7 +73,7 @@
             <TextBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3" Width="480" Text="{tsfBinding:Column Path=ValidIPAddresses}" Name="m_validIpAddressesField"/>
             
             <!--Sixth Row-->
-            <CheckBox Grid.Row="5" Grid.Column="3" Content="Enabled" IsChecked="{tsfBinding:Column Path=Enabled}"/>
+            <CheckBox Grid.Row="5" Grid.Column="3" Content="Enabled" IsChecked="{tsfBinding:Column Path=Enabled}" />
             
             <!--Seventh Row-->
             <Button Grid.Row="6" Grid.Column="0" Content="Import" Click="Button_Click"/>

@@ -95,6 +95,7 @@ namespace TimeSeriesFramework.UI.UserControls
         /// <param name="e">Event arguments.</param>
         private void Button_Click(object sender, RoutedEventArgs e)
         {
+            AuthenticationRequest m_request = new AuthenticationRequest();
             System.Windows.Forms.OpenFileDialog dg = new System.Windows.Forms.OpenFileDialog();
             dg.DefaultExt = ".xml";
 
