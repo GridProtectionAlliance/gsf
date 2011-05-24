@@ -205,7 +205,7 @@ namespace TimeSeriesFramework.UI.DataModels
         ///  Gets or sets <see cref="Device"/> Acronym.
         /// </summary>
         [Required(ErrorMessage = "Device acronym is a required field, please provide value.")]
-        [StringLength(50, ErrorMessage = "Device Acronym cannot exceed 50 characters.")]
+        [StringLength(200, ErrorMessage = "Device Acronym cannot exceed 200 characters.")]
         [RegularExpression("^[A-Z0-9-'!'_]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-' and '_' are allowed.")]
         public string Acronym
         {

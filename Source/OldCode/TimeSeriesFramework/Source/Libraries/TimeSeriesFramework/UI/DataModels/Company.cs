@@ -99,7 +99,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets map acronym used by <see cref="Company"/>.
         /// </summary>
         [Required(ErrorMessage = "Company map acronym is a required field, please provide value.")]
-        [StringLength(10, ErrorMessage = "Company map acronym cannot exceed 10 characters.")]
+        [StringLength(3, ErrorMessage = "Company map acronym cannot exceed 3 characters.")]
         public string MapAcronym
         {
             get

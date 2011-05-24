@@ -135,7 +135,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets <see cref="Adapter"/> AdapterName
         /// </summary>
         [Required(ErrorMessage = " Adapter name is a required field, please provide value.")]
-        [StringLength(50, ErrorMessage = " Adapter name cannot exceed 50 characters.")]
+        [StringLength(200, ErrorMessage = " Adapter name cannot exceed 200 characters.")]
         public string AdapterName
         {
             get
