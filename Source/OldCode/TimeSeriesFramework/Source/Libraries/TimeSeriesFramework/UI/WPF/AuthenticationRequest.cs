@@ -21,12 +21,7 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Xml.Serialization;
-using System.Collections.ObjectModel;
 
 namespace TimeSeriesFramework.UI
 {
@@ -38,7 +33,6 @@ namespace TimeSeriesFramework.UI
 
         #region [ Members ]
 
-        private Guid m_ID;
         private string m_acronym;
         private string m_name;
         private string m_sharedSecret;
@@ -51,22 +45,6 @@ namespace TimeSeriesFramework.UI
         #endregion
 
         #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets the request ID.
-        /// </summary>
-        [XmlElement]
-        public Guid ID
-        {
-            get
-            {
-                return m_ID;
-            }
-            set
-            {
-                m_ID = value;
-            }
-        }
 
         /// <summary>
         /// Gets or sets the request acronym.
@@ -145,22 +123,6 @@ namespace TimeSeriesFramework.UI
             set
             {
                 m_validIpAddresses = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets whether the subscriber is enabled.
-        /// </summary>
-        [XmlElement]
-        public bool Enabled
-        {
-            get
-            {
-                return m_enabled;
-            }
-            set
-            {
-                m_enabled = value;
             }
         }
 

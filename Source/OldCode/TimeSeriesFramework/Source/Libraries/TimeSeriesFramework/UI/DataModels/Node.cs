@@ -444,8 +444,8 @@ namespace TimeSeriesFramework.UI.DataModels
                 DataTable nodeTable;
 
                 nodeTable = database.Connection.RetrieveData(database.AdapterType, "Select ID, Name, CompanyID, " +
-                        "Longitude, Latitude, Description, ImagePath, Settings, MenuData, MenuType, Master, LoadOrder, Enabled, RemoteStatusServiceUrl, " +
-                        "RealTimeStatisticServiceUrl, CompanyName From NodeDetail ORDER BY LoadOrder");
+                        "Longitude, Latitude, Description, ImagePath, Settings, MenuData, MenuType, Master, LoadOrder, Enabled, " +
+                        "CompanyName From NodeDetail ORDER BY LoadOrder");
 
                 foreach (DataRow row in nodeTable.Rows)
                 {
@@ -465,8 +465,8 @@ namespace TimeSeriesFramework.UI.DataModels
                             LoadOrder = row.Field<int>("LoadOrder"),
                             Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
                             //TimeSeriesDataServiceUrl = row.Field<string>("TimeSeriesDataServiceUrl"),
-                            RemoteStatusServiceUrl = row.Field<string>("RemoteStatusServiceUrl"),
-                            RealTimeStatisticServiceUrl = row.Field<string>("RealTimeStatisticServiceUrl"),
+                            //RemoteStatusServiceUrl = row.Field<string>("RemoteStatusServiceUrl"),
+                            //RealTimeStatisticServiceUrl = row.Field<string>("RealTimeStatisticServiceUrl"),
                             m_companyName = row.Field<string>("CompanyName")
                         });
                 }

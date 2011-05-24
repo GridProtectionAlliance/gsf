@@ -45,11 +45,8 @@
             
             <!--First Row-->
             <TextBlock Grid.Row="0" Grid.Column="0" Text="Node ID"/>
-            <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding Source={StaticResource NodeLookupList}}" DisplayMemberPath="Value"
+            <ComboBox x:Name="ComboboxNode" Grid.Row="0" Grid.Column="1" ItemsSource="{Binding Source={StaticResource NodeLookupList}}" DisplayMemberPath="Value"
                       SelectedItem="{tsfBinding:Column Path=NodeID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource NodeLookupList}}"/>
-            <TextBlock Grid.Row="0" Grid.Column="2" Text="ID"/>
-            <TextBox Grid.Row="0" Grid.Column="3" Text="{tsfBinding:Column Path=ID}" Name="m_idField"/>
-            
             <!--Second Row-->
             <TextBlock Grid.Row="1" Grid.Column="0" Text="Acronym"/>
             <TextBox Grid.Row="1" Grid.Column="1" Text="{tsfBinding:Column Path=Acronym}" Name="m_acronymField"/>

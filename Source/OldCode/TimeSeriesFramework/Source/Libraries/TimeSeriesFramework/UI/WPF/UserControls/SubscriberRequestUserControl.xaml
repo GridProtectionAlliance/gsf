@@ -39,9 +39,7 @@
             </Grid.RowDefinitions>
 
             <!--First Row-->
-            <TextBlock Grid.Row="0" Grid.Column="0" Text="ID"/>
-            <TextBox Grid.Row="0" Grid.Column="1" Name="m_idField" IsReadOnly="True"/>
-
+            
             <!--Second Row-->
             <TextBlock Grid.Row="1" Grid.Column="0" Text="Acronym"/>
             <TextBox Grid.Row="1" Grid.Column="1" Name="m_acronymField"/>
@@ -66,9 +64,6 @@
             <!--Sixth Row-->
             <TextBlock Grid.Row="5" Grid.Column="0" Text="Valid IP Addresses"/>
             <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" Width="480" Name="m_validIpAddressesField"/>
-
-            <!--Seventh Row-->
-            <CheckBox Grid.Row="6" Grid.Column="3" Content="Enabled" Name="m_enabled"/>
 
             <!--Eighth Row-->
             <Button Grid.Row="7" Grid.Column="0" Content="Export" Click="Button_Click"/>

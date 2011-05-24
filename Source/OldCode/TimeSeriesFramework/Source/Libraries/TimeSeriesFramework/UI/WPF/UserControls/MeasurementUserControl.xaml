@@ -90,6 +90,10 @@
             <TextBox Grid.Row="4" Grid.Column="3" Text="{tsfBinding:Column Path=Multiplier}"/>
             
             <!--Sixth Row-->
+            <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="1">
+                <CheckBox Content="Internal" IsChecked="{tsfBinding:Column Path=Internal}"/>
+                <CheckBox Content="Subscribed" IsChecked="{tsfBinding:Column Path=Subscribed}"/>
+            </StackPanel>
             <CheckBox Content="Enabled" Grid.Row="5" Grid.Column="3" IsChecked="{tsfBinding:Column Path=Enabled}"/>
         </Grid>
 
@@ -103,6 +107,8 @@
                 <sdk:DataGridTextColumn Header="Historian" Width="*" Binding="{tsfBinding:Column Path=Historian}" CellStyle="{StaticResource CenterAlignCellStyle}" />
                 <sdk:DataGridTextColumn Header="Device" Width="*" Binding="{tsfBinding:Column Path=Device}" CellStyle="{StaticResource CenterAlignCellStyle}"/>                
                 <sdk:DataGridTextColumn Header="Signal Reference" Width="2*" Binding="{tsfBinding:Column Path=SignalReference}"/>
+                <sdk:DataGridCheckBoxColumn Header="Internal" Width="*" Binding="{tsfBinding:Column Path=Internal}" CellStyle="{StaticResource CenterAlignCellStyle}"/>
+                <sdk:DataGridCheckBoxColumn Header="Subscribed" Width="*" Binding="{tsfBinding:Column Path=Subscribed}" CellStyle="{StaticResource CenterAlignCellStyle}"/>
                 <sdk:DataGridCheckBoxColumn Header="Enabled" Width="*" Binding="{tsfBinding:Column Path=Enabled}" CellStyle="{StaticResource CenterAlignCellStyle}"/>
             </sdk:DataGrid.Columns>
         </sdk:DataGrid>

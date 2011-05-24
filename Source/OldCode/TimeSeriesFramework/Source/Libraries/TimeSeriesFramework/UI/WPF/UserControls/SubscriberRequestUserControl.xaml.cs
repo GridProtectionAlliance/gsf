@@ -23,25 +23,15 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Data;
+using System.Net;
+using System.Security.Cryptography;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using TVA;
 using System.Xml;
 using System.Xml.Serialization;
 using TVA.Data;
-using System.Data;
-using System.Security.Cryptography;
 using TVA.Security.Cryptography;
-using System.Net;
 
 namespace TimeSeriesFramework.UI.UserControls
 {
@@ -74,7 +64,6 @@ namespace TimeSeriesFramework.UI.UserControls
         void SubscriberRequestUserControl_Loaded(object sender, RoutedEventArgs e)
         {
             AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-            m_idField.Text = database.CurrentNodeID().ToString();
             DataRow row = database.Connection.RetrieveRow(database.AdapterType, "SELECT Company.Acronym, Company.Name FROM Company, Node WHERE Company.ID = Node.CompanyID AND Node.ID = @id", database.CurrentNodeID());
             m_acronymField.Text = row.Field<string>("Acronym");
             m_nameField.Text = row.Field<string>("Name");
@@ -109,7 +98,6 @@ namespace TimeSeriesFramework.UI.UserControls
             dg.ShowDialog();
             filename = dg.FileName;
             AuthenticationRequest request = new AuthenticationRequest();
-            request.ID = Guid.Parse(m_idField.Text);
             request.Acronym = m_acronymField.Text;
             request.Name = m_nameField.Text;
             request.SharedSecret = m_sharedSecretField.Text;
@@ -117,7 +105,6 @@ namespace TimeSeriesFramework.UI.UserControls
             request.Key = m_keyField.Text;
             request.IV = m_ivField.Text;
             request.ValidIPAddresses = m_validIpAddressesField.Text;
-            request.Enabled = (bool)m_enabled.IsChecked;
             
 
             XmlSerializer serializer = new XmlSerializer(typeof(AuthenticationRequest));
