@@ -330,7 +330,7 @@ namespace TimeSeriesFramework.Transport
                 }
             }
             else
-                OnProcessException(new InvalidOperationException("Cannot make authenticate subscription without a connection string."));
+                OnProcessException(new InvalidOperationException("Cannot authenticate subscription without a connection string."));
 
             return false;
         }
@@ -610,9 +610,9 @@ namespace TimeSeriesFramework.Transport
                                 {
                                     case ServerCommand.Authenticate:
                                         OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
-                                        
+
                                         m_authenticated = true;
-                                        
+
                                         if (ConnectionAuthenticated != null)
                                             ConnectionAuthenticated(this, EventArgs.Empty);
                                         break;
@@ -620,7 +620,7 @@ namespace TimeSeriesFramework.Transport
                                         OnStatusMessage("Success code received in response to server command \"{0}\": latest meta-data received.", commandCode);
 
                                         if (MetaDataReceived != null)
-                                            MetaDataReceived(this, new EventArgs<DataSet>(Serialization.Deserialize<DataSet>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary)));                                        
+                                            MetaDataReceived(this, new EventArgs<DataSet>(Serialization.Deserialize<DataSet>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary)));
                                         break;
                                     case ServerCommand.Subscribe:
                                     case ServerCommand.Unsubscribe:
