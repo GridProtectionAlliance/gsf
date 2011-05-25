@@ -54,9 +54,6 @@
     <Reference Include="TVA.Core">
       <HintPath>..\..\..\Dependencies\TVA\TVA.Core.dll</HintPath>
     </Reference>
-    <Reference Include="TVA.Security">
-      <HintPath>..\..\..\Dependencies\TVA\TVA.Security.dll</HintPath>
-    </Reference>
     <Reference Include="TVA.Windows">
       <HintPath>..\..\..\Dependencies\TVA\TVA.Windows.dll</HintPath>
     </Reference>
@@ -99,7 +96,6 @@
     <Compile Include="IDataModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <Resource Include="DataModels\Images\Copy.png" />
     <Resource Include="DataModels\Images\EditConfiguration.png" />

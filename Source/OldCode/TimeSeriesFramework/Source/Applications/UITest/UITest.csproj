@@ -90,10 +90,6 @@
     <Reference Include="TVA.Core">
       <HintPath>..\..\Dependencies\TVA\TVA.Core.dll</HintPath>
     </Reference>
-    <Reference Include="TVA.Security, Version=4.0.2.27, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependencies\TVA\TVA.Security.dll</HintPath>
-    </Reference>
     <Reference Include="TVA.Windows">
       <HintPath>..\..\Dependencies\TVA\TVA.Windows.dll</HintPath>
     </Reference>

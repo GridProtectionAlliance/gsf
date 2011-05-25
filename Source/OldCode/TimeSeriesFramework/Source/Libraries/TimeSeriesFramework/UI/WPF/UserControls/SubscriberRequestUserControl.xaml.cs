@@ -24,12 +24,14 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Windows;
 using System.Windows.Controls;
 using System.Xml;
 using System.Xml.Serialization;
+using TVA;
 using TVA.Collections;
 using TVA.Data;
 using TVA.Security.Cryptography;
@@ -74,7 +76,13 @@ namespace TimeSeriesFramework.UI.UserControls
             // Generate a default shared secret password for subscriber key and initialization vector
             byte[] buffer = new byte[4];
             TVA.Security.Cryptography.Random.GetBytes(buffer);
-            m_sharedSecretField.Text = Convert.ToBase64String(buffer);
+            
+            string generatedSecret = Convert.ToBase64String(buffer).RemoveCrLfs();
+
+            if (generatedSecret.Contains("="))
+                generatedSecret = generatedSecret.Split('=')[0];
+
+            m_sharedSecretField.Text = generatedSecret;
 
             // Generate an identity for this subscriber
             AesManaged sa = new AesManaged();
@@ -82,8 +90,8 @@ namespace TimeSeriesFramework.UI.UserControls
             m_authenticationIDField.Text = Convert.ToBase64String(sa.Key);
 
             // Generate valid local IP addresses for this connection
-            IEnumerable<IPAddress> addresses = Dns.GetHostAddresses(Dns.GetHostName());
-            m_validIpAddressesField.Text = addresses.ToDelimitedString(';');
+            IEnumerable<IPAddress> addresses = Dns.GetHostAddresses(Dns.GetHostName()).OrderBy(key => key.AddressFamily);
+            m_validIpAddressesField.Text = addresses.ToDelimitedString("; ");
         }
 
         /// <summary>
