@@ -882,6 +882,11 @@ namespace TimeSeriesFramework.Transport
             #endregion
         }
 
+        // Constants
+
+        // Length of random salt prefix
+        internal const int CipherSaltLength = 8;
+
         // Fields
         private TcpServer m_commandChannel;
         private ConcurrentDictionary<Guid, ClientConnection> m_clientConnections;
@@ -1131,6 +1136,9 @@ namespace TimeSeriesFramework.Transport
             ushort index = 0;
             Guid signalID;
 
+            // We will now go through the client's requested keys and see which ones are authorized for subscription,
+            // this information will be available through the returned signal index cache which will also define
+            // a runtime index optimization for the allowed measurements.
             signalIndexCache.Reference.Clear();
 
             foreach (MeasurementKey key in inputMeasurementKeys)
@@ -1145,6 +1153,7 @@ namespace TimeSeriesFramework.Transport
                 }
                 else
                 {
+                    // When client authorization is not required, all points are assumed to be allowed
                     signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(LookupSignalID(key), key));
                 }
             }
@@ -1165,18 +1174,27 @@ namespace TimeSeriesFramework.Transport
 
             try
             {
-                // Lookup explicit measurements
-                DataRow[] explicitMeasurement = DataSource.Tables["SubscriberMeasurement"].Select("SignalID='" + signalID.ToString() + "'");
+                // Lookup explicitly defined individual measurements
+                DataRow[] explicitMeasurement = DataSource.Tables["SubscriberMeasurements"].Select(string.Format("Subscriber='{0}' AND SignalID='{1}'", subscriberID, signalID));
 
                 if (explicitMeasurement.Length > 0)
                     return explicitMeasurement[0]["Allowed"].ToNonNullString("0").ParseBoolean();
 
-                // Lookup group based measurements
-                //DataRow[] implicitMeasurements;
+                // Lookup implicitly defined group based measurements
+                DataRow[] implicitMeasurements;
+
+                foreach (DataRow subscriberMeasurementGroup in DataSource.Tables["SubscriberMeasurementGroups"].Select(string.Format("Subscriber='{0}'", subscriberID)))
+                {
+                    implicitMeasurements = DataSource.Tables["MeasurementGroupMeasurements"].Select(string.Format("SignalID='{0}' AND MeasurementGroupID={1}", signalID, int.Parse(subscriberMeasurementGroup["MeasurementGroupID"].ToNonNullString("0"))));
+
+                    if (implicitMeasurements.Length > 0)
+                        return subscriberMeasurementGroup["Allowed"].ToNonNullString("0").ParseBoolean();
+                }
             }
-            catch
+            catch (Exception ex)
             {
-                // Errors here are not catastrophic, this simply limits the rights of a subscriber to a measurement
+                // TODO: Setup subcriber ID lookup for better textual representation of subscribers...
+                OnProcessException(new InvalidOperationException(string.Format("Failed to determine subscriber rights for {0} due to exception: {1}", subscriberID, ex.Message)));
             }
 
             return false;

@@ -303,7 +303,7 @@ namespace TimeSeriesFramework.Transport
                 try
                 {
                     MemoryStream buffer = new MemoryStream();
-                    byte[] salt = new byte[8];
+                    byte[] salt = new byte[DataPublisher.CipherSaltLength];
                     byte[] bytes;
 
                     // Generate some random prefix data to make sure auth key transmission is always unique
