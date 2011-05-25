@@ -81,15 +81,12 @@
     <Compile Include="DataModels\Interconnection.cs" />
     <Compile Include="DataModels\Measurement.cs" />
     <Compile Include="DataModels\MeasurementGroup.cs" />
-    <Compile Include="DataModels\MeasurementGroupMeasurement.cs" />
     <Compile Include="DataModels\Node.cs" />
     <Compile Include="DataModels\Phasor.cs" />
     <Compile Include="DataModels\Protocol.cs" />
     <Compile Include="DataModels\SecurityGroup.cs" />
     <Compile Include="DataModels\SignalType.cs" />
     <Compile Include="DataModels\Subscriber.cs" />
-    <Compile Include="DataModels\SubscriberMeasurement.cs" />
-    <Compile Include="DataModels\SubscriberMeasurementGroup.cs" />
     <Compile Include="DataModels\UserAccount.cs" />
     <Compile Include="DataModels\Vendor.cs" />
     <Compile Include="DataModels\VendorDevice.cs" />
@@ -97,9 +94,10 @@
     <Compile Include="IDataModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
-    <Resource Include="DataModels\Images\Copy.png" />
-    <Resource Include="DataModels\Images\EditConfiguration.png" />
+    <Content Include="Images\Copy.png" />
+    <Content Include="Images\EditConfiguration.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

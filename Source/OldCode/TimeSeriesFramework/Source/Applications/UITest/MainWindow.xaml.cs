@@ -21,11 +21,14 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Xml;
 using System.Xml.Serialization;
 using TimeSeriesFramework.UI;
+using TimeSeriesFramework.UI.DataModels;
 
 namespace UITest
 {
@@ -63,12 +66,32 @@ namespace UITest
         /// <param name="e">Event arguments.</param>
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            // Load Menu
             XmlRootAttribute xmlRootAttribute = new XmlRootAttribute("MenuDataItems");
             XmlSerializer serializer = new XmlSerializer(typeof(ObservableCollection<MenuDataItem>), xmlRootAttribute);
             using (XmlReader reader = XmlReader.Create("Menu.xml"))
                 m_menuDataItems = (ObservableCollection<MenuDataItem>)serializer.Deserialize(reader);
 
             MenuMain.DataContext = m_menuDataItems;
+
+            // Populate Node Dropdown
+            ComboboxNode.ItemsSource = Node.GetLookupList(null);
+            if (ComboboxNode.Items.Count > 0)
+            {
+                ComboboxNode.SelectedIndex = 0;
+                ((App)Application.Current).NodeID = ((KeyValuePair<Guid, string>)ComboboxNode.SelectedItem).Key;
+            }
+        }
+
+        /// <summary>
+        /// Handles selectionchanged event on node selection combobox.
+        /// </summary>
+        /// <param name="sender">Source of the event.</param>
+        /// <param name="e">Event argument.</param>
+        private void ComboboxNode_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            ((App)Application.Current).NodeID = ((KeyValuePair<Guid, string>)ComboboxNode.SelectedItem).Key;
+            m_menuDataItems[0].Command.Execute(null);
         }
 
         #endregion

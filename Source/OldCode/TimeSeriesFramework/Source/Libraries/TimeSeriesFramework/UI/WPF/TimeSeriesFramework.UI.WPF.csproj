@@ -61,6 +61,13 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\Dependencies\TVA\TVA.Core.dll</HintPath>
     </Reference>
+    <Reference Include="TVA.PhasorProtocols">
+      <HintPath>..\..\..\..\Dependencies\TVA\TVA.PhasorProtocols.dll</HintPath>
+    </Reference>
+    <Reference Include="TVA.Security, Version=4.0.2.27, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Dependencies\TVA\TVA.Security.dll</HintPath>
+    </Reference>
     <Reference Include="TVA.Services, Version=4.0.2.32, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\..\..\Dependencies\TVA\TVA.Services.dll</HintPath>
     </Reference>
@@ -123,6 +130,12 @@
     <Compile Include="UserControls\HistorianUserControl.xaml.cs">
       <DependentUpon>HistorianUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\HomeUserControl.xaml.cs">
+      <DependentUpon>HomeUserControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\InputWizardUserControl.xaml.cs">
+      <DependentUpon>InputWizardUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\MeasurementGroupUserControl.xaml.cs">
       <DependentUpon>MeasurementGroupUserControl.xaml</DependentUpon>
     </Compile>
@@ -143,6 +156,9 @@
     </Compile>
     <Compile Include="UserControls\SelectMeasurementUserControl.xaml.cs">
       <DependentUpon>SelectMeasurementUserControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\SubscribeMeasurementUserControl.xaml.cs">
+      <DependentUpon>SubscribeMeasurementUserControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="UserControls\SubscriberMeasurementUserControl.xaml.cs">
       <DependentUpon>SubscriberMeasurementUserControl.xaml</DependentUpon>
@@ -173,6 +189,7 @@
     <Compile Include="ViewModels\Protocols.cs" />
     <Compile Include="ViewModels\SecurityGroups.cs" />
     <Compile Include="ViewModels\SelectMeasurements.cs" />
+    <Compile Include="ViewModels\SubscribeMeasurements.cs" />
     <Compile Include="ViewModels\SubscriberMeasurements.cs" />
     <Compile Include="ViewModels\Subscribers.cs" />
     <Compile Include="ViewModels\UserAccounts.cs" />
@@ -199,7 +216,9 @@
       <Name>TimeSeriesFramework.UI</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
+  </ItemGroup>
   <ItemGroup>
     <Page Include="UserControls\CalculatedMeasurementUserControl.xaml">
       <SubType>Designer</SubType>
@@ -241,6 +260,14 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="UserControls\HomeUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\InputWizardUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UserControls\MeasurementGroupUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -266,6 +293,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UserControls\SelectMeasurementUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\SubscribeMeasurementUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -42,6 +42,8 @@ namespace TimeSeriesFramework.UI.ViewModels
         private ObservableCollection<TimeSeriesFramework.UI.DataModels.Measurement> m_measurements;
         private RelayCommand m_searchCommand;
         private RelayCommand m_showAllCommand;
+        private bool m_internalOnly;
+        private int m_deviceID;
 
         #endregion
 
@@ -95,10 +97,15 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// </summary>
         /// <param name="itemsPerPage">Number of items to display on a page.</param>
         /// <param name="autosave">Boolean indicator to save data automatically.</param>
-        public SelectMeasurements(int itemsPerPage, bool autosave = true)
-            : base(itemsPerPage, autosave)     // Set ItemsPerPage to zero to avoid load() in the base class.
+        /// <param name="internalOnly">Boolean indicator to determine if only measurements with internal flag set to true needs to be displayed.</param>
+        /// <param name="deviceID">ID of the device to filter data.</param>
+        public SelectMeasurements(int itemsPerPage, bool autosave = true, bool internalOnly = false, int deviceID = 0)
+            : base(0, autosave)     // Set ItemsPerPage to zero to avoid load() in the base class.
         {
-
+            ItemsPerPage = itemsPerPage;
+            m_internalOnly = internalOnly;
+            m_deviceID = deviceID;
+            Load();
         }
 
         #endregion
@@ -128,7 +135,11 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// </summary>
         public override void Load()
         {
-            m_measurements = MeasurementGroup.GetPossibleMeasurements(null, 0);
+            if (m_internalOnly)
+                m_measurements = TimeSeriesFramework.UI.DataModels.Measurement.Load(null, m_deviceID, true);
+            else
+                m_measurements = MeasurementGroup.GetPossibleMeasurements(null, 0);
+
             ItemsSource = m_measurements;
         }
 

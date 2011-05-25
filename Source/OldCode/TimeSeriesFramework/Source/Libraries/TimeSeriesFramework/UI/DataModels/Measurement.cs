@@ -547,8 +547,9 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="deviceID">ID of the <see cref="Device"/> to filter data.</param>
+        /// <param name="filterByInternalFlag">boolean flag to indicate if only non internal data requested.</param>
         /// <returns>Collection of <see cref="Measurement"/>.</returns>
-        public static ObservableCollection<Measurement> Load(AdoDataConnection database, int deviceID = 0)
+        public static ObservableCollection<Measurement> Load(AdoDataConnection database, int deviceID = 0, bool filterByInternalFlag = false)
         {
             bool createdConnection = false;
 
@@ -559,12 +560,32 @@ namespace TimeSeriesFramework.UI.DataModels
                 ObservableCollection<Measurement> measurementList = new ObservableCollection<Measurement>();
                 DataTable measurementTable;
 
-                if (deviceID > 0)
-                    measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail WHERE " +
-                        "DeviceID = @deviceID ORDER BY PointID", DefaultTimeout, deviceID);
+                if (filterByInternalFlag)
+                {
+                    if (deviceID > 0)
+                    {
+                        measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail WHERE " +
+                           "DeviceID = @deviceID AND Internal = @internal AND Subscribed = @subscribed ORDER BY PointID", DefaultTimeout, deviceID, false, false);
+                    }
+                    else
+                    {
+                        measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail WHERE " +
+                            "NodeID = @nodeID AND Internal = @internal AND Subscribed = @subscribed ORDER BY PointTag", DefaultTimeout, database.CurrentNodeID(), false, false);
+                    }
+                }
                 else
-                    measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail WHERE " +
-                        "NodeID = @nodeID ORDER BY PointTag", DefaultTimeout, database.CurrentNodeID());
+                {
+                    if (deviceID > 0)
+                    {
+                        measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail WHERE " +
+                           "DeviceID = @deviceID ORDER BY PointID", DefaultTimeout, deviceID);
+                    }
+                    else
+                    {
+                        measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail WHERE " +
+                            "NodeID = @nodeID ORDER BY PointTag", DefaultTimeout, database.CurrentNodeID());
+                    }
+                }
 
                 foreach (DataRow row in measurementTable.Rows)
                 {
@@ -581,6 +602,8 @@ namespace TimeSeriesFramework.UI.DataModels
                         SignalReference = row.Field<string>("SignalReference"),
                         Adder = row.Field<double>("Adder"),
                         Multiplier = row.Field<double>("Multiplier"),
+                        Internal = Convert.ToBoolean(row.Field<object>("Internal")),
+                        Subscribed = Convert.ToBoolean(row.Field<object>("Subscribed")),
                         Description = row.Field<string>("Description"),
                         Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
                         m_historianAcronym = row.Field<string>("HistorianAcronym"),
@@ -642,6 +665,8 @@ namespace TimeSeriesFramework.UI.DataModels
                         Adder = row.Field<double>("Adder"),
                         Multiplier = row.Field<double>("Multiplier"),
                         Description = row.Field<string>("Description"),
+                        Internal = Convert.ToBoolean(row.Field<object>("Internal")),
+                        Subscribed = Convert.ToBoolean(row.Field<object>("Subscribed")),
                         Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
                         m_historianAcronym = row.Field<string>("HistorianAcronym"),
                         m_deviceAcronym = row.Field<object>("DeviceAcronym") == null ? string.Empty : row.Field<string>("DeviceAcronym"),
@@ -700,6 +725,8 @@ namespace TimeSeriesFramework.UI.DataModels
                         SignalReference = row.Field<string>("SignalReference"),
                         Adder = row.Field<double>("Adder"),
                         Multiplier = row.Field<double>("Multiplier"),
+                        Internal = Convert.ToBoolean(row.Field<object>("Internal")),
+                        Subscribed = Convert.ToBoolean(row.Field<object>("Subscribed")),
                         Description = row.Field<string>("Description"),
                         Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
                         m_historianAcronym = row.Field<string>("HistorianAcronym"),
@@ -729,8 +756,9 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
+        /// <param name="subscribedOnly">boolean flag to indicate if only subscribed measurements to be returned.</param>
         /// <returns><see cref="Dictionary{T1,T2}"/> containing PointID and SignalID of measurements defined in the database.</returns>
-        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional = false)
+        public static Dictionary<Guid, string> GetLookupList(AdoDataConnection database, bool isOptional = false, bool subscribedOnly = false)
         {
             bool createdConnection = false;
 
@@ -738,14 +766,81 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                Dictionary<int, string> measurementList = new Dictionary<int, string>();
+                Dictionary<Guid, string> measurementList = new Dictionary<Guid, string>();
                 if (isOptional)
-                    measurementList.Add(0, "Select Measurement");
+                    measurementList.Add(Guid.Empty, "Select Measurement");
 
-                DataTable measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT PointID, PointTag FROM Measurement ORDER BY PointID");
+                DataTable measurementTable;
+
+                if (subscribedOnly) // If subscribedOnly is set then return only those measurements which are not internal and subscribed flag is set to true.
+                    measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT SignalID, PointTag FROM MeasurementDetail WHERE NodeID = @nodeID AND Internal = @internal AND Subscribed = @subscribed ORDER BY PointID",
+                        DefaultTimeout, database.CurrentNodeID(), false, true);
+                else
+                    measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT SignalID, PointTag FROM MeasurementDetail WHERE NodeID = @nodeID ORDER BY PointID", DefaultTimeout, database.CurrentNodeID());
 
                 foreach (DataRow row in measurementTable.Rows)
-                    measurementList[row.Field<int>("PointID")] = row.Field<string>("PointTag");
+                    measurementList[database.Guid(row, "SignalID")] = row.Field<string>("PointTag");
+
+                return measurementList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Retrieves only subscribed <see cref="Measurement"/> collection.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <returns><see cref="ObservableCollection{T1}"/> type list of <see cref="Measurement"/>.</returns>
+        public static ObservableCollection<Measurement> GetSubscribedMeasurements(AdoDataConnection database)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                ObservableCollection<Measurement> measurementList = new ObservableCollection<Measurement>();
+                DataTable measurementTable;
+
+                measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail WHERE " +
+                    "NodeID = @nodeID AND Internal = @internal AND Subscribed = @subscribed ORDER BY PointTag", DefaultTimeout, database.CurrentNodeID(), false, true);
+
+                foreach (DataRow row in measurementTable.Rows)
+                {
+                    measurementList.Add(new Measurement()
+                    {
+                        SignalID = database.Guid(row, "SignalID"),
+                        HistorianID = row.Field<int?>("HistorianID"),
+                        PointID = row.Field<int>("PointID"),
+                        DeviceID = row.Field<int?>("DeviceID"),
+                        PointTag = row.Field<string>("PointTag"),
+                        AlternateTag = row.Field<string>("AlternateTag"),
+                        SignalTypeID = row.Field<int>("SignalTypeID"),
+                        PhasorSourceIndex = row.Field<int?>("PhasorSourceIndex"),
+                        SignalReference = row.Field<string>("SignalReference"),
+                        Adder = row.Field<double>("Adder"),
+                        Multiplier = row.Field<double>("Multiplier"),
+                        Internal = Convert.ToBoolean(row.Field<object>("Internal")),
+                        Subscribed = Convert.ToBoolean(row.Field<object>("Subscribed")),
+                        Description = row.Field<string>("Description"),
+                        Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
+                        m_historianAcronym = row.Field<string>("HistorianAcronym"),
+                        m_deviceAcronym = row.Field<object>("DeviceAcronym") == null ? string.Empty : row.Field<string>("DeviceAcronym"),
+                        m_signalName = row.Field<string>("SignalName"),
+                        m_signalAcronym = row.Field<string>("SignalAcronym"),
+                        m_signalSuffix = row.Field<string>("SignalTypeSuffix"),
+                        m_phasorLabel = row.Field<string>("PhasorLabel"),
+                        m_framesPerSecond = Convert.ToInt32(row.Field<object>("FramesPerSecond") ?? 30),
+                        m_id = row.Field<string>("ID"),
+                        m_companyAcronym = row.Field<object>("CompanyAcronym") == null ? string.Empty : row.Field<string>("CompanyAcronym"),
+                        m_companyName = row.Field<object>("CompanyName") == null ? string.Empty : row.Field<string>("CompanyName"),
+                        Selected = false
+                    });
+                }
 
                 return measurementList;
             }

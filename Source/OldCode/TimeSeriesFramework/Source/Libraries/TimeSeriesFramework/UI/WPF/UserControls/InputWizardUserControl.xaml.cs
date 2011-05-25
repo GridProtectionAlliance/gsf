@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  GridButton.cs - Gbtc
+//  InputWizardUserControl.xaml.cs - Gbtc
 //
 //  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,33 +16,26 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  05/09/2011 - Mehulbhai P Thakkar
+//  05/24/2011 - Mehulbhai P Thakkar
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using System.Windows.Controls;
-using System.Windows.Data;
 
-namespace TimeSeriesFramework.UI.Binding
+namespace TimeSeriesFramework.UI.UserControls
 {
     /// <summary>
-    /// Represents a custom <see cref="Binding"/> class.
+    /// Interaction logic for InputWizardUserControl.xaml
     /// </summary>
-    public class GridButtonCommand : System.Windows.Data.Binding
+    public partial class InputWizardUserControl : UserControl
     {
-        #region [ Constructor ]
-
         /// <summary>
-        /// Creates a new instance of <see cref="Column"/> class.
+        /// Creates an instance of <see cref="InputWizardUserControl"/> class.
         /// </summary>
-        public GridButtonCommand()
+        public InputWizardUserControl()
         {
-            RelativeSource src = new RelativeSource(RelativeSourceMode.FindAncestor);
-            src.AncestorType = typeof(DataGrid);
-            this.RelativeSource = src;
+            InitializeComponent();
         }
-
-        #endregion
     }
 }

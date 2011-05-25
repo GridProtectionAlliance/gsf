@@ -81,7 +81,7 @@
             </StackPanel>
             <ListBox x:Name="ListBoxDeniedMeasurements" ItemsSource="{tsfBinding:Column Path=DeniedMeasurements}" Grid.Column="0" Grid.Row="3" DisplayMemberPath="Value"/>
 
-            <uc:SelectMeasurementUserControl x:Name="UserControlSelectMeasurements" Grid.Column="2" Grid.Row="0" Grid.RowSpan="4" ItemsPerPage="13" Width="455" Height="325" VerticalAlignment="Top" HorizontalAlignment="Right"/>
+            <uc:SelectMeasurementUserControl x:Name="UserControlSelectMeasurements" Grid.Column="2" Grid.Row="0" Grid.RowSpan="4" ItemsPerPage="13" InternalOnly="False" Width="455" Height="325" VerticalAlignment="Top" HorizontalAlignment="Right"/>
         </Grid>
 
         <Grid DataContext="{tsfBinding:Column Path=CurrentItem}">

@@ -946,7 +946,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>        
         /// <param name="deviceType"><see cref="DeviceType"/> to filter data.</param>
         /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>        
-        /// <returns><see cref="Dictionary{T1,T2}"/> containing ID and Name of companies defined in the database.</returns>
+        /// <returns><see cref="Dictionary{T1,T2}"/> containing ID and Name of devices defined in the database.</returns>
         public static Dictionary<int, string> GetLookupList(AdoDataConnection database, DeviceType deviceType = DeviceType.DirectConnected, bool isOptional = false)
         {
             bool createdConnection = false;
@@ -970,6 +970,42 @@ namespace TimeSeriesFramework.UI.DataModels
                 else
                     deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM Device WHERE " +
                         "NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout, database.CurrentNodeID());
+
+                foreach (DataRow row in deviceTable.Rows)
+                    deviceList[row.Field<int>("ID")] = row.Field<string>("Acronym");
+
+                return deviceList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Gets a <see cref="Dictionary{T1,T2}"/> style list of <see cref="Device"/> information.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="protocolType">Type of protocol to filter data.</param>
+        /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
+        /// <returns><see cref="Dictionary{T1,T2}"/> containing ID and Name of devices defined in the database.</returns>
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, string protocolType, bool isOptional)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                Dictionary<int, string> deviceList = new Dictionary<int, string>();
+                DataTable deviceTable;
+
+                if (isOptional)
+                    deviceList.Add(0, "All Device");
+
+                deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM DeviceDetail WHERE " +
+                        "NodeID = @nodeID AND ProtocolType = @protocolType ORDER BY LoadOrder", DefaultTimeout, database.CurrentNodeID(), protocolType);
 
                 foreach (DataRow row in deviceTable.Rows)
                     deviceList[row.Field<int>("ID")] = row.Field<string>("Acronym");
