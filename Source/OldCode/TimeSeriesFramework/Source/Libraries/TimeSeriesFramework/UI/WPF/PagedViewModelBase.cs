@@ -21,6 +21,8 @@
 //  05/13/2011 - Mehulbhai P Thakkar
 //       Modified CurrentItem.PropertyChanged event handler to virtual so that it can 
 //       be overloaded by the derived classes for special handling such as by Measurements.cs
+//  05/25/2011 - J. Ritchie Carroll
+//       Added load/save/delete event operations to allow for user control interception.
 //
 //******************************************************************************************************
 
@@ -49,6 +51,36 @@ namespace TimeSeriesFramework.UI
         /// Raised when a property on this object has a new value.
         /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
+
+        /// <summary>
+        /// Raised before record load is executed.
+        /// </summary>
+        public event CancelEventHandler BeforeLoad;
+
+        /// <summary>
+        /// Raised when record has been loaded.
+        /// </summary>
+        public event EventHandler Loaded;
+
+        /// <summary>
+        /// Raised before record save is executed.
+        /// </summary>
+        public event CancelEventHandler BeforeSave;
+
+        /// <summary>
+        /// Raised when record has been saved.
+        /// </summary>
+        public event EventHandler Saved;
+
+        /// <summary>
+        /// Raised before record delete is executed.
+        /// </summary>
+        public event CancelEventHandler BeforeDelete;
+
+        /// <summary>
+        /// Raised when record has been deleted.
+        /// </summary>
+        public event EventHandler Deleted;
 
         // Fields
         private int m_pageCount, m_currentPageNumber, m_itemsPerPage;
@@ -478,7 +510,19 @@ namespace TimeSeriesFramework.UI
         /// </summary>
         public virtual void Load()
         {
-            ItemsSource = (ObservableCollection<TDataModel>)s_loadRecords.Invoke(this, new object[] { (AdoDataConnection)null });
+            try
+            {
+                if (OnBeforeLoadCanceled())
+                    throw new OperationCanceledException("Load was canceled.");
+
+                ItemsSource = (ObservableCollection<TDataModel>)s_loadRecords.Invoke(this, new object[] { (AdoDataConnection)null });
+
+                OnLoaded();
+            }
+            catch (Exception ex)
+            {
+                Popup(ex.Message, "Load " + DataModelName + " Exception:", MessageBoxImage.Error);
+            }
         }
 
         /// <summary>
@@ -490,7 +534,12 @@ namespace TimeSeriesFramework.UI
             {
                 try
                 {
+                    if (OnBeforeSaveCanceled())
+                        throw new OperationCanceledException("Save was canceled.");
+
                     string result = (string)s_saveRecord.Invoke(this, new object[] { (AdoDataConnection)null, CurrentItem });
+
+                    OnSaved();
 
                     m_propertyChanged = false;  // after saving information, set this flag to false.
 
@@ -516,8 +565,15 @@ namespace TimeSeriesFramework.UI
             {
                 try
                 {
+                    if (OnBeforeDeleteCanceled())
+                        throw new OperationCanceledException("Delete was canceled.");
+
                     string result = (string)s_deleteRecord.Invoke(this, new object[] { (AdoDataConnection)null, GetCurrentItemKey() });
+
+                    OnDeleted();
+
                     Load();
+
                     Popup(result, "Delete " + DataModelName, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
@@ -579,8 +635,75 @@ namespace TimeSeriesFramework.UI
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
         }
 
+        /// <summary>
+        /// Raises the <see cref="BeforeLoad"/> event.
+        /// </summary>
+        protected virtual bool OnBeforeLoadCanceled()
+        {
+            CancelEventArgs cancelEventArgs = new CancelEventArgs();
+
+            if (BeforeLoad != null)
+                BeforeLoad(this, cancelEventArgs);
+
+            return cancelEventArgs.Cancel;
+        }
+
+        /// <summary>
+        /// Raises the <see cref="Loaded"/> event.
+        /// </summary>
+        protected virtual void OnLoaded()
+        {
+            if (Loaded != null)
+                Loaded(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="BeforeSave"/> event.
+        /// </summary>
+        protected virtual bool OnBeforeSaveCanceled()
+        {
+            CancelEventArgs cancelEventArgs = new CancelEventArgs();
+
+            if (BeforeSave != null)
+                BeforeSave(this, cancelEventArgs);
+
+            return cancelEventArgs.Cancel;
+        }
+
+        /// <summary>
+        /// Raises the <see cref="Saved"/> event.
+        /// </summary>
+        protected virtual void OnSaved()
+        {
+            if (Saved != null)
+                Saved(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="BeforeDelete"/> event.
+        /// </summary>
+        protected virtual bool OnBeforeDeleteCanceled()
+        {
+            CancelEventArgs cancelEventArgs = new CancelEventArgs();
+
+            if (BeforeDelete != null)
+                BeforeDelete(this, cancelEventArgs);
+
+            return cancelEventArgs.Cancel;
+        }
+
+        /// <summary>
+        /// Raises the <see cref="Deleted"/> event.
+        /// </summary>
+        protected virtual void OnDeleted()
+        {
+            if (Deleted != null)
+                Deleted(this, EventArgs.Empty);
+        }
+
         // We monitor for changes to IsValid property on current item so that we can propagate
         // this change notification to CanSave
+
         /// <summary>
         /// Handles PropertyChanged event on CurrentItem.
         /// </summary>

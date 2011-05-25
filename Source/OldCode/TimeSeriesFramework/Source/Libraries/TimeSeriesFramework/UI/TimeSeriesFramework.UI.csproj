@@ -63,6 +63,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AuthenticationRequest.cs" />
     <Compile Include="Binding\Column.cs" />
     <Compile Include="Binding\DataOperation.cs" />
     <Compile Include="Binding\GridButtonCommand.cs" />
@@ -100,8 +101,8 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <Resource Include="Images\Copy.png" />
-    <Resource Include="Images\EditConfiguration.png" />
+    <Resource Include="DataModels\Images\Copy.png" />
+    <Resource Include="DataModels\Images\EditConfiguration.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -30,15 +30,13 @@ namespace TimeSeriesFramework.UI
     /// </summary>
     public class AuthenticationRequest
     {
-
         #region [ Members ]
 
         private string m_acronym;
         private string m_name;
         private string m_sharedSecret;
-        private string m_authKey;
-        private string m_validIpAddresses;
-        private bool m_enabled;
+        private string m_authenticationID;
+        private string m_validIPAddresses;
         private string m_key;
         private string m_iv;
 
@@ -47,7 +45,7 @@ namespace TimeSeriesFramework.UI
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the request acronym.
+        /// Gets or sets the suggested subscriber acronym.
         /// </summary>
         [XmlElement]
         public string Acronym
@@ -63,7 +61,7 @@ namespace TimeSeriesFramework.UI
         }
 
         /// <summary>
-        /// Gets or sets the request name.
+        /// Gets or sets the suggested subscriber name.
         /// </summary>
         [XmlElement]
         public string Name
@@ -79,7 +77,7 @@ namespace TimeSeriesFramework.UI
         }
 
         /// <summary>
-        /// Gets or sets the request shared secret.
+        /// Gets or sets the shared secret for the subscriber.
         /// </summary>
         [XmlElement]
         public string SharedSecret
@@ -95,39 +93,39 @@ namespace TimeSeriesFramework.UI
         }
 
         /// <summary>
-        /// Gets or sets the request auth key.
+        /// Gets or sets the authentication ID for the subscriber.
         /// </summary>
         [XmlElement]
-        public string AuthKey
+        public string AuthenticationID
         {
             get
             {
-                return m_authKey;
+                return m_authenticationID;
             }
             set
             {
-                m_authKey = value;
+                m_authenticationID = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets the request list of valid IP addresses.
+        /// Gets or sets the list of valid IP addresses for the subscriber.
         /// </summary>
         [XmlElement]
         public string ValidIPAddresses
         {
             get
             {
-                return m_validIpAddresses;
+                return m_validIPAddresses;
             }
             set
             {
-                m_validIpAddresses = value;
+                m_validIPAddresses = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets the request key.
+        /// Gets or sets the cryptographic key for the subscriber.
         /// </summary>
         [XmlElement]
         public string Key
@@ -143,7 +141,7 @@ namespace TimeSeriesFramework.UI
         }
 
         /// <summary>
-        /// Gets or sets the request IV.
+        /// Gets or sets the cryptographic initialization vector for the subscriber.
         /// </summary>
         [XmlElement]
         public string IV
@@ -159,6 +157,5 @@ namespace TimeSeriesFramework.UI
         }
 
         #endregion
-
     }
 }

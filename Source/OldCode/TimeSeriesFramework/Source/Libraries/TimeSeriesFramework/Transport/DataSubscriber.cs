@@ -691,15 +691,15 @@ namespace TimeSeriesFramework.Transport
                             // Expose new measurements to consumer
                             OnNewMeasurements(measurements);
                             break;
-                        case ServerResponse.SignalIndexCacheUpdate:
+                        case ServerResponse.UpdateSignalIndexCache:
                             // Deserialize new signal index cache
                             m_signalIndexCache = Serialization.Deserialize<SignalIndexCache>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary);
                             break;
-                        case ServerResponse.BaseTimeUpdate:
+                        case ServerResponse.UpdateBaseTime:
                             // Deserialize new base time offsets
                             m_baseTimeOffsets = Serialization.Deserialize<long[]>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary);
                             break;
-                        case ServerResponse.CipherKeyUpdate:
+                        case ServerResponse.UpdateCipherKey:
                             // Deserialize new cipher keys
                             m_keyIVs = Serialization.Deserialize<byte[][][]>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary);
                             break;

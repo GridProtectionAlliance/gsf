@@ -28,8 +28,16 @@ using System.Linq;
 namespace TimeSeriesFramework.Transport
 {
     /// <summary>
-    /// Signal index cross reference.
+    /// Represents a serializable <see cref="Guid"/> signal ID to <see cref="ushort"/> index cross reference.
     /// </summary>
+    /// <remarks>
+    /// This class is used to create a runtime index to be used for data exchange so that a 16-bit integer
+    /// is exchanged in the data packets for signal identification instead of the 128-bit Guid signal ID
+    /// to reduce bandwidth required for signal exchange. This means the total number of unique signal
+    /// IDs that could be exchanged using this method in a single session is 65,535. This number seems
+    /// reasonable for the currently envisioned use cases, however, multiple sessions each with their own
+    /// runtime signal index cache could be established if this is a limitation for a given data set.
+    /// </remarks>
     [Serializable]
     public class SignalIndexCache
     {
@@ -123,6 +131,7 @@ namespace TimeSeriesFramework.Transport
         /// <returns>Runtime signal index for given <see cref="Guid"/> <paramref name="signalID"/>.</returns>
         public ushort GetSignalIndex(Guid signalID)
         {
+            // We create a runtime cache of these indexes by signal ID since they will be looked up over and over
             if (m_signalIDCache == null)
                 m_signalIDCache = new ConcurrentDictionary<Guid, ushort>();
 
@@ -136,6 +145,7 @@ namespace TimeSeriesFramework.Transport
         /// <returns>Runtime signal index for given <see cref="MeasurementKey"/> <paramref name="key"/>.</returns>
         public ushort GetSignalIndex(MeasurementKey key)
         {
+            // We create a runtime cache of these indexes by measurement key since they will be looked up over and over
             if (m_keyCache == null)
                 m_keyCache = new ConcurrentDictionary<MeasurementKey, ushort>();
 

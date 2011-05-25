@@ -42,7 +42,6 @@ namespace TimeSeriesFramework.UI.ViewModels
         #region [ Members ]
 
         // Fields
-
         private Dictionary<Guid, string> m_nodeLookupList;
         private RelayCommand m_addAllowedMeasurementCommand;
         private RelayCommand m_removeAllowedMeasurementCommand;
@@ -470,6 +469,5 @@ namespace TimeSeriesFramework.UI.ViewModels
         }
 
         #endregion
-
     }
 }

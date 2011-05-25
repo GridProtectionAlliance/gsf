@@ -47,57 +47,117 @@ namespace TimeSeriesFramework.Transport
     #region [ Enumerations ]
 
     /// <summary>
-    /// <see cref="DataPublisher"/> server commands.
+    /// Server commands received by <see cref="DataPublisher"/> and sent by <see cref="DataSubscriber"/>.
     /// </summary>
+    /// <remarks>
+    /// Solicited server commands will receive a <see cref="ServerResponse.Succeeded"/> or <see cref="ServerResponse.Failed"/>
+    /// response code along with an associated success or failure message. Message type for successful responses will be based
+    /// on server command - for example, server response for a successful MetaDataRefresh command will return a serialized
+    /// <see cref="DataSet"/> of the available server metadata. Message type for failed responses will always be a string of
+    /// text respresenting the error message.
+    /// </remarks>
     public enum ServerCommand : byte
     {
         /// <summary>
         /// Authenticate command.
         /// </summary>
+        /// <remarks>
+        /// Requests that server authenticate client with the following encrypted authentication packet.
+        /// Successful return message type will be string indicating client ID was validated.
+        /// Client should not attempt further steps if authentication fails, user will need to take action.
+        /// Client should send MetaDataRefresh and Subscribe commands upon successful authentication.
+        /// If server is setup to not require authentication, authentication step can be skipped - however
+        /// it will be up to the implementation to know if authentication is required - the server cannot be
+        /// queried to determine if authentication is required.
+        /// It is expected that use of this protocol between gateways over a shared network (i.e., the lower
+        /// security zone) will require authentication.
+        /// It is expected that use of this protocol between gateway and other systems (e.g., a PDC) in a
+        /// private network (i.e., the higher security zone) can be setup to not require authentication.
+        /// </remarks>
         Authenticate = 0x00,
         /// <summary>
         /// Meta data refresh command.
         /// </summary>
+        /// <remarks>
+        /// Requests that server send an updated set of metadata so client can refresh its point list.
+        /// Successful return message type will be a <see cref="DataSet"/> containing server device and measurement metadata.
+        /// Received device list should be defined as children of the "parent" server device connection similar to the way
+        /// PMUs are defined as children of a parent PDC device connection.
+        /// Devices and measurements contain unique Guids that should be used to key metadata updates in local repository.
+        /// </remarks>
         MetaDataRefresh = 0x01,
         /// <summary>
         /// Subscribe command.
         /// </summary>
+        /// <remarks>
+        /// Requests a subscription of streaming data from server based on connection string that follows.
+        /// It will not be necessary to stop an existing subscription before requesting a new one.
+        /// Successful return message type will be string indicating total number of allowed points.
+        /// Client should wait for UpdateSignalIndexCache and UpdateBaseTime response codes before attempting
+        /// to parse data when using the compact measurement format.
+        /// Client should wait for UpdateCipherKey response code before attempting to parse data to know if
+        /// data packets will be encrypted as well as which keys to use if they are.
+        /// </remarks>
         Subscribe = 0x02,
         /// <summary>
         /// Unsubscribe command.
         /// </summary>
+        /// <remarks>
+        /// Requests that server stop sending streaming data to the client and cancel the current subcription.
+        /// </remarks>
         Unsubscribe = 0x03
     }
 
     /// <summary>
-    /// <see cref="DataPublisher"/> server responses.
+    /// Server responses sent by <see cref="DataPublisher"/> and received by <see cref="DataSubscriber"/>.
     /// </summary>
     public enum ServerResponse : byte
     {
+        // Although the server commands and responses will be on two different paths, the response enumeration values
+        // are defined as distinct from the command values to make it easier to identify codes from a wire analysis.
+
         /// <summary>
         /// Command succeeded response.
         /// </summary>
+        /// <remarks>
+        /// Informs client that its solicited server command succeeded, original command and success message follow.
+        /// </remarks>
         Succeeded = 0x80,
         /// <summary>
         /// Command failed response.
         /// </summary>
+        /// <remarks>
+        /// Informs client that its solicited server command failed, original command and failure message follow.
+        /// </remarks>
         Failed = 0x81,
         /// <summary>
         /// Data packet response.
         /// </summary>
+        /// <remarks>
+        /// Unsolicited response informs client that a data packet follows.
+        /// </remarks>
         DataPacket = 0x82,
         /// <summary>
-        /// Signal index cache update.
+        /// Update signal index cache response.
         /// </summary>
-        SignalIndexCacheUpdate = 0x83,
+        /// <remarks>
+        /// Unsolicited response requests that client update its runtime signal index cache with the one that follows.
+        /// </remarks>
+        UpdateSignalIndexCache = 0x83,
         /// <summary>
-        /// Base time update.
+        /// Update runtime base-timestamp offsets response.
         /// </summary>
-        BaseTimeUpdate = 0x84,
+        /// <remarks>
+        /// Unsolicited response requests that client update its runtime base-timestamp offsets with those that follow.
+        /// </remarks>
+        UpdateBaseTime = 0x84,
         /// <summary>
-        /// Cipher key update.
+        /// Update runtime cipher keys response.
         /// </summary>
-        CipherKeyUpdate = 0x85
+        /// <remarks>
+        /// Unsolicited response requests that client update its runtime data cipher keys with those that follow.
+        /// </remarks>
+        UpdateCipherKey = 0x85
     }
 
     /// <summary>
@@ -107,16 +167,25 @@ namespace TimeSeriesFramework.Transport
     public enum DataPacketFlags : byte
     {
         /// <summary>
-        /// Determines if data packet is synchronized. Bit set = synchronized, bit clear = unsynchronized.
+        /// Determines if data packet is synchronized.
         /// </summary>
+        /// <remarks>
+        /// Bit set = synchronized, bit clear = unsynchronized.
+        /// </remarks>
         Synchronized = (byte)Bits.Bit00,
         /// <summary>
-        /// Determines if serialized measurement is compact. Bit set = compact, bit clear = full fidelity.
+        /// Determines if serialized measurement is compact.
         /// </summary>
+        /// <remarks>
+        /// Bit set = compact, bit clear = full fidelity.
+        /// </remarks>
         Compact = (byte)Bits.Bit01,
         /// <summary>
-        /// No flags set. This would represent unsynchronized, full fidelity measurement data packets.
+        /// No flags set.
         /// </summary>
+        /// <remarks>
+        /// This would represent unsynchronized, full fidelity measurement data packets.
+        /// </remarks>
         NoFlags = (Byte)Bits.Nil
     }
 
@@ -679,6 +748,7 @@ namespace TimeSeriesFramework.Transport
             private string m_connectionID;
             private bool m_authenticated;
             private IClientSubscription m_subscription;
+            private string m_ipAddress;
 
             #endregion
 
@@ -704,10 +774,12 @@ namespace TimeSeriesFramework.Transport
 
                     if (remoteEndPoint != null)
                     {
+                        m_ipAddress = remoteEndPoint.Address.ToString();
+
                         if (remoteEndPoint.AddressFamily == AddressFamily.InterNetworkV6)
-                            m_connectionID = "[" + remoteEndPoint.Address + "]:" + remoteEndPoint.Port;
+                            m_connectionID = "[" + m_ipAddress + "]:" + remoteEndPoint.Port;
                         else
-                            m_connectionID = remoteEndPoint.Address + ":" + remoteEndPoint.Port;
+                            m_connectionID = m_ipAddress + ":" + remoteEndPoint.Port;
 
                         try
                         {
@@ -991,6 +1063,7 @@ namespace TimeSeriesFramework.Transport
             Dictionary<string, string> settings = Settings;
             string setting;
 
+            // Setup data publishing server with or without required authentication 
             if (settings.TryGetValue("requireClientAuthentication", out setting))
                 m_requireClientAuthentication = setting.ParseBoolean();
 
@@ -1303,28 +1376,28 @@ namespace TimeSeriesFramework.Transport
         private void m_commandChannel_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
         {
             ClientConnection connection;
+            IClientSubscription subscription;
+            byte commandByte;
+            ServerCommand command;
+            bool validServerCommand;
+            string message, setting;
             Guid clientID = e.Argument1;
             byte[] buffer = e.Argument2;
             int length = e.Argument3;
 
-            // Look up this client connection
-            if (!m_clientConnections.TryGetValue(clientID, out connection))
-            {
-                // Received a request from an unknown client, this request is denied
-                OnStatusMessage("WARNING: Ignored {0} byte request received from an unrecognized client: {1}", length, clientID);
-                return;
-            }
-
             if (length > 0 && buffer != null)
             {
-                // Query command byte
-                byte commandByte = buffer[0];
-                ServerCommand command;
-                IClientSubscription subscription;
-                string message, setting;
+                // Attempt to parse solicited server command
+                commandByte = buffer[0];
+                validServerCommand = Enum.TryParse<ServerCommand>(commandByte.ToString(), out command);
 
-                // See if command byte represents a valid server command
-                if (Enum.TryParse<ServerCommand>(commandByte.ToString(), out command))
+                // Look up this client connection
+                if (!m_clientConnections.TryGetValue(clientID, out connection))
+                {
+                    // Received a request from an unknown client, this request is denied
+                    OnStatusMessage("WARNING: Ignored {0} byte {1} command request received from an unrecognized client: {2}", length, validServerCommand ? command.ToString() : "unidentified", clientID);
+                }
+                else if (validServerCommand)
                 {
                     if (command == ServerCommand.Authenticate)
                     {
@@ -1460,7 +1533,7 @@ namespace TimeSeriesFramework.Transport
                                         connection.Subscription = subscription;
 
                                         // Send updated signal index cache to client with validated rights of the selected input measurement keys
-                                        SendClientResponse(clientID, ServerResponse.SignalIndexCacheUpdate, ServerCommand.Subscribe, Serialization.Serialize(subscription.SignalIndexCache, TVA.SerializationFormat.Binary));
+                                        SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, Serialization.Serialize(subscription.SignalIndexCache, TVA.SerializationFormat.Binary));
 
                                         // Send success response
                                         if (subscription.InputMeasurementKeys != null)

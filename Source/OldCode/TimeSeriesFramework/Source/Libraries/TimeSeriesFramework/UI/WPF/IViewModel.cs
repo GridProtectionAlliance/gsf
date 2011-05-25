@@ -18,9 +18,12 @@
 //  ----------------------------------------------------------------------------------------------------
 //  03/31/2011 - Mehulbhai P Thakkar
 //       Generated original version of source code.
+//  05/25/2011 - J. Ritchie Carroll
+//       Added load/save/delete event operations to allow for user control interception.
 //
 //******************************************************************************************************
 
+using System;
 using System.ComponentModel;
 using System.Windows.Input;
 
@@ -31,6 +34,36 @@ namespace TimeSeriesFramework.UI
     /// </summary>
     public interface IViewModel : INotifyPropertyChanged
     {
+        /// <summary>
+        /// Raised before record load is executed.
+        /// </summary>
+        event CancelEventHandler BeforeLoad;
+
+        /// <summary>
+        /// Raised when record has been loaded.
+        /// </summary>
+        event EventHandler Loaded;
+
+        /// <summary>
+        /// Raised before record save is executed.
+        /// </summary>
+        event CancelEventHandler BeforeSave;
+
+        /// <summary>
+        /// Raised when record has been saved.
+        /// </summary>
+        event EventHandler Saved;
+
+        /// <summary>
+        /// Raised before record delete is executed.
+        /// </summary>
+        event CancelEventHandler BeforeDelete;
+
+        /// <summary>
+        /// Raised when record has been deleted.
+        /// </summary>
+        event EventHandler Deleted;
+
         /// <summary>
         /// Gets <see cref="ICommand"/> object to perform Save operation.
         /// </summary>

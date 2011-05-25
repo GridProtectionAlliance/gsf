@@ -31,6 +31,12 @@ namespace TimeSeriesFramework
     /// <summary>
     /// Represents a <see cref="IMeasurement"/> that can be serialized.
     /// </summary>
+    /// <remarks>
+    /// This measurement implementation is serialized through <see cref="ISupportBinaryImage"/>
+    /// to allow complete control of binary format. All measurements properties are serialized
+    /// at their full resolution and no attempt is made to optimize the binary image for
+    /// purposes of size reduction.
+    /// </remarks>
     public class SerializableMeasurement : Measurement, ISupportBinaryImage
     {
         #region [ Members ]
@@ -43,7 +49,7 @@ namespace TimeSeriesFramework
         public const int FixedLength = 61;
 
         #endregion
-        
+
         #region [ Constructors ]
 
         /// <summary>
@@ -54,13 +60,14 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>
-        /// Creates a new <see cref="SerializableMeasurement"/> from source <see cref="IMeasurement"/> value.
+        /// Creates a new <see cref="SerializableMeasurement"/> from an existing <see cref="IMeasurement"/> value.
         /// </summary>
-        /// <param name="m">Source <see cref="IMeasurement"/> value.</param>
-        public SerializableMeasurement(IMeasurement m) : base(m.ID, m.Source, m.SignalID, m.Value, m.Adder, m.Multiplier, m.Timestamp)
+        /// <param name="measurement">Source <see cref="IMeasurement"/> value.</param>
+        public SerializableMeasurement(IMeasurement measurement)
+            : base(measurement.ID, measurement.Source, measurement.SignalID, measurement.Value, measurement.Adder, measurement.Multiplier, measurement.Timestamp)
         {
-            this.ValueQualityIsGood = m.ValueQualityIsGood;
-            this.TimestampQualityIsGood = m.TimestampQualityIsGood;
+            this.ValueQualityIsGood = measurement.ValueQualityIsGood;
+            this.TimestampQualityIsGood = measurement.TimestampQualityIsGood;
         }
 
         #endregion
@@ -93,7 +100,7 @@ namespace TimeSeriesFramework
         /// </remarks>
         public byte[] BinaryImage
         {
-            get 
+            get
             {
                 byte[] bytes, buffer;
                 int length, index = 0;
@@ -171,7 +178,7 @@ namespace TimeSeriesFramework
             }
         }
 
-        #endregion        
+        #endregion
 
         #region [ Methods ]
 

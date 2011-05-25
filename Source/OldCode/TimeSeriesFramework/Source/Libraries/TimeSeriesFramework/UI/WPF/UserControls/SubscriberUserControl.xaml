@@ -56,8 +56,8 @@
             <!--Third Row-->
             <TextBlock Grid.Row="2" Grid.Column="0" Text="Shared Secret"/>
             <TextBox Grid.Row="2" Grid.Column="1" Text="{tsfBinding:Column Path=SharedSecret}" Name="m_sharedSecretField"/>
-            <TextBlock Grid.Row="2" Grid.Column="2" Text="Auth Key"/>
-            <TextBox Grid.Row="2" Grid.Column="3" Text="{tsfBinding:Column Path=AuthKey}" Name="m_authKeyField"/>
+            <TextBlock Grid.Row="2" Grid.Column="2" Text="Authentication ID"/>
+            <TextBox Grid.Row="2" Grid.Column="3" Text="{tsfBinding:Column Path=AuthKey}" Name="m_authenticationID"/>
             
             <!--Fourth Row-->
             <TextBlock Grid.Row="3" Grid.Column="0" Text="Key"/>

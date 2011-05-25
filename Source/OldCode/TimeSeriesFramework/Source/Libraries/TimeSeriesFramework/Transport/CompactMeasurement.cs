@@ -31,55 +31,63 @@ using TVA.Security.Cryptography;
 namespace TimeSeriesFramework.Transport
 {
     /// <summary>
-    /// <see cref="CompactMeasurement"/> state flags.
-    /// </summary>
-    [Flags]
-    public enum StateFlags : byte
-    {
-        /// <summary>
-        /// Use even time index when set; odd time index when not set.
-        /// </summary>
-        TimeIndex = (byte)Bits.Bit00,
-        /// <summary>
-        /// Use even cipher index when set; off cipher index when not set.
-        /// </summary>
-        CipherIndex = (byte)Bits.Bit01,
-        /// <summary>
-        /// Value quality is good is true when set; otherwise false.
-        /// </summary>
-        ValueQualityIsGood = (byte)Bits.Bit02,
-        /// <summary>
-        /// Time quality is good is true when set; otherwise false.
-        /// </summary>
-        TimeQualityIsGood = (byte)Bits.Bit03,
-        /// <summary>
-        /// Discarded is true when set; otherwise false.
-        /// </summary>
-        Discarded = (byte)Bits.Bit04,
-        /// <summary>
-        /// Bit reserved for future use.
-        /// </summary>
-        Reserved01 = (byte)Bits.Bit05,
-        /// <summary>
-        /// Bit reserved for future use.
-        /// </summary>
-        Reserved02 = (byte)Bits.Bit06,
-        /// <summary>
-        /// Bit reserved for future use.
-        /// </summary>
-        Reserved03 = (byte)Bits.Bit07,
-        /// <summary>
-        /// No flags.
-        /// </summary>
-        NoFlags = (byte)Bits.Nil
-    }
-
-    /// <summary>
     /// Represents a <see cref="IMeasurement"/> that can be serialized with minimal size.
     /// </summary>
+    /// <remarks>
+    /// This measurement implementation is serialized through <see cref="ISupportBinaryImage"/>
+    /// to allow complete control of binary format. Only critical measurements properties are
+    /// serialized and every attempt is made to optimize the binary image for purposes of size
+    /// reduction.
+    /// </remarks>
     public class CompactMeasurement : Measurement, ISupportBinaryImage
     {
         #region [ Members ]
+
+        // Nested Types
+
+        /// <summary>
+        /// <see cref="CompactMeasurement"/> state flags.
+        /// </summary>
+        [Flags]
+        public enum StateFlags : byte
+        {
+            /// <summary>
+            /// Use even time index when set; odd time index when not set.
+            /// </summary>
+            TimeIndex = (byte)Bits.Bit00,
+            /// <summary>
+            /// Use even cipher index when set; off cipher index when not set.
+            /// </summary>
+            CipherIndex = (byte)Bits.Bit01,
+            /// <summary>
+            /// Value quality is good is true when set; otherwise false.
+            /// </summary>
+            ValueQualityIsGood = (byte)Bits.Bit02,
+            /// <summary>
+            /// Time quality is good is true when set; otherwise false.
+            /// </summary>
+            TimeQualityIsGood = (byte)Bits.Bit03,
+            /// <summary>
+            /// Discarded is true when set; otherwise false.
+            /// </summary>
+            Discarded = (byte)Bits.Bit04,
+            /// <summary>
+            /// Bit reserved for future use.
+            /// </summary>
+            Reserved01 = (byte)Bits.Bit05,
+            /// <summary>
+            /// Bit reserved for future use.
+            /// </summary>
+            Reserved02 = (byte)Bits.Bit06,
+            /// <summary>
+            /// Bit reserved for future use.
+            /// </summary>
+            Reserved03 = (byte)Bits.Bit07,
+            /// <summary>
+            /// No flags.
+            /// </summary>
+            NoFlags = (byte)Bits.Nil
+        }
 
         // Constants
 
@@ -88,9 +96,8 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         public const int FixedLength = 7;
 
-        // Constants
-        internal const int KeyIndex = 0;
-        internal const int IVIndex = 1;        
+        internal const int KeyIndex = 0;    // Index of cipher key component in keyIV array
+        internal const int IVIndex = 1;     // Index of initialization vector component in keyIV array
 
         // Members
         private SignalIndexCache m_signalIndexCache;
@@ -125,7 +132,7 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
-        /// Creates a new <see cref="CompactMeasurement"/> from source <see cref="IMeasurement"/> value.
+        /// Creates a new <see cref="CompactMeasurement"/> from an existing <see cref="IMeasurement"/> value.
         /// </summary>
         /// <param name="measurement">Source <see cref="IMeasurement"/> value.</param>
         /// <param name="signalIndexCache">Signal index cache used to serialize or deserialize runtime information.</param>
@@ -230,7 +237,7 @@ namespace TimeSeriesFramework.Transport
                     }
                 }
 
-                // If crypto keys were provided, encrypted data portion of buffer
+                // If crypto keys were provided, encrypt data portion of buffer
                 if (m_keyIVs != null)
                     Buffer.BlockCopy(buffer.Encrypt(1, length - 1, m_keyIVs[m_cipherIndex][KeyIndex], m_keyIVs[m_cipherIndex][IVIndex], CipherStrength.Aes256), 0, buffer, 1, length - 1);
 
