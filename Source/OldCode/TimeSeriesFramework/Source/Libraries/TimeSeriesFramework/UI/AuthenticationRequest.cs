@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System.ServiceModel;
 using System.Xml.Serialization;
 
 namespace TimeSeriesFramework.UI
@@ -28,6 +29,7 @@ namespace TimeSeriesFramework.UI
     /// <summary>
     /// Represents a subscriber authentication request.
     /// </summary>
+    [XmlSerializerFormat]
     public class AuthenticationRequest
     {
         #region [ Members ]

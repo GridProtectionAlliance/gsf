@@ -24,13 +24,12 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Windows;
 using System.Windows.Controls;
-using System.Xml;
-using System.Xml.Serialization;
 using TVA;
 using TVA.Collections;
 using TVA.Data;
@@ -76,7 +75,7 @@ namespace TimeSeriesFramework.UI.UserControls
             // Generate a default shared secret password for subscriber key and initialization vector
             byte[] buffer = new byte[4];
             TVA.Security.Cryptography.Random.GetBytes(buffer);
-            
+
             string generatedSecret = Convert.ToBase64String(buffer).RemoveCrLfs();
 
             if (generatedSecret.Contains("="))
@@ -102,17 +101,13 @@ namespace TimeSeriesFramework.UI.UserControls
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(m_keyField.Text) && string.IsNullOrWhiteSpace(m_ivField.Text))
-            {
-                string keyIV = Cipher.ExportKeyIV(m_sharedSecretField.Text, 256);
-                string[] parts = keyIV.Split('|');
-                m_keyField.Text = parts[0];
-                m_ivField.Text = parts[1];
-            }
+                m_generateButton_Click(this, null);
 
             string filename;
 
             System.Windows.Forms.SaveFileDialog saveFileDialog = new System.Windows.Forms.SaveFileDialog();
 
+            saveFileDialog.Filter = "XML Files (*.xml)|*.xml|All Files (*.*)|*.*";
             saveFileDialog.DefaultExt = ".xml";
             saveFileDialog.ShowDialog();
             filename = saveFileDialog.FileName;
@@ -127,12 +122,7 @@ namespace TimeSeriesFramework.UI.UserControls
             request.IV = m_ivField.Text;
             request.ValidIPAddresses = m_validIpAddressesField.Text;
 
-            XmlSerializer serializer = new XmlSerializer(typeof(AuthenticationRequest));
-
-            using (XmlWriter writer = XmlWriter.Create(filename))
-            {
-                serializer.Serialize(writer, request);
-            }
+            File.WriteAllBytes(filename, Serialization.Serialize(request, TVA.SerializationFormat.Xml));
         }
 
         /// <summary>
@@ -142,10 +132,10 @@ namespace TimeSeriesFramework.UI.UserControls
         /// <param name="e">Arguments of the event.</param>
         private void m_generateButton_Click(object sender, RoutedEventArgs e)
         {
-            string key_iv = Cipher.ExportKeyIV(m_sharedSecretField.Text, 256);
-            string[] keyAndIv = key_iv.Split('|');
-            m_keyField.Text = keyAndIv[0];
-            m_ivField.Text = keyAndIv[1];
+            string keyIV = Cipher.ExportKeyIV(m_sharedSecretField.Text, 256);
+            string[] parts = keyIV.Split('|');
+            m_keyField.Text = parts[0];
+            m_ivField.Text = parts[1];
         }
 
         #endregion
