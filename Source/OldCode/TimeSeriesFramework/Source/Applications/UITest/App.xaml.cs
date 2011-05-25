@@ -27,7 +27,7 @@ using System.Windows;
 using TimeSeriesFramework.UI;
 using TVA.ErrorManagement;
 
-namespace UITest
+namespace TSFManager
 {
     /// <summary>
     /// Interaction logic for App.xaml

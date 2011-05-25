@@ -47,7 +47,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataSubscriberTest", "Appli
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPublisherTest", "Applications\DataPublisherTest\DataPublisherTest.csproj", "{4508009C-7011-4981-B35F-594F42CC0D1F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UITest", "Applications\UITest\UITest.csproj", "{FC5B2769-89FD-420B-9722-D6E0B029ABDD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSFManager", "Applications\UITest\TSFManager.csproj", "{FC5B2769-89FD-420B-9722-D6E0B029ABDD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeSeriesFramework.UI", "Libraries\TimeSeriesFramework\UI\TimeSeriesFramework.UI.csproj", "{7ED01B57-DD71-4A38-BB29-65D629224A12}"
 EndProject
@@ -71,18 +71,18 @@ Global
 		SccProjectTopLevelParentUniqueName3 = TimeSeriesFramework.sln
 		SccProjectName3 = Applications/DataPublisherTest
 		SccLocalPath3 = Applications\\DataPublisherTest
-		SccProjectUniqueName4 = Applications\\UITest\\UITest.csproj
+		SccProjectUniqueName4 = Libraries\\TimeSeriesFramework\\UI\\TimeSeriesFramework.UI.csproj
 		SccProjectTopLevelParentUniqueName4 = TimeSeriesFramework.sln
-		SccProjectName4 = Applications/UITest
-		SccLocalPath4 = Applications\\UITest
-		SccProjectUniqueName5 = Libraries\\TimeSeriesFramework\\UI\\TimeSeriesFramework.UI.csproj
+		SccProjectName4 = Libraries/TimeSeriesFramework/UI
+		SccLocalPath4 = Libraries\\TimeSeriesFramework\\UI
+		SccProjectUniqueName5 = Libraries\\TimeSeriesFramework\\UI\\WPF\\TimeSeriesFramework.UI.WPF.csproj
 		SccProjectTopLevelParentUniqueName5 = TimeSeriesFramework.sln
-		SccProjectName5 = Libraries/TimeSeriesFramework/UI
-		SccLocalPath5 = Libraries\\TimeSeriesFramework\\UI
-		SccProjectUniqueName6 = Libraries\\TimeSeriesFramework\\UI\\WPF\\TimeSeriesFramework.UI.WPF.csproj
+		SccProjectName5 = Libraries/TimeSeriesFramework/UI/WPF
+		SccLocalPath5 = Libraries\\TimeSeriesFramework\\UI\\WPF
+		SccProjectUniqueName6 = Applications\\UITest\\TSFManager.csproj
 		SccProjectTopLevelParentUniqueName6 = TimeSeriesFramework.sln
-		SccProjectName6 = Libraries/TimeSeriesFramework/UI/WPF
-		SccLocalPath6 = Libraries\\TimeSeriesFramework\\UI\\WPF
+		SccProjectName6 = Applications/UITest
+		SccLocalPath6 = Applications\\UITest
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

@@ -8,8 +8,8 @@
     <ProjectGuid>{FC5B2769-89FD-420B-9722-D6E0B029ABDD}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>UITest</RootNamespace>
-    <AssemblyName>UITest</AssemblyName>
+    <RootNamespace>TSFManager</RootNamespace>
+    <AssemblyName>TSFManager</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>

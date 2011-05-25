@@ -1,7 +1,7 @@
-﻿<Application x:Class="UITest.App"
+﻿<Application x:Class="TSFManager.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
-             xmlns:util="clr-namespace:UITest.Utility"   
+             xmlns:util="clr-namespace:TSFManager.Utility"   
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         
