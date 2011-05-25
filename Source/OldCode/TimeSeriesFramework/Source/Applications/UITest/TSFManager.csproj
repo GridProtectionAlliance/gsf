@@ -8,8 +8,8 @@
     <ProjectGuid>{FC5B2769-89FD-420B-9722-D6E0B029ABDD}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TSFManager</RootNamespace>
-    <AssemblyName>TSFManager</AssemblyName>
+    <RootNamespace>TsfManager</RootNamespace>
+    <AssemblyName>TsfManager</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>

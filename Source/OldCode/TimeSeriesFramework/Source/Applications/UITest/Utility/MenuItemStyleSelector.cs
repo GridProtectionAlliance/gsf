@@ -25,7 +25,7 @@ using System.Windows;
 using System.Windows.Controls;
 using TimeSeriesFramework.UI;
 
-namespace TSFManager.Utility
+namespace TsfManager.Utility
 {
     /// <summary>
     /// Represents wrapper object around <see cref="StyleSelector"/> class.

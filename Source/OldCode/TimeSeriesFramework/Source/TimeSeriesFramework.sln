@@ -47,7 +47,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataSubscriberTest", "Appli
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPublisherTest", "Applications\DataPublisherTest\DataPublisherTest.csproj", "{4508009C-7011-4981-B35F-594F42CC0D1F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSFManager", "Applications\UITest\TSFManager.csproj", "{FC5B2769-89FD-420B-9722-D6E0B029ABDD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TsfManager", "Applications\UITest\TsfManager.csproj", "{FC5B2769-89FD-420B-9722-D6E0B029ABDD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeSeriesFramework.UI", "Libraries\TimeSeriesFramework\UI\TimeSeriesFramework.UI.csproj", "{7ED01B57-DD71-4A38-BB29-65D629224A12}"
 EndProject

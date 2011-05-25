@@ -30,7 +30,7 @@ using System.Xml.Serialization;
 using TimeSeriesFramework.UI;
 using TimeSeriesFramework.UI.DataModels;
 
-namespace TSFManager
+namespace TsfManager
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

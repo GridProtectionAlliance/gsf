@@ -1,7 +1,7 @@
-﻿<Application x:Class="TSFManager.App"
+﻿<Application x:Class="TsfManager.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
-             xmlns:util="clr-namespace:TSFManager.Utility"   
+             xmlns:util="clr-namespace:TsfManager.Utility"   
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         
