@@ -137,7 +137,7 @@
         <Setter Property="VerticalGridLinesBrush" Value="#FFE1E9EE" />
         <Setter Property="CanUserAddRows" Value="False" />
         <Setter Property="CanUserDeleteRows" Value="True"/>
-        <Setter Property="HorizontalScrollBarVisibility" Value="Auto" />
+        <Setter Property="HorizontalScrollBarVisibility" Value="Hidden" />
         <Setter Property="VerticalScrollBarVisibility" Value="Auto" />        
     </Style>
     
