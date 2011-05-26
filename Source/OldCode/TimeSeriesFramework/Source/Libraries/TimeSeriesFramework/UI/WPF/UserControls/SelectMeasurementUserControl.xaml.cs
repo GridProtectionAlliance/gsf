@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using TimeSeriesFramework.UI.ViewModels;
@@ -131,26 +132,23 @@ namespace TimeSeriesFramework.UI.UserControls
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Handles loaded event for select measurement user control.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void SelectMeasurementUserControl_Loaded(object sender, RoutedEventArgs e)
         {
-            // TODO: Think about the placement of try catch statement.
-            // It was added here since designed did not work without it.
-            try
-            {
+            if (!DesignerProperties.GetIsInDesignMode(this))
                 Refresh();
-            }
-            catch
-            {
-
-            }
         }
 
         /// <summary>
-        /// Handles property changed event for measurement.
+        /// Handles property changed event for select measurement user control.
         /// </summary>
         /// <param name="sender">Source of the event.</param>
         /// <param name="e">Event arguments.</param>
-        void measurement_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        private void measurement_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (SourceCollectionChanged != null)
                 SourceCollectionChanged(this, null);
@@ -164,7 +162,9 @@ namespace TimeSeriesFramework.UI.UserControls
         private void CheckBox_Checked(object sender, System.Windows.RoutedEventArgs e)
         {
             foreach (TimeSeriesFramework.UI.DataModels.Measurement measurement in m_itemsSource)
+            {
                 measurement.Selected = true;
+            }
         }
 
         /// <summary>
@@ -175,7 +175,9 @@ namespace TimeSeriesFramework.UI.UserControls
         private void CheckBox_Unchecked(object sender, System.Windows.RoutedEventArgs e)
         {
             foreach (TimeSeriesFramework.UI.DataModels.Measurement measurement in m_itemsSource)
+            {
                 measurement.Selected = false;
+            }
         }
 
         /// <summary>
@@ -184,11 +186,13 @@ namespace TimeSeriesFramework.UI.UserControls
         public void UncheckSelection()
         {
             foreach (TimeSeriesFramework.UI.DataModels.Measurement measurement in m_itemsSource)
+            {
                 measurement.Selected = false;
+            }
         }
 
         /// <summary>
-        /// Refreshes data bournd to grid.
+        /// Refreshes data bound to grid.
         /// </summary>
         /// <param name="deviceID">ID of the device to filter data.</param>
         public void Refresh(int deviceID = 0)
@@ -197,7 +201,9 @@ namespace TimeSeriesFramework.UI.UserControls
             m_itemsSource = m_dataContext.ItemsSource;
 
             foreach (TimeSeriesFramework.UI.DataModels.Measurement measurement in m_itemsSource)
-                measurement.PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler(measurement_PropertyChanged);
+            {
+                measurement.PropertyChanged += measurement_PropertyChanged;
+            }
 
             this.DataContext = m_dataContext;
         }

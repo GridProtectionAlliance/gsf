@@ -294,11 +294,11 @@ namespace TimeSeriesFramework.Transport
         /// Authenticates subcriber to a data publisher.
         /// </summary>
         /// <param name="sharedSecret">Shared secret used to look up private crypto key and initialization vector.</param>
-        /// <param name="authenticationKey">Authentication key that publisher will use to validate subscriber identity.</param>
+        /// <param name="authenticationID">Authentication ID that publisher will use to validate subscriber identity.</param>
         /// <returns><c>true</c> if authentication transmission was successful; otherwise <c>false</c>.</returns>
-        public virtual bool Authenticate(string sharedSecret, string authenticationKey)
+        public virtual bool Authenticate(string sharedSecret, string authenticationID)
         {
-            if (!string.IsNullOrWhiteSpace(authenticationKey))
+            if (!string.IsNullOrWhiteSpace(authenticationID))
             {
                 try
                 {
@@ -310,7 +310,7 @@ namespace TimeSeriesFramework.Transport
                     TVA.Security.Cryptography.Random.GetBytes(salt);
 
                     // Get encoded bytes of authentication key
-                    bytes = salt.Combine(Encoding.Unicode.GetBytes(authenticationKey));
+                    bytes = salt.Combine(Encoding.Unicode.GetBytes(authenticationID));
 
                     // Encrypt authentication key
                     bytes = bytes.Encrypt(sharedSecret, CipherStrength.Aes256);

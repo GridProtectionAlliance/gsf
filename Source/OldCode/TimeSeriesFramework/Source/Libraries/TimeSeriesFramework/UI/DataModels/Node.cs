@@ -58,8 +58,6 @@ namespace TimeSeriesFramework.UI.DataModels
         private bool m_master;
         private int m_loadOrder;
         private bool m_enabled;
-        //private string m_timeSeriesDataServiceUrl;
-        // TODO: Please check this.(RemoteStatusServiceUrl and RealTimeStatisticsServiceUrl are deleted from the New Schema)
         private string m_remoteStatusServiceUrl;
         private string m_realTimeStatisticServiceUrl;
         private string m_companyName;

@@ -24,6 +24,8 @@
 //  12/02/2010 - J. Ritchie Carroll
 //       Fixed an issue for when DataSubcriber dynamically resubscribes with a different
 //       synchronization method (e.g., going from unsynchronized to synchronized)
+//  05/26/2011 - J. Ritchie Carroll
+//       Implemented subscriber authentication model.
 //
 //******************************************************************************************************
 
@@ -41,6 +43,7 @@ using TimeSeriesFramework.Adapters;
 using TVA;
 using TVA.Communication;
 using TVA.IO.Compression;
+using TVA.Security.Cryptography;
 
 namespace TimeSeriesFramework.Transport
 {
@@ -748,7 +751,9 @@ namespace TimeSeriesFramework.Transport
             private string m_connectionID;
             private bool m_authenticated;
             private IClientSubscription m_subscription;
-            private string m_ipAddress;
+            private IPAddress m_ipAddress;
+            private string m_subscriberAcronym;
+            private string m_subscriberName;
 
             #endregion
 
@@ -774,7 +779,7 @@ namespace TimeSeriesFramework.Transport
 
                     if (remoteEndPoint != null)
                     {
-                        m_ipAddress = remoteEndPoint.Address.ToString();
+                        m_ipAddress = remoteEndPoint.Address;
 
                         if (remoteEndPoint.AddressFamily == AddressFamily.InterNetworkV6)
                             m_connectionID = "[" + m_ipAddress + "]:" + remoteEndPoint.Port;
@@ -800,8 +805,11 @@ namespace TimeSeriesFramework.Transport
                     m_connectionID = (m_subscriberID == Guid.Empty ? clientID.ToString() : m_subscriberID.ToString());
                 }
 
-                if (string.IsNullOrEmpty(m_connectionID))
+                if (string.IsNullOrWhiteSpace(m_connectionID))
                     m_connectionID = "unavailable";
+
+                if (m_ipAddress == null)
+                    m_ipAddress = System.Net.IPAddress.None;
             }
 
             #endregion
@@ -835,6 +843,36 @@ namespace TimeSeriesFramework.Transport
             }
 
             /// <summary>
+            /// Gets or sets the subscriber acronym of this <see cref="ClientConnection"/>.
+            /// </summary>
+            public string SubscriberAcronym
+            {
+                get
+                {
+                    return m_subscriberAcronym;
+                }
+                set
+                {
+                    m_subscriberAcronym = value;
+                }
+            }
+
+            /// <summary>
+            /// Gets or sets the subscriber name of this <see cref="ClientConnection"/>.
+            /// </summary>
+            public string SubscriberName
+            {
+                get
+                {
+                    return m_subscriberName;
+                }
+                set
+                {
+                    m_subscriberName = value;
+                }
+            }
+
+            /// <summary>
             /// Gets the connection identification of this <see cref="ClientConnection"/>.
             /// </summary>
             public string ConnectionID
@@ -861,6 +899,17 @@ namespace TimeSeriesFramework.Transport
             }
 
             /// <summary>
+            /// Gets the IP address of the remote client connection.
+            /// </summary>
+            public IPAddress IPAddress
+            {
+                get
+                {
+                    return m_ipAddress;
+                }
+            }
+
+            /// <summary>
             /// Gets or sets subscription associated with this <see cref="ClientConnection"/>.
             /// </summary>
             public IClientSubscription Subscription
@@ -874,10 +923,6 @@ namespace TimeSeriesFramework.Transport
                     m_subscription = value;
                 }
             }
-
-            #endregion
-
-            #region [ Methods ]
 
             #endregion
         }
@@ -1193,8 +1238,7 @@ namespace TimeSeriesFramework.Transport
             }
             catch (Exception ex)
             {
-                // TODO: Setup subcriber ID lookup for better textual representation of subscribers...
-                OnProcessException(new InvalidOperationException(string.Format("Failed to determine subscriber rights for {0} due to exception: {1}", subscriberID, ex.Message)));
+                OnProcessException(new InvalidOperationException(string.Format("Failed to determine subscriber rights for {0} due to exception: {1}", GetConnectionProperty(subscriberID, cc => cc.SubscriberAcronym), ex.Message)));
             }
 
             return false;
@@ -1371,6 +1415,21 @@ namespace TimeSeriesFramework.Transport
             return false;
         }
 
+        // Gets specfied property from client connection based on subscriber ID
+        private TResult GetConnectionProperty<TResult>(Guid subscriberID, Func<ClientConnection, TResult> predicate)
+        {
+            TResult result = default(TResult);
+
+            // Lookup client connection by subscriber ID
+            ClientConnection connection = m_clientConnections.Values.FirstOrDefault(cc => cc.SubscriberID == subscriberID);
+
+            // Extract desired property from client connection using given predicate function
+            if (connection != null)
+                result = predicate(connection);
+
+            return result;
+        }
+
         private void m_commandChannel_ClientConnected(object sender, EventArgs<Guid> e)
         {
             Guid clientID = e.Argument;
@@ -1420,12 +1479,96 @@ namespace TimeSeriesFramework.Transport
                     if (command == ServerCommand.Authenticate)
                     {
                         // Handle authentication request
-
-                        // If validated authenication request...
-                        if (true)
+                        try
                         {
-                            connection.Authenticated = true;
-                            connection.SubscriberID = Guid.Empty; // Should have looked up subscriber ID based on auth request and/or IP validation...
+                            DataRow subscriber = null;
+
+                            // Reset existing authentication state
+                            connection.Authenticated = false;
+
+                            // Subscriber connection is first referenced by its IP
+                            foreach (DataRow row in DataSource.Tables["Subscribers"].Select("Enabled <> 0"))
+                            {
+                                if (row["ValidIPAddresses"].ToNonNullString().Split(';', ',').Where(ip => !string.IsNullOrWhiteSpace(ip)).Select(ip => IPAddress.Parse(ip.Trim())).Contains(connection.IPAddress))
+                                {
+                                    // Found registered subscriber record for the connected IP
+                                    subscriber = row;
+                                    break;
+                                }
+                            }
+
+                            if (subscriber == null)
+                            {
+                                message = string.Format("No subscriber is registered for {0}, cannnot authenticate connection - {1} request denied.", connection.ConnectionID, command);
+                                SendClientResponse(clientID, ServerResponse.Failed, command, message);
+                                OnStatusMessage("WARNING: Client {0} {1} command request denied - subscriber is disabled or not registered.", connection.ConnectionID, command);
+                                return;
+                            }
+                            else
+                            {
+                                string sharedSecret = subscriber["SharedSecret"].ToNonNullString().Trim();
+                                string authenticationID = subscriber["AuthKey"].ToNonNullString().Trim();
+
+                                // Update subscriber data in associated connection object
+                                connection.SubscriberID = Guid.Parse(subscriber["ID"].ToNonNullString(Guid.Empty.ToString()).Trim());
+                                connection.SubscriberAcronym = subscriber["Acronym"].ToNonNullString().Trim();
+                                connection.SubscriberName = subscriber["Name"].ToNonNullString().Trim();
+
+                                if (length >= 5)
+                                {
+                                    // First 4 bytes beyond command byte represent an integer representing the length of the authentication string that follows
+                                    int byteLength = EndianOrder.BigEndian.ToInt32(buffer, 1);
+
+                                    // Byte length should be reasonable
+                                    if (byteLength >= 16 && byteLength <= 256)
+                                    {
+                                        if (length >= 5 + byteLength)
+                                        {
+                                            // Decrypt encoded portion of buffer
+                                            byte[] bytes = buffer.Decrypt(5, byteLength, sharedSecret, CipherStrength.Aes256);
+
+                                            // Validate the authentication ID - if it matches, connection is authenticated
+                                            connection.Authenticated = (string.Compare(authenticationID, Encoding.Unicode.GetString(bytes, CipherSaltLength, bytes.Length - CipherSaltLength)) == 0);
+
+                                            if (!connection.Authenticated)
+                                            {
+                                                message = string.Format("Subscriber authentication failed - {0} request denied.", command);
+                                                SendClientResponse(clientID, ServerResponse.Failed, command, message);
+                                                OnStatusMessage("WARNING: Client {0} {1} command request denied - subscriber authentication failed.", connection.ConnectionID, command);
+                                                return;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            message = "Not enough buffer was provided to parse client request.";
+                                            SendClientResponse(clientID, ServerResponse.Failed, command, message);
+                                            OnProcessException(new InvalidOperationException(message));
+                                            return;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        message = string.Format("Received request packet with an unexpected size from {0} - {1} request denied.", connection.ConnectionID, command);
+                                        SendClientResponse(clientID, ServerResponse.Failed, command, message);
+                                        OnStatusMessage("WARNING: Registered subscriber \"{0}\" {1} {2} command request was denied due to oddly sized {3} byte authentication packet.", connection.SubscriberName, connection.ConnectionID, command, byteLength);
+                                        return;
+                                    }
+                                }
+                                else
+                                {
+                                    message = "Not enough buffer was provided to parse client request.";
+                                    SendClientResponse(clientID, ServerResponse.Failed, command, message);
+                                    OnProcessException(new InvalidOperationException(message));
+                                    return;
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            message = "Failed to process authentication request due to exception: " + ex.Message;
+                            SendClientResponse(clientID, ServerResponse.Failed, command, message);
+                            OnProcessException(new InvalidOperationException(message, ex));
+                            return;
                         }
                     }
                     else if (m_requireClientAuthentication && !connection.Authenticated)

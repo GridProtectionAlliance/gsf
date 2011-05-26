@@ -63,6 +63,7 @@ namespace TimeSeriesFramework.UI
                 m_icon = value;
             }
         }
+
         /// <summary>
         /// Gets or sets text of <see cref="MenuDataItem"/> to be displayed in menu.
         /// </summary>
@@ -153,7 +154,10 @@ namespace TimeSeriesFramework.UI
             {
                 return new MenuCommand()
                 {
-                    Roles = this.Roles, UserControlAssembly = this.UserControlAssembly, UserControlPath = this.UserControlPath, Description = this.Description
+                    Roles = this.Roles,
+                    UserControlAssembly = this.UserControlAssembly,
+                    UserControlPath = this.UserControlPath,
+                    Description = this.Description
                 };
             }
         }

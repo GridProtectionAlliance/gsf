@@ -25,7 +25,7 @@
 //  05/05/2011 - Mehulbhai P Thakkar
 //       Added NULL handling for Save() operation.
 //  05/13/2011 - Aniket Salver
-//                  Modified the way Guid is retrived from the Data Base.
+//       Modified the way Guid is retrived from the Data Base.
 //  05/13/2011 - Mehulbhai P Thakkar
 //       Modified static methods to filter data by device.
 //

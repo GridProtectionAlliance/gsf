@@ -51,6 +51,7 @@ namespace TsfManager
         public App()
         {
             AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
+
             m_errorLogger = new ErrorLogger();
             m_defaultErrorText = m_errorLogger.ErrorTextMethod;
             m_errorLogger.ErrorTextMethod = ErrorText;
@@ -62,6 +63,7 @@ namespace TsfManager
             m_errorLogger.LogToScreenshot = true;
             m_errorLogger.LogToUI = true;
             m_errorLogger.Initialize();
+
             NodeID = Guid.Parse("e7a5235d-cb6f-4864-a96e-a8686f36e599");
         }
 
@@ -106,6 +108,5 @@ namespace TsfManager
         }
 
         #endregion
-
     }
 }
