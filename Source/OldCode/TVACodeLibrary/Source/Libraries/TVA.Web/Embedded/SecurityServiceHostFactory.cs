@@ -252,7 +252,7 @@ namespace TVA.Web.Embedded
         #region [ Members ]
 
         // Constants
-        private string TypeName = "System.ServiceModel.Activation.HostedAspNetEnvironment, System.ServiceModel.Activation, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35";
+        private string HostedAspNetEnvironment = "System.ServiceModel.Activation.HostedAspNetEnvironment, System.ServiceModel.Activation, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35";
 
         #endregion
 
@@ -307,7 +307,7 @@ namespace TVA.Web.Embedded
         /// </summary>
         private AuthenticationSchemes GetAuthenticationSchemes(Uri baseAddress)
         {
-            Type type = Type.GetType(TypeName);
+            Type type = Type.GetType(HostedAspNetEnvironment);
             object instance = Activator.CreateInstance(type, true);
 
             return (AuthenticationSchemes)instance.GetType().InvokeMember("GetAuthenticationSchemes", BindingFlags.InvokeMethod, null, instance, new object[] { baseAddress });
