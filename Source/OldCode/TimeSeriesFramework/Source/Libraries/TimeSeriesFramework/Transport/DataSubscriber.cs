@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Text;
+using System.Threading;
 using TimeSeriesFramework.Adapters;
 using TVA;
 using TVA.Communication;
@@ -559,6 +560,28 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
+        /// Provides default synchronization behavior for metadata updates.
+        /// </summary>
+        /// <param name="metadata">Updated metadata tables.</param>
+        protected virtual void SynchronizeMetadata(DataSet metadata)
+        {
+            // We handle synchronization on a seperate thread since this process may be lengthy
+            ThreadPool.QueueUserWorkItem(SynchronizeMetadata, metadata);
+        }
+
+        private void SynchronizeMetadata(object state)
+        {
+            DataSet metadata = state as DataSet;
+
+            if (metadata != null)
+            {
+                // Synchronize devices
+                // Synchronize phasors
+                // Synchronize measurements
+            }
+        }
+
+        /// <summary>
         /// Get message from string based response.
         /// </summary>
         /// <param name="buffer">Response buffer.</param>
@@ -583,7 +606,7 @@ namespace TimeSeriesFramework.Transport
                     bool solicited = false;
 
                     // See if this was a solicited response to a requested server command
-                    if (responseCode.IsSolicitedResponseCode())
+                    if (responseCode.IsSolicited())
                     {
                         lock (m_requests)
                         {
@@ -619,8 +642,15 @@ namespace TimeSeriesFramework.Transport
                                     case ServerCommand.MetaDataRefresh:
                                         OnStatusMessage("Success code received in response to server command \"{0}\": latest meta-data received.", commandCode);
 
+                                        // Deserialize metadata
+                                        DataSet metadata = Serialization.Deserialize<DataSet>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary);
+
+                                        // Synchronize metadata
+                                        SynchronizeMetadata(metadata);
+
+                                        // Raise metadata received event
                                         if (MetaDataReceived != null)
-                                            MetaDataReceived(this, new EventArgs<DataSet>(Serialization.Deserialize<DataSet>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary)));
+                                            MetaDataReceived(this, new EventArgs<DataSet>(metadata));
                                         break;
                                     case ServerCommand.Subscribe:
                                     case ServerCommand.Unsubscribe:

@@ -344,7 +344,7 @@ namespace TimeSeriesFramework.Transport
                     lock (this)
                     {
                         base.InputMeasurementKeys = value;
-                        m_parent.UpdateSignalIndexCache(m_signalIndexCache, value);
+                        m_parent.UpdateSignalIndexCache(m_clientID, m_signalIndexCache, value);
                     }
                 }
             }
@@ -565,7 +565,7 @@ namespace TimeSeriesFramework.Transport
                     lock (this)
                     {
                         base.InputMeasurementKeys = value;
-                        m_parent.UpdateSignalIndexCache(m_signalIndexCache, value);
+                        m_parent.UpdateSignalIndexCache(m_clientID, m_signalIndexCache, value);
                     }
                 }
             }
@@ -741,19 +741,23 @@ namespace TimeSeriesFramework.Transport
         }
 
         // Client connection class
-        private class ClientConnection
+        private class ClientConnection : IDisposable
         {
             #region [ Members ]
 
             // Fields
+            private DataPublisher m_parent;
             private Guid m_clientID;
             private Guid m_subscriberID;
             private string m_connectionID;
-            private bool m_authenticated;
-            private IClientSubscription m_subscription;
-            private IPAddress m_ipAddress;
             private string m_subscriberAcronym;
             private string m_subscriberName;
+            private IClientSubscription m_subscription;
+            private volatile bool m_authenticated;
+            private IPAddress m_ipAddress;
+            private TcpServer m_commandChannel;
+            private UdpServer m_dataChannel;
+            private bool m_disposed;
 
             #endregion
 
@@ -762,11 +766,14 @@ namespace TimeSeriesFramework.Transport
             /// <summary>
             /// Creates a new <see cref="ClientConnection"/> instance.
             /// </summary>
+            /// <param name="parent">Parent data publisher.</param>
             /// <param name="clientID">Client ID of associated connection.</param>
             /// <param name="commandChannel"><see cref="TcpServer"/> command channel used to lookup connection information.</param>
-            public ClientConnection(Guid clientID, TcpServer commandChannel)
+            public ClientConnection(DataPublisher parent, Guid clientID, TcpServer commandChannel)
             {
+                m_parent = parent;
                 m_clientID = clientID;
+                m_commandChannel = commandChannel;
                 m_subscriberID = clientID;
 
                 // Attempt to lookup remote connection identification for logging purposes
@@ -812,6 +819,14 @@ namespace TimeSeriesFramework.Transport
                     m_ipAddress = System.Net.IPAddress.None;
             }
 
+            /// <summary>
+            /// Releases the unmanaged resources before the <see cref="ClientConnection"/> object is reclaimed by <see cref="GC"/>.
+            /// </summary>
+            ~ClientConnection()
+            {
+                Dispose(false);
+            }
+
             #endregion
 
             #region [ Properties ]
@@ -824,6 +839,52 @@ namespace TimeSeriesFramework.Transport
                 get
                 {
                     return m_clientID;
+                }
+            }
+
+            /// <summary>
+            /// Gets or sets reference to <see cref="UdpServer"/> data channel, attaching and/or detaching to events as needed, associated with this <see cref="ClientConnection"/>.
+            /// </summary>
+            public UdpServer DataChannel
+            {
+                get
+                {
+                    return m_dataChannel;
+                }
+                set
+                {
+                    if (m_dataChannel != null)
+                    {
+                        // Detach from events on existing data channel reference
+                        m_dataChannel.SendClientDataException -= m_dataChannel_SendClientDataException;
+                        m_dataChannel.ServerStarted -= m_dataChannel_ServerStarted;
+                        m_dataChannel.ServerStopped -= m_dataChannel_ServerStopped;
+
+                        if (m_dataChannel != value)
+                            m_dataChannel.Dispose();
+                    }
+
+                    // Assign new data channel reference
+                    m_dataChannel = value;
+
+                    if (m_dataChannel != null)
+                    {
+                        // Attach to events on new data channel reference
+                        m_dataChannel.SendClientDataException += m_dataChannel_SendClientDataException;
+                        m_dataChannel.ServerStarted += m_dataChannel_ServerStarted;
+                        m_dataChannel.ServerStopped += m_dataChannel_ServerStopped;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Gets <see cref="IServer"/> publication channel - that is, data channel if defined otherwise command channel.
+            /// </summary>
+            public IServer PublishChannel
+            {
+                get
+                {
+                    return (m_dataChannel == null ? (IServer)m_commandChannel : (IServer)m_dataChannel);
                 }
             }
 
@@ -925,6 +986,61 @@ namespace TimeSeriesFramework.Transport
             }
 
             #endregion
+
+            #region [ Methods ]
+
+            /// <summary>
+            /// Releases all the resources used by the <see cref="ClientConnection"/> object.
+            /// </summary>
+            public void Dispose()
+            {
+                Dispose(true);
+                GC.SuppressFinalize(this);
+            }
+
+            /// <summary>
+            /// Releases the unmanaged resources used by the <see cref="ClientConnection"/> object and optionally releases the managed resources.
+            /// </summary>
+            /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+            protected virtual void Dispose(bool disposing)
+            {
+                if (!m_disposed)
+                {
+                    try
+                    {
+                        if (disposing)
+                        {
+                            DataChannel = null;
+                            m_commandChannel = null;
+                            m_ipAddress = null;
+                            m_subscription = null;
+                            m_parent = null;
+                        }
+                    }
+                    finally
+                    {
+                        m_disposed = true;  // Prevent duplicate dispose.
+                    }
+                }
+            }
+
+            private void m_dataChannel_SendClientDataException(object sender, EventArgs<Guid, Exception> e)
+            {
+                Exception ex = e.Argument2;
+                m_parent.OnProcessException(new InvalidOperationException(string.Format("Data channel exception occurred while sending client data to \"{0}\": {1}", m_connectionID, ex.Message), ex));
+            }
+
+            private void m_dataChannel_ServerStarted(object sender, EventArgs e)
+            {
+                m_parent.OnStatusMessage("Data channel started.");
+            }
+
+            private void m_dataChannel_ServerStopped(object sender, EventArgs e)
+            {
+                m_parent.OnStatusMessage("Data channel stopped.");
+            }
+
+            #endregion
         }
 
         // Constants
@@ -935,6 +1051,7 @@ namespace TimeSeriesFramework.Transport
         // Fields
         private TcpServer m_commandChannel;
         private ConcurrentDictionary<Guid, ClientConnection> m_clientConnections;
+        private ConcurrentDictionary<Guid, IServer> m_clientPublicationChannels;
         private ConcurrentDictionary<MeasurementKey, Guid> m_signalIDCache;
         private bool m_requireClientAuthentication;
         private bool m_disposed;
@@ -951,6 +1068,7 @@ namespace TimeSeriesFramework.Transport
             base.Name = "Data Publisher Collection";
             base.DataMember = "[internal]";
             m_clientConnections = new ConcurrentDictionary<Guid, ClientConnection>();
+            m_clientPublicationChannels = new ConcurrentDictionary<Guid, IServer>();
             m_signalIDCache = new ConcurrentDictionary<MeasurementKey, Guid>();
         }
 
@@ -1089,6 +1207,9 @@ namespace TimeSeriesFramework.Transport
                     if (disposing)
                     {
                         CommandChannel = null;
+
+                        if (m_clientConnections != null)
+                            m_clientConnections.Values.AsParallel().ForAll(cc => cc.Dispose());
                     }
                 }
                 finally
@@ -1175,7 +1296,7 @@ namespace TimeSeriesFramework.Transport
         }
 
         // Update signal index cache based on input measurement keys
-        private void UpdateSignalIndexCache(SignalIndexCache signalIndexCache, MeasurementKey[] inputMeasurementKeys)
+        private void UpdateSignalIndexCache(Guid clientID, SignalIndexCache signalIndexCache, MeasurementKey[] inputMeasurementKeys)
         {
             List<MeasurementKey> unauthorizedKeys = new List<MeasurementKey>();
             ushort index = 0;
@@ -1204,6 +1325,9 @@ namespace TimeSeriesFramework.Transport
             }
 
             signalIndexCache.UnauthorizedKeys = unauthorizedKeys.ToArray();
+
+            // Send client updated signal index cache
+            SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, Serialization.Serialize(signalIndexCache, TVA.SerializationFormat.Binary));
         }
 
         /// <summary>
@@ -1335,9 +1459,28 @@ namespace TimeSeriesFramework.Transport
         private bool SendClientResponse(Guid clientID, byte responseCode, byte commandCode, byte[] data)
         {
             bool success = false;
+            IServer publishChannel;
+
+            // Data packets can be published on a UDP data channel, so check for this...
+            if (responseCode == (byte)ServerResponse.DataPacket)
+            {
+                publishChannel = m_clientPublicationChannels.GetOrAdd(clientID, id =>
+                {
+                    ClientConnection connection;
+
+                    if (m_clientConnections.TryGetValue(id, out connection))
+                        return connection.PublishChannel;
+
+                    return m_commandChannel;
+                });
+            }
+            else
+            {
+                publishChannel = m_commandChannel;
+            }
 
             // Send response packet
-            if (m_commandChannel != null && m_commandChannel.CurrentState == ServerState.Running)
+            if (publishChannel != null && publishChannel.CurrentState == ServerState.Running)
             {
                 try
                 {
@@ -1363,7 +1506,7 @@ namespace TimeSeriesFramework.Transport
                         responsePacket.Write(data, 0, data.Length);
                     }
 
-                    m_commandChannel.SendToAsync(clientID, responsePacket.ToArray());
+                    publishChannel.MulticastAsync(responsePacket.ToArray(), 0, unchecked((int)responsePacket.Length));
 
                     success = true;
                 }
@@ -1434,7 +1577,7 @@ namespace TimeSeriesFramework.Transport
         {
             Guid clientID = e.Argument;
 
-            m_clientConnections[clientID] = new ClientConnection(clientID, m_commandChannel);
+            m_clientConnections[clientID] = new ClientConnection(this, clientID, m_commandChannel);
 
             OnStatusMessage("Client connected.");
         }
@@ -1443,9 +1586,14 @@ namespace TimeSeriesFramework.Transport
         {
             Guid clientID = e.Argument;
             ClientConnection connection;
+            IServer publicationChannel;
 
             RemoveClientSubscription(clientID);
-            m_clientConnections.TryRemove(clientID, out connection);
+
+            if (m_clientConnections.TryRemove(clientID, out connection))
+                connection.Dispose();
+
+            m_clientPublicationChannels.TryRemove(clientID, out publicationChannel);
 
             OnStatusMessage("Client disconnected.");
         }
@@ -1530,7 +1678,16 @@ namespace TimeSeriesFramework.Transport
                                             // Validate the authentication ID - if it matches, connection is authenticated
                                             connection.Authenticated = (string.Compare(authenticationID, Encoding.Unicode.GetString(bytes, CipherSaltLength, bytes.Length - CipherSaltLength)) == 0);
 
-                                            if (!connection.Authenticated)
+                                            if (connection.Authenticated)
+                                            {
+                                                // Send success response
+                                                message = string.Format("Registered subscriber \"{0}\" {1} was successfully authenticated.", connection.SubscriberName, connection.ConnectionID);
+                                                SendClientResponse(clientID, ServerResponse.Succeeded, command, message);
+                                                OnStatusMessage(message);
+                                                return;
+
+                                            }
+                                            else
                                             {
                                                 message = string.Format("Subscriber authentication failed - {0} request denied.", command);
                                                 SendClientResponse(clientID, ServerResponse.Failed, command, message);
@@ -1664,6 +1821,17 @@ namespace TimeSeriesFramework.Transport
                                             subscription.InitializationTimeout = int.Parse(setting);
                                         else
                                             subscription.InitializationTimeout = InitializationTimeout;
+
+                                        // Set up UDP data channel if client has requested this
+                                        connection.DataChannel = null;
+
+                                        if (subscription.Settings.TryGetValue("dataChannel", out setting))
+                                        {
+                                            Dictionary<string, string> settings = setting.ParseKeyValuePairs();
+
+                                            if (settings.TryGetValue("port", out setting))
+                                                connection.DataChannel = new UdpServer(string.Format("Port=-1; Clients={0}:{1}", connection.IPAddress, int.Parse(setting)));
+                                        }
 
                                         // Update measurement serialization format type
                                         subscription.UseCompactMeasurementFormat = useCompactMeasurementFormat;
