@@ -249,7 +249,8 @@ namespace TimeSeriesFramework.UI.ViewModels
         public override void Clear()
         {
             base.Clear();
-            CurrentItem.NodeID = m_nodeLookupList.First().Key;
+            if (m_nodeLookupList.Count > 0)
+                CurrentItem.NodeID = m_nodeLookupList.First().Key;
         }
 
         /// <summary>

@@ -8,6 +8,7 @@
              xmlns:uc="clr-namespace:TimeSeriesFramework.UI.UserControls"
              xmlns:tsfBinding="clr-namespace:TimeSeriesFramework.UI.Binding;assembly=TimeSeriesFramework.UI"
              Background="Transparent">
+    
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>

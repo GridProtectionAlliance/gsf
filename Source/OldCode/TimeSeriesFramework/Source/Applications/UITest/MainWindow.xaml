@@ -14,22 +14,22 @@
     </Window.Resources>
 
     <StackPanel Orientation="Vertical">
-        <Grid Background="{StaticResource MenuBackgroundBrush}">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2*"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+            <Grid Background="{StaticResource MenuBackgroundBrush}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
-            <Menu x:Name="MenuMain" ItemsSource="{Binding}" Style="{StaticResource MenuStyle}" ItemContainerStyleSelector="{StaticResource MenuItemStyleSelector}" />
+                <Menu x:Name="MenuMain" ItemsSource="{Binding}" Style="{StaticResource MenuStyle}" ItemContainerStyleSelector="{StaticResource MenuItemStyleSelector}" />
 
-            <ComboBox x:Name="ComboboxNode" Grid.Column="1" DisplayMemberPath="Value" SelectionChanged="ComboboxNode_SelectionChanged" HorizontalAlignment="Right" Margin="0,0,5,0"/>
-            
-        </Grid>
+                <ComboBox x:Name="ComboboxNode" Grid.Column="1" DisplayMemberPath="Value" SelectionChanged="ComboboxNode_SelectionChanged" HorizontalAlignment="Right" Margin="0,0,5,0"/>
 
-        <GroupBox x:Name="GroupBoxMain" Height="Auto" Margin="2">
-            <Frame x:Name="FrameContent" NavigationUIVisibility="Hidden" HorizontalAlignment="Center"/>
-        </GroupBox>
-        
-    </StackPanel>
-    
+            </Grid>
+
+            <GroupBox x:Name="GroupBoxMain" Margin="2">
+                <Frame x:Name="FrameContent" NavigationUIVisibility="Hidden" HorizontalAlignment="Center"/>
+            </GroupBox>
+
+        </StackPanel>
+
 </Window>

@@ -76,6 +76,18 @@ namespace TimeSeriesFramework.UI
             }
         }
 
+        public string ConnectionString
+        {
+            get
+            {
+                return m_connectionString;
+            }
+            set
+            {
+                m_connectionString = value;
+            }
+        }
+
         public int PmuId
         {
             get

@@ -22,12 +22,16 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Runtime.Serialization.Formatters;
+using System.Runtime.Serialization.Formatters.Soap;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
 using TimeSeriesFramework.UI.Commands;
 using TimeSeriesFramework.UI.DataModels;
+using TVA;
 
 namespace TimeSeriesFramework.UI.ViewModels
 {
@@ -47,7 +51,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         private RelayCommand m_requestConfigurationCommand;
         private string m_connectionString;
         private string m_alternateCommandChannel;
-        private int m_deviceIdCode;
+        private int m_accessID;
         private int m_protocolId;
         private bool m_connectToConcentrator;
         private string m_pdcAcronym;
@@ -56,6 +60,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         private int m_companyId;
         private int m_historianId;
         private int m_interconnectionId;
+        private bool m_skipDisableRealTimeData;
 
         #endregion
 
@@ -98,16 +103,16 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
-        public int DeviceIdCode
+        public int AccessID
         {
             get
             {
-                return m_deviceIdCode;
+                return m_accessID;
             }
             set
             {
-                m_deviceIdCode = value;
-                OnPropertyChanged("DeviceIdCode");
+                m_accessID = value;
+                OnPropertyChanged("AccessID");
             }
         }
 
@@ -212,6 +217,19 @@ namespace TimeSeriesFramework.UI.ViewModels
             {
                 m_interconnectionId = value;
                 OnPropertyChanged("InterconnectionId");
+            }
+        }
+
+        public bool SkipDisableRealTimeData
+        {
+            get
+            {
+                return m_skipDisableRealTimeData;
+            }
+            set
+            {
+                m_skipDisableRealTimeData = value;
+                OnPropertyChanged("SkipDisableRealTimeData");
             }
         }
 
@@ -350,24 +368,49 @@ namespace TimeSeriesFramework.UI.ViewModels
                 {
                     if ((fileData = fileDialog.OpenFile()) != null)
                     {
+                        ConnectionSettings connectionSettings = new ConnectionSettings();
                         using (fileData)
                         {
-                            ConnectionSettings connectionSettings = new ConnectionSettings();
+                            SoapFormatter sf = new SoapFormatter();
+                            sf.AssemblyFormat = FormatterAssemblyStyle.Simple;
+                            sf.TypeFormat = FormatterTypeStyle.TypesWhenNeeded;
+                            sf.Binder = new VersionConfigToNamespaceAssemblyObjectBinder();
+                            connectionSettings = sf.Deserialize(fileData) as ConnectionSettings;
 
-                            //SoapFormatter sf = new SoapFormatter();
-                            //sf.AssemblyFormat = FormatterAssemblyStyle.Simple;
-                            //sf.TypeFormat = FormatterTypeStyle.TypesWhenNeeded;
-                            //sf.Binder = new VersionConfigToNamespaceAssemblyObjectBinder();
-                            //connectionSettings = sf.Deserialize(inputStream) as ConnectionSettings;
+                            if (connectionSettings.ConnectionParameters != null)
+                            {
+                                ConnectionSettings cs = new ConnectionSettings();
+                                cs = (ConnectionSettings)connectionSettings.ConnectionParameters;
+                                connectionSettings.ConfigurationFileName = cs.ConfigurationFileName;
+                                connectionSettings.RefreshConfigurationFileOnChange = cs.RefreshConfigurationFileOnChange;
+                                connectionSettings.ParseWordCountFromByte = cs.ParseWordCountFromByte;
+                            }
+                        }
 
-                            //if (connectionSettings.ConnectionParameters != null)
-                            //{
-                            //    ConnectionSettings cs = new ConnectionSettings();
-                            //    cs = (ConnectionSettings)connectionSettings.ConnectionParameters;
-                            //    connectionSettings.configurationFileName = cs.configurationFileName;
-                            //    connectionSettings.refreshConfigurationFileOnChange = cs.refreshConfigurationFileOnChange;
-                            //    connectionSettings.parseWordCountFromByte = cs.parseWordCountFromByte;
-                            //}
+                        if (connectionSettings != null)
+                        {
+                            ConnectionString = connectionSettings.ConnectionString.ToLower();
+                            Dictionary<string, string> connectionStringKeyValues = ConnectionString.ParseKeyValuePairs();
+
+                            if (connectionStringKeyValues.ContainsKey("commandchannel"))
+                            {
+                                AlternateCommandChannel = connectionStringKeyValues["commandchannel"];
+                                connectionStringKeyValues.Remove("commandchannel");
+                            }
+
+                            if (connectionStringKeyValues.ContainsKey("skipdisablerealtimedata"))
+                            {
+                                SkipDisableRealTimeData = Convert.ToBoolean(connectionStringKeyValues["skipdisablerealtimedata"]);
+                                connectionStringKeyValues.Remove("skipdisablerealtimedata");
+                            }
+
+                            ConnectionString = "transportprotocol=" + connectionSettings.TransportProtocol.ToString() + ";" + connectionStringKeyValues.JoinKeyValuePairs();
+
+                            if (connectionSettings.ConnectionParameters != null)
+                                ConnectionString += ";inifilename=" + connectionSettings.ConfigurationFileName + ";refreshconfigfileonchange=" + connectionSettings.RefreshConfigurationFileOnChange.ToString() +
+                                    ";parsewordcountfrombyte=" + connectionSettings.ParseWordCountFromByte;
+
+                            AccessID = connectionSettings.PmuId;
                         }
                     }
                 }

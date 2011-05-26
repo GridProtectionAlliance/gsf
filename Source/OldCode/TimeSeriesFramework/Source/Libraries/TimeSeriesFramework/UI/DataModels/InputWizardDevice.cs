@@ -223,6 +223,19 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        public ObservableCollection<Phasor> PhasorList
+        {
+            get
+            {
+                return m_phasorList;
+            }
+            set
+            {
+                m_phasorList = value;
+                OnPropertyChanged("PhasorList");
+            }
+        }
+
         #endregion
 
         #region [ Methods ]

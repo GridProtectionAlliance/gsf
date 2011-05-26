@@ -268,14 +268,29 @@ namespace TimeSeriesFramework.UI.ViewModels
         {
             base.Clear();
             // Reset all the dropdown fields so that first item displays as selected.
-            CurrentItem.NodeID = m_nodeLookupList.First().Key;
-            CurrentItem.ParentID = m_concentratorDeviceLookupList.First().Key;
-            CurrentItem.CompanyID = m_companyLookupList.First().Key;
-            CurrentItem.HistorianID = m_historianLookupList.First().Key;
-            CurrentItem.InterconnectionID = m_interconnectionLookupList.First().Key;
-            CurrentItem.ProtocolID = m_protocolLookupList.First().Key;
-            CurrentItem.VendorDeviceID = m_vendorDeviceLookupList.First().Key;
-            CurrentItem.TimeZone = m_timezoneLookupList.First().Key;
+            if (m_nodeLookupList.Count > 0)
+                CurrentItem.NodeID = m_nodeLookupList.First().Key;
+
+            if (m_concentratorDeviceLookupList.Count > 0)
+                CurrentItem.ParentID = m_concentratorDeviceLookupList.First().Key;
+
+            if (m_companyLookupList.Count > 0)
+                CurrentItem.CompanyID = m_companyLookupList.First().Key;
+
+            if (m_historianLookupList.Count > 0)
+                CurrentItem.HistorianID = m_historianLookupList.First().Key;
+
+            if (m_interconnectionLookupList.Count > 0)
+                CurrentItem.InterconnectionID = m_interconnectionLookupList.First().Key;
+
+            if (m_protocolLookupList.Count > 0)
+                CurrentItem.ProtocolID = m_protocolLookupList.First().Key;
+
+            if (m_vendorDeviceLookupList.Count > 0)
+                CurrentItem.VendorDeviceID = m_vendorDeviceLookupList.First().Key;
+
+            if (m_timezoneLookupList.Count > 0)
+                CurrentItem.TimeZone = m_timezoneLookupList.First().Key;
         }
 
         /// <summary>

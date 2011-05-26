@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             mc:Ignorable="d" d:DesignHeight="550" d:DesignWidth="750"
+             mc:Ignorable="d" d:DesignHeight="550" d:DesignWidth="750" Height="500"
              xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:uc="clr-namespace:TimeSeriesFramework.UI.UserControls"
              xmlns:tsfBinding="clr-namespace:TimeSeriesFramework.UI.Binding;assembly=TimeSeriesFramework.UI"
@@ -17,8 +17,12 @@
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <StackPanel Orientation="Vertical">
-                
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
         <sdk:DataGrid ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" 
                       PreviewKeyDown="DataGrid_PreviewKeyDown">
             <sdk:DataGrid.Columns>
@@ -69,8 +73,8 @@
             </sdk:DataGrid.Columns>
         </sdk:DataGrid>
 
-        <uc:DataPagerUserControl CurrentPageNumber="{Binding CurrentPageNumber}" PageCount="{Binding PageCount}"
+        <uc:DataPagerUserControl Grid.Row="1"  CurrentPageNumber="{Binding CurrentPageNumber}" PageCount="{Binding PageCount}"
                                  FirstCommand="{Binding FirstCommand}" PreviousCommand="{Binding PreviousCommand}"
-                                 NextCommand="{Binding NextCommand}" LastCommand="{Binding LastCommand}"/>
-    </StackPanel>
+                                 NextCommand="{Binding NextCommand}" LastCommand="{Binding LastCommand}" VerticalAlignment="Bottom"/>
+    </Grid>
 </UserControl>

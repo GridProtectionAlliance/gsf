@@ -151,10 +151,17 @@ namespace TimeSeriesFramework.UI.ViewModels
         public override void Clear()
         {
             base.Clear();
-            CurrentItem.HistorianID = m_historianLookupList.First().Key;
-            CurrentItem.SignalTypeID = m_signalTypeLookupList.First().Key;
-            CurrentItem.DeviceID = m_deviceLookupList.First().Key;
-            CurrentItem.PhasorSourceIndex = m_phasorLookupList.First().Key;
+            if (m_historianLookupList.Count > 0)
+                CurrentItem.HistorianID = m_historianLookupList.First().Key;
+
+            if (m_signalTypeLookupList.Count > 0)
+                CurrentItem.SignalTypeID = m_signalTypeLookupList.First().Key;
+
+            if (m_deviceLookupList.Count > 0)
+                CurrentItem.DeviceID = m_deviceLookupList.First().Key;
+
+            if (m_phasorLookupList.Count > 0)
+                CurrentItem.PhasorSourceIndex = m_phasorLookupList.First().Key;
         }
 
         /// <summary>

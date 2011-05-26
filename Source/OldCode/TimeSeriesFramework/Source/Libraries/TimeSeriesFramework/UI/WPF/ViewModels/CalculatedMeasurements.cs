@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using TimeSeriesFramework.UI.DataModels;
 
 namespace TimeSeriesFramework.UI.ViewModels
@@ -85,8 +84,11 @@ namespace TimeSeriesFramework.UI.ViewModels
         public override void Clear()
         {
             base.Clear();
-            CurrentItem.NodeID = m_nodeLookupList.First().Key;
-            CurrentItem.DownsamplingMethod = m_downsamplingMethod.First().Key;
+            if (m_nodeLookupList.Count > 0)
+                CurrentItem.NodeID = m_nodeLookupList.First().Key;
+
+            if (m_downsamplingMethod.Count > 0)
+                CurrentItem.DownsamplingMethod = m_downsamplingMethod.First().Key;
         }
 
         #endregion
