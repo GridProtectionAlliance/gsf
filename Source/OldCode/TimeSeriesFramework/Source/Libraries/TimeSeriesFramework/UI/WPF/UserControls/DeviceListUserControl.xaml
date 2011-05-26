@@ -19,10 +19,10 @@
 
     <StackPanel Orientation="Vertical">
                 
-        <sdk:DataGrid ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" 
+        <sdk:DataGrid ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" 
                       PreviewKeyDown="DataGrid_PreviewKeyDown">
             <sdk:DataGrid.Columns>
-                <sdk:DataGridTemplateColumn Header="Acronym" Width="4*">
+                <sdk:DataGridTemplateColumn Header="Acronym" Width="3*">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Button Template="{StaticResource HyperlinkStyleButtonTemplate}" Content="{tsfBinding:Column Path=Acronym}" 
@@ -42,7 +42,7 @@
                         </DataTemplate>
                     </sdk:DataGridTemplateColumn.CellTemplate>
                 </sdk:DataGridTemplateColumn>
-                <sdk:DataGridTemplateColumn Header="" Width="2*">
+                <sdk:DataGridTemplateColumn Header="" Width="1.5*">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Button Template="{StaticResource HyperlinkStyleButtonTemplate}" Content="Measurements" 
@@ -59,7 +59,7 @@
                                     <Image Source="/TimeSeriesFramework.UI;component/images/EditConfiguration.png" Height="16" Width="16" />
                                 </Button>
                                 <Button ToolTip="Make Copy" Command="{tsfBinding:GridButtonCommand Path=DataContext.CopyCommand}" 
-                                    CommandParameter="{tsfBinding:GridButtonCommand Path=DataContext.CurrentItem}" Width="Auto" Height="Auto">
+                                    CommandParameter="{tsfBinding:GridButtonCommand Path=DataContext.CurrentItem}" Width="Auto" >
                                 <Image Source="/TimeSeriesFramework.UI;component/images/Copy.png" Height="16" Width="16" />
                             </Button>
                             </StackPanel>

@@ -6,7 +6,19 @@
     <Application.Resources>
         
         <ResourceDictionary>
-            
+
+            <RadialGradientBrush x:Key="ContentBackgroundBrush">
+                <GradientStop Color="#FFFFFFFF"/>
+                <GradientStop Color="#FF07426F" Offset="5"/>
+            </RadialGradientBrush>
+
+            <LinearGradientBrush x:Key="MenuBackgroundBrush" EndPoint="0.5,1" StartPoint="0.5,0">
+                <GradientStop Color="#FFB3C8D6" Offset="0"/>
+                <GradientStop Color="#FFE1E9EE" Offset="0.25"/>
+                <GradientStop Color="#FFE1E9EE" Offset="0.75"/>
+                <GradientStop Color="#FFB3C8D6" Offset="1"/>
+            </LinearGradientBrush>
+
             <Style TargetType="{x:Type MenuItem}" x:Key="MenuSeparatorStyle">
                 <Setter Property="Template">
                     <Setter.Value>
@@ -18,17 +30,26 @@
             </Style>
 
             <Style TargetType="{x:Type Menu}" x:Key="MenuStyle">
-                <Setter Property="Background" Value="AliceBlue"/>                
+                <Setter Property="Background" Value="Transparent"/>                                              
             </Style>
             
             <Style TargetType="{x:Type MenuItem}" x:Key="MenuItemStyle">
-                <Setter Property="Command" Value="{Binding Command}" /> 
+                <Setter Property="Command" Value="{Binding Command}" />                                                
+                <!--<Style.Triggers>
+                    <Trigger Property="MenuItem.IsMouseOver" Value="true">
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="MenuItem.Background" Value="{StaticResource MainBackgroundBrush}"/>
+                    </Trigger>
+                </Style.Triggers>-->
+
                 <!--<Setter Property="Icon">
                     <Setter.Value>
                         <Image Source="{Binding Icon, Converter={StaticResource StringToBitmapConverter}}" />
                     </Setter.Value>
                 </Setter>-->
             </Style>
+            
+            
 
             <util:MenuItemStyleSelector x:Key="MenuItemStyleSelector"/>
         

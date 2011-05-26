@@ -82,6 +82,9 @@
   <ItemGroup>
     <Compile Include="Commands\MenuCommand.cs" />
     <Compile Include="Commands\RelayCommand.cs" />
+    <Compile Include="ConnectionSettings.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="IViewModel.cs" />
     <Compile Include="MenuDataItem.cs" />
     <Compile Include="PagedViewModelBase.cs" />
@@ -176,6 +179,9 @@
     <Compile Include="UserControls\VendorUserControl.xaml.cs">
       <DependentUpon>VendorUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="VersionConfigToNamespaceAssemblyObjectBinder.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ViewModelBase.cs" />
     <Compile Include="ViewModels\ApplicationRoles.cs" />
     <Compile Include="ViewModels\CalculatedMeasurements.cs" />
@@ -183,6 +189,9 @@
     <Compile Include="ViewModels\Companies.cs" />
     <Compile Include="ViewModels\Devices.cs" />
     <Compile Include="ViewModels\Historians.cs" />
+    <Compile Include="ViewModels\InputWizardDevices.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ViewModels\MeasurementGroups.cs" />
     <Compile Include="ViewModels\Measurements.cs" />
     <Compile Include="ViewModels\Nodes.cs" />

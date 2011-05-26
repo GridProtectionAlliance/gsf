@@ -4,6 +4,7 @@
         Title="MainWindow" Height="600" Width="800"    
         xmlns:tsfconv="clr-namespace:TimeSeriesFramework.UI.Converters;assembly=TimeSeriesFramework.UI"
         xmlns:tsf="clr-namespace:TimeSeriesFramework.UI;assembly=TimeSeriesFramework.UI.WPF"
+         Background="{StaticResource ContentBackgroundBrush}"
         >
     <Window.Resources>        
         <tsfconv:RoleBasedVisibilityConverter x:Key="roleBasedVisibilityConverter" />
@@ -13,7 +14,7 @@
     </Window.Resources>
 
     <StackPanel Orientation="Vertical">
-        <Grid Background="AliceBlue">
+        <Grid Background="{StaticResource MenuBackgroundBrush}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="2*"/>
                 <ColumnDefinition Width="*"/>
@@ -24,9 +25,9 @@
             <ComboBox x:Name="ComboboxNode" Grid.Column="1" DisplayMemberPath="Value" SelectionChanged="ComboboxNode_SelectionChanged" HorizontalAlignment="Right" Margin="0,0,5,0"/>
             
         </Grid>
-            
-        <GroupBox x:Name="GroupBoxMain" Height="Auto" Margin="2">            
-            <Frame x:Name="FrameContent" NavigationUIVisibility="Hidden" HorizontalAlignment="Center" />
+
+        <GroupBox x:Name="GroupBoxMain" Height="Auto" Margin="2">
+            <Frame x:Name="FrameContent" NavigationUIVisibility="Hidden" HorizontalAlignment="Center"/>
         </GroupBox>
         
     </StackPanel>
