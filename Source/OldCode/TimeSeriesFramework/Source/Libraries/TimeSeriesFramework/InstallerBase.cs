@@ -25,13 +25,11 @@ using System;
 using System.Collections;
 using System.ComponentModel;
 using System.Configuration.Install;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Windows.Forms;
 using System.Xml;
 using TVA.IO;
-using TVA.Identity;
 
 namespace TimeSeriesFramework
 {
@@ -65,6 +63,9 @@ namespace TimeSeriesFramework
         /// <summary>
         /// Called when system settings are loaded.
         /// </summary>
+        /// <remarks>
+        /// This method will only be called if implementor overrides <see cref="ConfigurationName"/> with a valid config name.
+        /// </remarks>
         /// <param name="configurationFile">Open xml document containing configuration settings.</param>
         /// <param name="systemSettingsNode">Xml node containing system settings.</param>
         [SuppressMessage("Microsoft.Design", "CA1059")]
