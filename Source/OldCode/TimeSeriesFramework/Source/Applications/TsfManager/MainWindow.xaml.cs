@@ -29,6 +29,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using TimeSeriesFramework.UI;
 using TimeSeriesFramework.UI.DataModels;
+using TVA.IO;
 
 namespace TsfManager
 {
@@ -69,8 +70,11 @@ namespace TsfManager
             // Load Menu
             XmlRootAttribute xmlRootAttribute = new XmlRootAttribute("MenuDataItems");
             XmlSerializer serializer = new XmlSerializer(typeof(ObservableCollection<MenuDataItem>), xmlRootAttribute);
-            using (XmlReader reader = XmlReader.Create("Menu.xml"))
+
+            using (XmlReader reader = XmlReader.Create(FilePath.GetAbsolutePath("Menu.xml")))
+            {
                 m_menuDataItems = (ObservableCollection<MenuDataItem>)serializer.Deserialize(reader);
+            }
 
             MenuMain.DataContext = m_menuDataItems;
 
