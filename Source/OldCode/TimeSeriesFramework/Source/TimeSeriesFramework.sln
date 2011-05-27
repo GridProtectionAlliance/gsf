@@ -49,11 +49,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataSubscriberTest", "Appli
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPublisherTest", "Applications\DataPublisherTest\DataPublisherTest.csproj", "{4508009C-7011-4981-B35F-594F42CC0D1F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TsfManager", "Applications\UITest\TsfManager.csproj", "{FC5B2769-89FD-420B-9722-D6E0B029ABDD}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeSeriesFramework.UI", "Libraries\TimeSeriesFramework\UI\TimeSeriesFramework.UI.csproj", "{7ED01B57-DD71-4A38-BB29-65D629224A12}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeSeriesFramework.UI.WPF", "Libraries\TimeSeriesFramework\UI\WPF\TimeSeriesFramework.UI.WPF.csproj", "{5AF0D55A-30BF-46A5-8A47-FA885F56BFEF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TsfManager", "Applications\TsfManager\TsfManager.csproj", "{FC5B2769-89FD-420B-9722-D6E0B029ABDD}"
 EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
@@ -81,10 +81,10 @@ Global
 		SccProjectTopLevelParentUniqueName5 = TimeSeriesFramework.sln
 		SccProjectName5 = Libraries/TimeSeriesFramework/UI/WPF
 		SccLocalPath5 = Libraries\\TimeSeriesFramework\\UI\\WPF
-		SccProjectUniqueName6 = Applications\\UITest\\TSFManager.csproj
+		SccProjectUniqueName6 = Applications\\TsfManager\\TsfManager.csproj
 		SccProjectTopLevelParentUniqueName6 = TimeSeriesFramework.sln
-		SccProjectName6 = Applications/UITest
-		SccLocalPath6 = Applications\\UITest
+		SccProjectName6 = Applications/TsfManager
+		SccLocalPath6 = Applications\\TsfManager
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -125,17 +125,6 @@ Global
 		{4508009C-7011-4981-B35F-594F42CC0D1F}.Release|Mixed Platforms.Build.0 = Release|x86
 		{4508009C-7011-4981-B35F-594F42CC0D1F}.Release|x86.ActiveCfg = Release|x86
 		{4508009C-7011-4981-B35F-594F42CC0D1F}.Release|x86.Build.0 = Release|x86
-		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Debug|Mixed Platforms.Build.0 = Debug|x86
-		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Debug|x86.ActiveCfg = Debug|x86
-		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Debug|x86.Build.0 = Debug|x86
-		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Release|Any CPU.ActiveCfg = Release|x86
-		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Release|Mixed Platforms.ActiveCfg = Release|x86
-		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Release|Mixed Platforms.Build.0 = Release|x86
-		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Release|x86.ActiveCfg = Release|x86
-		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Release|x86.Build.0 = Release|x86
 		{7ED01B57-DD71-4A38-BB29-65D629224A12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7ED01B57-DD71-4A38-BB29-65D629224A12}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7ED01B57-DD71-4A38-BB29-65D629224A12}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -156,6 +145,18 @@ Global
 		{5AF0D55A-30BF-46A5-8A47-FA885F56BFEF}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{5AF0D55A-30BF-46A5-8A47-FA885F56BFEF}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{5AF0D55A-30BF-46A5-8A47-FA885F56BFEF}.Release|x86.ActiveCfg = Release|Any CPU
+		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Debug|x86.ActiveCfg = Debug|x86
+		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Debug|x86.Build.0 = Debug|x86
+		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Release|x86.ActiveCfg = Release|x86
+		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
