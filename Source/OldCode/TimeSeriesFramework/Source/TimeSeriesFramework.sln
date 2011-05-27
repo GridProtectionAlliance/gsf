@@ -28,12 +28,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TVA", "TVA", "{03779694-D6C
 		Dependencies\TVA\TVA.Communication.dll = Dependencies\TVA\TVA.Communication.dll
 		Dependencies\TVA\TVA.Communication.XML = Dependencies\TVA\TVA.Communication.XML
 		Dependencies\TVA\TVA.Core.dll = Dependencies\TVA\TVA.Core.dll
+		Dependencies\TVA\TVA.Core.XML = Dependencies\TVA\TVA.Core.XML
 		Dependencies\TVA\TVA.PhasorProtocols.dll = Dependencies\TVA\TVA.PhasorProtocols.dll
 		Dependencies\TVA\TVA.PhasorProtocols.xml = Dependencies\TVA\TVA.PhasorProtocols.xml
 		Dependencies\TVA\TVA.Services.dll = Dependencies\TVA\TVA.Services.dll
 		Dependencies\TVA\TVA.Services.XML = Dependencies\TVA\TVA.Services.XML
 		Dependencies\TVA\TVA.Web.dll = Dependencies\TVA\TVA.Web.dll
 		Dependencies\TVA\TVA.Web.XML = Dependencies\TVA\TVA.Web.XML
+		Dependencies\TVA\TVA.Windows.dll = Dependencies\TVA\TVA.Windows.dll
 		Dependencies\TVA\TVA.Windows.XML = Dependencies\TVA\TVA.Windows.XML
 	EndProjectSection
 EndProject
