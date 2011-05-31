@@ -42,6 +42,8 @@
 **       Updated to set versioning scheme settings.
 **  03/17/2011 - Pinal C. Patel
 **       Added the creation of nuget package.
+**  05/31/2011 - Pinal C. Patel
+**       Modified to create symbol packages to accompany NuGet library packages.
 **
 *******************************************************************************************************
 -->
@@ -117,15 +119,18 @@
   </Target>
 
   <Target Name="AfterDeployBuild">
-    <!-- Delete existing nuget package. -->
-    <Message Text="Deleting nuget package..."/>
+    <!-- Delete existing nuget packages. -->
+    <Message Text="Deleting nuget packages..."/>
     <ItemGroup>
-      <NugetPackages Include="$(NugetPackagesFolder)\$(ProjectName).$(Major).$(Minor).$(Build).*.nupkg"/>
+      <NugetPackages Include="$(NugetPackagesFolder)\TVA.*.$(Major).$(Minor).$(Build).*.nupkg"/>
     </ItemGroup>
     <Delete Files="@(NugetPackages)"/>
-    <!-- Create and deploy nuget package. -->
-    <Message Text="Creating nuget package..."/>
-    <Exec Command="Tools\NuGet\NuGet.exe pack $(ProjectName).nuspec /Version $(Major).$(Minor).$(Build).$(Revision) /BasePath $(BuildDeployFolder) /OutputDirectory $(NugetPackagesFolder)" ContinueOnError="true"/>
+    <!-- Create and deploy nuget packages. -->
+    <Message Text="Creating nuget packages..."/>
+    <ItemGroup>
+      <NugetProjects Include="$(LocalFolder)\Source\Libraries\**\*.csproj" Exclude="$(LocalFolder)\Source\Libraries\Tests\**\*.csproj"/>
+    </ItemGroup>
+    <Exec Command="Tools\NuGet\NuGet.exe pack %(NugetProjects.FullPath) /Symbols /Version $(Major).$(Minor).$(Build).$(Revision) /OutputDirectory $(NugetPackagesFolder)" ContinueOnError="true"/>
   </Target>
 
 </Project>
