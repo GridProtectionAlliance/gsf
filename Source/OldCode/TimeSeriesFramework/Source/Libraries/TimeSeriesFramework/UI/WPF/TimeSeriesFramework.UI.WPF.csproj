@@ -147,6 +147,9 @@
     <Compile Include="UserControls\MeasurementUserControl.xaml.cs">
       <DependentUpon>MeasurementUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\MonitoringUserControl.xaml.cs">
+      <DependentUpon>MonitoringUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\NodeUserControl.xaml.cs">
       <DependentUpon>NodeUserControl.xaml</DependentUpon>
     </Compile>
@@ -272,8 +275,8 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UserControls\HomeUserControl.xaml">
-      <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="UserControls\InputWizardUserControl.xaml">
       <SubType>Designer</SubType>
@@ -284,6 +287,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UserControls\MeasurementUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\MonitoringUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

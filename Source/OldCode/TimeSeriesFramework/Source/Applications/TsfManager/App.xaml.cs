@@ -28,7 +28,7 @@ using TimeSeriesFramework.UI;
 using TVA.ErrorManagement;
 using TVA.Reflection;
 
-namespace TsfManager
+namespace TimeSeriesFramework
 {
     /// <summary>
     /// Interaction logic for App.xaml

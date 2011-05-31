@@ -2,7 +2,7 @@
 using System.Windows;
 using TimeSeriesFramework.UI.UserControls;
 
-namespace TimeSeriesFramework.UI.WPF.UserControls
+namespace TsfManager
 {
     /// <summary>
     /// Interaction logic for HomeUserControl.xaml

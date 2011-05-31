@@ -31,7 +31,7 @@ using TimeSeriesFramework.UI;
 using TimeSeriesFramework.UI.DataModels;
 using TVA.IO;
 
-namespace TsfManager
+namespace TimeSeriesFramework
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
