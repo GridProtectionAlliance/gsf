@@ -135,12 +135,24 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// </summary>
         public override void Load()
         {
-            if (m_internalOnly)
-                m_measurements = TimeSeriesFramework.UI.DataModels.Measurement.Load(null, m_deviceID, true);
-            else
-                m_measurements = MeasurementGroup.GetPossibleMeasurements(null, 0);
+            Mouse.OverrideCursor = Cursors.Wait;
+            try
+            {
+                if (m_internalOnly)
+                    m_measurements = TimeSeriesFramework.UI.DataModels.Measurement.Load(null, m_deviceID, true);
+                else
+                    m_measurements = MeasurementGroup.GetPossibleMeasurements(null, 0);
 
-            ItemsSource = m_measurements;
+                ItemsSource = m_measurements;
+            }
+            catch (Exception ex)
+            {
+                Popup("ERROR: " + ex.Message, "Load Measurements", System.Windows.MessageBoxImage.Error);
+            }
+            finally
+            {
+                Mouse.OverrideCursor = null;
+            }
         }
 
         /// <summary>

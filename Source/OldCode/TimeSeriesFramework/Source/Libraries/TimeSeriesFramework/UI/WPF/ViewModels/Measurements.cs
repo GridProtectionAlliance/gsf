@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Input;
 using TimeSeriesFramework.UI.DataModels;
 
 namespace TimeSeriesFramework.UI.ViewModels
@@ -169,8 +170,20 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// </summary>
         public override void Load()
         {
-            ItemsSource = TimeSeriesFramework.UI.DataModels.Measurement.Load(null, m_deviceID);
-            PhasorLookupList = Phasor.GetLookupList(null, CurrentItem.DeviceID == null ? 0 : (int)CurrentItem.DeviceID);
+            Mouse.OverrideCursor = Cursors.Wait;
+            try
+            {
+                ItemsSource = TimeSeriesFramework.UI.DataModels.Measurement.Load(null, m_deviceID);
+                PhasorLookupList = Phasor.GetLookupList(null, CurrentItem.DeviceID == null ? 0 : (int)CurrentItem.DeviceID);
+            }
+            catch (Exception ex)
+            {
+                Popup("ERROR: " + ex.Message, "Load Measurements", System.Windows.MessageBoxImage.Error);
+            }
+            finally
+            {
+                Mouse.OverrideCursor = null;
+            }
         }
 
         /// <summary>

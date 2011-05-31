@@ -299,7 +299,19 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// <remarks>This method is overridden because MethodInfo.Invoke in the base class did not like optional parameters.</remarks>
         public override void Load()
         {
-            ItemsSource = Device.Load(null);
+            Mouse.OverrideCursor = Cursors.Wait;
+            try
+            {
+                ItemsSource = Device.Load(null);
+            }
+            catch (Exception ex)
+            {
+                Popup("ERROR: " + ex.Message, "Load Devices", MessageBoxImage.Error);
+            }
+            finally
+            {
+                Mouse.OverrideCursor = null;
+            }
         }
 
         /// <summary>
@@ -307,24 +319,36 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// </summary>
         public override void Save()
         {
-            base.Save();
-
-            if (ItemsPerPage == 0) // i.e. if user is on form page then go back to list page after save.
+            Mouse.OverrideCursor = Cursors.Wait;
+            try
             {
-                UIElement frame = null;
-                UIElement groupBox = null;
-                CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(System.Windows.Controls.Frame), ref frame);
-                CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(GroupBox), ref groupBox);
+                base.Save();
 
-                if (frame != null)
+                if (ItemsPerPage == 0) // i.e. if user is on form page then go back to list page after save.
                 {
-                    DeviceListUserControl deviceListUserControl = new DeviceListUserControl();
-                    ((System.Windows.Controls.Frame)frame).Navigate(deviceListUserControl);
+                    UIElement frame = null;
+                    UIElement groupBox = null;
+                    CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(System.Windows.Controls.Frame), ref frame);
+                    CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(GroupBox), ref groupBox);
 
-                    if (groupBox != null)
-                        ((GroupBox)groupBox).Header = "Browse Devices";
+                    if (frame != null)
+                    {
+                        DeviceListUserControl deviceListUserControl = new DeviceListUserControl();
+                        ((System.Windows.Controls.Frame)frame).Navigate(deviceListUserControl);
 
+                        if (groupBox != null)
+                            ((GroupBox)groupBox).Header = "Browse Devices";
+
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Popup("ERROR: " + ex.Message, "Save Device", MessageBoxImage.Error);
+            }
+            finally
+            {
+                Mouse.OverrideCursor = null;
             }
         }
 

@@ -536,6 +536,7 @@ namespace TimeSeriesFramework.UI.ViewModels
             {
                 try
                 {
+                    Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
                     ConnectionFileName = fileDialog.FileName;
                     if ((fileData = fileDialog.OpenFile()) != null)
                     {
@@ -592,6 +593,10 @@ namespace TimeSeriesFramework.UI.ViewModels
                 {
                     Popup(ex.Message, "Open Connection File", MessageBoxImage.Error);
                 }
+                finally
+                {
+                    Mouse.OverrideCursor = null;
+                }
             }
         }
 
@@ -605,6 +610,7 @@ namespace TimeSeriesFramework.UI.ViewModels
             {
                 try
                 {
+                    Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
                     ConfigurationFileName = fileDialog.FileName;
                     ConfigurationSummary = string.Empty;
 
@@ -671,6 +677,10 @@ namespace TimeSeriesFramework.UI.ViewModels
                 {
                     Popup(ex.Message, "Open Configuration File", MessageBoxImage.Error);
                 }
+                finally
+                {
+                    Mouse.OverrideCursor = null;
+                }
             }
         }
 
@@ -696,33 +706,45 @@ namespace TimeSeriesFramework.UI.ViewModels
 
         public void SavePDC()
         {
-            if (ConnectToConcentrator && (PdcID == null || PdcID == 0))
+            Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
+            try
             {
-                Device device = new Device();
-                device.IsConcentrator = true;
-                device.Acronym = PdcAcronym.ToUpper();
-                device.Name = PdcName;
-                device.ParentID = null;
-                device.AccessID = AccessID;
-                device.CompanyID = CompanyID == 0 ? (int?)null : CompanyID;
-                device.HistorianID = HistorianID == 0 ? (int?)null : HistorianID;
-                device.ProtocolID = ProtocolID == 0 ? (int?)null : ProtocolID;
-                device.InterconnectionID = InterconnectionID == 0 ? (int?)null : InterconnectionID;
-                device.AccessID = AccessID;
-                device.SkipDisableRealTimeData = SkipDisableRealTimeData;
-                device.ConnectionString = GenerateConnectionString();
-                device.Enabled = true;
-                Device.Save(null, device);
+                if (ConnectToConcentrator && (PdcID == null || PdcID == 0))
+                {
+                    Device device = new Device();
+                    device.IsConcentrator = true;
+                    device.Acronym = PdcAcronym.ToUpper();
+                    device.Name = PdcName;
+                    device.ParentID = null;
+                    device.AccessID = AccessID;
+                    device.CompanyID = CompanyID == 0 ? (int?)null : CompanyID;
+                    device.HistorianID = HistorianID == 0 ? (int?)null : HistorianID;
+                    device.ProtocolID = ProtocolID == 0 ? (int?)null : ProtocolID;
+                    device.InterconnectionID = InterconnectionID == 0 ? (int?)null : InterconnectionID;
+                    device.AccessID = AccessID;
+                    device.SkipDisableRealTimeData = SkipDisableRealTimeData;
+                    device.ConnectionString = GenerateConnectionString();
+                    device.Enabled = true;
+                    Device.Save(null, device);
 
-                device = Device.GetDevice(null, "WHERE Acronym = '" + PdcAcronym.ToUpper() + "'");
-                PdcID = device.ID;
+                    device = Device.GetDevice(null, "WHERE Acronym = '" + PdcAcronym.ToUpper() + "'");
+                    PdcID = device.ID;
+                }
+            }
+            catch (Exception ex)
+            {
+                Popup("ERROR: " + ex.Message, "Save PDC information", MessageBoxImage.Error);
+            }
+            finally
+            {
+                Mouse.OverrideCursor = null;
             }
         }
 
         public void SaveConfiguration()
         {
+            Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
             AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-
             try
             {
                 int deviceCount = 0;
@@ -797,6 +819,8 @@ namespace TimeSeriesFramework.UI.ViewModels
             {
                 if (database != null)
                     database.Dispose();
+
+                Mouse.OverrideCursor = null;
             }
         }
 

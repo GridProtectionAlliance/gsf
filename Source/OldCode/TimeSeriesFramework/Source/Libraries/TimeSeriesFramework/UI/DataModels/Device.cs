@@ -1112,10 +1112,6 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 return "Device information saved successfully";
             }
-            catch (Exception ex)
-            {
-                return string.Empty;
-            }
             finally
             {
                 if (createdConnection && database != null)

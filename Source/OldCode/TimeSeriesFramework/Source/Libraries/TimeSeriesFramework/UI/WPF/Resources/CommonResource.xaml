@@ -151,7 +151,7 @@
     <conv:NotConverter x:Key="NotConverter"/>
     <conv:DictionaryToKeyValuePairConverter x:Key="DictionaryToKeyValuePairConverter"/>
     <conv:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-
+    
     <ControlTemplate x:Key="HyperlinkStyleButtonTemplate" TargetType="Button">
         <TextBlock Text="{TemplateBinding Content}" FontSize="{StaticResource TextSize}" TextDecorations="Underline" Cursor="Hand" HorizontalAlignment="Center" Width="Auto" Height="20"/>
     </ControlTemplate>

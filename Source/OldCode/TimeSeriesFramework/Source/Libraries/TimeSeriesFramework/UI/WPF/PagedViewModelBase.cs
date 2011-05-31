@@ -510,6 +510,7 @@ namespace TimeSeriesFramework.UI
         /// </summary>
         public virtual void Load()
         {
+            Mouse.OverrideCursor = Cursors.Wait;
             try
             {
                 if (OnBeforeLoadCanceled())
@@ -522,6 +523,10 @@ namespace TimeSeriesFramework.UI
             catch (Exception ex)
             {
                 Popup(ex.Message, "Load " + DataModelName + " Exception:", MessageBoxImage.Error);
+            }
+            finally
+            {
+                Mouse.OverrideCursor = null;
             }
         }
 
