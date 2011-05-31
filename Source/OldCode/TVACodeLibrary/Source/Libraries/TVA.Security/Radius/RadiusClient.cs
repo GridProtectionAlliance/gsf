@@ -605,7 +605,7 @@ namespace TVA.Security.Radius
                     if (m_responseBytes != null)
                     {
                         // The server sent a response.
-                        response = new RadiusPacket(m_responseBytes, 0);
+                        response = new RadiusPacket(m_responseBytes, 0, m_responseBytes.Length);
                         if (response.Identifier == request.Identifier && response.Authenticator.CompareTo(RadiusPacket.CreateResponseAuthenticator(m_sharedSecret, request, response)) == 0)
                         {
                             // The response has passed the verification.
@@ -652,14 +652,14 @@ namespace TVA.Security.Radius
                     // User account is really in "New Pin" mode.
                     response = Authenticate(username, pin, response.GetAttributeValue(AttributeType.State));
                     reply = response.GetAttributeValue(AttributeType.ReplyMessage);
-                    if (!RadiusPacket.ToText(reply, 0, reply.Length).ToLower().Contains(m_newPinModeMessage2.ToLower()))
+                    if (!RadiusPacket.Encoding.GetString(reply, 0, reply.Length).ToLower().Contains(m_newPinModeMessage2.ToLower()))
                     {
                         return false; // New pin not accepted in attempt #1.
                     }
 
                     response = Authenticate(username, pin, response.GetAttributeValue(AttributeType.State));
                     reply = response.GetAttributeValue(AttributeType.ReplyMessage);
-                    if (!RadiusPacket.ToText(reply, 0, reply.Length).ToLower().Contains(m_newPinModeMessage3.ToLower()))
+                    if (!RadiusPacket.Encoding.GetString(reply, 0, reply.Length).ToLower().Contains(m_newPinModeMessage3.ToLower()))
                     {
                         return false; // New pin not accepted in attempt #2.
                     }
@@ -775,7 +775,7 @@ namespace TVA.Security.Radius
                     // Unfortunately, the only way of determining whether or not a user account is in the
                     // "New Pin" mode is from the text present in the ReplyMessage attribute of the
                     // AccessChallenge response from server.
-                    string messageString = RadiusPacket.ToText(messageBytes, 0, messageBytes.Length);
+                    string messageString = RadiusPacket.Encoding.GetString(messageBytes, 0, messageBytes.Length);
                     if (messageString.ToLower().Contains(m_newPinModeMessage1.ToLower()))
                     {
                         return true; // User account is in "New Pin" mode.
@@ -820,7 +820,7 @@ namespace TVA.Security.Radius
                     // Unfortunately, the only way of determining whether or not a user account is in the
                     // "Next Token" mode is from the text present in the ReplyMessage attribute of the
                     // AccessChallenge response from server.
-                    string messageString = RadiusPacket.ToText(messageBytes, 0, messageBytes.Length);
+                    string messageString = RadiusPacket.Encoding.GetString(messageBytes, 0, messageBytes.Length);
                     if (messageString.ToLower().Contains(m_nextTokenModeMessage.ToLower()))
                     {
                         return true; // User account is in "Next Token" mode.

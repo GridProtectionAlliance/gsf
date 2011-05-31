@@ -240,7 +240,7 @@ namespace TVA.Security.Radius
     #region [ Enumerations ]
 
     /// <summary>
-    /// Specifies the type of RADIUS packet.
+    /// Specifies the type of the <see cref="RadiusPacket"/>.
     /// </summary>
     public enum PacketType
     {
@@ -257,11 +257,11 @@ namespace TVA.Security.Radius
         /// </summary>
         AccessReject = 3,
         /// <summary>
-        /// Not used. No description available.
+        /// Not used. No description available. [RFC 2882]
         /// </summary>
         AccountingRequest = 4,
         /// <summary>
-        /// Not used. No description available.
+        /// Not used. No description available. [RFC 2882]
         /// </summary>
         AccountingResponse = 5,
         /// <summary>
@@ -289,11 +289,11 @@ namespace TVA.Security.Radius
         /// </summary>
         AccessChallenge = 11,
         /// <summary>
-        /// Not used. No description available.
+        /// Not used. No description available. [RFC 2882]
         /// </summary>
         StatuServer = 12,
         /// <summary>
-        /// Not used. No description available.
+        /// Not used. No description available. [RFC 2882]
         /// </summary>
         StatusClient = 13
     }
@@ -303,6 +303,8 @@ namespace TVA.Security.Radius
     /// <summary>
     /// Represents a data packet transferred between RADIUS client and server.
     /// </summary>
+    /// <seealso cref="RadiusPacketAttribute"/>
+    /// <seealso cref="RadiusClient"/>
     public class RadiusPacket : ISupportBinaryImage
     {
         // 0                   1                   2                   3
@@ -331,7 +333,7 @@ namespace TVA.Security.Radius
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a default instance of RADIUS packet.
+        /// Initializes a new instance of the <see cref="RadiusPacket"/> class.
         /// </summary>
         public RadiusPacket()
         {
@@ -341,9 +343,9 @@ namespace TVA.Security.Radius
         }
 
         /// <summary>
-        /// Creates an instance of RADIUS packet.
+        /// Initializes a new instance of the <see cref="RadiusPacket"/> class.
         /// </summary>
-        /// <param name="type">Type of the packet.</param>
+        /// <param name="type">Type of the <see cref="RadiusPacket"/>.</param>
         public RadiusPacket(PacketType type)
             : this()
         {
@@ -351,14 +353,15 @@ namespace TVA.Security.Radius
         }
 
         /// <summary>
-        /// Creates an instance of RADIUS packet.
+        /// Initializes a new instance of the <see cref="RadiusPacket"/> class.
         /// </summary>
-        /// <param name="binaryImage">A byte array.</param>
-        /// <param name="startIndex">Starting point in the byte array.</param>
-        public RadiusPacket(byte[] binaryImage, int startIndex)
+        /// <param name="binaryImage">Binary image to be used for initializing <see cref="RadiusPacket"/>.</param>
+        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
+        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
+        public RadiusPacket(byte[] binaryImage, int startIndex, int length)
             : this()
         {
-            Initialize(binaryImage, startIndex, binaryImage.Length);
+            Initialize(binaryImage, startIndex, length);
         }
 
         #endregion
@@ -366,10 +369,8 @@ namespace TVA.Security.Radius
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the type of the packet.
+        /// Gets or sets the type of the <see cref="RadiusPacket"/>.
         /// </summary>
-        /// <value></value>
-        /// <returns>Type of the packet.</returns>
         public PacketType Type
         {
             get
@@ -383,10 +384,8 @@ namespace TVA.Security.Radius
         }
 
         /// <summary>
-        /// Gets or sets the packet identifier.
+        /// Gets or sets the <see cref="RadiusPacket"/> identifier.
         /// </summary>
-        /// <value></value>
-        /// <returns>Identifier of the packet.</returns>
         public byte Identifier
         {
             get
@@ -400,10 +399,10 @@ namespace TVA.Security.Radius
         }
 
         /// <summary>
-        /// Gets or sets the packet authenticator.
+        /// Gets or sets the <see cref="RadiusPacket"/> authenticator.
         /// </summary>
-        /// <value></value>
-        /// <returns>Authenticator of the packet.</returns>
+        /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not 16-bytes in length.</exception>
         public byte[] Authenticator
         {
             get
@@ -412,29 +411,19 @@ namespace TVA.Security.Radius
             }
             set
             {
-                if (value != null)
-                {
-                    if (value.Length == 16)
-                    {
-                        m_authenticator = value;
-                    }
-                    else
-                    {
-                        throw new ArgumentException("Authenticator must 16-byte long.");
-                    }
-                }
-                else
-                {
-                    throw new ArgumentNullException("Authenticator");
-                }
+                if (value == null)
+                    throw new ArgumentNullException("value");
+
+                if (value == null || value.Length != 16)
+                    throw new ArgumentException("Value must 16-byte long.");
+                
+                m_authenticator = value;
             }
         }
 
         /// <summary>
-        /// Gets a list of packet attributes.
+        /// Gets a list of <see cref="RadiusPacketAttribute"/>s.
         /// </summary>
-        /// <value></value>
-        /// <returns>Attributes of the packet.</returns>
         public List<RadiusPacketAttribute> Attributes
         {
             get
@@ -444,10 +433,8 @@ namespace TVA.Security.Radius
         }
 
         /// <summary>
-        /// Gets the binary lenght of the packet.
+        /// Gets the lenght of the <see cref="BinaryImage"/>.
         /// </summary>
-        /// <value></value>
-        /// <returns>32-bit signed integer value.</returns>
         public int BinaryLength
         {
             get
@@ -456,7 +443,8 @@ namespace TVA.Security.Radius
                 int length = 20;
                 foreach (RadiusPacketAttribute attribute in m_attributes)
                 {
-                    length += attribute.BinaryLength;
+                    if (attribute != null)
+                        length += attribute.BinaryLength;
                 }
 
                 return length;
@@ -464,24 +452,26 @@ namespace TVA.Security.Radius
         }
 
         /// <summary>
-        /// Gets the binary image of the packet.
+        /// Gets the binary representation of the <see cref="RadiusPacket"/>.
         /// </summary>
-        /// <value></value>
-        /// <returns>A byte array.</returns>
         public byte[] BinaryImage
         {
             get
             {
                 byte[] image = new byte[BinaryLength];
-                image[0] = System.Convert.ToByte(m_type);
+
+                image[0] = Convert.ToByte(m_type);
                 image[1] = m_identifier;
-                Array.Copy(GetBytes((ushort)BinaryLength), 0, image, 2, 2);
+                Array.Copy(EndianOrder.GetBytes((ushort)BinaryLength), 0, image, 2, 2);
                 Array.Copy(m_authenticator, 0, image, 4, m_authenticator.Length);
                 int cursor = 20;
                 foreach (RadiusPacketAttribute attribute in m_attributes)
                 {
-                    Array.Copy(attribute.BinaryImage, 0, image, cursor, attribute.BinaryLength);
-                    cursor += attribute.BinaryLength;
+                    if (attribute != null)
+                    {
+                        Array.Copy(attribute.BinaryImage, 0, image, cursor, attribute.BinaryLength);
+                        cursor += attribute.BinaryLength;
+                    }
                 }
 
                 return image;
@@ -499,21 +489,26 @@ namespace TVA.Security.Radius
         /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
         /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
         /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="RadiusPacket"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="binaryImage"/> is null.</exception>
         public int Initialize(byte[] binaryImage, int startIndex, int length)
         {
-            if ((binaryImage != null) && binaryImage.Length >= 20)
+            if (binaryImage == null)
+                throw new ArgumentNullException("binaryImage");
+
+            if (length >= BinaryLength)
             {
-                // We have a valid buffer to work with.
+                // Binary image has sufficient data.
                 UInt16 size;
                 m_type = (PacketType)(binaryImage[startIndex]);
                 m_identifier = binaryImage[startIndex + 1];
-                size = ToUInt16(binaryImage, startIndex + 2);
+                size = EndianOrder.ToUInt16(binaryImage, startIndex + 2);
                 Array.Copy(binaryImage, 4, m_authenticator, 0, m_authenticator.Length);
-                // Parse any attributes in the packet.
+
+                // Parse all attributes in the packet.
                 int cursor = 20;
                 while (cursor < size)
                 {
-                    RadiusPacketAttribute attribute = new RadiusPacketAttribute(binaryImage, startIndex + cursor);
+                    RadiusPacketAttribute attribute = new RadiusPacketAttribute(binaryImage, startIndex + cursor, length);
                     m_attributes.Add(attribute);
                     cursor += attribute.BinaryLength;
                 }
@@ -522,27 +517,23 @@ namespace TVA.Security.Radius
             }
             else
             {
-                throw new ArgumentException("Buffer is not valid.");
+                // Binary image does not have sufficient data.
+                return 0;
             }
         }
 
         /// <summary>
-        /// Gets the value of the specified attribute if it is present in the packet.
+        /// Gets the value of the specified <paramref name="attributeType"/> if it is present in the <see cref="RadiusPacket"/>.
         /// </summary>
-        /// <param name="type">Type of the attribute whose value is to be retrieved.</param>
-        /// <returns>Attribute value as a byte array if attribute is present; otherwise Nothing.</returns>
-        public byte[] GetAttributeValue(AttributeType type)
+        /// <param name="attributeType"><see cref="RadiusPacketAttribute.Type"/> of the <see cref="RadiusPacketAttribute"/> whose value is to be retrieved.</param>
+        /// <returns><see cref="RadiusPacketAttribute"/>.<see cref="RadiusPacketAttribute.Value"/> if <see cref="RadiusPacketAttribute"/> is present; otherwise null.</returns>
+        public byte[] GetAttributeValue(AttributeType attributeType)
         {
-            foreach (RadiusPacketAttribute attrib in m_attributes)
-            {
-                // Attribute found, return its value.
-                if (attrib.Type == type)
-                {
-                    return attrib.Value;
-                }
-            }
-
-            return null; // Attribute is not present in the packet.
+            RadiusPacketAttribute match = m_attributes.Find(attribute => attribute.Type == attributeType);
+            if (match != null)
+                return null;
+            else
+                return match.Value;
         }
 
         #endregion
@@ -552,129 +543,16 @@ namespace TVA.Security.Radius
         // Static Fields
 
         /// <summary>
-        /// Encoding format for encoding text.
+        /// <see cref="Encoding "/> format for encoding text.
         /// </summary>
         public static Encoding Encoding = Encoding.UTF8;
 
+        /// <summary>
+        /// <see cref="EndianOrder"/> to use for byte conversion.
+        /// </summary>
+        public static EndianOrder EndianOrder = EndianOrder.BigEndian;
+
         // Static Methods
-
-        /// <summary>
-        /// Gets bytes for the specified text.
-        /// </summary>
-        /// <param name="value">Text blob.</param>
-        /// <returns>A byte array.</returns>
-        public static byte[] GetBytes(string value)
-        {
-            return Encoding.GetBytes(value);
-        }
-
-        /// <summary>
-        /// Gets bytes for the specified 16-bit signed integer value.
-        /// </summary>
-        /// <param name="value">16-bit signed integer value.</param>
-        /// <returns>A byte array.</returns>
-        public static byte[] GetBytes(short value)
-        {
-            // Integer values are in Big-endian (most significant byte first) format.
-            return EndianOrder.BigEndian.GetBytes(value);
-        }
-
-        /// <summary>
-        /// Gets bytes for the specified 16-bit unsigned integer value.
-        /// </summary>
-        /// <param name="value">16-bit unsigned integer value.</param>
-        /// <returns>A byte array.</returns>
-        [CLSCompliant(false)]
-        public static byte[] GetBytes(UInt16 value)
-        {
-            // Integer values are in Big-endian (most significant byte first) format.
-            return EndianOrder.BigEndian.GetBytes(value);
-        }
-
-        /// <summary>
-        /// Gets bytes for the specified 32-bit signed integer value.
-        /// </summary>
-        /// <param name="value">32-bit signed integer value.</param>
-        /// <returns>A byte array.</returns>
-        public static byte[] GetBytes(int value)
-        {
-            // Integer values are in Big-endian (most significant byte first) format.
-            return EndianOrder.BigEndian.GetBytes(value);
-        }
-
-        /// <summary>
-        /// Gets bytes for the specified 32-bit unsigned integer value.
-        /// </summary>
-        /// <param name="value">32-bit unsigned integer value.</param>
-        /// <returns>A byte array.</returns>
-        [CLSCompliant(false)]
-        public static byte[] GetBytes(UInt32 value)
-        {
-            // Integer values are in Big-endian (most significant byte first) format.
-            return EndianOrder.BigEndian.GetBytes(value);
-        }
-
-        /// <summary>
-        /// Converts the specified byte array to text.
-        /// </summary>
-        /// <param name="buffer">A byte array.</param>
-        /// <param name="index">Starting point in the byte array.</param>
-        /// <param name="length">Number of bytes to be converted.</param>
-        /// <returns>A text blob.</returns>
-        public static string ToText(byte[] buffer, int index, int length)
-        {
-            return Encoding.GetString(buffer, index, length);
-        }
-
-        /// <summary>
-        /// Converts the specified byte array to a signed 16-bit integer value.
-        /// </summary>
-        /// <param name="buffer">A byte array.</param>
-        /// <param name="index">Starting point in the byte array.</param>
-        /// <returns>A 16-bit signed integer value.</returns>
-        public static short ToInt16(byte[] buffer, int index)
-        {
-            // Integer values are in Big-endian (most significant byte first) format.
-            return EndianOrder.BigEndian.ToInt16(buffer, index);
-        }
-
-        /// <summary>
-        /// Converts the specified byte array to an unsigned 16-bit integer value.
-        /// </summary>
-        /// <param name="buffer">A byte array.</param>
-        /// <param name="index">Starting point in the byte array.</param>
-        /// <returns>A 16-bit unsigned integer value.</returns>
-        [CLSCompliant(false)]
-        public static UInt16 ToUInt16(byte[] buffer, int index)
-        {
-            // Integer values are in Big-endian (most significant byte first) format.
-            return EndianOrder.BigEndian.ToUInt16(buffer, index);
-        }
-
-        /// <summary>
-        /// Converts the specified byte array to a signed 32-bit integer value.
-        /// </summary>
-        /// <param name="buffer">A byte array.</param>
-        /// <param name="index">Starting point in the byte array.</param>
-        /// <returns>A 32-bit signed integer value.</returns>
-        public static int ToInt32(byte[] buffer, int index)
-        {
-            // Integer values are in Big-endian (most significant byte first) format.
-            return EndianOrder.BigEndian.ToInt32(buffer, index);
-        }
-
-        /// <summary>
-        /// Converts the specified byte array to an unsigned 32-bit integer value.
-        /// </summary>
-        /// <param name="buffer">A byte array.</param>
-        /// <param name="index">Starting point in the byte array.</param>
-        /// <returns>A 32-bit unsigned integer value.</returns>
-        [CLSCompliant(false)]
-        public static UInt32 ToUInt32(byte[] buffer, int index)
-        {
-            // Integer values are in Big-endian (most significant byte first) format.
-            return EndianOrder.BigEndian.ToUInt32(buffer, index);
-        }
 
         /// <summary>
         /// Generates an "Authenticator" value used in a RADIUS request packet sent by the client to server.
@@ -687,7 +565,7 @@ namespace TVA.Security.Radius
             // Since the output value (The Authenticator) has to be unique over the life of the shared secret,
             // we prepend a randomly generated "salt" text to ensure the uniqueness of the output value.
             byte[] randomBuffer = new byte[16];
-            byte[] secretBuffer = RadiusPacket.GetBytes(sharedSecret);
+            byte[] secretBuffer = Encoding.GetBytes(sharedSecret);
             Cryptography.Random.GetBytes(randomBuffer);
 
             return new MD5CryptoServiceProvider().ComputeHash(randomBuffer.Combine(secretBuffer));
@@ -704,14 +582,14 @@ namespace TVA.Security.Radius
         {
             byte[] requestBytes = requestPacket.BinaryImage;
             byte[] responseBytes = responsePacket.BinaryImage;
-            byte[] sharedSecretBytes = RadiusPacket.GetBytes(sharedSecret);
+            byte[] sharedSecretBytes = Encoding.GetBytes(sharedSecret);
             byte[] inputBuffer = new byte[responseBytes.Length + sharedSecretBytes.Length];
 
             // Response authenticator is generated as follows:
             // MD5(Code + Identifier + Length + Request Authenticator + Attributes + Shared Secret)
             //   where:
             //   Code, Identifier, Length & Attributes are from the response RADIUS packet
-            //   Request Authenticator if from the request RADIUS packet
+            //   Request Authenticator is from the request RADIUS packet
             //   Shared Secret is the shared secret ket
 
             Array.Copy(responseBytes, 0, inputBuffer, 0, responseBytes.Length);
@@ -736,8 +614,8 @@ namespace TVA.Security.Radius
             {
                 byte[] result;
                 byte[] xorBytes = null;
-                byte[] passwordBytes = RadiusPacket.GetBytes(password);
-                byte[] sharedSecretBytes = RadiusPacket.GetBytes(sharedSecret);
+                byte[] passwordBytes = Encoding.GetBytes(password);
+                byte[] sharedSecretBytes = Encoding.GetBytes(sharedSecret);
                 byte[] md5HashInputBytes = new byte[sharedSecretBytes.Length + 16];
                 MD5CryptoServiceProvider md5Provider = new MD5CryptoServiceProvider();
                 if (passwordBytes.Length % 16 == 0)

@@ -238,7 +238,7 @@ namespace TVA.Security.Radius
     #region [ Enumerations ]
 
     /// <summary>
-    /// Specifies the type of RADIUS packet attribute.
+    /// Specifies the type of <see cref="RadiusPacketAttribute"/>.
     /// </summary>
     public enum AttributeType
     {
@@ -295,7 +295,7 @@ namespace TVA.Security.Radius
         /// </summary>
         FramedCompression = 13,
         /// <summary>
-        /// Attribute indicates the system with which to connect the user when LoginService attribute is included.
+        /// Attribute indicates the system with which to connect the user when <see cref="AttributeType.LoginService"/> attribute is included.
         /// </summary>
         LoginIpHost = 14,
         /// <summary>
@@ -303,8 +303,7 @@ namespace TVA.Security.Radius
         /// </summary>
         LoginService = 15,
         /// <summary>
-        /// Attribute indicates the TCP port with which the user is to be connected when LoginService attribute
-        /// is included.
+        /// Attribute indicates the TCP port with which the user is to be connected when <see cref="AttributeType.LoginService"/> attribute is included.
         /// </summary>
         LoginTcpPort = 16,
         /// <summary>
@@ -328,13 +327,13 @@ namespace TVA.Security.Radius
         /// </summary>
         FramedIpxNetwork = 23,
         /// <summary>
-        /// Attribute available to be sent by the server to the client in an AccessChallenge and must be sent
-        /// unmodified from the client to the server in the new AccessRequest reply to the challenge.
+        /// Attribute available to be sent by the server to the client in an <see cref="PacketType.AccessChallenge"/> and must be 
+        /// sent unmodified from the client to the server in the new <see cref="PacketType.AccessRequest"/> reply to the challenge.
         /// </summary>
         State = 24,
         /// <summary>
-        /// Attribute available to be sent by the server to the client in an AccessAccept and should be sent
-        /// unmodified by the client to the accounting server as part of the AccountingRequest.
+        /// Attribute available to be sent by the server to the client in an <see cref="PacketType.AccessAccept"/> and should 
+        /// be sent unmodified by the client to the accounting server as part of the <see cref="PacketType.AccountingRequest"/>.
         /// </summary>
         Class = 25,
         /// <summary>
@@ -342,13 +341,11 @@ namespace TVA.Security.Radius
         /// </summary>
         VendorSpecific = 26,
         /// <summary>
-        /// Attribute sets the maximum number of seconds of service to be provided to the user before termination
-        /// of the session or prompt.
+        /// Attribute sets the maximum number of seconds of service to be provided to the user before termination of the session or prompt.
         /// </summary>
         SessionTimeout = 27,
         /// <summary>
-        /// Attribute sets the maximum number of consecutive seconds of idle connection allowed to the user before
-        /// termination of the session or prompt.
+        /// Attribute sets the maximum number of consecutive seconds of idle connection allowed to the user before termination of the session or prompt.
         /// </summary>
         IdleTimeout = 28,
         /// <summary>
@@ -388,8 +385,7 @@ namespace TVA.Security.Radius
         /// </summary>
         FramedAppleTalkLink = 37,
         /// <summary>
-        /// Attribute indicates the AppleTalk Network number which the NAS should probe to allocate an AppleTalk
-        /// node for the user.
+        /// Attribute indicates the AppleTalk Network number which the NAS should probe to allocate an AppleTalk node for the user.
         /// </summary>
         FramedAppleTalkNetwork = 38,
         /// <summary>
@@ -419,6 +415,8 @@ namespace TVA.Security.Radius
     /// <summary>
     /// Represents an attribute of <see cref="RadiusPacket"/>.
     /// </summary>
+    /// <seealso cref="RadiusPacket"/>
+    /// <seealso cref="RadiusClient"/>
     public class RadiusPacketAttribute : ISupportBinaryImage
     {
         // 0                   1                   2
@@ -438,7 +436,7 @@ namespace TVA.Security.Radius
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a default instance of RADIUS packet attribute.
+        /// Initializes a new instance of the <see cref="RadiusPacketAttribute"/> class.
         /// </summary>
         public RadiusPacketAttribute()
         {
@@ -446,41 +444,41 @@ namespace TVA.Security.Radius
         }
 
         /// <summary>
-        /// Creates an instance of RADIUS packet attribute.
+        /// Initializes a new instance of the <see cref="RadiusPacketAttribute"/> class.
         /// </summary>
-        /// <param name="type">Type of the attribute.</param>
-        /// <param name="value">Text value of the attribute.</param>
+        /// <param name="type">Type of the <see cref="RadiusPacketAttribute"/>.</param>
+        /// <param name="value">Text value of the <see cref="RadiusPacketAttribute"/>.</param>
         public RadiusPacketAttribute(AttributeType type, string value)
-            : this(type, RadiusPacket.GetBytes(value))
+            : this(type, RadiusPacket.Encoding.GetBytes(value))
         {
         }
 
         /// <summary>
-        /// Creates an instance of RADIUS packet attribute.
+        /// Initializes a new instance of the <see cref="RadiusPacketAttribute"/> class.
         /// </summary>
-        /// <param name="type">Type of the attribute.</param>
-        /// <param name="value">32-bit unsigned integer value of the attribute.</param>
+        /// <param name="type">Type of the <see cref="RadiusPacketAttribute"/>.</param>
+        /// <param name="value">32-bit unsigned integer value of the <see cref="RadiusPacketAttribute"/>.</param>
         [CLSCompliant(false)]
         public RadiusPacketAttribute(AttributeType type, UInt32 value)
-            : this(type, RadiusPacket.GetBytes(value))
+            : this(type, RadiusPacket.EndianOrder.GetBytes(value))
         {
         }
 
         /// <summary>
-        /// Creates an instance of RADIUS packet attribute.
+        /// Initializes a new instance of the <see cref="RadiusPacketAttribute"/> class.
         /// </summary>
-        /// <param name="type">Type of the attribute.</param>
-        /// <param name="value">IP address value of the attribute.</param>
+        /// <param name="type">Type of the <see cref="RadiusPacketAttribute"/>.</param>
+        /// <param name="value">IP address value of the <see cref="RadiusPacketAttribute"/>.</param>
         public RadiusPacketAttribute(AttributeType type, IPAddress value)
             : this(type, value.GetAddressBytes())
         {
         }
 
         /// <summary>
-        /// Creates an instance of RADIUS packet attribute.
+        /// Initializes a new instance of the <see cref="RadiusPacketAttribute"/> class.
         /// </summary>
-        /// <param name="type">Type of the attribute.</param>
-        /// <param name="value">Byte array value of the attribute.</param>
+        /// <param name="type">Type of the <see cref="RadiusPacketAttribute"/>.</param>
+        /// <param name="value">Byte array value of the <see cref="RadiusPacketAttribute"/>.</param>
         public RadiusPacketAttribute(AttributeType type, byte[] value)
         {
             this.Type = type;
@@ -488,13 +486,14 @@ namespace TVA.Security.Radius
         }
 
         /// <summary>
-        /// Creates an instance of RADIUS packet attribute.
+        /// Initializes a new instance of the <see cref="RadiusPacketAttribute"/> class.
         /// </summary>
-        /// <param name="binaryImage">A byte array.</param>
-        /// <param name="startIndex">Starting point in the byte array.</param>
-        public RadiusPacketAttribute(byte[] binaryImage, int startIndex)
+        /// <param name="binaryImage">Binary image to be used for initializing <see cref="RadiusPacketAttribute"/>.</param>
+        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
+        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
+        public RadiusPacketAttribute(byte[] binaryImage, int startIndex, int length)
         {
-            Initialize(binaryImage, startIndex, binaryImage.Length);
+            Initialize(binaryImage, startIndex, length);
         }
 
         #endregion
@@ -502,10 +501,8 @@ namespace TVA.Security.Radius
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the type of the attribute.
+        /// Gets or sets the type of the <see cref="RadiusPacketAttribute"/>.
         /// </summary>
-        /// <value></value>
-        /// <returns>Type of the attribute.</returns>
         public AttributeType Type
         {
             get
@@ -519,10 +516,9 @@ namespace TVA.Security.Radius
         }
 
         /// <summary>
-        /// Gets or sets the value of the attribute.
+        /// Gets or sets the value of the <see cref="RadiusPacketAttribute"/>.
         /// </summary>
-        /// <value></value>
-        /// <returns>Value of the attribute.</returns>
+        /// <exception cref="ArgumentNullException">The value being assigned is null or zero-length byte array.</exception>
         public byte[] Value
         {
             get
@@ -531,59 +527,41 @@ namespace TVA.Security.Radius
             }
             set
             {
-                if ((value != null) && value.Length > 0)
-                {
-                    // By definition, attribute value cannot be null or zero-length.
-                    m_value = value;
-                }
-                else
-                {
-                    throw new ArgumentNullException("Value");
-                }
+                // By definition, attribute value cannot be null or zero-length.
+                if (value == null || value.Length == 0)
+                    throw new ArgumentNullException("value");
+
+                m_value = value;
             }
         }
 
         /// <summary>
-        /// Gets the binary lenght of the attribute.
+        /// Gets the lenght of the <see cref="BinaryImage"/>.
         /// </summary>
-        /// <value></value>
-        /// <returns>32-bit signed integer value.</returns>
         public int BinaryLength
         {
             get
             {
                 // 2 bytes are fixed + length of the value
                 if (m_value == null)
-                {
                     return 2;
-                }
                 else
-                {
                     return 2 + m_value.Length;
-                }
             }
         }
 
         /// <summary>
-        /// Gets the binary image of the attribute.
+        /// Gets the binary representation of the <see cref="RadiusPacketAttribute"/>.
         /// </summary>
-        /// <value></value>
-        /// <returns>A byte array.</returns>
         public byte[] BinaryImage
         {
             get
             {
                 byte[] image = new byte[BinaryLength];
-                image[0] = System.Convert.ToByte(m_type);
-                image[1] = (byte)BinaryLength;
-                if ((m_value != null) && m_value.Length > 0)
-                {
-                    Array.Copy(m_value, 0, image, 2, m_value.Length);
-                }
-                else
-                {
-                    throw new ArgumentNullException("Value", "Attribute value cannot be null or zero-length.");
-                }
+
+                image[0] = Convert.ToByte(m_type);
+                image[1] = (byte)image.Length;
+                Array.Copy(m_value, 0, image, 2, m_value.Length);
 
                 return image;
             }
@@ -600,23 +578,26 @@ namespace TVA.Security.Radius
         /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
         /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
         /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="RadiusPacketAttribute"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="binaryImage"/> is null.</exception>
         public int Initialize(byte[] binaryImage, int startIndex, int length)
         {
+            if (binaryImage == null)
+                throw new ArgumentNullException("binaryImage");
 
-            if ((binaryImage != null) && binaryImage.Length >= 2)
+            if (length >= BinaryLength)
             {
-                // We have a valid buffer to work with.
+                // Binary image has sufficient data.
                 m_type = (AttributeType)(binaryImage[startIndex]);
-                m_value = new byte[System.Convert.ToInt16(binaryImage[startIndex + 1] - 2)];
+                m_value = new byte[Convert.ToInt16(binaryImage[startIndex + 1] - 2)];
                 Array.Copy(binaryImage, startIndex + 2, m_value, 0, m_value.Length);
 
                 return BinaryLength;
             }
             else
             {
-                throw new ArgumentException("Buffer is not valid.");
+                // Binary image does not have sufficient data.
+                return 0;
             }
-
         }
 
         #endregion
