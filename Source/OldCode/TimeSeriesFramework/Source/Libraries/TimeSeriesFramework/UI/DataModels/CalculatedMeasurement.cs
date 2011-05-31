@@ -340,7 +340,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_useLocalClockAsRealTime = value;
-                OnPropertyChanged("UseLocalAsRealTime");
+                OnPropertyChanged("UseLocalClockAsRealTime");
             }
         }
 

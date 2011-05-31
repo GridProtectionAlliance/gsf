@@ -255,7 +255,7 @@ namespace TimeSeriesFramework.UI.DataModels
                     });
                 }
 
-                measurementGroupList.Insert(0, new MeasurementGroup() { NodeID = (Guid)database.CurrentNodeID() });
+                measurementGroupList.Insert(0, new MeasurementGroup());
 
                 return measurementGroupList;
             }
@@ -412,11 +412,11 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 if (measurementGroup.ID == 0)
                     database.Connection.ExecuteNonQuery("INSERT INTO MeasurementGroup (NodeID, Name, Description, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) " +
-                        "VALUES (@nodeID, @name, @description, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, database.Guid(measurementGroup.NodeID),
+                        "VALUES (@nodeID, @name, @description, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, database.CurrentNodeID(),
                         measurementGroup.Name, measurementGroup.Description.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("UPDATE MeasurementGroup SET NodeID = @nodeID, Name = @name, Description = @description, " +
-                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, measurementGroup.NodeID, measurementGroup.Name,
+                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, database.CurrentNodeID(), measurementGroup.Name,
                         measurementGroup.Description.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow(), measurementGroup.ID);
 
                 return "Measurement group information saved successfully";

@@ -158,7 +158,9 @@ namespace TimeSeriesFramework.UI
         public static object Guid(this AdoDataConnection database, Guid guid)
         {
             if (database.IsJetEngine())
-                return "P" + guid.ToString();
+                return "{" + guid.ToString() + "}";
+                
+                //return "P" + guid.ToString();
 
             return guid;
         }
