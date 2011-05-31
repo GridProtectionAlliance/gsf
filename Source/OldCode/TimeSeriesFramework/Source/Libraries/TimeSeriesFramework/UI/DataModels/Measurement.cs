@@ -932,7 +932,7 @@ namespace TimeSeriesFramework.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
-                DataTable measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail WHERE " + whereClause);
+                DataTable measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail " + whereClause);
 
                 if (measurementTable.Rows.Count == 0)
                     return null;

@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             d:DesignHeight="550" d:DesignWidth="750"
+             d:DesignHeight="650" d:DesignWidth="850"
              xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:uc="clr-namespace:TimeSeriesFramework.UI.UserControls"
              xmlns:tsfBinding="clr-namespace:TimeSeriesFramework.UI.Binding;assembly=TimeSeriesFramework.UI"
@@ -56,7 +56,7 @@
             <!--Second Row-->
             <TextBlock Grid.Row="1" Grid.Column="0" Text="Signal Type"/>
             <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Source={StaticResource SignalTypeLookupList}}" DisplayMemberPath="Value" SelectedItem="{tsfBinding:Column Path=SignalTypeID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource SignalTypeLookupList}}"/>
-            <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal">
+            <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
                 <TextBlock Text="Point Tag" Style="{StaticResource RequiredLabel}"/>
                 <TextBlock Style="{StaticResource RequiredMarker}"/>
             </StackPanel>
@@ -65,7 +65,7 @@
             <!--Third Row-->
             <TextBlock Grid.Row="2" Grid.Column="0" Text="Alternate Tag"/>
             <TextBox Grid.Row="2" Grid.Column="1" Text="{tsfBinding:Column Path=AlternateTag}"/>
-            <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal">
+            <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
                 <TextBlock Text="Signal Reference" Style="{StaticResource RequiredLabel}"/>
                 <TextBlock Style="{StaticResource RequiredMarker}"/>
             </StackPanel>
@@ -78,12 +78,12 @@
             <TextBox Grid.Row="3" Grid.Column="3" Text="{tsfBinding:Column Path=Description}"/>
             
             <!--Fifth Row-->
-            <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="0">
+            <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="0" HorizontalAlignment="Right">
                 <TextBlock Text="Adder" Style="{StaticResource RequiredLabel}"/>
                 <TextBlock Style="{StaticResource RequiredMarker}"/>
             </StackPanel>
             <TextBox Grid.Row="4" Grid.Column="1" Text="{tsfBinding:Column Path=Adder}"/>
-            <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="2">
+            <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="2" HorizontalAlignment="Right">
                 <TextBlock Text="Multiplier" Style="{StaticResource RequiredLabel}"/>
                 <TextBlock Style="{StaticResource RequiredMarker}"/>
             </StackPanel>
@@ -102,10 +102,10 @@
 
         <sdk:DataGrid ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" PreviewKeyDown="DataGrid_PreviewKeyDown">
             <sdk:DataGrid.Columns>
-                <sdk:DataGridTextColumn Header="Signal ID" Width="3*" Binding="{tsfBinding:Column Path=SignalID}" ToolTipService.ToolTip="{tsfBinding:Column Path=PointTag}"/>
-                <sdk:DataGridTextColumn Header="Point ID" Width="*" Binding="{tsfBinding:Column Path=PointID}" CellStyle="{StaticResource CenterAlignCellStyle}"/>
-                <sdk:DataGridTextColumn Header="Historian" Width="*" Binding="{tsfBinding:Column Path=Historian}" CellStyle="{StaticResource CenterAlignCellStyle}" />
-                <sdk:DataGridTextColumn Header="Device" Width="*" Binding="{tsfBinding:Column Path=Device}" CellStyle="{StaticResource CenterAlignCellStyle}"/>                
+                <sdk:DataGridTextColumn Header="Signal ID" Width="3*" Binding="{tsfBinding:Column Path=SignalID}" ToolTipService.ToolTip="{tsfBinding:Column Path=PointTag}" IsReadOnly="True"/>
+                <sdk:DataGridTextColumn Header="Point ID" Width="*" Binding="{tsfBinding:Column Path=PointID}" CellStyle="{StaticResource CenterAlignCellStyle}" IsReadOnly="True"/>
+                <sdk:DataGridTextColumn Header="Historian" Width="*" Binding="{Binding Path=HistorianAcronym}" CellStyle="{StaticResource CenterAlignCellStyle}" IsReadOnly="True"/>
+                <sdk:DataGridTextColumn Header="Device" Width="*" Binding="{Binding Path=DeviceAcronym}" CellStyle="{StaticResource CenterAlignCellStyle}" IsReadOnly="True"/>                
                 <sdk:DataGridTextColumn Header="Signal Reference" Width="2*" Binding="{tsfBinding:Column Path=SignalReference}"/>
                 <sdk:DataGridCheckBoxColumn Header="Internal" Width="*" Binding="{tsfBinding:Column Path=Internal}" CellStyle="{StaticResource CenterAlignCellStyle}"/>
                 <sdk:DataGridCheckBoxColumn Header="Subscribed" Width="*" Binding="{tsfBinding:Column Path=Subscribed}" CellStyle="{StaticResource CenterAlignCellStyle}"/>

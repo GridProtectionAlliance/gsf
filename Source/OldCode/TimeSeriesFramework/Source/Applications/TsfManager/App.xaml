@@ -19,6 +19,36 @@
                 <GradientStop Color="#FFB3C8D6" Offset="1"/>
             </LinearGradientBrush>
 
+            <RadialGradientBrush x:Key="RedRadialGradientBrush" GradientOrigin=".2,.2">
+                <GradientStop Offset="0.2" Color="#FFFF9999"/>
+                <GradientStop Offset="0.5" Color="#FFFC0808"/>
+            </RadialGradientBrush>
+            
+            <RadialGradientBrush x:Key="GreenRadialGradientBrush" GradientOrigin=".2,.2">
+                <GradientStop Offset="0.2" Color="#FFB3FF46"/>
+                <GradientStop Offset="0.5" Color="#FF2EB30D"/>
+            </RadialGradientBrush>
+            
+            <RadialGradientBrush x:Key="YellowRadialGradientBrush" GradientOrigin=".2,.2">
+                <GradientStop Offset="0.2" Color="#FFFFFFFF"/>
+                <GradientStop Offset="0.5" Color="#FFE8E831"/>
+            </RadialGradientBrush>
+            
+            <RadialGradientBrush x:Key="GrayRadialGradientBrush" GradientOrigin=".2,.2">
+                <GradientStop Offset="0.2" Color="#FFA6A6A6"/>
+                <GradientStop Offset="0.5" Color="#FF767676"/>
+            </RadialGradientBrush>
+            
+            <RadialGradientBrush x:Key="WhiteRadialGradientBrush" GradientOrigin=".2,.2">
+                <GradientStop Offset="0.5" Color="#FFF0F0F0"/>
+                <GradientStop Offset="0.2" Color="#FFD4D4D4"/>
+            </RadialGradientBrush>
+            
+            <RadialGradientBrush x:Key="BlueRadialGradientBrush" GradientOrigin=".2,.2">
+                <GradientStop Offset="0.5" Color="#FF2588D8"/>
+                <GradientStop Offset="0.2" Color="#FF65AAE2"/>
+            </RadialGradientBrush>
+
             <Style TargetType="{x:Type MenuItem}" x:Key="MenuSeparatorStyle">
                 <Setter Property="Template">
                     <Setter.Value>

@@ -40,7 +40,7 @@ namespace TimeSeriesFramework.UI.UserControls
         {
             InitializeComponent();
             this.Unloaded += new RoutedEventHandler(CalculatedMeasurementUserControl_Unloaded);
-            this.DataContext = new CalculatedMeasurements(10);
+            this.DataContext = new CalculatedMeasurements(5);
         }
 
         void CalculatedMeasurementUserControl_Unloaded(object sender, RoutedEventArgs e)

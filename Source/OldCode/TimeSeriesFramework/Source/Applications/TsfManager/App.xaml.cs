@@ -26,6 +26,7 @@ using System.Security.Principal;
 using System.Windows;
 using TimeSeriesFramework.UI;
 using TVA.ErrorManagement;
+using TVA.Reflection;
 
 namespace TsfManager
 {
@@ -40,6 +41,7 @@ namespace TsfManager
         private Guid m_nodeID;
         private ErrorLogger m_errorLogger;
         private Func<string> m_defaultErrorText;
+        private string m_title;
 
         #endregion
 
@@ -65,6 +67,9 @@ namespace TsfManager
             m_errorLogger.Initialize();
 
             NodeID = Guid.Parse("e7a5235d-cb6f-4864-a96e-a8686f36e599");
+
+            Version appVersion = AssemblyInfo.EntryAssembly.Version;
+            m_title = "openPG Manager" + " (v" + appVersion.Major + "." + appVersion.Minor + "." + appVersion.Build + ") ";
         }
 
         #endregion
@@ -84,6 +89,14 @@ namespace TsfManager
             {
                 m_nodeID = value;
                 m_nodeID.SetAsCurrentNodeID();
+            }
+        }
+
+        public string Title
+        {
+            get
+            {
+                return m_title;
             }
         }
 

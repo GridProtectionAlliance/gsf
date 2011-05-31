@@ -404,7 +404,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         phasor.Phase, phasor.SourceIndex, CommonFunctions.CurrentUser, database.UtcNow(), phasor.ID);
 
                 // Get reference to the device to which phasor is being added.
-                Device device = Device.GetDevice(database, "ID = " + phasor.DeviceID);
+                Device device = Device.GetDevice(database, "WHERE ID = " + phasor.DeviceID);
 
                 // Get Phasor signal types.
                 ObservableCollection<SignalType> signals;
@@ -414,11 +414,11 @@ namespace TimeSeriesFramework.UI.DataModels
                     signals = SignalType.GetCurrentPhasorSignalTypes();
 
                 // Get reference to phasor which has just been added.
-                Phasor addedPhasor = GetPhasor(database, "DeviceID = " + phasor.DeviceID + " AND SourceIndex = " + phasor.SourceIndex);
+                Phasor addedPhasor = GetPhasor(database, "WHERE DeviceID = " + phasor.DeviceID + " AND SourceIndex = " + phasor.SourceIndex);
 
                 foreach (SignalType signal in signals)
                 {
-                    Measurement measurement = Measurement.GetMeasurement(database, "DeviceID = " + phasor.DeviceID + " AND SignalTypeSuffix = '" + signal.Suffix + "' AND PhasorSourceIndex = " + phasor.SourceIndex);
+                    Measurement measurement = Measurement.GetMeasurement(database, "WHERE DeviceID = " + phasor.DeviceID + " AND SignalTypeSuffix = '" + signal.Suffix + "' AND PhasorSourceIndex = " + phasor.SourceIndex);
                     if (measurement == null)
                         measurement = new Measurement();
 
@@ -485,7 +485,7 @@ namespace TimeSeriesFramework.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
-                DataTable phasorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM PhasorDetail WHERE " + whereClause);
+                DataTable phasorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM PhasorDetail " + whereClause);
 
                 if (phasorTable.Rows.Count == 0)
                     return null;

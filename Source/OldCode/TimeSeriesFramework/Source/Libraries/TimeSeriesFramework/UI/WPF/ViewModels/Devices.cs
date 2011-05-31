@@ -324,7 +324,6 @@ namespace TimeSeriesFramework.UI.ViewModels
                     if (groupBox != null)
                         ((GroupBox)groupBox).Header = "Browse Devices";
 
-                    Application.Current.MainWindow.Title = "Browse Devices";
                 }
             }
         }
@@ -348,8 +347,6 @@ namespace TimeSeriesFramework.UI.ViewModels
 
                 if (groupBox != null)
                     ((GroupBox)groupBox).Header = "Manage Device Configuration";
-
-                Application.Current.MainWindow.Title = "Manage Device Configuration";
             }
         }
 
@@ -388,8 +385,6 @@ namespace TimeSeriesFramework.UI.ViewModels
 
                 if (groupBox != null)
                     ((GroupBox)groupBox).Header = "Manage Device Configuration";
-
-                Application.Current.MainWindow.Title = "Manage Device Configuration";
             }
         }
 
@@ -424,8 +419,6 @@ namespace TimeSeriesFramework.UI.ViewModels
 
                 if (groupBox != null)
                     ((GroupBox)groupBox).Header = "Manage Measurements for " + device.Acronym;
-
-                Application.Current.MainWindow.Title = "Manage Measurements for " + device.Acronym;
             }
         }
 
@@ -449,8 +442,6 @@ namespace TimeSeriesFramework.UI.ViewModels
 
                 if (groupBox != null)
                     ((GroupBox)groupBox).Header = "Manage Phasors for " + device.Acronym;
-
-                Application.Current.MainWindow.Title = "Manage Phasors for " + device.Acronym;
             }
         }
 

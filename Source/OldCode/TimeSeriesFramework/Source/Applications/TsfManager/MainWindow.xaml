@@ -1,7 +1,7 @@
 ﻿<Window x:Class="TsfManager.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="600" Width="800"    
+        Title="MainWindow" Height="700" Width="900"    
         xmlns:tsfconv="clr-namespace:TimeSeriesFramework.UI.Converters;assembly=TimeSeriesFramework.UI"
         xmlns:tsf="clr-namespace:TimeSeriesFramework.UI;assembly=TimeSeriesFramework.UI.WPF"
          Background="{StaticResource ContentBackgroundBrush}"
@@ -14,17 +14,20 @@
     </Window.Resources>
 
     <StackPanel Orientation="Vertical">
-            <Grid Background="{StaticResource MenuBackgroundBrush}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="2*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
+        <Grid Background="{StaticResource MenuBackgroundBrush}">
+            <Grid.ColumnDefinitions>                
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <Menu x:Name="MenuMain" ItemsSource="{Binding}" Style="{StaticResource MenuStyle}" ItemContainerStyleSelector="{StaticResource MenuItemStyleSelector}"
+                  VerticalAlignment="Bottom" Margin="2"/>
 
-                <Menu x:Name="MenuMain" ItemsSource="{Binding}" Style="{StaticResource MenuStyle}" ItemContainerStyleSelector="{StaticResource MenuItemStyleSelector}" />
-
-                <ComboBox x:Name="ComboboxNode" Grid.Column="1" DisplayMemberPath="Value" SelectionChanged="ComboboxNode_SelectionChanged" HorizontalAlignment="Right" Margin="0,0,5,0"/>
-
-            </Grid>
+            <StackPanel Orientation="Horizontal" Grid.Column="1" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="2">
+                <ComboBox x:Name="ComboboxNode" DisplayMemberPath="Value" SelectionChanged="ComboboxNode_SelectionChanged" />
+                <Ellipse x:Name="EllipseConnectionState" Fill="{StaticResource RedRadialGradientBrush}" Width="16" Height="16" Margin="2,0,0,0" />
+            </StackPanel>
+        </Grid>
 
             <GroupBox x:Name="GroupBoxMain" Margin="2">
                 <Frame x:Name="FrameContent" NavigationUIVisibility="Hidden" HorizontalAlignment="Center"/>

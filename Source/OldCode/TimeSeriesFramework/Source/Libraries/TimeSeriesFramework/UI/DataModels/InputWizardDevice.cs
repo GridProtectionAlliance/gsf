@@ -47,8 +47,8 @@ namespace TimeSeriesFramework.UI.DataModels
         private int m_analogCount;
         private bool m_addDigitals;
         private bool m_addAnalogs;
-        private bool m_isNew;
-        private ObservableCollection<Phasor> m_phasorList;
+        private bool m_existing;
+        private ObservableCollection<InputWizardDevicePhasor> m_phasorList;
 
         #endregion
 
@@ -64,6 +64,7 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 m_acronym = value;
                 OnPropertyChanged("Acronym");
+                Existing = (Device.GetDevice(null, "WHERE Acronym = '" + m_acronym.ToUpper() + "'") != null);
             }
         }
 
@@ -210,20 +211,20 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
-        public bool IsNew
+        public bool Existing
         {
             get
             {
-                return m_isNew;
+                return m_existing;
             }
             set
             {
-                m_isNew = value;
-                OnPropertyChanged("IsNew");
+                m_existing = value;
+                OnPropertyChanged("Existing");
             }
         }
 
-        public ObservableCollection<Phasor> PhasorList
+        public ObservableCollection<InputWizardDevicePhasor> PhasorList
         {
             get
             {
@@ -240,9 +241,27 @@ namespace TimeSeriesFramework.UI.DataModels
 
         #region [ Methods ]
 
+        public static ObservableCollection<InputWizardDevice> Load(AdoDataConnection database)
+        {
+            return new ObservableCollection<InputWizardDevice>();
+        }
+
         public static string Save(AdoDataConnection database, InputWizardDevice inputWizardDevice)
         {
             return "";
+            //if (inputWizardDevice.Include)
+            //{
+            //    bool createdConnection = false;
+            //    try
+            //    {
+            //        createdConnection = CreateConnection(ref database);
+            //    }
+            //    finally
+            //    {
+            //        if (createdConnection && database != null)
+            //            database.Dispose();
+            //    }
+            //}
         }
 
         public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional = false)
@@ -257,5 +276,84 @@ namespace TimeSeriesFramework.UI.DataModels
 
         #endregion
 
+    }
+
+    public class InputWizardDevicePhasor : DataModelBase
+    {
+        #region [ Members ]
+
+        // Fields
+        private string m_label;
+        private string m_type;
+        private string m_phase;
+        private string m_destinationLabel;
+        private bool m_include;
+
+        #endregion
+
+        public string Label
+        {
+            get
+            {
+                return m_label;
+            }
+            set
+            {
+                m_label = value;
+                OnPropertyChanged("Label");
+            }
+        }
+
+        public string Type
+        {
+            get
+            {
+                return m_type;
+            }
+            set
+            {
+                m_type = value;
+                OnPropertyChanged("Type");
+            }
+        }
+
+        public string Phase
+        {
+            get
+            {
+                return m_phase;
+            }
+            set
+            {
+                m_phase = value;
+                OnPropertyChanged("Phase");
+            }
+        }
+
+        public string DestinationLabel
+        {
+            get
+            {
+                return m_destinationLabel;
+            }
+            set
+            {
+                m_destinationLabel = value;
+                OnPropertyChanged("DestinationLabel");
+            }
+        }
+
+        public bool Include
+        {
+            get
+            {
+                return m_include;
+            }
+            set
+            {
+                m_include = value;
+                OnPropertyChanged("Include");
+            }
+        }
     }
 }

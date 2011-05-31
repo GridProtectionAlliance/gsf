@@ -41,7 +41,7 @@ namespace TimeSeriesFramework.UI.UserControls
         public DeviceListUserControl()
         {
             InitializeComponent();
-            this.DataContext = new Devices(30);
+            this.DataContext = new Devices(16);
         }
 
         #endregion
@@ -67,5 +67,10 @@ namespace TimeSeriesFramework.UI.UserControls
         }
 
         #endregion
+
+        private void DataGrid_Sorting(object sender, DataGridSortingEventArgs e)
+        {
+
+        }
     }
 }

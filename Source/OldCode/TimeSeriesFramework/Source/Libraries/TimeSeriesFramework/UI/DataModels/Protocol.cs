@@ -220,10 +220,10 @@ namespace TimeSeriesFramework.UI.DataModels
                 if (isOptional)
                     protocolList.Add(0, "Select Protocol");
 
-                protocolTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM Protocol ORDER BY LoadOrder");
+                protocolTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM Protocol ORDER BY LoadOrder");
 
                 foreach (DataRow row in protocolTable.Rows)
-                    protocolList[row.Field<int>("ID")] = row.Field<string>("Name");
+                    protocolList[row.Field<int>("ID")] = row.Field<string>("Acronym");
 
                 return protocolList;
             }

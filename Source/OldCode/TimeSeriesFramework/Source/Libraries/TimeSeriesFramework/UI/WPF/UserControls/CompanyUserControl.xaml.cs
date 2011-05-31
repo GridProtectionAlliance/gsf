@@ -42,7 +42,7 @@ namespace TimeSeriesFramework.UI.UserControls
         {
             InitializeComponent();
             this.Unloaded += new RoutedEventHandler(CompanyUserControl_Unloaded);
-            this.DataContext = new Companies(18, false);
+            this.DataContext = new Companies(22, false);
         }
 
         #endregion

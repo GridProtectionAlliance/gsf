@@ -54,6 +54,7 @@ namespace TsfManager
         {
             InitializeComponent();
             this.Loaded += new RoutedEventHandler(MainWindow_Loaded);
+            Title = ((App)Application.Current).Title;
         }
 
         #endregion

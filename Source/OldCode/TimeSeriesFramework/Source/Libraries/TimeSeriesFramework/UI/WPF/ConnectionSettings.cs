@@ -33,158 +33,171 @@ namespace TimeSeriesFramework.UI
     [Serializable()]
     public class ConnectionSettings
     {
-        #region [ Members ]
 
-        // Fields
-        private PhasorProtocol m_phasorProtocol;
-        private TransportProtocol m_transportProtocol;
-        private string m_connectionString;
-        private int m_pmuId;
-        private int m_frameRate;
-        private bool m_autoRepeatPlayback;
-        private int m_byteEncodingDisplayFormat;
-        private object m_connectionParameters;
-        private string m_configurationFileName;
-        private bool m_refreshConfigurationFileOnChange;
-        private bool m_parseWordCountFromByte;
+        public PhasorProtocol PhasorProtocol;
+        public TransportProtocol TransportProtocol;
+        public string ConnectionString;
+        public int PmuID;
+        public int FrameRate;
+        public bool AutoRepeatPlayback;
+        public int ByteEncodingDisplayFormat;
+        public object ConnectionParameters;
+        public string ConfigurationFileName;
+        public bool RefreshConfigurationFileOnChange;
+        public bool ParseWordCountFromByte;
 
-        #endregion
+        //#region [ Members ]
 
-        #region [ Properties ]
+        //// Fields
+        //private PhasorProtocol m_phasorProtocol;
+        //private TransportProtocol m_transportProtocol;
+        //private string m_connectionString;
+        //private int m_pmuId;
+        //private int m_frameRate;
+        //private bool m_autoRepeatPlayback;
+        //private int m_byteEncodingDisplayFormat;
+        //private object m_connectionParameters;
+        //private string m_configurationFileName;
+        //private bool m_refreshConfigurationFileOnChange;
+        //private bool m_parseWordCountFromByte;
 
-        public PhasorProtocol PhasorProtocol
-        {
-            get
-            {
-                return m_phasorProtocol;
-            }
-            set
-            {
-                m_phasorProtocol = value;
-            }
-        }
+        //#endregion
 
-        public TransportProtocol TransportProtocol
-        {
-            get
-            {
-                return m_transportProtocol;
-            }
-            set
-            {
-                m_transportProtocol = value;
-            }
-        }
+        //#region [ Properties ]
 
-        public string ConnectionString
-        {
-            get
-            {
-                return m_connectionString;
-            }
-            set
-            {
-                m_connectionString = value;
-            }
-        }
+        //public PhasorProtocol PhasorProtocol
+        //{
+        //    get
+        //    {
+        //        return m_phasorProtocol;
+        //    }
+        //    set
+        //    {
+        //        m_phasorProtocol = value;
+        //    }
+        //}
 
-        public int PmuId
-        {
-            get
-            {
-                return m_pmuId;
-            }
-            set
-            {
-                m_pmuId = value;
-            }
-        }
+        //public TransportProtocol TransportProtocol
+        //{
+        //    get
+        //    {
+        //        return m_transportProtocol;
+        //    }
+        //    set
+        //    {
+        //        m_transportProtocol = value;
+        //    }
+        //}
 
-        public int FrameRate
-        {
-            get
-            {
-                return m_frameRate;
-            }
-            set
-            {
-                m_frameRate = value;
-            }
-        }
+        //public string ConnectionString
+        //{
+        //    get
+        //    {
+        //        return m_connectionString;
+        //    }
+        //    set
+        //    {
+        //        m_connectionString = value;
+        //    }
+        //}
 
-        public bool AutoRepeatPlayback
-        {
-            get
-            {
-                return m_autoRepeatPlayback;
-            }
-            set
-            {
-                m_autoRepeatPlayback = value;
-            }
-        }
+        //public int PmuId
+        //{
+        //    get
+        //    {
+        //        return m_pmuId;
+        //    }
+        //    set
+        //    {
+        //        m_pmuId = value;
+        //    }
+        //}
 
-        public int ByteEncodingDisplayFormat
-        {
-            get
-            {
-                return m_byteEncodingDisplayFormat;
-            }
-            set
-            {
-                m_byteEncodingDisplayFormat = value;
-            }
-        }
+        //public int FrameRate
+        //{
+        //    get
+        //    {
+        //        return m_frameRate;
+        //    }
+        //    set
+        //    {
+        //        m_frameRate = value;
+        //    }
+        //}
 
-        public object ConnectionParameters
-        {
-            get
-            {
-                return m_connectionParameters;
-            }
-            set
-            {
-                m_connectionParameters = value;
-            }
-        }
+        //public bool AutoRepeatPlayback
+        //{
+        //    get
+        //    {
+        //        return m_autoRepeatPlayback;
+        //    }
+        //    set
+        //    {
+        //        m_autoRepeatPlayback = value;
+        //    }
+        //}
 
-        public string ConfigurationFileName
-        {
-            get
-            {
-                return m_configurationFileName;
-            }
-            set
-            {
-                m_configurationFileName = value;
-            }
-        }
+        //public int ByteEncodingDisplayFormat
+        //{
+        //    get
+        //    {
+        //        return m_byteEncodingDisplayFormat;
+        //    }
+        //    set
+        //    {
+        //        m_byteEncodingDisplayFormat = value;
+        //    }
+        //}
 
-        public bool RefreshConfigurationFileOnChange
-        {
-            get
-            {
-                return m_refreshConfigurationFileOnChange;
-            }
-            set
-            {
-                m_refreshConfigurationFileOnChange = value;
-            }
-        }
+        //public object ConnectionParameters
+        //{
+        //    get
+        //    {
+        //        return m_connectionParameters;
+        //    }
+        //    set
+        //    {
+        //        m_connectionParameters = value;
+        //    }
+        //}
 
-        public bool ParseWordCountFromByte
-        {
-            get
-            {
-                return m_parseWordCountFromByte;
-            }
-            set
-            {
-                m_parseWordCountFromByte = value;
-            }
-        }
+        //public string ConfigurationFileName
+        //{
+        //    get
+        //    {
+        //        return m_configurationFileName;
+        //    }
+        //    set
+        //    {
+        //        m_configurationFileName = value;
+        //    }
+        //}
 
-        #endregion
+        //public bool RefreshConfigurationFileOnChange
+        //{
+        //    get
+        //    {
+        //        return m_refreshConfigurationFileOnChange;
+        //    }
+        //    set
+        //    {
+        //        m_refreshConfigurationFileOnChange = value;
+        //    }
+        //}
+
+        //public bool ParseWordCountFromByte
+        //{
+        //    get
+        //    {
+        //        return m_parseWordCountFromByte;
+        //    }
+        //    set
+        //    {
+        //        m_parseWordCountFromByte = value;
+        //    }
+        //}
+
+        //#endregion
 
     }
 }

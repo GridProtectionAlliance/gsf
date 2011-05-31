@@ -40,7 +40,7 @@ namespace TimeSeriesFramework.UI.UserControls
         {
             InitializeComponent();
             this.Unloaded += new RoutedEventHandler(AdapterUserControl_Unloaded);
-            this.DataContext = new ViewModels.Adapters(18, adapterType);
+            this.DataContext = new ViewModels.Adapters(10, adapterType);
         }
 
         /// <summary>

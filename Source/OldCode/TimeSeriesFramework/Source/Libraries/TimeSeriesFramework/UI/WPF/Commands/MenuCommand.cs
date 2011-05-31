@@ -178,8 +178,6 @@ namespace TimeSeriesFramework.UI.Commands
 
                     if (groupBox != null)
                         ((GroupBox)groupBox).Header = txt;
-
-                    Application.Current.MainWindow.Title = m_description;
                 }
                 else
                     throw new InvalidOperationException("Failed to create user control " + m_userControlPath);

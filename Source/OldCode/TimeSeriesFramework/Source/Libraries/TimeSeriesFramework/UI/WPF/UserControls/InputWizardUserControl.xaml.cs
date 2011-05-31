@@ -22,6 +22,8 @@
 //******************************************************************************************************
 
 using System.Windows.Controls;
+using TimeSeriesFramework.UI.DataModels;
+using TimeSeriesFramework.UI.ViewModels;
 
 namespace TimeSeriesFramework.UI.UserControls
 {
@@ -30,12 +32,129 @@ namespace TimeSeriesFramework.UI.UserControls
     /// </summary>
     public partial class InputWizardUserControl : UserControl
     {
+        #region [ Members ]
+
+        private InputWizardDevices m_dataContext;
+        private bool loaded;
+
+        #endregion
+
+        #region [ Constructor ]
+
         /// <summary>
         /// Creates an instance of <see cref="InputWizardUserControl"/> class.
         /// </summary>
         public InputWizardUserControl()
         {
             InitializeComponent();
+            this.Loaded += new System.Windows.RoutedEventHandler(InputWizardUserControl_Loaded);
+            m_dataContext = new InputWizardDevices(1);
+            StackPanelRoot.DataContext = m_dataContext;
         }
+
+        #endregion
+
+        #region [ Methods ]
+
+        private void InputWizardUserControl_Loaded(object sender, System.Windows.RoutedEventArgs e)
+        {
+            loaded = true;
+        }
+
+        /// <summary>
+        /// Hanldes checked event on the select all check box.
+        /// </summary>
+        /// <param name="sender">Source of the event.</param>
+        /// <param name="e">Event arguments.</param>
+        private void CheckBoxAll_Checked(object sender, System.Windows.RoutedEventArgs e)
+        {
+            foreach (InputWizardDevice device in m_dataContext.ItemsSource)
+            {
+                device.Include = true;
+                foreach (InputWizardDevicePhasor phasor in device.PhasorList)
+                    phasor.Include = true;
+            }
+        }
+
+        /// <summary>
+        /// Handles unchecked event on the select all check box.
+        /// </summary>
+        /// <param name="sender">Source of the event.</param>
+        /// <param name="e">Event arguments.</param>
+        private void CheckBoxAll_Unchecked(object sender, System.Windows.RoutedEventArgs e)
+        {
+            foreach (InputWizardDevice device in m_dataContext.ItemsSource)
+            {
+                device.Include = false;
+                foreach (InputWizardDevicePhasor phasor in device.PhasorList)
+                    phasor.Include = false;
+            }
+        }
+
+        private void CheckBoxDevice_Checked(object sender, System.Windows.RoutedEventArgs e)
+        {
+            foreach (InputWizardDevicePhasor phasor in ((InputWizardDevice)((CheckBox)sender).DataContext).PhasorList)
+                phasor.Include = true;
+        }
+
+        private void CheckBoxDevice_Unchecked(object sender, System.Windows.RoutedEventArgs e)
+        {
+            foreach (InputWizardDevicePhasor phasor in ((InputWizardDevice)((CheckBox)sender).DataContext).PhasorList)
+                phasor.Include = false;
+        }
+
+        private void ButtonPrevious_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (ExpanderStep2.IsExpanded)
+                ExpanderStep1.IsExpanded = true;
+            else if (ExpanderStep3.IsExpanded)
+                ExpanderStep2.IsExpanded = true;
+        }
+
+        private void ButtonNext_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (ExpanderStep1.IsExpanded)
+            {
+                ExpanderStep2.IsExpanded = true;
+            }
+            else if (ExpanderStep2.IsExpanded)
+            {
+                ExpanderStep3.IsExpanded = true;
+                m_dataContext.SavePDC();
+            }
+            else if (ExpanderStep3.IsExpanded)
+            {
+                m_dataContext.SaveConfiguration();
+            }
+        }
+
+        private void ExpanderStep3_Expanded(object sender, System.Windows.RoutedEventArgs e)
+        {
+            ExpanderStep1.IsExpanded = false;
+            ExpanderStep2.IsExpanded = false;
+            ButtonNext.Content = "Finish";
+            ButtonPrevious.IsEnabled = true;
+        }
+
+        private void ExpanderStep2_Expanded(object sender, System.Windows.RoutedEventArgs e)
+        {
+            ExpanderStep1.IsExpanded = false;
+            ExpanderStep3.IsExpanded = false;
+            ButtonNext.Content = "Next";
+            ButtonPrevious.IsEnabled = true;
+        }
+
+        private void ExpanderStep1_Expanded(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (loaded) // This is added to avoid null reference exception.
+            {
+                ExpanderStep2.IsExpanded = false;
+                ExpanderStep3.IsExpanded = false;
+                ButtonNext.Content = "Next";
+                ButtonPrevious.IsEnabled = false;
+            }
+        }
+
+        #endregion
     }
 }
