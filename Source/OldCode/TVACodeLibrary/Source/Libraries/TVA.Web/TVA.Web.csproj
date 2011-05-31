@@ -58,6 +58,7 @@
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>$(OutputPath)\TVA.Web.XML</DocumentationFile>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
