@@ -84,40 +84,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ServiceModel\ISelfHostingService.cs" />
-    <Compile Include="ServiceModel\Messaging\ClientInfo.cs" />
-    <Compile Include="ServiceModel\Messaging\IMessageBusService.cs" />
-    <Compile Include="ServiceModel\Messaging\IMessageBusServiceCallback.cs" />
-    <Compile Include="ServiceModel\Messaging\Message.cs" />
-    <Compile Include="ServiceModel\Messaging\MessageBusSecurityPolicy.cs" />
-    <Compile Include="ServiceModel\Messaging\MessageBusService.cs" />
-    <Compile Include="ServiceModel\Messaging\NamespaceDoc.cs" />
-    <Compile Include="ServiceModel\Messaging\RegistrationInfo.cs" />
-    <Compile Include="ServiceModel\Messaging\RegistrationRequest.cs" />
-    <Compile Include="ServiceModel\NamespaceDoc.cs" />
-    <Compile Include="ServiceModel\SecurityPolicy.cs" />
-    <Compile Include="ServiceModel\SelfHostingService.cs" />
-    <Compile Include="ServiceProcess\ClientHelper.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="ServiceProcess\ClientInfo.cs" />
-    <Compile Include="ServiceProcess\ClientRequest.cs" />
-    <Compile Include="ServiceProcess\ClientRequestHandler.cs" />
-    <Compile Include="ServiceProcess\ClientRequestInfo.cs" />
-    <Compile Include="ServiceProcess\NamespaceDoc.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ServiceProcess\ServiceHelper.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="ServiceProcess\ServiceInstallerEx.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="ServiceProcess\ServiceProcess.cs" />
-    <Compile Include="ServiceProcess\ServiceResponse.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="ServiceProcess\ClientHelper.bmp" />
-    <EmbeddedResource Include="ServiceProcess\ServiceHelper.bmp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TVA.Communication\TVA.Communication.csproj">
@@ -150,7 +117,10 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="ServiceModel\" />
+    <Folder Include="ServiceProcess\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

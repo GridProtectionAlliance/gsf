@@ -10,9 +10,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{C3058807-1DFE-4681-BBBC-959BE6A84E10}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CS", "CS", "{7708DB97-99C1-4596-B44F-5BFE4E664015}"
-	ProjectSection(SolutionItems) = preProject
-		Templates\CS\TVAWindowsService.zip = Templates\CS\TVAWindowsService.zip
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{6C78685B-1653-43B5-98C8-0470A173A848}"
 EndProject
@@ -28,8 +25,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Core", "Libraries\TVA.Core\TVA.Core.csproj", "{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Communication", "Libraries\TVA.Communication\TVA.Communication.csproj", "{2B2EB9BE-E6A9-406F-BFE6-FF46DD6BD264}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Services", "Libraries\TVA.Services\TVA.Services.csproj", "{595C35F5-AC9A-4D94-99F4-806C2ED0B8F8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Security", "Libraries\TVA.Security\TVA.Security.csproj", "{4060E729-EFFD-4E50-A0D5-99C0990EF7DA}"
 EndProject
@@ -55,15 +50,21 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Communication.Tests", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Security.Tests", "Libraries\Tests\TVA.Security.Tests\TVA.Security.Tests.csproj", "{CC2B0A07-3D70-4261-A96E-D5A747A7B74F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Services.Tests", "Libraries\Tests\TVA.Services.Tests\TVA.Services.Tests.csproj", "{837A3CD4-A18C-4F9F-8EE0-3F132242F971}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Web.Tests", "Libraries\Tests\TVA.Web.Tests\TVA.Web.Tests.csproj", "{B296098C-3CE1-4256-A101-B1B22BB56DB0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Windows.Tests", "Libraries\Tests\TVA.Windows.Tests\TVA.Windows.Tests.csproj", "{CEFDB630-AFF0-4FAB-9F1A-003DB1558E9B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.ServiceProcess", "Libraries\TVA.ServiceProcess\TVA.ServiceProcess.csproj", "{2E23E926-CF64-4607-BDE1-1B2FC76F4919}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.ServiceModel", "Libraries\TVA.ServiceModel\TVA.ServiceModel.csproj", "{0622C318-5032-4D56-BB71-5CE64B502FB0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.ServiceProcess.Tests", "Libraries\Tests\TVA.ServiceProcess.Tests\TVA.ServiceProcess.Tests.csproj", "{5EC0143C-E287-4EE0-A80A-683124FD677D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.ServiceModel.Tests", "Libraries\Tests\TVA.ServiceModel.Tests\TVA.ServiceModel.Tests.csproj", "{3D134BF6-04D6-4EE5-B88B-B14123232A19}"
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 18
+		SccNumberOfProjects = 20
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs05
 		SccLocalPath0 = .
@@ -79,62 +80,70 @@ Global
 		SccProjectTopLevelParentUniqueName3 = TVACodeLibrary.sln
 		SccProjectName3 = Libraries/TVA.Security
 		SccLocalPath3 = Libraries\\TVA.Security
-		SccProjectUniqueName4 = Libraries\\TVA.Services\\TVA.Services.csproj
+		SccProjectUniqueName4 = Libraries\\TVA.Web\\TVA.Web.csproj
 		SccProjectTopLevelParentUniqueName4 = TVACodeLibrary.sln
-		SccProjectName4 = Libraries/TVA.Services
-		SccLocalPath4 = Libraries\\TVA.Services
-		SccProjectUniqueName5 = Libraries\\TVA.Web\\TVA.Web.csproj
+		SccProjectName4 = Libraries/TVA.Web
+		SccLocalPath4 = Libraries\\TVA.Web
+		SccProjectUniqueName5 = Libraries\\TVA.Windows\\TVA.Windows.csproj
 		SccProjectTopLevelParentUniqueName5 = TVACodeLibrary.sln
-		SccProjectName5 = Libraries/TVA.Web
-		SccLocalPath5 = Libraries\\TVA.Web
-		SccProjectUniqueName6 = Libraries\\TVA.Windows\\TVA.Windows.csproj
+		SccProjectName5 = Libraries/TVA.Windows
+		SccLocalPath5 = Libraries\\TVA.Windows
+		SccProjectUniqueName6 = Tools\\ConfigCrypter\\ConfigCrypter.csproj
 		SccProjectTopLevelParentUniqueName6 = TVACodeLibrary.sln
-		SccProjectName6 = Libraries/TVA.Windows
-		SccLocalPath6 = Libraries\\TVA.Windows
-		SccProjectUniqueName7 = Tools\\ConfigCrypter\\ConfigCrypter.csproj
+		SccProjectName6 = Tools/ConfigCrypter
+		SccLocalPath6 = Tools\\ConfigCrypter
+		SccProjectUniqueName7 = Tools\\ConfigEditor\\ConfigEditor.csproj
 		SccProjectTopLevelParentUniqueName7 = TVACodeLibrary.sln
-		SccProjectName7 = Tools/ConfigCrypter
-		SccLocalPath7 = Tools\\ConfigCrypter
-		SccProjectUniqueName8 = Tools\\ConfigEditor\\ConfigEditor.csproj
+		SccProjectName7 = Tools/ConfigEditor
+		SccLocalPath7 = Tools\\ConfigEditor
+		SccProjectUniqueName8 = Tools\\DataMigrationUtility\\DataMigrationUtility.vbproj
 		SccProjectTopLevelParentUniqueName8 = TVACodeLibrary.sln
-		SccProjectName8 = Tools/ConfigEditor
-		SccLocalPath8 = Tools\\ConfigEditor
-		SccProjectUniqueName9 = Tools\\DataMigrationUtility\\DataMigrationUtility.vbproj
+		SccProjectName8 = Tools/DataMigrationUtility
+		SccLocalPath8 = Tools\\DataMigrationUtility
+		SccProjectUniqueName9 = Tools\\UDPRebroadcaster\\UDPRebroadcaster\\UDPRebroadcaster.csproj
 		SccProjectTopLevelParentUniqueName9 = TVACodeLibrary.sln
-		SccProjectName9 = Tools/DataMigrationUtility
-		SccLocalPath9 = Tools\\DataMigrationUtility
-		SccProjectUniqueName10 = Tools\\UDPRebroadcaster\\UDPRebroadcaster\\UDPRebroadcaster.csproj
+		SccProjectName9 = Tools/UDPRebroadcaster/UDPRebroadcaster
+		SccLocalPath9 = Tools\\UDPRebroadcaster\\UDPRebroadcaster
+		SccProjectUniqueName10 = Tools\\UDPRebroadcaster\\UDPRebroadcasterConsole\\UDPRebroadcasterConsole.csproj
 		SccProjectTopLevelParentUniqueName10 = TVACodeLibrary.sln
-		SccProjectName10 = Tools/UDPRebroadcaster/UDPRebroadcaster
-		SccLocalPath10 = Tools\\UDPRebroadcaster\\UDPRebroadcaster
-		SccProjectUniqueName11 = Tools\\UDPRebroadcaster\\UDPRebroadcasterConsole\\UDPRebroadcasterConsole.csproj
+		SccProjectName10 = Tools/UDPRebroadcaster/UDPRebroadcasterConsole
+		SccLocalPath10 = Tools\\UDPRebroadcaster\\UDPRebroadcasterConsole
+		SccProjectUniqueName11 = Libraries\\Tests\\TVA.Core.Tests\\TVA.Core.Tests.csproj
 		SccProjectTopLevelParentUniqueName11 = TVACodeLibrary.sln
-		SccProjectName11 = Tools/UDPRebroadcaster/UDPRebroadcasterConsole
-		SccLocalPath11 = Tools\\UDPRebroadcaster\\UDPRebroadcasterConsole
-		SccProjectUniqueName12 = Libraries\\Tests\\TVA.Core.Tests\\TVA.Core.Tests.csproj
+		SccProjectName11 = Libraries/Tests/TVA.Core.Tests
+		SccLocalPath11 = Libraries\\Tests\\TVA.Core.Tests
+		SccProjectUniqueName12 = Libraries\\Tests\\TVA.Communication.Tests\\TVA.Communication.Tests.csproj
 		SccProjectTopLevelParentUniqueName12 = TVACodeLibrary.sln
-		SccProjectName12 = Libraries/Tests/TVA.Core.Tests
-		SccLocalPath12 = Libraries\\Tests\\TVA.Core.Tests
-		SccProjectUniqueName13 = Libraries\\Tests\\TVA.Communication.Tests\\TVA.Communication.Tests.csproj
+		SccProjectName12 = Libraries/Tests/TVA.Communication.Tests
+		SccLocalPath12 = Libraries\\Tests\\TVA.Communication.Tests
+		SccProjectUniqueName13 = Libraries\\Tests\\TVA.Security.Tests\\TVA.Security.Tests.csproj
 		SccProjectTopLevelParentUniqueName13 = TVACodeLibrary.sln
-		SccProjectName13 = Libraries/Tests/TVA.Communication.Tests
-		SccLocalPath13 = Libraries\\Tests\\TVA.Communication.Tests
-		SccProjectUniqueName14 = Libraries\\Tests\\TVA.Security.Tests\\TVA.Security.Tests.csproj
+		SccProjectName13 = Libraries/Tests/TVA.Security.Tests
+		SccLocalPath13 = Libraries\\Tests\\TVA.Security.Tests
+		SccProjectUniqueName14 = Libraries\\Tests\\TVA.Web.Tests\\TVA.Web.Tests.csproj
 		SccProjectTopLevelParentUniqueName14 = TVACodeLibrary.sln
-		SccProjectName14 = Libraries/Tests/TVA.Security.Tests
-		SccLocalPath14 = Libraries\\Tests\\TVA.Security.Tests
-		SccProjectUniqueName15 = Libraries\\Tests\\TVA.Services.Tests\\TVA.Services.Tests.csproj
+		SccProjectName14 = Libraries/Tests/TVA.Web.Tests
+		SccLocalPath14 = Libraries\\Tests\\TVA.Web.Tests
+		SccProjectUniqueName15 = Libraries\\Tests\\TVA.Windows.Tests\\TVA.Windows.Tests.csproj
 		SccProjectTopLevelParentUniqueName15 = TVACodeLibrary.sln
-		SccProjectName15 = Libraries/Tests/TVA.Services.Tests
-		SccLocalPath15 = Libraries\\Tests\\TVA.Services.Tests
-		SccProjectUniqueName16 = Libraries\\Tests\\TVA.Web.Tests\\TVA.Web.Tests.csproj
+		SccProjectName15 = Libraries/Tests/TVA.Windows.Tests
+		SccLocalPath15 = Libraries\\Tests\\TVA.Windows.Tests
+		SccProjectUniqueName16 = Libraries\\TVA.ServiceProcess\\TVA.ServiceProcess.csproj
 		SccProjectTopLevelParentUniqueName16 = TVACodeLibrary.sln
-		SccProjectName16 = Libraries/Tests/TVA.Web.Tests
-		SccLocalPath16 = Libraries\\Tests\\TVA.Web.Tests
-		SccProjectUniqueName17 = Libraries\\Tests\\TVA.Windows.Tests\\TVA.Windows.Tests.csproj
+		SccProjectName16 = Libraries/TVA.ServiceProcess
+		SccLocalPath16 = Libraries\\TVA.ServiceProcess
+		SccProjectUniqueName17 = Libraries\\TVA.ServiceModel\\TVA.ServiceModel.csproj
 		SccProjectTopLevelParentUniqueName17 = TVACodeLibrary.sln
-		SccProjectName17 = Libraries/Tests/TVA.Windows.Tests
-		SccLocalPath17 = Libraries\\Tests\\TVA.Windows.Tests
+		SccProjectName17 = Libraries/TVA.ServiceModel
+		SccLocalPath17 = Libraries\\TVA.ServiceModel
+		SccProjectUniqueName18 = Libraries\\Tests\\TVA.ServiceProcess.Tests\\TVA.ServiceProcess.Tests.csproj
+		SccProjectTopLevelParentUniqueName18 = TVACodeLibrary.sln
+		SccProjectName18 = Libraries/Tests/TVA.ServiceProcess.Tests
+		SccLocalPath18 = Libraries\\Tests\\TVA.ServiceProcess.Tests
+		SccProjectUniqueName19 = Libraries\\Tests\\TVA.ServiceModel.Tests\\TVA.ServiceModel.Tests.csproj
+		SccProjectTopLevelParentUniqueName19 = TVACodeLibrary.sln
+		SccProjectName19 = Libraries/Tests/TVA.ServiceModel.Tests
+		SccLocalPath19 = Libraries\\Tests\\TVA.ServiceModel.Tests
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = TVACodeLibrary.vsmdi
@@ -158,12 +167,6 @@ Global
 		{2B2EB9BE-E6A9-406F-BFE6-FF46DD6BD264}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2B2EB9BE-E6A9-406F-BFE6-FF46DD6BD264}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2B2EB9BE-E6A9-406F-BFE6-FF46DD6BD264}.Release|x86.ActiveCfg = Release|Any CPU
-		{595C35F5-AC9A-4D94-99F4-806C2ED0B8F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{595C35F5-AC9A-4D94-99F4-806C2ED0B8F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{595C35F5-AC9A-4D94-99F4-806C2ED0B8F8}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{595C35F5-AC9A-4D94-99F4-806C2ED0B8F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{595C35F5-AC9A-4D94-99F4-806C2ED0B8F8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{595C35F5-AC9A-4D94-99F4-806C2ED0B8F8}.Release|x86.ActiveCfg = Release|Any CPU
 		{4060E729-EFFD-4E50-A0D5-99C0990EF7DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4060E729-EFFD-4E50-A0D5-99C0990EF7DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4060E729-EFFD-4E50-A0D5-99C0990EF7DA}.Debug|x86.ActiveCfg = Debug|Any CPU
@@ -232,12 +235,6 @@ Global
 		{CC2B0A07-3D70-4261-A96E-D5A747A7B74F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CC2B0A07-3D70-4261-A96E-D5A747A7B74F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CC2B0A07-3D70-4261-A96E-D5A747A7B74F}.Release|x86.ActiveCfg = Release|Any CPU
-		{837A3CD4-A18C-4F9F-8EE0-3F132242F971}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{837A3CD4-A18C-4F9F-8EE0-3F132242F971}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{837A3CD4-A18C-4F9F-8EE0-3F132242F971}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{837A3CD4-A18C-4F9F-8EE0-3F132242F971}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{837A3CD4-A18C-4F9F-8EE0-3F132242F971}.Release|Any CPU.Build.0 = Release|Any CPU
-		{837A3CD4-A18C-4F9F-8EE0-3F132242F971}.Release|x86.ActiveCfg = Release|Any CPU
 		{B296098C-3CE1-4256-A101-B1B22BB56DB0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B296098C-3CE1-4256-A101-B1B22BB56DB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B296098C-3CE1-4256-A101-B1B22BB56DB0}.Debug|x86.ActiveCfg = Debug|Any CPU
@@ -250,6 +247,30 @@ Global
 		{CEFDB630-AFF0-4FAB-9F1A-003DB1558E9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CEFDB630-AFF0-4FAB-9F1A-003DB1558E9B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CEFDB630-AFF0-4FAB-9F1A-003DB1558E9B}.Release|x86.ActiveCfg = Release|Any CPU
+		{2E23E926-CF64-4607-BDE1-1B2FC76F4919}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E23E926-CF64-4607-BDE1-1B2FC76F4919}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E23E926-CF64-4607-BDE1-1B2FC76F4919}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2E23E926-CF64-4607-BDE1-1B2FC76F4919}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E23E926-CF64-4607-BDE1-1B2FC76F4919}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E23E926-CF64-4607-BDE1-1B2FC76F4919}.Release|x86.ActiveCfg = Release|Any CPU
+		{0622C318-5032-4D56-BB71-5CE64B502FB0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0622C318-5032-4D56-BB71-5CE64B502FB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0622C318-5032-4D56-BB71-5CE64B502FB0}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0622C318-5032-4D56-BB71-5CE64B502FB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0622C318-5032-4D56-BB71-5CE64B502FB0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0622C318-5032-4D56-BB71-5CE64B502FB0}.Release|x86.ActiveCfg = Release|Any CPU
+		{5EC0143C-E287-4EE0-A80A-683124FD677D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5EC0143C-E287-4EE0-A80A-683124FD677D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5EC0143C-E287-4EE0-A80A-683124FD677D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5EC0143C-E287-4EE0-A80A-683124FD677D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5EC0143C-E287-4EE0-A80A-683124FD677D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5EC0143C-E287-4EE0-A80A-683124FD677D}.Release|x86.ActiveCfg = Release|Any CPU
+		{3D134BF6-04D6-4EE5-B88B-B14123232A19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D134BF6-04D6-4EE5-B88B-B14123232A19}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D134BF6-04D6-4EE5-B88B-B14123232A19}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3D134BF6-04D6-4EE5-B88B-B14123232A19}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D134BF6-04D6-4EE5-B88B-B14123232A19}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D134BF6-04D6-4EE5-B88B-B14123232A19}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -257,11 +278,12 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
 		{2B2EB9BE-E6A9-406F-BFE6-FF46DD6BD264} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
-		{595C35F5-AC9A-4D94-99F4-806C2ED0B8F8} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
 		{4060E729-EFFD-4E50-A0D5-99C0990EF7DA} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
 		{0501C2DC-3428-4413-AE92-F0D82FF3DBBC} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
 		{EA70C8AA-60DE-4FFD-B1D9-B5406395B1AF} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
 		{F06A2E20-D5DD-4B88-9ABC-CEE7245829E3} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
+		{2E23E926-CF64-4607-BDE1-1B2FC76F4919} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
+		{0622C318-5032-4D56-BB71-5CE64B502FB0} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
 		{7708DB97-99C1-4596-B44F-5BFE4E664015} = {C3058807-1DFE-4681-BBBC-959BE6A84E10}
 		{1C4124EF-0F9C-47B9-B1CB-B2CA39AB0E57} = {6C78685B-1653-43B5-98C8-0470A173A848}
 		{35027A69-1A76-4312-B57B-F5826F0B87AF} = {6C78685B-1653-43B5-98C8-0470A173A848}
@@ -272,8 +294,9 @@ Global
 		{044C17D3-DEC9-4A57-9B4F-3664393C888E} = {F06A2E20-D5DD-4B88-9ABC-CEE7245829E3}
 		{10184FDE-42E4-4BC5-ADDC-F211D25FD94C} = {F06A2E20-D5DD-4B88-9ABC-CEE7245829E3}
 		{CC2B0A07-3D70-4261-A96E-D5A747A7B74F} = {F06A2E20-D5DD-4B88-9ABC-CEE7245829E3}
-		{837A3CD4-A18C-4F9F-8EE0-3F132242F971} = {F06A2E20-D5DD-4B88-9ABC-CEE7245829E3}
 		{B296098C-3CE1-4256-A101-B1B22BB56DB0} = {F06A2E20-D5DD-4B88-9ABC-CEE7245829E3}
 		{CEFDB630-AFF0-4FAB-9F1A-003DB1558E9B} = {F06A2E20-D5DD-4B88-9ABC-CEE7245829E3}
+		{5EC0143C-E287-4EE0-A80A-683124FD677D} = {F06A2E20-D5DD-4B88-9ABC-CEE7245829E3}
+		{3D134BF6-04D6-4EE5-B88B-B14123232A19} = {F06A2E20-D5DD-4B88-9ABC-CEE7245829E3}
 	EndGlobalSection
 EndGlobal

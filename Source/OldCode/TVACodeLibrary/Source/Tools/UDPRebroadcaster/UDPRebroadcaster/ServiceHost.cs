@@ -237,7 +237,6 @@ using System;
 using System.ComponentModel;
 using System.ServiceProcess;
 using TVA;
-using TVA.Services.ServiceProcess;
 
 namespace UDPRebroadcaster
 {

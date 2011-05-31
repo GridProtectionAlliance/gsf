@@ -301,7 +301,7 @@ namespace UDPRebroadcaster
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.m_serviceHelper = new TVA.Services.ServiceProcess.ServiceHelper(this.components);
+            this.m_serviceHelper = new TVA.ServiceProcess.ServiceHelper(this.components);
             this.m_remotingServer = new TVA.Communication.TcpServer(this.components);
             this.m_udpServer = new TVA.Communication.UdpServer(this.components);
             this.m_udpClient = new TVA.Communication.UdpClient(this.components);
@@ -376,7 +376,7 @@ namespace UDPRebroadcaster
 
         #endregion
 
-        private TVA.Services.ServiceProcess.ServiceHelper m_serviceHelper;
+        private TVA.ServiceProcess.ServiceHelper m_serviceHelper;
         private TVA.Communication.TcpServer m_remotingServer;
         private TVA.Communication.UdpServer m_udpServer;
         private TVA.Communication.UdpClient m_udpClient;

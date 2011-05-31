@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Security.Permissions;
 
 // Assembly identity attributes.
 [assembly: AssemblyVersion("4.0.2.36")]
@@ -9,7 +8,7 @@ using System.Security.Permissions;
 // Informational attributes.
 [assembly: AssemblyCompany("TVA")]
 [assembly: AssemblyCopyright("No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.")]
-[assembly: AssemblyProduct("openPDC Framework")]
+[assembly: AssemblyProduct("TVA Code Library")]
 
 // Assembly manifest attributes.
 #if DEBUG
@@ -18,7 +17,7 @@ using System.Security.Permissions;
 [assembly: AssemblyConfiguration("Release Build")]
 #endif
 [assembly: AssemblyDefaultAlias("TVA.Windows")]
-[assembly: AssemblyDescription("Windows application components of the openPDC Framework.")]
+[assembly: AssemblyDescription("Library of Windows Forms and WPF extensions and components.")]
 [assembly: AssemblyTitle("TVA.Windows")]
 
 // Other configuration attributes.

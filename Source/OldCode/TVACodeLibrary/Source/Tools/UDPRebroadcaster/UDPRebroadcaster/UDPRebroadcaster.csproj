@@ -123,9 +123,9 @@
       <Project>{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88}</Project>
       <Name>TVA.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\Libraries\TVA.Services\TVA.Services.csproj">
-      <Project>{595C35F5-AC9A-4D94-99F4-806C2ED0B8F8}</Project>
-      <Name>TVA.Services</Name>
+    <ProjectReference Include="..\..\..\Libraries\TVA.ServiceProcess\TVA.ServiceProcess.csproj">
+      <Project>{2E23E926-CF64-4607-BDE1-1B2FC76F4919}</Project>
+      <Name>TVA.ServiceProcess</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

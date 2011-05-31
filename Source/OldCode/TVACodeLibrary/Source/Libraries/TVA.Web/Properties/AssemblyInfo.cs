@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Security.Permissions;
 using System.Web.UI;
 using TVA.Web.Hosting;
 
@@ -11,7 +10,7 @@ using TVA.Web.Hosting;
 // Informational attributes.
 [assembly: AssemblyCompany("TVA")]
 [assembly: AssemblyCopyright("No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.")]
-[assembly: AssemblyProduct("openPDC Framework")]
+[assembly: AssemblyProduct("TVA Code Library")]
 
 // Assembly manifest attributes.
 #if DEBUG
@@ -20,7 +19,7 @@ using TVA.Web.Hosting;
 [assembly: AssemblyConfiguration("Release Build")]
 #endif
 [assembly: AssemblyDefaultAlias("TVA.Web")]
-[assembly: AssemblyDescription("Web application components of the openPDC Framework.")]
+[assembly: AssemblyDescription("Library of ASP.NET extensions and components.")]
 [assembly: AssemblyTitle("TVA.Web")]
 
 // Other configuration attributes.

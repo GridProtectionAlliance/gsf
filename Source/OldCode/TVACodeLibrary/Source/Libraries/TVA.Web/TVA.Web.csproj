@@ -112,9 +112,9 @@
       <Project>{4060E729-EFFD-4E50-A0D5-99C0990EF7DA}</Project>
       <Name>TVA.Security</Name>
     </ProjectReference>
-    <ProjectReference Include="..\TVA.Services\TVA.Services.csproj">
-      <Project>{595C35F5-AC9A-4D94-99F4-806C2ED0B8F8}</Project>
-      <Name>TVA.Services</Name>
+    <ProjectReference Include="..\TVA.ServiceModel\TVA.ServiceModel.csproj">
+      <Project>{0622C318-5032-4D56-BB71-5CE64B502FB0}</Project>
+      <Name>TVA.ServiceModel</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

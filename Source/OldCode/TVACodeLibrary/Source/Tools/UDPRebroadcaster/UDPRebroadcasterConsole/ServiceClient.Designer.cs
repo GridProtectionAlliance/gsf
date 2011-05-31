@@ -31,7 +31,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.m_clientHelper = new TVA.Services.ServiceProcess.ClientHelper(this.components);
+            this.m_clientHelper = new TVA.ServiceProcess.ClientHelper(this.components);
             this.m_remotingClient = new TVA.Communication.TcpClient(this.components);
             this.m_errorLogger = new TVA.ErrorManagement.ErrorLogger(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.m_clientHelper)).BeginInit();
@@ -68,7 +68,7 @@
 
         #endregion
 
-        private TVA.Services.ServiceProcess.ClientHelper m_clientHelper;
+        private TVA.ServiceProcess.ClientHelper m_clientHelper;
         private TVA.Communication.TcpClient m_remotingClient;
         private TVA.ErrorManagement.ErrorLogger m_errorLogger;
 

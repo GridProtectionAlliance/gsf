@@ -238,7 +238,7 @@
 
 using System.ServiceModel.Activation;
 using TVA.Security;
-using TVA.Services.ServiceModel;
+using TVA.ServiceModel;
 
 namespace TVA.Web.Embedded
 {

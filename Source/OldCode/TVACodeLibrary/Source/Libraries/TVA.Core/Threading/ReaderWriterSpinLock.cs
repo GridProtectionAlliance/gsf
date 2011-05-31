@@ -254,10 +254,8 @@
 #endregion
 
 using System;
-using System.Threading;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 // We use plenty of interlocked operations on volatile fields below.  Safe.
 #pragma warning disable 0420
