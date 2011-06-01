@@ -93,6 +93,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets name of the connection file used for configuration.
+        /// </summary>
         public string ConnectionFileName
         {
             get
@@ -106,6 +109,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets name of the xml configuration file used for configuration.
+        /// </summary>
         public string ConfigurationFileName
         {
             get
@@ -119,6 +125,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets name of the INI file used for configuration.
+        /// </summary>
         public string IniFileName
         {
             get
@@ -131,6 +140,7 @@ namespace TimeSeriesFramework.UI.ViewModels
                 OnPropertyChanged("IniFileName");
             }
         }
+
         /// <summary>
         /// Gets <see cref="Dictionary{T1,T2}"/> type collection of <see cref="Company"/> defined in the database.
         /// </summary>
@@ -186,6 +196,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets connection string to backend service.
+        /// </summary>
         public string ConnectionString
         {
             get
@@ -199,6 +212,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets command channel to communicate with backend service.
+        /// </summary>
         public string AlternateCommandChannel
         {
             get
@@ -212,6 +228,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets ID of the device to be configured.
+        /// </summary>
         public int AccessID
         {
             get
@@ -225,6 +244,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets protocol id for devices to be configured.
+        /// </summary>
         public int ProtocolID
         {
             get
@@ -238,6 +260,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets boolean value indicating if connection is to concentrator.
+        /// </summary>
         public bool ConnectToConcentrator
         {
             get
@@ -251,6 +276,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets ID of the concetrator device.
+        /// </summary>
         public int? PdcID
         {
             get
@@ -264,6 +292,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or setc acronym of the concentrator device.
+        /// </summary>
         public string PdcAcronym
         {
             get
@@ -275,6 +306,7 @@ namespace TimeSeriesFramework.UI.ViewModels
                 m_pdcAcronym = value;
                 OnPropertyChanged("PdcAcronym");
 
+                // Everytime acronym changes, check in the database to see if it already exists.
                 PdcMessage = "";
                 Device device = Device.GetDevice(null, " WHERE Acronym = '" + m_pdcAcronym.ToUpper() + "'");
                 if (device != null)
@@ -292,6 +324,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets message to be displayed on the screen when pdc acronym changes.
+        /// </summary>
         public string PdcMessage
         {
             get
@@ -305,6 +340,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets name of the concentrator device.
+        /// </summary>
         public string PdcName
         {
             get

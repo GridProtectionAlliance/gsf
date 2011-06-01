@@ -76,10 +76,12 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// <param name="autoSave">Boolean value to determine is user changes should be saved automatically.</param>
         /// <param name="adapterType"><see cref="AdapterType"/> to determine type.</param>
         public Adapters(int itemsPerPage, AdapterType adapterType, bool autoSave = true)
-            : base(itemsPerPage, autoSave)
+            : base(0, autoSave) // Set items per page to zero to avoid load in the base class.
         {
             m_nodeLookupList = Node.GetLookupList(null);
+            ItemsPerPage = itemsPerPage;
             m_adapterType = adapterType;
+            Load();
         }
 
         #endregion

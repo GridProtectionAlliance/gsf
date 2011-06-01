@@ -409,7 +409,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_ignoreBadTimeStamps = value;
-                OnPropertyChanged("IgnoreBadtimeStamps");
+                OnPropertyChanged("IgnoreBadTimeStamps");
             }
         }
 
@@ -679,7 +679,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         "@typeName, @connectionString, @configSection, @inputMeasurements, @outputMeasurements, @minimumMeasurementsToUse, @framesPerSecond, " +
                         "@lagTime, @leadTime, @useLocalClockAsRealTime, @allowSortsByArrival, @loadOrder, @enabled, @ignoreBadTimeStamps, @timeResolution, " +
                         "@allowPreemptivePublishing, @downsamplingMethod, @performTimestampReasonabilityCheck, @updatedBy, @updatedOn, @createdBy, @createdOn)",
-                        DefaultTimeout, database.Guid(calculatedMeasurement.NodeID), calculatedMeasurement.Acronym.Replace(" ", "").ToUpper(), calculatedMeasurement.Name.ToNotNull(),
+                        DefaultTimeout, database.CurrentNodeID(), calculatedMeasurement.Acronym.Replace(" ", "").ToUpper(), calculatedMeasurement.Name.ToNotNull(),
                         calculatedMeasurement.AssemblyName, calculatedMeasurement.TypeName, calculatedMeasurement.ConnectionString.ToNotNull(), calculatedMeasurement.ConfigSection.ToNotNull(),
                         calculatedMeasurement.InputMeasurements.ToNotNull(), calculatedMeasurement.OutputMeasurements.ToNotNull(), calculatedMeasurement.MinimumMeasurementsToUse,
                         calculatedMeasurement.FramesPerSecond, calculatedMeasurement.LagTime, calculatedMeasurement.LeadTime, calculatedMeasurement.UseLocalClockAsRealTime,

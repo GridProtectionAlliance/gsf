@@ -770,7 +770,8 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 if (subscriber.ID == Guid.Empty || subscriber.ID == null)
                     database.Connection.ExecuteNonQuery("INSERT INTO Subscriber (NodeID, Acronym, Name, SharedSecret, AuthKey, ValidIPAddresses, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@nodeID, @acronym, " +
-                "@name, @sharedSecret, @authKey, @validIpAddresses, @enabled, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, database.Guid(subscriber.NodeID), subscriber.Acronym, subscriber.Name.ToNotNull(),
+                "@name, @sharedSecret, @authKey, @validIpAddresses, @enabled, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout,
+                subscriber.NodeID == null ? database.CurrentNodeID() : subscriber.NodeID == Guid.Empty ? database.CurrentNodeID() : database.Guid(subscriber.NodeID), subscriber.Acronym, subscriber.Name.ToNotNull(),
                 subscriber.SharedSecret, subscriber.AuthKey, subscriber.ValidIPAddresses, subscriber.Enabled, CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("UPDATE Subscriber SET NodeID = @nodeID, Acronym = @acronym, Name = @name, SharedSecret = @sharedSecret, AuthKey = @authKey, ValidIPAddresses = @validIpAddresses, " +
