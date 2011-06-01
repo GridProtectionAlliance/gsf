@@ -281,7 +281,7 @@ namespace TVA.ServiceModel.Messaging
     /// using System.ServiceModel.Description;
     /// using System.Threading;
     /// using TVA;
-    /// using TVA.Services.ServiceModel.Messaging;
+    /// using TVA.ServiceModel.Messaging;
     /// 
     /// class Program
     /// {
@@ -347,7 +347,7 @@ namespace TVA.ServiceModel.Messaging
     ///     <messageBusService>
     ///       <add name="Endpoints" value="" description="Semicolon delimited list of URIs where the web service can be accessed."
     ///         encrypted="false" />
-    ///       <add name="Contract" value="TVA.Services.ServiceModel.Messaging.IMessageBusService, TVA.Services"
+    ///       <add name="Contract" value="TVA.ServiceModel.Messaging.IMessageBusService, TVA.Services"
     ///         description="Assembly qualified name of the contract interface implemented by the web service."
     ///         encrypted="false" />
     ///       <add name="Singleton" value="True" description="True if the web service is singleton; otherwise False."
@@ -364,8 +364,8 @@ namespace TVA.ServiceModel.Messaging
     ///   </categorizedSettings>
     ///   <system.serviceModel>
     ///     <services>
-    ///       <service name="TVA.Services.ServiceModel.Messaging.MessageBusService">
-    ///         <endpoint address="" contract="TVA.Services.ServiceModel.Messaging.IMessageBusService" binding="wsDualHttpBinding" />
+    ///       <service name="TVA.ServiceModel.Messaging.MessageBusService">
+    ///         <endpoint address="" contract="TVA.ServiceModel.Messaging.IMessageBusService" binding="wsDualHttpBinding" />
     ///       </service>
     ///     </services>
     ///     <behaviors>
@@ -378,7 +378,7 @@ namespace TVA.ServiceModel.Messaging
     ///     </behaviors>
     ///     <serviceHostingEnvironment multipleSiteBindingsEnabled="true">
     ///       <serviceActivations>
-    ///         <add relativeAddress="MessageBusService.svc" service="TVA.Services.ServiceModel.Messaging.MessageBusService, TVA.Services" />
+    ///         <add relativeAddress="MessageBusService.svc" service="TVA.ServiceModel.Messaging.MessageBusService, TVA.Services" />
     ///       </serviceActivations>
     ///     </serviceHostingEnvironment>
     ///   </system.serviceModel>

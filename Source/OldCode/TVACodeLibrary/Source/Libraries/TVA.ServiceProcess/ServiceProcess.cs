@@ -502,7 +502,7 @@ namespace TVA.ServiceProcess
             // Start the execution on a seperate thread.
 #if ThreadTracking
             m_processThread = new ManagedThread(InvokeExecutionMethod);
-            m_processThread.Name = "TVA.Services.ServiceProcess.ServiceProcess.InvokeExecutionMethod() [" + m_name + "]";
+            m_processThread.Name = "TVA.ServiceProcess.ServiceProcess.InvokeExecutionMethod() [" + m_name + "]";
 #else
             m_processThread = new Thread(InvokeExecutionMethod);
 #endif

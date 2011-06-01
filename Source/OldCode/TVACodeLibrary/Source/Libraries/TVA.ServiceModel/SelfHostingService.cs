@@ -280,7 +280,7 @@ namespace TVA.ServiceModel
     /// <code>
     /// using System.ServiceModel;
     /// using System.ServiceModel.Web;
-    /// using TVA.Services.ServiceModel;
+    /// using TVA.ServiceModel;
     /// 
     /// namespace Services
     /// {
@@ -307,7 +307,7 @@ namespace TVA.ServiceModel
     /// using System.ServiceModel.Description;
     /// using System.ServiceModel.Web;
     /// using Services;
-    /// using TVA.Services.ServiceModel;
+    /// using TVA.ServiceModel;
     /// 
     /// class Program
     /// {
