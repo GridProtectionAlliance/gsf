@@ -529,20 +529,18 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 if (node.ID == null || node.ID == Guid.Empty)
                     database.Connection.ExecuteNonQuery("INSERT INTO Node (Name, CompanyID, Longitude, Latitude, Description, ImagePath, Settings, MenuType, MenuData, Master, LoadOrder, " +
-                        "Enabled, RemoteStatusServiceUrl, RealTimeStatisticServiceUrl, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@name, @companyID, " +
-                        "@longitude, @latitude, @description, @ImagePath, @Settings, @DataType, @DataMenu, @master, @loadOrder, @enabled, @remoteStatusServiceUrl, @realTimeStatisticServiceUrl, " +
+                        "Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@name, @companyID, " +
+                        "@longitude, @latitude, @description, @imagePath, @settings, @menuType, @menuData, @master, @loadOrder, @enabled, " +
                         "@updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, node.Name, node.CompanyID.ToNotNull(), node.Longitude.ToNotNull(),
                         node.Latitude.ToNotNull(), node.Description.ToNotNull(), node.ImagePath.ToNotNull(), node.Settings.ToNotNull(), node.MenuType, node.MenuData, node.Master, node.LoadOrder, node.Enabled,
-                        node.RemoteStatusServiceUrl.ToNotNull(), node.m_realTimeStatisticServiceUrl.ToNotNull(), CommonFunctions.CurrentUser,
+                        CommonFunctions.CurrentUser,
                         database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("UPDATE Node SET Name = @name, CompanyID = @companyID, Longitude = @longitude, Latitude = @latitude, " +
                         "Description = @description, ImagePath = @imagePath, Settings = @Settings, MenuType = @MenuType, MenuData = @MenuData, Master = @master, LoadOrder = @loadOrder, Enabled = @enabled, " +
-                        "RemoteStatusServiceUrl = @remoteStatusServiceUrl, RealTimeStatisticServiceUrl = @realTimeStatisticServiceUrl, " +
                         "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, node.Name, node.CompanyID.ToNotNull(), node.Longitude.ToNotNull(),
                         node.Latitude.ToNotNull(), node.Description.ToNotNull(), node.ImagePath.ToNotNull(), node.Settings.ToNotNull(), node.MenuType, node.MenuData, node.Master, node.LoadOrder, node.Enabled,
-                        node.RemoteStatusServiceUrl.ToNotNull(), node.m_realTimeStatisticServiceUrl.ToNotNull(), CommonFunctions.CurrentUser,
-                        database.UtcNow(), node.ID);
+                        CommonFunctions.CurrentUser, database.UtcNow(), node.ID);
 
                 return "Node information saved successfully";
             }
