@@ -91,7 +91,7 @@ namespace TimeSeriesFramework.UI.Converters
 
                     Guid key = Guid.Parse(value.ToString());
 
-                    if (key == Guid.Empty)
+                    if (key == Guid.Empty && collection.Count > 0)
                         return collection.First();
 
                     foreach (KeyValuePair<Guid, string> item in collection)
