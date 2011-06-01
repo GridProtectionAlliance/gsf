@@ -27,9 +27,9 @@
     <licenseUrl>http://tvacodelibrary.codeplex.com/license</licenseUrl>
     <iconUrl>http://download.codeplex.com/Project/Download/FileDownload.aspx?ProjectName=tvacodelibrary&#x26;DownloadId=140265&#x26;Build=17672</iconUrl>
     <dependencies>
-      <dependency id="TVA.Core" />
-      <dependency id="TVA.Communication" />
-      <dependency id="TVA.Security" />
+      <dependency id="TVACodeLibrary.Libraries.Core" />
+      <dependency id="TVACodeLibrary.Libraries.Communication" />
+      <dependency id="TVACodeLibrary.Libraries.Security" />
     </dependencies>
   </metadata>
 </package>
