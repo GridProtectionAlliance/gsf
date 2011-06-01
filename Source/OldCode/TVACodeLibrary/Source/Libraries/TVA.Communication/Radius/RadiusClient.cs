@@ -232,9 +232,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using TVA.Communication;
 
-namespace TVA.Security.Radius
+namespace TVA.Communication.Radius
 {
     /// <summary>
     /// Represents a RADIUS communication client.

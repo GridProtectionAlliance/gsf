@@ -233,7 +233,7 @@ using System;
 using System.Net;
 using TVA.Parsing;
 
-namespace TVA.Security.Radius
+namespace TVA.Communication.Radius
 {
     #region [ Enumerations ]
 

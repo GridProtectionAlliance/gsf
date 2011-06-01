@@ -30,7 +30,6 @@
     <iconUrl>http://download.codeplex.com/Project/Download/FileDownload.aspx?ProjectName=tvacodelibrary&#x26;DownloadId=140265&#x26;Build=17672</iconUrl>
     <dependencies>
       <dependency id="TVA.Core" />
-      <dependency id="TVA.Communication" />
     </dependencies>
   </metadata>
 </package>

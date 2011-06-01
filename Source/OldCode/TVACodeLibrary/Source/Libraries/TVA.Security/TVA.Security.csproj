@@ -84,10 +84,6 @@
   <ItemGroup>
     <Compile Include="AdoSecurityProvider.cs" />
     <Compile Include="LdapSecurityProvider.cs" />
-    <Compile Include="Radius\NamespaceDoc.cs" />
-    <Compile Include="Radius\RadiusClient.cs" />
-    <Compile Include="Radius\RadiusPacket.cs" />
-    <Compile Include="Radius\RadiusPacketAttribute.cs" />
     <Compile Include="RestrictAccessAttribute.cs" />
     <Compile Include="ISecurityProvider.cs" />
     <Compile Include="NamespaceDoc.cs" />
@@ -101,10 +97,6 @@
     <Compile Include="UserDataCache.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\TVA.Communication\TVA.Communication.csproj">
-      <Project>{2B2EB9BE-E6A9-406F-BFE6-FF46DD6BD264}</Project>
-      <Name>TVA.Communication</Name>
-    </ProjectReference>
     <ProjectReference Include="..\TVA.Core\TVA.Core.csproj">
       <Project>{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88}</Project>
       <Name>TVA.Core</Name>

@@ -231,7 +231,7 @@
 
 using System.Runtime.CompilerServices;
 
-namespace TVA.Security.Radius
+namespace TVA.Communication.Radius
 {
     /// <summary>
     /// Contains classes for RADIUS (Remote Authentication Dial In User Service) based server and client communication.

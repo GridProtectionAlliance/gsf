@@ -235,7 +235,7 @@ using System.Security.Cryptography;
 using System.Text;
 using TVA.Parsing;
 
-namespace TVA.Security.Radius
+namespace TVA.Communication.Radius
 {
     #region [ Enumerations ]
 
@@ -337,7 +337,7 @@ namespace TVA.Security.Radius
         /// </summary>
         public RadiusPacket()
         {
-            m_identifier = (byte)(Cryptography.Random.Between(0, 255));
+            m_identifier = (byte)(TVA.Security.Cryptography.Random.Between(0, 255));
             m_authenticator = new byte[16];
             m_attributes = new List<RadiusPacketAttribute>();
         }
@@ -566,7 +566,7 @@ namespace TVA.Security.Radius
             // we prepend a randomly generated "salt" text to ensure the uniqueness of the output value.
             byte[] randomBuffer = new byte[16];
             byte[] secretBuffer = Encoding.GetBytes(sharedSecret);
-            Cryptography.Random.GetBytes(randomBuffer);
+            TVA.Security.Cryptography.Random.GetBytes(randomBuffer);
 
             return new MD5CryptoServiceProvider().ComputeHash(randomBuffer.Combine(secretBuffer));
         }
