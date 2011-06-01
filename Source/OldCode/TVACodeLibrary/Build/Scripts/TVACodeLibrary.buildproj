@@ -122,7 +122,7 @@
     <!-- Delete existing nuget packages. -->
     <Message Text="Deleting nuget packages..."/>
     <ItemGroup>
-      <NugetPackages Include="$(NugetPackagesFolder)\TVA.*.$(Major).$(Minor).$(Build).*.nupkg"/>
+      <NugetPackages Include="$(NugetPackagesFolder)\TVACodeLibrary.*.$(Major).$(Minor).$(Build).*.nupkg"/>
     </ItemGroup>
     <Delete Files="@(NugetPackages)"/>
     <!-- Create and deploy nuget packages. -->
