@@ -29,6 +29,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
+using System.Windows;
 using TVA;
 using TVA.Collections;
 using TVA.Data;
@@ -364,8 +365,16 @@ namespace TimeSeriesFramework.UI
         {
             if (database == null)
             {
-                database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                return true;
+                try
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("ERROR: " + ex.Message, "Create Database Connection", MessageBoxButton.OK);
+                    return false;
+                }
             }
             else
                 return false;
