@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="TimeSeriesFramework.UI.WPF.UserControls.HomeUserControl"
+﻿<UserControl x:Class="TimeSeriesFramework.UI.UserControls.HomeUserControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -15,54 +15,6 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
-
-    <Grid x:Name="HomePageLayoutRoot" HorizontalAlignment="Center">
-        <Grid.Resources>
-            <SolidColorBrush x:Key="LightColorBrush" Color="#FFFFFFFF"/>
-            <SolidColorBrush x:Key="DarkColorBrush" Color="#FF07426F"/>
-            <Style x:Key="PortletBorderStyle" TargetType="TextBlock">
-                <Setter Property="Background" Value="{StaticResource DarkColorBrush}"/>
-            </Style>
-        </Grid.Resources>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-        
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-        
-        <StackPanel Orientation="Vertical" Grid.Column="0" HorizontalAlignment="Center">
-            <Border HorizontalAlignment="Center" >
-                <StackPanel Orientation="Vertical" Margin="0">
-                    <TextBlock Text="Quick Links" Padding="5" HorizontalAlignment="Center" FontSize="18"/>
-                    <StackPanel Orientation="Vertical">
-                        <StackPanel.Resources>
-                            <Style TargetType="Button" x:Key="HomeButtonStyle">
-                                <Setter Property="HorizontalAlignment" Value="Center"/>
-                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                                <Setter Property="Padding" Value="3"/>
-                                <Setter Property="Margin" Value="3"/>
-                                <Setter Property="Width" Value="{StaticResource LargeItemSize}"/>
-                                <Setter Property="FontWeight" Value="Bold"/>
-                                <Setter Property="FontSize" Value="{StaticResource TextSize}"/>
-                            </Style>
-                        </StackPanel.Resources>                       
-                        <Button x:Name="ButtonBrowsedevices" Content="Browse Devices" Style="{StaticResource HomeButtonStyle}"/>
-                        <Button x:Name="ButtonRuntimeStatistics" Content="Runtime Statistics" Style="{StaticResource HomeButtonStyle}"/>
-                        <Button x:Name="ButtonAddDevice" Content="Add New Device" Style="{StaticResource HomeButtonStyle}"/>
-                        <Button x:Name="ButtonDevices" Content="Manage Devices" Style="{StaticResource HomeButtonStyle}"/>
-                        <Button x:Name="ButtonOutputStreams" Content="Manage Output Streams" Style="{StaticResource HomeButtonStyle}"/>
-                        <Button x:Name="ButtonSystemConsole" Content="SystemConsole" Style="{StaticResource HomeButtonStyle}"/>
-                        <Button x:Name="ButtonRestartOpenPG" Content="Restart openPG" Style="{StaticResource HomeButtonStyle}"/>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-            <Border>
-                
-            </Border>
-        </StackPanel>
-    </Grid>
+   
 
 </UserControl>
