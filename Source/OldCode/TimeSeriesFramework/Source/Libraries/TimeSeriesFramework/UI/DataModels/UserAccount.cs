@@ -343,12 +343,12 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     userAccountList.Add(new UserAccount()
                     {
-                        ID = database.Guid(row, "ID"), 
+                        ID = database.Guid(row, "ID"),
                         Name = row.Field<string>("Name"),
                         Password = row.Field<object>("Password") == null ? string.Empty : row.Field<string>("Password"),
                         FirstName = row.Field<object>("FirstName") == null ? string.Empty : row.Field<string>("FirstName"),
                         LastName = row.Field<object>("LastName") == null ? string.Empty : row.Field<string>("LastName"),
-                        DefaultNodeID =  database.Guid(row, "DefaultNodeID"),
+                        DefaultNodeID = database.Guid(row, "DefaultNodeID"),
                         Phone = row.Field<object>("Phone") == null ? string.Empty : row.Field<string>("Phone"),
                         Email = row.Field<object>("Email") == null ? string.Empty : row.Field<string>("Email"),
                         LockedOut = Convert.ToBoolean(row.Field<object>("LockedOut")),
@@ -387,7 +387,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 Dictionary<Guid, string> userAccountList = new Dictionary<Guid, string>();
                 if (isOptional)
-                    userAccountList.Add(Guid.Empty , "Select UserAccount");
+                    userAccountList.Add(Guid.Empty, "Select UserAccount");
 
                 DataTable userAccountTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM UserAccount ORDER BY Name");
 
@@ -431,7 +431,7 @@ namespace TimeSeriesFramework.UI.DataModels
                     database.Connection.ExecuteNonQuery("INSERT INTO UserAccount (Name, " + passwordColumn + ", FirstName, LastName, DefaultNodeID, Phone, Email, LockedOut, UseADAuthentication, " +
                         "ChangePasswordOn, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@name, @password, @firstName, @lastName, @defaultNodeID, @phone, " +
                         "@email, @lockedOut, @useADAuthentication, @changePasswordOn, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, userAccount.Name,
-                        userAccount.Password.ToNotNull(), userAccount.FirstName.ToNotNull(), userAccount.LastName.ToNotNull(), database.Guid(userAccount.DefaultNodeID),
+                        userAccount.Password.ToNotNull(), userAccount.FirstName.ToNotNull(), userAccount.LastName.ToNotNull(), database.CurrentNodeID(),
                         userAccount.Phone.ToNotNull(), userAccount.Email.ToNotNull(), userAccount.LockedOut, userAccount.UseADAuthentication, changePasswordOn,
                         CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
                 else
