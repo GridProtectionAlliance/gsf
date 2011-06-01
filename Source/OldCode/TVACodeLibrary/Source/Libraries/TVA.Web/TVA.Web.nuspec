@@ -22,9 +22,7 @@
     <id>TVACodeLibrary.Libraries.Web</id>
     <version>1.0.0.0</version>
     <authors>TVA</authors>
-    <description>
-      Library of ASP.NET web forms extensions, embedded resource hosting and HTTP Module for implementing role-based security.
-    </description>
+    <description>Library of ASP.NET web forms extensions, embedded resource hosting and HTTP Module for implementing role-based security.</description>
     <projectUrl>http://tvacodelibrary.codeplex.com/</projectUrl>
     <licenseUrl>http://tvacodelibrary.codeplex.com/license</licenseUrl>
     <iconUrl>http://download.codeplex.com/Project/Download/FileDownload.aspx?ProjectName=tvacodelibrary&#x26;DownloadId=140265&#x26;Build=17672</iconUrl>
