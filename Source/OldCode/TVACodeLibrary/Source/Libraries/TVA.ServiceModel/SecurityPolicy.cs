@@ -315,7 +315,7 @@ namespace TVA.ServiceModel
     ///         <behavior name="serviceBehavior">
     ///           <serviceAuthorization principalPermissionMode="Custom">
     ///             <authorizationPolicies>
-    ///               <add policyType="TVA.Web.SecurityPolicy, TVA.Web" />
+    ///               <add policyType="TVA.ServiceModel.SecurityPolicy, TVA.ServiceModel" />
     ///             </authorizationPolicies>
     ///           </serviceAuthorization>
     ///         </behavior>
@@ -342,7 +342,7 @@ namespace TVA.ServiceModel
     /// <configuration>
     ///   <system.web>
     ///     <httpModules>
-    ///       <add name="SecurityModule" type="TVA.Web.SecurityModule, TVA.Web" />
+    ///       <add name="SecurityModule" type="TVA.ServiceModel.SecurityModule, TVA.ServiceModel" />
     ///     </httpModules>
     ///   </system.web>
     ///   <system.serviceModel>
@@ -362,7 +362,7 @@ namespace TVA.ServiceModel
     ///         <behavior name="serviceBehavior">
     ///           <serviceAuthorization principalPermissionMode="Custom">
     ///             <authorizationPolicies>
-    ///               <add policyType="TVA.Web.SecurityPolicy, TVA.Web" />
+    ///               <add policyType="TVA.ServiceModel.SecurityPolicy, TVA.ServiceModel" />
     ///             </authorizationPolicies>
     ///           </serviceAuthorization>
     ///         </behavior>
