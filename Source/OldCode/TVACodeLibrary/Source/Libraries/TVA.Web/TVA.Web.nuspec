@@ -19,7 +19,7 @@
 
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
-    <id>TVA.Web</id>
+    <id>TVACodeLibrary.Libraries.Web</id>
     <version>1.0.0.0</version>
     <authors>TVA</authors>
     <description>
