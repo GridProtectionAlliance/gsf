@@ -1048,7 +1048,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         "@connectionString, @timezone, @framesPerSecond, @timeAdjustmentTicks, @dataLossInterval, @contactList, @measuredLines, @loadOrder, @enabled, " +
                         "@allowedParsingExceptions, @parsingExceptionWindow, @delayedConnectionInterval, @allowUseOfCachedConfiguration, @autoStartDataParsingSequence, " +
                         "@skipDisableRealTimeData, @measurementReportingInterval, @connectOndemand, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, nodeID,
-                        device.ParentID.ToNotNull(), database.Guid(Guid.NewGuid()), device.Acronym.Replace(" ", "").ToUpper(), device.Name, device.IsConcentrator, device.CompanyID.ToNotNull(),
+                        device.ParentID.ToNotNull(), database.Guid(Guid.NewGuid()), device.Acronym.Replace(" ", "").ToUpper(), device.Name.ToNotNull(), device.IsConcentrator, device.CompanyID.ToNotNull(),
                         device.HistorianID.ToNotNull(), device.AccessID, device.VendorDeviceID.ToNotNull(),
                         device.ProtocolID.ToNotNull(), device.Longitude.ToNotNull(), device.Latitude.ToNotNull(), device.InterconnectionID.ToNotNull(),
                         device.ConnectionString.ToNotNull(), device.TimeZone.ToNotNull(), device.FramesPerSecond ?? 30, device.TimeAdjustmentTicks, device.DataLossInterval, device.ContactList.ToNotNull(), device.MeasuredLines.ToNotNull(),
@@ -1064,7 +1064,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         "DelayedConnectionInterval = @delayedConnectionInterval, AllowUseOfCachedConfiguration = @allowUseOfCachedConfiguration, AutoStartDataParsingSequence " +
                         "= @autoStartDataParsingSequence, SkipDisableRealTimeData = @skipDisableRealTimeData, MeasurementReportingInterval = @measurementReportingInterval, ConnectOnDemand = @ConnectOnDemand, " +
                         "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, nodeID,
-                        device.ParentID.ToNotNull(), database.Guid(device.UniqueID), device.Acronym.Replace(" ", "").ToUpper(), device.Name, device.IsConcentrator, device.CompanyID.ToNotNull(),
+                        device.ParentID.ToNotNull(), database.Guid(device.UniqueID), device.Acronym.Replace(" ", "").ToUpper(), device.Name.ToNotNull(), device.IsConcentrator, device.CompanyID.ToNotNull(),
                         device.HistorianID.ToNotNull(), device.AccessID, device.VendorDeviceID.ToNotNull(),
                         device.ProtocolID.ToNotNull(), device.Longitude.ToNotNull(), device.Latitude.ToNotNull(), device.InterconnectionID.ToNotNull(),
                         device.ConnectionString.ToNotNull(), device.TimeZone.ToNotNull(), device.FramesPerSecond ?? 30, device.TimeAdjustmentTicks, device.DataLossInterval, device.ContactList.ToNotNull(), device.MeasuredLines.ToNotNull(),
