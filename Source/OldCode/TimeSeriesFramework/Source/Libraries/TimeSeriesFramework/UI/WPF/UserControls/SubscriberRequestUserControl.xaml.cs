@@ -67,30 +67,42 @@ namespace TimeSeriesFramework.UI.UserControls
         {
             // Connect to database to retrieve company information for current node
             AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-            DataRow row = database.Connection.RetrieveRow(database.AdapterType, "SELECT Company.Acronym, Company.Name FROM Company, Node WHERE Company.ID = Node.CompanyID AND Node.ID = @id", database.CurrentNodeID());
+            try
+            {
+                DataRow row = database.Connection.RetrieveRow(database.AdapterType, "SELECT Company.Acronym, Company.Name FROM Company, Node WHERE Company.ID = Node.CompanyID AND Node.ID = @id", database.CurrentNodeID());
 
-            m_acronymField.Text = row.Field<string>("Acronym");
-            m_nameField.Text = row.Field<string>("Name");
+                m_acronymField.Text = row.Field<string>("Acronym");
+                m_nameField.Text = row.Field<string>("Name");
 
-            // Generate a default shared secret password for subscriber key and initialization vector
-            byte[] buffer = new byte[4];
-            TVA.Security.Cryptography.Random.GetBytes(buffer);
+                // Generate a default shared secret password for subscriber key and initialization vector
+                byte[] buffer = new byte[4];
+                TVA.Security.Cryptography.Random.GetBytes(buffer);
 
-            string generatedSecret = Convert.ToBase64String(buffer).RemoveCrLfs();
+                string generatedSecret = Convert.ToBase64String(buffer).RemoveCrLfs();
 
-            if (generatedSecret.Contains("="))
-                generatedSecret = generatedSecret.Split('=')[0];
+                if (generatedSecret.Contains("="))
+                    generatedSecret = generatedSecret.Split('=')[0];
 
-            m_sharedSecretField.Text = generatedSecret;
+                m_sharedSecretField.Text = generatedSecret;
 
-            // Generate an identity for this subscriber
-            AesManaged sa = new AesManaged();
-            sa.GenerateKey();
-            m_authenticationIDField.Text = Convert.ToBase64String(sa.Key);
+                // Generate an identity for this subscriber
+                AesManaged sa = new AesManaged();
+                sa.GenerateKey();
+                m_authenticationIDField.Text = Convert.ToBase64String(sa.Key);
 
-            // Generate valid local IP addresses for this connection
-            IEnumerable<IPAddress> addresses = Dns.GetHostAddresses(Dns.GetHostName()).OrderBy(key => key.AddressFamily);
-            m_validIpAddressesField.Text = addresses.ToDelimitedString("; ");
+                // Generate valid local IP addresses for this connection
+                IEnumerable<IPAddress> addresses = Dns.GetHostAddresses(Dns.GetHostName()).OrderBy(key => key.AddressFamily);
+                m_validIpAddressesField.Text = addresses.ToDelimitedString("; ");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("ERROR: " + ex.Message, "Subscriber Request", MessageBoxButton.OK);
+            }
+            finally
+            {
+                if (database != null)
+                    database.Dispose();
+            }
         }
 
         /// <summary>

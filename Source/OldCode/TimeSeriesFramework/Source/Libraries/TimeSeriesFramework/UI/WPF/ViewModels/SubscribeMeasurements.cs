@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -265,22 +266,37 @@ namespace TimeSeriesFramework.UI.ViewModels
 
             if (measurementsToBeAdded.Count > 0)
             {
-                foreach (DataModels.Measurement measurement in measurementsToBeAdded)
+                Mouse.OverrideCursor = Cursors.Wait;
+                AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                try
                 {
-                    if (measurement.Selected)
+                    foreach (DataModels.Measurement measurement in measurementsToBeAdded)
                     {
-                        measurement.Internal = false;
-                        measurement.Subscribed = true;
-                        AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                        if (measurement.Selected)
+                        {
+                            measurement.Internal = false;
+                            measurement.Subscribed = true;
 
-                        DataModels.Measurement.Save(database, measurement);
+                            DataModels.Measurement.Save(database, measurement);
+                        }
                     }
+
+                    if (SubscriptionChanged != null)
+                        SubscriptionChanged(this, null);
+
+                    SubscribedMeasurements = DataModels.Measurement.GetSubscribedMeasurements(database);
                 }
+                catch (Exception ex)
+                {
+                    Popup("ERROR: " + ex.Message, "Subscribe Measurements", MessageBoxImage.Error);
+                }
+                finally
+                {
+                    if (database != null)
+                        database.Dispose();
 
-                if (SubscriptionChanged != null)
-                    SubscriptionChanged(this, null);
-
-                SubscribedMeasurements = DataModels.Measurement.GetSubscribedMeasurements(null);
+                    Mouse.OverrideCursor = null;
+                }
             }
         }
 
@@ -290,19 +306,34 @@ namespace TimeSeriesFramework.UI.ViewModels
 
             if (measurementsToBeRemoved.Count > 0)
             {
-                foreach (DataModels.Measurement measurement in measurementsToBeRemoved)
+                Mouse.OverrideCursor = Cursors.Wait;
+                AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                try
                 {
-                    measurement.Internal = false;
-                    measurement.Subscribed = false;
-                    AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    foreach (DataModels.Measurement measurement in measurementsToBeRemoved)
+                    {
+                        measurement.Internal = false;
+                        measurement.Subscribed = false;
 
-                    DataModels.Measurement.Save(database, measurement);
+                        DataModels.Measurement.Save(database, measurement);
+                    }
+
+                    if (SubscriptionChanged != null)
+                        SubscriptionChanged(this, null);
+
+                    SubscribedMeasurements = DataModels.Measurement.GetSubscribedMeasurements(database);
                 }
+                catch (Exception ex)
+                {
+                    Popup("ERROR: " + ex.Message, "Unsubscribe Measurements", MessageBoxImage.Error);
+                }
+                finally
+                {
+                    if (database != null)
+                        database.Dispose();
 
-                if (SubscriptionChanged != null)
-                    SubscriptionChanged(this, null);
-
-                SubscribedMeasurements = DataModels.Measurement.GetSubscribedMeasurements(null);
+                    Mouse.OverrideCursor = null;
+                }
             }
         }
 
