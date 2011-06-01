@@ -130,7 +130,7 @@
     <ItemGroup>
       <NugetProjects Include="$(LocalFolder)\Source\Libraries\**\*.csproj" Exclude="$(LocalFolder)\Source\Libraries\Tests\**\*.csproj"/>
     </ItemGroup>
-    <Exec Command="Tools\NuGet\NuGet.exe pack %(NugetProjects.FullPath) /Symbols /Version $(Major).$(Minor).$(Build).$(Revision) /OutputDirectory $(NugetPackagesFolder)" ContinueOnError="true"/>
+    <Exec Command="NuGet.exe pack %(NugetProjects.FullPath) /Symbols /Version $(Major).$(Minor).$(Build).$(Revision) /OutputDirectory $(NugetPackagesFolder)" ContinueOnError="true"/>
   </Target>
 
 </Project>
