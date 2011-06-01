@@ -22,7 +22,9 @@
     <id>TVA.Windows</id>
     <version>1.0.0.0</version>
     <authors>TVA</authors>
-    <description>Library of Windows Forms and WPF extensions and components.</description>
+    <description>
+      Library of property grid extensions, about dialog and base Windows Form and WPF Window for implementing role-based security.
+    </description>
     <projectUrl>http://tvacodelibrary.codeplex.com/</projectUrl>
     <licenseUrl>http://tvacodelibrary.codeplex.com/license</licenseUrl>
     <iconUrl>http://download.codeplex.com/Project/Download/FileDownload.aspx?ProjectName=tvacodelibrary&#x26;DownloadId=140265&#x26;Build=17672</iconUrl>

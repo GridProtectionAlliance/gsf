@@ -22,7 +22,9 @@
     <id>TVA.Communication</id>
     <version>1.0.0.0</version>
     <authors>TVA</authors>
-    <description>Library of socket, serial and file-based communication components.</description>
+    <description>
+      Library of components for TCP, UDP, serial and file-based communication in an abstract fashion.
+    </description>
     <projectUrl>http://tvacodelibrary.codeplex.com/</projectUrl>
     <licenseUrl>http://tvacodelibrary.codeplex.com/license</licenseUrl>
     <iconUrl>http://download.codeplex.com/Project/Download/FileDownload.aspx?ProjectName=tvacodelibrary&#x26;DownloadId=140265&#x26;Build=17672</iconUrl>

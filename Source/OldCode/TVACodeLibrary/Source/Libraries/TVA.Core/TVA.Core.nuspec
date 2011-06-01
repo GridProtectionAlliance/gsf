@@ -22,7 +22,12 @@
     <id>TVA.Core</id>
     <version>1.0.0.0</version>
     <authors>TVA</authors>
-    <description>Library of .NET extensions and components.</description>
+    <description>
+      Library of .NET extensions and components - adapter framework, process queue, configuration api, diagnostics, error handling, 
+      active directory, interop, checksums, ftp, mail, unit conversion, binary parsing, scheduler, ntp time, precision timer, int24, 
+      unit24, console extensions, database extensions, drawing extension, reflection extensions, xml extensions, bit extensions, 
+      buffer extensions, char extensions, data-time extensions, enum extensions, string extensions.
+    </description>
     <projectUrl>http://tvacodelibrary.codeplex.com/</projectUrl>
     <licenseUrl>http://tvacodelibrary.codeplex.com/license</licenseUrl>
     <iconUrl>http://download.codeplex.com/Project/Download/FileDownload.aspx?ProjectName=tvacodelibrary&#x26;DownloadId=140265&#x26;Build=17672</iconUrl>
