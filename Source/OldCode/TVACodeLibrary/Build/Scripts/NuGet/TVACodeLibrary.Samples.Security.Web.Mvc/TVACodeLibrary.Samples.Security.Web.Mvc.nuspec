@@ -1,8 +1,8 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 
 <!--
 *******************************************************************************************************
-**  TVACodeLibrary.nuspec - Gbtc
+**  TVACodeLibrary.Samples.Security.Web.Mvc.nuspec - Gbtc
 **
 **  Tennessee Valley Authority, 2009
 **  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -11,7 +11,7 @@
 **
 **  Code Modification History:
 **  ===================================================================================================
-**  03/17/2011 - Pinal C. Patel
+**  06/01/2011 - Pinal C. Patel
 **       Generated original version of source code.
 **
 *******************************************************************************************************
@@ -19,18 +19,19 @@
 
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
-    <id>TVACodeLibrary</id>
+    <id>TVACodeLibrary.Samples.Security.Web.Mvc</id>
     <version>1.0.0.0</version>
-    <authors>Pinal C. Patel</authors>
-    <description>This TVA Code Library is a collection of class libraries that extends and expands the functionality included in Microsoft’s .NET Framework. It makes some of Microsoft’s functions simpler to use, and adds functions that Microsoft did not include in the .NET Framework.</description>
-    <language>en-US</language>
+    <authors>TVA</authors>
+    <description>Enables role-based security using TVA Code Library security framework in an ASP.NET MVC application.</description>
     <projectUrl>http://tvacodelibrary.codeplex.com/</projectUrl>
     <licenseUrl>http://tvacodelibrary.codeplex.com/license</licenseUrl>
     <iconUrl>http://download.codeplex.com/Project/Download/FileDownload.aspx?ProjectName=tvacodelibrary&#x26;DownloadId=140265&#x26;Build=17672</iconUrl>
-    <tags>.NET ASP.NET WCF LDAP adapters binary configuration diagnostics drawing logging mail music parser reflection scheduler security serialization sockets</tags>
+    <dependencies>
+      <dependency id="WebActivator" />
+      <dependency id="TVACodeLibrary.Samples.Security.Web" />
+    </dependencies>
   </metadata>
   <files>
-    <file src="Libraries\*.dll" target="lib" />
-    <file src="Libraries\*.xml" target="lib" />
+    <file src="Content\**\*.*" target="Content" />
   </files>
 </package>
