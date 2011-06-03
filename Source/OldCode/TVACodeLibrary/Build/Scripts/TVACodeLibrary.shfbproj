@@ -7,7 +7,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{f20c4e07-742b-4a26-989a-8ff93477236a}</ProjectGuid>
-    <SHFBSchemaVersion>1.8.0.0</SHFBSchemaVersion>
+    <SHFBSchemaVersion>1.9.0.0</SHFBSchemaVersion>
     <!-- AssemblyName, Name, and RootNamespace are not used by SHFB but Visual
          Studio adds them anyway -->
     <AssemblyName>Documentation</AssemblyName>
@@ -18,18 +18,20 @@
     <HtmlHelpName>TVACodeLibrary</HtmlHelpName>
     <HelpTitle>TVA Code Library Help</HelpTitle>
     <DocumentationSources>
-      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Communication.dll" xmlns="" />
-      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Communication.xml" xmlns="" />
-      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Core.dll" xmlns="" />
-      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Core.xml" xmlns="" />
-      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Security.dll" xmlns="" />
-      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Security.xml" xmlns="" />
-      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Services.dll" xmlns="" />
-      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Services.xml" xmlns="" />
-      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Web.dll" xmlns="" />
-      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Web.xml" xmlns="" />
-      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Windows.dll" xmlns="" />
-      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Windows.xml" xmlns="" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Communication.dll" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Communication.xml" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Core.dll" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Core.xml" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Security.dll" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Security.xml" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.ServiceModel.dll" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.ServiceModel.xml" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.ServiceProcess.dll" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.ServiceProcess.xml" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Web.dll" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Web.xml" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Windows.dll" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Windows.xml" />
     </DocumentationSources>
     <FrameworkVersion>4.0.30319</FrameworkVersion>
     <Preliminary>False</Preliminary>
@@ -45,7 +47,7 @@
         <configuration />
       </PlugInConfig>
     </PlugInConfigurations>
-    <HelpFileFormat>Help1xAndHelp2x</HelpFileFormat>
+    <HelpFileFormat>HtmlHelp1, MSHelp2</HelpFileFormat>
     <KeepLogFile>False</KeepLogFile>
   </PropertyGroup>
   <!-- There are no properties for these two groups but they need to appear in
