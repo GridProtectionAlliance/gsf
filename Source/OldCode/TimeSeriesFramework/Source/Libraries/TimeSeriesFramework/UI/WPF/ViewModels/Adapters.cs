@@ -112,6 +112,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         public override void Clear()
         {
             base.Clear();
+            CurrentItem.Type = m_adapterType;
             if (m_nodeLookupList.Count > 0)
                 CurrentItem.NodeID = m_nodeLookupList.First().Key;
         }
@@ -122,6 +123,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         public override void Load()
         {
             ItemsSource = Adapter.Load(null, m_adapterType);
+            CurrentItem.Type = m_adapterType;
         }
 
         /// <summary>
