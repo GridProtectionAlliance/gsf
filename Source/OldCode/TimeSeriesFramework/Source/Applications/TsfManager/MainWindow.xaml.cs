@@ -44,7 +44,15 @@ namespace TsfManager
         private ObservableCollection<MenuDataItem> m_menuDataItems;
 
         #endregion
-
+        #region [ Properties ]
+        public ObservableCollection<MenuDataItem> MenuDataItems
+        {
+            get
+            {
+                return m_menuDataItems;
+            }
+        }
+        #endregion
         #region [ Constructor ]
 
         /// <summary>

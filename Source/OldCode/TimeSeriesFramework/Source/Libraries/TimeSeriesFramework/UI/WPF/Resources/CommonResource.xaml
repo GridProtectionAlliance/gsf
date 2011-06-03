@@ -147,6 +147,15 @@
         <Setter Property="Width" Value="{StaticResource XSmallItemSize}" />
         <Setter Property="FontSize" Value="{StaticResource TextSize}" />
     </Style>
+    
+    <Style TargetType="Button" x:Key="HomeButtonStyle">
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="Padding" Value="3"/>
+        <Setter Property="Margin" Value="3"/>
+        <Setter Property="Width" Value="{StaticResource LargeItemSize}"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontSize" Value="{StaticResource TextSize}"/>
+    </Style>
 
     <conv:NotConverter x:Key="NotConverter"/>
     <conv:DictionaryToKeyValuePairConverter x:Key="DictionaryToKeyValuePairConverter"/>

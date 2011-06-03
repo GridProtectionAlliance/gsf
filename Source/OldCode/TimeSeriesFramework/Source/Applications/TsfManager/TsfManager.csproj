@@ -106,7 +106,14 @@
     <Compile Include="ApplicationInstall.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="HomeUserControl.xaml.cs">
+      <DependentUpon>HomeUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Utility\MenuItemStyleSelector.cs" />
+    <Page Include="HomeUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

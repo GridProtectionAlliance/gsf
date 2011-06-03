@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System.Windows.Controls;
+using System.Windows;
 
 namespace TimeSeriesFramework.UI.UserControls
 {
@@ -36,6 +37,15 @@ namespace TimeSeriesFramework.UI.UserControls
         public HomeUserControl()
         {
             InitializeComponent();
+        }
+
+        private void ButtonBrowseDevices_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            UIElement frame = null;
+            CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(System.Windows.Controls.Frame), ref frame);
+            DeviceListUserControl userControl = new DeviceListUserControl();
+
+            ((System.Windows.Controls.Frame)frame).Navigate(userControl);
         }
     }
 }
