@@ -421,6 +421,10 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 return "Measurement group information saved successfully";
             }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
             finally
             {
                 if (createdConnection && database != null)
