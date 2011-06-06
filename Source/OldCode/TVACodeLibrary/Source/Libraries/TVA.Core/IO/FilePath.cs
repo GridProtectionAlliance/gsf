@@ -35,6 +35,8 @@
 //       Added IsValidFileName function.
 //  02/14/2011 - J. Ritchie Carroll
 //       Fixed bug in GetDirectoryName where last directory was being truncated as a file name.
+//  06/06/2011 - Stephen C. Wills
+//       Fixed bug in GetFileName where path suffix was being removed before extracting the file name.
 //
 //*******************************************************************************************************
 
@@ -476,7 +478,7 @@ namespace TVA.IO
         /// <returns>File name and extension if the file path has it; otherwise empty string.</returns>
         public static string GetFileName(string filePath)
         {
-            return Path.GetFileName(RemovePathSuffix(filePath));
+            return Path.GetFileName(filePath);
         }
 
         /// <summary>
