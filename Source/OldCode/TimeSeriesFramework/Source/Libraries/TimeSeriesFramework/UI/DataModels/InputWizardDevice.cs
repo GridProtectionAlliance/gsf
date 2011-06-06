@@ -23,6 +23,8 @@
 
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
@@ -54,6 +56,12 @@ namespace TimeSeriesFramework.UI.DataModels
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets or sets acronym of the <see cref="InputWizardDevice"/>.
+        /// </summary>
+        [Required(ErrorMessage = "Device acronym is a required field, please provide value.")]
+        [StringLength(200, ErrorMessage = "Device Acronym cannot exceed 200 characters.")]
+        [RegularExpression("^[A-Z0-9-'!'_]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-' and '_' are allowed.")]
         public string Acronym
         {
             get
@@ -68,6 +76,10 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets name of the <see cref="InputWizardDevice"/>.
+        /// </summary>
+        [StringLength(200, ErrorMessage = "Device Name cannot exceed 200 characters.")]
         public string Name
         {
             get
@@ -81,6 +93,9 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        ///  Gets or sets <see cref="InputWizardDevice"/> Longitude.
+        /// </summary>
         public decimal Longitude
         {
             get
@@ -94,6 +109,9 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="InputWizardDevice"/> Latitude.
+        /// </summary>
         public decimal Latitude
         {
             get
@@ -107,6 +125,9 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="InputWizardDevice"/> vendor device id.
+        /// </summary>
         public int? VendorDeviceID
         {
             get
@@ -120,6 +141,9 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="InputWizardDevice"/> access id.
+        /// </summary>
         public int AccessID
         {
             get
@@ -133,6 +157,9 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="InputWizardDevice"/> parent access id.
+        /// </summary>
         public int ParentAccessID
         {
             get
@@ -146,6 +173,9 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="InputWizardDevice"/> include flag.
+        /// </summary>
         public bool Include
         {
             get
@@ -159,6 +189,9 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="InputWizardDevice"/> digital count.
+        /// </summary>
         public int DigitalCount
         {
             get
@@ -172,6 +205,9 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="InputWizardDevice"/> analog count.
+        /// </summary>
         public int AnalogCount
         {
             get
@@ -185,6 +221,9 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="InputWizardDevice"/> add digitals flag.
+        /// </summary>
         public bool AddDigitals
         {
             get
@@ -198,6 +237,9 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="InputWizardDevice"/> add analog flag.
+        /// </summary>
         public bool AddAnalogs
         {
             get
@@ -211,6 +253,9 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="InputWizardDevice"/> existing flag.
+        /// </summary>
         public bool Existing
         {
             get
@@ -224,6 +269,9 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="InputWizardDevice"/> phasor list.
+        /// </summary>
         public ObservableCollection<InputWizardDevicePhasor> PhasorList
         {
             get
@@ -241,34 +289,44 @@ namespace TimeSeriesFramework.UI.DataModels
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Retrieves <see cref="ObservableCollection{T}"/> type collection of <see cref="InputWizardDevice"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <returns>Collection of <see cref="InputWizardDevice"/>.</returns>
         public static ObservableCollection<InputWizardDevice> Load(AdoDataConnection database)
         {
             return new ObservableCollection<InputWizardDevice>();
         }
 
+        /// <summary>
+        /// Saves <see cref="InputWizardDevice"/> information in to database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="inputWizardDevice">Information about <see cref="InputWizardDevice"/>.</param>
+        /// <returns>string, indicating success for UI display.</returns>
         public static string Save(AdoDataConnection database, InputWizardDevice inputWizardDevice)
         {
             return "";
-            //if (inputWizardDevice.Include)
-            //{
-            //    bool createdConnection = false;
-            //    try
-            //    {
-            //        createdConnection = CreateConnection(ref database);
-            //    }
-            //    finally
-            //    {
-            //        if (createdConnection && database != null)
-            //            database.Dispose();
-            //    }
-            //}
         }
 
+        /// <summary>
+        /// Gets a <see cref="Dictionary{T1,T2}"/> style list of <see cref="InputWizardDevice"/> information.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
+        /// <returns><see cref="Dictionary{T1,T2}"/> type collection.</returns>
         public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional = false)
         {
             return new Dictionary<int, string>();
         }
 
+        /// <summary>
+        /// Deletes specified record from database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="deviceID">ID of the record to be deleted.</param>
+        /// <returns>String, for display use, indicating success.</returns>
         public static string Delete(AdoDataConnection database, int deviceID)
         {
             return "";
@@ -278,6 +336,9 @@ namespace TimeSeriesFramework.UI.DataModels
 
     }
 
+    /// <summary>
+    /// Represents phasor information for <see cref="InputWizardDevice"/> from IConfigurationFrame.
+    /// </summary>
     public class InputWizardDevicePhasor : DataModelBase
     {
         #region [ Members ]
@@ -286,11 +347,18 @@ namespace TimeSeriesFramework.UI.DataModels
         private string m_label;
         private string m_type;
         private string m_phase;
-        private string m_destinationLabel;
+        //private string m_destinationLabel;
         private bool m_include;
 
         #endregion
 
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the <see cref="InputWizardDevicePhasor"/> Label.
+        /// </summary>
+        [Required(ErrorMessage = "Phasor label is a required field, please provide value.")]
+        [StringLength(200, ErrorMessage = "Phasor label must not exceed 200 characters.")]
         public string Label
         {
             get
@@ -304,6 +372,11 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets the <see cref="InputWizardDevicePhasor"/> Type.
+        /// </summary>
+        [DefaultValue("V")]
+        [StringLength(1, ErrorMessage = "Phasor type must be 1 character.")]
         public string Type
         {
             get
@@ -317,6 +390,11 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets the Phase of the current <see cref="InputWizardDevicePhasor"/>.
+        /// </summary>
+        [DefaultValue("+")]
+        [StringLength(1, ErrorMessage = "Phasor phase must be 1 character.")]
         public string Phase
         {
             get
@@ -330,19 +408,22 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
-        public string DestinationLabel
-        {
-            get
-            {
-                return m_destinationLabel;
-            }
-            set
-            {
-                m_destinationLabel = value;
-                OnPropertyChanged("DestinationLabel");
-            }
-        }
+        //public string DestinationLabel
+        //{
+        //    get
+        //    {
+        //        return m_destinationLabel;
+        //    }
+        //    set
+        //    {
+        //        m_destinationLabel = value;
+        //        OnPropertyChanged("DestinationLabel");
+        //    }
+        //}
 
+        /// <summary>
+        /// Gets or sets boolean flag indicating if <see cref="InputWizardDevicePhasor"/> needs to be saved into database.
+        /// </summary>
         public bool Include
         {
             get
@@ -355,5 +436,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 OnPropertyChanged("Include");
             }
         }
+
+        #endregion
     }
 }

@@ -72,6 +72,9 @@ namespace TsfManager
             this.Unloaded += new RoutedEventHandler(MainWindow_Unloaded);
             Title = ((App)Application.Current).Title;
 
+            if (!string.IsNullOrEmpty(CommonFunctions.CurrentUser))
+                Title += " Current User: " + CommonFunctions.CurrentUser;
+
             CommonFunctions.SetRetryServiceConnection(true);
         }
 

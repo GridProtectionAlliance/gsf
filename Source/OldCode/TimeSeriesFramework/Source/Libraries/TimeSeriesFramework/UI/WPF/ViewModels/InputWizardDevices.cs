@@ -788,7 +788,7 @@ namespace TimeSeriesFramework.UI.ViewModels
                                                                                             Label = phasor.Label,
                                                                                             Type = phasor.PhasorType == PhasorType.Current ? "I" : "V",
                                                                                             Phase = "+",
-                                                                                            DestinationLabel = "",
+                                                                                            //DestinationLabel = "",
                                                                                             Include = true
                                                                                         }).ToList())
                     });

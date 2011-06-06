@@ -33,7 +33,6 @@ namespace TimeSeriesFramework.UI
     [Serializable()]
     public class ConnectionSettings
     {
-
         public PhasorProtocol PhasorProtocol;
         public TransportProtocol TransportProtocol;
         public string ConnectionString;

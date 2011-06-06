@@ -406,6 +406,12 @@ namespace TimeSeriesFramework.UI
             }
         }
 
+        /// <summary>
+        /// Retrieves runtime id for an object.
+        /// </summary>
+        /// <param name="sourceTable">Table where object has been defined.</param>
+        /// <param name="sourceID">ID of an object in source table.</param>
+        /// <returns>string, id of an object in Runtime table.</returns>
         public static string GetRuntimeID(string sourceTable, int sourceID)
         {
             string runtimeID = string.Empty;
@@ -426,6 +432,10 @@ namespace TimeSeriesFramework.UI
             }
         }
 
+        /// <summary>
+        /// Sets a boolean flag indicating if connection cycle should be continued.
+        /// </summary>
+        /// <param name="retry"></param>
         public static void SetRetryServiceConnection(bool retry)
         {
             s_retryServiceConnection = retry;
@@ -433,12 +443,19 @@ namespace TimeSeriesFramework.UI
                 DisconnectWindowsServiceClient();
         }
 
+        /// <summary>
+        /// Retrieves <see cref="WindowsServiceClient"/> object.
+        /// </summary>
+        /// <returns><see cref="WindowsServiceClient"/> object.</returns>
         public static WindowsServiceClient GetWindowsServiceClient()
         {
             ConnectWindowsServiceClient();
             return s_windowsServiceClient;
         }
 
+        /// <summary>
+        /// Connects to backend windows service.
+        /// </summary>
         public static void ConnectWindowsServiceClient()
         {
             if (s_windowsServiceClient == null || s_windowsServiceClient.Helper.RemotingClient.CurrentState != TVA.Communication.ClientState.Connected)
@@ -467,6 +484,10 @@ namespace TimeSeriesFramework.UI
             }
         }
 
+        /// <summary>
+        /// Connects asynchronously to backend windows service.
+        /// </summary>
+        /// <param name="state">paramter used.</param>
         private static void ConnectAsync(object state)
         {
             try
@@ -480,6 +501,9 @@ namespace TimeSeriesFramework.UI
             }
         }
 
+        /// <summary>
+        /// Disconnects from backend windows service.
+        /// </summary>
         public static void DisconnectWindowsServiceClient()
         {
             try
@@ -496,6 +520,11 @@ namespace TimeSeriesFramework.UI
             }
         }
 
+        /// <summary>
+        /// Sends command to backend windows service via <see cref="WindowsServiceClient"/> object.
+        /// </summary>
+        /// <param name="command">command to be sent.</param>
+        /// <returns>string, indicating success.</returns>
         public static string SendCommandToService(string command)
         {
             if (s_windowsServiceClient != null && s_windowsServiceClient.Helper.RemotingClient.CurrentState == TVA.Communication.ClientState.Connected)
