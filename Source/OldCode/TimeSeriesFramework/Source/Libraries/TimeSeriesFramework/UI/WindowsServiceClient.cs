@@ -136,16 +136,6 @@ namespace TimeSeriesFramework.UI
         #region [ Methods ]
 
         /// <summary>
-        /// Handles ConnectionException event for remoting client.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        void m_remotingClient_ConnectionException(object sender, EventArgs<Exception> e)
-        {
-
-        }
-
-        /// <summary>
         /// Releases all the resources used by the <see cref="WindowsServiceClient"/> object.
         /// </summary>
         public void Dispose()

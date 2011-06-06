@@ -466,11 +466,11 @@ namespace TimeSeriesFramework.UI
                 AdoDataConnection database = new AdoDataConnection(DefaultSettingsCategory);
                 try
                 {
-                    string remoteStateServer = database.RemoteStatusServerConnectionString();
+                    string connectionString = database.RemoteStatusServerConnectionString();
 
-                    if (!string.IsNullOrWhiteSpace(remoteStateServer))
+                    if (!string.IsNullOrWhiteSpace(connectionString))
                     {
-                        s_windowsServiceClient = new WindowsServiceClient("server=" + remoteStateServer);
+                        s_windowsServiceClient = new WindowsServiceClient(connectionString);
                         s_windowsServiceClient.Helper.RemotingClient.MaxConnectionAttempts = -1;
 
                         System.Threading.ThreadPool.QueueUserWorkItem(ConnectAsync, null);
