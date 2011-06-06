@@ -30,8 +30,8 @@
         <StackPanel Orientation="Vertical" Grid.Column="0">
             <TextBlock Text="Quick Links" HorizontalAlignment="Left" FontSize="{StaticResource XLargeTextSize}"/>
             <Border>
-                <StackPanel Orientation="Vertical">
-                    <Button x:Name="ButtonBrowseDevices" Content="Browse Devices" Style="{StaticResource HomeButtonStyle}" Click="ButtonBrowseDevices_Click"/>
+                <StackPanel Orientation="Vertical" ButtonBase.Click="CommonClickHandler">
+                    <Button x:Name="ButtonBrowseDevices" Content="Browse Devices" Style="{StaticResource HomeButtonStyle}"/>
                     <Button x:Name="ButtonSubscriberRequest" Content="Create Request" Style="{StaticResource HomeButtonStyle}"/>
                     <Button x:Name="ButtonSubscribers" Content="Browse Subscribers" Style="{StaticResource HomeButtonStyle}"/>
                     <Button x:Name="ButtonMeasurementGroup" Content="Measurement Groups" Style="{StaticResource HomeButtonStyle}"/>
