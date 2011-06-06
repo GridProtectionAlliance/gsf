@@ -24,6 +24,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
+using System.Windows.Input;
+using TimeSeriesFramework.UI.Commands;
 using TimeSeriesFramework.UI.DataModels;
 
 namespace TimeSeriesFramework.UI.ViewModels
@@ -38,10 +41,25 @@ namespace TimeSeriesFramework.UI.ViewModels
         // Fields
         private Dictionary<Guid, string> m_nodeLookupList;
         private AdapterType m_adapterType;
+        private RelayCommand m_initializeCommand;
+        private string m_runtimeID;
 
         #endregion
 
         #region [ Properties ]
+
+        public string RuntimeID
+        {
+            get
+            {
+                return m_runtimeID;
+            }
+            set
+            {
+                m_runtimeID = value;
+                OnPropertyChanged("RuntimeID");
+            }
+        }
 
         /// <summary>
         /// Gets flag that determines if <see cref="PagedViewModelBase{T1, T2}.CurrentItem"/> is a new record.
@@ -62,6 +80,17 @@ namespace TimeSeriesFramework.UI.ViewModels
             get
             {
                 return m_nodeLookupList;
+            }
+        }
+
+        public ICommand InitializeCommand
+        {
+            get
+            {
+                if (m_initializeCommand == null)
+                    m_initializeCommand = new RelayCommand(Initialize, () => CanSave);
+
+                return m_initializeCommand;
             }
         }
 
@@ -132,6 +161,36 @@ namespace TimeSeriesFramework.UI.ViewModels
         public override void Delete()
         {
             Adapter.Delete(null, m_adapterType, GetCurrentItemKey());
+        }
+
+        protected override void OnPropertyChanged(string propertyName)
+        {
+            base.OnPropertyChanged(propertyName);
+
+            if (propertyName == "CurrentItem")
+            {
+                if (m_adapterType == AdapterType.Action)
+                    RuntimeID = CommonFunctions.GetRuntimeID("CustomActionAdapter", CurrentItem.ID);
+                else if (m_adapterType == AdapterType.Input)
+                    RuntimeID = CommonFunctions.GetRuntimeID("CustomInputAdapter", CurrentItem.ID);
+                else
+                    RuntimeID = CommonFunctions.GetRuntimeID("CustomOutputAdapter", CurrentItem.ID);
+            }
+        }
+
+        private void Initialize()
+        {
+            try
+            {
+                if (Confirm("Do you want to send Initialize " + GetCurrentItemName() + "?", "Confirm Initialize"))
+                {
+                    Popup(CommonFunctions.SendCommandToService("Initialize " + RuntimeID), "Initialize", MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                Popup("ERROR: " + ex.Message, "Failed To Initialize", MessageBoxImage.Error);
+            }
         }
 
         #endregion

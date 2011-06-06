@@ -29,6 +29,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters;
 using System.Runtime.Serialization.Formatters.Soap;
+using System.Threading;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
@@ -37,6 +38,7 @@ using TimeSeriesFramework.UI.DataModels;
 using TVA;
 using TVA.Data;
 using TVA.PhasorProtocols;
+using TVA.Services.ServiceProcess;
 
 namespace TimeSeriesFramework.UI.ViewModels
 {
@@ -54,10 +56,12 @@ namespace TimeSeriesFramework.UI.ViewModels
         private RelayCommand m_browseIniFileCommand;
         private RelayCommand m_browseConfigurationFileCommand;
         private RelayCommand m_requestConfigurationCommand;
+        private RelayCommand m_saveConfigurationFileCommand;
         private string m_connectionString;
         private string m_alternateCommandChannel;
         private int m_accessID;
         private int m_protocolID;
+        private string m_protocolAcronym;
         private bool m_connectToConcentrator;
         private int? m_pdcID;
         private string m_pdcAcronym;
@@ -77,6 +81,9 @@ namespace TimeSeriesFramework.UI.ViewModels
         private string m_iniFileName;
         private string m_pdcMessage;
         private string m_configurationSummary;
+        private IConfigurationFrame m_configurationFrame;
+        private string m_requestConfigurationError;
+        private object m_requestConfigurationAttachment;
 
         #endregion
 
@@ -261,6 +268,23 @@ namespace TimeSeriesFramework.UI.ViewModels
         }
 
         /// <summary>
+        /// Gets or sets protocol acronym for devices to be configured.
+        /// </summary>
+        public string ProtocolAcronym
+        {
+            get
+            {
+                return m_protocolAcronym;
+            }
+            set
+            {
+                m_protocolAcronym = value;
+                OnPropertyChanged("ProtocolAcronym");
+            }
+        }
+
+
+        /// <summary>
         /// Gets or sets boolean value indicating if connection is to concentrator.
         /// </summary>
         public bool ConnectToConcentrator
@@ -356,6 +380,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets vendor device id for this configuration.
+        /// </summary>
         public int PdcVendorDeviceID
         {
             get
@@ -369,6 +396,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets company ID to which devices are to be associated in this configuration.
+        /// </summary>
         public int CompanyID
         {
             get
@@ -382,6 +412,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets Historian ID to which devices are to be associated in this configuration.
+        /// </summary>
         public int HistorianID
         {
             get
@@ -395,6 +428,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets Interconnection ID to which devices are to be associated in this configuration.
+        /// </summary>
         public int InterconnectionID
         {
             get
@@ -408,6 +444,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets a boolean flag for SkipDisableRealTimeData.
+        /// </summary>
         public bool SkipDisableRealTimeData
         {
             get
@@ -421,6 +460,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="ICommand"/> to browse to connection file.
+        /// </summary>
         public ICommand BrowseConnectionFileCommand
         {
             get
@@ -432,6 +474,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="ICommand"/> to build connection string.
+        /// </summary>
         public ICommand BuildConnectionStringCommand
         {
             get
@@ -443,6 +488,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="ICommand"/> to build alternate command channel.
+        /// </summary>
         public ICommand BuildAlternateCommandChannelCommand
         {
             get
@@ -454,6 +502,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="ICommand"/> to browse to INI file.
+        /// </summary>
         public ICommand BrowseIniFileCommand
         {
             get
@@ -465,6 +516,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="ICommand"/> to browse to configuration file.
+        /// </summary>
         public ICommand BrowseConfigurationFileCommand
         {
             get
@@ -476,6 +530,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="ICommand"/> to request configuration frame from backed service.
+        /// </summary>
         public ICommand RequestConfigurationCommand
         {
             get
@@ -487,6 +544,20 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        public ICommand SaveConfigurationFileCommand
+        {
+            get
+            {
+                if (m_saveConfigurationFileCommand == null)
+                    m_saveConfigurationFileCommand = new RelayCommand(SaveConfigurationFile, (param) => CanSave);
+
+                return m_saveConfigurationFileCommand;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets summary message to be displayed on UI aftern parsing configuration file or frame.
+        /// </summary>
         public string ConfigurationSummary
         {
             get
@@ -500,6 +571,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets boolean flag indicating if configuration can be saved or not.
+        /// </summary>
         public override bool CanSave
         {
             get
@@ -564,6 +638,10 @@ namespace TimeSeriesFramework.UI.ViewModels
             return CurrentItem.Name;
         }
 
+        /// <summary>
+        /// Handles BrowseConnectionFileCommand.
+        /// </summary>
+        /// <param name="parameter">Parameter to be used in command execution.</param>
         private void BrowseConnectionFile(object parameter)
         {
             Stream fileData = null;
@@ -621,7 +699,7 @@ namespace TimeSeriesFramework.UI.ViewModels
                                     ";parsewordcountfrombyte=" + connectionSettings.ParseWordCountFromByte;
 
                             AccessID = connectionSettings.PmuID;
-
+                            ProtocolAcronym = connectionSettings.PhasorProtocol.ToString();
                             if (m_protocolLookupList.Count > 0)
                                 ProtocolID = m_protocolLookupList.FirstOrDefault(p => p.Value == connectionSettings.PhasorProtocol.ToString()).Key;
                         }
@@ -638,6 +716,10 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Handles BrowseConfigurationFileCommand.
+        /// </summary>
+        /// <param name="parameter">Parameter to be used in command execution.</param>
         private void BrowseConfigurationFile(object parameter)
         {
             Stream fileData = null;
@@ -657,58 +739,8 @@ namespace TimeSeriesFramework.UI.ViewModels
                         SoapFormatter sf = new SoapFormatter();
                         sf.AssemblyFormat = FormatterAssemblyStyle.Simple;
                         sf.TypeFormat = FormatterTypeStyle.TypesWhenNeeded;
-                        IConfigurationFrame configurationFrame = sf.Deserialize(fileData) as IConfigurationFrame;
-
-                        ObservableCollection<InputWizardDevice> wizardDeviceList = new ObservableCollection<InputWizardDevice>();
-
-                        if (configurationFrame != null)
-                        {
-                            foreach (IConfigurationCell cell in configurationFrame.Cells)
-                            {
-                                Device existingDevice = Device.GetDevice(null, "WHERE Acronym = '" + cell.StationName.Replace(" ", "").ToUpper() + "'");
-
-                                wizardDeviceList.Add(new InputWizardDevice()
-                                    {
-                                        Acronym = cell.StationName.Replace(" ", "").ToUpper(),
-                                        Name = CultureInfo.CurrentUICulture.TextInfo.ToTitleCase(cell.StationName.ToLower()),
-                                        Longitude = existingDevice == null ? -98.6m : existingDevice.Longitude == null ? -98.6m : (decimal)existingDevice.Longitude,
-                                        Latitude = existingDevice == null ? 37.5m : existingDevice.Latitude == null ? 37.5m : (decimal)existingDevice.Latitude,
-                                        VendorDeviceID = existingDevice == null ? (int?)null : existingDevice.VendorDeviceID,
-                                        AccessID = cell.IDCode,
-                                        ParentAccessID = configurationFrame.IDCode,
-                                        Include = true,
-                                        DigitalCount = cell.DigitalDefinitions.Count,
-                                        AnalogCount = cell.AnalogDefinitions.Count,
-                                        AddDigitals = false,
-                                        AddAnalogs = false,
-                                        Existing = existingDevice == null ? false : true,
-                                        PhasorList = new ObservableCollection<InputWizardDevicePhasor>((from phasor in cell.PhasorDefinitions
-                                                                                                        select new InputWizardDevicePhasor()
-                                                                                                       {
-                                                                                                           Label = phasor.Label,
-                                                                                                           Type = phasor.PhasorType == PhasorType.Current ? "I" : "V",
-                                                                                                           Phase = "+",
-                                                                                                           DestinationLabel = "",
-                                                                                                           Include = true
-                                                                                                       }).ToList())
-                                    });
-                            }
-                        }
-
-                        ItemsSource = wizardDeviceList;
-
-                        ConfigurationSummary = "Current Configuration Summary: " + wizardDeviceList.Count;
-
-                        if (wizardDeviceList.Count > 1)
-                        {
-                            ConfigurationSummary += " Devices. Please provide PDC information below.";
-                            ConnectToConcentrator = true;
-                        }
-                        else
-                        {
-                            ConfigurationSummary += " Device";
-                            ConnectToConcentrator = false;
-                        }
+                        m_configurationFrame = sf.Deserialize(fileData) as IConfigurationFrame;
+                        ParseConfiguration();
                     }
                 }
                 catch (Exception ex)
@@ -719,6 +751,97 @@ namespace TimeSeriesFramework.UI.ViewModels
                 {
                     Mouse.OverrideCursor = null;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Parses IConfigurationFrame to retrieve devices and other configuration information.
+        /// </summary>        
+        private void ParseConfiguration()
+        {
+            ObservableCollection<InputWizardDevice> wizardDeviceList = new ObservableCollection<InputWizardDevice>();
+
+            if (m_configurationFrame != null)
+            {
+                foreach (IConfigurationCell cell in m_configurationFrame.Cells)
+                {
+                    Device existingDevice = Device.GetDevice(null, "WHERE Acronym = '" + cell.StationName.Replace(" ", "").ToUpper() + "'");
+
+                    wizardDeviceList.Add(new InputWizardDevice()
+                    {
+                        Acronym = cell.StationName.Replace(" ", "").ToUpper(),
+                        Name = CultureInfo.CurrentUICulture.TextInfo.ToTitleCase(cell.StationName.ToLower()),
+                        Longitude = existingDevice == null ? -98.6m : existingDevice.Longitude == null ? -98.6m : (decimal)existingDevice.Longitude,
+                        Latitude = existingDevice == null ? 37.5m : existingDevice.Latitude == null ? 37.5m : (decimal)existingDevice.Latitude,
+                        VendorDeviceID = existingDevice == null ? (int?)null : existingDevice.VendorDeviceID,
+                        AccessID = cell.IDCode,
+                        ParentAccessID = m_configurationFrame.IDCode,
+                        Include = true,
+                        DigitalCount = cell.DigitalDefinitions.Count,
+                        AnalogCount = cell.AnalogDefinitions.Count,
+                        AddDigitals = false,
+                        AddAnalogs = false,
+                        Existing = existingDevice == null ? false : true,
+                        PhasorList = new ObservableCollection<InputWizardDevicePhasor>((from phasor in cell.PhasorDefinitions
+                                                                                        select new InputWizardDevicePhasor()
+                                                                                        {
+                                                                                            Label = phasor.Label,
+                                                                                            Type = phasor.PhasorType == PhasorType.Current ? "I" : "V",
+                                                                                            Phase = "+",
+                                                                                            DestinationLabel = "",
+                                                                                            Include = true
+                                                                                        }).ToList())
+                    });
+                }
+            }
+
+            ItemsSource = wizardDeviceList;
+
+            ConfigurationSummary = "Current Configuration Summary: " + wizardDeviceList.Count;
+
+            if (wizardDeviceList.Count > 1)
+            {
+                ConfigurationSummary += " Devices. Please provide PDC information below.";
+                ConnectToConcentrator = true;
+            }
+            else
+            {
+                ConfigurationSummary += " Device";
+                ConnectToConcentrator = false;
+            }
+        }
+
+        private void SaveConfigurationFile(object parameter)
+        {
+            try
+            {
+                if (m_configurationFrame != null)
+                {
+                    SaveFileDialog saveDialog = new SaveFileDialog();
+                    saveDialog.Title = "Save Current Configuration";
+                    saveDialog.Filter = "XML Files (*.xml)|*.xml|All Files (*.*)|*.*";
+                    saveDialog.FileName = "";
+
+                    if (saveDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        using (FileStream stream = File.Create(saveDialog.FileName))
+                        {
+                            SoapFormatter sf = new SoapFormatter();
+                            sf.AssemblyFormat = FormatterAssemblyStyle.Simple;
+                            sf.TypeFormat = FormatterTypeStyle.TypesWhenNeeded;
+                            sf.Serialize(stream, m_configurationFrame);
+                            Popup("Configuration file saved successfully.", "Save Current Configuration", MessageBoxImage.Information);
+                        }
+                    }
+                }
+                else
+                {
+                    Popup("Current configuration is undefined and cannot be saved.", "Save Current Configuration", MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                Popup("ERROR: " + ex.Message, "Save Current Configuration", MessageBoxImage.Error);
             }
         }
 
@@ -737,9 +860,99 @@ namespace TimeSeriesFramework.UI.ViewModels
 
         }
 
+        /// <summary>
+        /// Handles RequestConfigurationCommand.
+        /// </summary>
+        /// <param name="parameter">Parameters to be used in command execution.</param>
         private void RequestConfiguration(object parameter)
         {
+            m_requestConfigurationError = string.Empty;
+            AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+            WindowsServiceClient windowsServiceClient = null;
 
+            try
+            {
+                s_responseWaitHandle = new ManualResetEvent(false);
+
+                windowsServiceClient = CommonFunctions.GetWindowsServiceClient();
+                if (windowsServiceClient != null && windowsServiceClient.Helper != null &&
+                   windowsServiceClient.Helper.RemotingClient != null && windowsServiceClient.Helper.RemotingClient.CurrentState == TVA.Communication.ClientState.Connected)
+                {
+                    windowsServiceClient.Helper.ReceivedServiceResponse += Helper_ReceivedServiceResponse;
+                    windowsServiceClient.Helper.ReceivedServiceUpdate += Helper_ReceivedServiceUpdate;
+
+                    string connectionString = GenerateConnectionString();
+                    if (!connectionString.EndsWith(";"))
+                        connectionString += ";";
+                    connectionString += "accessid=" + AccessID + ";";
+
+                    if (!connectionString.ToLower().Contains("phasorprotocol"))
+                        connectionString += "phasorprotocol=" + ProtocolAcronym + ";";
+
+                    windowsServiceClient.Helper.SendRequest(string.Format("invoke 0 requestdeviceconfiguration \"{0}\"", connectionString));
+
+                    if (s_responseWaitHandle.WaitOne(65000))
+                    {
+                        if (m_requestConfigurationAttachment is ConfigurationErrorFrame)
+                        {
+                            throw new ApplicationException("Received configuration error frame." + Environment.NewLine + m_requestConfigurationError);
+                        }
+                        else if (m_requestConfigurationAttachment is IConfigurationFrame)
+                        {
+                            m_configurationFrame = m_requestConfigurationAttachment as IConfigurationFrame;
+                            ParseConfiguration();
+                        }
+                        else
+                        {
+                            throw new ApplicationException("Invalid frame received, invocation for device configuration has failed.");
+                        }
+                    }
+                    else
+                    {
+                        throw new ApplicationException("Response timeout occured. Waited 60 seconds for Configuration Frame to arrive.");
+                    }
+                }
+                else
+                {
+                    throw new ApplicationException("Connection timeout occured. Tried 10 times to connect to windows service.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Popup("ERROR: " + ex.Message, "Request Configuration", MessageBoxImage.Error);
+            }
+            finally
+            {
+                if (database != null)
+                    database.Dispose();
+
+                if (windowsServiceClient != null)
+                {
+                    windowsServiceClient.Helper.ReceivedServiceResponse -= Helper_ReceivedServiceResponse;
+                    windowsServiceClient.Helper.ReceivedServiceUpdate -= Helper_ReceivedServiceUpdate;
+                }
+            }
+        }
+
+        private void Helper_ReceivedServiceUpdate(object sender, EventArgs<UpdateType, string> e)
+        {
+            if (e.Argument2.StartsWith("[PHASOR!SERVICES]") && !e.Argument2.Contains("*"))
+                m_requestConfigurationError += e.Argument2.Replace("[PHASOR!SERVICES]", "").Replace("\r\n\r\n", "\r\n");
+        }
+
+        private void Helper_ReceivedServiceResponse(object sender, EventArgs<ServiceResponse> e)
+        {
+            List<object> attachments = e.Argument.Attachments;
+
+            // Handle any special attachments coming in from service
+            if (attachments != null)
+            {
+                foreach (object attachment in attachments)
+                {
+                    m_requestConfigurationAttachment = attachment;
+                    s_responseWaitHandle.Set();
+                }
+            }
         }
 
         public void SavePDC()
@@ -877,6 +1090,14 @@ namespace TimeSeriesFramework.UI.ViewModels
 
             return connectionString;
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Fields
+
+        private static ManualResetEvent s_responseWaitHandle;
 
         #endregion
     }

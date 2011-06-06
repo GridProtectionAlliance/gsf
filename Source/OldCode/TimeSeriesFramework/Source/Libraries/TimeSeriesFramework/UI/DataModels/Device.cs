@@ -1072,11 +1072,16 @@ namespace TimeSeriesFramework.UI.DataModels
                         device.AutoStartDataParsingSequence, device.SkipDisableRealTimeData, device.MeasurementReportingInterval, device.ConnectOnDemand, CommonFunctions.CurrentUser,
                         database.UtcNow(), device.ID);
 
-                // If device is concentrator then we do not want to create default measurements for it. So exit function.
-                if (device.IsConcentrator)
-                    return "Device information saved successfully";
 
                 Device savedDevice = GetDevice(database, "WHERE Acronym = '" + device.Acronym.Replace(" ", "").ToUpper() + "'");
+
+                // If device is concentrator then we do not want to create default measurements for it. So exit function.                                
+                if (device.IsConcentrator)
+                {
+                    NotifyService(savedDevice);
+                    return "Device information saved successfully";
+                }
+
                 if (savedDevice == null)
                     return "Device information saved successfully but failed to create measurements";
 
@@ -1109,6 +1114,9 @@ namespace TimeSeriesFramework.UI.DataModels
                         Phasor.Save(database, phasor);
                     }
                 }
+
+                // Notify service about configuration changes made here.                 
+                NotifyService(savedDevice);
 
                 return "Device information saved successfully";
             }
@@ -1221,6 +1229,31 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        public static void NotifyService(Device device)
+        {
+            if (device.Enabled)
+            {
+                if (device.ParentID == null)
+                    CommonFunctions.SendCommandToService("Initialize " + CommonFunctions.GetRuntimeID("Device", device.ID));
+                else
+                    CommonFunctions.SendCommandToService("Initialize " + CommonFunctions.GetRuntimeID("Device", (int)device.ParentID));
+            }
+            else
+            {
+                //we do this to make sure all statistical measurements are in the system.
+                CommonFunctions.SendCommandToService("ReloadConfig");
+            }
+
+            if (device.HistorianID != null)
+                CommonFunctions.SendCommandToService("Invoke " + CommonFunctions.GetRuntimeID("Historian", (int)device.HistorianID) + " RefreshMetadata");
+
+            Historian statHistorian = Historian.GetHistorian(null, "WHERE Acronym = 'STAT'");
+            if (statHistorian != null)
+                CommonFunctions.SendCommandToService("Invoke " + CommonFunctions.GetRuntimeID("Historian", statHistorian.ID) + " RefreshMetadata");
+
+            CommonFunctions.SendCommandToService("Invoke 0 ReloadStatistics");
+            CommonFunctions.SendCommandToService("RefreshRoutes");
+        }
         #endregion
     }
 }

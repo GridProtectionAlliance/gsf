@@ -53,6 +53,8 @@ namespace TimeSeriesFramework.UI.ViewModels
         private RelayCommand m_phasorCommand;
         private RelayCommand m_measurementCommand;
         private RelayCommand m_copyCommand;
+        private RelayCommand m_initializeCommand;
+        private string m_runtimeID;
 
         #endregion
 
@@ -83,6 +85,19 @@ namespace TimeSeriesFramework.UI.ViewModels
         #endregion
 
         #region [ Properties ]
+
+        public string RuntimeID
+        {
+            get
+            {
+                return m_runtimeID;
+            }
+            set
+            {
+                m_runtimeID = value;
+                OnPropertyChanged("RuntimeID");
+            }
+        }
 
         /// <summary>
         /// Gets <see cref="Dictionary{T1,T2}"/> type collection of <see cref="Node"/> defined in the database.
@@ -236,6 +251,17 @@ namespace TimeSeriesFramework.UI.ViewModels
                     m_measurementCommand = new RelayCommand(GoToMeasurements);
 
                 return m_measurementCommand;
+            }
+        }
+
+        public ICommand InitializeCommand
+        {
+            get
+            {
+                if (m_initializeCommand == null)
+                    m_initializeCommand = new RelayCommand(Initialize, () => CanSave);
+
+                return m_initializeCommand;
             }
         }
 
@@ -466,6 +492,34 @@ namespace TimeSeriesFramework.UI.ViewModels
 
                 if (groupBox != null)
                     ((GroupBox)groupBox).Header = "Manage Phasors for " + device.Acronym;
+            }
+        }
+
+        protected override void OnPropertyChanged(string propertyName)
+        {
+            base.OnPropertyChanged(propertyName);
+
+            if (propertyName == "CurrentItem")
+                RuntimeID = CommonFunctions.GetRuntimeID("Device", CurrentItem.ID);
+        }
+
+        private void Initialize()
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(RuntimeID))
+                {
+                    if (Confirm("Do you want to send Initialize " + GetCurrentItemName() + "?", "Confirm Initialize"))
+                    {
+                        Device.NotifyService(CurrentItem);
+
+                        Popup("Successfully sent Initialize command.", "Initialize", MessageBoxImage.Information);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Popup("ERROR: " + ex.Message, "Failed To Initialize", MessageBoxImage.Error);
             }
         }
 

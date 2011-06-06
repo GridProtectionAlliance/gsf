@@ -74,8 +74,9 @@
             <CheckBox Content="Enabled" Grid.Row="4" Grid.Column="3" IsChecked="{tsfBinding:Column Path=Enabled}"/>
             <TextBlock Text="Runtime ID" Grid.Row="5" Grid.Column="0" />
             <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="1">
-                <TextBlock Text="" />
-                <Button Content="Initialize" IsEnabled="{Binding Path=IsNewRecord, Converter={StaticResource NotConverter}}"/>
+                <TextBlock Text="{tsfBinding:Column Path=DataContext.RuntimeID, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}}" />
+                <Button Content="Initialize" Command="{Binding Path=DataContext.InitializeCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}}" 
+                        IsEnabled="{Binding Path=DataContext.IsNewRecord, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}, Converter={StaticResource NotConverter}}"/>
             </StackPanel>                        
         </Grid>
 

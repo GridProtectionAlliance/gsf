@@ -478,6 +478,51 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        public static Node GetCurrentNode(AdoDataConnection database)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+                DataTable nodeTable;
+
+                nodeTable = database.Connection.RetrieveData(database.AdapterType, "Select ID, Name, CompanyID, " +
+                        "Longitude, Latitude, Description, ImagePath, Settings, MenuData, MenuType, Master, LoadOrder, Enabled, " +
+                        "CompanyName From NodeDetail WHERE ID = @id ORDER BY LoadOrder", DefaultTimeout, database.CurrentNodeID());
+
+                if (nodeTable.Rows.Count == 0)
+                    return null;
+
+                DataRow row = nodeTable.Rows[0];
+
+                Node node = new Node()
+                    {
+                        ID = database.Guid(row, "ID"),
+                        Name = row.Field<string>("Name"),
+                        CompanyID = row.Field<int?>("CompanyID"),
+                        Longitude = row.Field<decimal?>("Longitude"),
+                        Latitude = row.Field<decimal?>("Latitude"),
+                        Description = row.Field<string>("Description"),
+                        ImagePath = row.Field<string>("ImagePath"),
+                        Settings = row.Field<string>("Settings"),
+                        MenuType = row.Field<string>("MenuType"),
+                        MenuData = row.Field<string>("MenuData"),
+                        Master = Convert.ToBoolean(row.Field<object>("Master")),
+                        LoadOrder = row.Field<int>("LoadOrder"),
+                        Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
+                        m_companyName = row.Field<string>("CompanyName")
+                    };
+
+                return node;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
         /// <summary>
         /// Gets a <see cref="Dictionary{T1,T2}"/> style list of <see cref="Node"/> information.
         /// </summary>

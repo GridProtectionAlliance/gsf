@@ -91,6 +91,9 @@
     <Reference Include="TVA.Core">
       <HintPath>..\..\Dependencies\TVA\TVA.Core.dll</HintPath>
     </Reference>
+    <Reference Include="TVA.Services, Version=4.0.2.32, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\TVA\TVA.Services.dll</HintPath>
+    </Reference>
     <Reference Include="TVA.Windows">
       <HintPath>..\..\Dependencies\TVA\TVA.Windows.dll</HintPath>
     </Reference>

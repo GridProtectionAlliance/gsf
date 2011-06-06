@@ -120,7 +120,8 @@
                 </Grid.RowDefinitions>
 
                 <StackPanel Grid.Column="1" Grid.Row="0" Grid.ColumnSpan="3" Orientation="Horizontal">
-                    <Button x:Name="ButtonRequestConfiguration" Content="Request Configuration" Width="175" HorizontalAlignment="Left"  IsEnabled="False"/>
+                    <Button x:Name="ButtonRequestConfiguration" Content="Request Configuration" Width="175" HorizontalAlignment="Left"
+                            Command="{Binding Path=DataContext.RequestConfigurationCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}"/>
                     <TextBlock Text="Request could take up to 60 seconds to complete for UDP only streams." HorizontalAlignment="Left" Margin="0" FontStyle="Italic" />
                 </StackPanel>
 
@@ -141,24 +142,28 @@
 
                 <StackPanel Orientation="Horizontal" x:Name="StackPanelSummary" Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3">
                     <TextBlock Text="{tsfBinding:Column Path=DataContext.ConfigurationSummary, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}" Foreground="#FF095188" Width="Auto"/>
-                    <Button x:Name="ButtonSaveConfiguration" Content="Save Configuration" Width="Auto" IsEnabled="False" />
+                    <Button x:Name="ButtonSaveConfiguration" Content="Save Configuration" Width="Auto"
+                            Command="{Binding Path=DataContext.SaveConfigurationFileCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}"/>
                 </StackPanel>
 
                 <Border Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="3" BorderThickness="1" Margin="2" BorderBrush="#FF333333" />
 
-                <CheckBox IsChecked="{tsfBinding:Column Path=DataContext.ConnectToConcentrator, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=1}}"  Content="Connection is to Concentrator" FontSize="{StaticResource LargeTextSize}" FontWeight="Bold" Grid.Row="8" Grid.Column="1" Grid.ColumnSpan="3" />
-                
-                <TextBlock Grid.Row="9" Grid.Column="0" Text="PDC Acronym" />
-                <StackPanel Orientation="Horizontal" Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="3" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="2">
+                <CheckBox x:Name="CheckBoxConnectToConcentrator" IsChecked="{tsfBinding:Column Path=DataContext.ConnectToConcentrator, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=1}}"  Content="Connection is to Concentrator" FontSize="{StaticResource LargeTextSize}" FontWeight="Bold" Grid.Row="8" Grid.Column="1" Grid.ColumnSpan="3" />
+
+                <TextBlock Grid.Row="9" Grid.Column="0" Text="PDC Acronym" Visibility="{Binding ElementName=CheckBoxConnectToConcentrator, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                <StackPanel Orientation="Horizontal" Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="3" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="2"
+                            Visibility="{Binding ElementName=CheckBoxConnectToConcentrator, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <TextBox Text="{tsfBinding:Column Path=DataContext.PdcAcronym, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}"  Width="{StaticResource SmallItemSize}" />
                     <TextBlock Text="{tsfBinding:Column Path=DataContext.PdcMessage, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}" Width="Auto" TextWrapping="Wrap"/>
                 </StackPanel>
-                
-                <TextBlock Grid.Row="10" Grid.Column="0" Text="PDC Name"/>
-                <TextBox Text="{tsfBinding:Column Path=DataContext.PdcName, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=1}}" Grid.Row="10" Grid.Column="1" Grid.ColumnSpan="3" />
-                
-                <TextBlock Grid.Row="11" Grid.Column="0" Text="PDC Device Vendor" />
+
+                <TextBlock Grid.Row="10" Grid.Column="0" Text="PDC Name" Visibility="{Binding ElementName=CheckBoxConnectToConcentrator, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                <TextBox Text="{tsfBinding:Column Path=DataContext.PdcName, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=1}}" Grid.Row="10" Grid.Column="1" Grid.ColumnSpan="3" 
+                         Visibility="{Binding ElementName=CheckBoxConnectToConcentrator, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                <TextBlock Grid.Row="11" Grid.Column="0" Text="PDC Device Vendor" Visibility="{Binding ElementName=CheckBoxConnectToConcentrator, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                 <ComboBox Grid.Row="11" Grid.Column="1" ItemsSource="{Binding Source={StaticResource VendorDeviceLookupList}}" DisplayMemberPath="Value"
+                      Visibility="{Binding ElementName=CheckBoxConnectToConcentrator, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}"
                       SelectedItem="{tsfBinding:Column Path=DataContext.PdcVendorDeviceID, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=1}, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource VendorDeviceLookupList}}"/>
 
                 <Border Grid.Row="12" Grid.Column="1" Grid.ColumnSpan="3" BorderThickness="1" Margin="2" BorderBrush="#FF333333" />

@@ -27,6 +27,7 @@ using System.Data;
 using System.Threading;
 using System.Windows;
 using System.Windows.Media;
+using TimeSeriesFramework.UI.DataModels;
 using TVA;
 using TVA.Data;
 
@@ -37,17 +38,37 @@ namespace TimeSeriesFramework.UI
     /// </summary>
     public static class CommonFunctions
     {
-        private static Guid s_currentNodeID;
+        #region [ Members ]
 
         /// <summary>
         /// Defines the default settings category for TimeSeriesFramework data connections.
         /// </summary>
         public const string DefaultSettingsCategory = "SystemSettings";
 
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+
+        private static Guid s_currentNodeID;
+        private static string s_remoteStatusServerConnectionString;
+        private static string s_dataPublisherPort;
+        private static string s_realTimeStatisticServiceUrl;
+        private static string s_timeSeriesDataServiceUrl;
+        private static WindowsServiceClient s_windowsServiceClient;
+        private static bool s_retryServiceConnection;
+
+        // Static Properties
+
         /// <summary>
         /// Defines the current user name as defined in the Thread.CurrentPrincipal.Identity.
         /// </summary>
         public static readonly string CurrentUser = Thread.CurrentPrincipal.Identity.Name;
+
+        // Static Methods
+
+        #region [AdoDataConnection Extension Methods]
 
         /// <summary>
         /// Sets the current user context for the database.
@@ -128,12 +149,80 @@ namespace TimeSeriesFramework.UI
         }
 
         /// <summary>
-        /// Assigns <see cref="CurrentNodeID"/> based ID of currently active node.
+        /// Retrieves connection string to connect to backend windows service.
         /// </summary>
-        /// <param name="nodeID">Current node ID <see cref="CurrentNodeID"/> to assign.</param>
-        public static void SetAsCurrentNodeID(this Guid nodeID)
+        /// <param name="database"><see cref="AdoDataConnection"/> to database.</param>
+        /// <returns>IP address and port on which backend windows service is running.</returns>
+        public static string RemoteStatusServerConnectionString(this AdoDataConnection database)
         {
-            s_currentNodeID = nodeID;
+            if (string.IsNullOrEmpty(s_remoteStatusServerConnectionString))
+                database.GetNodeSettings();
+
+            return s_remoteStatusServerConnectionString;
+        }
+
+        /// <summary>
+        /// Retrieves web service url to query real time statistics values.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to database.</param>
+        /// <returns>string, url to web service.</returns>
+        public static string RealTimeStatisticServiceUrl(this AdoDataConnection database)
+        {
+            if (string.IsNullOrEmpty(s_realTimeStatisticServiceUrl))
+                database.GetNodeSettings();
+
+            return s_realTimeStatisticServiceUrl;
+        }
+
+        /// <summary>
+        /// Retrieves a port number on which back end service is publishing data.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to database.</param>
+        /// <returns>port number on which data is being published.</returns>
+        public static string DataPublisherPort(this AdoDataConnection database)
+        {
+            if (string.IsNullOrEmpty(s_dataPublisherPort))
+                database.GetNodeSettings();
+
+            return s_dataPublisherPort;
+        }
+
+        /// <summary>
+        /// Retrieves web serivce url to query real time data.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to database.</param>
+        /// <returns>string, url to web service.</returns>
+        public static string TimeSeriesDataServiceUrl(this AdoDataConnection database)
+        {
+            if (string.IsNullOrEmpty(s_timeSeriesDataServiceUrl))
+                database.GetNodeSettings();
+
+            return s_timeSeriesDataServiceUrl;
+        }
+
+        /// <summary>
+        /// Method to parse Settings field value for current node defined in the database and extract various parameters to communicate with backend windows service.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to database.</param>
+        private static void GetNodeSettings(this AdoDataConnection database)
+        {
+            Node node = Node.GetCurrentNode(database);
+            if (node != null)
+            {
+                Dictionary<string, string> settings = node.Settings.ToLower().ParseKeyValuePairs();
+
+                if (settings.ContainsKey("remotestatusserverconnectionstring"))
+                    s_remoteStatusServerConnectionString = settings["remotestatusserverconnectionstring"];
+
+                if (settings.ContainsKey("realtimestatisticserviceurl"))
+                    s_realTimeStatisticServiceUrl = settings["realtimestatisticserviceurl"];
+
+                if (settings.ContainsKey("datapublisherport"))
+                    s_dataPublisherPort = settings["datapublisherport"];
+
+                if (settings.ContainsKey("timeseriesdataserviceurl"))
+                    s_timeSeriesDataServiceUrl = settings["timeseriesdataserviceurl"];
+            }
         }
 
         /// <summary>
@@ -171,7 +260,7 @@ namespace TimeSeriesFramework.UI
         /// <param name="database">Connected <see cref="AdoDataConnection"/>.</param>
         /// <param name="row"><see cref="DataRow"/> from which value needs to be retrieved.</param>
         /// <param name="fieldName">Name of the field which contains <see cref="System.Guid"/>.</param>
-        /// <returns></returns>
+        /// <returns><see cref="System.Guid"/>.</returns>
         public static Guid Guid(this AdoDataConnection database, DataRow row, string fieldName)
         {
             if (database.IsJetEngine() || database.IsMySQL())
@@ -200,6 +289,26 @@ namespace TimeSeriesFramework.UI
                 return DateTime.UtcNow.ToOADate();
 
             return DateTime.UtcNow;
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Assigns <see cref="CurrentNodeID"/> based ID of currently active node.
+        /// </summary>
+        /// <param name="nodeID">Current node ID <see cref="CurrentNodeID"/> to assign.</param>
+        public static void SetAsCurrentNodeID(this Guid nodeID)
+        {
+            s_currentNodeID = nodeID;
+
+            // When node selection changes, reset other static members related to node.
+            s_remoteStatusServerConnectionString = string.Empty;
+            s_realTimeStatisticServiceUrl = string.Empty;
+            s_dataPublisherPort = string.Empty;
+            s_timeSeriesDataServiceUrl = string.Empty;
+            SetRetryServiceConnection(true);
+            DisconnectWindowsServiceClient();
+            ConnectWindowsServiceClient();
         }
 
         /// <summary>
@@ -296,6 +405,103 @@ namespace TimeSeriesFramework.UI
                 }
             }
         }
+
+        public static string GetRuntimeID(string sourceTable, int sourceID)
+        {
+            string runtimeID = string.Empty;
+            AdoDataConnection database = null;
+            try
+            {
+                database = new AdoDataConnection(DefaultSettingsCategory);
+                object id = database.Connection.ExecuteScalar("SELECT ID FROM Runtime WHERE SourceTable = @sourceTable AND SourceID = @sourceID", sourceTable, sourceID);
+                if (id != null)
+                    runtimeID = id.ToString();
+
+                return runtimeID;
+            }
+            finally
+            {
+                if (database != null)
+                    database.Dispose();
+            }
+        }
+
+        public static void SetRetryServiceConnection(bool retry)
+        {
+            s_retryServiceConnection = retry;
+            if (!retry)
+                DisconnectWindowsServiceClient();
+        }
+
+        public static WindowsServiceClient GetWindowsServiceClient()
+        {
+            ConnectWindowsServiceClient();
+            return s_windowsServiceClient;
+        }
+
+        public static void ConnectWindowsServiceClient()
+        {
+            if (s_windowsServiceClient == null || s_windowsServiceClient.Helper.RemotingClient.CurrentState != TVA.Communication.ClientState.Connected)
+            {
+                if (s_windowsServiceClient != null)
+                    DisconnectWindowsServiceClient();
+
+                AdoDataConnection database = new AdoDataConnection(DefaultSettingsCategory);
+                try
+                {
+                    s_windowsServiceClient = new WindowsServiceClient("server=" + database.RemoteStatusServerConnectionString());
+                    s_windowsServiceClient.Helper.RemotingClient.MaxConnectionAttempts = -1;
+
+                    System.Threading.ThreadPool.QueueUserWorkItem(ConnectAsync, null);
+                }
+                finally
+                {
+                    if (database != null)
+                        database.Dispose();
+                }
+            }
+        }
+
+        private static void ConnectAsync(object state)
+        {
+            try
+            {
+                if (s_windowsServiceClient != null && s_retryServiceConnection)
+                    s_windowsServiceClient.Helper.Connect();
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("Failed to connect to service: " + ex.Message, ex.InnerException ?? ex);
+            }
+        }
+
+        public static void DisconnectWindowsServiceClient()
+        {
+            try
+            {
+                if (s_windowsServiceClient != null)
+                {
+                    s_windowsServiceClient.Dispose();
+                    s_windowsServiceClient = null;
+                }
+            }
+            catch
+            {
+                // TODO: Log into database error log.
+            }
+        }
+
+        public static string SendCommandToService(string command)
+        {
+            if (s_windowsServiceClient != null && s_windowsServiceClient.Helper.RemotingClient.CurrentState == TVA.Communication.ClientState.Connected)
+                s_windowsServiceClient.Helper.SendRequest(command);
+            else
+                throw new ApplicationException("Application is currently disconnected from service.");
+
+            return "Successfully sent " + command + " command.";
+        }
+
+        #endregion
 
     }
 }

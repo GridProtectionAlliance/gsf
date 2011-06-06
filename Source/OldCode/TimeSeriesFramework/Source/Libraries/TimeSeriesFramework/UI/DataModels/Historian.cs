@@ -511,6 +511,46 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        public static Historian GetHistorian(AdoDataConnection database, string whereClause)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+                DataTable historianTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM HistorianDetail " + whereClause);
+
+                if (historianTable.Rows.Count == 0)
+                    return null;
+
+                DataRow row = historianTable.Rows[0];
+
+                Historian historian = new Historian()
+                {
+                    NodeID = database.Guid(row, "NodeID"),
+                    ID = row.Field<int>("ID"),
+                    Acronym = row.Field<string>("Acronym"),
+                    Name = row.Field<string>("Name"),
+                    AssemblyName = row.Field<string>("AssemblyName"),
+                    TypeName = row.Field<string>("TypeName"),
+                    ConnectionString = row.Field<string>("ConnectionString"),
+                    IsLocal = Convert.ToBoolean(row.Field<object>("IsLocal")),
+                    Description = row.Field<string>("Description"),
+                    LoadOrder = row.Field<int>("LoadOrder"),
+                    Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
+                    MeasurementReportingInterval = row.Field<int>("MeasurementReportingInterval"),
+                    m_nodeName = row.Field<string>("NodeName")
+                };
+
+                return historian;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
         #endregion
     }
 }

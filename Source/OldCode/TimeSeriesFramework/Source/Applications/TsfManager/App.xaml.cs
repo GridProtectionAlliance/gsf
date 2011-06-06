@@ -66,8 +66,6 @@ namespace TsfManager
             m_errorLogger.LogToUI = true;
             m_errorLogger.Initialize();
 
-            NodeID = Guid.Parse("e7a5235d-cb6f-4864-a96e-a8686f36e599");
-
             Version appVersion = AssemblyInfo.EntryAssembly.Version;
             m_title = "openPG Manager" + " (v" + appVersion.Major + "." + appVersion.Minor + "." + appVersion.Build + ") ";
         }

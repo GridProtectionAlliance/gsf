@@ -25,6 +25,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 using System.Xml;
 using System.Xml.Serialization;
 using TimeSeriesFramework.UI;
@@ -42,9 +44,12 @@ namespace TsfManager
 
         // Fields
         private ObservableCollection<MenuDataItem> m_menuDataItems;
+        private WindowsServiceClient m_windowsServiceClient;
 
         #endregion
+
         #region [ Properties ]
+
         public ObservableCollection<MenuDataItem> MenuDataItems
         {
             get
@@ -52,7 +57,9 @@ namespace TsfManager
                 return m_menuDataItems;
             }
         }
+
         #endregion
+
         #region [ Constructor ]
 
         /// <summary>
@@ -62,7 +69,10 @@ namespace TsfManager
         {
             InitializeComponent();
             this.Loaded += new RoutedEventHandler(MainWindow_Loaded);
+            this.Unloaded += new RoutedEventHandler(MainWindow_Unloaded);
             Title = ((App)Application.Current).Title;
+
+            CommonFunctions.SetRetryServiceConnection(true);
         }
 
         #endregion
@@ -90,10 +100,17 @@ namespace TsfManager
             // Populate Node Dropdown
             ComboboxNode.ItemsSource = Node.GetLookupList(null);
             if (ComboboxNode.Items.Count > 0)
-            {
                 ComboboxNode.SelectedIndex = 0;
-                ((App)Application.Current).NodeID = ((KeyValuePair<Guid, string>)ComboboxNode.SelectedItem).Key;
-            }
+        }
+
+        /// <summary>
+        /// Method to handle window unloaded event.
+        /// </summary>
+        /// <param name="sender">Source of the event.</param>
+        /// <param name="e">Event arguments.</param>
+        void MainWindow_Unloaded(object sender, RoutedEventArgs e)
+        {
+            CommonFunctions.SetRetryServiceConnection(false);
         }
 
         /// <summary>
@@ -105,6 +122,47 @@ namespace TsfManager
         {
             ((App)Application.Current).NodeID = ((KeyValuePair<Guid, string>)ComboboxNode.SelectedItem).Key;
             m_menuDataItems[0].Command.Execute(null);
+
+            if (m_windowsServiceClient != null)
+            {
+                m_windowsServiceClient.Helper.RemotingClient.ConnectionEstablished -= RemotingClient_ConnectionEstablished;
+                m_windowsServiceClient.Helper.RemotingClient.ConnectionTerminated -= RemotingClient_ConnectionTerminated;
+            }
+
+            m_windowsServiceClient = CommonFunctions.GetWindowsServiceClient();
+
+            if (m_windowsServiceClient != null)
+            {
+                m_windowsServiceClient.Helper.RemotingClient.ConnectionEstablished += RemotingClient_ConnectionEstablished;
+                m_windowsServiceClient.Helper.RemotingClient.ConnectionTerminated += RemotingClient_ConnectionTerminated;
+
+                if (m_windowsServiceClient.Helper.RemotingClient.CurrentState == TVA.Communication.ClientState.Connected)
+                {
+                    EllipseConnectionState.Dispatcher.BeginInvoke((Action)delegate()
+                    {
+                        EllipseConnectionState.Fill = Application.Current.Resources["GreenRadialGradientBrush"] as RadialGradientBrush;
+                        ToolTipService.SetToolTip(EllipseConnectionState, "Connected to the service");
+                    });
+                }
+            }
+        }
+
+        private void RemotingClient_ConnectionTerminated(object sender, EventArgs e)
+        {
+            EllipseConnectionState.Dispatcher.BeginInvoke((Action)delegate()
+                {
+                    EllipseConnectionState.Fill = Application.Current.Resources["RedRadialGradientBrush"] as RadialGradientBrush;
+                    ToolTipService.SetToolTip(EllipseConnectionState, "Disconnected from the service");
+                });
+        }
+
+        private void RemotingClient_ConnectionEstablished(object sender, EventArgs e)
+        {
+            EllipseConnectionState.Dispatcher.BeginInvoke((Action)delegate()
+                {
+                    EllipseConnectionState.Fill = Application.Current.Resources["GreenRadialGradientBrush"] as RadialGradientBrush;
+                    ToolTipService.SetToolTip(EllipseConnectionState, "Connected to the service");
+                });
         }
 
         #endregion
