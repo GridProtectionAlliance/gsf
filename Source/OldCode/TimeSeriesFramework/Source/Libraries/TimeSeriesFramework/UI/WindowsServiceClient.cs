@@ -22,8 +22,10 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using TVA;
 using TVA.Communication;
+using TVA.Security.Cryptography;
 using TVA.Services.ServiceProcess;
 
 namespace TimeSeriesFramework.UI
@@ -53,10 +55,11 @@ namespace TimeSeriesFramework.UI
         public WindowsServiceClient(string connectionString)
         {
             // Initialize status cache members.
-            string statusBufferSize;
+            Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
+            string setting;
 
-            if (connectionString.ParseKeyValuePairs().TryGetValue("statusBufferSize", out statusBufferSize))
-                m_statusBufferSize = int.Parse(statusBufferSize);
+            if (settings.TryGetValue("statusBufferSize", out setting) && !string.IsNullOrWhiteSpace(setting))
+                m_statusBufferSize = int.Parse(setting);
             else
                 m_statusBufferSize = 8192;
 
@@ -65,7 +68,25 @@ namespace TimeSeriesFramework.UI
             // Initialize remoting client socket.
             m_remotingClient = new TcpClient();
             m_remotingClient.ConnectionString = connectionString;
-            m_remotingClient.SharedSecret = "openPDC";
+
+            // If user overrides shared secret, assume they are wanting an encrypted session
+            if (settings.TryGetValue("sharedSecret", out setting) && !string.IsNullOrWhiteSpace(setting))
+            {
+                m_remotingClient.Encryption = CipherStrength.Aes256;
+                m_remotingClient.SecureSession = true;
+                m_remotingClient.SharedSecret = setting.Trim();
+            }
+            else
+            {
+                m_remotingClient.Encryption = CipherStrength.None;
+                m_remotingClient.SecureSession = false;
+                m_remotingClient.SharedSecret = "TSF";
+            }
+
+            // See if user wants to connect to remote service using integrated security
+            if (settings.TryGetValue("integratedSecurity", out setting) && !string.IsNullOrWhiteSpace(setting))
+                m_remotingClient.IntegratedSecurity = setting.ParseBoolean();
+
             m_remotingClient.Handshake = true;
             m_remotingClient.PayloadAware = true;
             m_remotingClient.MaxConnectionAttempts = -1;
