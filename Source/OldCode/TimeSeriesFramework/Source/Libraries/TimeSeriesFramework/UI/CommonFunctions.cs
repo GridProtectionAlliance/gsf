@@ -449,10 +449,15 @@ namespace TimeSeriesFramework.UI
                 AdoDataConnection database = new AdoDataConnection(DefaultSettingsCategory);
                 try
                 {
-                    s_windowsServiceClient = new WindowsServiceClient("server=" + database.RemoteStatusServerConnectionString());
-                    s_windowsServiceClient.Helper.RemotingClient.MaxConnectionAttempts = -1;
+                    string remoteStateServer = database.RemoteStatusServerConnectionString();
 
-                    System.Threading.ThreadPool.QueueUserWorkItem(ConnectAsync, null);
+                    if (!string.IsNullOrWhiteSpace(remoteStateServer))
+                    {
+                        s_windowsServiceClient = new WindowsServiceClient("server=" + remoteStateServer);
+                        s_windowsServiceClient.Helper.RemotingClient.MaxConnectionAttempts = -1;
+
+                        System.Threading.ThreadPool.QueueUserWorkItem(ConnectAsync, null);
+                    }
                 }
                 finally
                 {
