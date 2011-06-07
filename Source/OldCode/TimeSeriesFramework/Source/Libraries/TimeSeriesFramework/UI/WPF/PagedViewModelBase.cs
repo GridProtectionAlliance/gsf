@@ -212,6 +212,10 @@ namespace TimeSeriesFramework.UI
                 // If CurrentItem changes then raise OnPropertyChanged on CanDelete property.
                 // This will help us display or hide certain item based on IsNewItem property value.                
                 OnPropertyChanged("CanDelete");
+
+                // If CurrentItem changes then raise OnPropertyChanged on IsNewRecord property.
+                // This will help us enable or disable Initialize button where applicable.
+                OnPropertyChanged("IsNewRecord");
             }
         }
 

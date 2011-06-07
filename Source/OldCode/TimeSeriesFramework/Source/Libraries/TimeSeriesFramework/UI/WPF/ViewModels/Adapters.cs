@@ -160,7 +160,15 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// </summary>
         public override void Delete()
         {
-            Adapter.Delete(null, m_adapterType, GetCurrentItemKey());
+            try
+            {
+                Popup(Adapter.Delete(null, m_adapterType, GetCurrentItemKey()), "Delete Adapter", MessageBoxImage.Information);
+                Load();
+            }
+            catch (Exception ex)
+            {
+                Popup("ERROR: " + ex.Message, "Delete Adapter", MessageBoxImage.Error);
+            }
         }
 
         protected override void OnPropertyChanged(string propertyName)
