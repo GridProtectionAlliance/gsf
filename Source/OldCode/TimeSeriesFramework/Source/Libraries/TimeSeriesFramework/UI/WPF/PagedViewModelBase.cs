@@ -215,7 +215,8 @@ namespace TimeSeriesFramework.UI
 
                 // If CurrentItem changes then raise OnPropertyChanged on IsNewRecord property.
                 // This will help us enable or disable Initialize button where applicable.
-                OnPropertyChanged("IsNewRecord");
+                if (m_currentItem != null)
+                    OnPropertyChanged("IsNewRecord");
             }
         }
 
@@ -458,7 +459,10 @@ namespace TimeSeriesFramework.UI
         {
             get
             {
-                return !IsNewRecord;
+                if (CurrentItem == null)
+                    return false;
+                else
+                    return !IsNewRecord;
             }
         }
 
