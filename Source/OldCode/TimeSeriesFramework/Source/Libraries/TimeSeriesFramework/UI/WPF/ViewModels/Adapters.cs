@@ -169,12 +169,19 @@ namespace TimeSeriesFramework.UI.ViewModels
 
             if (propertyName == "CurrentItem")
             {
-                if (m_adapterType == AdapterType.Action)
-                    RuntimeID = CommonFunctions.GetRuntimeID("CustomActionAdapter", CurrentItem.ID);
-                else if (m_adapterType == AdapterType.Input)
-                    RuntimeID = CommonFunctions.GetRuntimeID("CustomInputAdapter", CurrentItem.ID);
+                if (CurrentItem == null)
+                {
+                    RuntimeID = string.Empty;
+                }
                 else
-                    RuntimeID = CommonFunctions.GetRuntimeID("CustomOutputAdapter", CurrentItem.ID);
+                {
+                    if (m_adapterType == AdapterType.Action)
+                        RuntimeID = CommonFunctions.GetRuntimeID("CustomActionAdapter", CurrentItem.ID);
+                    else if (m_adapterType == AdapterType.Input)
+                        RuntimeID = CommonFunctions.GetRuntimeID("CustomInputAdapter", CurrentItem.ID);
+                    else
+                        RuntimeID = CommonFunctions.GetRuntimeID("CustomOutputAdapter", CurrentItem.ID);
+                }
             }
         }
 

@@ -500,7 +500,12 @@ namespace TimeSeriesFramework.UI.ViewModels
             base.OnPropertyChanged(propertyName);
 
             if (propertyName == "CurrentItem")
-                RuntimeID = CommonFunctions.GetRuntimeID("Device", CurrentItem.ID);
+            {
+                if (CurrentItem == null)
+                    RuntimeID = string.Empty;
+                else
+                    RuntimeID = CommonFunctions.GetRuntimeID("Device", CurrentItem.ID);
+            }
         }
 
         private void Initialize()

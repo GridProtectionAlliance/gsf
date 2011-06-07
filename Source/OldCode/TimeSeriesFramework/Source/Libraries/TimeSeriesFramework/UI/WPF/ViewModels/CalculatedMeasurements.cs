@@ -126,7 +126,12 @@ namespace TimeSeriesFramework.UI.ViewModels
             base.OnPropertyChanged(propertyName);
 
             if (propertyName == "CurrentItem")
-                RuntimeID = CommonFunctions.GetRuntimeID("CalculatedMeasurement", CurrentItem.ID);
+            {
+                if (CurrentItem == null)
+                    RuntimeID = string.Empty;
+                else
+                    RuntimeID = CommonFunctions.GetRuntimeID("CalculatedMeasurement", CurrentItem.ID);
+            }
         }
 
         private void Initialize()
