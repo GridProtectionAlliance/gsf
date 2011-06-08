@@ -296,14 +296,14 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <param name="vendorDevice">Information about <see cref="VendorDevice"/>.</param>
         /// <param name="isNew">Indicates if save is a new addition or an update to an existing record.</param>
         /// <returns>String, for display use, indicating success.</returns>
-        public static string Save(AdoDataConnection database, VendorDevice vendorDevice, bool isNew)
+        public static string Save(AdoDataConnection database, VendorDevice vendorDevice)
         {
             bool createdConnection = false;
             try
             {
                 createdConnection = CreateConnection(ref database);
 
-                if (isNew)
+                if (vendorDevice.ID == 0)
                     database.Connection.ExecuteNonQuery("INSERT INTO VendorDevice (VendorID, Name, Description, URL, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@vendorID, @name, @description, @url, @updatedBy, @updatedOn, @createdBy, @createdOn)",
                         DefaultTimeout, vendorDevice.VendorID, vendorDevice.Name, vendorDevice.Description.ToNotNull(), vendorDevice.URL.ToNotNull(),
                         CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());

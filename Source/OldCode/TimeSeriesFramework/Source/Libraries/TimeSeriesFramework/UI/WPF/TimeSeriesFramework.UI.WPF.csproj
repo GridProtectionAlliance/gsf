@@ -232,14 +232,12 @@
     </Compile>
     <Compile Include="ViewModels\MeasurementGroups.cs" />
     <Compile Include="ViewModels\Measurements.cs" />
-    <Compile Include="ViewModels\Monitor.cs" />
     <Compile Include="ViewModels\Nodes.cs" />
     <Compile Include="ViewModels\Phasors.cs" />
     <Compile Include="ViewModels\Protocols.cs" />
     <Compile Include="ViewModels\SecurityGroups.cs" />
     <Compile Include="ViewModels\SelectMeasurements.cs" />
     <Compile Include="ViewModels\SubscribeMeasurements.cs" />
-    <Compile Include="ViewModels\SubscriberMeasurements.cs" />
     <Compile Include="ViewModels\Subscribers.cs" />
     <Compile Include="ViewModels\UserAccounts.cs" />
     <Compile Include="ViewModels\VendorDevices.cs" />

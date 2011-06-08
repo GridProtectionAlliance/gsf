@@ -264,7 +264,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         {
             ObservableCollection<TimeSeriesFramework.UI.DataModels.Measurement> measurementsToBeAdded = (ObservableCollection<TimeSeriesFramework.UI.DataModels.Measurement>)parameter;
 
-            if (measurementsToBeAdded.Count > 0)
+            if (measurementsToBeAdded != null && measurementsToBeAdded.Count > 0)
             {
                 Mouse.OverrideCursor = Cursors.Wait;
                 AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
@@ -304,7 +304,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         {
             ObservableCollection<object> measurementsToBeRemoved = (ObservableCollection<object>)parameter;
 
-            if (measurementsToBeRemoved.Count > 0)
+            if (measurementsToBeRemoved != null && measurementsToBeRemoved.Count > 0)
             {
                 Mouse.OverrideCursor = Cursors.Wait;
                 AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
