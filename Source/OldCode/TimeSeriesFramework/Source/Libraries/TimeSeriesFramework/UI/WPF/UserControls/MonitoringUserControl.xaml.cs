@@ -11,6 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using TimeSeriesFramework.UI.ViewModels;
 
 namespace TimeSeriesFramework.UI.UserControls
 {
@@ -19,9 +20,17 @@ namespace TimeSeriesFramework.UI.UserControls
     /// </summary>
     public partial class MonitoringUserControl : UserControl
     {
+        Monitor m_dataContext;
         public MonitoringUserControl()
         {
             InitializeComponent();
+            m_dataContext = new Monitor();
+            this.Unloaded += new RoutedEventHandler(MonitoringUserControl_Unloaded);
+        }
+
+        void MonitoringUserControl_Unloaded(object sender, RoutedEventArgs e)
+        {
+            m_dataContext.DetachServiceEvents();
         }
     }
 }

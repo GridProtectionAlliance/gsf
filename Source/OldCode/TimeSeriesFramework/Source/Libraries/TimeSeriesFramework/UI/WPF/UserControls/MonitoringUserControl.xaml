@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:tsfBinding="clr-namespace:TimeSeriesFramework.UI.Binding;assembly=TimeSeriesFramework.UI"
              mc:Ignorable="d" 
              d:DesignHeight="550" d:DesignWidth="750">
     <UserControl.Resources>
@@ -29,7 +30,7 @@
                 <Border BorderThickness="0">
                     <ScrollViewer x:Name="ScrollViewerMonitor" Background="Black" Margin="2,2,2,0" BorderThickness="0" Padding="0" Height="420" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" VerticalContentAlignment="Top">
                         <ScrollViewer.Content>
-                            <TextBlock x:Name="TextBoxServiceStatus" HorizontalAlignment="Left" Foreground="White" TextWrapping="Wrap" Margin="2" Height="Auto" FontFamily="Courier New" FontSize="{StaticResource LargerTextSize}"/>
+                            <TextBlock x:Name="TextBoxServiceStatus" Text="{tsfBinding:Column Path=StatusMessages}" HorizontalAlignment="Left" Foreground="White" TextWrapping="Wrap" Margin="2" Height="Auto" FontFamily="Courier New" FontSize="{StaticResource LargerTextSize}"/>
                         </ScrollViewer.Content>
                     </ScrollViewer>
                 </Border>

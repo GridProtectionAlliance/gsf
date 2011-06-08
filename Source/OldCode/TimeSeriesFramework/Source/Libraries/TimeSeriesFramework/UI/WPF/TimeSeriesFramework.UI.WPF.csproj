@@ -232,6 +232,7 @@
     </Compile>
     <Compile Include="ViewModels\MeasurementGroups.cs" />
     <Compile Include="ViewModels\Measurements.cs" />
+    <Compile Include="ViewModels\Monitor.cs" />
     <Compile Include="ViewModels\Nodes.cs" />
     <Compile Include="ViewModels\Phasors.cs" />
     <Compile Include="ViewModels\Protocols.cs" />
