@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  05/15/2011 - J. Ritchie Carroll
 //       Added runtime size optimizations.
+//  06/07/2011 - J. Ritchie Carroll
+//       Implemented initialize bug fix as found and proposed by Luc Cezard.
 //
 //******************************************************************************************************
 
@@ -291,7 +293,7 @@ namespace TimeSeriesFramework.Transport
             if (m_keyIVs != null)
                 buffer = buffer.Decrypt(startIndex + 1, length - 1, m_keyIVs[m_cipherIndex][KeyIndex], m_keyIVs[m_cipherIndex][IVIndex], CipherStrength.Aes256);
             else
-                index = 1;
+                index = startIndex + 1;
 
             // Decode runtime ID
             ushort id = EndianOrder.BigEndian.ToUInt16(buffer, index);

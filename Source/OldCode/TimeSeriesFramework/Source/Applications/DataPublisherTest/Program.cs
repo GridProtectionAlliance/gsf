@@ -28,6 +28,7 @@ namespace DataPublisherTest
             // Attach to publisher events
             publisher.StatusMessage += publisher_StatusMessage;
             publisher.ProcessException += publisher_ProcessException;
+            publisher.ProcessMeasurementFilter = true;
             //publisher.SharedSecret = "TimeSeriesLibraryTest";
 
             // Initialize publisher

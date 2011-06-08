@@ -1298,6 +1298,7 @@ namespace TimeSeriesFramework.Transport
         // Update signal index cache based on input measurement keys
         private void UpdateSignalIndexCache(Guid clientID, SignalIndexCache signalIndexCache, MeasurementKey[] inputMeasurementKeys)
         {
+            ConcurrentDictionary<ushort, Tuple<Guid, MeasurementKey>> reference = new ConcurrentDictionary<ushort, Tuple<Guid, MeasurementKey>>();
             List<MeasurementKey> unauthorizedKeys = new List<MeasurementKey>();
             ushort index = 0;
             Guid signalID;
@@ -1305,25 +1306,24 @@ namespace TimeSeriesFramework.Transport
             // We will now go through the client's requested keys and see which ones are authorized for subscription,
             // this information will be available through the returned signal index cache which will also define
             // a runtime index optimization for the allowed measurements.
-            signalIndexCache.Reference.Clear();
-
             foreach (MeasurementKey key in inputMeasurementKeys)
             {
                 if (m_requireClientAuthentication)
                 {
                     // Validate that subscriber has rights to this signal
                     if (SubcriberHasRights(signalIndexCache.SubscriberID, key, out signalID))
-                        signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(signalID, key));
+                        reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(signalID, key));
                     else
                         unauthorizedKeys.Add(key);
                 }
                 else
                 {
                     // When client authorization is not required, all points are assumed to be allowed
-                    signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(LookupSignalID(key), key));
+                    reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(LookupSignalID(key), key));
                 }
             }
 
+            signalIndexCache.Reference = reference;
             signalIndexCache.UnauthorizedKeys = unauthorizedKeys.ToArray();
 
             // Send client updated signal index cache
@@ -1851,6 +1851,7 @@ namespace TimeSeriesFramework.Transport
                                         else
                                         {
                                             // Manually re-initialize existing client subscription
+                                            subscription.ProcessMeasurementFilter = ProcessMeasurementFilter;
                                             subscription.Initialize();
                                             subscription.Initialized = true;
                                         }
@@ -1910,6 +1911,7 @@ namespace TimeSeriesFramework.Transport
                             // Handle meta data refresh
                             DataSet metadata = new DataSet();
                             metadata.Tables.Add(DataSource.Tables["Devices"].Copy());
+                            metadata.Tables.Add(DataSource.Tables["Phasors"].Copy());
                             metadata.Tables.Add(DataSource.Tables["ActiveMeasurements"].Copy());
                             SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.MetaDataRefresh, Serialization.Serialize(metadata, TVA.SerializationFormat.Binary));
                             break;
@@ -1918,8 +1920,8 @@ namespace TimeSeriesFramework.Transport
                 else
                 {
                     // Handle unrecognized commands
-                    message = "sent an unrecognized server command: 0x" + commandByte.ToString("X").PadLeft(2, '0');
-                    SendClientResponse(clientID, (byte)ServerResponse.Failed, commandByte, Encoding.Unicode.GetBytes("Client " + message));
+                    message = " sent an unrecognized server command: 0x" + commandByte.ToString("X").PadLeft(2, '0');
+                    SendClientResponse(clientID, (byte)ServerResponse.Failed, commandByte, Encoding.Unicode.GetBytes("Client" + message));
                     OnProcessException(new InvalidOperationException("WARNING: " + connection.ConnectionID + message));
                 }
             }

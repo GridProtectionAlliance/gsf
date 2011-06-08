@@ -648,9 +648,6 @@ namespace TimeSeriesFramework.Adapters
                 else
                     adapter.InitializationTimeout = InitializationTimeout;
 
-                // Update adapter routing type flag
-                adapter.ProcessMeasurementFilter = ProcessMeasurementFilter;
-
                 return true;
             }
             catch (Exception ex)
@@ -1041,6 +1038,9 @@ namespace TimeSeriesFramework.Adapters
 
                 // Associate parent collection
                 item.AssignParentCollection(this);
+
+                // Update adapter routing type flag
+                item.ProcessMeasurementFilter = ProcessMeasurementFilter;
 
                 // If automatically initializing new elements, handle object initialization from
                 // thread pool so it can take needed amount of time

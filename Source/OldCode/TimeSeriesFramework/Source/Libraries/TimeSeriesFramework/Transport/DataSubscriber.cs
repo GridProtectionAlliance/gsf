@@ -322,7 +322,7 @@ namespace TimeSeriesFramework.Transport
                     // Encode encrypted authentication key into buffer
                     buffer.Write(bytes, 0, bytes.Length);
 
-                    // Send authenticate server command with associated command buffer
+                    // Send authentication command to server with associated command buffer
                     return SendServerCommand(ServerCommand.Authenticate, buffer.ToArray());
                 }
                 catch (Exception ex)

@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  08/23/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
+//  06/07/2011 - J. Ritchie Carroll
+//       Implemented binary image bug fix as found and proposed by Luc Cezard.
 //
 //******************************************************************************************************
 
@@ -33,7 +35,7 @@ namespace TimeSeriesFramework
     /// </summary>
     /// <remarks>
     /// This measurement implementation is serialized through <see cref="ISupportBinaryImage"/>
-    /// to allow complete control of binary format. All measurements properties are serialized
+    /// to allow complete control of binary format. All measurement properties are serialized
     /// at their full resolution and no attempt is made to optimize the binary image for
     /// purposes of size reduction.
     /// </remarks>
@@ -107,8 +109,16 @@ namespace TimeSeriesFramework
                 string source = Source.ToNonNullString();
                 string tagName = TagName.ToNonNullString();
 
+                // Encode source string length
+                bytes = Encoding.Unicode.GetBytes(source);
+                length = bytes.Length;
+
+                // Encode tag name string length
+                bytes = Encoding.Unicode.GetBytes(tagName);
+                length += bytes.Length;
+
                 // Allocate buffer to hold binary image
-                buffer = new byte[FixedLength + source.Length + tagName.Length];
+                buffer = new byte[FixedLength + length];
 
                 // Encode ID
                 EndianOrder.BigEndian.CopyBytes(ID, buffer, index);

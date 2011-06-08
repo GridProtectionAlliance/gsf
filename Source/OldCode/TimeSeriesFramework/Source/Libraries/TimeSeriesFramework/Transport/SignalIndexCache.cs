@@ -84,13 +84,17 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
-        /// Gets integer signal index cross reference dictionary.
+        /// Gets or sets integer signal index cross reference dictionary.
         /// </summary>
         public ConcurrentDictionary<ushort, Tuple<Guid, MeasurementKey>> Reference
         {
             get
             {
                 return m_reference;
+            }
+            set
+            {
+                m_reference = value;
             }
         }
 

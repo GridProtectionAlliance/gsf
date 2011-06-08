@@ -31,6 +31,7 @@ namespace TimeSeriesFramework
     /// <summary>
     /// Represents a primary key for a measurement.
     /// </summary>
+    [Serializable()]
     public struct MeasurementKey : IEquatable<MeasurementKey>, IComparable<MeasurementKey>, IComparable
     {
         #region [ Members ]
