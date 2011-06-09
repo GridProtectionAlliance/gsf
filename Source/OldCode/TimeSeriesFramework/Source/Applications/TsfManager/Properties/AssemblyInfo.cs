@@ -5,8 +5,8 @@ using System.Windows;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("UITest")]
-[assembly: AssemblyDescription("Time-series Data Processing Framework UI Test Harness")]
+[assembly: AssemblyTitle("TSF Manager")]
+[assembly: AssemblyDescription("Time-series Framework UI Management Application")]
 [assembly: AssemblyCompany("Grid Protection Alliance")]
 [assembly: AssemblyProduct("Time-series Data Processing Framework")]
 [assembly: AssemblyCopyright("Copyright © GPA, 2011.  All Rights Reserved.")]
@@ -54,5 +54,5 @@ using System.Windows;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.69.0")]
-[assembly: AssemblyVersion("1.0.69.0")]
-[assembly: AssemblyFileVersion("1.0.69.0")]
+[assembly: AssemblyVersion("0.6.3.0")]
+[assembly: AssemblyFileVersion("0.6.3.0")]
