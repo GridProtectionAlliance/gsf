@@ -17,6 +17,8 @@
 //       Added overrides to RefreshData(), UpdateData(), ResetPassword() and ChangePassword() methods.
 //  02/14/2011 - J. Ritchie Carroll
 //       Modified provider to be able to use local accounts when user is not connected to a domain.
+//  06/09/2011 - Pinal C. Patel
+//       Fixed a bug in the caching logic of RefreshData() method.
 //
 //*******************************************************************************************************
 
@@ -497,7 +499,7 @@ namespace TVA.Security
                     if (UserData.IsDefined)
                     {
                         // Fill in user information from domain data if it is available
-                        if (user.UserEntry != null)
+                        if (user.DomainAvailable)
                         {
                             // Copy relevant user information
                             UserData.FirstName = user.FirstName;
@@ -527,8 +529,7 @@ namespace TVA.Security
                         {
                             // Attempt to load previously cached user information when domain is offline
                             UserData cachedUserData = userDataCache[UserData.LoginID];
-
-                            if (userDataCache != null)
+                            if (cachedUserData != null)
                             {
                                 // Copy relevant cached user information
                                 UserData.FirstName = cachedUserData.FirstName;

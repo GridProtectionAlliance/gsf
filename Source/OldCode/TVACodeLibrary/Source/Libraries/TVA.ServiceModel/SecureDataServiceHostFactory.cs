@@ -1,29 +1,15 @@
 ﻿//*******************************************************************************************************
-//  SecurityModule.cs - Gbtc
+//  SecureDataServiceHostFactory.cs - Gbtc
 //
-//  Tennessee Valley Authority, 2010
+//  Tennessee Valley Authority, 2011
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  03/31/2010 - Pinal C. Patel
-//       Generated original version of source code.
-//  05/27/2010 - Pinal C. Patel
-//       Added usage example to code comments.
-//  06/30/2010 - Pinal C. Patel
-//       Modified redirection logic to support security of static resources (*.txt, *.pdf, *.exe).
-//  07/01/2010 - Pinal C. Patel
-//       Modified redirection logic to allow for custom redirection using customErrors settings.
-//  08/11/2010 - Pinal C. Patel
-//       Made key methods virtual for extensibility.
-//  10/14/2010 - Pinal C. Patel
-//       Modified GetResourceName() to return path and query for consistency with SecurityPolicy.
-//  01/06/2011 - Pinal C. Patel
-//       Implemented logic to use RestrictAccessAttribute for access control on the requested resource.
 //  06/09/2011 - Pinal C. Patel
-//       Added null reference check in IsAccessRestricted() method.
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
@@ -244,239 +230,44 @@
 #endregion
 
 using System;
-using System.Web;
-using System.Web.Configuration;
-using System.Web.Hosting;
-using System.Web.SessionState;
-using TVA.Configuration;
-using TVA.Security;
-using TVA.Web.Hosting;
+using System.Collections.Generic;
+using System.Data.Services;
+using System.IdentityModel.Policy;
+using System.ServiceModel;
+using System.ServiceModel.Description;
 
-namespace TVA.Web
+namespace TVA.ServiceModel
 {
-    #region [ Enumerations ]
-
-    #endregion
-
     /// <summary>
-    /// Represents an <see cref="IHttpModule">HTTP module</see> that can be used to enable site-wide role-based security.
+    /// A service host factory for WCF Data Services that enables role-based security using <see cref="SecurityPolicy"/>.
     /// </summary>
-    /// <example>
-    /// Required config file entries:
-    /// <code>
-    /// <![CDATA[
-    /// <?xml version="1.0"?>
-    /// <configuration>
-    ///   <configSections>
-    ///     <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
-    ///   </configSections>
-    ///   <categorizedSettings>
-    ///     <securityProvider>
-    ///       <add name="ApplicationName" value="" description="Name of the application being secured as defined in the backend security datastore."
-    ///         encrypted="false" />
-    ///       <add name="ConnectionString" value="" description="Connection string to be used for connection to the backend security datastore."
-    ///         encrypted="false" />
-    ///       <add name="ProviderType" value="TVA.Security.LdapSecurityProvider, TVA.Security"
-    ///         description="The type to be used for enforcing security." encrypted="false" />
-    ///       <add name="IncludedResources" value="*/*.*=*" description="Semicolon delimited list of resources to be secured along with role names."
-    ///         encrypted="false" />
-    ///       <add name="ExcludedResources" value="*/WebResource.axd*;*/SecurityPortal.aspx*"
-    ///         description="Semicolon delimited list of resources to be excluded from being secured."
-    ///         encrypted="false" />
-    ///       <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
-    ///         encrypted="false" />
-    ///       <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
-    ///         encrypted="false" />
-    ///     </securityProvider>
-    ///     <activeDirectory>
-    ///       <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
-    ///         encrypted="false" />
-    ///       <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
-    ///         encrypted="false" />
-    ///       <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
-    ///         encrypted="true" />
-    ///     </activeDirectory>
-    ///   </categorizedSettings>
-    ///   <system.web>
-    ///     <authentication mode="Windows"/>
-    ///     <httpModules>
-    ///       <add name="SecurityModule" type="TVA.Web.SecurityModule, TVA.Web" />
-    ///     </httpModules>
-    ///   </system.web>
-    /// </configuration>
-    /// ]]>
-    /// </code>
-    /// </example>
-    /// <seealso cref="ISecurityProvider"/>
-    public class SecurityModule : IHttpModule
+    /// <see cref="SecurityPolicy"/>
+    public class SecureDataServiceHostFactory : DataServiceHostFactory
     {
-        #region [ Members ]
-
-        // Nested Types
-
         /// <summary>
-        /// A handler used to force the SessionStateModule to load session state.
+        /// Creates a new <see cref="DataServiceHost"/> from the URI.
         /// </summary>
-        private class SessionEnabledHandler : IHttpHandler, IRequiresSessionState
+        /// <param name="serviceType">Specifies the type of WCF service to host.</param>
+        /// <param name="baseAddresses">An array of base addresses for the service.</param>
+        /// <returns>New <see cref="DataServiceHost"/>.</returns>
+        protected override ServiceHost CreateServiceHost(Type serviceType, Uri[] baseAddresses)
         {
-            public IHttpHandler OriginalHandler;
+            // Create data service host.
+            ServiceHost host = base.CreateServiceHost(serviceType, baseAddresses);
 
-            /// <summary>
-            /// Initializes a new instance of the <see cref="SessionEnabledHandler"/> class.
-            /// </summary>
-            /// <param name="originalHandler">The original handler object.</param>
-            public SessionEnabledHandler(IHttpHandler originalHandler)
+            // Enable security on the data service.
+            ServiceAuthorizationBehavior serviceBehavior = host.Description.Behaviors.Find<ServiceAuthorizationBehavior>();
+            if (serviceBehavior == null)
             {
-                OriginalHandler = originalHandler;
+                serviceBehavior = new ServiceAuthorizationBehavior();
+                host.Description.Behaviors.Add(serviceBehavior);
             }
+            serviceBehavior.PrincipalPermissionMode = PrincipalPermissionMode.Custom;
+            List<IAuthorizationPolicy> policies = new List<IAuthorizationPolicy>();
+            policies.Add((IAuthorizationPolicy)Activator.CreateInstance(typeof(SecurityPolicy)));
+            serviceBehavior.ExternalAuthorizationPolicies = policies.AsReadOnly();
 
-            /// <summary>
-            /// This method will never get called.
-            /// </summary>
-            public void ProcessRequest(HttpContext context)
-            {
-                throw new NotSupportedException();
-            }
-
-            /// <summary>
-            /// Returns false since class has a member.
-            /// </summary>
-            public bool IsReusable
-            {
-                get { return false; }
-            }
+            return host;
         }
-
-        // Fields
-        private HttpApplication m_application;
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Initializes the <see cref="SecurityModule"/>.
-        /// </summary>
-        /// <param name="context">An <see cref="HttpApplication"/> object.</param>
-        public void Init(HttpApplication context)
-        {
-            m_application = context;
-            m_application.PostMapRequestHandler += Application_PostMapRequestHandler;
-            m_application.PostAcquireRequestState += Application_PostAcquireRequestState;
-            m_application.PreRequestHandlerExecute += Application_PreRequestHandlerExecute;
-
-            if (!(HostingEnvironment.VirtualPathProvider is EmbeddedResourcePathProvider))
-                HostingEnvironment.RegisterVirtualPathProvider(new EmbeddedResourcePathProvider());
-        }
-
-        /// <summary>
-        /// Releases the resources used by <see cref="SecurityModule"/>.
-        /// </summary>
-        public void Dispose()
-        {
-            m_application.PostMapRequestHandler -= Application_PostMapRequestHandler;
-            m_application.PostAcquireRequestState -= Application_PostAcquireRequestState;
-            m_application.PreRequestHandlerExecute -= Application_PreRequestHandlerExecute;
-        }
-
-        /// <summary>
-        /// Gets the name of resource being accessed.
-        /// </summary>
-        /// <returns><see cref="HttpApplication.Request"/>.<see cref="HttpRequest.Url"/>.<see cref="Uri.PathAndQuery"/> property value.</returns>
-        protected virtual string GetResourceName()
-        {
-            return m_application.Request.Url.PathAndQuery;
-        }
-
-        /// <summary>
-        /// Determines if access to the requested resource is restricted by <see cref="RestrictAccessAttribute"/>.
-        /// </summary>
-        /// <returns>true if access to the requested resource is restricted, otherwise false.</returns>
-        protected virtual bool IsAccessRestricted()
-        {
-            // Check for the request handler.
-            IHttpHandler handler = m_application.Context.Handler;
-            if (handler == null)
-                return false;
-
-            // Evaluate access restriction if defined.
-            object[] attributes = handler.GetType().GetCustomAttributes(typeof(RestrictAccessAttribute), true);
-            if (attributes.Length > 0)
-                return !((RestrictAccessAttribute)attributes[0]).CheckAccess();
-            else
-                return false;
-        }
-
-        private void Application_PostMapRequestHandler(object sender, EventArgs e)
-        {
-            if (!SecurityProviderUtility.IsResourceSecurable(GetResourceName()))
-                return;
-
-            if (m_application.Context.Handler is IReadOnlySessionState ||
-                m_application.Context.Handler is IRequiresSessionState)
-                // no need to replace the current handler 
-                return;
-
-            // swap the current handler 
-            m_application.Context.Handler = new SessionEnabledHandler(m_application.Context.Handler);
-        }
-
-        private void Application_PostAcquireRequestState(object sender, EventArgs e)
-        {
-            if (!SecurityProviderUtility.IsResourceSecurable(GetResourceName()))
-                return;
-
-            SessionEnabledHandler handler = HttpContext.Current.Handler as SessionEnabledHandler;
-            if (handler != null)
-                // set the original handler back 
-                HttpContext.Current.Handler = handler.OriginalHandler;
-        }
-
-        private void Application_PreRequestHandlerExecute(object sender, EventArgs e)
-        {
-            string resource = GetResourceName();
-            if (!SecurityProviderUtility.IsResourceSecurable(resource))
-                return;
-
-            if (SecurityProviderCache.CurrentProvider == null)
-                SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
-
-            if (!m_application.User.Identity.IsAuthenticated)
-                // Failed to authenticate user.
-                Redirect(401);
-
-            if (IsAccessRestricted() || 
-                !SecurityProviderUtility.IsResourceAccessible(resource))
-                // User does not have access to the resource.
-                Redirect(403);
-        }
-
-        private void Redirect(int statusCode)
-        {
-            if (m_application.Context.IsCustomErrorEnabled)
-            {
-                // Defer redirect to customErrors settings in the config file to allow for custom error pages.
-                ConfigurationFile configFile = ConfigurationFile.Current;
-                CustomErrorsSection customErrors = configFile.Configuration.GetSection("system.web/customErrors") as CustomErrorsSection;
-                if (customErrors != null && customErrors.Errors[statusCode.ToString()] != null)
-                {
-                    // Set status code for the response.
-                    m_application.Context.Response.StatusCode = statusCode;
-                    // Throw exception for ASP.NET pipeline to takeover processing.
-                    throw new HttpException(statusCode, string.Format("Security exception (HTTP status code: {0})", statusCode));
-                }
-            }
-
-            // Abruptly ending the processing caused by a redirect does not work well when processing static content.
-            string redirectUrl = string.Format("~/SecurityPortal.aspx?s={0}&r={1}", statusCode, HttpUtility.UrlEncode(m_application.Request.Url.AbsoluteUri));
-            if (m_application.Context.Handler is DefaultHttpHandler)
-                // Accessed resource is static.
-                m_application.Context.Response.Redirect(redirectUrl, false);
-            else
-                // Accessed resource is dynamic.
-                m_application.Context.Response.Redirect(redirectUrl, true);
-        }
-
-        #endregion
     }
 }
