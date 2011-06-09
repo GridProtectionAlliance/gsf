@@ -447,7 +447,10 @@ namespace TimeSeriesFramework.UI
         {
             get
             {
-                return CurrentItem.IsValid;
+                if (CurrentItem == null)
+                    return false;
+                else
+                    return CurrentItem.IsValid;
             }
         }
 
@@ -530,7 +533,10 @@ namespace TimeSeriesFramework.UI
             }
             catch (Exception ex)
             {
-                Popup(ex.Message, "Load " + DataModelName + " Exception:", MessageBoxImage.Error);
+                if (ex.InnerException != null)
+                    Popup(ex.Message + Environment.NewLine + "Inner Exception: " + ex.InnerException.Message, "Load " + DataModelName + " Exception:", MessageBoxImage.Error);
+                else
+                    Popup(ex.Message, "Load " + DataModelName + " Exception:", MessageBoxImage.Error);
             }
             finally
             {
@@ -564,7 +570,10 @@ namespace TimeSeriesFramework.UI
                 }
                 catch (Exception ex)
                 {
-                    Popup(ex.Message, "Save " + DataModelName + " Exception:", MessageBoxImage.Error);
+                    if (ex.InnerException != null)
+                        Popup(ex.Message + Environment.NewLine + "Inner Exception: " + ex.InnerException.Message, "Save " + DataModelName + " Exception:", MessageBoxImage.Error);
+                    else
+                        Popup(ex.Message, "Save " + DataModelName + " Exception:", MessageBoxImage.Error);
                 }
             }
         }
@@ -591,7 +600,10 @@ namespace TimeSeriesFramework.UI
                 }
                 catch (Exception ex)
                 {
-                    Popup(ex.Message, "Delete " + DataModelName + " Exception:", MessageBoxImage.Error);
+                    if (ex.InnerException != null)
+                        Popup(ex.Message + Environment.NewLine + "Inner Exception: " + ex.InnerException.Message, "Delete " + DataModelName + " Exception:", MessageBoxImage.Error);
+                    else
+                        Popup(ex.Message, "Delete " + DataModelName + " Exception:", MessageBoxImage.Error);
                 }
             }
         }
