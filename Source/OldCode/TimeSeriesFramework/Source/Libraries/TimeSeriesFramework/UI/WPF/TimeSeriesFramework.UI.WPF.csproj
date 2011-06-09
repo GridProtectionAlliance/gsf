@@ -169,9 +169,6 @@
     <Compile Include="UserControls\HistorianUserControl.xaml.cs">
       <DependentUpon>HistorianUserControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UserControls\HomeUserControl.xaml.cs">
-      <DependentUpon>HomeUserControl.xaml</DependentUpon>
-    </Compile>
     <Compile Include="UserControls\InputWizardUserControl.xaml.cs">
       <DependentUpon>InputWizardUserControl.xaml</DependentUpon>
     </Compile>
@@ -221,6 +218,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ViewModelBase.cs" />
+    <Compile Include="ViewModels\AdapterConnectionStringParameter.cs" />
     <Compile Include="ViewModels\ApplicationRoles.cs" />
     <Compile Include="ViewModels\CalculatedMeasurements.cs" />
     <Compile Include="ViewModels\Adapters.cs" />
@@ -303,10 +301,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UserControls\HistorianUserControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="UserControls\HomeUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
