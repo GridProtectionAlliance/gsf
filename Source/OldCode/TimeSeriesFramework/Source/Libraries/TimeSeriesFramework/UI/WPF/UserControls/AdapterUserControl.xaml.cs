@@ -21,10 +21,12 @@
 //
 //******************************************************************************************************
 
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using TimeSeriesFramework.UI.DataModels;
+using TVA;
 
 namespace TimeSeriesFramework.UI.UserControls
 {
@@ -48,7 +50,7 @@ namespace TimeSeriesFramework.UI.UserControls
         /// </summary>
         /// <param name="sender">Source of the event.</param>
         /// <param name="e">Argument of the event.</param>
-        void AdapterUserControl_Unloaded(object sender, RoutedEventArgs e)
+        private void AdapterUserControl_Unloaded(object sender, RoutedEventArgs e)
         {
             (this.DataContext as ViewModels.Adapters).ProcessPropertyChange();
         }
@@ -68,6 +70,38 @@ namespace TimeSeriesFramework.UI.UserControls
                     if (MessageBox.Show("Are you sure you want to delete " + dataGrid.SelectedItems.Count + " selected item(s)?", "Delete Selected Items", MessageBoxButton.YesNo) == MessageBoxResult.No)
                         e.Handled = true;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Handles Click event on the button labeled "Browse..."
+        /// </summary>
+        /// <param name="sender">Source of the event.</param>
+        /// <param name="e">Arguments for the event.</param>
+        private void Browse_Click(object sender, RoutedEventArgs e)
+        {
+            System.Windows.Forms.FolderBrowserDialog browser = new System.Windows.Forms.FolderBrowserDialog();
+
+            browser.SelectedPath = SearchDirectoryTextBox.Text;
+
+            if (browser.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                SearchDirectoryTextBox.Text = browser.SelectedPath;
+        }
+
+        /// <summary>
+        /// Handles Click event on the button labeled "Default".
+        /// </summary>
+        /// <param name="sender">Source of the event.</param>
+        /// <param name="e">Arguments for the event.</param>
+        private void Default_Click(object sender, RoutedEventArgs e)
+        {
+            TimeSeriesFramework.UI.ViewModels.Adapters dataContext = this.DataContext as TimeSeriesFramework.UI.ViewModels.Adapters;
+
+            if (dataContext != null && dataContext.SelectedParameter != null)
+            {
+                Dictionary<string, string> settings = dataContext.CurrentItem.ConnectionString.ToNonNullString().ParseKeyValuePairs();
+                settings.Remove(dataContext.SelectedParameter.Name);
+                dataContext.CurrentItem.ConnectionString = settings.JoinKeyValuePairs();
             }
         }
     }

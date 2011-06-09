@@ -98,6 +98,18 @@ namespace TimeSeriesFramework.UI.Converters
                         if (item.Key == key)
                             return item;
                 }
+                else if (viewSource.Source is Dictionary<Type, string>)
+                {
+                    Dictionary<Type, string> collection = (Dictionary<Type, string>)viewSource.Source;
+
+                    if (value != null)
+                    {
+                        KeyValuePair<Type, string> item = collection.ToList().SingleOrDefault(pair => pair.Key.FullName == value.ToString());
+
+                        if (!item.Equals(default(KeyValuePair<Type, string>)))
+                            return item;
+                    }
+                }
             }
 
             return null;
@@ -121,6 +133,8 @@ namespace TimeSeriesFramework.UI.Converters
                     return string.IsNullOrEmpty(((KeyValuePair<string, string>)value).Key) ? (object)DBNull.Value : ((KeyValuePair<string, string>)value).Key;
                 else if (value is KeyValuePair<Guid, string>)
                     return ((KeyValuePair<Guid, string>)value).Key == Guid.Empty ? (object)DBNull.Value : ((KeyValuePair<Guid, string>)value).Key;
+                else if (value is KeyValuePair<Type, string>)
+                    return ((KeyValuePair<Type, string>)value).Key.FullName;
             }
             return null;
         }
