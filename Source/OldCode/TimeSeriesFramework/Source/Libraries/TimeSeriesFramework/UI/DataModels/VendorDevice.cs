@@ -293,8 +293,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Saves <see cref="VendorDevice"/> information to database.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="vendorDevice">Information about <see cref="VendorDevice"/>.</param>
-        /// <param name="isNew">Indicates if save is a new addition or an update to an existing record.</param>
+        /// <param name="vendorDevice">Information about <see cref="VendorDevice"/>.</param>        
         /// <returns>String, for display use, indicating success.</returns>
         public static string Save(AdoDataConnection database, VendorDevice vendorDevice)
         {

@@ -478,6 +478,11 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Retrieves a <see cref="Node"/> defined in the database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <returns><see cref="Node"/> information.</returns>
         public static Node GetCurrentNode(AdoDataConnection database)
         {
             bool createdConnection = false;

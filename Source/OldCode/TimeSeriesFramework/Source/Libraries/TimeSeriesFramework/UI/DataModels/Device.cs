@@ -1229,6 +1229,10 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Sends required commands to backend service to notify that <see cref="Device"/> configuration has changed.
+        /// </summary>
+        /// <param name="device"><see cref="Device"/> whose configuration has changed.</param>
         public static void NotifyService(Device device)
         {
             if (device.Enabled)

@@ -462,7 +462,7 @@ namespace TimeSeriesFramework.UI.DataModels
                     database.Connection.ExecuteNonQuery("INSERT INTO " + tableName + " (NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, LoadOrder, " +
                         "Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@nodeID, @adapterName, @assemblyName, @typeName, @connectionString, @loadOrder, " +
                         "@enabled, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout,
-                        adapter.NodeID == null ? database.CurrentNodeID() : adapter.NodeID == Guid.Empty ? database.CurrentNodeID() : database.Guid(adapter.NodeID), adapter.AdapterName, adapter.AssemblyName,
+                        (adapter.NodeID == null || adapter.NodeID == Guid.Empty) ? database.CurrentNodeID() : database.Guid(adapter.NodeID), adapter.AdapterName, adapter.AssemblyName,
                         adapter.TypeName, adapter.ConnectionString.ToNotNull(), adapter.LoadOrder, adapter.Enabled, CommonFunctions.CurrentUser,
                         database.UtcNow(), CommonFunctions.CurrentUser,
                         database.UtcNow());

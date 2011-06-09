@@ -33,170 +33,60 @@ namespace TimeSeriesFramework.UI
     [Serializable()]
     public class ConnectionSettings
     {
+        /// <summary>
+        /// Defines <see cref="PhasorProtocol"/> from PmuConnection file.
+        /// </summary>
         public PhasorProtocol PhasorProtocol;
+
+        /// <summary>
+        /// Defines <see cref="TransportProtocol"/> from PmuConnection file.
+        /// </summary>
         public TransportProtocol TransportProtocol;
+
+        /// <summary>
+        /// Defines connection string from PmuConnection file.
+        /// </summary>
         public string ConnectionString;
+
+        /// <summary>
+        /// Defines ID of the source from PmuConnection file.
+        /// </summary>
         public int PmuID;
+
+        /// <summary>
+        /// Defines frame rate from PmuConnection file.
+        /// </summary>
         public int FrameRate;
+
+        /// <summary>
+        /// Defines boolean flag if data needs to be repeated again and again.
+        /// </summary>
         public bool AutoRepeatPlayback;
+
+        /// <summary>
+        /// Defines byte encoding format from PmuConnection file.
+        /// </summary>
         public int ByteEncodingDisplayFormat;
+
+        /// <summary>
+        /// Defines additional connection information such as alternate command channel from PmuConnection file.
+        /// </summary>
         public object ConnectionParameters;
+
+        /// <summary>
+        /// Defines name of the configuration file.
+        /// </summary>
         public string ConfigurationFileName;
+
+        /// <summary>
+        /// Defines boolean flag to refresh configuration file on change.
+        /// </summary>
         public bool RefreshConfigurationFileOnChange;
+
+        /// <summary>
+        /// Defines boolean flag indicating if parse word count from byte.
+        /// </summary>
         public bool ParseWordCountFromByte;
-
-        //#region [ Members ]
-
-        //// Fields
-        //private PhasorProtocol m_phasorProtocol;
-        //private TransportProtocol m_transportProtocol;
-        //private string m_connectionString;
-        //private int m_pmuId;
-        //private int m_frameRate;
-        //private bool m_autoRepeatPlayback;
-        //private int m_byteEncodingDisplayFormat;
-        //private object m_connectionParameters;
-        //private string m_configurationFileName;
-        //private bool m_refreshConfigurationFileOnChange;
-        //private bool m_parseWordCountFromByte;
-
-        //#endregion
-
-        //#region [ Properties ]
-
-        //public PhasorProtocol PhasorProtocol
-        //{
-        //    get
-        //    {
-        //        return m_phasorProtocol;
-        //    }
-        //    set
-        //    {
-        //        m_phasorProtocol = value;
-        //    }
-        //}
-
-        //public TransportProtocol TransportProtocol
-        //{
-        //    get
-        //    {
-        //        return m_transportProtocol;
-        //    }
-        //    set
-        //    {
-        //        m_transportProtocol = value;
-        //    }
-        //}
-
-        //public string ConnectionString
-        //{
-        //    get
-        //    {
-        //        return m_connectionString;
-        //    }
-        //    set
-        //    {
-        //        m_connectionString = value;
-        //    }
-        //}
-
-        //public int PmuId
-        //{
-        //    get
-        //    {
-        //        return m_pmuId;
-        //    }
-        //    set
-        //    {
-        //        m_pmuId = value;
-        //    }
-        //}
-
-        //public int FrameRate
-        //{
-        //    get
-        //    {
-        //        return m_frameRate;
-        //    }
-        //    set
-        //    {
-        //        m_frameRate = value;
-        //    }
-        //}
-
-        //public bool AutoRepeatPlayback
-        //{
-        //    get
-        //    {
-        //        return m_autoRepeatPlayback;
-        //    }
-        //    set
-        //    {
-        //        m_autoRepeatPlayback = value;
-        //    }
-        //}
-
-        //public int ByteEncodingDisplayFormat
-        //{
-        //    get
-        //    {
-        //        return m_byteEncodingDisplayFormat;
-        //    }
-        //    set
-        //    {
-        //        m_byteEncodingDisplayFormat = value;
-        //    }
-        //}
-
-        //public object ConnectionParameters
-        //{
-        //    get
-        //    {
-        //        return m_connectionParameters;
-        //    }
-        //    set
-        //    {
-        //        m_connectionParameters = value;
-        //    }
-        //}
-
-        //public string ConfigurationFileName
-        //{
-        //    get
-        //    {
-        //        return m_configurationFileName;
-        //    }
-        //    set
-        //    {
-        //        m_configurationFileName = value;
-        //    }
-        //}
-
-        //public bool RefreshConfigurationFileOnChange
-        //{
-        //    get
-        //    {
-        //        return m_refreshConfigurationFileOnChange;
-        //    }
-        //    set
-        //    {
-        //        m_refreshConfigurationFileOnChange = value;
-        //    }
-        //}
-
-        //public bool ParseWordCountFromByte
-        //{
-        //    get
-        //    {
-        //        return m_parseWordCountFromByte;
-        //    }
-        //    set
-        //    {
-        //        m_parseWordCountFromByte = value;
-        //    }
-        //}
-
-        //#endregion
 
     }
 }

@@ -27,8 +27,17 @@ using System.Runtime.Serialization;
 
 namespace TimeSeriesFramework.UI
 {
+    /// <summary>
+    /// Class to override default type binding when parsing *.PmuConnection file.
+    /// </summary>
     public class VersionConfigToNamespaceAssemblyObjectBinder : SerializationBinder
     {
+        /// <summary>
+        /// Controls the binding of a serialized object to type.
+        /// </summary>
+        /// <param name="assemblyName">Specifies the <see cref="Assembly"/> name of the serialized object.</param>
+        /// <param name="typeName">Specified the <see cref="Type"/> name of the serialized object.</param>
+        /// <returns></returns>
         public override Type BindToType(string assemblyName, string typeName)
         {
             Type typeToDeserialize = null;

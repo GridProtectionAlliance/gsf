@@ -458,7 +458,7 @@ namespace TimeSeriesFramework.UI.DataModels
                     database.Connection.ExecuteNonQuery("INSERT INTO Historian (NodeID, Acronym, Name, AssemblyName, TypeName, ConnectionString, IsLocal, MeasurementReportingInterval, " +
                         "Description, LoadOrder, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@nodeID, @acronym, @name, @assemblyName, @typeName, @connectionString, " +
                         "@isLocal, @measurementReportingInterval, @description, @loadOrder, @enabled, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout,
-                        historian.NodeID == null ? database.CurrentNodeID() : historian.NodeID == Guid.Empty ? database.CurrentNodeID() : database.Guid(historian.NodeID),
+                        (historian.NodeID == null || historian.NodeID == Guid.Empty) ? database.CurrentNodeID() : database.Guid(historian.NodeID),
                         historian.Acronym.Replace(" ", "").ToUpper(), historian.Name.ToNotNull(), historian.AssemblyName.ToNotNull(), historian.TypeName.ToNotNull(),
                         historian.ConnectionString.ToNotNull(), historian.IsLocal, historian.MeasurementReportingInterval, historian.Description.ToNotNull(),
                         historian.LoadOrder, historian.Enabled, CommonFunctions.CurrentUser, database.UtcNow(),
@@ -511,6 +511,12 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Retrieves a <see cref="Historian"/> information from the database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="whereClause">Filter expression to filter data.</param>
+        /// <returns><see cref="Historian"/> information.</returns>
         public static Historian GetHistorian(AdoDataConnection database, string whereClause)
         {
             bool createdConnection = false;
