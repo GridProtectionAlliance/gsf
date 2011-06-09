@@ -155,23 +155,30 @@ namespace TimeSeriesFramework.UI.UserControls
 
             openFileDialog.Filter = "XML Files (*.xml)|*.xml|All Files (*.*)|*.*";
             openFileDialog.DefaultExt = ".xml";
-            openFileDialog.ShowDialog();
+            System.Windows.Forms.DialogResult res = openFileDialog.ShowDialog();
 
-            m_request = Serialization.Deserialize<AuthenticationRequest>(File.ReadAllBytes(openFileDialog.FileName), SerializationFormat.Xml);
-
-            Subscriber subscriber = new Subscriber()
+            if (res != System.Windows.Forms.DialogResult.Cancel)
             {
-                NodeID = ((KeyValuePair<Guid, string>)ComboboxNode.SelectedItem).Key,
-                Acronym = m_request.Acronym.ToUpper(),
-                Name = m_request.Name,
-                SharedSecret = m_request.SharedSecret,
-                AuthKey = m_request.AuthenticationID,
-                ValidIPAddresses = m_request.ValidIPAddresses
-            };
+                m_request = Serialization.Deserialize<AuthenticationRequest>(File.ReadAllBytes(openFileDialog.FileName), SerializationFormat.Xml);
 
-            (this.DataContext as Subscribers).CurrentItem = subscriber;
-            m_keyField.Text = m_request.Key;
-            m_ivField.Text = m_request.IV;
+                Subscriber subscriber = new Subscriber()
+                {
+                    NodeID = ((KeyValuePair<Guid, string>)ComboboxNode.SelectedItem).Key,
+                    Acronym = m_request.Acronym.ToUpper(),
+                    Name = m_request.Name,
+                    SharedSecret = m_request.SharedSecret,
+                    AuthKey = m_request.AuthenticationID,
+                    ValidIPAddresses = m_request.ValidIPAddresses
+                };
+
+                (this.DataContext as Subscribers).CurrentItem = subscriber;
+                m_keyField.Text = m_request.Key;
+                m_ivField.Text = m_request.IV;
+            }
+            else
+            {
+                e.Handled = true;
+            }
         }
 
         /// <summary>

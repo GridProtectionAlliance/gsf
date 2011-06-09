@@ -115,26 +115,34 @@ namespace TimeSeriesFramework.UI.UserControls
             if (string.IsNullOrWhiteSpace(m_keyField.Text) && string.IsNullOrWhiteSpace(m_ivField.Text))
                 m_generateButton_Click(this, null);
 
-            string filename;
+            string filename = "";
 
             System.Windows.Forms.SaveFileDialog saveFileDialog = new System.Windows.Forms.SaveFileDialog();
 
             saveFileDialog.Filter = "XML Files (*.xml)|*.xml|All Files (*.*)|*.*";
             saveFileDialog.DefaultExt = ".xml";
-            saveFileDialog.ShowDialog();
-            filename = saveFileDialog.FileName;
+            System.Windows.Forms.DialogResult res = saveFileDialog.ShowDialog();
+            if (res != System.Windows.Forms.DialogResult.Cancel)
+            {
+                filename = saveFileDialog.FileName;
+                AuthenticationRequest request = new AuthenticationRequest();
 
-            AuthenticationRequest request = new AuthenticationRequest();
+                request.Acronym = m_acronymField.Text;
+                request.Name = m_nameField.Text;
+                request.SharedSecret = m_sharedSecretField.Text;
+                request.AuthenticationID = m_authenticationIDField.Text;
+                request.Key = m_keyField.Text;
+                request.IV = m_ivField.Text;
+                request.ValidIPAddresses = m_validIpAddressesField.Text;
 
-            request.Acronym = m_acronymField.Text;
-            request.Name = m_nameField.Text;
-            request.SharedSecret = m_sharedSecretField.Text;
-            request.AuthenticationID = m_authenticationIDField.Text;
-            request.Key = m_keyField.Text;
-            request.IV = m_ivField.Text;
-            request.ValidIPAddresses = m_validIpAddressesField.Text;
+                File.WriteAllBytes(filename, Serialization.Serialize(request, TVA.SerializationFormat.Xml));
+            }
+            else
+            {
+                e.Handled = true;
+            }
 
-            File.WriteAllBytes(filename, Serialization.Serialize(request, TVA.SerializationFormat.Xml));
+            
         }
 
         /// <summary>
