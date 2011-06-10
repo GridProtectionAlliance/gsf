@@ -537,12 +537,13 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// <returns>The parameter defined by the given property info.</returns>
         private AdapterConnectionStringParameter GetParameter(PropertyInfo info)
         {
-            DescriptionAttribute descriptionAttribute;
             DefaultValueAttribute defaultValueAttribute;
+            DescriptionAttribute descriptionAttribute;
             AdapterConnectionStringParameter parameter = null;
 
-            string description = null;
+            bool isRequired = false;
             object defaultValue = null;
+            string description = null;
             
             if(m_parameterList != null)
                 parameter = m_parameterList.SingleOrDefault(param => param.Name.Equals(info.Name, StringComparison.CurrentCultureIgnoreCase));
@@ -552,8 +553,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             // information, we can skip this step.
             if (parameter == null || parameter.Info == null)
             {
+                isRequired = !info.TryGetAttribute(out defaultValueAttribute);
+                defaultValue = isRequired ? null : defaultValueAttribute.Value;
                 description = info.TryGetAttribute(out descriptionAttribute) ? descriptionAttribute.Description : string.Empty;
-                defaultValue = info.TryGetAttribute(out defaultValueAttribute) ? defaultValueAttribute.Value : null;
             }
 
             if (parameter == null)
@@ -566,7 +568,7 @@ namespace TimeSeriesFramework.UI.ViewModels
                     Description = description,
                     Value = null,
                     DefaultValue = defaultValue,
-                    Color = (defaultValue == null) ? Brushes.Red : Brushes.Black
+                    IsRequired = isRequired
                 };
             }
             else if (parameter.Info == null)
@@ -577,7 +579,6 @@ namespace TimeSeriesFramework.UI.ViewModels
                 parameter.Info = info;
                 parameter.Description = description;
                 parameter.DefaultValue = defaultValue;
-                parameter.Color = red ? Brushes.Red : Brushes.Black;
             }
 
             return parameter;
@@ -602,7 +603,7 @@ namespace TimeSeriesFramework.UI.ViewModels
                 {
                     Name = name,
                     DefaultValue = string.Empty,
-                    Color = Brushes.Black
+                    IsRequired = false
                 };
             }
 
@@ -610,9 +611,8 @@ namespace TimeSeriesFramework.UI.ViewModels
         }
 
         /// <summary>
-        /// Updates all properties of the <see cref="AdapterConnectionStringParameter"/>s
-        /// in the given parameter list that depend on the given connection string
-        /// settings. This includes the value, boldness, and color of the parameters.
+        /// Updates the values of the <see cref="AdapterConnectionStringParameter"/>s in the
+        /// given parameter list using the values in the given connection string settings.
         /// </summary>
         /// <param name="parameters">The list of parameters to be updated.</param>
         /// <param name="settings">
@@ -624,12 +624,7 @@ namespace TimeSeriesFramework.UI.ViewModels
             if (parameters != null)
             {
                 foreach (AdapterConnectionStringParameter parameter in parameters)
-                {
-                    bool contained = settings.ContainsKey(parameter.Name);
-                    parameter.Value = contained ? settings[parameter.Name] : null;
-                    parameter.Boldness = contained ? FontWeights.Bold : FontWeights.Normal;
-                    parameter.Color = (!contained && parameter.DefaultValue == null) ? Brushes.Red : Brushes.Black;
-                }
+                    parameter.Value = settings.ContainsKey(parameter.Name) ? settings[parameter.Name] : null;
             }
         }
 

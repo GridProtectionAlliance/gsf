@@ -48,8 +48,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         private string m_description;
         private object m_value;
         private object m_defaultValue;
-        private FontWeight m_boldness;
-        private Brush m_color;
+        private bool m_isRequired;
 
         #endregion
 
@@ -141,6 +140,8 @@ namespace TimeSeriesFramework.UI.ViewModels
 
                 m_value = value;
                 OnPropertyChanged("Value");
+                OnPropertyChanged("Color");
+                OnPropertyChanged("Boldness");
             }
         }
 
@@ -165,6 +166,23 @@ namespace TimeSeriesFramework.UI.ViewModels
         }
 
         /// <summary>
+        /// Gets or sets a value that indicates whether this parameter is defined by a property
+        /// that is annotated with the <see cref="System.ComponentModel.DefaultValueAttribute"/>.
+        /// </summary>
+        public bool IsRequired
+        {
+            get
+            {
+                return m_isRequired;
+            }
+            set
+            {
+                m_isRequired = value;
+                OnPropertyChanged("IsRequired");
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the color of the item in the <see cref="System.Windows.Controls.ListBox"/>
         /// that the <see cref="AdapterConnectionStringParameter"/> is modeling.
         /// </summary>
@@ -172,12 +190,8 @@ namespace TimeSeriesFramework.UI.ViewModels
         {
             get
             {
-                return m_color;
-            }
-            set
-            {
-                m_color = value;
-                OnPropertyChanged("Color");
+                bool red = m_isRequired && (m_value == null);
+                return red ? Brushes.Red : Brushes.Black;
             }
         }
 
@@ -189,12 +203,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         {
             get
             {
-                return m_boldness;
-            }
-            set
-            {
-                m_boldness = value;
-                OnPropertyChanged("Boldness");
+                return (m_value == null) ? FontWeights.Normal : FontWeights.Bold;
             }
         }
 
