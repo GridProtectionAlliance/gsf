@@ -63,7 +63,8 @@
                 <StackPanel Orientation="Vertical" Grid.Row="3" Grid.Column="1">
                     <StackPanel Orientation="Horizontal">
                         <TextBox Text="{tsfBinding:Column Path=DataContext.ConnectionString, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=3}}"  Width="{StaticResource XXXLargeItemSize}" Height="{StaticResource XSmallItemSize}" TextWrapping="Wrap" />
-                        <Button Content=" + " VerticalAlignment="Top" ToolTip="Build connection string" Width="Auto" IsEnabled="False"/>
+                        <Button Command="{Binding Path=DataContext.BuildConnectionStringCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}"
+                            Content=" + " VerticalAlignment="Top" ToolTip="Build connection string" Width="Auto"/>
                     </StackPanel>
                     <TextBlock Text="Connection information is relative to the openPDC node." FontStyle="Italic" HorizontalAlignment="Left" />
                 </StackPanel>
@@ -71,7 +72,8 @@
                 <TextBlock Grid.Row="4" Grid.Column="0" Text="Alternate Command Channel" TextWrapping="Wrap" VerticalAlignment="Top"/>
                 <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="1">
                     <TextBox Text="{tsfBinding:Column Path=DataContext.AlternateCommandChannel, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}"  Width="{StaticResource XXXLargeItemSize}" Height="{StaticResource XSmallItemSize}" TextWrapping="Wrap" />
-                    <Button x:Name="ButtonBuildCommandChannel" Content=" + " VerticalAlignment="Top" ToolTip="Build alternate command channel" Width="Auto" IsEnabled="False"/>                    
+                    <Button Command="{Binding Path=DataContext.BuildAlternateCommandChannelCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}"
+                            Content=" + " VerticalAlignment="Top" ToolTip="Build alternate command channel" Width="Auto"/>
                 </StackPanel>
 
                 <Border Grid.Row="5" Grid.Column="1" BorderThickness="1" Margin="2,20,2,20" BorderBrush="#FF333333" />

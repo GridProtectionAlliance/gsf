@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO.Ports;
 using System.Threading;
 using System.Windows;
 using System.Windows.Media;
@@ -533,6 +534,34 @@ namespace TimeSeriesFramework.UI
                 throw new ApplicationException("Application is currently disconnected from service.");
 
             return "Successfully sent " + command + " command.";
+        }
+
+        /// <summary>
+        /// Retrieves a list of <see cref="StopBits"/>.
+        /// </summary>
+        /// <returns>Collection of <see cref="StopBits"/> as a <see cref="List{T}"/>.</returns>
+        public static List<string> GetStopBits()
+        {
+            List<string> stopBitsList = new List<string>();
+
+            foreach (string stopBit in Enum.GetNames(typeof(StopBits)))
+                stopBitsList.Add(stopBit);
+
+            return stopBitsList;
+        }
+
+        /// <summary>
+        /// Retrieves a list of <see cref="Parity"/>.
+        /// </summary>
+        /// <returns>Collection of <see cref="Parity"/> as a <see cref="List{T}"/>.</returns>
+        public static List<string> GetParities()
+        {
+            List<string> parityList = new List<string>();
+
+            foreach (string parity in Enum.GetNames(typeof(Parity)))
+                parityList.Add(parity);
+
+            return parityList;
         }
 
         #endregion

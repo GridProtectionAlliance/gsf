@@ -103,10 +103,18 @@
                       SelectedItem="{tsfBinding:Column Path=VendorDeviceID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource VendorDeviceLookupList}}"/>
 
             <TextBlock Text="Connection String" Grid.Row="5" Grid.Column="0" />
-            <TextBox Grid.Row="5" Grid.Column="1" Text="{tsfBinding:Column Path=ConnectionString}" Height="50" TextWrapping="Wrap"/>
-
+            <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="1">
+                <TextBox Text="{tsfBinding:Column Path=ConnectionString}" Height="50" TextWrapping="Wrap"/>
+                <Button Command="{Binding Path=DataContext.BuildConnectionStringCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}"
+                            Content=" + " VerticalAlignment="Top" ToolTip="Build connection string" Width="Auto"/>
+            </StackPanel>
+            
             <TextBlock Text="Alternate Command Channel" Grid.Row="5" Grid.Column="2"/>
-            <TextBox Grid.Row="5" Grid.Column="3" Text="{tsfBinding:Column Path=AlternateCommandChannel}" Height="50" TextWrapping="Wrap"/>
+            <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="3">
+                <TextBox Text="{tsfBinding:Column Path=AlternateCommandChannel}" Height="50" TextWrapping="Wrap"/>
+                <Button Command="{Binding Path=DataContext.BuildAlternateCommandChannelCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}"
+                            Content=" + " VerticalAlignment="Top" ToolTip="Build alternate command channel" Width="Auto"/>
+            </StackPanel>            
 
             <StackPanel Orientation="Horizontal" Grid.Row="6" Grid.Column="0" HorizontalAlignment="Right">
                 <TextBlock Text="Data Loss Interval" Style="{StaticResource RequiredLabel}" />

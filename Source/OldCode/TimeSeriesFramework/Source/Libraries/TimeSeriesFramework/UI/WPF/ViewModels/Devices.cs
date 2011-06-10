@@ -29,6 +29,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using TimeSeriesFramework.UI.Commands;
 using TimeSeriesFramework.UI.DataModels;
+using TimeSeriesFramework.UI.Modal;
 using TimeSeriesFramework.UI.UserControls;
 
 namespace TimeSeriesFramework.UI.ViewModels
@@ -54,6 +55,8 @@ namespace TimeSeriesFramework.UI.ViewModels
         private RelayCommand m_measurementCommand;
         private RelayCommand m_copyCommand;
         private RelayCommand m_initializeCommand;
+        private RelayCommand m_buildConnectionStringCommand;
+        private RelayCommand m_buildAlternateCommandChannelCommand;
         private string m_runtimeID;
 
         #endregion
@@ -86,6 +89,37 @@ namespace TimeSeriesFramework.UI.ViewModels
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets or sets <see cref="ICommand"/> to build connection string.
+        /// </summary>
+        public ICommand BuildConnectionStringCommand
+        {
+            get
+            {
+                if (m_buildConnectionStringCommand == null)
+                    m_buildConnectionStringCommand = new RelayCommand(BuildConnectionString, () => CanSave);
+
+                return m_buildConnectionStringCommand;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="ICommand"/> to build alternate command channel.
+        /// </summary>
+        public ICommand BuildAlternateCommandChannelCommand
+        {
+            get
+            {
+                if (m_buildAlternateCommandChannelCommand == null)
+                    m_buildAlternateCommandChannelCommand = new RelayCommand(BuildAlternateCommandChannel, () => CanSave);
+
+                return m_buildAlternateCommandChannelCommand;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="Device"/> RuntimeID.
+        /// </summary>
         public string RuntimeID
         {
             get
@@ -525,6 +559,44 @@ namespace TimeSeriesFramework.UI.ViewModels
             catch (Exception ex)
             {
                 Popup("ERROR: " + ex.Message, "Failed To Initialize", MessageBoxImage.Error);
+            }
+        }
+
+        private void BuildConnectionString()
+        {
+            if (CurrentItem != null)
+            {
+                ConnectionStringBuilder csb = new ConnectionStringBuilder(ConnectionStringBuilder.ConnectionType.DeviceConnection);
+                if (!string.IsNullOrEmpty(CurrentItem.ConnectionString))
+                    csb.ConnectionString = CurrentItem.ConnectionString;
+
+                csb.Closed += new EventHandler(delegate(object popupWindow, EventArgs eargs)
+                {
+                    if ((bool)csb.DialogResult)
+                        CurrentItem.ConnectionString = csb.ConnectionString;
+                });
+                csb.Owner = System.Windows.Application.Current.MainWindow;
+                csb.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                csb.ShowDialog();
+            }
+        }
+
+        private void BuildAlternateCommandChannel()
+        {
+            if (CurrentItem != null)
+            {
+                ConnectionStringBuilder csb = new ConnectionStringBuilder(ConnectionStringBuilder.ConnectionType.AlternateCommandChannel);
+                if (!string.IsNullOrEmpty(CurrentItem.AlternateCommandChannel))
+                    csb.ConnectionString = CurrentItem.AlternateCommandChannel;
+
+                csb.Closed += new EventHandler(delegate(object popupWindow, EventArgs eargs)
+                {
+                    if ((bool)csb.DialogResult)
+                        CurrentItem.AlternateCommandChannel = csb.ConnectionString;
+                });
+                csb.Owner = System.Windows.Application.Current.MainWindow;
+                csb.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                csb.ShowDialog();
             }
         }
 

@@ -41,6 +41,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using TVA;
 using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
@@ -130,6 +131,7 @@ namespace TimeSeriesFramework.UI.DataModels
         private string m_createdBy;
         private DateTime m_updatedOn;
         private string m_updatedBy;
+        private string m_alternateCommandChannel;
 
         #endregion
 
@@ -852,6 +854,23 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="Device"/> alternate command channel.
+        /// </summary>
+        // Field is not saved in database so no validation applied.
+        public string AlternateCommandChannel
+        {
+            get
+            {
+                return m_alternateCommandChannel;
+            }
+            set
+            {
+                m_alternateCommandChannel = value;
+                OnPropertyChanged("AlternateCommandChannel");
+            }
+        }
+
         #endregion
 
         #region [ Static ]
@@ -901,7 +920,8 @@ namespace TimeSeriesFramework.UI.DataModels
                         Longitude = row.Field<decimal?>("Longitude"),
                         Latitude = row.Field<decimal?>("Latitude"),
                         InterconnectionID = row.Field<int?>("InterconnectionID"),
-                        ConnectionString = row.Field<string>("ConnectionString"),
+                        ConnectionString = ParseConnectionString(row.Field<string>("ConnectionString")),
+                        AlternateCommandChannel = ParseAlternateCommand(row.Field<string>("ConnectionString")),
                         TimeZone = row.Field<string>("TimeZone"),
                         FramesPerSecond = Convert.ToInt32(row.Field<object>("FramesPerSecond") ?? 30),
                         TimeAdjustmentTicks = Convert.ToInt64(row.Field<object>("TimeAdjustmentTicks")),
@@ -1051,7 +1071,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         device.ParentID.ToNotNull(), database.Guid(Guid.NewGuid()), device.Acronym.Replace(" ", "").ToUpper(), device.Name.ToNotNull(), device.IsConcentrator, device.CompanyID.ToNotNull(),
                         device.HistorianID.ToNotNull(), device.AccessID, device.VendorDeviceID.ToNotNull(),
                         device.ProtocolID.ToNotNull(), device.Longitude.ToNotNull(), device.Latitude.ToNotNull(), device.InterconnectionID.ToNotNull(),
-                        device.ConnectionString.ToNotNull(), device.TimeZone.ToNotNull(), device.FramesPerSecond ?? 30, device.TimeAdjustmentTicks, device.DataLossInterval, device.ContactList.ToNotNull(), device.MeasuredLines.ToNotNull(),
+                        BuildConnectionString(device), device.TimeZone.ToNotNull(), device.FramesPerSecond ?? 30, device.TimeAdjustmentTicks, device.DataLossInterval, device.ContactList.ToNotNull(), device.MeasuredLines.ToNotNull(),
                         device.LoadOrder, device.Enabled, device.AllowedParsingExceptions, device.ParsingExceptionWindow, device.DelayedConnectionInterval, device.AllowUseOfCachedConfiguration,
                         device.AutoStartDataParsingSequence, device.SkipDisableRealTimeData, device.MeasurementReportingInterval, device.ConnectOnDemand, CommonFunctions.CurrentUser,
                         database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
@@ -1067,7 +1087,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         device.ParentID.ToNotNull(), database.Guid(device.UniqueID), device.Acronym.Replace(" ", "").ToUpper(), device.Name.ToNotNull(), device.IsConcentrator, device.CompanyID.ToNotNull(),
                         device.HistorianID.ToNotNull(), device.AccessID, device.VendorDeviceID.ToNotNull(),
                         device.ProtocolID.ToNotNull(), device.Longitude.ToNotNull(), device.Latitude.ToNotNull(), device.InterconnectionID.ToNotNull(),
-                        device.ConnectionString.ToNotNull(), device.TimeZone.ToNotNull(), device.FramesPerSecond ?? 30, device.TimeAdjustmentTicks, device.DataLossInterval, device.ContactList.ToNotNull(), device.MeasuredLines.ToNotNull(),
+                        BuildConnectionString(device), device.TimeZone.ToNotNull(), device.FramesPerSecond ?? 30, device.TimeAdjustmentTicks, device.DataLossInterval, device.ContactList.ToNotNull(), device.MeasuredLines.ToNotNull(),
                         device.LoadOrder, device.Enabled, device.AllowedParsingExceptions, device.ParsingExceptionWindow, device.DelayedConnectionInterval, device.AllowUseOfCachedConfiguration,
                         device.AutoStartDataParsingSequence, device.SkipDisableRealTimeData, device.MeasurementReportingInterval, device.ConnectOnDemand, CommonFunctions.CurrentUser,
                         database.UtcNow(), device.ID);
@@ -1191,7 +1211,8 @@ namespace TimeSeriesFramework.UI.DataModels
                     Longitude = row.Field<decimal?>("Longitude"),
                     Latitude = row.Field<decimal?>("Latitude"),
                     InterconnectionID = row.Field<int?>("InterconnectionID"),
-                    ConnectionString = row.Field<string>("ConnectionString"),
+                    ConnectionString = ParseConnectionString(row.Field<string>("ConnectionString")),
+                    AlternateCommandChannel = ParseAlternateCommand(row.Field<string>("ConnectionString")),
                     TimeZone = row.Field<string>("TimeZone"),
                     FramesPerSecond = Convert.ToInt32(row.Field<object>("FramesPerSecond") ?? 30),
                     TimeAdjustmentTicks = Convert.ToInt64(row.Field<object>("TimeAdjustmentTicks")),
@@ -1258,6 +1279,45 @@ namespace TimeSeriesFramework.UI.DataModels
             CommonFunctions.SendCommandToService("Invoke 0 ReloadStatistics");
             CommonFunctions.SendCommandToService("RefreshRoutes");
         }
+
+        private static string ParseConnectionString(string connectionString)
+        {
+            Dictionary<string, string> settings = connectionString.ToLower().ParseKeyValuePairs();
+            if (settings.ContainsKey("commandchannel"))
+            {
+                settings.Remove("commandchannel");
+                return settings.JoinKeyValuePairs();
+            }
+
+            return connectionString;
+        }
+
+        private static string ParseAlternateCommand(string connectionString)
+        {
+            Dictionary<string, string> settings = connectionString.ToLower().ParseKeyValuePairs();
+            if (settings.ContainsKey("commandchannel"))
+                return settings["commandchannel"].Replace("{", "").Replace("}", "");
+
+            return string.Empty;
+        }
+
+        private static string BuildConnectionString(Device device)
+        {
+            if (device.ConnectionString == null)
+                return string.Empty;
+
+            string connectionString = device.ConnectionString;
+            if (!string.IsNullOrEmpty(device.AlternateCommandChannel))
+            {
+                if (!connectionString.EndsWith(";"))
+                    connectionString += ";";
+
+                connectionString += "commandchannel={" + device.AlternateCommandChannel + "}";
+            }
+
+            return connectionString;
+        }
+
         #endregion
     }
 }

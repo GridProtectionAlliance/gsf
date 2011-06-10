@@ -35,6 +35,7 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using TimeSeriesFramework.UI.Commands;
 using TimeSeriesFramework.UI.DataModels;
+using TimeSeriesFramework.UI.Modal;
 using TVA;
 using TVA.Data;
 using TVA.PhasorProtocols;
@@ -468,7 +469,7 @@ namespace TimeSeriesFramework.UI.ViewModels
             get
             {
                 if (m_browseConnectionFileCommand == null)
-                    m_browseConnectionFileCommand = new RelayCommand(BrowseConnectionFile, (param) => CanSave);
+                    m_browseConnectionFileCommand = new RelayCommand(BrowseConnectionFile, () => CanSave);
 
                 return m_browseConnectionFileCommand;
             }
@@ -482,7 +483,7 @@ namespace TimeSeriesFramework.UI.ViewModels
             get
             {
                 if (m_buildConnectionStringCommand == null)
-                    m_buildConnectionStringCommand = new RelayCommand(BuildConnectionString, (param) => CanSave);
+                    m_buildConnectionStringCommand = new RelayCommand(BuildConnectionString, () => CanSave);
 
                 return m_buildConnectionStringCommand;
             }
@@ -496,7 +497,7 @@ namespace TimeSeriesFramework.UI.ViewModels
             get
             {
                 if (m_buildAlternateCommandChannelCommand == null)
-                    m_buildAlternateCommandChannelCommand = new RelayCommand(BuildAlternateCommandChannel, (param) => CanSave);
+                    m_buildAlternateCommandChannelCommand = new RelayCommand(BuildAlternateCommandChannel, () => CanSave);
 
                 return m_buildAlternateCommandChannelCommand;
             }
@@ -510,7 +511,7 @@ namespace TimeSeriesFramework.UI.ViewModels
             get
             {
                 if (m_browseIniFileCommand == null)
-                    m_browseIniFileCommand = new RelayCommand(BrowseIniFile, (param) => CanSave);
+                    m_browseIniFileCommand = new RelayCommand(BrowseIniFile, () => CanSave);
 
                 return m_browseIniFileCommand;
             }
@@ -524,7 +525,7 @@ namespace TimeSeriesFramework.UI.ViewModels
             get
             {
                 if (m_browseConfigurationFileCommand == null)
-                    m_browseConfigurationFileCommand = new RelayCommand(BrowseConfigurationFile, (param) => CanSave);
+                    m_browseConfigurationFileCommand = new RelayCommand(BrowseConfigurationFile, () => CanSave);
 
                 return m_browseConfigurationFileCommand;
             }
@@ -538,7 +539,7 @@ namespace TimeSeriesFramework.UI.ViewModels
             get
             {
                 if (m_requestConfigurationCommand == null)
-                    m_requestConfigurationCommand = new RelayCommand(RequestConfiguration, (param) => CanSave);
+                    m_requestConfigurationCommand = new RelayCommand(RequestConfiguration, () => CanSave);
 
                 return m_requestConfigurationCommand;
             }
@@ -549,7 +550,7 @@ namespace TimeSeriesFramework.UI.ViewModels
             get
             {
                 if (m_saveConfigurationFileCommand == null)
-                    m_saveConfigurationFileCommand = new RelayCommand(SaveConfigurationFile, (param) => CanSave);
+                    m_saveConfigurationFileCommand = new RelayCommand(SaveConfigurationFile, () => CanSave);
 
                 return m_saveConfigurationFileCommand;
             }
@@ -640,9 +641,8 @@ namespace TimeSeriesFramework.UI.ViewModels
 
         /// <summary>
         /// Handles BrowseConnectionFileCommand.
-        /// </summary>
-        /// <param name="parameter">Parameter to be used in command execution.</param>
-        private void BrowseConnectionFile(object parameter)
+        /// </summary>        
+        private void BrowseConnectionFile()
         {
             Stream fileData = null;
             OpenFileDialog fileDialog = new OpenFileDialog();
@@ -718,9 +718,8 @@ namespace TimeSeriesFramework.UI.ViewModels
 
         /// <summary>
         /// Handles BrowseConfigurationFileCommand.
-        /// </summary>
-        /// <param name="parameter">Parameter to be used in command execution.</param>
-        private void BrowseConfigurationFile(object parameter)
+        /// </summary>        
+        private void BrowseConfigurationFile()
         {
             Stream fileData = null;
             OpenFileDialog fileDialog = new OpenFileDialog();
@@ -811,7 +810,10 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
-        private void SaveConfigurationFile(object parameter)
+        /// <summary>
+        /// Saves current configuration information into XML file.
+        /// </summary>
+        private void SaveConfigurationFile()
         {
             try
             {
@@ -845,26 +847,47 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
-        private void BrowseIniFile(object parameter)
+        private void BrowseIniFile()
         {
 
         }
 
-        private void BuildConnectionString(object parameter)
+        private void BuildConnectionString()
         {
+            ConnectionStringBuilder csb = new ConnectionStringBuilder(ConnectionStringBuilder.ConnectionType.DeviceConnection);
+            if (!string.IsNullOrEmpty(ConnectionString))
+                csb.ConnectionString = ConnectionString;
 
+            csb.Closed += new EventHandler(delegate(object popupWindow, EventArgs eargs)
+                {
+                    if ((bool)csb.DialogResult)
+                        ConnectionString = csb.ConnectionString;
+                });
+            csb.Owner = System.Windows.Application.Current.MainWindow;
+            csb.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            csb.ShowDialog();
         }
 
-        private void BuildAlternateCommandChannel(object parameter)
+        private void BuildAlternateCommandChannel()
         {
+            ConnectionStringBuilder csb = new ConnectionStringBuilder(ConnectionStringBuilder.ConnectionType.AlternateCommandChannel);
+            if (!string.IsNullOrEmpty(AlternateCommandChannel))
+                csb.ConnectionString = AlternateCommandChannel;
 
+            csb.Closed += new EventHandler(delegate(object popupWindow, EventArgs eargs)
+            {
+                if ((bool)csb.DialogResult)
+                    AlternateCommandChannel = csb.ConnectionString;
+            });
+            csb.Owner = System.Windows.Application.Current.MainWindow;
+            csb.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            csb.ShowDialog();
         }
 
         /// <summary>
         /// Handles RequestConfigurationCommand.
-        /// </summary>
-        /// <param name="parameter">Parameters to be used in command execution.</param>
-        private void RequestConfiguration(object parameter)
+        /// </summary>        
+        private void RequestConfiguration()
         {
             m_requestConfigurationError = string.Empty;
             AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
@@ -934,12 +957,22 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Handles ReceivedServiceUpdate event.
+        /// </summary>
+        /// <param name="sender">Source of the event.</param>
+        /// <param name="e">Event arguments.</param>
         private void Helper_ReceivedServiceUpdate(object sender, EventArgs<UpdateType, string> e)
         {
             if (e.Argument2.StartsWith("[PHASOR!SERVICES]") && !e.Argument2.Contains("*"))
                 m_requestConfigurationError += e.Argument2.Replace("[PHASOR!SERVICES]", "").Replace("\r\n\r\n", "\r\n");
         }
 
+        /// <summary>
+        /// Handles ReceivedServiceResponse event.
+        /// </summary>
+        /// <param name="sender">Source of the event.</param>
+        /// <param name="e">Event arguments.</param>
         private void Helper_ReceivedServiceResponse(object sender, EventArgs<ServiceResponse> e)
         {
             List<object> attachments = e.Argument.Attachments;
@@ -955,6 +988,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Saves concentrating device information in to database.
+        /// </summary>
         public void SavePDC()
         {
             Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
@@ -992,6 +1028,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Saves configuration information in to database.
+        /// </summary>
         public void SaveConfiguration()
         {
             Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
@@ -1075,6 +1114,10 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Generates connection string to save into database by merging connection string and alternate command channel.
+        /// </summary>
+        /// <returns>string, to store into database.</returns>
         private string GenerateConnectionString()
         {
             string connectionString = ConnectionString;
