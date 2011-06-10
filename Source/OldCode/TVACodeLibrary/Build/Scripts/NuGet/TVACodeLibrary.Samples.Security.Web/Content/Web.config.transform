@@ -35,9 +35,9 @@
     <cryptographyServices>
       <add name="CryptoCache" value="KeyIVCache.bin" description="Path and file name of cryptographic key and initialization vector cache."
         encrypted="false" />
-      <add name="RetryDelayInterval" value="200" description="Wait interval, in milliseconds, before retrying load of cryptographic key and initialization vector cache."
+      <add name="CacheRetryDelayInterval" value="200" description="Wait interval, in milliseconds, before retrying load of cryptographic key and initialization vector cache."
         encrypted="false" />
-      <add name="MaximumRetryAttempts" value="10" description="Maximum retry attempts allowed for loading cryptographic key and initialization vector cache."
+      <add name="CacheMaximumRetryAttempts" value="10" description="Maximum retry attempts allowed for loading cryptographic key and initialization vector cache."
         encrypted="false" />
     </cryptographyServices>
   </categorizedSettings>

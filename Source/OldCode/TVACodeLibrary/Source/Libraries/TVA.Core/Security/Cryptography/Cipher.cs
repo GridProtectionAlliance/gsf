@@ -39,6 +39,9 @@
 //       with a short lifecycle.
 //  04/14/2011 - Pinal C. Patel
 //       Updated to use new serialization and deserialization methods in TVA.Serialization class.
+//  06/10/2011 - Pinal C. Patel
+//       Renamed RetryDelayInterval and MaximumRetryAttempts settings persisted to the config file 
+//       to CacheRetryDelayInterval and CacheMaximumRetryAttempts for clarity.
 //
 //*******************************************************************************************************
 
@@ -614,12 +617,12 @@ namespace TVA.Security.Cryptography
             CategorizedSettingsElementCollection settings = config.Settings[CryptoServicesSettingsCategory];
 
             settings.Add("CryptoCache", localCacheFileName, "Path and file name of cryptographic key and initialization vector cache.");
-            settings.Add("RetryDelayInterval", retryDelayInterval, "Wait interval, in milliseconds, before retrying load of cryptographic key and initialization vector cache.");
-            settings.Add("MaximumRetryAttempts", maximumRetryAttempts, "Maximum retry attempts allowed for loading cryptographic key and initialization vector cache.");
+            settings.Add("CacheRetryDelayInterval", retryDelayInterval, "Wait interval, in milliseconds, before retrying load of cryptographic key and initialization vector cache.");
+            settings.Add("CacheMaximumRetryAttempts", maximumRetryAttempts, "Maximum retry attempts allowed for loading cryptographic key and initialization vector cache.");
 
             localCacheFileName = FilePath.GetAbsolutePath(settings["CryptoCache"].ValueAs(localCacheFileName));
-            retryDelayInterval = settings["RetryDelayInterval"].ValueAs(retryDelayInterval);
-            maximumRetryAttempts = settings["MaximumRetryAttempts"].ValueAs(maximumRetryAttempts);
+            retryDelayInterval = settings["CacheRetryDelayInterval"].ValueAs(retryDelayInterval);
+            maximumRetryAttempts = settings["CacheMaximumRetryAttempts"].ValueAs(maximumRetryAttempts);
 
             // Initialize local cryptographic key and initialization vector cache (application may only have read-only access to this cache)
             localKeyIVCache = new KeyIVCache()
