@@ -13,6 +13,9 @@
 //       Generated original version of source code.
 //  04/14/2011 - Pinal C. Patel
 //       Updated to use new serialization and deserialization methods in TVA.Serialization class.
+//  06/10/2011 - Pinal C. Patel
+//       Renamed RetryDelayInterval and MaximumRetryAttempts settings persisted to the config file 
+//       to CacheRetryDelayInterval and CacheMaximumRetryAttempts for clarity.
 //
 //*******************************************************************************************************
 
@@ -503,11 +506,11 @@ namespace TVA.Security
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection settings = config.Settings[SecurityProviderBase.DefaultSettingsCategory];
 
-            settings.Add("RetryDelayInterval", retryDelayInterval, "Wait interval, in milliseconds, before retrying load of user data cache.");
-            settings.Add("MaximumRetryAttempts", maximumRetryAttempts, "Maximum retry attempts allowed for loading user data cache.");
+            settings.Add("CacheRetryDelayInterval", retryDelayInterval, "Wait interval, in milliseconds, before retrying load of user data cache.");
+            settings.Add("CacheMaximumRetryAttempts", maximumRetryAttempts, "Maximum retry attempts allowed for loading user data cache.");
 
-            retryDelayInterval = settings["RetryDelayInterval"].ValueAs(retryDelayInterval);
-            maximumRetryAttempts = settings["MaximumRetryAttempts"].ValueAs(maximumRetryAttempts);
+            retryDelayInterval = settings["CacheRetryDelayInterval"].ValueAs(retryDelayInterval);
+            maximumRetryAttempts = settings["CacheMaximumRetryAttempts"].ValueAs(maximumRetryAttempts);
 
             // Make sure user directory exists
             if (!Directory.Exists(userCacheFolder))

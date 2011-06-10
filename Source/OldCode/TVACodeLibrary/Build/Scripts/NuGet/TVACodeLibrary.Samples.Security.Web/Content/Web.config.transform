@@ -19,9 +19,9 @@
         encrypted="false" />
       <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages."
         encrypted="false" />
-      <add name="RetryDelayInterval" value="200" description="Wait interval, in milliseconds, before retrying load of user data cache."
+      <add name="CacheRetryDelayInterval" value="200" description="Wait interval, in milliseconds, before retrying load of user data cache."
         encrypted="false" />
-      <add name="MaximumRetryAttempts" value="10" description="Maximum retry attempts allowed for loading user data cache."
+      <add name="CacheMaximumRetryAttempts" value="10" description="Maximum retry attempts allowed for loading user data cache."
         encrypted="false" />
     </securityProvider>
     <activeDirectory>
@@ -48,6 +48,7 @@
     </httpModules>
   </system.web>
   <system.webServer>
+    <validation validateIntegratedModeConfiguration="false" />
     <modules>
       <add name="SecurityModule" type="TVA.Web.SecurityModule, TVA.Web" />
     </modules>
