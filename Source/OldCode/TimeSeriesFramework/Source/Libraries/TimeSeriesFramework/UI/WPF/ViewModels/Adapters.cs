@@ -512,7 +512,7 @@ namespace TimeSeriesFramework.UI.ViewModels
                     return infoList.Select(info => GetParameter(info))
                         .Union(keyList.Select(key => GetParameter(key)))
                         .OrderBy(parameter => parameter.Name)
-                        .OrderByDescending(parameter => parameter.DefaultValue == null)
+                        .OrderByDescending(parameter => parameter.IsRequired)
                         .ToList();
                 }
             }
