@@ -19,7 +19,7 @@ using TVA.Web.Hosting;
 [assembly: AssemblyConfiguration("Release Build")]
 #endif
 [assembly: AssemblyDefaultAlias("TVA.Web")]
-[assembly: AssemblyDescription("Library of ASP.NET extensions and components.")]
+[assembly: AssemblyDescription("Library of ASP.NET web forms extensions, embedded resource hosting and HTTP Module for implementing role-based security.")]
 [assembly: AssemblyTitle("TVA.Web")]
 
 // Other configuration attributes.

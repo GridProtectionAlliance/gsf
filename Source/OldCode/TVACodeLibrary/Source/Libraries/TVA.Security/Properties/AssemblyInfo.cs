@@ -17,7 +17,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("Release Build")]
 #endif
 [assembly: AssemblyDefaultAlias("TVA.Security")]
-[assembly: AssemblyDescription("Library of role-based security framework.")]
+[assembly: AssemblyDescription("Library of core security framework for implementing role-based security across various .NET application types.")]
 [assembly: AssemblyTitle("TVA.Security")]
 
 // Other configuration attributes.

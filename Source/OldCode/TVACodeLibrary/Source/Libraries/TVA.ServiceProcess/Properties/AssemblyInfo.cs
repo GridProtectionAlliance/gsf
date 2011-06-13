@@ -17,7 +17,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("Release Build")]
 #endif
 [assembly: AssemblyDefaultAlias("TVA.ServiceProcess")]
-[assembly: AssemblyDescription("Library of components that facilitate remote interaction with a Windows Service.")]
+[assembly: AssemblyDescription("Library of components that facilitate remote interaction with a Windows Service from Console, Windows and Web application.")]
 [assembly: AssemblyTitle("TVA.ServiceProcess")]
 
 // Other configuration attributes.

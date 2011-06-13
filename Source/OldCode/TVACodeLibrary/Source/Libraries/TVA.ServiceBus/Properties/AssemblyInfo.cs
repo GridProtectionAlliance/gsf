@@ -16,11 +16,11 @@ using System.Runtime.InteropServices;
 #else
 [assembly: AssemblyConfiguration("Release Build")]
 #endif
-[assembly: AssemblyDefaultAlias("TVA.Windows")]
-[assembly: AssemblyDescription("Library of property grid extensions, about dialog and base Windows Form and WPF Window for implementing role-based security.")]
-[assembly: AssemblyTitle("TVA.Windows")]
+[assembly: AssemblyDefaultAlias("TVA.ServiceBus")]
+[assembly: AssemblyDescription("Library of lightweight WCF-based Service Bus with queue and topic support for secure event-driven messaging between application.")]
+[assembly: AssemblyTitle("TVA.ServiceBus")]
 
 // Other configuration attributes.
 [assembly: CLSCompliant(true)]
 [assembly: ComVisible(false)]
-[assembly: Guid("85dfc906-a5f5-41ff-9a40-230ded5cd69d")]
+[assembly: Guid("055544a1-be9e-4727-9946-173e3548d2e0")]

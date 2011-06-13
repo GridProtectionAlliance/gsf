@@ -17,7 +17,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("Release Build")]
 #endif
 [assembly: AssemblyDefaultAlias("TVA.Communication")]
-[assembly: AssemblyDescription("Library of socket, serial and file-based communication components.")]
+[assembly: AssemblyDescription("Library of components for TCP, UDP, serial and file-based communication in an abstract fashion.")]
 [assembly: AssemblyTitle("TVA.Communication")]
 
 // Other configuration attributes.
