@@ -29,6 +29,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters;
 using System.Runtime.Serialization.Formatters.Soap;
+using System.Text;
 using System.Threading;
 using System.Windows;
 using System.Windows.Forms;
@@ -85,6 +86,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         private IConfigurationFrame m_configurationFrame;
         private string m_requestConfigurationError;
         private object m_requestConfigurationAttachment;
+        private bool m_protocolIsBpaPdcStream;
 
         #endregion
 
@@ -265,6 +267,7 @@ namespace TimeSeriesFramework.UI.ViewModels
             {
                 m_protocolID = value;
                 OnPropertyChanged("ProtocolID");
+                ProtocolAcronym = m_protocolLookupList[m_protocolID];
             }
         }
 
@@ -281,9 +284,24 @@ namespace TimeSeriesFramework.UI.ViewModels
             {
                 m_protocolAcronym = value;
                 OnPropertyChanged("ProtocolAcronym");
+                OnPropertyChanged("ProtocolIsBpaPdcStream");
             }
         }
 
+        /// <summary>
+        /// Gets a flag indicating if selected protocol is BpaPdcStream. 
+        /// This is used to hide or display Ini file selection on input wizard screen.
+        /// </summary>
+        public bool ProtocolIsBpaPdcStream
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(m_protocolAcronym))
+                    return (m_protocolAcronym.ToLower() == "bpapdcstream");
+                else
+                    return false;
+            }
+        }
 
         /// <summary>
         /// Gets or sets boolean value indicating if connection is to concentrator.
@@ -738,7 +756,34 @@ namespace TimeSeriesFramework.UI.ViewModels
                         SoapFormatter sf = new SoapFormatter();
                         sf.AssemblyFormat = FormatterAssemblyStyle.Simple;
                         sf.TypeFormat = FormatterTypeStyle.TypesWhenNeeded;
-                        m_configurationFrame = sf.Deserialize(fileData) as IConfigurationFrame;
+
+                        // If protocol is BpaPdcStream and INI file path is provided then replace existing path with the provided one.
+                        if (ProtocolIsBpaPdcStream && !string.IsNullOrEmpty(IniFileName))
+                        {
+                            try
+                            {
+                                string configFileDataString = (new StreamReader(fileData)).ReadToEnd();
+                                string leftPart = configFileDataString.Substring(0, configFileDataString.IndexOf("</configurationFileName>"));
+                                string rightPart = configFileDataString.Substring(configFileDataString.IndexOf("</configurationFileName>"));
+                                leftPart = leftPart.Substring(0, leftPart.LastIndexOf(">") + 1);
+                                configFileDataString = leftPart + m_iniFileName + rightPart;
+
+                                Byte[] fileBytes = Encoding.UTF8.GetBytes(configFileDataString);
+                                MemoryStream ms = new MemoryStream();
+                                ms.Write(fileBytes, 0, fileBytes.Length);
+                                ms.Position = 0;
+                                m_configurationFrame = sf.Deserialize(ms) as IConfigurationFrame;
+                            }
+                            catch (Exception ex)
+                            {
+                                throw new Exception("Error occured in processing INI file. " + ex.Message);
+                            }
+                        }
+                        else
+                        {
+                            m_configurationFrame = sf.Deserialize(fileData) as IConfigurationFrame;
+                        }
+
                         ParseConfiguration();
                     }
                 }
@@ -849,7 +894,21 @@ namespace TimeSeriesFramework.UI.ViewModels
 
         private void BrowseIniFile()
         {
-
+            Stream fileData = null;
+            OpenFileDialog fileDialog = new OpenFileDialog();
+            fileDialog.Multiselect = false;
+            fileDialog.Filter = "INI Files (*.ini)|*.ini|All Files (*.*)|*.*";
+            if (fileDialog.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    IniFileName = fileDialog.FileName;
+                }
+                catch (Exception ex)
+                {
+                    Popup(ex.Message, "Browse to INI File", MessageBoxImage.Error);
+                }
+            }
         }
 
         private void BuildConnectionString()

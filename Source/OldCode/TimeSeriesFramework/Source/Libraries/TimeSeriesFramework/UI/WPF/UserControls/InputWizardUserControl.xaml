@@ -85,11 +85,13 @@
                 <ComboBox Grid.Row="7" Grid.Column="1" ItemsSource="{Binding Source={StaticResource ProtocolLookupList}}" DisplayMemberPath="Value"
                       SelectedItem="{tsfBinding:Column Path=ProtocolID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource ProtocolLookupList}}"/>
                 
-                <TextBlock Grid.Row="8" Grid.Column="0" x:Name="TextBlockIniFile" Text="Select INI File"/>
-                <StackPanel x:Name="StackPanelIniFile" Orientation="Horizontal" Grid.Row="8" Grid.Column="1">
-                    <TextBox Text="{tsfBinding:Column Path=DataContext.IniFilePath, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}"  Width="{StaticResource XXXLargeItemSize}" />
+                <TextBlock Grid.Row="8" Grid.Column="0" Text="Select INI File"
+                           Visibility="{Binding Path=DataContext.ProtocolIsBpaPdcStream, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel}, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                <StackPanel Orientation="Horizontal" Grid.Row="8" Grid.Column="1"
+                            Visibility="{Binding Path=DataContext.ProtocolIsBpaPdcStream, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <TextBox Text="{tsfBinding:Column Path=DataContext.IniFileName, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}"  Width="{StaticResource XXXLargeItemSize}" />
                     <Button Command="{Binding Path=DataContext.BrowseIniFileCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}"
-                        Content=" .. " ToolTip="Browse to ini file" Width="Auto" IsEnabled="False" />
+                        Content=" .. " ToolTip="Browse to ini file" Width="Auto"/>
                 </StackPanel>
             </Grid>
         </Expander>
