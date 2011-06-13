@@ -1047,6 +1047,11 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <returns>String, for display use, indicating success.</returns>
         public static string Save(AdoDataConnection database, Device device)
         {
+            return SaveWithAnalogsDigitals(database, device, 0, 0);
+        }
+
+        public static string SaveWithAnalogsDigitals(AdoDataConnection database, Device device, int digitalCount, int analogCount)
+        {
             bool createdConnection = false;
 
             try
@@ -1107,22 +1112,74 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 foreach (SignalType signal in SignalType.GetPmuSignalTypes())
                 {
-                    Measurement measurement = Measurement.GetMeasurement(database, "WHERE DeviceID = " + savedDevice.ID + " AND SignalTypeSuffix = '" + signal.Suffix + "'");
+                    if (signal.Suffix != "CV")
+                    {
+                        Measurement measurement;
 
-                    if (measurement == null)
-                        measurement = new Measurement();
+                        if (signal.Suffix == "AV" && analogCount > 0)
+                        {
+                            for (int i = 1; i <= analogCount; i++)
+                            {
+                                measurement = Measurement.GetMeasurement(database, "WHERE DeviceID = " + savedDevice.ID + " AND SignalReference = '" +
+                                    savedDevice.Acronym + "-AV" + i.ToString() + "'");
 
-                    measurement.HistorianID = savedDevice.HistorianID;
-                    measurement.DeviceID = savedDevice.ID;
-                    measurement.PointTag = savedDevice.CompanyAcronym + "_" + savedDevice.Acronym + ":" + savedDevice.VendorAcronym + signal.Abbreviation;
-                    measurement.AlternateTag = string.Empty;
-                    measurement.SignalReference = savedDevice.Acronym + "-" + signal.Suffix;
-                    measurement.SignalTypeID = signal.ID;
-                    measurement.PhasorSourceIndex = (int?)null;
-                    measurement.Description = savedDevice.Name + " " + savedDevice.VendorDeviceName + " " + signal.Name;
-                    measurement.Enabled = true;
+                                if (measurement == null)
+                                    measurement = new Measurement();
 
-                    Measurement.Save(database, measurement);
+                                measurement.HistorianID = savedDevice.HistorianID;
+                                measurement.DeviceID = savedDevice.ID;
+                                measurement.PointTag = savedDevice.CompanyAcronym + "_" + savedDevice.Acronym + ":" + savedDevice.VendorAcronym + "A" + i.ToString();
+                                measurement.AlternateTag = string.Empty;
+                                measurement.SignalReference = savedDevice.Acronym + "-AV" + i.ToString();
+                                measurement.SignalTypeID = signal.ID;
+                                measurement.PhasorSourceIndex = (int?)null;
+                                measurement.Description = savedDevice.Name + " " + savedDevice.VendorDeviceName + " Analog Value " + i.ToString();
+                                measurement.Enabled = true;
+                                Measurement.Save(database, measurement);
+                            }
+                        }
+                        else if (signal.Suffix == "DV" && digitalCount > 0)
+                        {
+                            for (int i = 1; i <= digitalCount; i++)
+                            {
+                                measurement = Measurement.GetMeasurement(database, "WHERE DeviceID = " + savedDevice.ID + " AND SignalReference = '" +
+                                    savedDevice.Acronym + "-DV" + i.ToString() + "'");
+
+                                if (measurement == null)
+                                    measurement = new Measurement();
+
+                                measurement.HistorianID = savedDevice.HistorianID;
+                                measurement.DeviceID = savedDevice.ID;
+                                measurement.PointTag = savedDevice.CompanyAcronym + "_" + savedDevice.Acronym + ":" + savedDevice.VendorAcronym + "D" + i.ToString();
+                                measurement.AlternateTag = string.Empty;
+                                measurement.SignalReference = savedDevice.Acronym + "-DV" + i.ToString();
+                                measurement.SignalTypeID = signal.ID;
+                                measurement.PhasorSourceIndex = (int?)null;
+                                measurement.Description = savedDevice.Name + " " + savedDevice.VendorDeviceName + " Digital Value " + i.ToString();
+                                measurement.Enabled = true;
+                                Measurement.Save(database, measurement);
+                            }
+                        }
+                        else
+                        {
+                            measurement = Measurement.GetMeasurement(database, "WHERE DeviceID = " + savedDevice.ID + " AND SignalTypeSuffix = '" + signal.Suffix + "'");
+
+                            if (measurement == null)
+                                measurement = new Measurement();
+
+                            measurement.HistorianID = savedDevice.HistorianID;
+                            measurement.DeviceID = savedDevice.ID;
+                            measurement.PointTag = savedDevice.CompanyAcronym + "_" + savedDevice.Acronym + ":" + savedDevice.VendorAcronym + signal.Abbreviation;
+                            measurement.AlternateTag = string.Empty;
+                            measurement.SignalReference = savedDevice.Acronym + "-" + signal.Suffix;
+                            measurement.SignalTypeID = signal.ID;
+                            measurement.PhasorSourceIndex = (int?)null;
+                            measurement.Description = savedDevice.Name + " " + savedDevice.VendorDeviceName + " " + signal.Name;
+                            measurement.Enabled = true;
+
+                            Measurement.Save(database, measurement);
+                        }
+                    }
                 }
 
                 // For existing devices, just call Save on each phasors so that measurements related to those phasor will reflect changes made to device.
@@ -1135,8 +1192,15 @@ namespace TimeSeriesFramework.UI.DataModels
                     }
                 }
 
-                // Notify service about configuration changes made here.                 
-                NotifyService(savedDevice);
+                try
+                {
+                    // Notify service about configuration changes made here.                 
+                    NotifyService(savedDevice);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Device information saved successfully. Failed to send Initialize command to backend service." + Environment.NewLine + ex.Message);
+                }
 
                 return "Device information saved successfully";
             }

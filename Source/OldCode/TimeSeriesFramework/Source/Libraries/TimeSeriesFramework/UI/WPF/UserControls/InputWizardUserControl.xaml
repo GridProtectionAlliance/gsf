@@ -220,19 +220,34 @@
                         </sdk:DataGridTemplateColumn.HeaderTemplate>
                     </sdk:DataGridTemplateColumn>
                     
-                    <sdk:DataGridTemplateColumn Header="Acronym" Width="2*">
+                    <sdk:DataGridTemplateColumn Header="Acronym" Width="3*">
                         <sdk:DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBox Text="{tsfBinding:Column Path=Acronym}"/>
-                                    <TextBlock Style="{StaticResource RequiredMarker}" Visibility="{tsfBinding:Column Path=Existing, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                    <TextBox Text="{tsfBinding:Column Path=Acronym}" Margin="0"/>
+                                    <TextBlock Style="{StaticResource RequiredMarker}" Margin="0"
+                                               Visibility="{tsfBinding:Column Path=Existing, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                 </StackPanel>
                             </DataTemplate>
                         </sdk:DataGridTemplateColumn.CellTemplate>                        
                     </sdk:DataGridTemplateColumn>                    
-                    <sdk:DataGridTextColumn Header="Name" Binding="{tsfBinding:Column Path=Name}" Width="2*"/>
+                    <sdk:DataGridTextColumn Header="Name" Binding="{tsfBinding:Column Path=Name}" Width="2*" />
                     <sdk:DataGridTextColumn Header="Longitude" Binding="{tsfBinding:Column Path=Longitude}" Width="*"/>
-                    <sdk:DataGridTextColumn Header="Latitude" Binding="{tsfBinding:Column Path=Latitude}" Width="*"/>                    
+                    <sdk:DataGridTextColumn Header="Latitude" Binding="{tsfBinding:Column Path=Latitude}" Width="*"/>
+                    <sdk:DataGridTemplateColumn Header="Digitals" Width="*">
+                        <sdk:DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox Content="{tsfBinding:Column Path=DigitalCount}" IsChecked="{tsfBinding:Column Path=AddDigitals}" Margin="0" HorizontalAlignment="Center"/>
+                            </DataTemplate>
+                        </sdk:DataGridTemplateColumn.CellTemplate>
+                    </sdk:DataGridTemplateColumn>
+                    <sdk:DataGridTemplateColumn Header="Analogs" Width="*">
+                        <sdk:DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox Content="{tsfBinding:Column Path=AnalogCount}" IsChecked="{tsfBinding:Column Path=AddAnalogs}" Margin="0" HorizontalAlignment="Center"/>
+                            </DataTemplate>
+                        </sdk:DataGridTemplateColumn.CellTemplate>
+                    </sdk:DataGridTemplateColumn>
                 </sdk:DataGrid.Columns>
                 
                 <sdk:DataGrid.RowDetailsTemplate>

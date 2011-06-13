@@ -203,8 +203,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 if (!string.IsNullOrEmpty(source) && source.ToUpper() == "PMU")
                 {
-                    query = "SELECT ID, Acronym, Name, Suffix, Abbreviation, Source, EngineeringUnits FROM SignalType Where Source = 'PMU' AND " +
-                        "Suffix IN ('FQ', 'DF', 'SF') ORDER BY Name";
+                    query = "SELECT ID, Acronym, Name, Suffix, Abbreviation, Source, EngineeringUnits FROM SignalType Where Source = 'PMU' ORDER BY Name";
                 }
                 else if (!string.IsNullOrEmpty(source) && source.ToUpper() == "PHASOR" && !string.IsNullOrEmpty(phasorType))
                 {

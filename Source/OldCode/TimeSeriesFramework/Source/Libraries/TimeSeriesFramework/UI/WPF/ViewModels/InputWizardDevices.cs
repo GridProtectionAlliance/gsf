@@ -550,7 +550,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         }
 
         /// <summary>
-        /// Gets or sets <see cref="ICommand"/> to request configuration frame from backed service.
+        /// Gets <see cref="ICommand"/> to request configuration frame from backed service.
         /// </summary>
         public ICommand RequestConfigurationCommand
         {
@@ -563,6 +563,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets <see cref="ICommand"/> to save current configuration to XML file.
+        /// </summary>
         public ICommand SaveConfigurationFileCommand
         {
             get
@@ -892,6 +895,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Handles BroseIniFileCommand.
+        /// </summary>
         private void BrowseIniFile()
         {
             Stream fileData = null;
@@ -911,6 +917,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Pops up another window to build or modify connection string.
+        /// </summary>
         private void BuildConnectionString()
         {
             ConnectionStringBuilder csb = new ConnectionStringBuilder(ConnectionStringBuilder.ConnectionType.DeviceConnection);
@@ -927,6 +936,9 @@ namespace TimeSeriesFramework.UI.ViewModels
             csb.ShowDialog();
         }
 
+        /// <summary>
+        /// Pops up another window to build or modify alternate command channel.
+        /// </summary>
         private void BuildAlternateCommandChannel()
         {
             ConnectionStringBuilder csb = new ConnectionStringBuilder(ConnectionStringBuilder.ConnectionType.AlternateCommandChannel);
@@ -1129,7 +1141,13 @@ namespace TimeSeriesFramework.UI.ViewModels
                         else
                             device.ConnectionString = GenerateConnectionString();
 
-                        Device.Save(database, device);
+                        if (!inputWizardDevice.AddAnalogs)
+                            inputWizardDevice.AnalogCount = 0;
+
+                        if (!inputWizardDevice.AddDigitals)
+                            inputWizardDevice.DigitalCount = 0;
+
+                        Device.SaveWithAnalogsDigitals(database, device, inputWizardDevice.DigitalCount, inputWizardDevice.AnalogCount);
 
                         if (device.ID == 0)
                             device.ID = Device.GetDevice(database, "WHERE Acronym = '" + inputWizardDevice.Acronym.ToUpper() + "'").ID;
