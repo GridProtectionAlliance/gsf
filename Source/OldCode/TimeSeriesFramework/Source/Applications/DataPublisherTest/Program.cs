@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using TimeSeriesFramework;
 using TimeSeriesFramework.Transport;
 using TVA;
-using TVA.Collections;
 
-using TVA.Security.Cryptography;
 
 namespace DataPublisherTest
 {
@@ -18,13 +14,6 @@ namespace DataPublisherTest
 
         static void Main(string[] args)
         {
-
-            string test = "This is a test...";
-
-            test = test.Encrypt("MyPassword", CipherStrength.Aes256);
-            test = test.Decrypt("MyPassword", CipherStrength.Aes256);
-
-
             // Attach to publisher events
             publisher.StatusMessage += publisher_StatusMessage;
             publisher.ProcessException += publisher_ProcessException;
