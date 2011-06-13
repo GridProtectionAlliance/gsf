@@ -1506,7 +1506,7 @@ namespace TimeSeriesFramework.Transport
                         responsePacket.Write(data, 0, data.Length);
                     }
 
-                    publishChannel.MulticastAsync(responsePacket.ToArray(), 0, unchecked((int)responsePacket.Length));
+                    publishChannel.SendToAsync(clientID, responsePacket.ToArray(), 0, unchecked((int)responsePacket.Length));
 
                     success = true;
                 }
