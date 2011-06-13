@@ -59,6 +59,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         private RelayCommand m_browseConfigurationFileCommand;
         private RelayCommand m_requestConfigurationCommand;
         private RelayCommand m_saveConfigurationFileCommand;
+        private RelayCommand m_manualConfigurationCommand;
         private string m_connectionString;
         private string m_alternateCommandChannel;
         private int m_accessID;
@@ -86,7 +87,6 @@ namespace TimeSeriesFramework.UI.ViewModels
         private IConfigurationFrame m_configurationFrame;
         private string m_requestConfigurationError;
         private object m_requestConfigurationAttachment;
-        private bool m_protocolIsBpaPdcStream;
 
         #endregion
 
@@ -578,6 +578,20 @@ namespace TimeSeriesFramework.UI.ViewModels
         }
 
         /// <summary>
+        /// Gets <see cref="ICommand"/> to create or update configuration manually.
+        /// </summary>
+        public ICommand ManualConfigurationCommand
+        {
+            get
+            {
+                if (m_manualConfigurationCommand == null)
+                    m_manualConfigurationCommand = new RelayCommand(ManualConfiguration, () => CanSave);
+
+                return m_manualConfigurationCommand;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets summary message to be displayed on UI aftern parsing configuration file or frame.
         /// </summary>
         public string ConfigurationSummary
@@ -1026,6 +1040,29 @@ namespace TimeSeriesFramework.UI.ViewModels
                     windowsServiceClient.Helper.ReceivedServiceUpdate -= Helper_ReceivedServiceUpdate;
                 }
             }
+        }
+
+        /// <summary>
+        /// Handles ManualConfigurationCommand.
+        /// </summary>
+        private void ManualConfiguration()
+        {
+            ConfigurationCreator cc = new ConfigurationCreator();
+            if (m_configurationFrame != null)
+                cc.ConfigurationFrame = m_configurationFrame;
+
+            cc.Closed += new EventHandler(delegate(object popupWindow, EventArgs eargs)
+                {
+                    if ((bool)cc.DialogResult)
+                    {
+                        m_configurationFrame = cc.ConfigurationFrame;
+                        ParseConfiguration();
+                    }
+                });
+
+            cc.Owner = System.Windows.Application.Current.MainWindow;
+            cc.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            cc.ShowDialog();
         }
 
         /// <summary>

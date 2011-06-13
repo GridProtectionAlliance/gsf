@@ -122,6 +122,9 @@
     </Compile>
     <Compile Include="IViewModel.cs" />
     <Compile Include="MenuDataItem.cs" />
+    <Compile Include="Modal\ConfigurationCreator.xaml.cs">
+      <DependentUpon>ConfigurationCreator.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Modal\ConnectionStringBuilder.xaml.cs">
       <DependentUpon>ConnectionStringBuilder.xaml</DependentUpon>
     </Compile>
@@ -267,6 +270,10 @@
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Modal\ConfigurationCreator.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Modal\ConnectionStringBuilder.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

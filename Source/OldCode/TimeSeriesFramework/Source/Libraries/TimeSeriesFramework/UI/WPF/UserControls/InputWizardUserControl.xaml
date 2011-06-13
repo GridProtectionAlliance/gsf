@@ -142,11 +142,12 @@
 
                 <TextBlock Text="OR" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3" FontWeight="Bold" FontSize="{StaticResource LargeTextSize}" HorizontalAlignment="Center" Margin="0"/>
 
-                <Button x:Name="ButtonManualConfiguration" Grid.Column="1" Grid.Row="5" Grid.ColumnSpan="3" Content="Create Configuration" HorizontalAlignment="Left" Width="175" IsEnabled="False"/>
+                <Button Grid.Column="1" Grid.Row="5" Grid.ColumnSpan="3" Content="Create Configuration" HorizontalAlignment="Left" Width="175" 
+                       Command="{Binding Path=DataContext.ManualConfigurationCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel}}" />
 
                 <StackPanel Orientation="Horizontal" x:Name="StackPanelSummary" Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3">
                     <TextBlock Text="{tsfBinding:Column Path=DataContext.ConfigurationSummary, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}" Foreground="#FF095188" Width="Auto"/>
-                    <Button x:Name="ButtonSaveConfiguration" Content="Save Configuration" Width="Auto"
+                    <Button Content="Save Configuration" Width="Auto"
                             Command="{Binding Path=DataContext.SaveConfigurationFileCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}"/>
                 </StackPanel>
 
