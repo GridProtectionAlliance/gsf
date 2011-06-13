@@ -2,7 +2,7 @@
 
 <!--
 *******************************************************************************************************
-**  TVA.ServiceModel.nuspec - Gbtc
+**  TVA.ServiceBus.nuspec - Gbtc
 **
 **  Tennessee Valley Authority, 2009
 **  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -11,7 +11,7 @@
 **
 **  Code Modification History:
 **  ===================================================================================================
-**  05/31/2011 - Pinal C. Patel
+**  06/13/2011 - Pinal C. Patel
 **       Generated original version of source code.
 **
 *******************************************************************************************************
@@ -19,16 +19,17 @@
 
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
-    <id>TVACodeLibrary.Libraries.ServiceModel</id>
+    <id>TVACodeLibrary.Libraries.ServiceBus</id>
     <version>1.0.0.0</version>
     <authors>TVA</authors>
-    <description>Library of base WCF service with self-hosting capability, and WCF Authorization Policy and Host Factories for implementing role-based security.</description>
+    <description>Library of lightweight WCF-based Service Bus with queue and topic support for secure event-driven messaging between disjoint systems.</description>
     <projectUrl>http://tvacodelibrary.codeplex.com/</projectUrl>
     <licenseUrl>http://tvacodelibrary.codeplex.com/license</licenseUrl>
     <iconUrl>http://download.codeplex.com/Project/Download/FileDownload.aspx?ProjectName=tvacodelibrary&#x26;DownloadId=140265&#x26;Build=17672</iconUrl>
     <dependencies>
       <dependency id="TVACodeLibrary.Libraries.Core" version="4.0.2" />
       <dependency id="TVACodeLibrary.Libraries.Security" version="4.0.2" />
+      <dependency id="TVACodeLibrary.Libraries.ServiceModel" version="4.0.2" />
     </dependencies>
   </metadata>
 </package>

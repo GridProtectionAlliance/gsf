@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  IMessageBusServiceCallback.cs - Gbtc
+//  ClientInfo.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,11 +8,10 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  10/06/2010 - Pinal C. Patel
+//  10/19/2010 - Pinal C. Patel
 //       Generated original version of source code.
-//  10/29/2010 - Pinal C. Patel
-//       Renamed MessageReceived to ProcessMessage so Silverlight generated async proxy has 
-//       ProcessMessageReceived instead of MessageReceivedReceived.
+//  11/24/2010 - Pinal C. Patel
+//       Updated ConnectedAt to use UTC time.
 //
 //*******************************************************************************************************
 
@@ -232,23 +231,89 @@
 */
 #endregion
 
+using System;
+using System.Runtime.Serialization;
 using System.ServiceModel;
 
-namespace TVA.ServiceModel.Messaging
+namespace TVA.ServiceBus
 {
     /// <summary>
-    /// Defines a callback contract that must be implemented by clients of <see cref="MessageBusService"/> for receiving <see cref="Message"/>s.
+    /// Represents information about a client connected to the <see cref="ServiceBusService"/> to produce/consume <see cref="Message"/>s.
     /// </summary>
-    public interface IMessageBusServiceCallback
+    [DataContract()]
+    public class ClientInfo
     {
+        #region [ Members ]
+
+        // Fields
+
+        /// <summary>
+        /// Gets or sets the session identifier of the client.
+        /// </summary>
+        [DataMember()]
+        public string SessionId;
+
+        /// <summary>
+        /// Gets or sets the UTC <see cref="DateTime"/> when the client connected to the <see cref="ServiceBusService"/>.
+        /// </summary>
+        [DataMember()]
+        public DateTime ConnectedAt;
+
+        /// <summary>
+        /// Gets or sets the total number of <see cref="Message"/>s produced by the client.
+        /// </summary>
+        [DataMember()]
+        public long MessagesProduced;
+
+        /// <summary>
+        /// Gets or sets the total number of <see cref="Message"/>s consumed by the client.
+        /// </summary>
+        [DataMember()]
+        public long MessagesConsumed;
+
+        /// <summary>
+        /// Gets or sets the <see cref="OperationContext"/> object of the client.
+        /// </summary>
+        public OperationContext OperationContext;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClientInfo"/> class.
+        /// </summary>
+        /// <param name="context">An <see cref="OperationContext"/> object of the client.</param>
+        internal ClientInfo(OperationContext context)
+        {
+            SessionId = context.SessionId;
+            ConnectedAt = DateTime.UtcNow;
+            OperationContext = context;
+        }
+
+        #endregion
+
         #region [ Methods ]
 
         /// <summary>
-        /// Invoked when a new <see cref="Message"/> is received from the <see cref="MessageBusService"/>.
+        /// Determines if the specified <see cref="Object"/> is equal to the current <see cref="ClientInfo"/> object.
         /// </summary>
-        /// <param name="message"><see cref="Message"/> received from the <see cref="MessageBusService"/>.</param>
-        [OperationContract(IsOneWay = true)]
-        void ProcessMessage(Message message);
+        /// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="ClientInfo"/> object.</param>
+        /// <returns>true if both <see cref="Object"/>s  are equal; otherwise false.</returns>
+        public override bool Equals(object obj)
+        {
+            ClientInfo other = obj as ClientInfo;
+            return (other != null && other.SessionId == this.SessionId);
+        }
+
+        /// <summary>
+        /// Gets a hash value for the current <see cref="ClientInfo"/> object.
+        /// </summary>
+        /// <returns>An <see cref="Int32"/> value.</returns>
+        public override int GetHashCode()
+        {
+            return SessionId.GetHashCode();
+        }
 
         #endregion
     }

@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  NamespaceDoc.cs - Gbtc
+//  ServiceBusSecurityPolicy.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,7 +8,7 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  10/06/2010 - Pinal C. Patel
+//  10/18/2010 - Pinal C. Patel
 //       Generated original version of source code.
 //
 //*******************************************************************************************************
@@ -229,15 +229,90 @@
 */
 #endregion
 
-using System.Runtime.CompilerServices;
+using System.IdentityModel.Policy;
+using System.ServiceModel;
+using System.Text.RegularExpressions;
+using TVA.ServiceModel;
 
-namespace TVA.ServiceModel.Messaging
+namespace TVA.ServiceBus
 {
     /// <summary>
-    /// Contains WCF web services that facilitate secure inter-process messaging.
+    /// Represents an <see cref="IAuthorizationPolicy">authorization policy</see> that can be used for enabling role-based security on <see cref="ServiceBusService"/>.
     /// </summary>
-    [CompilerGenerated()]
-    class NamespaceDoc
+    /// <example>
+    /// This example shows the required config file entries when securing <see cref="ServiceBusService"/>:
+    /// <code>
+    /// <![CDATA[
+    /// <?xml version="1.0"?>
+    /// <configuration>
+    ///   <configSections>
+    ///     <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+    ///   </configSections>
+    ///   <categorizedSettings>
+    ///     <securityProvider>
+    ///       <add name="ApplicationName" value="" description="Name of the application being secured as defined in the backend security datastore."
+    ///         encrypted="false" />
+    ///       <add name="ConnectionString" value="" description="Connection string to be used for connection to the backend security datastore."
+    ///         encrypted="false" />
+    ///       <add name="ProviderType" value="TVA.Security.LdapSecurityProvider, TVA.Security"
+    ///         description="The type to be used for enforcing security." encrypted="false" />
+    ///       <add name="IncludedResources" value="Topic.Name=*;Queue.Name=*" description="Semicolon delimited list of resources to be secured along with role names."
+    ///         encrypted="false" />
+    ///       <add name="ExcludedResources" value="*/mex;*/Publish;*/GetClients;*/GetQueues;*/GetTopics;*/SecurityService.svc/*"
+    ///         description="Semicolon delimited list of resources to be excluded from being secured."
+    ///         encrypted="false" />
+    ///       <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
+    ///         encrypted="false" />
+    ///       <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
+    ///         encrypted="false" />
+    ///     </securityProvider>
+    ///     <activeDirectory>
+    ///       <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
+    ///         encrypted="false" />
+    ///       <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
+    ///         encrypted="false" />
+    ///       <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
+    ///         encrypted="true" />
+    ///     </activeDirectory>
+    ///   </categorizedSettings>
+    /// </configuration>
+    /// ]]>
+    /// </code>
+    /// </example>
+    /// <seealso cref="ServiceBusService"/>
+    public class ServiceBusSecurityPolicy : SecurityPolicy
     {
+        #region [ Members ]
+
+        // Constants
+        private const string NameRegex = @"<(?'Name'b:MessageName)\b[^>]*>(?'Value'.*?)</\1>";
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Gets the name of resource being accessed.
+        /// </summary>
+        /// <returns>
+        /// <see cref="Message"/>.<see cref="Message.Name"/> property value for <see cref="ServiceBusService.Publish"/> operations, 
+        /// otherwise <see cref="System.ServiceModel.Channels.MessageHeaders.Action"/> property value for all other operations.
+        /// </returns>
+        protected override string GetResourceName()
+        {
+            System.ServiceModel.Channels.Message message = OperationContext.Current.RequestContext.RequestMessage;
+            if (message.Headers.Action.EndsWith("Register"))
+            {
+                // For register operation use the topic and queue name for applying security.
+                MatchCollection matches = Regex.Matches(message.ToString(), NameRegex);
+                if (matches.Count > 0)
+                    return matches[0].Groups["Value"].Value;
+            }
+
+            // For all other operations simply use the operation name for applying security.
+            return OperationContext.Current.RequestContext.RequestMessage.Headers.Action;
+        }
+
+        #endregion
     }
 }

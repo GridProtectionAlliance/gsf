@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{0622C318-5032-4D56-BB71-5CE64B502FB0}</ProjectGuid>
+    <ProjectGuid>{C4524980-9901-4370-A49F-657761258E43}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TVA.ServiceModel</RootNamespace>
-    <AssemblyName>TVA.ServiceModel</AssemblyName>
+    <RootNamespace>TVA.ServiceBus</RootNamespace>
+    <AssemblyName>TVA.ServiceBus</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SccProjectName>SAK</SccProjectName>
@@ -25,7 +25,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\..\Build\Output\Debug\Libraries\TVA.ServiceModel.XML</DocumentationFile>
+    <DocumentationFile>..\..\..\Build\Output\Debug\Libraries\TVA.ServiceBus.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -34,18 +34,15 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\..\Build\Output\Release\Libraries\TVA.ServiceModel.XML</DocumentationFile>
+    <DocumentationFile>..\..\..\Build\Output\Release\Libraries\TVA.ServiceBus.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Data.Services" />
     <Reference Include="System.IdentityModel" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
-    <Reference Include="System.ServiceModel.Activation" />
-    <Reference Include="System.ServiceModel.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -53,12 +50,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ISelfHostingService.cs" />
+    <Compile Include="ClientInfo.cs" />
+    <Compile Include="IServiceBusService.cs" />
+    <Compile Include="IServiceBusServiceCallback.cs" />
+    <Compile Include="Message.cs" />
+    <Compile Include="ServiceBusSecurityPolicy.cs" />
+    <Compile Include="ServiceBusService.cs" />
     <Compile Include="NamespaceDoc.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SecureDataServiceHostFactory.cs" />
-    <Compile Include="SecurityPolicy.cs" />
-    <Compile Include="SelfHostingService.cs" />
+    <Compile Include="RegistrationInfo.cs" />
+    <Compile Include="RegistrationRequest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TVA.Core\TVA.Core.csproj">
@@ -68,6 +69,10 @@
     <ProjectReference Include="..\TVA.Security\TVA.Security.csproj">
       <Project>{4060E729-EFFD-4E50-A0D5-99C0990EF7DA}</Project>
       <Name>TVA.Security</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TVA.ServiceModel\TVA.ServiceModel.csproj">
+      <Project>{0622C318-5032-4D56-BB71-5CE64B502FB0}</Project>
+      <Name>TVA.ServiceModel</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

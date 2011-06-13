@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  ClientInfo.cs - Gbtc
+//  Message.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,10 +8,10 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  10/19/2010 - Pinal C. Patel
+//  10/06/2010 - Pinal C. Patel
 //       Generated original version of source code.
-//  11/24/2010 - Pinal C. Patel
-//       Updated ConnectedAt to use UTC time.
+//  03/11/2011 - Pinal C. Patel
+//       Marked the class with Serializable attribute and changed properties to field for serialization.
 //
 //*******************************************************************************************************
 
@@ -232,88 +232,62 @@
 #endregion
 
 using System;
-using System.Runtime.Serialization;
-using System.ServiceModel;
 
-namespace TVA.ServiceModel.Messaging
+namespace TVA.ServiceBus
 {
+    #region [ Enumerations ]
+
     /// <summary>
-    /// Represents information about a client connected to the <see cref="MessageBusService"/> to produce/consume <see cref="Message"/>s.
+    /// Indicates how a <see cref="Message"/> is distributed by the <see cref="ServiceBusService"/>.
     /// </summary>
-    [DataContract()]
-    public class ClientInfo
+    public enum MessageType
+    {
+        /// <summary>
+        /// <see cref="Message"/> is distributed to all of its registered consumers.
+        /// </summary>
+        Topic,
+        /// <summary>
+        /// <see cref="Message"/> is distributed to the first of all its registered consumers.
+        /// </summary>
+        Queue
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Represents a message that can be used to exchange information between processes using <see cref="ServiceBusService"/>.
+    /// </summary>
+    [Serializable()]
+    public class Message
     {
         #region [ Members ]
 
         // Fields
 
         /// <summary>
-        /// Gets or sets the session identifier of the client.
+        /// Gets or sets the <see cref="DateTime"/> when this <see cref="Message"/> was created.
         /// </summary>
-        [DataMember()]
-        public string SessionId;
+        public DateTime Time;
 
         /// <summary>
-        /// Gets or sets the UTC <see cref="DateTime"/> when the client connected to the <see cref="MessageBusService"/>.
+        /// Gets or sets the <see cref="MessageType">Type</see> of this <see cref="Message"/>.
         /// </summary>
-        [DataMember()]
-        public DateTime ConnectedAt;
+        public MessageType Type;
 
         /// <summary>
-        /// Gets or sets the total number of <see cref="Message"/>s produced by the client.
+        /// Gets or sets the identifier of this <see cref="Message"/>.
         /// </summary>
-        [DataMember()]
-        public long MessagesProduced;
+        public string Name;
 
         /// <summary>
-        /// Gets or sets the total number of <see cref="Message"/>s consumed by the client.
+        /// Gets or sets the format of the <see cref="Content"/> in this <see cref="Message"/>.
         /// </summary>
-        [DataMember()]
-        public long MessagesConsumed;
+        public string Format;
 
         /// <summary>
-        /// Gets or sets the <see cref="OperationContext"/> object of the client.
+        /// Gets or sets the actual payload of this <see cref="Message"/>.
         /// </summary>
-        public OperationContext OperationContext;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ClientInfo"/> class.
-        /// </summary>
-        /// <param name="context">An <see cref="OperationContext"/> object of the client.</param>
-        internal ClientInfo(OperationContext context)
-        {
-            SessionId = context.SessionId;
-            ConnectedAt = DateTime.UtcNow;
-            OperationContext = context;
-        }
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Determines if the specified <see cref="Object"/> is equal to the current <see cref="ClientInfo"/> object.
-        /// </summary>
-        /// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="ClientInfo"/> object.</param>
-        /// <returns>true if both <see cref="Object"/>s  are equal; otherwise false.</returns>
-        public override bool Equals(object obj)
-        {
-            ClientInfo other = obj as ClientInfo;
-            return (other != null && other.SessionId == this.SessionId);
-        }
-
-        /// <summary>
-        /// Gets a hash value for the current <see cref="ClientInfo"/> object.
-        /// </summary>
-        /// <returns>An <see cref="Int32"/> value.</returns>
-        public override int GetHashCode()
-        {
-            return SessionId.GetHashCode();
-        }
+        public byte[] Content;
 
         #endregion
     }

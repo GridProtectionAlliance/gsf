@@ -62,9 +62,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.ServiceProcess.Tests", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.ServiceModel.Tests", "Libraries\Tests\TVA.ServiceModel.Tests\TVA.ServiceModel.Tests.csproj", "{3D134BF6-04D6-4EE5-B88B-B14123232A19}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.ServiceBus", "Libraries\TVA.ServiceBus\TVA.ServiceBus.csproj", "{C4524980-9901-4370-A49F-657761258E43}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.ServiceBus.Tests", "Libraries\Tests\TVA.ServiceBus.Tests\TVA.ServiceBus.Tests.csproj", "{058C96F1-EFE5-4050-A6F6-FF901D0FA4D3}"
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 20
+		SccNumberOfProjects = 22
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs05
 		SccLocalPath0 = .
@@ -144,6 +148,14 @@ Global
 		SccProjectTopLevelParentUniqueName19 = TVACodeLibrary.sln
 		SccProjectName19 = Libraries/Tests/TVA.ServiceModel.Tests
 		SccLocalPath19 = Libraries\\Tests\\TVA.ServiceModel.Tests
+		SccProjectUniqueName20 = Libraries\\TVA.ServiceBus\\TVA.ServiceBus.csproj
+		SccProjectTopLevelParentUniqueName20 = TVACodeLibrary.sln
+		SccProjectName20 = Libraries/TVA.ServiceBus
+		SccLocalPath20 = Libraries\\TVA.ServiceBus
+		SccProjectUniqueName21 = Libraries\\Tests\\TVA.ServiceBus.Tests\\TVA.ServiceBus.Tests.csproj
+		SccProjectTopLevelParentUniqueName21 = TVACodeLibrary.sln
+		SccProjectName21 = Libraries/Tests/TVA.ServiceBus.Tests
+		SccLocalPath21 = Libraries\\Tests\\TVA.ServiceBus.Tests
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = TVACodeLibrary.vsmdi
@@ -271,6 +283,18 @@ Global
 		{3D134BF6-04D6-4EE5-B88B-B14123232A19}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3D134BF6-04D6-4EE5-B88B-B14123232A19}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3D134BF6-04D6-4EE5-B88B-B14123232A19}.Release|x86.ActiveCfg = Release|Any CPU
+		{C4524980-9901-4370-A49F-657761258E43}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C4524980-9901-4370-A49F-657761258E43}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C4524980-9901-4370-A49F-657761258E43}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C4524980-9901-4370-A49F-657761258E43}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C4524980-9901-4370-A49F-657761258E43}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C4524980-9901-4370-A49F-657761258E43}.Release|x86.ActiveCfg = Release|Any CPU
+		{058C96F1-EFE5-4050-A6F6-FF901D0FA4D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{058C96F1-EFE5-4050-A6F6-FF901D0FA4D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{058C96F1-EFE5-4050-A6F6-FF901D0FA4D3}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{058C96F1-EFE5-4050-A6F6-FF901D0FA4D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{058C96F1-EFE5-4050-A6F6-FF901D0FA4D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{058C96F1-EFE5-4050-A6F6-FF901D0FA4D3}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -284,6 +308,7 @@ Global
 		{F06A2E20-D5DD-4B88-9ABC-CEE7245829E3} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
 		{2E23E926-CF64-4607-BDE1-1B2FC76F4919} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
 		{0622C318-5032-4D56-BB71-5CE64B502FB0} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
+		{C4524980-9901-4370-A49F-657761258E43} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
 		{7708DB97-99C1-4596-B44F-5BFE4E664015} = {C3058807-1DFE-4681-BBBC-959BE6A84E10}
 		{1C4124EF-0F9C-47B9-B1CB-B2CA39AB0E57} = {6C78685B-1653-43B5-98C8-0470A173A848}
 		{35027A69-1A76-4312-B57B-F5826F0B87AF} = {6C78685B-1653-43B5-98C8-0470A173A848}
@@ -298,5 +323,6 @@ Global
 		{CEFDB630-AFF0-4FAB-9F1A-003DB1558E9B} = {F06A2E20-D5DD-4B88-9ABC-CEE7245829E3}
 		{5EC0143C-E287-4EE0-A80A-683124FD677D} = {F06A2E20-D5DD-4B88-9ABC-CEE7245829E3}
 		{3D134BF6-04D6-4EE5-B88B-B14123232A19} = {F06A2E20-D5DD-4B88-9ABC-CEE7245829E3}
+		{058C96F1-EFE5-4050-A6F6-FF901D0FA4D3} = {F06A2E20-D5DD-4B88-9ABC-CEE7245829E3}
 	EndGlobalSection
 EndGlobal

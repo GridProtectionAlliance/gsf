@@ -17,7 +17,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("Release Build")]
 #endif
 [assembly: AssemblyDefaultAlias("TVA.ServiceModel")]
-[assembly: AssemblyDescription("Library of self-hosting WCF service, WCF-based messaging bus and Authorization Policy for implementing role-based security.")]
+[assembly: AssemblyDescription("Library of base WCF service with self-hosting capability, and WCF Authorization Policy and Host Factories for implementing role-based security.")]
 [assembly: AssemblyTitle("TVA.ServiceModel")]
 
 // Other configuration attributes.

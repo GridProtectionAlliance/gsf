@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  Message.cs - Gbtc
+//  IServiceBusServiceCallback.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -10,8 +10,9 @@
 //  -----------------------------------------------------------------------------------------------------
 //  10/06/2010 - Pinal C. Patel
 //       Generated original version of source code.
-//  03/11/2011 - Pinal C. Patel
-//       Marked the class with Serializable attribute and changed properties to field for serialization.
+//  10/29/2010 - Pinal C. Patel
+//       Renamed MessageReceived to ProcessMessage so Silverlight generated async proxy has 
+//       ProcessMessageReceived instead of MessageReceivedReceived.
 //
 //*******************************************************************************************************
 
@@ -231,63 +232,23 @@
 */
 #endregion
 
-using System;
+using System.ServiceModel;
 
-namespace TVA.ServiceModel.Messaging
+namespace TVA.ServiceBus
 {
-    #region [ Enumerations ]
-
     /// <summary>
-    /// Indicates how a <see cref="Message"/> is distributed by the <see cref="MessageBusService"/>.
+    /// Defines a callback contract that must be implemented by clients of <see cref="ServiceBusService"/> for receiving <see cref="Message"/>s.
     /// </summary>
-    public enum MessageType
+    public interface IServiceBusServiceCallback
     {
-        /// <summary>
-        /// <see cref="Message"/> is distributed to all of its registered consumers.
-        /// </summary>
-        Topic,
-        /// <summary>
-        /// <see cref="Message"/> is distributed to the first of all its registered consumers.
-        /// </summary>
-        Queue
-    }
-
-    #endregion
-
-    /// <summary>
-    /// Represents a message that can be used to exchange information between processes using <see cref="MessageBusService"/>.
-    /// </summary>
-    [Serializable()]
-    public class Message
-    {
-        #region [ Members ]
-
-        // Fields
+        #region [ Methods ]
 
         /// <summary>
-        /// Gets or sets the <see cref="DateTime"/> when this <see cref="Message"/> was created.
+        /// Invoked when a new <see cref="Message"/> is received from the <see cref="ServiceBusService"/>.
         /// </summary>
-        public DateTime Time;
-
-        /// <summary>
-        /// Gets or sets the <see cref="MessageType">Type</see> of this <see cref="Message"/>.
-        /// </summary>
-        public MessageType Type;
-
-        /// <summary>
-        /// Gets or sets the identifier of this <see cref="Message"/>.
-        /// </summary>
-        public string Name;
-
-        /// <summary>
-        /// Gets or sets the format of the <see cref="Content"/> in this <see cref="Message"/>.
-        /// </summary>
-        public string Format;
-
-        /// <summary>
-        /// Gets or sets the actual payload of this <see cref="Message"/>.
-        /// </summary>
-        public byte[] Content;
+        /// <param name="message"><see cref="Message"/> received from the <see cref="ServiceBusService"/>.</param>
+        [OperationContract(IsOneWay = true)]
+        void ProcessMessage(Message message);
 
         #endregion
     }

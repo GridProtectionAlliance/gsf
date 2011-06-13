@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  MessageBusService.cs - Gbtc
+//  ServiceBusService.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -248,13 +248,14 @@ using System.Text;
 using System.Threading;
 using TVA.Collections;
 using TVA.Configuration;
+using TVA.ServiceModel;
 
-namespace TVA.ServiceModel.Messaging
+namespace TVA.ServiceBus
 {
     #region [ Enumerations ]
 
     /// <summary>
-    /// Indicates how the distribution of <see cref="Message"/>s is processed by the <see cref="MessageBusService"/>.
+    /// Indicates how the distribution of <see cref="Message"/>s is processed by the <see cref="ServiceBusService"/>.
     /// </summary>
     public enum MessageProcessingMode
     {
@@ -271,17 +272,17 @@ namespace TVA.ServiceModel.Messaging
     #endregion
 
     /// <summary>
-    /// A message bus for event-based messaging between disjoint systems.
+    /// A service bus for event-based messaging between disjoint systems.
     /// </summary>
     /// <example>
-    /// This example shows how to host <see cref="MessageBusService"/> inside a console application:
+    /// This example shows how to host <see cref="ServiceBusService"/> inside a console application:
     /// <code>
     /// using System;
     /// using System.ServiceModel;
     /// using System.ServiceModel.Description;
     /// using System.Threading;
     /// using TVA;
-    /// using TVA.ServiceModel.Messaging;
+    /// using TVA.ServiceBus;
     /// 
     /// class Program
     /// {
@@ -291,17 +292,17 @@ namespace TVA.ServiceModel.Messaging
     ///         Console.Write("Enable security (Y/N): ");
     ///         bool enableSecurity = Console.ReadLine().ParseBoolean();
     /// 
-    ///         // Initialize message bus service.
-    ///         MessageBusService service = new MessageBusService();
+    ///         // Initialize service bus.
+    ///         ServiceBusService service = new ServiceBusService();
     ///         service.Singleton = true;
     ///         service.PublishMetadata = true;
     ///         service.PersistSettings = false;
     ///         service.Endpoints = "http.duplex://localhost:4501; net.tcp://locahost:4502";
     ///         if (enableSecurity)
-    ///             service.SecurityPolicy = typeof(MessageBusSecurityPolicy).FullName;
+    ///             service.SecurityPolicy = typeof(ServiceBusSecurityPolicy).FullName;
     ///         service.Initialize();
     /// 
-    ///         // Show message bus service status.
+    ///         // Show service bus status.
     ///         if (service.ServiceHost.State == CommunicationState.Opened)
     ///         {
     ///             Console.WriteLine("\r\n{0} is running:", service.GetType().Name);
@@ -335,7 +336,7 @@ namespace TVA.ServiceModel.Messaging
     ///     }
     /// }
     /// </code>
-    /// This example shows how to host <see cref="MessageBusService"/> inside a web application:
+    /// This example shows how to host <see cref="ServiceBusService"/> inside a web application:
     /// <code>
     /// <![CDATA[
     /// <?xml version="1.0"?>
@@ -344,10 +345,10 @@ namespace TVA.ServiceModel.Messaging
     ///     <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
     ///   </configSections>
     ///   <categorizedSettings>
-    ///     <messageBusService>
+    ///     <serviceBusService>
     ///       <add name="Endpoints" value="" description="Semicolon delimited list of URIs where the web service can be accessed."
     ///         encrypted="false" />
-    ///       <add name="Contract" value="TVA.ServiceModel.Messaging.IMessageBusService, TVA.Services"
+    ///       <add name="Contract" value="TVA.ServiceBus.IServiceBusService, TVA.ServiceBus"
     ///         description="Assembly qualified name of the contract interface implemented by the web service."
     ///         encrypted="false" />
     ///       <add name="Singleton" value="True" description="True if the web service is singleton; otherwise False."
@@ -360,12 +361,12 @@ namespace TVA.ServiceModel.Messaging
     ///         encrypted="false" />
     ///       <add name="ProcessingMode" value="Sequential" description="Processing mode (Parallel; Sequential) to be used for the distribution of messages."
     ///         encrypted="false" />
-    ///     </messageBusService>
+    ///     </serviceBusService>
     ///   </categorizedSettings>
     ///   <system.serviceModel>
     ///     <services>
-    ///       <service name="TVA.ServiceModel.Messaging.MessageBusService">
-    ///         <endpoint address="" contract="TVA.ServiceModel.Messaging.IMessageBusService" binding="wsDualHttpBinding" />
+    ///       <service name="TVA.ServiceBus.ServiceBusService">
+    ///         <endpoint address="" contract="TVA.ServiceBus.IServiceBusService" binding="wsDualHttpBinding" />
     ///       </service>
     ///     </services>
     ///     <behaviors>
@@ -378,35 +379,35 @@ namespace TVA.ServiceModel.Messaging
     ///     </behaviors>
     ///     <serviceHostingEnvironment multipleSiteBindingsEnabled="true">
     ///       <serviceActivations>
-    ///         <add relativeAddress="MessageBusService.svc" service="TVA.ServiceModel.Messaging.MessageBusService, TVA.Services" />
+    ///         <add relativeAddress="ServiceBusService.svc" service="TVA.ServiceBus.ServiceBusService, TVA.ServiceBus" />
     ///       </serviceActivations>
     ///     </serviceHostingEnvironment>
     ///   </system.serviceModel>
     /// </configuration>
     /// ]]>
     /// </code>
-    /// This example shows how to publish <see cref="Message"/>s to <see cref="MessageBusService"/>:
+    /// This example shows how to publish <see cref="Message"/>s to <see cref="ServiceBusService"/>:
     /// <code>
     /// using System;
     /// using System.ServiceModel;
     /// using System.Threading;
     /// 
-    /// class Program : IMessageBusServiceCallback
+    /// class Program : IServiceBusServiceCallback
     /// {
     ///     static void Main(string[] args)
     ///     {
-    ///         // NOTE: Service reference to the message bus service must be added to generate the service proxy.
+    ///         // NOTE: Service reference to the service bus service must be added to generate the service proxy.
     /// 
-    ///         // Initialize auto-generated message bus service proxy.
+    ///         // Initialize auto-generated service bus service proxy.
     ///         InstanceContext callbackContext = new InstanceContext(new Program());
-    ///         MessageBusServiceClient messageBusService = new MessageBusServiceClient(callbackContext, "NetTcpBinding_IMessageBusService");
+    ///         ServiceBusServiceClient serviceBusService = new ServiceBusServiceClient(callbackContext, "NetTcpBinding_IServiceBusService");
     /// 
     ///         // Create registration request for publishing messages.
     ///         RegistrationRequest registration = new RegistrationRequest();
     ///         registration.MessageType = MessageType.Topic;
     ///         registration.MessageName = "Topic.Frequency";
     ///         registration.RegistrationType = RegistrationType.Produce;
-    ///         messageBusService.Register(registration);
+    ///         serviceBusService.Register(registration);
     /// 
     ///         // Start publishing messages to the bus asynchronously.
     ///         new Thread(delegate() 
@@ -417,11 +418,11 @@ namespace TVA.ServiceModel.Messaging
     ///                 message.Format = "application/octet-stream";
     /// 
     ///                 Random random = new Random(59);
-    ///                 while (messageBusService.State == CommunicationState.Opened)
+    ///                 while (serviceBusService.State == CommunicationState.Opened)
     ///                 {
     ///                     message.Time = DateTime.UtcNow;
     ///                     message.Content = BitConverter.GetBytes(random.Next(61));
-    ///                     messageBusService.Publish(message);
+    ///                     serviceBusService.Publish(message);
     /// 
     ///                     Thread.Sleep(5000);
     ///                 }
@@ -430,7 +431,7 @@ namespace TVA.ServiceModel.Messaging
     ///         // Shutdown.
     ///         Console.Write("Press Enter key to stop...");
     ///         Console.ReadLine();
-    ///         messageBusService.Close();
+    ///         serviceBusService.Close();
     ///     }
     /// 
     ///     public void ProcessMessage(Message message)
@@ -440,33 +441,33 @@ namespace TVA.ServiceModel.Messaging
     ///     }
     /// }
     /// </code>
-    /// This example shows how to subscribe to <see cref="MessageBusService"/> for receiving <see cref="Message"/>s:
+    /// This example shows how to subscribe to <see cref="ServiceBusService"/> for receiving <see cref="Message"/>s:
     /// <code>
     /// using System;
     /// using System.ServiceModel;
     /// 
-    /// class Program : IMessageBusServiceCallback
+    /// class Program : IServiceBusServiceCallback
     /// {
     ///     static void Main(string[] args)
     ///     {
-    ///         // NOTE: Service reference to the message bus service must be added to generate the service proxy.
+    ///         // NOTE: Service reference to the service bus service must be added to generate the service proxy.
     /// 
-    ///         // Initialize auto-generated message bus service proxy.
+    ///         // Initialize auto-generated service bus service proxy.
     ///         InstanceContext callbackContext = new InstanceContext(new Program());
-    ///         MessageBusServiceClient messageBusService = new MessageBusServiceClient(callbackContext, "NetTcpBinding_IMessageBusService");
+    ///         ServiceBusServiceClient serviceBusService = new ServiceBusServiceClient(callbackContext, "NetTcpBinding_IServiceBusService");
     /// 
-    ///         // Subscribe with message bus service to receive messages.
+    ///         // Subscribe with service bus service to receive messages.
     ///         RegistrationRequest registration = new RegistrationRequest();
     ///         registration.MessageType = MessageType.Topic;
     ///         registration.MessageName = "Topic.Frequency";
     ///         registration.RegistrationType = RegistrationType.Consume;
-    ///         messageBusService.Register(registration);
+    ///         serviceBusService.Register(registration);
     /// 
     ///         // Shutdown.
     ///         Console.WriteLine("Press Enter key to stop...");
     ///         Console.WriteLine();
     ///         Console.ReadLine();
-    ///         messageBusService.Close();
+    ///         serviceBusService.Close();
     ///     }
     /// 
     ///     public void ProcessMessage(Message message)
@@ -478,32 +479,32 @@ namespace TVA.ServiceModel.Messaging
     ///     }
     /// }
     /// </code>
-    /// This example shows how to monitor <see cref="MessageBusService"/> remotely:
+    /// This example shows how to monitor <see cref="ServiceBusService"/> remotely:
     /// <code>
     /// using System;
     /// using System.ServiceModel;
     /// using System.Threading;
     /// using TVA;
     /// 
-    /// class Program : IMessageBusServiceCallback
+    /// class Program : IServiceBusServiceCallback
     /// {
     ///     static void Main(string[] args)
     ///     {
-    ///         // NOTE: Service reference to the message bus service must be added to generate the service proxy.
+    ///         // NOTE: Service reference to the service bus service must be added to generate the service proxy.
     /// 
-    ///         // Initialize auto-generated message bus service proxy.
+    ///         // Initialize auto-generated service bus service proxy.
     ///         InstanceContext callbackContext = new InstanceContext(new Program());
-    ///         MessageBusServiceClient messageBusService = new MessageBusServiceClient(callbackContext, "NetTcpBinding_IMessageBusService");
-    ///         messageBusService.ChannelFactory.Open();
+    ///         ServiceBusServiceClient serviceBusService = new ServiceBusServiceClient(callbackContext, "NetTcpBinding_IServiceBusService");
+    ///         serviceBusService.ChannelFactory.Open();
     /// 
-    ///         // Start querying messages bus service status asynchronously.
+    ///         // Start querying service bus service status asynchronously.
     ///         new Thread(delegate()
     ///         {
-    ///             while (messageBusService.State == CommunicationState.Opened)
+    ///             while (serviceBusService.State == CommunicationState.Opened)
     ///             {
     ///                 Console.Clear();
     ///                 Console.WriteLine(new string('-', 79));
-    ///                 Console.WriteLine("|" + "Message Bus Status".CenterText(77) + "|");
+    ///                 Console.WriteLine("|" + "Service Bus Status".CenterText(77) + "|");
     ///                 Console.WriteLine(new string('-', 79));
     ///                 Console.WriteLine();
     /// 
@@ -524,7 +525,7 @@ namespace TVA.ServiceModel.Messaging
     ///                 Console.Write(" ");
     ///                 Console.Write(new string('-', 15));
     ///                 Console.WriteLine();
-    ///                 foreach (ClientInfo client in messageBusService.GetClients())
+    ///                 foreach (ClientInfo client in serviceBusService.GetClients())
     ///                 {
     ///                     Console.Write(client.SessionId.TruncateRight(25).PadRight(25));
     ///                     Console.Write(" ");
@@ -558,7 +559,7 @@ namespace TVA.ServiceModel.Messaging
     ///                 Console.Write(" ");
     ///                 Console.Write(new string('-', 15));
     ///                 Console.WriteLine();
-    ///                 foreach (RegistrationInfo queue in messageBusService.GetQueues())
+    ///                 foreach (RegistrationInfo queue in serviceBusService.GetQueues())
     ///                 {
     ///                     Console.Write(queue.MessageName.PadRight(25));
     ///                     Console.Write(" ");
@@ -594,7 +595,7 @@ namespace TVA.ServiceModel.Messaging
     ///                 Console.Write(" ");
     ///                 Console.Write(new string('-', 15));
     ///                 Console.WriteLine();
-    ///                 foreach (RegistrationInfo topic in messageBusService.GetTopics())
+    ///                 foreach (RegistrationInfo topic in serviceBusService.GetTopics())
     ///                 {
     ///                     Console.Write(topic.MessageName.PadRight(25));
     ///                     Console.Write(" ");
@@ -616,7 +617,7 @@ namespace TVA.ServiceModel.Messaging
     /// 
     ///         // Shutdown.
     ///         Console.ReadLine();
-    ///         messageBusService.Close();
+    ///         serviceBusService.Close();
     ///     }
     /// 
     ///     public void ProcessMessage(Message message)
@@ -631,9 +632,9 @@ namespace TVA.ServiceModel.Messaging
     /// <seealso cref="ClientInfo"/>
     /// <seealso cref="RegistrationInfo"/>
     /// <seealso cref="RegistrationRequest"/>
-    /// <seealso cref="MessageBusSecurityPolicy"/>
+    /// <seealso cref="ServiceBusSecurityPolicy"/>
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
-    public class MessageBusService : SelfHostingService, IMessageBusService
+    public class ServiceBusService : SelfHostingService, IServiceBusService
     {
         #region [ Members ]
 
@@ -682,9 +683,9 @@ namespace TVA.ServiceModel.Messaging
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MessageBusService"/> class.
+        /// Initializes a new instance of the <see cref="ServiceBusService"/> class.
         /// </summary>
-        public MessageBusService()
+        public ServiceBusService()
             : base()
         {
             // Override base class settings.
@@ -708,7 +709,7 @@ namespace TVA.ServiceModel.Messaging
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether the <see cref="MessageBusService"/> is currently enabled.
+        /// Gets or sets a boolean value that indicates whether the <see cref="ServiceBusService"/> is currently enabled.
         /// </summary>
         public override bool Enabled
         {
@@ -726,7 +727,7 @@ namespace TVA.ServiceModel.Messaging
         }
 
         /// <summary>
-        /// Gets the descriptive status of the <see cref="MessageBusService"/>.
+        /// Gets the descriptive status of the <see cref="ServiceBusService"/>.
         /// </summary>
         public override string Status
         {
@@ -780,7 +781,7 @@ namespace TVA.ServiceModel.Messaging
         }
 
         /// <summary>
-        /// Gets or sets the maximum number of <see cref="Message"/>s that can be buffered for distribution by the <see cref="MessageBusService"/> before the 
+        /// Gets or sets the maximum number of <see cref="Message"/>s that can be buffered for distribution by the <see cref="ServiceBusService"/> before the 
         /// the oldest buffered <see cref="Message"/>s are discarded to keep memory consumption in check by avoiding <see cref="Message"/> flooding.
         /// </summary>
         /// <remarks>Set <see cref="BufferThreshold"/> to -1 to disable discarding of <see cref="Message"/>s.</remarks>
@@ -800,7 +801,7 @@ namespace TVA.ServiceModel.Messaging
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="MessageProcessingMode"/> used by the <see cref="MessageBusService"/> for processing <see cref="Message"/> distribution.
+        /// Gets or sets the <see cref="MessageProcessingMode"/> used by the <see cref="ServiceBusService"/> for processing <see cref="Message"/> distribution.
         /// </summary>
         public MessageProcessingMode ProcessingMode
         {
@@ -819,7 +820,7 @@ namespace TVA.ServiceModel.Messaging
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes the <see cref="MessageBusService"/>.
+        /// Initializes the <see cref="ServiceBusService"/>.
         /// </summary>
         /// <exception cref="NotSupportedException">The specified <see cref="ProcessingMode"/> is not supported.</exception>
         public override void Initialize()
@@ -841,7 +842,7 @@ namespace TVA.ServiceModel.Messaging
         }
 
         /// <summary>
-        /// Saves <see cref="MessageBusService"/> settings to the config file if the <see cref="TVA.Adapters.Adapter.PersistSettings"/> property is set to true.
+        /// Saves <see cref="ServiceBusService"/> settings to the config file if the <see cref="TVA.Adapters.Adapter.PersistSettings"/> property is set to true.
         /// </summary>
         public override void SaveSettings()
         {
@@ -858,7 +859,7 @@ namespace TVA.ServiceModel.Messaging
         }
 
         /// <summary>
-        /// Loads saved <see cref="MessageBusService"/> settings from the config file if the <see cref="TVA.Adapters.Adapter.PersistSettings"/> property is set to true.
+        /// Loads saved <see cref="ServiceBusService"/> settings from the config file if the <see cref="TVA.Adapters.Adapter.PersistSettings"/> property is set to true.
         /// </summary>
         public override void LoadSettings()
         {
@@ -876,7 +877,7 @@ namespace TVA.ServiceModel.Messaging
         }
 
         /// <summary>
-        /// Registers with the <see cref="MessageBusService"/> to produce or consume <see cref="Message"/>s.
+        /// Registers with the <see cref="ServiceBusService"/> to produce or consume <see cref="Message"/>s.
         /// </summary>
         /// <param name="request">An <see cref="RegistrationRequest"/> containing registration data.</param>
         public virtual void Register(RegistrationRequest request)
@@ -981,7 +982,7 @@ namespace TVA.ServiceModel.Messaging
         }
 
         /// <summary>
-        /// Unregisters a previous registration with the <see cref="MessageBusService"/> to produce or consume <see cref="Message"/>s
+        /// Unregisters a previous registration with the <see cref="ServiceBusService"/> to produce or consume <see cref="Message"/>s
         /// </summary>
         /// <param name="request">The <see cref="RegistrationRequest"/> used when registering.</param>
         public virtual void Unregister(RegistrationRequest request)
@@ -1032,7 +1033,7 @@ namespace TVA.ServiceModel.Messaging
         }
 
         /// <summary>
-        /// Sends the <paramref name="message"/> to the <see cref="MessageBusService"/> for distribution amongst its registered consumers.
+        /// Sends the <paramref name="message"/> to the <see cref="ServiceBusService"/> for distribution amongst its registered consumers.
         /// </summary>
         /// <param name="message">The <see cref="Message"/> that is to be distributed.</param>
         public virtual void Publish(Message message)
@@ -1132,7 +1133,7 @@ namespace TVA.ServiceModel.Messaging
         }
 
         /// <summary>
-        /// Gets a list of all clients connected to the <see cref="MessageBusService"/>.
+        /// Gets a list of all clients connected to the <see cref="ServiceBusService"/>.
         /// </summary>
         /// <returns>An <see cref="ICollection{T}"/> of <see cref="ClientInfo"/> objects.</returns>
         public virtual ICollection<ClientInfo> GetClients()
@@ -1141,7 +1142,7 @@ namespace TVA.ServiceModel.Messaging
         }
 
         /// <summary>
-        /// Gets a list of all <see cref="MessageType.Queue"/>s registered on the <see cref="MessageBusService"/>.
+        /// Gets a list of all <see cref="MessageType.Queue"/>s registered on the <see cref="ServiceBusService"/>.
         /// </summary>
         /// <returns>An <see cref="ICollection{T}"/> of <see cref="RegistrationInfo"/> objects.</returns>
         public virtual ICollection<RegistrationInfo> GetQueues()
@@ -1150,7 +1151,7 @@ namespace TVA.ServiceModel.Messaging
         }
 
         /// <summary>
-        /// Gets a list of all <see cref="MessageType.Topic"/>s registered on the <see cref="MessageBusService"/>.
+        /// Gets a list of all <see cref="MessageType.Topic"/>s registered on the <see cref="ServiceBusService"/>.
         /// </summary>
         /// <returns>An <see cref="ICollection{T}"/> of <see cref="RegistrationInfo"/> objects.</returns>
         public virtual ICollection<RegistrationInfo> GetTopics()
@@ -1159,7 +1160,7 @@ namespace TVA.ServiceModel.Messaging
         }
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="MessageBusService"/> object and optionally releases the managed resources.
+        /// Releases the unmanaged resources used by the <see cref="ServiceBusService"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
@@ -1265,7 +1266,7 @@ namespace TVA.ServiceModel.Messaging
                         {
                             try
                             {
-                                client.OperationContext.GetCallbackChannel<IMessageBusServiceCallback>().ProcessMessage(context.Message);
+                                client.OperationContext.GetCallbackChannel<IServiceBusServiceCallback>().ProcessMessage(context.Message);
                                 Interlocked.Increment(ref client.MessagesConsumed);
 
                                 if (context.Message.Type == MessageType.Queue)

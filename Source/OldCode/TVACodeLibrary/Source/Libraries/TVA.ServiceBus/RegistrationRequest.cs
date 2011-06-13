@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  RegistrationInfo.cs - Gbtc
+//  RegistrationContext.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,10 +8,8 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  10/19/2010 - Pinal C. Patel
+//  10/06/2010 - Pinal C. Patel
 //       Generated original version of source code.
-//  02/03/2011 - Pinal C. Patel
-//       Added LatestMessage field to save the very latest message distributed out to subscribers.
 //
 //*******************************************************************************************************
 
@@ -231,146 +229,52 @@
 */
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
-using System.Threading;
-
-namespace TVA.ServiceModel.Messaging
+namespace TVA.ServiceBus
 {
+    #region [ Enumerations ]
+
     /// <summary>
-    /// Represents information about a registration with the <see cref="MessageBusService"/> to produce/consume <see cref="Message"/>s.
+    /// Indicates the intent of the <see cref="RegistrationRequest"/>.
     /// </summary>
-    [DataContract()]
-    public class RegistrationInfo : IDisposable
+    public enum RegistrationType
     {
-        #region [ Members ]
-
-        // Fields
-
-        private bool m_disposed;
-
         /// <summary>
-        /// Gets or sets the type for <see cref="Message"/>s being produced/consumed.
+        /// Register to produce <see cref="Message"/>s.
         /// </summary>
-        [DataMember()]
-        public MessageType MessageType;
-
+        Produce,
         /// <summary>
-        /// Gets or sets the name for <see cref="Message"/>s being produced/consumed. 
+        /// Register to consume <see cref="Message"/>s.
         /// </summary>
-        [DataMember()]
-        public string MessageName;
+        Consume
+    }
 
-        /// <summary>
-        /// Gets or sets the total number of <see cref="Message"/>s received.
-        /// </summary>
-        [DataMember()]
-        public long MessagesReceived;
+    #endregion
 
-        /// <summary>
-        /// Gets or sets the total number of <see cref="Message"/>s distributed.
-        /// </summary>
-        [DataMember()]
-        public long MessagesProcessed;
-
-        /// <summary>
-        /// Gets or sets the list of clients producing the <see cref="Message"/>s.
-        /// </summary>
-        [DataMember()]
-        public List<ClientInfo> Producers;
-
-        /// <summary>
-        /// Gets or sets the list of clients consuming the <see cref="Message"/>s.
-        /// </summary>
-        [DataMember()]
-        public List<ClientInfo> Consumers;
-
-        /// <summary>
-        /// Gets or sets the latest <see cref="Message"/> distributed to the subscribers.
-        /// </summary>
-        public Message LatestMessage;
-
-        /// <summary>
-        /// Gets the <see cref="ReaderWriterLockSlim"/> to be used for synchronized access to <see cref="Producers"/>.
-        /// </summary>
-        public readonly ReaderWriterLockSlim ProducersLock;
-
-        /// <summary>
-        /// Gets the <see cref="ReaderWriterLockSlim"/> to be used for synchronized access to <see cref="Consumers"/>.
-        /// </summary>
-        public readonly ReaderWriterLockSlim ConsumersLock;
-
-        #endregion
-
+    /// <summary>
+    /// Represents a request to register with the <see cref="ServiceBusService"/> to produce or consume <see cref="Message"/>s.
+    /// </summary>
+    public class RegistrationRequest
+    {
         #region [ Constructors ]
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="RegistrationInfo"/> class.
-        /// </summary>
-        /// <param name="request">An <see cref="RegistrationRequest"/> object.</param>
-        internal RegistrationInfo(RegistrationRequest request)
-        {
-            MessageType = request.MessageType;
-            MessageName = request.MessageName;
-            Producers = new List<ClientInfo>();
-            Consumers = new List<ClientInfo>();
-            ProducersLock = new ReaderWriterLockSlim();
-            ConsumersLock = new ReaderWriterLockSlim();
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources before the <see cref="RegistrationInfo"/> object is reclaimed by <see cref="GC"/>.
-        /// </summary>
-        ~RegistrationInfo()
-        {
-            Dispose(false);
-        }
 
         #endregion
 
         #region [ Properties ]
 
-        #endregion
-
-        #region [ Methods ]
+        /// <summary>
+        /// Gets or sets the <see cref="RegistrationType">type</see> of this <see cref="RegistrationRequest"/>.
+        /// </summary>
+        public RegistrationType RegistrationType { get; set; }
 
         /// <summary>
-        /// Releases all the resources used by the <see cref="RegistrationInfo"/> object.
+        /// Gets or sets the <see cref="Message.Type"/> of the <see cref="Message"/> this <see cref="RegistrationRequest"/> is for.
         /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+        public MessageType MessageType { get; set; }
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="RegistrationInfo"/> object and optionally releases the managed resources.
+        /// Gets or sets the <see cref="Message.Name"/> of the <see cref="Message"/> this <see cref="RegistrationRequest"/> is for.
         /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.
-                    if (disposing)
-                    {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        if (ProducersLock != null)
-                            ProducersLock.Dispose();
-
-                        if (ConsumersLock != null)
-                            ConsumersLock.Dispose();
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;  // Prevent duplicate dispose.
-                }
-            }
-        }
+        public string MessageName { get; set; }
 
         #endregion
     }

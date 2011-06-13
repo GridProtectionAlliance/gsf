@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  IMessageBusService.cs - Gbtc
+//  NamespaceDoc.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -10,14 +10,6 @@
 //  -----------------------------------------------------------------------------------------------------
 //  10/06/2010 - Pinal C. Patel
 //       Generated original version of source code.
-//  10/26/2010 - Pinal C. Patel
-//       Added management operations GetClients(), GetQueues() and GetTopics().
-//  10/29/2010 - Pinal C. Patel
-//       Made all operations two-way (IsOneWay = false, the default) so OperationContext.RequestContext 
-//       is available when operations are invoked so security can be applied to them.
-//  02/03/2011 - Pinal C. Patel
-//       Added GetLatestMessage() operation that can be used to retrieve the latest message published 
-//       to the subscribers of a topic.
 //
 //*******************************************************************************************************
 
@@ -237,69 +229,15 @@
 */
 #endregion
 
-using System.Collections.Generic;
-using System.ServiceModel;
+using System.Runtime.CompilerServices;
 
-namespace TVA.ServiceModel.Messaging
+namespace TVA.ServiceBus
 {
     /// <summary>
-    /// Defines a message bus for event-based messaging between disjoint systems.
+    /// Contains WCF web services that facilitate secure inter-process messaging.
     /// </summary>
-    [ServiceContract(SessionMode = SessionMode.Allowed, CallbackContract = typeof(IMessageBusServiceCallback))]
-    public interface IMessageBusService : ISelfHostingService
+    [CompilerGenerated()]
+    class NamespaceDoc
     {
-        #region [ Methods ]
-
-        /// <summary>
-        /// Registers with the <see cref="MessageBusService"/> to produce or consume <see cref="Message"/>s.
-        /// </summary>
-        /// <param name="request">An <see cref="RegistrationRequest"/> containing registration data.</param>
-        [OperationContract()]
-        void Register(RegistrationRequest request);
-
-        /// <summary>
-        /// Unregisters a previous registration with the <see cref="MessageBusService"/> to produce or consume <see cref="Message"/>s
-        /// </summary>
-        /// <param name="request">The <see cref="RegistrationRequest"/> used when registering.</param>
-        [OperationContract()]
-        void Unregister(RegistrationRequest request);
-
-        /// <summary>
-        /// Sends the <paramref name="message"/> to the <see cref="MessageBusService"/> for distribution amongst its registered consumers.
-        /// </summary>
-        /// <param name="message">The <see cref="Message"/> that is to be distributed.</param>
-        [OperationContract()]
-        void Publish(Message message);
-
-        /// <summary>
-        /// Gets the latest <see cref="Message"/> distributed to the subscribers of the specified <paramref name="topic"/>.
-        /// </summary>
-        /// <param name="topic">The topic <see cref="RegistrationRequest"/> used when registering.</param>
-        /// <returns>The latest <see cref="Message"/> distributed to the <paramref name="topic"/> subscribers.</returns>
-        [OperationContract()]
-        Message GetLatestMessage(RegistrationRequest topic);
-
-        /// <summary>
-        /// Gets a list of all clients connected to the <see cref="MessageBusService"/>.
-        /// </summary>
-        /// <returns>An <see cref="ICollection{T}"/> of <see cref="ClientInfo"/> objects.</returns>
-        [OperationContract()]
-        ICollection<ClientInfo> GetClients();
-
-        /// <summary>
-        /// Gets a list of all <see cref="MessageType.Queue"/>s registered on the <see cref="MessageBusService"/>.
-        /// </summary>
-        /// <returns>An <see cref="ICollection{T}"/> of <see cref="RegistrationInfo"/> objects.</returns>
-        [OperationContract()]
-        ICollection<RegistrationInfo> GetQueues();
-
-        /// <summary>
-        /// Gets a list of all <see cref="MessageType.Topic"/>s registered on the <see cref="MessageBusService"/>.
-        /// </summary>
-        /// <returns>An <see cref="ICollection{T}"/> of <see cref="RegistrationInfo"/> objects.</returns>
-        [OperationContract()]
-        ICollection<RegistrationInfo> GetTopics();
-
-        #endregion
     }
 }

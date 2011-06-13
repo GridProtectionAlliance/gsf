@@ -17,7 +17,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("Release Build")]
 #endif
 [assembly: AssemblyDefaultAlias("TVA.ServiceBus")]
-[assembly: AssemblyDescription("Library of lightweight WCF-based Service Bus with queue and topic support for secure event-driven messaging between application.")]
+[assembly: AssemblyDescription("Library of lightweight WCF-based Service Bus with queue and topic support for secure event-driven messaging between disjoint systems.")]
 [assembly: AssemblyTitle("TVA.ServiceBus")]
 
 // Other configuration attributes.
