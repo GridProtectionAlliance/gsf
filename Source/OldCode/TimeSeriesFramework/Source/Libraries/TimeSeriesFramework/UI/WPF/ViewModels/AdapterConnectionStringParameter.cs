@@ -122,13 +122,6 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
             set
             {
-                // Numeric type validation
-                if (m_info != null && value != null)
-                {
-                    if (m_info.PropertyType.IsNumeric() && !Common.IsNumeric(value))
-                        throw new ArgumentException("Not a number.");
-                }
-
                 m_value = value;
                 OnPropertyChanged("Value");
                 OnPropertyChanged("Color");

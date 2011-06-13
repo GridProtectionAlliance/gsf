@@ -327,19 +327,24 @@ namespace TimeSeriesFramework.UI.ViewModels
             {
                 Dictionary<string, string> settings = CurrentItem.ConnectionString.ToNonNullString().ParseKeyValuePairs();
 
-                // Attempting to update parameter values without suppressing connection
-                // string updates would result in an infinite loop. We should not be modifying
-                // the connection string directly at the same time the user is, anyway.
-                m_suppressConnectionStringUpdates = true;
+                try
+                {
+                    // Attempting to update parameter values without suppressing connection
+                    // string updates would result in an infinite loop. We should not be modifying
+                    // the connection string directly at the same time the user is, anyway.
+                    m_suppressConnectionStringUpdates = true;
 
-                // When the connection string changes, we need to keep all related
-                // elements synchronized. Since we can't easily determine exactly
-                // what has changed, simply update everything.
-                ParameterList = GetParameterList(CurrentItem.AssemblyName, CurrentItem.TypeName);
-                UpdateConnectionStringParameters(m_parameterList, settings);
-
-                // Indicate hat we want to stop suppressing connection string updates.
-                m_suppressConnectionStringUpdates = false;
+                    // When the connection string changes, we need to keep all related
+                    // elements synchronized. Since we can't easily determine exactly
+                    // what has changed, simply update everything.
+                    ParameterList = GetParameterList(CurrentItem.AssemblyName, CurrentItem.TypeName);
+                    UpdateConnectionStringParameters(m_parameterList, settings);
+                }
+                finally
+                {
+                    // Indicate that we want to stop suppressing connection string updates.
+                    m_suppressConnectionStringUpdates = false;
+                }
             }
         }
 
@@ -356,21 +361,27 @@ namespace TimeSeriesFramework.UI.ViewModels
             {
                 Dictionary<string, string> settings;
 
-                // Attempting to modify the connection string without first suppressing
-                // connection string updates would result in an infinite loop.
-                m_suppressConnectionStringUpdates = true;
+                try
+                {
+                    // Attempting to modify the connection string without first suppressing
+                    // connection string updates would result in an infinite loop.
+                    m_suppressConnectionStringUpdates = true;
 
-                // The easiest way to update is to break the connection string into key
-                // value pairs, update the value of the pair corresponding to the parameter
-                // that fired the event, and then rejoin the key value pairs.
-                settings = CurrentItem.ConnectionString.ToNonNullString().ParseKeyValuePairs();
-                settings[parameter.Name] = parameter.Value.ToString();
-                CurrentItem.ConnectionString = settings.JoinKeyValuePairs();
+                    // The easiest way to update is to break the connection string into key
+                    // value pairs, update the value of the pair corresponding to the parameter
+                    // that fired the event, and then rejoin the key value pairs.
+                    settings = CurrentItem.ConnectionString.ToNonNullString().ParseKeyValuePairs();
+                    settings[parameter.Name] = parameter.Value.ToString();
+                    CurrentItem.ConnectionString = settings.JoinKeyValuePairs();
 
-                // Update connection string parameters, if necessary, and indicate
-                // that we want to stop suppressing connection string updates.
-                UpdateConnectionStringParameters(m_parameterList, settings);
-                m_suppressConnectionStringUpdates = false;
+                    // Update connection string parameters, if necessary.
+                    UpdateConnectionStringParameters(m_parameterList, settings);
+                }
+                finally
+                {
+                    // Indicate that we want to stop suppressing connection string updates.
+                    m_suppressConnectionStringUpdates = false;
+                }
             }
         }
 
@@ -624,18 +635,7 @@ namespace TimeSeriesFramework.UI.ViewModels
             if (parameters != null)
             {
                 foreach (AdapterConnectionStringParameter parameter in parameters)
-                {
-                    try
-                    {
-                        parameter.Value = settings.ContainsKey(parameter.Name) ? settings[parameter.Name] : null;
-                    }
-                    catch (ArgumentException)
-                    {
-                        // Exception indicates the value of a numeric parameter is not
-                        // numeric. Such validation should only occur when modifying that
-                        // parameter directly through the ParameterValueTextBox.
-                    }
-                }
+                    parameter.Value = settings.ContainsKey(parameter.Name) ? settings[parameter.Name] : null;
             }
         }
 
