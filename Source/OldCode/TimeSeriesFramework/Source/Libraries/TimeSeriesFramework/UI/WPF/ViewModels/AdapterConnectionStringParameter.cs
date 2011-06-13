@@ -118,16 +118,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         {
             get
             {
-                object value = m_value ?? m_defaultValue;
-
-                // Numeric type validation
-                if (m_info != null && value != null)
-                {
-                    if (m_info.PropertyType.IsNumeric() && !Common.IsNumeric(value))
-                        throw new ArgumentException("Not a number.");
-                }
-
-                return value;
+                return m_value ?? m_defaultValue;
             }
             set
             {

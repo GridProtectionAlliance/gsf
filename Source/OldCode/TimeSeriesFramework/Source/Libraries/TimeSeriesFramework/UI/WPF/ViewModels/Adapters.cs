@@ -624,7 +624,18 @@ namespace TimeSeriesFramework.UI.ViewModels
             if (parameters != null)
             {
                 foreach (AdapterConnectionStringParameter parameter in parameters)
-                    parameter.Value = settings.ContainsKey(parameter.Name) ? settings[parameter.Name] : null;
+                {
+                    try
+                    {
+                        parameter.Value = settings.ContainsKey(parameter.Name) ? settings[parameter.Name] : null;
+                    }
+                    catch (ArgumentException)
+                    {
+                        // Exception indicates the value of a numeric parameter is not
+                        // numeric. Such validation should only occur when modifying that
+                        // parameter directly through the ParameterValueTextBox.
+                    }
+                }
             }
         }
 
