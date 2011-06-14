@@ -307,7 +307,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets whether the current <see cref="Measurement"/> is enabled.
         /// </summary>
-        [DefaultValue(false)]
+        [DefaultValue(true)]
         public bool Internal
         {
             get
