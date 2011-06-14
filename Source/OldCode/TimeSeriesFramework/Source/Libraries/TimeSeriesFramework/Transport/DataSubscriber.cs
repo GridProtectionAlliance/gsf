@@ -317,9 +317,12 @@ namespace TimeSeriesFramework.Transport
             if (settings.TryGetValue("autoConnect", out setting))
                 m_autoConnect = setting.ParseBoolean();
 
-            // Connect to local connection authenticated event when automatically engaging connection cycle
+            // Connect to local events when automatically engaging connection cycle
             if (m_autoConnect)
+            {
                 ConnectionAuthenticated += DataSubscriber_ConnectionAuthenticated;
+                MetaDataReceived += DataSubscriber_MetaDataReceived;
+            }
 
             // If active measurements are defined, attempt to defined desired subscription points from there
             if (DataSource != null && DataSource.Tables != null && DataSource.Tables.Count > 0)
@@ -642,28 +645,6 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
-        /// Provides default synchronization behavior for metadata updates.
-        /// </summary>
-        /// <param name="metadata">Updated metadata tables.</param>
-        protected virtual void SynchronizeMetadata(DataSet metadata)
-        {
-            // We handle synchronization on a seperate thread since this process may be lengthy
-            ThreadPool.QueueUserWorkItem(SynchronizeMetadata, metadata);
-        }
-
-        private void SynchronizeMetadata(object state)
-        {
-            DataSet metadata = state as DataSet;
-
-            if (metadata != null)
-            {
-                // Synchronize devices
-                // Synchronize phasors
-                // Synchronize measurements
-            }
-        }
-
-        /// <summary>
         /// Get message from string based response.
         /// </summary>
         /// <param name="buffer">Response buffer.</param>
@@ -726,9 +707,6 @@ namespace TimeSeriesFramework.Transport
 
                                         // Deserialize metadata
                                         DataSet metadata = Serialization.Deserialize<DataSet>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary);
-
-                                        // Synchronize metadata
-                                        SynchronizeMetadata(metadata);
 
                                         // Raise metadata received event
                                         if (MetaDataReceived != null)
@@ -824,6 +802,7 @@ namespace TimeSeriesFramework.Transport
             }
         }
 
+        // Handles auto-connection subscription initialization
         private void StartSubscription()
         {
             StringBuilder filterExpression = new StringBuilder();
@@ -845,16 +824,47 @@ namespace TimeSeriesFramework.Transport
 
                     filterExpression.Append(key.ToString());
                 }
-            }
 
-            // Start unsynchronized subscription
-            UnsynchronizedSubscribe(true, false, filterExpression.ToString(), dataChannel);
+                // Start unsynchronized subscription
+                UnsynchronizedSubscribe(true, false, filterExpression.ToString(), dataChannel);
+            }
+            else
+            {
+                OnStatusMessage("WARNING: No measurements are currently defined for subscription.");
+            }
+        }
+
+        // Handles auto-connection metadata synchronization
+        private void SynchronizeMetadata(object state)
+        {
+            try
+            {
+                DataSet metadata = state as DataSet;
+
+                if (metadata != null)
+                {
+                    // Synchronize devices
+                    // Synchronize phasors
+                    // Synchronize measurements
+                }
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException("Failed to synchronize metadata to local cache: " + ex.Message, ex));
+            }
         }
 
         // This method is called when connection has been authenticated
         private void DataSubscriber_ConnectionAuthenticated(object sender, EventArgs e)
         {
             StartSubscription();
+        }
+
+        // This method is called then new metadata has been received
+        private void DataSubscriber_MetaDataReceived(object sender, EventArgs<DataSet> e)
+        {
+            // We handle synchronization on a seperate thread since this process may be lengthy
+            ThreadPool.QueueUserWorkItem(SynchronizeMetadata, e.Argument);
         }
 
         #region [ Command Channel Event Handlers ]
