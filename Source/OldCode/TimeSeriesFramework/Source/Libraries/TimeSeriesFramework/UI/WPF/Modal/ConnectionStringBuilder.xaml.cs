@@ -40,10 +40,40 @@ namespace TimeSeriesFramework.UI.Modal
         /// </summary>
         public enum TransportProtocol
         {
+            /// <summary>
+            /// Defines TCP tranasport protocol.
+            /// </summary>
+            /// <remarks>
+            /// Use this to create connection string for TCP connection.
+            /// </remarks>
             tcp,
+            /// <summary>
+            /// Defines UDP tranasport protocol.
+            /// </summary>
+            /// <remarks>
+            /// Use this to create connection string for UDP connection.
+            /// </remarks>
             udp,
+            /// <summary>
+            /// Defines Serial tranasport protocol.
+            /// </summary>
+            /// <remarks>
+            /// Use this to create connection string for Serial connection.
+            /// </remarks>
             serial,
+            /// <summary>
+            /// Defines file based connection.
+            /// </summary>
+            /// <remarks>
+            /// Use this to create connection string for File based connection.
+            /// </remarks>
             file,
+            /// <summary>
+            /// Defines UDP Server connection.
+            /// </summary>
+            /// <remarks>
+            /// Use this to create connection string for TCP Server connection.
+            /// </remarks>
             udpserver
         }
 
@@ -52,9 +82,33 @@ namespace TimeSeriesFramework.UI.Modal
         /// </summary>
         public enum ConnectionType
         {
+            /// <summary>
+            /// Defines connection to a device.
+            /// </summary>
+            /// <remarks>
+            /// Use this to connect to a device.
+            /// </remarks>
             DeviceConnection,
+            /// <summary>
+            /// Defines data channel for communication.
+            /// </summary>
+            /// <remarks>
+            /// Use this to generate string to setup data channel.
+            /// </remarks>
             DataChannel,
+            /// <summary>
+            /// Defines command channel for communication.
+            /// </summary>
+            /// <remarks>
+            /// Use this to generate string to setup command channel.
+            /// </remarks>
             CommandChannel,
+            /// <summary>
+            /// Defines alternate command channel.
+            /// </summary>
+            /// <remarks>
+            /// Use this to generate string to setup alternate command channel.
+            /// </remarks>
             AlternateCommandChannel
         }
 

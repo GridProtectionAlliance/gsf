@@ -33,7 +33,7 @@ namespace TimeSeriesFramework.UI.UserControls
     {
 
         /// <summary>
-        /// Creates new instance of <see cref="IaonTreeUserControl/>"/>
+        /// Creates new instance of <see cref="IaonTreeUserControl"/>
         /// </summary>
         public IaonTreeUserControl()
         {

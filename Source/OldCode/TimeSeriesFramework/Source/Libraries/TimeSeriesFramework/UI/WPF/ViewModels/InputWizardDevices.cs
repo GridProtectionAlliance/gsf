@@ -914,7 +914,6 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// </summary>
         private void BrowseIniFile()
         {
-            Stream fileData = null;
             OpenFileDialog fileDialog = new OpenFileDialog();
             fileDialog.Multiselect = false;
             fileDialog.Filter = "INI Files (*.ini)|*.ini|All Files (*.*)|*.*";
