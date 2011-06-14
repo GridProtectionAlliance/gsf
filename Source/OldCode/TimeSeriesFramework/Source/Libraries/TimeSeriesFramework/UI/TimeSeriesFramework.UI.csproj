@@ -115,6 +115,7 @@
     <Compile Include="DataModels\Device.cs" />
     <Compile Include="DataModels\ErrorLog.cs" />
     <Compile Include="DataModels\Historian.cs" />
+    <Compile Include="DataModels\IaonTree.cs" />
     <Compile Include="DataModels\InputWizardDevice.cs">
       <SubType>Code</SubType>
     </Compile>

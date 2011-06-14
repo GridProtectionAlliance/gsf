@@ -436,7 +436,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Saves <see cref="Company"/> information to database.
+        /// Saves <see cref="Adapter"/> information to database.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="adapter">Information about <see cref="Adapter"/>.</param>        
@@ -483,7 +483,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Deletes specified <see cref="Company"/> record from database.
+        /// Deletes specified <see cref="Adapter"/> record from database.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="adapterType">Type of adapter to determine from which table record to be deleted.</param>

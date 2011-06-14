@@ -175,6 +175,9 @@
     <Compile Include="UserControls\HistorianUserControl.xaml.cs">
       <DependentUpon>HistorianUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\IaonTreeUserControl.xaml.cs">
+      <DependentUpon>IaonTreeUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\InputWizardUserControl.xaml.cs">
       <DependentUpon>InputWizardUserControl.xaml</DependentUpon>
     </Compile>
@@ -231,6 +234,7 @@
     <Compile Include="ViewModels\Companies.cs" />
     <Compile Include="ViewModels\Devices.cs" />
     <Compile Include="ViewModels\Historians.cs" />
+    <Compile Include="ViewModels\IaonTrees.cs" />
     <Compile Include="ViewModels\InputWizardDevices.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -315,6 +319,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UserControls\HistorianUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\IaonTreeUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

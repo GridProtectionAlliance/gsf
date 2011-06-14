@@ -1,0 +1,72 @@
+﻿<UserControl x:Class="TimeSeriesFramework.UI.UserControls.IaonTreeUserControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" d:DesignHeight="650" d:DesignWidth="850"
+             xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:uc="clr-namespace:TimeSeriesFramework.UI.UserControls"
+             xmlns:tsfBinding="clr-namespace:TimeSeriesFramework.UI.Binding;assembly=TimeSeriesFramework.UI"
+             Background="Transparent">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/TimeSeriesFramework.UI.WPF;Component/Resources/CommonResource.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    
+    
+    <Grid x:Name="LayoutRoot">
+        <Border>
+            <StackPanel Orientation="Vertical">
+                <StackPanel.Resources>
+                    <HierarchicalDataTemplate x:Key="ChildNodeTemplate">
+                        <StackPanel Orientation="Horizontal">
+                            <ToolTipService.ToolTip>
+                                <TextBlock Width="500" TextWrapping="Wrap" Text="{Binding Path=ConnectionString}"/>
+                            </ToolTipService.ToolTip>
+                            <Border>
+                                <TextBlock Width="{StaticResource LargeItemSize}" TextAlignment="Left" Padding="1" Text="{Binding Path=AdapterName}"/>
+                            </Border>
+                            <Border>
+                                <TextBlock Width="{StaticResource XXLargeItemSize}" TextAlignment="Left" Padding="1" Text="{Binding Path=AssemblyName}"/>
+                            </Border>
+                            <Border>
+                                <TextBlock Width="{StaticResource XXXLargeItemSize}" TextAlignment="Left" Padding="1" Text="{Binding Path=TypeName}"/>
+                            </Border>
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                    <HierarchicalDataTemplate x:Key="RootNodeTemplate" ItemTemplate="{StaticResource ChildNodeTemplate}" ItemsSource="{Binding Path=AdapterList}">
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="{Binding Path=AdapterType}" FontSize="{StaticResource LargeTextSize}" VerticalAlignment="Center" HorizontalAlignment="Left" FontWeight="Bold" Margin="5"/>
+                            <Border>
+                                <StackPanel Orientation="Horizontal" Margin="2">
+                                    <TextBlock Text="" Width="{StaticResource BlankItemSize}" TextAlignment="Center" FontSize="{StaticResource LargeTextSize}" FontWeight="Bold"/>
+                                    <Border>
+                                        <TextBlock Text="Adapter Name" Width="{StaticResource LargeItemSize}" TextAlignment="Center" FontSize="{StaticResource TextSize}" FontWeight="Bold" Padding="1"/>
+                                    </Border>
+                                    <Border>
+                                        <TextBlock Text="Assembly Name" Width="{StaticResource XXLargeItemSize}" TextAlignment="Center" FontSize="{StaticResource TextSize}" FontWeight="Bold" Padding="1"/>
+                                    </Border>
+                                    <Border>
+                                        <TextBlock Text="Type Name" Width="{StaticResource XXXLargeItemSize}" TextAlignment="Center" FontSize="{StaticResource TextSize}" FontWeight="Bold" Padding="1"/>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                    <Style x:Key="ExpandedItemStyle" TargetType="TreeViewItem">
+                        <Setter Property="IsExpanded" Value="True"/>
+                    </Style>
+                </StackPanel.Resources>
+                
+                <TreeView x:Name="TreeViewIaon" ItemTemplate="{StaticResource RootNodeTemplate}" Height="772" ItemContainerStyle="{StaticResource ExpandedItemStyle}" ItemsSource="{tsfBinding:Column Path=ItemsSource}" Background="Transparent">
+                    
+                </TreeView>
+            </StackPanel>
+        </Border>
+            
+    </Grid>
+</UserControl>

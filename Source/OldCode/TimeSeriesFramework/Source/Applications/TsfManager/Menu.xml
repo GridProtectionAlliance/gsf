@@ -21,6 +21,8 @@
       <MenuDataItem Icon="" MenuText="Input Adapters" Description="Manage Input Adapters" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.CustomInputAdapterUserControl" />
       <MenuDataItem Icon="" MenuText="Action Adapters" Description="Manage Action Adapters" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.CustomActionAdapterUserControl" />
       <MenuDataItem Icon="" MenuText="Output Adapters" Description="Manage Output Adapters" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.CustomOutputAdapterUserControl" />
+      <MenuDataItem Icon="" MenuText="" Description="" Roles="*" UserControlAssembly="" UserControlPath="" />
+      <MenuDataItem Icon="" MenuText="Iaon Tree" Description=" View Iaon Tree" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.IaonTreeUserControl"/>
     </SubMenuItems>
   </MenuDataItem>
   <!-- Subscription Management menu items are openPG specific and should be migrated to that project -->
