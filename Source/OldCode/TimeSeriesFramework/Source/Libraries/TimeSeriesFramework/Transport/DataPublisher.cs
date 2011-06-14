@@ -1053,7 +1053,7 @@ namespace TimeSeriesFramework.Transport
         private ConcurrentDictionary<Guid, ClientConnection> m_clientConnections;
         private ConcurrentDictionary<Guid, IServer> m_clientPublicationChannels;
         private ConcurrentDictionary<MeasurementKey, Guid> m_signalIDCache;
-        private bool m_requireClientAuthentication;
+        private bool m_requireAuthentication;
         private bool m_disposed;
 
         #endregion
@@ -1087,15 +1087,15 @@ namespace TimeSeriesFramework.Transport
         /// <summary>
         /// Gets or sets flag that determines if <see cref="DataPublisher"/> should require subscribers to authenticate before making data requests.
         /// </summary>
-        public bool RequireClientAuthentication
+        public bool RequireAuthentication
         {
             get
             {
-                return m_requireClientAuthentication;
+                return m_requireAuthentication;
             }
             set
             {
-                m_requireClientAuthentication = value;
+                m_requireAuthentication = value;
             }
         }
 
@@ -1235,8 +1235,8 @@ namespace TimeSeriesFramework.Transport
             string setting;
 
             // Setup data publishing server with or without required authentication 
-            if (settings.TryGetValue("requireClientAuthentication", out setting))
-                m_requireClientAuthentication = setting.ParseBoolean();
+            if (settings.TryGetValue("requireAuthentication", out setting))
+                m_requireAuthentication = setting.ParseBoolean();
 
             // Create a new TCP server
             TcpServer commandChannel = new TcpServer();
@@ -1308,7 +1308,7 @@ namespace TimeSeriesFramework.Transport
             // a runtime index optimization for the allowed measurements.
             foreach (MeasurementKey key in inputMeasurementKeys)
             {
-                if (m_requireClientAuthentication)
+                if (m_requireAuthentication)
                 {
                     // Validate that subscriber has rights to this signal
                     if (SubcriberHasRights(signalIndexCache.SubscriberID, key, out signalID))
@@ -1728,7 +1728,7 @@ namespace TimeSeriesFramework.Transport
                             return;
                         }
                     }
-                    else if (m_requireClientAuthentication && !connection.Authenticated)
+                    else if (m_requireAuthentication && !connection.Authenticated)
                     {
                         message = string.Format("Subscriber not authenticated - {0} request denied.", command);
                         SendClientResponse(clientID, ServerResponse.Failed, command, message);

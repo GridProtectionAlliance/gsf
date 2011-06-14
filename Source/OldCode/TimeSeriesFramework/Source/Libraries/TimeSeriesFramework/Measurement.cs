@@ -216,6 +216,8 @@ namespace TimeSeriesFramework
             protected set
             {
                 m_key = value;
+                m_source = m_key.Source;
+                m_id = m_key.ID;
             }
         }
 

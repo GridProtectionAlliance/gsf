@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using TimeSeriesFramework.Adapters;
@@ -71,6 +72,8 @@ namespace TimeSeriesFramework.Transport
         private volatile bool m_authenticated;
         private List<ServerCommand> m_requests;
         private bool m_synchronizedSubscription;
+        private bool m_requireAuthentication;
+        private bool m_autoConnect;
         private bool m_disposed;
 
         #endregion
@@ -88,6 +91,36 @@ namespace TimeSeriesFramework.Transport
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets flag that determines if <see cref="DataPublisher"/> requires subscribers to authenticate before making data requests.
+        /// </summary>
+        public bool RequireAuthentication
+        {
+            get
+            {
+                return m_requireAuthentication;
+            }
+            set
+            {
+                m_requireAuthentication = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if <see cref="DataSubscriber"/> should attempt to autoconnection to <see cref="DataPublisher"/> using defined connection settings.
+        /// </summary>
+        public bool AutoConnect
+        {
+            get
+            {
+                return m_autoConnect;
+            }
+            set
+            {
+                m_autoConnect = value;
+            }
+        }
 
         /// <summary>
         /// Gets flag that determines if this <see cref="DataSubscriber"/> has successfully authenticated with the <see cref="DataPublisher"/>.
@@ -273,6 +306,51 @@ namespace TimeSeriesFramework.Transport
         {
             base.Initialize();
 
+            Dictionary<string, string> settings = Settings;
+            string setting;
+
+            // Setup data publishing server with or without required authentication 
+            if (settings.TryGetValue("requireAuthentication", out setting))
+                m_requireAuthentication = setting.ParseBoolean();
+
+            // Define auto connect setting
+            if (settings.TryGetValue("autoConnect", out setting))
+                m_autoConnect = setting.ParseBoolean();
+
+            // Connect to local connection authenticated event when automatically engaging connection cycle
+            if (m_autoConnect)
+                ConnectionAuthenticated += DataSubscriber_ConnectionAuthenticated;
+
+            // If active measurements are defined, attempt to defined desired subscription points from there
+            if (DataSource != null && DataSource.Tables != null && DataSource.Tables.Count > 0)
+            {
+                try
+                {
+                    if (DataSource.Tables.Contains("ActiveMeasurements"))
+                    {
+                        // Filter to points requested for subscription that are enabled and not owned locally
+                        DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select("Internal = 0 AND Subscribed <> 0 AND Enabled <> 0");
+                        MeasurementKey[] subscribedKeys = null;
+
+                        if (filteredRows.Length > 0)
+                            subscribedKeys = filteredRows.Select(row => MeasurementKey.Parse(row["ID"].ToNonNullString("_:0"))).ToArray();
+
+                        if (subscribedKeys != null)
+                        {
+                            // Combine input measurement keys for source IDs with any existing input measurement keys and return unique set
+                            if (InputMeasurementKeys == null)
+                                InputMeasurementKeys = subscribedKeys;
+                            else
+                                InputMeasurementKeys = subscribedKeys.Concat(InputMeasurementKeys).Distinct().ToArray();
+                        }
+                    }
+                }
+                catch
+                {
+                    // Errors here are not catastrophic, this simply limits the auto-assignment of input measurement keys desired for subscription
+                }
+            }
+
             // Create a new TCP client
             TcpClient commandChannel = new TcpClient();
 
@@ -285,8 +363,12 @@ namespace TimeSeriesFramework.Transport
             // Assign command channel client reference and attach to needed events
             this.CommandChannel = commandChannel;
 
-            // Pass all connection string settings to data client
-            commandChannel.ConnectionString = ConnectionString;
+            // Get proper connection string - either from specified command channel
+            // or from base connection string
+            if (settings.TryGetValue("commandChannel", out setting))
+                commandChannel.ConnectionString = setting;
+            else
+                commandChannel.ConnectionString = ConnectionString;
 
             Initialized = true;
         }
@@ -742,6 +824,39 @@ namespace TimeSeriesFramework.Transport
             }
         }
 
+        private void StartSubscription()
+        {
+            StringBuilder filterExpression = new StringBuilder();
+            string dataChannel = null;
+
+            // Request metadata refresh
+            SendServerCommand(ServerCommand.MetaDataRefresh, null);
+
+            // If TCP command channel is defined separately, then base connection string defines data channel
+            if (Settings.ContainsKey("commandChannel"))
+                dataChannel = ConnectionString;
+
+            if (InputMeasurementKeys != null)
+            {
+                foreach (MeasurementKey key in InputMeasurementKeys)
+                {
+                    if (filterExpression.Length > 0)
+                        filterExpression.Append(';');
+
+                    filterExpression.Append(key.ToString());
+                }
+            }
+
+            // Start unsynchronized subscription
+            UnsynchronizedSubscribe(true, false, filterExpression.ToString(), dataChannel);
+        }
+
+        // This method is called when connection has been authenticated
+        private void DataSubscriber_ConnectionAuthenticated(object sender, EventArgs e)
+        {
+            StartSubscription();
+        }
+
         #region [ Command Channel Event Handlers ]
 
         private void m_commandChannel_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
@@ -761,6 +876,30 @@ namespace TimeSeriesFramework.Transport
                 ConnectionEstablished(sender, e);
 
             OnStatusMessage("Data subscriber command channel connection to publisher was established.");
+
+            if (m_autoConnect)
+            {
+                if (m_requireAuthentication)
+                {
+                    // Attempt authentication, remaining steps will happen on successful authentication
+                    Dictionary<string, string> settings = Settings;
+                    string sharedSecret, authenticationID;
+
+                    if (!settings.TryGetValue("sharedSecret", out sharedSecret))
+                        OnProcessException(new ArgumentException("The \"sharedSecret\" setting must defined when authentication is required."));
+
+                    if (!settings.TryGetValue("authenticationID", out authenticationID))
+                        OnProcessException(new ArgumentException("The \"authenticationID\" setting must defined when authentication is required."));
+
+                    if (!string.IsNullOrWhiteSpace(sharedSecret) && !string.IsNullOrWhiteSpace(authenticationID))
+                        Authenticate(sharedSecret, authenticationID);
+                }
+                else
+                {
+                    // Go ahead and start subscription
+                    StartSubscription();
+                }
+            }
         }
 
         private void m_commandChannel_ConnectionTerminated(object sender, EventArgs e)
