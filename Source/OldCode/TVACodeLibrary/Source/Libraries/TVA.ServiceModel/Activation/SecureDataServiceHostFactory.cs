@@ -236,7 +236,7 @@ using System.IdentityModel.Policy;
 using System.ServiceModel;
 using System.ServiceModel.Description;
 
-namespace TVA.ServiceModel
+namespace TVA.ServiceModel.Activation
 {
     /// <summary>
     /// A service host factory for WCF Data Services that enables role-based security using <see cref="SecurityPolicy"/>.
