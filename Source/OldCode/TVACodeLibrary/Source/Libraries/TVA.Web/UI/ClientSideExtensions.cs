@@ -10,6 +10,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  12/22/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  06/15/2011 - Pinal C. Patel
+//       Added Refresh() client-side extension.
 //
 //*******************************************************************************************************
 
@@ -287,6 +289,55 @@ namespace TVA.Web.UI
             script.AppendFormat("{0};", button.Page.ClientScript.GetPostBackEventReference(button, null));
 
             button.OnClientClick = script.ToString();
+        }
+
+        /// <summary>
+        /// Registers this <paramref name="page"/> to perform a page refresh.
+        /// </summary>
+        /// <param name="page"><see cref="Page"/> to refresh.</param>
+        /// <param name="refreshOnLoad">Refreshes the <paramref name="page"/> after the page content has loaded.</param>
+        public static void Refresh(this Page page, bool refreshOnLoad = false)
+        {
+            if (!page.ClientScript.IsClientScriptBlockRegistered("Refresh"))
+            {
+                StringBuilder script = new StringBuilder();
+                script.Append("<script language=\"javascript\">\r\n");
+                script.Append("   function Refresh()\r\n");
+                script.Append("   {\r\n");
+                script.Append("       window.location.href = unescape(window.location.pathname);\r\n");
+                script.Append("       return false;\r\n");
+                script.Append("   }\r\n");
+                script.Append("</script>\r\n");
+
+                page.ClientScript.RegisterClientScriptBlock(page.GetType(), "Refresh", script.ToString());
+            }
+
+            if (refreshOnLoad)
+            {
+                // Refresh page after page load.
+                if (!page.ClientScript.IsStartupScriptRegistered("RefreshPostLoad"))
+                {
+                    StringBuilder script = new StringBuilder();
+                    script.Append("<script language=\"javascript\">\r\n");
+                    script.Append("   Refresh();\r\n");
+                    script.Append("</script>\r\n");
+
+                    page.ClientScript.RegisterStartupScript(page.GetType(), "RefreshPostLoad", script.ToString());
+                }
+            }
+            else
+            {
+                // Refresh page before page load.
+                if (!page.ClientScript.IsClientScriptBlockRegistered("RefreshPreLoad"))
+                {
+                    StringBuilder script = new StringBuilder();
+                    script.Append("<script language=\"javascript\">\r\n");
+                    script.Append("   Refresh();\r\n");
+                    script.Append("</script>\r\n");
+
+                    page.ClientScript.RegisterClientScriptBlock(page.GetType(), "RefreshPreLoad", script.ToString());
+                }
+            }
         }
 
         ///// <summary>
