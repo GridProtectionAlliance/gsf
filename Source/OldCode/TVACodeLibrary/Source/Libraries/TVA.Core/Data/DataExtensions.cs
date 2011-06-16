@@ -40,6 +40,8 @@
 //       array of values after initial value for ease-of-use. Added "params" style array
 //       to all templated IDbConnection that will use the CreateParameterizedCommand
 //       connection extension with optional parameters.
+//  06/16/2011 - Pinal C. Patel
+//       Modified AddParameterWithValue() to be backwards compatible.
 //
 //*******************************************************************************************************
 
@@ -1550,13 +1552,22 @@ namespace TVA.Data
         /// <param name="direction"><see cref="ParameterDirection"/> for <see cref="IDbDataParameter"/>.</param>
         public static void AddParameterWithValue(this IDbCommand command, string name, object value, ParameterDirection direction = ParameterDirection.Input)
         {
-            IDbDataParameter parameter = command.CreateParameter();
+            if (value is IDbDataParameter)
+            {
+                // Value is already a parameter.
+                command.Parameters.Add(value);
+            }
+            else
+            {
+                // Create a parameter for the value.
+                IDbDataParameter parameter = command.CreateParameter();
 
-            parameter.ParameterName = name;
-            parameter.Value = value;
-            parameter.Direction = direction;
+                parameter.ParameterName = name;
+                parameter.Value = value;
+                parameter.Direction = direction;
 
-            command.Parameters.Add(parameter);
+                command.Parameters.Add(parameter);
+            }
         }
 
         /// <summary>
