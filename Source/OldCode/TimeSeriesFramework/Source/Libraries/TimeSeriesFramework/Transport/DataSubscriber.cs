@@ -505,7 +505,9 @@ namespace TimeSeriesFramework.Transport
                     if (!string.IsNullOrWhiteSpace(setting))
                     {
                         dataChannel = new UdpClient(setting);
-                        dataChannel.Compression = CompressionStrength.Standard;
+                        //dataChannel.Compression = CompressionStrength.Standard;
+                        dataChannel.ReceiveBufferSize = ushort.MaxValue;
+                        dataChannel.Connect();
                     }
 
                     // Assign data channel client reference and attach to needed events

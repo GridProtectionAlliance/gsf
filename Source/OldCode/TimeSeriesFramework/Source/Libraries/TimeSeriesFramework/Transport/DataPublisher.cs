@@ -1506,7 +1506,23 @@ namespace TimeSeriesFramework.Transport
                         responsePacket.Write(data, 0, data.Length);
                     }
 
-                    publishChannel.SendToAsync(clientID, responsePacket.ToArray(), 0, unchecked((int)responsePacket.Length));
+                    byte[] responseData = responsePacket.ToArray();
+                    int responseLength = unchecked((int)responsePacket.Length);
+
+                    if (publishChannel is UdpServer)
+                    {
+                        int length;
+
+                        for (int i = 0; i <= responseLength / ushort.MaxValue; i++)
+                        {
+                            length = (i == responseLength / ushort.MaxValue ? responseLength % ushort.MaxValue : ushort.MaxValue);
+                            publishChannel.Multicast(responseData.BlockCopy(i * ushort.MaxValue, length), 0, length);
+                        }
+                    }
+                    else
+                    {
+                        publishChannel.SendToAsync(clientID, responseData, 0, responseLength);
+                    }
 
                     success = true;
                 }
@@ -1830,7 +1846,11 @@ namespace TimeSeriesFramework.Transport
                                             Dictionary<string, string> settings = setting.ParseKeyValuePairs();
 
                                             if (settings.TryGetValue("port", out setting))
+                                            {
                                                 connection.DataChannel = new UdpServer(string.Format("Port=-1; Clients={0}:{1}", connection.IPAddress, int.Parse(setting)));
+                                                //connection.DataChannel.Compression = CompressionStrength.Standard;
+                                                connection.DataChannel.Start();
+                                            }
                                         }
 
                                         // Update measurement serialization format type
