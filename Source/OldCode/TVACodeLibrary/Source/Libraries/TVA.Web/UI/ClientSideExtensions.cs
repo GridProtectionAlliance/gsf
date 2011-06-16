@@ -740,7 +740,7 @@ namespace TVA.Web.UI
         /// <param name="title">Title of the message box.</param>
         /// <param name="buttons">Buttons to be displayed in the message box.</param>
         /// <param name="doPostBack">True if a post-back is to be performed when either OK, Retry, or Yes buttons are clicked in the message box, otherwise False.</param>
-        public static void MsgBox(this Page page, string prompt, string title, MsgBoxStyle buttons, bool doPostBack)
+        public static void MsgBox(this Page page, string prompt, string title, MsgBoxStyle buttons, bool doPostBack = false)
         {
             if (!page.ClientScript.IsClientScriptBlockRegistered("ShowMsgBox"))
                 page.ClientScript.RegisterClientScriptBlock(page.GetType(), "ShowMsgBox", GetMsgBoxScript());
@@ -778,7 +778,7 @@ namespace TVA.Web.UI
         /// <param name="title">Title of the message box.</param>
         /// <param name="buttons">Buttons to be displayed in the message box.</param>
         /// <param name="doPostBack">True if a post-back is to be performed when either OK, Retry, or Yes buttons are clicked in the message box, otherwise False.</param>
-        public static void MsgBox(this Control control, string prompt, string title, MsgBoxStyle buttons, bool doPostBack)
+        public static void MsgBox(this Control control, string prompt, string title, MsgBoxStyle buttons, bool doPostBack = false)
         {
             if (!control.Page.ClientScript.IsClientScriptBlockRegistered("ShowMsgBox"))
                 control.Page.ClientScript.RegisterClientScriptBlock(control.Page.GetType(), "ShowMsgBox", GetMsgBoxScript());
