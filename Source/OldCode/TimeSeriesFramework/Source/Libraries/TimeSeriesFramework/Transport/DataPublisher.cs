@@ -38,7 +38,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
 using TimeSeriesFramework.Adapters;
 using TVA;
 using TVA.Communication;
@@ -683,58 +682,54 @@ namespace TimeSeriesFramework.Transport
                             }
 
                             // Publish latest data values...
-                            ThreadPool.QueueUserWorkItem(ProcessMeasurements, currentMeasurements);
+                            ProcessMeasurements(currentMeasurements);
                         }
                     }
                     else
                     {
                         // Publish unsynchronized on data receipt otherwise...
-                        ThreadPool.QueueUserWorkItem(ProcessMeasurements, measurements);
+                        ProcessMeasurements(measurements);
                     }
                 }
             }
 
-            private void ProcessMeasurements(object state)
+            private void ProcessMeasurements(IEnumerable<IMeasurement> measurements)
             {
-                if (state != null && !m_disposed)
+                MemoryStream data = new MemoryStream();
+                bool useCompactMeasurementFormat = m_useCompactMeasurementFormat;
+                byte[] buffer;
+
+                // Serialize data packet flags into response
+                DataPacketFlags flags = DataPacketFlags.NoFlags; // No flags means bit is cleared, i.e., unsynchronized
+
+                if (useCompactMeasurementFormat)
+                    flags |= DataPacketFlags.Compact;
+
+                data.WriteByte((byte)flags);
+
+                // No frame level timestamp is serialized into the data packet since all data is unsynchronized and
+                // essentially published upon receipt, however timestamps are included in the serialized measurements.
+
+                // Serialize total number of measurement values to follow
+                data.Write(EndianOrder.BigEndian.GetBytes(measurements.Count()), 0, 4);
+
+                // Serialize measurements to data buffer
+                foreach (IMeasurement measurement in measurements)
                 {
-                    IEnumerable<IMeasurement> measurements = state as IEnumerable<IMeasurement>;
-                    MemoryStream data = new MemoryStream();
-                    bool useCompactMeasurementFormat = m_useCompactMeasurementFormat;
-                    byte[] buffer;
-
-                    // Serialize data packet flags into response
-                    DataPacketFlags flags = DataPacketFlags.NoFlags; // No flags means bit is cleared, i.e., unsynchronized
-
                     if (useCompactMeasurementFormat)
-                        flags |= DataPacketFlags.Compact;
+                        buffer = (new CompactMeasurement(measurement, m_signalIndexCache, true)).BinaryImage;
+                    else
+                        buffer = (new SerializableMeasurement(measurement)).BinaryImage;
 
-                    data.WriteByte((byte)flags);
-
-                    // No frame level timestamp is serialized into the data packet since all data is unsynchronized and
-                    // essentially published upon receipt, however timestamps are included in the serialized measurements.
-
-                    // Serialize total number of measurement values to follow
-                    data.Write(EndianOrder.BigEndian.GetBytes(measurements.Count()), 0, 4);
-
-                    // Serialize measurements to data buffer
-                    foreach (IMeasurement measurement in measurements)
-                    {
-                        if (useCompactMeasurementFormat)
-                            buffer = (new CompactMeasurement(measurement, m_signalIndexCache, true)).BinaryImage;
-                        else
-                            buffer = (new SerializableMeasurement(measurement)).BinaryImage;
-
-                        data.Write(buffer, 0, buffer.Length);
-                    }
-
-                    // Publish data packet to client
-                    if (m_parent != null)
-                        m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, data.ToArray());
-
-                    // Track last publication time
-                    m_lastPublishTime = DateTime.UtcNow.Ticks;
+                    data.Write(buffer, 0, buffer.Length);
                 }
+
+                // Publish data packet to client
+                if (m_parent != null)
+                    m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, data.ToArray());
+
+                // Track last publication time
+                m_lastPublishTime = DateTime.UtcNow.Ticks;
             }
 
             #endregion
