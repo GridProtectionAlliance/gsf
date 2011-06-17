@@ -70,6 +70,7 @@ namespace TimeSeriesFramework.Transport
         private volatile long[] m_baseTimeOffsets;
         private volatile byte[][][] m_keyIVs;
         private volatile bool m_authenticated;
+        private byte[] m_measurementDataBuffer;
         private List<ServerCommand> m_requests;
         private bool m_synchronizedSubscription;
         private bool m_requireAuthentication;
@@ -756,32 +757,42 @@ namespace TimeSeriesFramework.Transport
                             count = EndianOrder.BigEndian.ToInt32(buffer, responseIndex);
                             responseIndex += 4;
 
-                            // Deserialize measurements
-                            for (int i = 0; i < count; i++)
+                            try
                             {
-                                if (compactMeasurementFormat)
+                                // Deserialize measurements
+                                for (int i = 0; i < count; i++)
                                 {
-                                    // Deserialize compact measurement format
-                                    slimMeasurement = new CompactMeasurement(m_signalIndexCache, !synchronizedMeasurements, m_baseTimeOffsets, m_keyIVs);
-                                    responseIndex += slimMeasurement.Initialize(buffer, responseIndex, length - responseIndex);
+                                    if (compactMeasurementFormat)
+                                    {
+                                        // Deserialize compact measurement format
+                                        slimMeasurement = new CompactMeasurement(m_signalIndexCache, !synchronizedMeasurements, m_baseTimeOffsets, m_keyIVs);
+                                        responseIndex += slimMeasurement.Initialize(buffer, responseIndex, length - responseIndex);
 
-                                    // Apply timestamp from frame if not included in transmission
-                                    if (!slimMeasurement.IncludeTime)
-                                        slimMeasurement.Timestamp = timestamp;
+                                        // Apply timestamp from frame if not included in transmission
+                                        if (!slimMeasurement.IncludeTime)
+                                            slimMeasurement.Timestamp = timestamp;
 
-                                    measurements.Add(slimMeasurement);
+                                        measurements.Add(slimMeasurement);
+                                    }
+                                    else
+                                    {
+                                        // Deserialize full measurement format
+                                        measurement = new SerializableMeasurement();
+                                        responseIndex += measurement.Initialize(buffer, responseIndex, length - responseIndex);
+                                        measurements.Add(measurement);
+                                    }
                                 }
-                                else
-                                {
-                                    // Deserialize full measurement format
-                                    measurement = new SerializableMeasurement();
-                                    responseIndex += measurement.Initialize(buffer, responseIndex, length - responseIndex);
-                                    measurements.Add(measurement);
-                                }
+
+                                // Expose new measurements to consumer
+                                OnNewMeasurements(measurements);
                             }
-
-                            // Expose new measurements to consumer
-                            OnNewMeasurements(measurements);
+                            catch (InvalidOperationException)
+                            {
+                                if (m_dataChannel != null)
+                                    m_measurementDataBuffer = buffer.BlockCopy(0, length);
+                                else
+                                    throw;
+                            }
                             break;
                         case ServerResponse.UpdateSignalIndexCache:
                             // Deserialize new signal index cache
@@ -971,7 +982,22 @@ namespace TimeSeriesFramework.Transport
 
         private void m_dataChannel_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
         {
-            ProcessServerResponse(e.Argument1, e.Argument2);
+            byte[] measurementData;
+            int length;
+
+            if (m_measurementDataBuffer == null)
+            {
+                measurementData = e.Argument1;
+                length = e.Argument2;
+            }
+            else
+            {
+                measurementData = m_measurementDataBuffer.Combine(0, m_measurementDataBuffer.Length, e.Argument1, 0, e.Argument2);
+                length = measurementData.Length;
+                m_measurementDataBuffer = null;
+            }
+
+            ProcessServerResponse(measurementData, length);
         }
 
         private void m_dataChannel_ConnectionException(object sender, EventArgs<Exception> e)
