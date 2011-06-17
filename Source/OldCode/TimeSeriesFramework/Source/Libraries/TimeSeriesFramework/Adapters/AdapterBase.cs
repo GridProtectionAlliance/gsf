@@ -293,6 +293,13 @@ namespace TimeSeriesFramework.Adapters
             }
         }
 
+        // TODO: SignalID and measurement key I/O definition should be as transparent as possible - assigning one will
+        // load the other (and visa-versa). Define a "InputSignalIDs" and "OutputSignalIDs" property that will auto-
+        // assign the "InputMeasurementKeys" and "OutputMeasurements" based on an associated default "MeasurementDefinitionTable"
+
+        // Also, the static parsers should take an optional parameter for the default MeasurementDefinitionTable as well
+        // and allow lookup of the 
+
         /// <summary>
         /// Gets or sets output measurements that the <see cref="AdapterBase"/> will produce, if any.
         /// </summary>

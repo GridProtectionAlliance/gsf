@@ -1311,7 +1311,7 @@ namespace TimeSeriesFramework.Transport
                 if (m_requireAuthentication)
                 {
                     // Validate that subscriber has rights to this signal
-                    if (SubcriberHasRights(signalIndexCache.SubscriberID, key, out signalID))
+                    if (SubscriberHasRights(signalIndexCache.SubscriberID, key, out signalID))
                         reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(signalID, key));
                     else
                         unauthorizedKeys.Add(key);
@@ -1331,16 +1331,13 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
-        /// Determines if subscriber has rights to specified <see cref="MeasurementKey"/>.
+        /// Determines if subscriber has rights to specified <paramref name="signalID"/>.
         /// </summary>
         /// <param name="subscriberID"><see cref="Guid"/> based subscriber ID.</param>
-        /// <param name="key"><see cref="MeasurementKey"/> to lookup.</param>
-        /// <param name="signalID"><see cref="Guid"/> signal ID if found; otherwise an empty Guid.</param>
+        /// <param name="signalID"><see cref="Guid"/> signal ID to lookup.</param>
         /// <returns><c>true</c> if subscriber has rights to specified <see cref="MeasurementKey"/>; otherwise <c>false</c>.</returns>
-        protected bool SubcriberHasRights(Guid subscriberID, MeasurementKey key, out Guid signalID)
+        protected bool SubscriberHasRights(Guid subscriberID, Guid signalID)
         {
-            signalID = LookupSignalID(key);
-
             try
             {
                 // Lookup explicitly defined individual measurements
@@ -1364,6 +1361,23 @@ namespace TimeSeriesFramework.Transport
             {
                 OnProcessException(new InvalidOperationException(string.Format("Failed to determine subscriber rights for {0} due to exception: {1}", GetConnectionProperty(subscriberID, cc => cc.SubscriberAcronym), ex.Message)));
             }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Determines if subscriber has rights to specified <see cref="MeasurementKey"/>.
+        /// </summary>
+        /// <param name="subscriberID"><see cref="Guid"/> based subscriber ID.</param>
+        /// <param name="key"><see cref="MeasurementKey"/> to lookup.</param>
+        /// <param name="signalID"><see cref="Guid"/> signal ID if found; otherwise an empty Guid.</param>
+        /// <returns><c>true</c> if subscriber has rights to specified <see cref="MeasurementKey"/>; otherwise <c>false</c>.</returns>
+        protected bool SubscriberHasRights(Guid subscriberID, MeasurementKey key, out Guid signalID)
+        {
+            signalID = LookupSignalID(key);
+
+            if (signalID != Guid.Empty)
+                return SubscriberHasRights(subscriberID, signalID);
 
             return false;
         }
