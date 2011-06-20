@@ -42,6 +42,7 @@ using TimeSeriesFramework.Adapters;
 using TVA;
 using TVA.Communication;
 using TVA.IO.Compression;
+using TVA.Parsing;
 using TVA.Security.Cryptography;
 
 namespace TimeSeriesFramework.Transport
@@ -386,40 +387,76 @@ namespace TimeSeriesFramework.Transport
             {
                 if (!m_disposed)
                 {
-                    MemoryStream data = new MemoryStream();
+                    List<ISupportBinaryImage> packet = new List<ISupportBinaryImage>();
                     bool useCompactMeasurementFormat = m_useCompactMeasurementFormat;
-                    byte[] buffer;
+                    long frameLevelTimestamp = frame.Timestamp;
+                    int maxPacketSize = ushort.MaxValue / 2;
+                    int packetSize = 13;
 
-                    // Serialize data packet flags into response
-                    DataPacketFlags flags = DataPacketFlags.Synchronized;
-
-                    if (useCompactMeasurementFormat)
-                        flags |= DataPacketFlags.Compact;
-
-                    data.WriteByte((byte)flags);
-
-                    // Serialize frame timestamp into data packet - this only occurs in synchronized data packets,
-                    // unsynchronized subcriptions always include timestamps in the serialized measurements
-                    data.Write(EndianOrder.BigEndian.GetBytes((long)frame.Timestamp), 0, 8);
-
-                    // Serialize total number of measurement values to follow
-                    data.Write(EndianOrder.BigEndian.GetBytes(frame.Measurements.Values.Count), 0, 4);
-
-                    // Serialize measurements to data buffer
                     foreach (IMeasurement measurement in frame.Measurements.Values)
                     {
-                        if (useCompactMeasurementFormat)
-                            buffer = (new CompactMeasurement(measurement, m_signalIndexCache, false)).BinaryImage;
-                        else
-                            buffer = (new SerializableMeasurement(measurement)).BinaryImage;
+                        ISupportBinaryImage binaryMeasurement;
+                        int binaryLength;
 
-                        data.Write(buffer, 0, buffer.Length);
+                        // Serialize the current measurement.
+                        if (useCompactMeasurementFormat)
+                            binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, false);
+                        else
+                            binaryMeasurement = new SerializableMeasurement(measurement);
+
+                        // Determine the size of the measurement in bytes.
+                        binaryLength = binaryMeasurement.BinaryLength;
+
+                        // If the current measurement will not fit in the packet based on
+                        // the max packet size, process the packet and start a new one.
+                        if (packetSize + binaryLength > maxPacketSize)
+                        {
+                            ProcessBinaryMeasurements(packet, frameLevelTimestamp);
+                            packet.Clear();
+                            packetSize = 13;
+                        }
+
+                        // Add the measurement to the packet.
+                        packet.Add(binaryMeasurement);
+                        packetSize += binaryLength;
                     }
 
-                    // Publish data packet to client
-                    if (m_parent != null)
-                        m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, data.ToArray());
+                    // Process the remaining measurements.
+                    ProcessBinaryMeasurements(packet, frameLevelTimestamp);
                 }
+            }
+
+            private void ProcessBinaryMeasurements(IEnumerable<ISupportBinaryImage> measurements, long frameLevelTimestamp)
+            {
+                MemoryStream data = new MemoryStream();
+                bool useCompactMeasurementFormat = m_useCompactMeasurementFormat;
+                byte[] buffer;
+
+                // Serialize data packet flags into response
+                DataPacketFlags flags = DataPacketFlags.Synchronized;
+
+                if (useCompactMeasurementFormat)
+                    flags |= DataPacketFlags.Compact;
+
+                data.WriteByte((byte)flags);
+
+                // Serialize frame timestamp into data packet - this only occurs in synchronized data packets,
+                // unsynchronized subcriptions always include timestamps in the serialized measurements
+                data.Write(EndianOrder.BigEndian.GetBytes(frameLevelTimestamp), 0, 8);
+
+                // Serialize total number of measurement values to follow
+                data.Write(EndianOrder.BigEndian.GetBytes(measurements.Count()), 0, 4);
+
+                // Serialize measurements to data buffer
+                foreach (ISupportBinaryImage measurement in measurements)
+                {
+                    buffer = measurement.BinaryImage;
+                    data.Write(buffer, 0, buffer.Length);
+                }
+
+                // Publish data packet to client
+                if (m_parent != null)
+                    m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, data.ToArray());
             }
 
             /// <summary>
@@ -695,6 +732,45 @@ namespace TimeSeriesFramework.Transport
 
             private void ProcessMeasurements(IEnumerable<IMeasurement> measurements)
             {
+                List<ISupportBinaryImage> packet = new List<ISupportBinaryImage>();
+                bool useCompactMeasurementFormat = m_useCompactMeasurementFormat;
+                int maxPacketSize = ushort.MaxValue / 2;
+                int packetSize = 5;
+
+                foreach (IMeasurement measurement in measurements)
+                {
+                    ISupportBinaryImage binaryMeasurement;
+                    int binaryLength;
+
+                    // Serialize the current measurement.
+                    if (useCompactMeasurementFormat)
+                        binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, true);
+                    else
+                        binaryMeasurement = new SerializableMeasurement(measurement);
+
+                    // Determine the size of the measurement in bytes.
+                    binaryLength = binaryMeasurement.BinaryLength;
+
+                    // If the current measurement will not fit in the packet based on the max
+                    // packet size, process the current packet and start a new packet.
+                    if (packetSize + binaryLength > maxPacketSize)
+                    {
+                        ProcessBinaryMeasurements(packet);
+                        packet.Clear();
+                        packetSize = 5;
+                    }
+
+                    // Add the current measurement to the packet.
+                    packet.Add(binaryMeasurement);
+                    packetSize += binaryLength;
+                }
+
+                // Process the remaining measurements.
+                ProcessBinaryMeasurements(packet);
+            }
+
+            private void ProcessBinaryMeasurements(IEnumerable<ISupportBinaryImage> measurements)
+            {
                 MemoryStream data = new MemoryStream();
                 bool useCompactMeasurementFormat = m_useCompactMeasurementFormat;
                 byte[] buffer;
@@ -714,13 +790,9 @@ namespace TimeSeriesFramework.Transport
                 data.Write(EndianOrder.BigEndian.GetBytes(measurements.Count()), 0, 4);
 
                 // Serialize measurements to data buffer
-                foreach (IMeasurement measurement in measurements)
+                foreach (ISupportBinaryImage measurement in measurements)
                 {
-                    if (useCompactMeasurementFormat)
-                        buffer = (new CompactMeasurement(measurement, m_signalIndexCache, true)).BinaryImage;
-                    else
-                        buffer = (new SerializableMeasurement(measurement)).BinaryImage;
-
+                    buffer = measurement.BinaryImage;
                     data.Write(buffer, 0, buffer.Length);
                 }
 
@@ -1520,13 +1592,7 @@ namespace TimeSeriesFramework.Transport
 
                     if (publishChannel is UdpServer)
                     {
-                        int length;
-
-                        for (int i = 0; i <= responseLength / ushort.MaxValue; i++)
-                        {
-                            length = (i == responseLength / ushort.MaxValue ? responseLength % ushort.MaxValue : ushort.MaxValue);
-                            publishChannel.Multicast(responseData.BlockCopy(i * ushort.MaxValue, length), 0, length);
-                        }
+                        publishChannel.Multicast(responseData, 0, responseLength);
                     }
                     else
                     {
@@ -1880,7 +1946,7 @@ namespace TimeSeriesFramework.Transport
                                         else
                                         {
                                             // Manually re-initialize existing client subscription
-                                            subscription.ProcessMeasurementFilter = ProcessMeasurementFilter;
+                                            subscription.ProcessMeasurementFilter = true;
                                             subscription.Initialize();
                                             subscription.Initialized = true;
                                         }
