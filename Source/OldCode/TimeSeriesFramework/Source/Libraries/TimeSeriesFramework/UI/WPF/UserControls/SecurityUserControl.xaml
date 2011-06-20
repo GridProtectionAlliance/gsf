@@ -136,7 +136,7 @@
                         <TextBlock Text="Password" Style="{StaticResource RequiredLabel}"/>
                         <TextBlock Style="{StaticResource RequiredMarker}" />
                     </StackPanel>
-                    <PasswordBox Grid.Row="2" Grid.Column="1" IsEnabled="{tsfBinding:Column Path=UseADAuthentication, Converter={StaticResource NotConverter}}" />
+                    <PasswordBox Grid.Row="2" Grid.Column="1" IsEnabled="{tsfBinding:Column Path=UseADAuthentication, Converter={StaticResource NotConverter}}" PasswordChanged="PasswordBox_PasswordChanged" />
                     <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="2">
                         <TextBlock Text="First Name" Style="{StaticResource RequiredLabel}"/>
                         <TextBlock Style="{StaticResource RequiredMarker}" />
