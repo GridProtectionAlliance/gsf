@@ -239,24 +239,6 @@ namespace TimeSeriesFramework.Transport
                 get;
                 set;
             }
-
-            /// <summary>
-            /// Gets or sets key and initialization vectors to use for encrypting data packets.
-            /// </summary>
-            byte[][][] KeyIVs
-            {
-                get;
-                set;
-            }
-
-            /// <summary>
-            /// Gets or sets active cipher index to use for encrypting data packets.
-            /// </summary>
-            int CipherIndex
-            {
-                get;
-                set;
-            }
         }
 
         // Synchronized action adapter interface
@@ -270,8 +252,6 @@ namespace TimeSeriesFramework.Transport
             private Guid m_clientID;
             private Guid m_subscriberID;
             private bool m_useCompactMeasurementFormat;
-            private byte[][][] m_keyIVs;
-            private int m_cipherIndex;
             private bool m_disposed;
 
             #endregion
@@ -293,8 +273,6 @@ namespace TimeSeriesFramework.Transport
                 m_clientID = clientID;
                 m_subscriberID = subscriberID;
                 m_signalIndexCache = new SignalIndexCache(subscriberID);
-                m_keyIVs = null;
-                m_cipherIndex = 0;
             }
 
             #endregion
@@ -346,36 +324,6 @@ namespace TimeSeriesFramework.Transport
                 set
                 {
                     m_useCompactMeasurementFormat = value;
-                }
-            }
-
-            /// <summary>
-            /// Gets or sets key and initialization vectors to use for encrypting data packets.
-            /// </summary>
-            public byte[][][] KeyIVs
-            {
-                get
-                {
-                    return m_keyIVs;
-                }
-                set
-                {
-                    m_keyIVs = value;
-                }
-            }
-
-            /// <summary>
-            /// Gets or sets active cipher index to use for encrypting data packets.
-            /// </summary>
-            public int CipherIndex
-            {
-                get
-                {
-                    return m_cipherIndex;
-                }
-                set
-                {
-                    m_cipherIndex = value;
                 }
             }
 
@@ -452,7 +400,7 @@ namespace TimeSeriesFramework.Transport
 
                         // Serialize the current measurement.
                         if (useCompactMeasurementFormat)
-                            binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, false, null, m_keyIVs, 0, m_cipherIndex);
+                            binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, false);
                         else
                             binaryMeasurement = new SerializableMeasurement(measurement);
 
@@ -561,8 +509,6 @@ namespace TimeSeriesFramework.Transport
             private bool m_useCompactMeasurementFormat;
             private long m_lastPublishTime;
             private bool m_includeTime;
-            private byte[][][] m_keyIVs;
-            private int m_cipherIndex;
             private bool m_disposed;
 
             #endregion
@@ -584,8 +530,6 @@ namespace TimeSeriesFramework.Transport
                 m_clientID = clientID;
                 m_subscriberID = subscriberID;
                 m_signalIndexCache = new SignalIndexCache(subscriberID);
-                m_keyIVs = null;
-                m_cipherIndex = 0;
             }
 
             #endregion
@@ -637,36 +581,6 @@ namespace TimeSeriesFramework.Transport
                 set
                 {
                     m_useCompactMeasurementFormat = value;
-                }
-            }
-
-            /// <summary>
-            /// Gets or sets key and initialization vectors to use for encrypting data packets.
-            /// </summary>
-            public byte[][][] KeyIVs
-            {
-                get
-                {
-                    return m_keyIVs;
-                }
-                set
-                {
-                    m_keyIVs = value;
-                }
-            }
-
-            /// <summary>
-            /// Gets or sets active cipher index to use for encrypting data packets.
-            /// </summary>
-            public int CipherIndex
-            {
-                get
-                {
-                    return m_cipherIndex;
-                }
-                set
-                {
-                    m_cipherIndex = value;
                 }
             }
 
@@ -845,7 +759,7 @@ namespace TimeSeriesFramework.Transport
 
                     // Serialize the current measurement.
                     if (useCompactMeasurementFormat)
-                        binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, m_includeTime, null, m_keyIVs, 0, m_cipherIndex);
+                        binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, m_includeTime);
                     else
                         binaryMeasurement = new SerializableMeasurement(measurement);
 
@@ -913,6 +827,12 @@ namespace TimeSeriesFramework.Transport
         {
             #region [ Members ]
 
+            // Constants
+            private const int EvenKey = 0;      // Even key/IV index
+            private const int OddKey = 1;       // Odd key/IV index
+            private const int KeyIndex = 0;     // Index of cipher key component in keyIV array
+            private const int IVIndex = 1;      // Index of initialization vector component in keyIV array
+
             // Fields
             private DataPublisher m_parent;
             private Guid m_clientID;
@@ -920,8 +840,11 @@ namespace TimeSeriesFramework.Transport
             private string m_connectionID;
             private string m_subscriberAcronym;
             private string m_subscriberName;
+            private string m_sharedSecret;
             private IClientSubscription m_subscription;
             private volatile bool m_authenticated;
+            private volatile byte[][][] m_keyIVs;
+            private volatile int m_cipherIndex;
             private IPAddress m_ipAddress;
             private TcpServer m_commandChannel;
             private UdpServer m_dataChannel;
@@ -943,6 +866,8 @@ namespace TimeSeriesFramework.Transport
                 m_clientID = clientID;
                 m_commandChannel = commandChannel;
                 m_subscriberID = clientID;
+                m_keyIVs = null;
+                m_cipherIndex = 0;
 
                 // Attempt to lookup remote connection identification for logging purposes
                 try
@@ -1128,6 +1053,71 @@ namespace TimeSeriesFramework.Transport
             }
 
             /// <summary>
+            /// Gets or sets shared secret used to lookup cipher keys only known to client and server.
+            /// </summary>
+            public string SharedSecret
+            {
+                get
+                {
+                    return m_sharedSecret;
+                }
+                set
+                {
+                    m_sharedSecret = value;
+                }
+            }
+
+            /// <summary>
+            /// Gets active cipher key, if any.
+            /// </summary>
+            public byte[] Key
+            {
+                get
+                {
+                    if (m_keyIVs != null)
+                        return m_keyIVs[m_cipherIndex][KeyIndex];
+
+                    return null;
+                }
+            }
+
+            /// <summary>
+            /// Gets active intitialization vector, if any.
+            /// </summary>
+            public byte[] IV
+            {
+                get
+                {
+                    if (m_keyIVs != null)
+                        return m_keyIVs[m_cipherIndex][IVIndex];
+
+                    return null;
+                }
+            }
+
+            /// <summary>
+            /// Gets active keys and initialization vectors.
+            /// </summary>
+            public byte[][][] KeyIVs
+            {
+                get
+                {
+                    return m_keyIVs;
+                }
+            }
+
+            /// <summary>
+            /// Gets current cipher index.
+            /// </summary>
+            public int CipherIndex
+            {
+                get
+                {
+                    return m_cipherIndex;
+                }
+            }
+
+            /// <summary>
             /// Gets the IP address of the remote client connection.
             /// </summary>
             public IPAddress IPAddress
@@ -1164,6 +1154,46 @@ namespace TimeSeriesFramework.Transport
             {
                 Dispose(true);
                 GC.SuppressFinalize(this);
+            }
+
+            /// <summary>
+            /// Creates or updates cipher keys.
+            /// </summary>
+            public void UpdateKeyIVs()
+            {
+                AesManaged symmetricAlgorithm = new AesManaged();
+
+                symmetricAlgorithm.KeySize = 256;
+                symmetricAlgorithm.GenerateKey();
+                symmetricAlgorithm.GenerateIV();
+
+                if (m_keyIVs == null)
+                {
+                    // Initialize new key set
+                    m_keyIVs = new byte[2][][];
+                    m_keyIVs[EvenKey] = new byte[2][];
+                    m_keyIVs[OddKey] = new byte[2][];
+
+                    m_keyIVs[EvenKey][KeyIndex] = symmetricAlgorithm.Key;
+                    m_keyIVs[EvenKey][IVIndex] = symmetricAlgorithm.IV;
+
+                    symmetricAlgorithm.GenerateKey();
+                    symmetricAlgorithm.GenerateIV();
+
+                    m_keyIVs[OddKey][KeyIndex] = symmetricAlgorithm.Key;
+                    m_keyIVs[OddKey][IVIndex] = symmetricAlgorithm.IV;
+
+                    m_cipherIndex = EvenKey;
+                }
+                else
+                {
+                    // Generate a new key set for current cipher index
+                    m_keyIVs[m_cipherIndex][KeyIndex] = symmetricAlgorithm.Key;
+                    m_keyIVs[m_cipherIndex][IVIndex] = symmetricAlgorithm.IV;
+
+                    // Set run-time to the other key set
+                    m_cipherIndex = (m_cipherIndex == EvenKey ? OddKey : EvenKey);
+                }
             }
 
             /// <summary>
@@ -1467,53 +1497,29 @@ namespace TimeSeriesFramework.Transport
             return "Currently not connected".CenterText(maxLength);
         }
 
-        // Update cipher keys
-        private void UpdateKeyIVs(IClientSubscription subscription)
+        // Create or rotate runtime encryption keys
+        private void RotateCipherKeys(ClientConnection connection)
         {
-            const int EvenKey = 0;      // Even key/IV index
-            const int OddKey = 1;       // Odd key/IV index
-            const int KeyIndex = 0;     // Index of cipher key component in keyIV array
-            const int IVIndex = 1;      // Index of initialization vector component in keyIV array
+            MemoryStream response = new MemoryStream();
 
-            byte[][][] keyIVs = subscription.KeyIVs;
-            int cipherIndex = subscription.CipherIndex;
-            AesManaged symmetricAlgorithm = new AesManaged();
+            // Create or update cipher keys and initialization vectors 
+            connection.UpdateKeyIVs();
 
-            symmetricAlgorithm.KeySize = 256;
-            symmetricAlgorithm.GenerateKey();
-            symmetricAlgorithm.GenerateIV();
+            // Add current cipher index to response
+            response.Write(EndianOrder.BigEndian.GetBytes(connection.CipherIndex), 0, 4);
 
-            if (keyIVs == null)
-            {
-                // Initialize new key set
-                keyIVs = new byte[2][][];
-                keyIVs[EvenKey] = new byte[2][];
-                keyIVs[OddKey] = new byte[2][];
+            // Serialize new keys
+            byte[] bytes = Serialization.Serialize(connection.KeyIVs, TVA.SerializationFormat.Binary);
 
-                keyIVs[EvenKey][KeyIndex] = symmetricAlgorithm.Key;
-                keyIVs[EvenKey][IVIndex] = symmetricAlgorithm.IV;
+            // Encrypt keys using private keys known only to current client and server
+            if (connection.Authenticated && !string.IsNullOrWhiteSpace(connection.SharedSecret))
+                bytes = bytes.Encrypt(connection.SharedSecret, CipherStrength.Aes256);
 
-                symmetricAlgorithm.GenerateKey();
-                symmetricAlgorithm.GenerateIV();
+            // Add serialized key response
+            response.Write(bytes, 4, bytes.Length);
 
-                keyIVs[OddKey][KeyIndex] = symmetricAlgorithm.Key;
-                keyIVs[OddKey][IVIndex] = symmetricAlgorithm.IV;
-
-                cipherIndex = EvenKey;
-            }
-            else
-            {
-                // Generate a new key set for current cipher index
-                keyIVs[cipherIndex][KeyIndex] = symmetricAlgorithm.Key;
-                keyIVs[cipherIndex][IVIndex] = symmetricAlgorithm.IV;
-
-                // Set run-time to the other key set
-                cipherIndex = (cipherIndex == EvenKey ? OddKey : EvenKey);
-            }
-
-            // Update subscription with new keys and active cipher index
-            subscription.KeyIVs = keyIVs;
-            subscription.CipherIndex = cipherIndex;
+            // Send cipher key updates
+            SendClientResponse(connection.ClientID, ServerResponse.UpdateCipherKey, ServerCommand.Subscribe, bytes);
         }
 
         // Update signal index cache based on input measurement keys
@@ -1699,15 +1705,17 @@ namespace TimeSeriesFramework.Transport
             // Data packets can be published on a UDP data channel, so check for this...
             if (responseCode == (byte)ServerResponse.DataPacket)
             {
-                publishChannel = m_clientPublicationChannels.GetOrAdd(clientID, id =>
-                {
-                    ClientConnection connection;
+                ClientConnection connection;
 
-                    if (m_clientConnections.TryGetValue(id, out connection))
-                        return connection.PublishChannel;
+                // Attempt to lookup associated client connection
+                m_clientConnections.TryGetValue(clientID, out connection);
 
-                    return m_commandChannel;
-                });
+                // Lookup proper publication channel
+                publishChannel = m_clientPublicationChannels.GetOrAdd(clientID, id => connection == null ? m_commandChannel : connection.PublishChannel);
+
+                // Encrypt data packet payload if connection key is defined
+                if (connection != null && connection.Key != null)
+                    data = data.Encrypt(connection.Key, connection.IV, CipherStrength.Aes256);
             }
             else
             {
@@ -1745,13 +1753,9 @@ namespace TimeSeriesFramework.Transport
                     int responseLength = unchecked((int)responsePacket.Length);
 
                     if (publishChannel is UdpServer)
-                    {
                         publishChannel.Multicast(responseData, 0, responseLength);
-                    }
                     else
-                    {
                         publishChannel.SendToAsync(clientID, responseData, 0, responseLength);
-                    }
 
                     success = true;
                 }
@@ -1850,7 +1854,7 @@ namespace TimeSeriesFramework.Transport
             byte commandByte;
             ServerCommand command;
             bool validServerCommand;
-            string message, setting, authenticationID, sharedSecret = null;
+            string message, setting;
             Guid clientID = e.Argument1;
             byte[] buffer = e.Argument2;
             int length = e.Argument3;
@@ -1899,13 +1903,14 @@ namespace TimeSeriesFramework.Transport
                             }
                             else
                             {
-                                sharedSecret = subscriber["SharedSecret"].ToNonNullString().Trim();
-                                authenticationID = subscriber["AuthKey"].ToNonNullString().Trim();
+                                string sharedSecret = subscriber["SharedSecret"].ToNonNullString().Trim();
+                                string authenticationID = subscriber["AuthKey"].ToNonNullString().Trim();
 
                                 // Update subscriber data in associated connection object
                                 connection.SubscriberID = Guid.Parse(subscriber["ID"].ToNonNullString(Guid.Empty.ToString()).Trim());
                                 connection.SubscriberAcronym = subscriber["Acronym"].ToNonNullString().Trim();
                                 connection.SubscriberName = subscriber["Name"].ToNonNullString().Trim();
+                                connection.SharedSecret = sharedSecret;
 
                                 if (length >= 5)
                                 {
@@ -2114,23 +2119,8 @@ namespace TimeSeriesFramework.Transport
                                         SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, Serialization.Serialize(subscription.SignalIndexCache, TVA.SerializationFormat.Binary));
 
                                         // Send new or updated cipher keys
-                                        if (connection.Authenticated && !string.IsNullOrWhiteSpace(sharedSecret))
-                                        {
-                                            MemoryStream keyBuffer = new MemoryStream();
-                                            byte[][][] keyIVs = subscription.KeyIVs;
-                                            int cipherIndex = subscription.CipherIndex;
-
-                                            // Create or update cipher keys and initialization vectors 
-                                            UpdateKeyIVs(subscription);
-
-                                            // Serialize new keys
-                                            byte[] bytes = Serialization.Serialize(subscription.KeyIVs, TVA.SerializationFormat.Binary);
-
-                                            // Encrypt keys using private keys known only to current client and server
-                                            bytes = bytes.Encrypt(sharedSecret, CipherStrength.Aes256);
-
-                                            SendClientResponse(clientID, ServerResponse.UpdateCipherKey, ServerCommand.Subscribe, bytes);
-                                        }
+                                        if (connection.Authenticated)
+                                            RotateCipherKeys(connection);
 
                                         // Send success response
                                         if (subscription.InputMeasurementKeys != null)

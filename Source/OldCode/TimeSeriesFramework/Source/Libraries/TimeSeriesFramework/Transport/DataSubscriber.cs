@@ -69,11 +69,14 @@ namespace TimeSeriesFramework.Transport
         private volatile SignalIndexCache m_signalIndexCache;
         private volatile long[] m_baseTimeOffsets;
         private volatile byte[][][] m_keyIVs;
+        private volatile int m_cipherIndex;
         private volatile bool m_authenticated;
         private List<ServerCommand> m_requests;
         private bool m_synchronizedSubscription;
         private bool m_requireAuthentication;
         private bool m_autoConnect;
+        private string m_sharedSecret;
+        private string m_authenticationID;
         private bool m_includeTime;
         private bool m_disposed;
 
@@ -313,6 +316,17 @@ namespace TimeSeriesFramework.Transport
             // Setup data publishing server with or without required authentication 
             if (settings.TryGetValue("requireAuthentication", out setting))
                 m_requireAuthentication = setting.ParseBoolean();
+            else
+                m_requireAuthentication = false;
+
+            if (m_requireAuthentication)
+            {
+                if (!settings.TryGetValue("sharedSecret", out m_sharedSecret) && !string.IsNullOrWhiteSpace(m_sharedSecret))
+                    throw new ArgumentException("The \"sharedSecret\" setting must defined when authentication is required.");
+
+                if (!settings.TryGetValue("authenticationID", out m_authenticationID) && !string.IsNullOrWhiteSpace(m_authenticationID))
+                    throw new ArgumentException("The \"authenticationID\" setting must defined when authentication is required.");
+            }
 
             // Define auto connect setting
             if (settings.TryGetValue("autoConnect", out setting))
@@ -629,6 +643,7 @@ namespace TimeSeriesFramework.Transport
         {
             m_commandChannel.Connect();
             m_authenticated = false;
+            m_keyIVs = null;
         }
 
         /// <summary>
@@ -738,8 +753,6 @@ namespace TimeSeriesFramework.Transport
                         case ServerResponse.DataPacket:
                             // Deserialize data packet
                             List<IMeasurement> measurements = new List<IMeasurement>();
-                            SerializableMeasurement measurement;
-                            CompactMeasurement slimMeasurement;
                             DataPacketFlags flags;
                             Ticks timestamp = 0;
                             int count;
@@ -750,6 +763,14 @@ namespace TimeSeriesFramework.Transport
 
                             bool synchronizedMeasurements = ((byte)(flags & DataPacketFlags.Synchronized) > 0);
                             bool compactMeasurementFormat = ((byte)(flags & DataPacketFlags.Compact) > 0);
+
+                            // Decrypt data packet payload if keys are available
+                            if (m_keyIVs != null)
+                            {
+                                buffer = buffer.BlockCopy(responseIndex, responseLength - 1).Decrypt(m_keyIVs[m_cipherIndex][0], m_keyIVs[m_cipherIndex][1], CipherStrength.Aes256);
+                                responseIndex = 0;
+                                responseLength = buffer.Length;
+                            }
 
                             // Synchronized packets contain a frame level timestamp
                             if (synchronizedMeasurements)
@@ -768,19 +789,19 @@ namespace TimeSeriesFramework.Transport
                                 if (compactMeasurementFormat)
                                 {
                                     // Deserialize compact measurement format
-                                    slimMeasurement = new CompactMeasurement(m_signalIndexCache, m_includeTime, m_baseTimeOffsets, m_keyIVs);
-                                    responseIndex += slimMeasurement.Initialize(buffer, responseIndex, length - responseIndex);
+                                    CompactMeasurement measurement = new CompactMeasurement(m_signalIndexCache, m_includeTime, m_baseTimeOffsets);
+                                    responseIndex += measurement.Initialize(buffer, responseIndex, length - responseIndex);
 
                                     // Apply timestamp from frame if not included in transmission
-                                    if (!slimMeasurement.IncludeTime)
-                                        slimMeasurement.Timestamp = timestamp;
+                                    if (!measurement.IncludeTime)
+                                        measurement.Timestamp = timestamp;
 
-                                    measurements.Add(slimMeasurement);
+                                    measurements.Add(measurement);
                                 }
                                 else
                                 {
                                     // Deserialize full measurement format
-                                    measurement = new SerializableMeasurement();
+                                    SerializableMeasurement measurement = new SerializableMeasurement();
                                     responseIndex += measurement.Initialize(buffer, responseIndex, length - responseIndex);
                                     measurements.Add(measurement);
                                 }
@@ -798,8 +819,18 @@ namespace TimeSeriesFramework.Transport
                             m_baseTimeOffsets = Serialization.Deserialize<long[]>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary);
                             break;
                         case ServerResponse.UpdateCipherKey:
+                            // Get active cipher index
+                            m_cipherIndex = EndianOrder.BigEndian.ToInt32(buffer, responseIndex);
+
+                            // Extract remaining response
+                            byte[] bytes = buffer.BlockCopy(responseIndex + 4, responseLength - 4);
+
+                            // Decrypt response payload if subscription is authenticated
+                            if (m_authenticated)
+                                bytes = bytes.Decrypt(m_sharedSecret, CipherStrength.Aes256);
+
                             // Deserialize new cipher keys
-                            m_keyIVs = Serialization.Deserialize<byte[][][]>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary);
+                            m_keyIVs = Serialization.Deserialize<byte[][][]>(bytes, TVA.SerializationFormat.Binary);
                             break;
                     }
                 }
@@ -897,26 +928,11 @@ namespace TimeSeriesFramework.Transport
 
             if (m_autoConnect)
             {
+                // Attempt authentication if required, remaining steps will happen on successful authentication
                 if (m_requireAuthentication)
-                {
-                    // Attempt authentication, remaining steps will happen on successful authentication
-                    Dictionary<string, string> settings = Settings;
-                    string sharedSecret, authenticationID;
-
-                    if (!settings.TryGetValue("sharedSecret", out sharedSecret))
-                        OnProcessException(new ArgumentException("The \"sharedSecret\" setting must defined when authentication is required."));
-
-                    if (!settings.TryGetValue("authenticationID", out authenticationID))
-                        OnProcessException(new ArgumentException("The \"authenticationID\" setting must defined when authentication is required."));
-
-                    if (!string.IsNullOrWhiteSpace(sharedSecret) && !string.IsNullOrWhiteSpace(authenticationID))
-                        Authenticate(sharedSecret, authenticationID);
-                }
+                    Authenticate(m_sharedSecret, m_authenticationID);
                 else
-                {
-                    // Go ahead and start subscription
                     StartSubscription();
-                }
             }
         }
 
