@@ -508,6 +508,7 @@ namespace TimeSeriesFramework.Transport
             private Guid m_subscriberID;
             private bool m_useCompactMeasurementFormat;
             private long m_lastPublishTime;
+            private bool m_includeTime;
             private bool m_disposed;
 
             #endregion
@@ -635,6 +636,21 @@ namespace TimeSeriesFramework.Transport
             }
 
             /// <summary>
+            /// Initializes <see cref="UnsynchronizedClientSubscription"/>.
+            /// </summary>
+            public override void Initialize()
+            {
+                base.Initialize();
+
+                string setting;
+
+                if (Settings.TryGetValue("includeTime", out setting))
+                    m_includeTime = setting.ParseBoolean();
+                else
+                    m_includeTime = true;
+            }
+
+            /// <summary>
             /// Gets a short one-line status of this <see cref="UnsynchronizedClientSubscription"/>.
             /// </summary>
             /// <param name="maxLength">Maximum number of available characters for display.</param>
@@ -744,7 +760,7 @@ namespace TimeSeriesFramework.Transport
 
                     // Serialize the current measurement.
                     if (useCompactMeasurementFormat)
-                        binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, true);
+                        binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, m_includeTime);
                     else
                         binaryMeasurement = new SerializableMeasurement(measurement);
 

@@ -65,7 +65,7 @@ namespace DataSubscriberTest
                     else
                     {
                         Console.WriteLine("Initiating throttled unsynchronized subscription...");
-                        subscriber.UnsynchronizedSubscribe(true, true, "DEVARCHIVE:1;DEVARCHIVE:2", null, 5.0D, 1.0D, false);
+                        subscriber.UnsynchronizedSubscribe(true, true, "DEVARCHIVE:1;DEVARCHIVE:2", null, true, 5.0D, 1.0D, false);
                     }
                 }
             }

@@ -74,6 +74,7 @@ namespace TimeSeriesFramework.Transport
         private bool m_synchronizedSubscription;
         private bool m_requireAuthentication;
         private bool m_autoConnect;
+        private bool m_includeTime;
         private bool m_disposed;
 
         #endregion
@@ -463,20 +464,25 @@ namespace TimeSeriesFramework.Transport
         /// <param name="throttled">Boolean value that determines if data should be throttled at a set transmission interval or sent on change.</param>
         /// <param name="filterExpression">Filtering expression that defines the measurements that are being subscribed.</param>
         /// <param name="dataChannel">Desired UDP return data channel connection string to use for data packet transmission. Set to <c>null</c> to use TCP channel for data transmission.</param>
+        /// <param name="includeTime">Boolean value that determines if time is a necessary component in streaming data.</param>
         /// <param name="lagTime">When <paramref name="throttled"/> is <c>true</c>, defines the data transmission speed in seconds (can be subsecond).</param>
         /// <param name="leadTime">When <paramref name="throttled"/> is <c>true</c>, defines the allowed time deviation tolerance to real-time in seconds (can be subsecond).</param>
         /// <param name="useLocalClockAsRealTime">When <paramref name="throttled"/> is <c>true</c>, defines boolean value that determines whether or not to use the local clock time as real-time. Set to <c>false</c> to use latest received measurement timestamp as real-time.</param>
         /// <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
-        public virtual bool UnsynchronizedSubscribe(bool compactFormat, bool throttled, string filterExpression, string dataChannel = null, double lagTime = 10.0D, double leadTime = 5.0D, bool useLocalClockAsRealTime = false)
+        public virtual bool UnsynchronizedSubscribe(bool compactFormat, bool throttled, string filterExpression, string dataChannel = null, bool includeTime = true, double lagTime = 10.0D, double leadTime = 5.0D, bool useLocalClockAsRealTime = false)
         {
             StringBuilder connectionString = new StringBuilder();
 
             connectionString.AppendFormat("trackLatestMeasurements={0}; ", throttled);
-            connectionString.AppendFormat("lagTime={0}; ", lagTime);
-            connectionString.AppendFormat("leadTime={0}; ", leadTime);
             connectionString.AppendFormat("inputMeasurementKeys={{{0}}}; ", filterExpression.ToNonNullString());
             connectionString.AppendFormat("dataChannel={{{0}}}; ", dataChannel.ToNonNullString());
+            connectionString.AppendFormat("includeTime={0}; ", includeTime);
+            connectionString.AppendFormat("lagTime={0}; ", lagTime);
+            connectionString.AppendFormat("leadTime={0}; ", leadTime);
             connectionString.AppendFormat("useLocalClockAsRealTime={0}", useLocalClockAsRealTime);
+
+            // Track specified time inclusion for later deserialization
+            m_includeTime = includeTime;
 
             return Subscribe(false, compactFormat, connectionString.ToString());
         }
@@ -762,7 +768,7 @@ namespace TimeSeriesFramework.Transport
                                 if (compactMeasurementFormat)
                                 {
                                     // Deserialize compact measurement format
-                                    slimMeasurement = new CompactMeasurement(m_signalIndexCache, !synchronizedMeasurements, m_baseTimeOffsets, m_keyIVs);
+                                    slimMeasurement = new CompactMeasurement(m_signalIndexCache, m_includeTime, m_baseTimeOffsets, m_keyIVs);
                                     responseIndex += slimMeasurement.Initialize(buffer, responseIndex, length - responseIndex);
 
                                     // Apply timestamp from frame if not included in transmission
