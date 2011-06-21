@@ -1516,10 +1516,10 @@ namespace TimeSeriesFramework.Transport
                 bytes = bytes.Encrypt(connection.SharedSecret, CipherStrength.Aes256);
 
             // Add serialized key response
-            response.Write(bytes, 4, bytes.Length);
+            response.Write(bytes, 0, bytes.Length);
 
             // Send cipher key updates
-            SendClientResponse(connection.ClientID, ServerResponse.UpdateCipherKey, ServerCommand.Subscribe, bytes);
+            SendClientResponse(connection.ClientID, ServerResponse.UpdateCipherKey, ServerCommand.Subscribe, response.ToArray());
         }
 
         // Update signal index cache based on input measurement keys

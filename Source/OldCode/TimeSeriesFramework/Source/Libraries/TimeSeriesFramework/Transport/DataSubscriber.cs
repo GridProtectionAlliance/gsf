@@ -757,20 +757,20 @@ namespace TimeSeriesFramework.Transport
                             Ticks timestamp = 0;
                             int count;
 
+                            // Decrypt data packet payload if keys are available
+                            if (m_keyIVs != null)
+                            {
+                                buffer = buffer.BlockCopy(responseIndex, responseLength).Decrypt(m_keyIVs[m_cipherIndex][0], m_keyIVs[m_cipherIndex][1], CipherStrength.Aes256);
+                                responseIndex = 0;
+                                responseLength = buffer.Length;
+                            }
+
                             // Get data packet flags
                             flags = (DataPacketFlags)buffer[responseIndex];
                             responseIndex++;
 
                             bool synchronizedMeasurements = ((byte)(flags & DataPacketFlags.Synchronized) > 0);
                             bool compactMeasurementFormat = ((byte)(flags & DataPacketFlags.Compact) > 0);
-
-                            // Decrypt data packet payload if keys are available
-                            if (m_keyIVs != null)
-                            {
-                                buffer = buffer.BlockCopy(responseIndex, responseLength - 1).Decrypt(m_keyIVs[m_cipherIndex][0], m_keyIVs[m_cipherIndex][1], CipherStrength.Aes256);
-                                responseIndex = 0;
-                                responseLength = buffer.Length;
-                            }
 
                             // Synchronized packets contain a frame level timestamp
                             if (synchronizedMeasurements)
