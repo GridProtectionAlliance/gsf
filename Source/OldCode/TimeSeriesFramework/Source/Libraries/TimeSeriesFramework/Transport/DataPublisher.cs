@@ -272,6 +272,7 @@ namespace TimeSeriesFramework.Transport
                 m_clientID = clientID;
                 m_subscriberID = subscriberID;
                 m_signalIndexCache = new SignalIndexCache(subscriberID);
+                ProcessMeasurementFilter = true;
             }
 
             #endregion
@@ -529,6 +530,7 @@ namespace TimeSeriesFramework.Transport
                 m_clientID = clientID;
                 m_subscriberID = subscriberID;
                 m_signalIndexCache = new SignalIndexCache(subscriberID);
+                ProcessMeasurementFilter = true;
             }
 
             #endregion
@@ -1946,7 +1948,6 @@ namespace TimeSeriesFramework.Transport
                                         else
                                         {
                                             // Manually re-initialize existing client subscription
-                                            subscription.ProcessMeasurementFilter = true;
                                             subscription.Initialize();
                                             subscription.Initialized = true;
                                         }
