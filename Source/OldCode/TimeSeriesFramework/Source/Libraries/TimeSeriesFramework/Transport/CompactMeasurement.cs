@@ -28,7 +28,6 @@
 using System;
 using TVA;
 using TVA.Parsing;
-using TVA.Security.Cryptography;
 
 namespace TimeSeriesFramework.Transport
 {
@@ -58,33 +57,33 @@ namespace TimeSeriesFramework.Transport
             /// </summary>
             TimeIndex = (byte)Bits.Bit00,
             /// <summary>
-            /// Use even cipher index when set; off cipher index when not set.
-            /// </summary>
-            CipherIndex = (byte)Bits.Bit01,
-            /// <summary>
             /// Value quality is good is true when set; otherwise false.
             /// </summary>
-            ValueQualityIsGood = (byte)Bits.Bit02,
+            ValueQualityIsGood = (byte)Bits.Bit01,
             /// <summary>
             /// Time quality is good is true when set; otherwise false.
             /// </summary>
-            TimeQualityIsGood = (byte)Bits.Bit03,
+            TimeQualityIsGood = (byte)Bits.Bit02,
             /// <summary>
             /// Discarded is true when set; otherwise false.
             /// </summary>
-            Discarded = (byte)Bits.Bit04,
+            Discarded = (byte)Bits.Bit03,
             /// <summary>
             /// Bit reserved for future use.
             /// </summary>
-            Reserved01 = (byte)Bits.Bit05,
+            Reserved01 = (byte)Bits.Bit04,
             /// <summary>
             /// Bit reserved for future use.
             /// </summary>
-            Reserved02 = (byte)Bits.Bit06,
+            Reserved02 = (byte)Bits.Bit05,
             /// <summary>
             /// Bit reserved for future use.
             /// </summary>
-            Reserved03 = (byte)Bits.Bit07,
+            Reserved03 = (byte)Bits.Bit06,
+            /// <summary>
+            /// Bit reserved for future use.
+            /// </summary>
+            Reserved04 = (byte)Bits.Bit07,
             /// <summary>
             /// No flags.
             /// </summary>
@@ -98,16 +97,11 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         public const int FixedLength = 7;
 
-        internal const int KeyIndex = 0;    // Index of cipher key component in keyIV array
-        internal const int IVIndex = 1;     // Index of initialization vector component in keyIV array
-
         // Members
         private SignalIndexCache m_signalIndexCache;
         private bool m_includeTime;
         private long[] m_baseTimeOffsets;
-        private byte[][][] m_keyIVs;
         private int m_timeIndex;
-        private int m_cipherIndex;
 
         #endregion
 
@@ -119,8 +113,7 @@ namespace TimeSeriesFramework.Transport
         /// <param name="signalIndexCache">Signal index cache used to serialize or deserialize runtime information.</param>
         /// <param name="includeTime">Set to <c>true</c> to include time in serialized packet; otherwise <c>false</c>.</param>
         /// <param name="baseTimeOffsets">Base time offset array - set to <c>null</c> to use full fidelity measurement time.</param>
-        /// <param name="keyIVs">Key and initialization vector array - set to <c>null</c> to not use encryption.</param>
-        public CompactMeasurement(SignalIndexCache signalIndexCache, bool includeTime = true, long[] baseTimeOffsets = null, byte[][][] keyIVs = null)
+        public CompactMeasurement(SignalIndexCache signalIndexCache, bool includeTime = true, long[] baseTimeOffsets = null)
         {
             m_signalIndexCache = signalIndexCache;
             m_includeTime = includeTime;
@@ -129,8 +122,6 @@ namespace TimeSeriesFramework.Transport
                 m_baseTimeOffsets = new long[] { 0, 0 };
             else
                 m_baseTimeOffsets = baseTimeOffsets;
-
-            m_keyIVs = keyIVs;
         }
 
         /// <summary>
@@ -140,10 +131,8 @@ namespace TimeSeriesFramework.Transport
         /// <param name="signalIndexCache">Signal index cache used to serialize or deserialize runtime information.</param>
         /// <param name="includeTime">Set to <c>true</c> to include time in serialized packet; otherwise <c>false</c>.</param>
         /// <param name="baseTimeOffsets">Base time offset array - set to <c>null</c> to use full fidelity measurement time.</param>
-        /// <param name="keyIVs">Key and initialization vector array - set to <c>null</c> to not use encryption.</param>
         /// <param name="timeIndex">Time index to use for base offset.</param>
-        /// <param name="cipherIndex">Cipher index to use for cryptography.</param>
-        public CompactMeasurement(IMeasurement measurement, SignalIndexCache signalIndexCache, bool includeTime = true, long[] baseTimeOffsets = null, byte[][][] keyIVs = null, int timeIndex = 0, int cipherIndex = 0)
+        public CompactMeasurement(IMeasurement measurement, SignalIndexCache signalIndexCache, bool includeTime = true, long[] baseTimeOffsets = null, int timeIndex = 0)
             : base(measurement.ID, measurement.Source, measurement.SignalID, measurement.Value, measurement.Adder, measurement.Multiplier, measurement.Timestamp)
         {
             this.ValueQualityIsGood = measurement.ValueQualityIsGood;
@@ -156,9 +145,7 @@ namespace TimeSeriesFramework.Transport
             else
                 m_baseTimeOffsets = baseTimeOffsets;
 
-            m_keyIVs = keyIVs;
             m_timeIndex = timeIndex;
-            m_cipherIndex = cipherIndex;
         }
 
         #endregion
@@ -202,7 +189,6 @@ namespace TimeSeriesFramework.Transport
                 // Encode flags
                 StateFlags flags =
                     (m_timeIndex == 0 ? StateFlags.NoFlags : StateFlags.TimeIndex) |
-                    (m_cipherIndex == 0 ? StateFlags.NoFlags : StateFlags.CipherIndex) |
                     (ValueQualityIsGood ? StateFlags.ValueQualityIsGood : StateFlags.NoFlags) |
                     (TimestampQualityIsGood ? StateFlags.TimeQualityIsGood : StateFlags.NoFlags) |
                     (IsDiscarded ? StateFlags.Discarded : StateFlags.NoFlags);
@@ -239,10 +225,6 @@ namespace TimeSeriesFramework.Transport
                     }
                 }
 
-                // If crypto keys were provided, encrypt data portion of buffer
-                if (m_keyIVs != null)
-                    Buffer.BlockCopy(buffer.Encrypt(1, length - 1, m_keyIVs[m_cipherIndex][KeyIndex], m_keyIVs[m_cipherIndex][IVIndex], CipherStrength.Aes256), 0, buffer, 1, length - 1);
-
                 return buffer;
             }
         }
@@ -277,7 +259,6 @@ namespace TimeSeriesFramework.Transport
             // Decode flags
             StateFlags flags = (StateFlags)buffer[startIndex];
             m_timeIndex = (byte)(flags & StateFlags.TimeIndex) > 0 ? 1 : 0;
-            m_cipherIndex = (byte)(flags & StateFlags.CipherIndex) > 0 ? 1 : 0;
             ValueQualityIsGood = ((byte)(flags & StateFlags.ValueQualityIsGood) > 0);
             TimestampQualityIsGood = ((byte)(flags & StateFlags.TimeQualityIsGood) > 0);
             IsDiscarded = ((byte)(flags & StateFlags.Discarded) > 0);
@@ -289,11 +270,7 @@ namespace TimeSeriesFramework.Transport
             if (count < length)
                 throw new InvalidOperationException("Not enough buffer available to deserialize measurement.");
 
-            // If crypto keys were provided, decrypt data portion of buffer
-            if (m_keyIVs != null)
-                buffer = buffer.Decrypt(startIndex + 1, length - 1, m_keyIVs[m_cipherIndex][KeyIndex], m_keyIVs[m_cipherIndex][IVIndex], CipherStrength.Aes256);
-            else
-                index = startIndex + 1;
+            index = startIndex + 1;
 
             // Decode runtime ID
             ushort id = EndianOrder.BigEndian.ToUInt16(buffer, index);
