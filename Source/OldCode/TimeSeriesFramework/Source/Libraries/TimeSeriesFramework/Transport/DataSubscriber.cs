@@ -71,7 +71,7 @@ namespace TimeSeriesFramework.Transport
         private volatile byte[][][] m_keyIVs;
         private volatile int m_cipherIndex;
         private volatile bool m_authenticated;
-        private volatile long m_totalBytesReceived;
+        private long m_totalBytesReceived;
         private List<ServerCommand> m_requests;
         private bool m_synchronizedSubscription;
         private bool m_requireAuthentication;
