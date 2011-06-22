@@ -1443,7 +1443,7 @@ namespace TimeSeriesFramework.Transport
             TcpServer commandChannel = new TcpServer();
 
             // Initialize default settings
-            commandChannel.SettingsCategory = Name;
+            commandChannel.SettingsCategory = Name.ToLower();
             commandChannel.ConfigurationString = "port=6165";
             commandChannel.PayloadAware = true;
             commandChannel.Compression = CompressionStrength.Standard;
