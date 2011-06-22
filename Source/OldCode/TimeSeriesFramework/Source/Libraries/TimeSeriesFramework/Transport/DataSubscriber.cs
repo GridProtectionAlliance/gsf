@@ -71,6 +71,7 @@ namespace TimeSeriesFramework.Transport
         private volatile byte[][][] m_keyIVs;
         private volatile int m_cipherIndex;
         private volatile bool m_authenticated;
+        private volatile long m_totalBytesReceived;
         private List<ServerCommand> m_requests;
         private bool m_synchronizedSubscription;
         private bool m_requireAuthentication;
@@ -134,6 +135,17 @@ namespace TimeSeriesFramework.Transport
             get
             {
                 return m_authenticated;
+            }
+        }
+
+        /// <summary>
+        /// Gets total data packet bytes received during this session.
+        /// </summary>
+        public long TotalBytesReceived
+        {
+            get
+            {
+                return m_totalBytesReceived;
             }
         }
 
@@ -643,6 +655,7 @@ namespace TimeSeriesFramework.Transport
         {
             m_commandChannel.Connect();
             m_authenticated = false;
+            m_totalBytesReceived = 0;
             m_keyIVs = null;
         }
 
@@ -809,6 +822,7 @@ namespace TimeSeriesFramework.Transport
 
                             // Expose new measurements to consumer
                             OnNewMeasurements(measurements);
+                            m_totalBytesReceived += length;
                             break;
                         case ServerResponse.UpdateSignalIndexCache:
                             // Deserialize new signal index cache
