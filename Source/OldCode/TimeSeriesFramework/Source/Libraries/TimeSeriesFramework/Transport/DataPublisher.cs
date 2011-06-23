@@ -2078,11 +2078,24 @@ namespace TimeSeriesFramework.Transport
                                         if (subscription.Settings.TryGetValue("dataChannel", out setting))
                                         {
                                             Dictionary<string, string> settings = setting.ParseKeyValuePairs();
+                                            string networkInterface;
+                                            bool compressionEnabled = false;
+
+                                            settings.TryGetValue("interface", out networkInterface);
+
+                                            if (string.IsNullOrWhiteSpace(networkInterface))
+                                                networkInterface = "::0";
+
+                                            if (settings.TryGetValue("compression", out setting))
+                                                compressionEnabled = setting.ParseBoolean();
 
                                             if (settings.TryGetValue("port", out setting))
                                             {
-                                                connection.DataChannel = new UdpServer(string.Format("Port=-1; Clients={0}:{1}", connection.IPAddress, int.Parse(setting)));
-                                                //connection.DataChannel.Compression = CompressionStrength.Standard;
+                                                connection.DataChannel = new UdpServer(string.Format("Port=-1; Clients={0}:{1}; interface={2}", connection.IPAddress, int.Parse(setting), networkInterface));
+
+                                                if (compressionEnabled)
+                                                    connection.DataChannel.Compression = CompressionStrength.Standard;
+
                                                 connection.DataChannel.Start();
                                             }
                                         }

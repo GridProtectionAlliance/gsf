@@ -145,7 +145,7 @@ namespace TimeSeriesFramework.Transport
         {
             get
             {
-                return m_totalBytesReceived;
+                return Interlocked.Read(ref m_totalBytesReceived);
             }
         }
 
@@ -216,9 +216,10 @@ namespace TimeSeriesFramework.Transport
                 {
                     // Detach from events on existing data channel reference
                     m_dataChannel.ConnectionException -= m_dataChannel_ConnectionException;
-                    m_dataChannel.ReceiveDataComplete -= m_dataChannel_ReceiveDataComplete;
                     m_dataChannel.ReceiveDataException -= m_dataChannel_ReceiveDataException;
                     m_dataChannel.ReceiveDataTimeout -= m_dataChannel_ReceiveDataTimeout;
+                    //m_dataChannel.ReceiveDataComplete -= m_dataChannel_ReceiveDataComplete;
+                    m_dataChannel.ReceiveDataHandler = null;
 
                     if (m_dataChannel != value)
                         m_dataChannel.Dispose();
@@ -231,9 +232,10 @@ namespace TimeSeriesFramework.Transport
                 {
                     // Attach to desired events on new data channel reference
                     m_dataChannel.ConnectionException += m_dataChannel_ConnectionException;
-                    m_dataChannel.ReceiveDataComplete += m_dataChannel_ReceiveDataComplete;
                     m_dataChannel.ReceiveDataException += m_dataChannel_ReceiveDataException;
                     m_dataChannel.ReceiveDataTimeout += m_dataChannel_ReceiveDataTimeout;
+                    //m_dataChannel.ReceiveDataComplete += m_dataChannel_ReceiveDataComplete;
+                    m_dataChannel.ReceiveDataHandler = HandleDataChannelReceived;
                 }
             }
         }
@@ -537,7 +539,17 @@ namespace TimeSeriesFramework.Transport
                     if (!string.IsNullOrWhiteSpace(setting))
                     {
                         dataChannel = new UdpClient(setting);
-                        //dataChannel.Compression = CompressionStrength.Standard;
+
+                        // Parse data channel sub-settings to check for compression setting
+                        settings = setting.ParseKeyValuePairs();
+                        bool compressionEnabled = false;
+
+                        if (settings.TryGetValue("compression", out setting))
+                            compressionEnabled = setting.ParseBoolean();
+
+                        if (compressionEnabled)
+                            dataChannel.Compression = CompressionStrength.Standard;
+
                         dataChannel.ReceiveBufferSize = ushort.MaxValue;
                         dataChannel.Connect();
                     }
@@ -655,8 +667,8 @@ namespace TimeSeriesFramework.Transport
         {
             m_commandChannel.Connect();
             m_authenticated = false;
-            m_totalBytesReceived = 0;
             m_keyIVs = null;
+            Interlocked.Exchange(ref m_totalBytesReceived, 0L);
         }
 
         /// <summary>
@@ -822,7 +834,6 @@ namespace TimeSeriesFramework.Transport
 
                             // Expose new measurements to consumer
                             OnNewMeasurements(measurements);
-                            m_totalBytesReceived += length;
                             break;
                         case ServerResponse.UpdateSignalIndexCache:
                             // Deserialize new signal index cache
@@ -1005,9 +1016,11 @@ namespace TimeSeriesFramework.Transport
 
         #region [ Data Channel Event Handlers ]
 
-        private void m_dataChannel_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
+        private void HandleDataChannelReceived(byte[] buffer, int offset, int length)
         {
-            ProcessServerResponse(e.Argument1, e.Argument2);
+            Interlocked.Add(ref m_totalBytesReceived, length);
+            Payload.ProcessReceived(ref buffer, ref offset, ref length, m_dataChannel.Encryption, m_dataChannel.SharedSecret, m_dataChannel.Compression);
+            ProcessServerResponse(buffer, length);
         }
 
         private void m_dataChannel_ConnectionException(object sender, EventArgs<Exception> e)
