@@ -124,6 +124,7 @@
     <Compile Include="Adapters\NamespaceDoc.cs" />
     <Compile Include="Adapters\OutputAdapterBase.cs" />
     <Compile Include="Adapters\OutputAdapterCollection.cs" />
+    <Compile Include="Transport\ClientConnection.cs" />
     <Compile Include="Transport\Common.cs" />
     <Compile Include="Transport\DataPublisher.cs" />
     <Compile Include="Transport\DataSubscriber.cs" />
@@ -150,7 +151,10 @@
     <Compile Include="TemporalMeasurement.cs" />
     <Compile Include="TrackingFrame.cs" />
     <Compile Include="Transport\CompactMeasurement.cs" />
+    <Compile Include="Transport\IClientSubscription.cs" />
     <Compile Include="Transport\SignalIndexCache.cs" />
+    <Compile Include="Transport\SynchronizedClientSubscription.cs" />
+    <Compile Include="Transport\UnsynchronizedClientSubscription.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="DebugHostBase.resx">

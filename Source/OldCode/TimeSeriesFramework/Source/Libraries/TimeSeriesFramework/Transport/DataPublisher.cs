@@ -36,14 +36,12 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
-using System.Security.Cryptography;
 using System.Text;
 using TimeSeriesFramework.Adapters;
 using TVA;
 using TVA.Communication;
+using TVA.Data;
 using TVA.IO.Compression;
-using TVA.Parsing;
 using TVA.Security.Cryptography;
 
 namespace TimeSeriesFramework.Transport
@@ -209,1148 +207,6 @@ namespace TimeSeriesFramework.Transport
     {
         #region [ Members ]
 
-        // Nested Types
-
-        // Client subscription action adapter interface
-        private interface IClientSubscription : IActionAdapter
-        {
-            /// <summary>
-            /// Gets the <see cref="Guid"/> client TCP connection identifier of this <see cref="IClientSubscription"/>.
-            /// </summary>
-            Guid ClientID
-            {
-                get;
-            }
-
-            /// <summary>
-            /// Gets the <see cref="Guid"/> based subscriber ID of this <see cref="IClientSubscription"/>.
-            /// </summary>
-            Guid SubscriberID
-            {
-                get;
-            }
-
-            /// <summary>
-            /// Gets the current signal index cache of this <see cref="IClientSubscription"/>.
-            /// </summary>
-            SignalIndexCache SignalIndexCache
-            {
-                get;
-            }
-
-            /// <summary>
-            /// Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="IClientSubscription"/>.
-            /// </summary>
-            bool UseCompactMeasurementFormat
-            {
-                get;
-                set;
-            }
-        }
-
-        // Synchronized action adapter interface
-        private class SynchronizedClientSubscription : ActionAdapterBase, IClientSubscription
-        {
-            #region [ Members ]
-
-            // Fields
-            private SignalIndexCache m_signalIndexCache;
-            private DataPublisher m_parent;
-            private Guid m_clientID;
-            private Guid m_subscriberID;
-            private bool m_useCompactMeasurementFormat;
-            private bool m_disposed;
-
-            #endregion
-
-            #region [ Constructors ]
-
-            /// <summary>
-            /// Creates a new <see cref="SynchronizedClientSubscription"/>.
-            /// </summary>
-            /// <param name="parent">Reference to parent.</param>
-            /// <param name="clientID"><see cref="Guid"/> based client connection ID.</param>
-            /// <param name="subscriberID"><see cref="Guid"/> based subscriber ID.</param>
-            public SynchronizedClientSubscription(DataPublisher parent, Guid clientID, Guid subscriberID)
-            {
-                // Pass parent reference into base class
-                AssignParentCollection(parent);
-
-                m_parent = parent;
-                m_clientID = clientID;
-                m_subscriberID = subscriberID;
-                m_signalIndexCache = new SignalIndexCache(subscriberID);
-            }
-
-            #endregion
-
-            #region [ Properties ]
-
-            /// <summary>
-            /// Gets the <see cref="Guid"/> client TCP connection identifier of this <see cref="SynchronizedClientSubscription"/>.
-            /// </summary>
-            public Guid ClientID
-            {
-                get
-                {
-                    return m_clientID;
-                }
-            }
-
-            /// <summary>
-            /// Gets the <see cref="Guid"/> based subscriber ID of this <see cref="SynchronizedClientSubscription"/>.
-            /// </summary>
-            public Guid SubscriberID
-            {
-                get
-                {
-                    return m_subscriberID;
-                }
-            }
-
-            /// <summary>
-            /// Gets the current signal index cache of this <see cref="SynchronizedClientSubscription"/>.
-            /// </summary>
-            public SignalIndexCache SignalIndexCache
-            {
-                get
-                {
-                    return m_signalIndexCache;
-                }
-            }
-
-            /// <summary>
-            /// Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="SynchronizedClientSubscription"/>.
-            /// </summary>
-            public bool UseCompactMeasurementFormat
-            {
-                get
-                {
-                    return m_useCompactMeasurementFormat;
-                }
-                set
-                {
-                    m_useCompactMeasurementFormat = value;
-                }
-            }
-
-            /// <summary>
-            /// Gets or sets primary keys of input measurements the <see cref="SynchronizedClientSubscription"/> expects, if any.
-            /// </summary>
-            /// <remarks>
-            /// We override method so assignment can be synchronized such that dynamic updates won't interfere
-            /// with filtering in <see cref="QueueMeasurementsForProcessing"/>.
-            /// </remarks>
-            public override MeasurementKey[] InputMeasurementKeys
-            {
-                get
-                {
-                    return base.InputMeasurementKeys;
-                }
-                set
-                {
-                    lock (this)
-                    {
-                        base.InputMeasurementKeys = value;
-                        m_parent.UpdateSignalIndexCache(m_clientID, m_signalIndexCache, value);
-                    }
-                }
-            }
-
-            /// <summary>
-            /// Gets a formatted message describing the status of this <see cref="SynchronizedClientSubscription"/>.
-            /// </summary>
-            public override string Status
-            {
-                get
-                {
-                    StringBuilder status = new StringBuilder();
-                    ClientConnection connection;
-
-                    if (m_parent.m_clientConnections.TryGetValue(m_clientID, out connection))
-                    {
-                        status.Append(connection.Status);
-                        status.AppendLine();
-                    }
-
-                    status.Append(base.Status);
-                    return status.ToString();
-                }
-            }
-
-            #endregion
-
-            #region [ Methods ]
-
-            /// <summary>
-            /// Releases the unmanaged resources used by the <see cref="SynchronizedClientSubscription"/> object and optionally releases the managed resources.
-            /// </summary>
-            /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-            protected override void Dispose(bool disposing)
-            {
-                if (!m_disposed)
-                {
-                    try
-                    {
-                        if (disposing)
-                        {
-                            // Remove reference to parent
-                            m_parent = null;
-                        }
-                    }
-                    finally
-                    {
-                        m_disposed = true;          // Prevent duplicate dispose.
-                        base.Dispose(disposing);    // Call base class Dispose().
-                    }
-                }
-            }
-
-            /// <summary>
-            /// Publish <see cref="IFrame"/> of time-aligned collection of <see cref="IMeasurement"/> values that arrived within the
-            /// concentrator's defined <see cref="ConcentratorBase.LagTime"/>.
-            /// </summary>
-            /// <param name="frame"><see cref="IFrame"/> of measurements with the same timestamp that arrived within <see cref="ConcentratorBase.LagTime"/> that are ready for processing.</param>
-            /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
-            protected override void PublishFrame(IFrame frame, int index)
-            {
-                if (!m_disposed)
-                {
-                    List<ISupportBinaryImage> packet = new List<ISupportBinaryImage>();
-                    bool useCompactMeasurementFormat = m_useCompactMeasurementFormat;
-                    long frameLevelTimestamp = frame.Timestamp;
-                    int packetSize = 13;
-
-                    foreach (IMeasurement measurement in frame.Measurements.Values)
-                    {
-                        ISupportBinaryImage binaryMeasurement;
-                        int binaryLength;
-
-                        // Serialize the current measurement.
-                        if (useCompactMeasurementFormat)
-                            binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, false);
-                        else
-                            binaryMeasurement = new SerializableMeasurement(measurement);
-
-                        // Determine the size of the measurement in bytes.
-                        binaryLength = binaryMeasurement.BinaryLength;
-
-                        // If the current measurement will not fit in the packet based on
-                        // the max packet size, process the packet and start a new one.
-                        if (packetSize + binaryLength > MaxPacketSize)
-                        {
-                            ProcessBinaryMeasurements(packet, frameLevelTimestamp);
-                            packet.Clear();
-                            packetSize = 13;
-                        }
-
-                        // Add the measurement to the packet.
-                        packet.Add(binaryMeasurement);
-                        packetSize += binaryLength;
-                    }
-
-                    // Process the remaining measurements.
-                    ProcessBinaryMeasurements(packet, frameLevelTimestamp);
-                }
-            }
-
-            private void ProcessBinaryMeasurements(IEnumerable<ISupportBinaryImage> measurements, long frameLevelTimestamp)
-            {
-                MemoryStream data = new MemoryStream();
-                bool useCompactMeasurementFormat = m_useCompactMeasurementFormat;
-                byte[] buffer;
-
-                // Serialize data packet flags into response
-                DataPacketFlags flags = DataPacketFlags.Synchronized;
-
-                if (useCompactMeasurementFormat)
-                    flags |= DataPacketFlags.Compact;
-
-                data.WriteByte((byte)flags);
-
-                // Serialize frame timestamp into data packet - this only occurs in synchronized data packets,
-                // unsynchronized subcriptions always include timestamps in the serialized measurements
-                data.Write(EndianOrder.BigEndian.GetBytes(frameLevelTimestamp), 0, 8);
-
-                // Serialize total number of measurement values to follow
-                data.Write(EndianOrder.BigEndian.GetBytes(measurements.Count()), 0, 4);
-
-                // Serialize measurements to data buffer
-                foreach (ISupportBinaryImage measurement in measurements)
-                {
-                    buffer = measurement.BinaryImage;
-                    data.Write(buffer, 0, buffer.Length);
-                }
-
-                // Publish data packet to client
-                if (m_parent != null)
-                    m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, data.ToArray());
-            }
-
-            /// <summary>
-            /// Queues a single measurement for processing.
-            /// </summary>
-            /// <param name="measurement">Measurement to queue for processing.</param>
-            /// <remarks>
-            /// Measurement is filtered against the defined <see cref="InputMeasurementKeys"/> so we override method
-            /// so that dynamic updates to keys will be synchronized with filtering to prevent interference.
-            /// </remarks>
-            public override void QueueMeasurementForProcessing(IMeasurement measurement)
-            {
-                lock (this)
-                {
-                    if (!m_disposed)
-                        base.QueueMeasurementForProcessing(measurement);
-                }
-            }
-
-            /// <summary>
-            /// Queues a collection of measurements for processing.
-            /// </summary>
-            /// <param name="measurements">Collection of measurements to queue for processing.</param>
-            /// <remarks>
-            /// Measurements are filtered against the defined <see cref="InputMeasurementKeys"/> so we override method
-            /// so that dynamic updates to keys will be synchronized with filtering to prevent interference.
-            /// </remarks>
-            public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
-            {
-                lock (this)
-                {
-                    if (!m_disposed)
-                        base.QueueMeasurementsForProcessing(measurements);
-                }
-            }
-
-            #endregion
-        }
-
-        // Unsynchronized action adapter interface
-        private class UnsynchronizedClientSubscription : FacileActionAdapterBase, IClientSubscription
-        {
-            #region [ Members ]
-
-            // Fields
-            private SignalIndexCache m_signalIndexCache;
-            private DataPublisher m_parent;
-            private Guid m_clientID;
-            private Guid m_subscriberID;
-            private bool m_useCompactMeasurementFormat;
-            private long m_lastPublishTime;
-            private bool m_includeTime;
-            private bool m_disposed;
-
-            #endregion
-
-            #region [ Constructors ]
-
-            /// <summary>
-            /// Creates a new <see cref="UnsynchronizedClientSubscription"/>.
-            /// </summary>
-            /// <param name="parent">Reference to parent.</param>
-            /// <param name="clientID"><see cref="Guid"/> based client connection ID.</param>
-            /// <param name="subscriberID"><see cref="Guid"/> based subscriber ID.</param>
-            public UnsynchronizedClientSubscription(DataPublisher parent, Guid clientID, Guid subscriberID)
-            {
-                // Pass parent reference into base class
-                AssignParentCollection(parent);
-
-                m_parent = parent;
-                m_clientID = clientID;
-                m_subscriberID = subscriberID;
-                m_signalIndexCache = new SignalIndexCache(subscriberID);
-            }
-
-            #endregion
-
-            #region [ Properties ]
-
-            /// <summary>
-            /// Gets the <see cref="Guid"/> client TCP connection identifier of this <see cref="UnsynchronizedClientSubscription"/>.
-            /// </summary>
-            public Guid ClientID
-            {
-                get
-                {
-                    return m_clientID;
-                }
-            }
-
-            /// <summary>
-            /// Gets the <see cref="Guid"/> based subscriber ID of this <see cref="UnsynchronizedClientSubscription"/>.
-            /// </summary>
-            public Guid SubscriberID
-            {
-                get
-                {
-                    return m_subscriberID;
-                }
-            }
-
-            /// <summary>
-            /// Gets the current signal index cache of this <see cref="UnsynchronizedClientSubscription"/>.
-            /// </summary>
-            public SignalIndexCache SignalIndexCache
-            {
-                get
-                {
-                    return m_signalIndexCache;
-                }
-            }
-
-            /// <summary>
-            /// Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="UnsynchronizedClientSubscription"/>.
-            /// </summary>
-            public bool UseCompactMeasurementFormat
-            {
-                get
-                {
-                    return m_useCompactMeasurementFormat;
-                }
-                set
-                {
-                    m_useCompactMeasurementFormat = value;
-                }
-            }
-
-            /// <summary>
-            /// Gets or sets primary keys of input measurements the <see cref="UnsynchronizedClientSubscription"/> expects, if any.
-            /// </summary>
-            /// <remarks>
-            /// We override method so assignment can be synchronized such that dynamic updates won't interfere
-            /// with filtering in <see cref="QueueMeasurementsForProcessing"/>.
-            /// </remarks>
-            public override MeasurementKey[] InputMeasurementKeys
-            {
-                get
-                {
-                    return base.InputMeasurementKeys;
-                }
-                set
-                {
-                    lock (this)
-                    {
-                        base.InputMeasurementKeys = value;
-                        m_parent.UpdateSignalIndexCache(m_clientID, m_signalIndexCache, value);
-                    }
-                }
-            }
-
-            /// <summary>
-            /// Gets a formatted message describing the status of this <see cref="UnsynchronizedClientSubscription"/>.
-            /// </summary>
-            public override string Status
-            {
-                get
-                {
-                    StringBuilder status = new StringBuilder();
-                    ClientConnection connection;
-
-                    if (m_parent.m_clientConnections.TryGetValue(m_clientID, out connection))
-                    {
-                        status.Append(connection.Status);
-                        status.AppendLine();
-                    }
-
-                    status.Append(base.Status);
-                    return status.ToString();
-                }
-            }
-
-            #endregion
-
-            #region [ Methods ]
-
-            /// <summary>
-            /// Releases the unmanaged resources used by the <see cref="UnsynchronizedClientSubscription"/> object and optionally releases the managed resources.
-            /// </summary>
-            /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-            protected override void Dispose(bool disposing)
-            {
-                if (!m_disposed)
-                {
-                    try
-                    {
-                        if (disposing)
-                        {
-                            // Remove reference to parent
-                            m_parent = null;
-                        }
-                    }
-                    finally
-                    {
-                        m_disposed = true;          // Prevent duplicate dispose.
-                        base.Dispose(disposing);    // Call base class Dispose().
-                    }
-                }
-            }
-
-            /// <summary>
-            /// Initializes <see cref="UnsynchronizedClientSubscription"/>.
-            /// </summary>
-            public override void Initialize()
-            {
-                base.Initialize();
-
-                string setting;
-
-                if (Settings.TryGetValue("includeTime", out setting))
-                    m_includeTime = setting.ParseBoolean();
-                else
-                    m_includeTime = true;
-            }
-
-            /// <summary>
-            /// Gets a short one-line status of this <see cref="UnsynchronizedClientSubscription"/>.
-            /// </summary>
-            /// <param name="maxLength">Maximum number of available characters for display.</param>
-            /// <returns>A short one-line summary of the current status of this <see cref="AdapterBase"/>.</returns>
-            public override string GetShortStatus(int maxLength)
-            {
-                int inputCount = 0, outputCount = 0;
-
-                if (InputMeasurementKeys != null)
-                    inputCount = InputMeasurementKeys.Length;
-
-                if (OutputMeasurements != null)
-                    outputCount = OutputMeasurements.Length;
-
-                return string.Format("Total input measurements: {0}, total output measurements: {1}", inputCount, outputCount).PadLeft(maxLength);
-            }
-
-            /// <summary>
-            /// Queues a single measurement for processing.
-            /// </summary>
-            /// <param name="measurement">Measurement to queue for processing.</param>
-            /// <remarks>
-            /// Measurement is filtered against the defined <see cref="InputMeasurementKeys"/> so we override method
-            /// so that dyanmic updates to keys will be synchronized with filtering to prevent interference.
-            /// </remarks>
-            public override void QueueMeasurementForProcessing(IMeasurement measurement)
-            {
-                QueueMeasurementsForProcessing(new IMeasurement[] { measurement });
-            }
-
-            /// <summary>
-            /// Queues a collection of measurements for processing.
-            /// </summary>
-            /// <param name="measurements">Collection of measurements to queue for processing.</param>
-            /// <remarks>
-            /// Measurements are filtered against the defined <see cref="InputMeasurementKeys"/> so we override method
-            /// so that dyanmic updates to keys will be synchronized with filtering to prevent interference.
-            /// </remarks>
-            public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
-            {
-                if (ProcessMeasurementFilter)
-                {
-                    List<IMeasurement> filteredMeasurements = new List<IMeasurement>();
-
-                    lock (this)
-                    {
-                        foreach (IMeasurement measurement in measurements)
-                        {
-                            if (IsInputMeasurement(measurement.Key))
-                                filteredMeasurements.Add(measurement);
-                        }
-                    }
-
-                    measurements = filteredMeasurements;
-                }
-
-                if (measurements.Count() > 0 && Enabled)
-                {
-                    if (TrackLatestMeasurements)
-                    {
-                        // Keep track of latest measurements
-                        base.QueueMeasurementsForProcessing(measurements);
-
-                        // See if it is time to publish
-                        if (m_lastPublishTime == 0)
-                        {
-                            // Allow at least one set of measurements to be defined before initial publication
-                            m_lastPublishTime = 1;
-                        }
-                        else if (DateTime.UtcNow.Ticks > m_lastPublishTime + Ticks.FromSeconds(LatestMeasurements.LagTime))
-                        {
-                            List<IMeasurement> currentMeasurements = new List<IMeasurement>();
-                            Measurement newMeasurement;
-
-                            // Create a new set of measurements that represent the latest known values setting value to NaN if it is old
-                            foreach (TemporalMeasurement measurement in LatestMeasurements)
-                            {
-                                newMeasurement = new Measurement(measurement.ID, measurement.Source, measurement.SignalID, measurement.GetAdjustedValue(RealTime), measurement.Adder, measurement.Multiplier, measurement.Timestamp);
-                                newMeasurement.TimestampQualityIsGood = measurement.TimestampQualityIsGood;
-                                newMeasurement.ValueQualityIsGood = measurement.ValueQualityIsGood;
-                                currentMeasurements.Add(newMeasurement);
-                            }
-
-                            // Publish latest data values...
-                            ProcessMeasurements(currentMeasurements);
-                        }
-                    }
-                    else
-                    {
-                        // Publish unsynchronized on data receipt otherwise...
-                        ProcessMeasurements(measurements);
-                    }
-                }
-            }
-
-            private void ProcessMeasurements(IEnumerable<IMeasurement> measurements)
-            {
-                List<ISupportBinaryImage> packet = new List<ISupportBinaryImage>();
-                bool useCompactMeasurementFormat = m_useCompactMeasurementFormat;
-                int packetSize = 5;
-
-                foreach (IMeasurement measurement in measurements)
-                {
-                    ISupportBinaryImage binaryMeasurement;
-                    int binaryLength;
-
-                    // Serialize the current measurement.
-                    if (useCompactMeasurementFormat)
-                        binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, m_includeTime);
-                    else
-                        binaryMeasurement = new SerializableMeasurement(measurement);
-
-                    // Determine the size of the measurement in bytes.
-                    binaryLength = binaryMeasurement.BinaryLength;
-
-                    // If the current measurement will not fit in the packet based on the max
-                    // packet size, process the current packet and start a new packet.
-                    if (packetSize + binaryLength > MaxPacketSize)
-                    {
-                        ProcessBinaryMeasurements(packet);
-                        packet.Clear();
-                        packetSize = 5;
-                    }
-
-                    // Add the current measurement to the packet.
-                    packet.Add(binaryMeasurement);
-                    packetSize += binaryLength;
-                }
-
-                // Process the remaining measurements.
-                ProcessBinaryMeasurements(packet);
-            }
-
-            private void ProcessBinaryMeasurements(IEnumerable<ISupportBinaryImage> measurements)
-            {
-                MemoryStream data = new MemoryStream();
-                bool useCompactMeasurementFormat = m_useCompactMeasurementFormat;
-                byte[] buffer;
-
-                // Serialize data packet flags into response
-                DataPacketFlags flags = DataPacketFlags.NoFlags; // No flags means bit is cleared, i.e., unsynchronized
-
-                if (useCompactMeasurementFormat)
-                    flags |= DataPacketFlags.Compact;
-
-                data.WriteByte((byte)flags);
-
-                // No frame level timestamp is serialized into the data packet since all data is unsynchronized and essentially
-                // published upon receipt, however timestamps are optionally included in the serialized measurements.
-
-                // Serialize total number of measurement values to follow
-                data.Write(EndianOrder.BigEndian.GetBytes(measurements.Count()), 0, 4);
-
-                // Serialize measurements to data buffer
-                foreach (ISupportBinaryImage measurement in measurements)
-                {
-                    buffer = measurement.BinaryImage;
-                    data.Write(buffer, 0, buffer.Length);
-                }
-
-                // Publish data packet to client
-                if (m_parent != null)
-                    m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, data.ToArray());
-
-                // Track last publication time
-                m_lastPublishTime = DateTime.UtcNow.Ticks;
-            }
-
-            #endregion
-        }
-
-        // Client connection class
-        private class ClientConnection : IProvideStatus, IDisposable
-        {
-            #region [ Members ]
-
-            // Constants
-            private const int EvenKey = 0;      // Even key/IV index
-            private const int OddKey = 1;       // Odd key/IV index
-            private const int KeyIndex = 0;     // Index of cipher key component in keyIV array
-            private const int IVIndex = 1;      // Index of initialization vector component in keyIV array
-
-            // Fields
-            private DataPublisher m_parent;
-            private Guid m_clientID;
-            private Guid m_subscriberID;
-            private string m_connectionID;
-            private string m_subscriberAcronym;
-            private string m_subscriberName;
-            private string m_sharedSecret;
-            private IClientSubscription m_subscription;
-            private volatile bool m_authenticated;
-            private volatile byte[][][] m_keyIVs;
-            private volatile int m_cipherIndex;
-            private IPAddress m_ipAddress;
-            private TcpServer m_commandChannel;
-            private UdpServer m_dataChannel;
-            private System.Timers.Timer m_pingTimer;
-            private bool m_disposed;
-
-            #endregion
-
-            #region [ Constructors ]
-
-            /// <summary>
-            /// Creates a new <see cref="ClientConnection"/> instance.
-            /// </summary>
-            /// <param name="parent">Parent data publisher.</param>
-            /// <param name="clientID">Client ID of associated connection.</param>
-            /// <param name="commandChannel"><see cref="TcpServer"/> command channel used to lookup connection information.</param>
-            public ClientConnection(DataPublisher parent, Guid clientID, TcpServer commandChannel)
-            {
-                m_parent = parent;
-                m_clientID = clientID;
-                m_commandChannel = commandChannel;
-                m_subscriberID = clientID;
-                m_keyIVs = null;
-                m_cipherIndex = 0;
-                m_pingTimer = new System.Timers.Timer();
-
-                m_pingTimer.Interval = 5000.0D;
-                m_pingTimer.AutoReset = true;
-                m_pingTimer.Elapsed += m_pingTimer_Elapsed;
-                m_pingTimer.Start();
-
-                // Attempt to lookup remote connection identification for logging purposes
-                try
-                {
-                    IPEndPoint remoteEndPoint = null;
-
-                    if (commandChannel != null)
-                        remoteEndPoint = commandChannel.Client(clientID).Provider.RemoteEndPoint as IPEndPoint;
-
-                    if (remoteEndPoint != null)
-                    {
-                        m_ipAddress = remoteEndPoint.Address;
-
-                        if (remoteEndPoint.AddressFamily == AddressFamily.InterNetworkV6)
-                            m_connectionID = "[" + m_ipAddress + "]:" + remoteEndPoint.Port;
-                        else
-                            m_connectionID = m_ipAddress + ":" + remoteEndPoint.Port;
-
-                        try
-                        {
-                            IPHostEntry ipHost = Dns.GetHostEntry(remoteEndPoint.Address);
-
-                            if (!string.IsNullOrWhiteSpace(ipHost.HostName))
-                                m_connectionID = ipHost.HostName + " (" + m_connectionID + ")";
-                        }
-                        catch
-                        {
-                            // Just ignoring possible DNS lookup failures...
-                        }
-                    }
-                }
-                catch
-                {
-                    // At worst we'll just use the client GUID for identification
-                    m_connectionID = (m_subscriberID == Guid.Empty ? clientID.ToString() : m_subscriberID.ToString());
-                }
-
-                if (string.IsNullOrWhiteSpace(m_connectionID))
-                    m_connectionID = "unavailable";
-
-                if (m_ipAddress == null)
-                    m_ipAddress = System.Net.IPAddress.None;
-            }
-
-            /// <summary>
-            /// Releases the unmanaged resources before the <see cref="ClientConnection"/> object is reclaimed by <see cref="GC"/>.
-            /// </summary>
-            ~ClientConnection()
-            {
-                Dispose(false);
-            }
-
-            #endregion
-
-            #region [ Properties ]
-
-            /// <summary>
-            /// Gets client ID of this <see cref="ClientConnection"/>.
-            /// </summary>
-            public Guid ClientID
-            {
-                get
-                {
-                    return m_clientID;
-                }
-            }
-
-            /// <summary>
-            /// Gets or sets reference to <see cref="UdpServer"/> data channel, attaching and/or detaching to events as needed, associated with this <see cref="ClientConnection"/>.
-            /// </summary>
-            public UdpServer DataChannel
-            {
-                get
-                {
-                    return m_dataChannel;
-                }
-                set
-                {
-                    if (m_dataChannel != null)
-                    {
-                        // Detach from events on existing data channel reference
-                        m_dataChannel.SendClientDataException -= m_dataChannel_SendClientDataException;
-                        m_dataChannel.ServerStarted -= m_dataChannel_ServerStarted;
-                        m_dataChannel.ServerStopped -= m_dataChannel_ServerStopped;
-
-                        if (m_dataChannel != value)
-                            m_dataChannel.Dispose();
-                    }
-
-                    // Assign new data channel reference
-                    m_dataChannel = value;
-
-                    if (m_dataChannel != null)
-                    {
-                        // Attach to events on new data channel reference
-                        m_dataChannel.SendClientDataException += m_dataChannel_SendClientDataException;
-                        m_dataChannel.ServerStarted += m_dataChannel_ServerStarted;
-                        m_dataChannel.ServerStopped += m_dataChannel_ServerStopped;
-                    }
-                }
-            }
-
-            /// <summary>
-            /// Gets <see cref="IServer"/> publication channel - that is, data channel if defined otherwise command channel.
-            /// </summary>
-            public IServer PublishChannel
-            {
-                get
-                {
-                    return (m_dataChannel == null ? (IServer)m_commandChannel : (IServer)m_dataChannel);
-                }
-            }
-
-            /// <summary>
-            /// Gets or sets the <see cref="Guid"/> based subscriber ID of this <see cref="ClientConnection"/>.
-            /// </summary>
-            public Guid SubscriberID
-            {
-                get
-                {
-                    return m_subscriberID;
-                }
-                set
-                {
-                    m_subscriberID = value;
-                }
-            }
-
-            /// <summary>
-            /// Gets or sets the subscriber acronym of this <see cref="ClientConnection"/>.
-            /// </summary>
-            public string SubscriberAcronym
-            {
-                get
-                {
-                    return m_subscriberAcronym;
-                }
-                set
-                {
-                    m_subscriberAcronym = value;
-                }
-            }
-
-            /// <summary>
-            /// Gets or sets the subscriber name of this <see cref="ClientConnection"/>.
-            /// </summary>
-            public string SubscriberName
-            {
-                get
-                {
-                    return m_subscriberName;
-                }
-                set
-                {
-                    m_subscriberName = value;
-                }
-            }
-
-            /// <summary>
-            /// Gets the connection identification of this <see cref="ClientConnection"/>.
-            /// </summary>
-            public string ConnectionID
-            {
-                get
-                {
-                    return m_connectionID;
-                }
-            }
-
-            /// <summary>
-            /// Gets or sets authenticated state of this <see cref="ClientConnection"/>.
-            /// </summary>
-            public bool Authenticated
-            {
-                get
-                {
-                    return m_authenticated;
-                }
-                set
-                {
-                    m_authenticated = value;
-                }
-            }
-
-            /// <summary>
-            /// Gets or sets shared secret used to lookup cipher keys only known to client and server.
-            /// </summary>
-            public string SharedSecret
-            {
-                get
-                {
-                    return m_sharedSecret;
-                }
-                set
-                {
-                    m_sharedSecret = value;
-                }
-            }
-
-            /// <summary>
-            /// Gets active cipher key, if any.
-            /// </summary>
-            public byte[] Key
-            {
-                get
-                {
-                    if (m_keyIVs != null)
-                        return m_keyIVs[m_cipherIndex][KeyIndex];
-
-                    return null;
-                }
-            }
-
-            /// <summary>
-            /// Gets active intitialization vector, if any.
-            /// </summary>
-            public byte[] IV
-            {
-                get
-                {
-                    if (m_keyIVs != null)
-                        return m_keyIVs[m_cipherIndex][IVIndex];
-
-                    return null;
-                }
-            }
-
-            /// <summary>
-            /// Gets active keys and initialization vectors.
-            /// </summary>
-            public byte[][][] KeyIVs
-            {
-                get
-                {
-                    return m_keyIVs;
-                }
-            }
-
-            /// <summary>
-            /// Gets current cipher index.
-            /// </summary>
-            public int CipherIndex
-            {
-                get
-                {
-                    return m_cipherIndex;
-                }
-            }
-
-            /// <summary>
-            /// Gets the IP address of the remote client connection.
-            /// </summary>
-            public IPAddress IPAddress
-            {
-                get
-                {
-                    return m_ipAddress;
-                }
-            }
-
-            /// <summary>
-            /// Gets or sets subscription associated with this <see cref="ClientConnection"/>.
-            /// </summary>
-            public IClientSubscription Subscription
-            {
-                get
-                {
-                    return m_subscription;
-                }
-                set
-                {
-                    m_subscription = value;
-                }
-            }
-
-            /// <summary>
-            /// Gets the subscriber name of this <see cref="ClientConnection"/>.
-            /// </summary>
-            public string Name
-            {
-                get
-                {
-                    return SubscriberName;
-                }
-            }
-
-            /// <summary>
-            /// Gets a formatted message describing the status of this <see cref="ClientConnection"/>.
-            /// </summary>
-            public string Status
-            {
-                get
-                {
-                    StringBuilder status = new StringBuilder();
-                    string formatString = "{0,26}: {1}";
-
-                    status.AppendLine();
-                    status.AppendFormat(formatString, "Subscriber ID", m_connectionID);
-                    status.AppendLine();
-                    status.AppendFormat(formatString, "Subscriber name", SubscriberName);
-                    status.AppendLine();
-                    status.AppendFormat(formatString, "Subscriber acronym", SubscriberAcronym);
-                    status.AppendLine();
-                    status.AppendFormat(formatString, "Publish channel protocol", PublishChannel.TransportProtocol);
-                    status.AppendLine();
-
-                    if (m_dataChannel != null)
-                    {
-                        status.AppendLine();
-                        status.Append(m_dataChannel.Status);
-                    }
-
-                    return status.ToString();
-                }
-            }
-
-            #endregion
-
-            #region [ Methods ]
-
-            /// <summary>
-            /// Releases all the resources used by the <see cref="ClientConnection"/> object.
-            /// </summary>
-            public void Dispose()
-            {
-                Dispose(true);
-                GC.SuppressFinalize(this);
-            }
-
-            /// <summary>
-            /// Creates or updates cipher keys.
-            /// </summary>
-            public void UpdateKeyIVs()
-            {
-                AesManaged symmetricAlgorithm = new AesManaged();
-
-                symmetricAlgorithm.KeySize = 256;
-                symmetricAlgorithm.GenerateKey();
-                symmetricAlgorithm.GenerateIV();
-
-                if (m_keyIVs == null)
-                {
-                    // Initialize new key set
-                    m_keyIVs = new byte[2][][];
-                    m_keyIVs[EvenKey] = new byte[2][];
-                    m_keyIVs[OddKey] = new byte[2][];
-
-                    m_keyIVs[EvenKey][KeyIndex] = symmetricAlgorithm.Key;
-                    m_keyIVs[EvenKey][IVIndex] = symmetricAlgorithm.IV;
-
-                    symmetricAlgorithm.GenerateKey();
-                    symmetricAlgorithm.GenerateIV();
-
-                    m_keyIVs[OddKey][KeyIndex] = symmetricAlgorithm.Key;
-                    m_keyIVs[OddKey][IVIndex] = symmetricAlgorithm.IV;
-
-                    m_cipherIndex = EvenKey;
-                }
-                else
-                {
-                    // Generate a new key set for current cipher index
-                    m_keyIVs[m_cipherIndex][KeyIndex] = symmetricAlgorithm.Key;
-                    m_keyIVs[m_cipherIndex][IVIndex] = symmetricAlgorithm.IV;
-
-                    // Set run-time to the other key set
-                    m_cipherIndex = (m_cipherIndex == EvenKey ? OddKey : EvenKey);
-                }
-            }
-
-            /// <summary>
-            /// Releases the unmanaged resources used by the <see cref="ClientConnection"/> object and optionally releases the managed resources.
-            /// </summary>
-            /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-            protected virtual void Dispose(bool disposing)
-            {
-                if (!m_disposed)
-                {
-                    try
-                    {
-                        if (disposing)
-                        {
-                            if (m_pingTimer != null)
-                            {
-                                m_pingTimer.Elapsed -= m_pingTimer_Elapsed;
-                                m_pingTimer.Dispose();
-                            }
-                            m_pingTimer = null;
-
-                            DataChannel = null;
-                            m_commandChannel = null;
-                            m_ipAddress = null;
-                            m_subscription = null;
-                            m_parent = null;
-                        }
-                    }
-                    finally
-                    {
-                        m_disposed = true;  // Prevent duplicate dispose.
-                    }
-                }
-            }
-
-            private void m_pingTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-            {
-                // Send a no-op keep-alive ping to make sure the client is still connected
-                m_parent.SendClientResponse(m_clientID, ServerResponse.NoOP, ServerCommand.Subscribe);
-            }
-
-            private void m_dataChannel_SendClientDataException(object sender, EventArgs<Guid, Exception> e)
-            {
-                Exception ex = e.Argument2;
-                m_parent.OnProcessException(new InvalidOperationException(string.Format("Data channel exception occurred while sending client data to \"{0}\": {1}", m_connectionID, ex.Message), ex));
-            }
-
-            private void m_dataChannel_ServerStarted(object sender, EventArgs e)
-            {
-                m_parent.OnStatusMessage("Data channel started.");
-            }
-
-            private void m_dataChannel_ServerStopped(object sender, EventArgs e)
-            {
-                m_parent.OnStatusMessage("Data channel stopped.");
-            }
-
-            #endregion
-        }
-
         // Constants
 
         // Maximum packet size before split
@@ -1364,6 +220,7 @@ namespace TimeSeriesFramework.Transport
         private ConcurrentDictionary<Guid, ClientConnection> m_clientConnections;
         private ConcurrentDictionary<Guid, IServer> m_clientPublicationChannels;
         private ConcurrentDictionary<MeasurementKey, Guid> m_signalIDCache;
+        private string m_metadataTables;
         private bool m_requireAuthentication;
         private bool m_disposed;
 
@@ -1381,6 +238,7 @@ namespace TimeSeriesFramework.Transport
             m_clientConnections = new ConcurrentDictionary<Guid, ClientConnection>();
             m_clientPublicationChannels = new ConcurrentDictionary<Guid, IServer>();
             m_signalIDCache = new ConcurrentDictionary<MeasurementKey, Guid>();
+            m_metadataTables = "Device,Measurement";
         }
 
         /// <summary>
@@ -1449,6 +307,32 @@ namespace TimeSeriesFramework.Transport
 
                 if (m_commandChannel != null)
                     m_commandChannel.SettingsCategory = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets comma seperated list of tables to include in meta-data exchange.
+        /// </summary>
+        public string MetadataTables
+        {
+            get
+            {
+                return m_metadataTables;
+            }
+            set
+            {
+                m_metadataTables = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets dictionary of connected clients.
+        /// </summary>
+        internal protected ConcurrentDictionary<Guid, ClientConnection> ClientConnections
+        {
+            get
+            {
+                return m_clientConnections;
             }
         }
 
@@ -1607,33 +491,13 @@ namespace TimeSeriesFramework.Transport
             return "Currently not connected".CenterText(maxLength);
         }
 
-        // Create or rotate runtime encryption keys
-        private void RotateCipherKeys(ClientConnection connection)
-        {
-            MemoryStream response = new MemoryStream();
-
-            // Create or update cipher keys and initialization vectors 
-            connection.UpdateKeyIVs();
-
-            // Add current cipher index to response
-            response.Write(EndianOrder.BigEndian.GetBytes(connection.CipherIndex), 0, 4);
-
-            // Serialize new keys
-            byte[] bytes = Serialization.Serialize(connection.KeyIVs, TVA.SerializationFormat.Binary);
-
-            // Encrypt keys using private keys known only to current client and server
-            if (connection.Authenticated && !string.IsNullOrWhiteSpace(connection.SharedSecret))
-                bytes = bytes.Encrypt(connection.SharedSecret, CipherStrength.Aes256);
-
-            // Add serialized key response
-            response.Write(bytes, 0, bytes.Length);
-
-            // Send cipher key updates
-            SendClientResponse(connection.ClientID, ServerResponse.UpdateCipherKey, ServerCommand.Subscribe, response.ToArray());
-        }
-
-        // Update signal index cache based on input measurement keys
-        private void UpdateSignalIndexCache(Guid clientID, SignalIndexCache signalIndexCache, MeasurementKey[] inputMeasurementKeys)
+        /// <summary>
+        /// Updates signal index cache based on input measurement keys.
+        /// </summary>
+        /// <param name="clientID">Client ID of connection over which to update signal index cache.</param>
+        /// <param name="signalIndexCache">New signal index cache.</param>
+        /// <param name="inputMeasurementKeys">Subscribed measurement keys.</param>
+        public void UpdateSignalIndexCache(Guid clientID, SignalIndexCache signalIndexCache, MeasurementKey[] inputMeasurementKeys)
         {
             ConcurrentDictionary<ushort, Tuple<Guid, MeasurementKey>> reference = new ConcurrentDictionary<ushort, Tuple<Guid, MeasurementKey>>();
             List<MeasurementKey> unauthorizedKeys = new List<MeasurementKey>();
@@ -1755,7 +619,7 @@ namespace TimeSeriesFramework.Transport
         /// <param name="response">Server response.</param>
         /// <param name="command">In response to command.</param>
         /// <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
-        protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command)
+        internal protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command)
         {
             return SendClientResponse(clientID, response, command, (byte[])null);
         }
@@ -1768,7 +632,7 @@ namespace TimeSeriesFramework.Transport
         /// <param name="command">In response to command.</param>
         /// <param name="status">Status message to return.</param>
         /// <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
-        protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, string status)
+        internal protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, string status)
         {
             if (status != null)
                 return SendClientResponse(clientID, response, command, Encoding.Unicode.GetBytes(status));
@@ -1785,7 +649,7 @@ namespace TimeSeriesFramework.Transport
         /// <param name="formattedStatus">Formatted status message to return.</param>
         /// <param name="args">Arguments for <paramref name="formattedStatus"/>.</param>
         /// <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
-        protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, string formattedStatus, params object[] args)
+        internal protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, string formattedStatus, params object[] args)
         {
             if (!string.IsNullOrWhiteSpace(formattedStatus))
                 return SendClientResponse(clientID, response, command, Encoding.Unicode.GetBytes(string.Format(formattedStatus, args)));
@@ -1801,7 +665,7 @@ namespace TimeSeriesFramework.Transport
         /// <param name="command">In response to command.</param>
         /// <param name="data">Data to return to client; null if none.</param>
         /// <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
-        protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, byte[] data)
+        internal protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, byte[] data)
         {
             return SendClientResponse(clientID, (byte)response, (byte)command, data);
         }
@@ -1932,6 +796,356 @@ namespace TimeSeriesFramework.Transport
             return result;
         }
 
+        #region [ Server Command Request Handlers ]
+
+        // Handles authentication request
+        private void HandleAuthenticationRequest(ClientConnection connection, byte[] buffer, int length)
+        {
+            Guid clientID = connection.ClientID;
+            string message;
+
+            // Handle authentication request
+            try
+            {
+                DataRow subscriber = null;
+
+                // Reset existing authentication state
+                connection.Authenticated = false;
+
+                // Subscriber connection is first referenced by its IP
+                foreach (DataRow row in DataSource.Tables["Subscribers"].Select("Enabled <> 0"))
+                {
+                    if (row["ValidIPAddresses"].ToNonNullString().Split(';', ',').Where(ip => !string.IsNullOrWhiteSpace(ip)).Select(ip => IPAddress.Parse(ip.Trim())).Contains(connection.IPAddress))
+                    {
+                        // Found registered subscriber record for the connected IP
+                        subscriber = row;
+                        break;
+                    }
+                }
+
+                if (subscriber == null)
+                {
+                    message = string.Format("No subscriber is registered for {0}, cannnot authenticate connection - {1} request denied.", connection.ConnectionID, ServerCommand.Authenticate);
+                    SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
+                    OnStatusMessage("WARNING: Client {0} {1} command request denied - subscriber is disabled or not registered.", connection.ConnectionID, ServerCommand.Authenticate);
+                    return;
+                }
+                else
+                {
+                    string sharedSecret = subscriber["SharedSecret"].ToNonNullString().Trim();
+                    string authenticationID = subscriber["AuthKey"].ToNonNullString().Trim();
+
+                    // Update subscriber data in associated connection object
+                    connection.SubscriberID = Guid.Parse(subscriber["ID"].ToNonNullString(Guid.Empty.ToString()).Trim());
+                    connection.SubscriberAcronym = subscriber["Acronym"].ToNonNullString().Trim();
+                    connection.SubscriberName = subscriber["Name"].ToNonNullString().Trim();
+                    connection.SharedSecret = sharedSecret;
+
+                    if (length >= 5)
+                    {
+                        // First 4 bytes beyond command byte represent an integer representing the length of the authentication string that follows
+                        int byteLength = EndianOrder.BigEndian.ToInt32(buffer, 1);
+
+                        // Byte length should be reasonable
+                        if (byteLength >= 16 && byteLength <= 256)
+                        {
+                            if (length >= 5 + byteLength)
+                            {
+                                // Decrypt encoded portion of buffer
+                                byte[] bytes = buffer.Decrypt(5, byteLength, sharedSecret, CipherStrength.Aes256);
+
+                                // Validate the authentication ID - if it matches, connection is authenticated
+                                connection.Authenticated = (string.Compare(authenticationID, Encoding.Unicode.GetString(bytes, CipherSaltLength, bytes.Length - CipherSaltLength)) == 0);
+
+                                if (connection.Authenticated)
+                                {
+                                    // Send success response
+                                    message = string.Format("Registered subscriber \"{0}\" {1} was successfully authenticated.", connection.SubscriberName, connection.ConnectionID);
+                                    SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.Authenticate, message);
+                                    OnStatusMessage(message);
+                                    return;
+
+                                }
+                                else
+                                {
+                                    message = string.Format("Subscriber authentication failed - {0} request denied.", ServerCommand.Authenticate);
+                                    SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
+                                    OnStatusMessage("WARNING: Client {0} {1} command request denied - subscriber authentication failed.", connection.ConnectionID, ServerCommand.Authenticate);
+                                    return;
+                                }
+                            }
+                            else
+                            {
+                                message = "Not enough buffer was provided to parse client request.";
+                                SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
+                                OnProcessException(new InvalidOperationException(message));
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            message = string.Format("Received request packet with an unexpected size from {0} - {1} request denied.", connection.ConnectionID, ServerCommand.Authenticate);
+                            SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
+                            OnStatusMessage("WARNING: Registered subscriber \"{0}\" {1} {2} command request was denied due to oddly sized {3} byte authentication packet.", connection.SubscriberName, connection.ConnectionID, ServerCommand.Authenticate, byteLength);
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        message = "Not enough buffer was provided to parse client request.";
+                        SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
+                        OnProcessException(new InvalidOperationException(message));
+                        return;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                message = "Failed to process authentication request due to exception: " + ex.Message;
+                SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
+                OnProcessException(new InvalidOperationException(message, ex));
+                return;
+            }
+        }
+
+        // Handles subscribe request
+        private void HandleSubscribeRequest(ClientConnection connection, byte[] buffer, int length)
+        {
+            Guid clientID = connection.ClientID;
+            IClientSubscription subscription;
+            string message, setting;
+
+            // Handle subscribe
+            try
+            {
+                // Make sure there is enough buffer for flags and connection string length
+                if (length >= 6)
+                {
+                    // Next byte is the data packet flags
+                    DataPacketFlags flags = (DataPacketFlags)buffer[1];
+                    bool useSynchronizedSubscription = ((byte)(flags & DataPacketFlags.Synchronized) > 0);
+                    bool useCompactMeasurementFormat = ((byte)(flags & DataPacketFlags.Compact) > 0);
+                    bool addSubscription = false;
+
+                    // Next 4 bytes are an integer representing the length of the connection string that follows
+                    int byteLength = EndianOrder.BigEndian.ToInt32(buffer, 2);
+
+                    if (byteLength > 0 && length >= 6 + byteLength)
+                    {
+                        string connectionString = Encoding.Unicode.GetString(buffer, 6, byteLength);
+
+                        // Get client subscription
+                        if (connection.Subscription == null)
+                            TryGetClientSubscription(clientID, out subscription);
+                        else
+                            subscription = connection.Subscription;
+
+                        if (subscription == null)
+                        {
+                            // Client subscription not established yet, so we create a new one
+                            if (useSynchronizedSubscription)
+                                subscription = new SynchronizedClientSubscription(this, clientID, connection.SubscriberID);
+                            else
+                                subscription = new UnsynchronizedClientSubscription(this, clientID, connection.SubscriberID);
+
+                            addSubscription = true;
+                        }
+                        else
+                        {
+                            // Check to see if consumer is requesting to change synchronization method
+                            if (useSynchronizedSubscription)
+                            {
+                                if (subscription is UnsynchronizedClientSubscription)
+                                {
+                                    // Subscription is for unsynchronized measurements and consumer is requesting synchronized
+                                    subscription.Stop();
+
+                                    lock (this)
+                                    {
+                                        Remove(subscription);
+                                    }
+
+                                    // Create a new synchronized subscription
+                                    subscription = new SynchronizedClientSubscription(this, clientID, connection.SubscriberID);
+                                    addSubscription = true;
+                                }
+                            }
+                            else
+                            {
+                                if (subscription is SynchronizedClientSubscription)
+                                {
+                                    // Subscription is for synchronized measurements and consumer is requesting unsynchronized
+                                    subscription.Stop();
+
+                                    lock (this)
+                                    {
+                                        Remove(subscription);
+                                    }
+
+                                    // Create a new unsynchronized subscription
+                                    subscription = new UnsynchronizedClientSubscription(this, clientID, connection.SubscriberID);
+                                    addSubscription = true;
+                                }
+                            }
+                        }
+
+                        // Update client subscription properties
+                        subscription.ConnectionString = connectionString;
+                        subscription.DataSource = DataSource;
+
+                        if (subscription.Settings.TryGetValue("initializationTimeout", out setting))
+                            subscription.InitializationTimeout = int.Parse(setting);
+                        else
+                            subscription.InitializationTimeout = InitializationTimeout;
+
+                        // Set up UDP data channel if client has requested this
+                        connection.DataChannel = null;
+
+                        if (subscription.Settings.TryGetValue("dataChannel", out setting))
+                        {
+                            Dictionary<string, string> settings = setting.ParseKeyValuePairs();
+                            string networkInterface;
+                            bool compressionEnabled = false;
+
+                            settings.TryGetValue("interface", out networkInterface);
+
+                            if (string.IsNullOrWhiteSpace(networkInterface))
+                                networkInterface = "::0";
+
+                            if (settings.TryGetValue("compression", out setting))
+                                compressionEnabled = setting.ParseBoolean();
+
+                            if (settings.TryGetValue("port", out setting))
+                            {
+                                connection.DataChannel = new UdpServer(string.Format("Port=-1; Clients={0}:{1}; interface={2}", connection.IPAddress, int.Parse(setting), networkInterface));
+
+                                if (compressionEnabled)
+                                    connection.DataChannel.Compression = CompressionStrength.Standard;
+
+                                connection.DataChannel.Start();
+                            }
+                        }
+
+                        // Update measurement serialization format type
+                        subscription.UseCompactMeasurementFormat = useCompactMeasurementFormat;
+
+                        // Subscribed signals (i.e., input measurement keys) will be parsed from connection string during
+                        // initialization of adapter. This should also gracefully handle "resubscribing" which can add and
+                        // remove subscribed points since assignment and use of input measurement keys is synchronized
+                        // within the client subscription class
+                        if (addSubscription)
+                        {
+                            // Adding client subscription to collection will automatically initialize it
+                            lock (this)
+                            {
+                                Add(subscription);
+                            }
+                        }
+                        else
+                        {
+                            // Manually re-initialize existing client subscription
+                            subscription.Initialize();
+                            subscription.Initialized = true;
+                        }
+
+                        // Make sure adapter is started
+                        subscription.Start();
+
+                        // Track subscription in connection information
+                        connection.Subscription = subscription;
+
+                        // Send updated signal index cache to client with validated rights of the selected input measurement keys
+                        SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, Serialization.Serialize(subscription.SignalIndexCache, TVA.SerializationFormat.Binary));
+
+                        // Send new or updated cipher keys
+                        if (connection.Authenticated)
+                            connection.RotateCipherKeys();
+
+                        // Send success response
+                        if (subscription.InputMeasurementKeys != null)
+                            message = string.Format("Client subscribed as {0}compact {1}synchronized with {2} signals.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un", subscription.InputMeasurementKeys.Length);
+                        else
+                            message = string.Format("Client subscribed as {0}compact {1}synchronized, but no signals were specified. Make sure \"inputMeasurementKeys\" setting is properly defined.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un");
+
+                        SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.Subscribe, message);
+                        OnStatusMessage(message);
+                    }
+                    else
+                    {
+                        if (byteLength > 0)
+                            message = "Not enough buffer was provided to parse client data subscription.";
+                        else
+                            message = "Cannot initialize client data subscription without a connection string.";
+
+                        SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Subscribe, message);
+                        OnProcessException(new InvalidOperationException(message));
+                    }
+                }
+                else
+                {
+                    message = "Not enough buffer was provided to parse client data subscription.";
+                    SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Subscribe, message);
+                    OnProcessException(new InvalidOperationException(message));
+                }
+            }
+            catch (Exception ex)
+            {
+                message = "Failed to process client data subscription due to exception: " + ex.Message;
+                SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Subscribe, message);
+                OnProcessException(new InvalidOperationException(message, ex));
+            }
+        }
+
+        // Handles unsubscribe request
+        private void HandleUnsubscribeRequest(ClientConnection connection)
+        {
+            Guid clientID = connection.ClientID;
+
+            RemoveClientSubscription(clientID); // This does not disconnect client command channel...
+            connection.Subscription = null;
+
+            SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.Unsubscribe, "Client unsubscribed.");
+            OnStatusMessage(connection.ConnectionID + " unsubscribed.");
+        }
+
+        // Handles meta-data refresh request
+        private void HandleMetadataRefresh(ClientConnection connection)
+        {
+            Guid clientID = connection.ClientID;
+            string message;
+
+            try
+            {
+                AdoDataConnection adoDatabase = new AdoDataConnection("systemSettings");
+                IDbConnection dbConnection = adoDatabase.Connection;
+                DataSet metadata = new DataSet();
+                DataTable table;
+
+                // Copy key meta-data tables
+                foreach (string tableName in m_metadataTables.Split(','))
+                {
+                    if (!string.IsNullOrWhiteSpace(tableName))
+                    {
+                        table = dbConnection.RetrieveData(adoDatabase.AdapterType, string.Format("SELECT * FROM {0}", tableName));
+                        table.TableName = tableName;
+                        metadata.Tables.Add(table.Copy());
+                    }
+                }
+
+                SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.MetaDataRefresh, Serialization.Serialize(metadata, TVA.SerializationFormat.Binary));
+            }
+            catch (Exception ex)
+            {
+                message = "Failed to transfer meta-data due to exception: " + ex.Message;
+                SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Subscribe, message);
+                OnProcessException(new InvalidOperationException(message, ex));
+            }
+        }
+
+        #endregion
+
+        #region [ Command Channel Handlers ]
+
         private void m_commandChannel_ClientConnected(object sender, EventArgs<Guid> e)
         {
             Guid clientID = e.Argument;
@@ -1959,21 +1173,19 @@ namespace TimeSeriesFramework.Transport
 
         private void m_commandChannel_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
         {
-            ClientConnection connection;
-            IClientSubscription subscription;
-            byte commandByte;
-            ServerCommand command;
-            bool validServerCommand;
-            string message, setting;
             Guid clientID = e.Argument1;
             byte[] buffer = e.Argument2;
             int length = e.Argument3;
 
             if (length > 0 && buffer != null)
             {
+                ClientConnection connection;
+                ServerCommand command;
+                string message;
+                byte commandByte = buffer[0];
+
                 // Attempt to parse solicited server command
-                commandByte = buffer[0];
-                validServerCommand = Enum.TryParse<ServerCommand>(commandByte.ToString(), out command);
+                bool validServerCommand = Enum.TryParse<ServerCommand>(commandByte.ToString(), out command);
 
                 // Look up this client connection
                 if (!m_clientConnections.TryGetValue(clientID, out connection))
@@ -1985,108 +1197,8 @@ namespace TimeSeriesFramework.Transport
                 {
                     if (command == ServerCommand.Authenticate)
                     {
-                        // Handle authentication request
-                        try
-                        {
-                            DataRow subscriber = null;
-
-                            // Reset existing authentication state
-                            connection.Authenticated = false;
-
-                            // Subscriber connection is first referenced by its IP
-                            foreach (DataRow row in DataSource.Tables["Subscribers"].Select("Enabled <> 0"))
-                            {
-                                if (row["ValidIPAddresses"].ToNonNullString().Split(';', ',').Where(ip => !string.IsNullOrWhiteSpace(ip)).Select(ip => IPAddress.Parse(ip.Trim())).Contains(connection.IPAddress))
-                                {
-                                    // Found registered subscriber record for the connected IP
-                                    subscriber = row;
-                                    break;
-                                }
-                            }
-
-                            if (subscriber == null)
-                            {
-                                message = string.Format("No subscriber is registered for {0}, cannnot authenticate connection - {1} request denied.", connection.ConnectionID, command);
-                                SendClientResponse(clientID, ServerResponse.Failed, command, message);
-                                OnStatusMessage("WARNING: Client {0} {1} command request denied - subscriber is disabled or not registered.", connection.ConnectionID, command);
-                                return;
-                            }
-                            else
-                            {
-                                string sharedSecret = subscriber["SharedSecret"].ToNonNullString().Trim();
-                                string authenticationID = subscriber["AuthKey"].ToNonNullString().Trim();
-
-                                // Update subscriber data in associated connection object
-                                connection.SubscriberID = Guid.Parse(subscriber["ID"].ToNonNullString(Guid.Empty.ToString()).Trim());
-                                connection.SubscriberAcronym = subscriber["Acronym"].ToNonNullString().Trim();
-                                connection.SubscriberName = subscriber["Name"].ToNonNullString().Trim();
-                                connection.SharedSecret = sharedSecret;
-
-                                if (length >= 5)
-                                {
-                                    // First 4 bytes beyond command byte represent an integer representing the length of the authentication string that follows
-                                    int byteLength = EndianOrder.BigEndian.ToInt32(buffer, 1);
-
-                                    // Byte length should be reasonable
-                                    if (byteLength >= 16 && byteLength <= 256)
-                                    {
-                                        if (length >= 5 + byteLength)
-                                        {
-                                            // Decrypt encoded portion of buffer
-                                            byte[] bytes = buffer.Decrypt(5, byteLength, sharedSecret, CipherStrength.Aes256);
-
-                                            // Validate the authentication ID - if it matches, connection is authenticated
-                                            connection.Authenticated = (string.Compare(authenticationID, Encoding.Unicode.GetString(bytes, CipherSaltLength, bytes.Length - CipherSaltLength)) == 0);
-
-                                            if (connection.Authenticated)
-                                            {
-                                                // Send success response
-                                                message = string.Format("Registered subscriber \"{0}\" {1} was successfully authenticated.", connection.SubscriberName, connection.ConnectionID);
-                                                SendClientResponse(clientID, ServerResponse.Succeeded, command, message);
-                                                OnStatusMessage(message);
-                                                return;
-
-                                            }
-                                            else
-                                            {
-                                                message = string.Format("Subscriber authentication failed - {0} request denied.", command);
-                                                SendClientResponse(clientID, ServerResponse.Failed, command, message);
-                                                OnStatusMessage("WARNING: Client {0} {1} command request denied - subscriber authentication failed.", connection.ConnectionID, command);
-                                                return;
-                                            }
-                                        }
-                                        else
-                                        {
-                                            message = "Not enough buffer was provided to parse client request.";
-                                            SendClientResponse(clientID, ServerResponse.Failed, command, message);
-                                            OnProcessException(new InvalidOperationException(message));
-                                            return;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        message = string.Format("Received request packet with an unexpected size from {0} - {1} request denied.", connection.ConnectionID, command);
-                                        SendClientResponse(clientID, ServerResponse.Failed, command, message);
-                                        OnStatusMessage("WARNING: Registered subscriber \"{0}\" {1} {2} command request was denied due to oddly sized {3} byte authentication packet.", connection.SubscriberName, connection.ConnectionID, command, byteLength);
-                                        return;
-                                    }
-                                }
-                                else
-                                {
-                                    message = "Not enough buffer was provided to parse client request.";
-                                    SendClientResponse(clientID, ServerResponse.Failed, command, message);
-                                    OnProcessException(new InvalidOperationException(message));
-                                    return;
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            message = "Failed to process authentication request due to exception: " + ex.Message;
-                            SendClientResponse(clientID, ServerResponse.Failed, command, message);
-                            OnProcessException(new InvalidOperationException(message, ex));
-                            return;
-                        }
+                        // Handle authenticate
+                        HandleAuthenticationRequest(connection, buffer, length);
                     }
                     else if (m_requireAuthentication && !connection.Authenticated)
                     {
@@ -2100,200 +1212,15 @@ namespace TimeSeriesFramework.Transport
                     {
                         case ServerCommand.Subscribe:
                             // Handle subscribe
-                            try
-                            {
-                                // Make sure there is enough buffer for flags and connection string length
-                                if (length >= 6)
-                                {
-                                    // Next byte is the data packet flags
-                                    DataPacketFlags flags = (DataPacketFlags)buffer[1];
-                                    bool useSynchronizedSubscription = ((byte)(flags & DataPacketFlags.Synchronized) > 0);
-                                    bool useCompactMeasurementFormat = ((byte)(flags & DataPacketFlags.Compact) > 0);
-                                    bool addSubscription = false;
-
-                                    // Next 4 bytes are an integer representing the length of the connection string that follows
-                                    int byteLength = EndianOrder.BigEndian.ToInt32(buffer, 2);
-
-                                    if (byteLength > 0 && length >= 6 + byteLength)
-                                    {
-                                        string connectionString = Encoding.Unicode.GetString(buffer, 6, byteLength);
-
-                                        // Get client subscription
-                                        if (connection.Subscription == null)
-                                            TryGetClientSubscription(clientID, out subscription);
-                                        else
-                                            subscription = connection.Subscription;
-
-                                        if (subscription == null)
-                                        {
-                                            // Client subscription not established yet, so we create a new one
-                                            if (useSynchronizedSubscription)
-                                                subscription = new SynchronizedClientSubscription(this, clientID, connection.SubscriberID);
-                                            else
-                                                subscription = new UnsynchronizedClientSubscription(this, clientID, connection.SubscriberID);
-
-                                            addSubscription = true;
-                                        }
-                                        else
-                                        {
-                                            // Check to see if consumer is requesting to change synchronization method
-                                            if (useSynchronizedSubscription)
-                                            {
-                                                if (subscription is UnsynchronizedClientSubscription)
-                                                {
-                                                    // Subscription is for unsynchronized measurements and consumer is requesting synchronized
-                                                    subscription.Stop();
-
-                                                    lock (this)
-                                                    {
-                                                        Remove(subscription);
-                                                    }
-
-                                                    // Create a new synchronized subscription
-                                                    subscription = new SynchronizedClientSubscription(this, clientID, connection.SubscriberID);
-                                                    addSubscription = true;
-                                                }
-                                            }
-                                            else
-                                            {
-                                                if (subscription is SynchronizedClientSubscription)
-                                                {
-                                                    // Subscription is for synchronized measurements and consumer is requesting unsynchronized
-                                                    subscription.Stop();
-
-                                                    lock (this)
-                                                    {
-                                                        Remove(subscription);
-                                                    }
-
-                                                    // Create a new unsynchronized subscription
-                                                    subscription = new UnsynchronizedClientSubscription(this, clientID, connection.SubscriberID);
-                                                    addSubscription = true;
-                                                }
-                                            }
-                                        }
-
-                                        // Update client subscription properties
-                                        subscription.ConnectionString = connectionString;
-                                        subscription.DataSource = DataSource;
-
-                                        if (subscription.Settings.TryGetValue("initializationTimeout", out setting))
-                                            subscription.InitializationTimeout = int.Parse(setting);
-                                        else
-                                            subscription.InitializationTimeout = InitializationTimeout;
-
-                                        // Set up UDP data channel if client has requested this
-                                        connection.DataChannel = null;
-
-                                        if (subscription.Settings.TryGetValue("dataChannel", out setting))
-                                        {
-                                            Dictionary<string, string> settings = setting.ParseKeyValuePairs();
-                                            string networkInterface;
-                                            bool compressionEnabled = false;
-
-                                            settings.TryGetValue("interface", out networkInterface);
-
-                                            if (string.IsNullOrWhiteSpace(networkInterface))
-                                                networkInterface = "::0";
-
-                                            if (settings.TryGetValue("compression", out setting))
-                                                compressionEnabled = setting.ParseBoolean();
-
-                                            if (settings.TryGetValue("port", out setting))
-                                            {
-                                                connection.DataChannel = new UdpServer(string.Format("Port=-1; Clients={0}:{1}; interface={2}", connection.IPAddress, int.Parse(setting), networkInterface));
-
-                                                if (compressionEnabled)
-                                                    connection.DataChannel.Compression = CompressionStrength.Standard;
-
-                                                connection.DataChannel.Start();
-                                            }
-                                        }
-
-                                        // Update measurement serialization format type
-                                        subscription.UseCompactMeasurementFormat = useCompactMeasurementFormat;
-
-                                        // Subscribed signals (i.e., input measurement keys) will be parsed from connection string during
-                                        // initialization of adapter. This should also gracefully handle "resubscribing" which can add and
-                                        // remove subscribed points since assignment and use of input measurement keys is synchronized
-                                        // within the client subscription class
-                                        if (addSubscription)
-                                        {
-                                            // Adding client subscription to collection will automatically initialize it
-                                            lock (this)
-                                            {
-                                                Add(subscription);
-                                            }
-                                        }
-                                        else
-                                        {
-                                            // Manually re-initialize existing client subscription
-                                            subscription.Initialize();
-                                            subscription.Initialized = true;
-                                        }
-
-                                        // Make sure adapter is started
-                                        subscription.Start();
-
-                                        // Track subscription in connection information
-                                        connection.Subscription = subscription;
-
-                                        // Send updated signal index cache to client with validated rights of the selected input measurement keys
-                                        SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, Serialization.Serialize(subscription.SignalIndexCache, TVA.SerializationFormat.Binary));
-
-                                        // Send new or updated cipher keys
-                                        if (connection.Authenticated)
-                                            RotateCipherKeys(connection);
-
-                                        // Send success response
-                                        if (subscription.InputMeasurementKeys != null)
-                                            message = string.Format("Client subscribed as {0}compact {1}synchronized with {2} signals.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un", subscription.InputMeasurementKeys.Length);
-                                        else
-                                            message = string.Format("Client subscribed as {0}compact {1}synchronized, but no signals were specified. Make sure \"inputMeasurementKeys\" setting is properly defined.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un");
-
-                                        SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.Subscribe, message);
-                                        OnStatusMessage(message);
-                                    }
-                                    else
-                                    {
-                                        if (byteLength > 0)
-                                            message = "Not enough buffer was provided to parse client data subscription.";
-                                        else
-                                            message = "Cannot initialize client data subscription without a connection string.";
-
-                                        SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Subscribe, message);
-                                        OnProcessException(new InvalidOperationException(message));
-                                    }
-                                }
-                                else
-                                {
-                                    message = "Not enough buffer was provided to parse client data subscription.";
-                                    SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Subscribe, message);
-                                    OnProcessException(new InvalidOperationException(message));
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                message = "Failed to process client data subscription due to exception: " + ex.Message;
-                                SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Subscribe, message);
-                                OnProcessException(new InvalidOperationException(message, ex));
-                            }
+                            HandleSubscribeRequest(connection, buffer, length);
                             break;
                         case ServerCommand.Unsubscribe:
                             // Handle unsubscribe
-                            RemoveClientSubscription(clientID); // This does not disconnect client command channel...
-                            connection.Subscription = null;
-                            message = "Client unsubscribed.";
-                            SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.Unsubscribe, message);
-                            OnStatusMessage(connection.ConnectionID + " unsubscribed.");
+                            HandleUnsubscribeRequest(connection);
                             break;
                         case ServerCommand.MetaDataRefresh:
                             // Handle meta data refresh
-                            DataSet metadata = new DataSet();
-                            metadata.Tables.Add(DataSource.Tables["Devices"].Copy());
-                            metadata.Tables.Add(DataSource.Tables["Phasors"].Copy());
-                            metadata.Tables.Add(DataSource.Tables["ActiveMeasurements"].Copy());
-                            SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.MetaDataRefresh, Serialization.Serialize(metadata, TVA.SerializationFormat.Binary));
+                            HandleMetadataRefresh(connection);
                             break;
                     }
                 }
@@ -2347,6 +1274,8 @@ namespace TimeSeriesFramework.Transport
         {
             OnProcessException(new InvalidOperationException("Data publisher timed out while trying validate client connection"));
         }
+
+        #endregion
 
         #endregion
     }

@@ -939,7 +939,7 @@ namespace TimeSeriesFramework.Adapters
         /// <remarks>
         /// This overload combines string.Format and SendStatusMessage for convienence.
         /// </remarks>
-        protected virtual void OnStatusMessage(string formattedStatus, params object[] args)
+        internal protected virtual void OnStatusMessage(string formattedStatus, params object[] args)
         {
             if (StatusMessage != null)
                 StatusMessage(this, new EventArgs<string>(string.Format(formattedStatus, args)));
@@ -949,7 +949,7 @@ namespace TimeSeriesFramework.Adapters
         /// Raises <see cref="ProcessException"/> event.
         /// </summary>
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
-        protected virtual void OnProcessException(Exception ex)
+        internal protected virtual void OnProcessException(Exception ex)
         {
             if (ProcessException != null)
                 ProcessException(this, new EventArgs<Exception>(ex));
