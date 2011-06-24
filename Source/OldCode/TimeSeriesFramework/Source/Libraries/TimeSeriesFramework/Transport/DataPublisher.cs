@@ -161,7 +161,14 @@ namespace TimeSeriesFramework.Transport
         /// <remarks>
         /// Unsolicited response requests that client update its runtime data cipher keys with those that follow.
         /// </remarks>
-        UpdateCipherKey = 0x85
+        UpdateCipherKey = 0x85,
+        /// <summary>
+        /// No operation keep-alive ping.
+        /// </summary>
+        /// <remarks>
+        /// The command channel can remain quiet for some time, this command allows a period test of client connectivity.
+        /// </remarks>
+        NoOP = 0xFF
     }
 
     /// <summary>
@@ -890,6 +897,7 @@ namespace TimeSeriesFramework.Transport
             private IPAddress m_ipAddress;
             private TcpServer m_commandChannel;
             private UdpServer m_dataChannel;
+            private System.Timers.Timer m_pingTimer;
             private bool m_disposed;
 
             #endregion
@@ -910,6 +918,12 @@ namespace TimeSeriesFramework.Transport
                 m_subscriberID = clientID;
                 m_keyIVs = null;
                 m_cipherIndex = 0;
+                m_pingTimer = new System.Timers.Timer();
+
+                m_pingTimer.Interval = 5000.0D;
+                m_pingTimer.AutoReset = true;
+                m_pingTimer.Elapsed += m_pingTimer_Elapsed;
+                m_pingTimer.Start();
 
                 // Attempt to lookup remote connection identification for logging purposes
                 try
@@ -1291,6 +1305,13 @@ namespace TimeSeriesFramework.Transport
                     {
                         if (disposing)
                         {
+                            if (m_pingTimer != null)
+                            {
+                                m_pingTimer.Elapsed -= m_pingTimer_Elapsed;
+                                m_pingTimer.Dispose();
+                            }
+                            m_pingTimer = null;
+
                             DataChannel = null;
                             m_commandChannel = null;
                             m_ipAddress = null;
@@ -1303,6 +1324,12 @@ namespace TimeSeriesFramework.Transport
                         m_disposed = true;  // Prevent duplicate dispose.
                     }
                 }
+            }
+
+            private void m_pingTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+            {
+                // Send a no-op keep-alive ping to make sure the client is still connected
+                m_parent.SendClientResponse(m_clientID, ServerResponse.NoOP, ServerCommand.Subscribe);
             }
 
             private void m_dataChannel_SendClientDataException(object sender, EventArgs<Guid, Exception> e)
@@ -1836,7 +1863,7 @@ namespace TimeSeriesFramework.Transport
                     int responseLength = unchecked((int)responsePacket.Length);
 
                     if (publishChannel is UdpServer)
-                        publishChannel.Multicast(responseData, 0, responseLength);
+                        publishChannel.MulticastAsync(responseData, 0, responseLength);
                     else
                         publishChannel.SendToAsync(clientID, responseData, 0, responseLength);
 
