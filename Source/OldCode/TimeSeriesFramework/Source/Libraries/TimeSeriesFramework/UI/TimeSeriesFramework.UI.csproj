@@ -111,9 +111,12 @@
     <Compile Include="Converters\DictionaryToKeyValuePairConverter.cs" />
     <Compile Include="Converters\NotConverter.cs" />
     <Compile Include="Converters\RoleBasedVisibilityConverter.cs" />
+    <Compile Include="Converters\StringToColorConverter.cs" />
+    <Compile Include="Converters\StringToSymbolConverter.cs" />
     <Compile Include="DataModelBase.cs" />
     <Compile Include="DataModels\Adapter.cs" />
     <Compile Include="DataModels\ApplicationRole.cs" />
+    <Compile Include="DataModels\BasicStatisticInfo.cs" />
     <Compile Include="DataModels\CalculatedMeasurement.cs" />
     <Compile Include="DataModels\Company.cs" />
     <Compile Include="DataModels\Device.cs" />
@@ -132,6 +135,7 @@
     <Compile Include="DataModels\SecurityGroup.cs" />
     <Compile Include="DataModels\SignalType.cs" />
     <Compile Include="DataModels\Subscriber.cs" />
+    <Compile Include="DataModels\TimeTaggedMeasurement.cs" />
     <Compile Include="DataModels\UserAccount.cs" />
     <Compile Include="DataModels\Vendor.cs" />
     <Compile Include="DataModels\VendorDevice.cs" />

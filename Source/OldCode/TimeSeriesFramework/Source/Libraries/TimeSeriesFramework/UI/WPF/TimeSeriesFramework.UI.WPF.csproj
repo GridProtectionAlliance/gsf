@@ -199,6 +199,9 @@
     <Compile Include="UserControls\ProtocolGroupUserControl.xaml.cs">
       <DependentUpon>ProtocolGroupUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\RealTimeStatisticsUserControl.xaml.cs">
+      <DependentUpon>RealTimeStatisticsUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\SecurityUserControl.xaml.cs">
       <DependentUpon>SecurityUserControl.xaml</DependentUpon>
     </Compile>
@@ -351,6 +354,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UserControls\ProtocolGroupUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\RealTimeStatisticsUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

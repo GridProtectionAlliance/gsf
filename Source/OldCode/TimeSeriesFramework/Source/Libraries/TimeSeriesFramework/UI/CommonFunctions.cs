@@ -25,12 +25,17 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO.Ports;
+using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Media;
 using TimeSeriesFramework.UI.DataModels;
 using TVA;
 using TVA.Data;
+using System.Collections.ObjectModel;
+using System.Net;
+using System.IO;
+using System.Xml.Linq;
 
 namespace TimeSeriesFramework.UI
 {
@@ -212,8 +217,8 @@ namespace TimeSeriesFramework.UI
             {
                 Dictionary<string, string> settings = node.Settings.ToLower().ParseKeyValuePairs();
 
-                if (settings.ContainsKey("remotestatusserverconnectionstring"))
-                    s_remoteStatusServerConnectionString = settings["remotestatusserverconnectionstring"];
+                if (settings.ContainsKey("remotestatusserviceurl"))
+                    s_remoteStatusServerConnectionString = settings["remotestatusserviceurl"];
 
                 if (settings.ContainsKey("realtimestatisticserviceurl"))
                     s_realTimeStatisticServiceUrl = settings["realtimestatisticserviceurl"];
@@ -564,6 +569,278 @@ namespace TimeSeriesFramework.UI
             return parityList;
         }
 
+        public static Dictionary<int, TimeTaggedMeasurement> GetStatisticMeasurements(string statisticDataUrl, string nodeID)
+        {
+            Dictionary<int, TimeTaggedMeasurement> statisticMeasurementList = new Dictionary<int, TimeTaggedMeasurement>();
+            Dictionary<int, BasicStatisticInfo> basicStatisticList = new Dictionary<int, BasicStatisticInfo>(BasicStatisticInfo.Load(null, System.Guid.Parse(nodeID)));
+
+            try
+            {
+                HttpWebRequest request = WebRequest.Create(statisticDataUrl) as HttpWebRequest;
+                using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
+                {
+                    if (response.StatusCode == HttpStatusCode.OK)
+                    {
+                        StreamReader reader = new StreamReader(response.GetResponseStream());
+                        XElement timeSeriesDataPoints = XElement.Parse(reader.ReadToEnd());
+
+                        foreach (XElement element in timeSeriesDataPoints.Element("TimeSeriesDataPoints").Elements("TimeSeriesDataPoint"))
+                        {
+                            BasicStatisticInfo basicStatisticInfo;
+                            if (basicStatisticList.TryGetValue(Convert.ToInt32(element.Element("HistorianID").Value), out basicStatisticInfo))
+                            {
+                                //System.Diagnostics.Debug.WriteLine(element.Element("HistorianID").Value);
+                                DateTime sourceDateTime;
+                                string quality;
+                                if (DateTime.TryParseExact(element.Element("Time").Value, "yyyy-MM-dd HH:mm:ss.fff", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out sourceDateTime) && DateTime.UtcNow.Subtract(sourceDateTime).TotalSeconds > 30)
+                                    quality = "Unknown";
+                                else
+                                    quality = element.Element("Quality").Value;
+
+                                statisticMeasurementList.Add(Convert.ToInt32(element.Element("HistorianID").Value), new TimeTaggedMeasurement()
+                                {
+                                    //PointID = Convert.ToInt32(element.Element("HistorianID").Value),
+                                    TimeTag = element.Element("Time").Value,
+                                    CurrentValue = string.Format(basicStatisticInfo.DisplayFormat, ConvertValueToType(element.Element("Value").Value, basicStatisticInfo.DataType)),
+                                    Quality = quality
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                
+            }
+
+            return statisticMeasurementList;
+        }
+
+        static object ConvertValueToType(string xmlValue, string xmlDataType)
+        {
+            Type dataType = Type.GetType(xmlDataType);
+            float value;
+
+            if (float.TryParse(xmlValue, out value))
+            {
+                switch (xmlDataType)
+                {
+                    case "System.DateTime":
+                        return new DateTime((long)value);
+                    default:
+                        return Convert.ChangeType(value, dataType);
+                }
+            }
+
+            return "".ConvertToType<object>(dataType);
+        }
+
+        public static KeyValuePair<int?, int?> GetMinMaxPointIDs(AdoDataConnection connection, Guid nodeID)
+        {
+            KeyValuePair<int?, int?> minMaxPointIDs = new KeyValuePair<int?, int?>(1, 5000);
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = DataModelBase.CreateConnection(ref connection);
+
+                DataTable results = connection.Connection.RetrieveData(connection.AdapterType, "SELECT MIN(PointID) AS MinPointID, MAX(PointID) AS MaxPointID FROM MeasurementDetail WHERE NodeID = @nodeID", connection.Guid(nodeID));
+
+                foreach (DataRow row in results.Rows)
+                {
+                    minMaxPointIDs = new KeyValuePair<int?, int?>(row.Field<int?>("MinPointID"), row.Field<int?>("MaxPointID"));
+                }
+            }
+            finally
+            {
+                if (createdConnection && connection != null)
+                    connection.Dispose();
+            }
+
+            return minMaxPointIDs;
+        }
+
+        public static void LogException(AdoDataConnection connection, string source, Exception ex)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = DataModelBase.CreateConnection(ref connection);
+
+                connection.Connection.ExecuteNonQuery("INSERT INTO ErrorLog (Source, Message, Detail) VALUES (@source, @message, @detail", DataModelBase.DefaultTimeout, source, ex.Message, ex.ToString());
+            }
+            catch
+            {
+                //Do nothing.  Don't worry about it
+            }
+            finally
+            {
+                if (createdConnection && connection != null)
+                    connection.Dispose();
+            }
+        }
+
+        public static ObservableCollection<StatisticMeasurementData> GetStatisticMeasurementData(AdoDataConnection connection, Guid nodeID)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = DataModelBase.CreateConnection(ref connection);
+
+                ObservableCollection<StatisticMeasurementData> statisticMeasurementDataList = new ObservableCollection<StatisticMeasurementData>();
+                ObservableCollection<StreamInfo> inputStreamList = new ObservableCollection<StreamInfo>();
+                ObservableCollection<StreamInfo> outputStreamInfoList = new ObservableCollection<StreamInfo>();
+
+                DataSet resultSet = new DataSet();
+                resultSet.EnforceConstraints = false;
+                DataTable resultTable;
+
+
+                //-------------------------------------------------------------
+                //First get all the PDC devices and directly connected devices.  These are our input stream devices.
+                resultTable = connection.Connection.RetrieveData(connection.AdapterType, "SELECT ID, Acronym, Name FROM DeviceDetail WHERE NodeID = @nodeID AND (IsConcentrator = @isConcentrator OR ParentAcronym = @parentAcronym) ORDER BY Acronym", connection.Guid(nodeID), true, string.Empty);
+                resultTable.TableName = "InputStreamDevices";
+                resultSet.Tables.Add(resultTable.Copy());
+                //-------------------------------------------------------------
+
+                //-------------------------------------------------------------
+                //Second, get all the Devices that are connected to PDC.  These devices are part of input stream coming from other PDCs.
+                resultTable = connection.Connection.RetrieveData(connection.AdapterType, "SELECT ID, Acronym, Name, ParentID FROM DeviceDetail WHERE NodeID = @nodeID AND IsConcentrator = @isConcentrator AND ParentID > 0 ORDER BY Acronym", connection.Guid(nodeID), false);
+                resultTable.TableName = "PdcDevices";
+                resultSet.Tables.Add(resultTable.Copy());
+                //-------------------------------------------------------------
+
+                //-------------------------------------------------------------
+                //Get Output Stream information.
+                resultTable = connection.Connection.RetrieveData(connection.AdapterType, "SELECT ID, Acronym, Name FROM OutputStream WHERE NodeID = @nodeID ORDER BY Acronym", connection.Guid(nodeID));
+                resultTable.TableName = "OutputStreams";
+                resultSet.Tables.Add(resultTable.Copy());
+                //-------------------------------------------------------------
+
+                //-------------------------------------------------------------
+                //Third we need to get statistics measurements from Measurement table, statistic definition from Statistic table. Create relationship between those two.
+                //Then create parent child relationship to above two datatables.
+                resultTable = connection.Connection.RetrieveData(connection.AdapterType, "SELECT DeviceID, PointID, PointTag, SignalReference, MeasurementSource FROM StatisticMeasurement WHERE NodeID = @nodeID ORDER BY MeasurementSource, SignalReference", connection.Guid(nodeID));
+                resultTable.TableName = "StatisticMeasurements";
+                resultSet.Tables.Add(resultTable.Copy());
+                //-------------------------------------------------------------
+
+                //-------------------------------------------------------------
+                //Get Statistic Definitions
+                resultTable = connection.Connection.RetrieveData(connection.AdapterType, "SELECT Source, SignalIndex, Name, Description, DataType, DisplayFormat, IsConnectedState, LoadOrder FROM Statistic ORDER BY Source, SignalIndex");
+                resultTable.TableName = "StatisticDefinitions";
+                resultSet.Tables.Add(resultTable.Copy());
+                //-------------------------------------------------------------
+
+                List<DetailStatisticInfo> statisticInfoList = new List<DetailStatisticInfo>();
+                statisticInfoList = (from measurement in resultSet.Tables["StatisticMeasurements"].AsEnumerable()
+                                     select new DetailStatisticInfo()
+                                     {
+                                         DeviceID = measurement.Field<object>("DeviceID") == null ? -1 : Convert.ToInt32(measurement.Field<object>("DeviceID")),
+                                         PointID = Convert.ToInt32(measurement.Field<object>("PointID")),
+                                         PointTag = measurement.Field<string>("PointTag"),
+                                         SignalReference = measurement.Field<string>("SignalReference"),
+                                         Statistics = (from statistic in resultSet.Tables["StatisticDefinitions"].AsEnumerable()
+                                                       where statistic.Field<string>("Source") == measurement.Field<string>("MeasurementSource") &&
+                                                           statistic.Field<int>("SignalIndex") == Convert.ToInt32((measurement.Field<string>("SignalReference")).Substring((measurement.Field<string>("SignalReference")).LastIndexOf("-ST") + 3))
+                                                       select new BasicStatisticInfo()
+                                                       {
+                                                           Source = statistic.Field<string>("Source"),
+                                                           Name = statistic.Field<string>("Name"),
+                                                           Description = statistic.Field<string>("Description"),
+                                                           Quality = "N/A",
+                                                           TimeTag = "N/A",
+                                                           Value = "--",
+                                                           DataType = statistic.Field<object>("DataType") == null ? string.Empty : statistic.Field<string>("DataType"),
+                                                           DisplayFormat = statistic.Field<object>("DisplayFormat") == null ? string.Empty : statistic.Field<string>("DisplayFormat"),
+                                                           IsConnectedState = Convert.ToBoolean(statistic.Field<object>("IsConnectedState")),
+                                                           LoadOrder = Convert.ToInt32(statistic.Field<object>("LoadOrder"))
+                                                       }).First()
+                                     }).ToList();
+
+                //-------------------------------------------------------------
+                inputStreamList = new ObservableCollection<StreamInfo>((from inputDevice in resultSet.Tables["InputStreamDevices"].AsEnumerable()
+                                                                        select new StreamInfo()
+                                                                        {
+                                                                            ID = Convert.ToInt32(inputDevice.Field<object>("ID")),
+                                                                            Acronym = inputDevice.Field<string>("Acronym"),
+                                                                            Name = inputDevice.Field<string>("Name"),
+                                                                            StatusColor = "Gray",
+                                                                            StatisticList = new ObservableCollection<DetailStatisticInfo>((from statistic in statisticInfoList
+                                                                                                                                           where statistic.DeviceID == Convert.ToInt32(inputDevice.Field<object>("ID"))
+                                                                                                                                           select statistic).ToList().OrderBy(o => o.Statistics.Source).ThenBy(o => o.Statistics.LoadOrder).ToList()),
+                                                                            DeviceStatisticList = new ObservableCollection<DeviceStatistic>((from pdcDevice in resultSet.Tables["PdcDevices"].AsEnumerable()
+                                                                                                                                             where Convert.ToInt32(pdcDevice.Field<object>("ParentID")) == Convert.ToInt32(inputDevice.Field<object>("ID"))
+                                                                                                                                             select new DeviceStatistic()
+                                                                                                                                             {
+                                                                                                                                                 ID = Convert.ToInt32(pdcDevice.Field<object>("ID")),
+                                                                                                                                                 Acronym = pdcDevice.Field<string>("Acronym"),
+                                                                                                                                                 Name = pdcDevice.Field<string>("Name"),
+                                                                                                                                                 StatisticList = new ObservableCollection<DetailStatisticInfo>((from statistic in statisticInfoList
+                                                                                                                                                                                                                where statistic.DeviceID == Convert.ToInt32(pdcDevice.Field<object>("ID"))
+                                                                                                                                                                                                                select statistic
+                                                                                                                                                                 ).ToList().OrderBy(o => o.Statistics.LoadOrder).ToList())
+                                                                                                                                             }).ToList())
+                                                                        }).ToList());
+
+                foreach (StreamInfo inputStreamDevice in inputStreamList)
+                {
+                    inputStreamDevice.DeviceStatisticList.Insert(0, new DeviceStatistic()
+                    {
+                        ID = 0,
+                        Acronym = "Run-Time Statistics",
+                        Name = "",
+                        StatisticList = new ObservableCollection<DetailStatisticInfo>(inputStreamDevice.StatisticList)
+                    });
+                    inputStreamDevice.StatisticList = null;  //since this is moved to dummy device above "Run-Time Statistics", we don't need it anymore.
+                }
+
+                statisticMeasurementDataList.Add(new StatisticMeasurementData()
+                {
+                    SourceType = "Input Streams",
+                    SourceStreamInfoList = new ObservableCollection<StreamInfo>(inputStreamList)
+                });
+
+                outputStreamInfoList = new ObservableCollection<StreamInfo>((from outputDevice in resultSet.Tables["OutputStreams"].AsEnumerable()
+                                                                             select new StreamInfo()
+                                                                             {
+                                                                                 ID = Convert.ToInt32(outputDevice.Field<object>("ID")),
+                                                                                 Acronym = outputDevice.Field<string>("Acronym"),
+                                                                                 Name = outputDevice.Field<string>("Name"),
+                                                                                 StatusColor = "Gray",
+                                                                                 StatisticList = new ObservableCollection<DetailStatisticInfo>((from statistic in statisticInfoList
+                                                                                                                                                where statistic.SignalReference.StartsWith(outputDevice.Field<string>("Acronym") + "!")
+                                                                                                                                                select statistic).ToList().OrderBy(o => o.Statistics.Source).ThenBy(o => o.Statistics.LoadOrder).ToList()),
+                                                                                 DeviceStatisticList = new ObservableCollection<DeviceStatistic>()
+                                                                             }).ToList());
+
+                foreach (StreamInfo outputStreamDevice in outputStreamInfoList)
+                {
+                    outputStreamDevice.DeviceStatisticList.Insert(0, new DeviceStatistic()
+                    {
+                        ID = 0,
+                        Acronym = "Run-Time Statistics",
+                        Name = "",
+                        StatisticList = new ObservableCollection<DetailStatisticInfo>(outputStreamDevice.StatisticList)
+                    });
+                    outputStreamDevice.StatisticList = null;
+                }
+                statisticMeasurementDataList.Add(new StatisticMeasurementData()
+                {
+                    SourceType = "Output Streams",
+                    SourceStreamInfoList = outputStreamInfoList
+                });
+
+                return statisticMeasurementDataList;
+            }
+            finally
+            {
+                if (createdConnection && connection != null)
+                    connection.Dispose();
+            }
+        }
         #endregion
 
     }
