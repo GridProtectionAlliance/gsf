@@ -350,6 +350,27 @@ namespace TimeSeriesFramework.Transport
                 }
             }
 
+            /// <summary>
+            /// Gets a formatted message describing the status of this <see cref="SynchronizedClientSubscription"/>.
+            /// </summary>
+            public override string Status
+            {
+                get
+                {
+                    StringBuilder status = new StringBuilder();
+                    ClientConnection connection;
+
+                    if (m_parent.m_clientConnections.TryGetValue(m_clientID, out connection))
+                    {
+                        status.Append(connection.Status);
+                        status.AppendLine();
+                    }
+
+                    status.Append(base.Status);
+                    return status.ToString();
+                }
+            }
+
             #endregion
 
             #region [ Methods ]
@@ -607,6 +628,27 @@ namespace TimeSeriesFramework.Transport
                 }
             }
 
+            /// <summary>
+            /// Gets a formatted message describing the status of this <see cref="UnsynchronizedClientSubscription"/>.
+            /// </summary>
+            public override string Status
+            {
+                get
+                {
+                    StringBuilder status = new StringBuilder();
+                    ClientConnection connection;
+
+                    if (m_parent.m_clientConnections.TryGetValue(m_clientID, out connection))
+                    {
+                        status.Append(connection.Status);
+                        status.AppendLine();
+                    }
+
+                    status.Append(base.Status);
+                    return status.ToString();
+                }
+            }
+
             #endregion
 
             #region [ Methods ]
@@ -823,7 +865,7 @@ namespace TimeSeriesFramework.Transport
         }
 
         // Client connection class
-        private class ClientConnection : IDisposable
+        private class ClientConnection : IProvideStatus, IDisposable
         {
             #region [ Members ]
 
@@ -1140,6 +1182,47 @@ namespace TimeSeriesFramework.Transport
                 set
                 {
                     m_subscription = value;
+                }
+            }
+
+            /// <summary>
+            /// Gets the subscriber name of this <see cref="ClientConnection"/>.
+            /// </summary>
+            public string Name
+            {
+                get
+                {
+                    return SubscriberName;
+                }
+            }
+
+            /// <summary>
+            /// Gets a formatted message describing the status of this <see cref="ClientConnection"/>.
+            /// </summary>
+            public string Status
+            {
+                get
+                {
+                    StringBuilder status = new StringBuilder();
+                    string formatString = "{0,26}: {1}";
+
+                    status.AppendLine();
+                    status.AppendFormat(formatString, "Subscriber ID", m_connectionID);
+                    status.AppendLine();
+                    status.AppendFormat(formatString, "Subscriber name", SubscriberName);
+                    status.AppendLine();
+                    status.AppendFormat(formatString, "Subscriber acronym", SubscriberAcronym);
+                    status.AppendLine();
+                    status.AppendFormat(formatString, "Publish channel protocol", PublishChannel.TransportProtocol);
+                    status.AppendLine();
+
+                    if (m_dataChannel != null)
+                    {
+                        status.AppendLine();
+                        status.Append(m_dataChannel.Status);
+                    }
+
+                    return status.ToString();
                 }
             }
 
