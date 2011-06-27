@@ -238,7 +238,7 @@ namespace TimeSeriesFramework.Transport
             m_clientConnections = new ConcurrentDictionary<Guid, ClientConnection>();
             m_clientPublicationChannels = new ConcurrentDictionary<Guid, IServer>();
             m_signalIDCache = new ConcurrentDictionary<MeasurementKey, Guid>();
-            m_metadataTables = "Device,Measurement";
+            m_metadataTables = "DeviceDetail,MeasurementDetail";
         }
 
         /// <summary>
