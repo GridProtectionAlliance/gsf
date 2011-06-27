@@ -864,7 +864,6 @@ namespace TimeSeriesFramework.Transport
                                     SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.Authenticate, message);
                                     OnStatusMessage(message);
                                     return;
-
                                 }
                                 else
                                 {
@@ -1025,6 +1024,10 @@ namespace TimeSeriesFramework.Transport
                                 connection.DataChannel.Start();
                             }
                         }
+
+                        // Remove any existing cached publication channel since connection is changing
+                        IServer publicationChannel;
+                        m_clientPublicationChannels.TryRemove(clientID, out publicationChannel);
 
                         // Update measurement serialization format type
                         subscription.UseCompactMeasurementFormat = useCompactMeasurementFormat;
@@ -1199,6 +1202,7 @@ namespace TimeSeriesFramework.Transport
                     {
                         // Handle authenticate
                         HandleAuthenticationRequest(connection, buffer, length);
+                        return;
                     }
                     else if (m_requireAuthentication && !connection.Authenticated)
                     {

@@ -156,7 +156,7 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
-        /// Gets or sets reference to <see cref="UdpServer"/> data channel, attaching and/or detaching to events as needed, associated with this <see cref="ClientConnection"/>.
+        /// Gets or sets reference to <see cref="UdpServer"/> data channel, attaching to or detaching from events as needed, associated with this <see cref="ClientConnection"/>.
         /// </summary>
         public UdpServer DataChannel
         {
@@ -418,6 +418,39 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="ClientConnection"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        if (m_pingTimer != null)
+                        {
+                            m_pingTimer.Elapsed -= m_pingTimer_Elapsed;
+                            m_pingTimer.Dispose();
+                        }
+                        m_pingTimer = null;
+
+                        DataChannel = null;
+                        m_commandChannel = null;
+                        m_ipAddress = null;
+                        m_subscription = null;
+                        m_parent = null;
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
+                }
+            }
+        }
+
+        /// <summary>
         /// Creates or updates cipher keys.
         /// </summary>
         public void UpdateKeyIVs()
@@ -454,39 +487,6 @@ namespace TimeSeriesFramework.Transport
 
                 // Set run-time to the other key set
                 m_cipherIndex = (m_cipherIndex == EvenKey ? OddKey : EvenKey);
-            }
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="ClientConnection"/> object and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        if (m_pingTimer != null)
-                        {
-                            m_pingTimer.Elapsed -= m_pingTimer_Elapsed;
-                            m_pingTimer.Dispose();
-                        }
-                        m_pingTimer = null;
-
-                        DataChannel = null;
-                        m_commandChannel = null;
-                        m_ipAddress = null;
-                        m_subscription = null;
-                        m_parent = null;
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;  // Prevent duplicate dispose.
-                }
             }
         }
 
