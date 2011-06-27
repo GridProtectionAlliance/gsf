@@ -551,7 +551,7 @@ namespace TimeSeriesFramework.Transport
                             dataChannel.Compression = CompressionStrength.Standard;
 
                         dataChannel.ReceiveBufferSize = ushort.MaxValue;
-                        dataChannel.Connect();
+                        dataChannel.ConnectAsync();
                     }
 
                     // Assign data channel client reference and attach to needed events
@@ -613,7 +613,7 @@ namespace TimeSeriesFramework.Transport
         /// <param name="commandCode"><see cref="ServerCommand"/> to send.</param>
         /// <param name="data">Command data to send.</param>
         /// <returns><c>true</c> if <paramref name="commandCode"/> transmission was successful; otherwise <c>false</c>.</returns>
-        protected virtual bool SendServerCommand(ServerCommand commandCode, byte[] data)
+        public virtual bool SendServerCommand(ServerCommand commandCode, byte[] data = null)
         {
             if (m_commandChannel != null && m_commandChannel.CurrentState == ClientState.Connected)
             {
@@ -665,7 +665,7 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         protected override void AttemptConnection()
         {
-            m_commandChannel.Connect();
+            m_commandChannel.ConnectAsync();
             m_authenticated = false;
             m_keyIVs = null;
             Interlocked.Exchange(ref m_totalBytesReceived, 0L);
