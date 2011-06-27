@@ -611,7 +611,7 @@ namespace TimeSeriesFramework.UI
             }
             catch (Exception ex)
             {
-                
+                LogException(null, "CommonFunctions.GetStatisticMeasurements", ex);
             }
 
             return statisticMeasurementList;
@@ -700,7 +700,7 @@ namespace TimeSeriesFramework.UI
 
                 //-------------------------------------------------------------
                 //First get all the PDC devices and directly connected devices.  These are our input stream devices.
-                resultTable = connection.Connection.RetrieveData(connection.AdapterType, "SELECT ID, Acronym, Name FROM DeviceDetail WHERE NodeID = @nodeID AND (IsConcentrator = @isConcentrator OR ParentAcronym = @parentAcronym) ORDER BY Acronym", connection.Guid(nodeID), true, string.Empty);
+                resultTable = connection.Connection.RetrieveData(connection.AdapterType, "SELECT ID, Acronym, Name FROM DeviceDetail");// AND (IsConcentrator = @isConcentrator OR ParentAcronym = @parentAcronym) ORDER BY Acronym", connection.Guid(nodeID), false, string.Empty);
                 resultTable.TableName = "InputStreamDevices";
                 resultSet.Tables.Add(resultTable.Copy());
                 //-------------------------------------------------------------

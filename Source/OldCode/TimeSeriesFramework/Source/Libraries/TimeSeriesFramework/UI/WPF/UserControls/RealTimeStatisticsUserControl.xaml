@@ -38,35 +38,32 @@
                                 <TextBlock Text="{Binding Path=SignalReference}" ToolTipService.ToolTip="{Binding Path=PointTag}" Width="{StaticResource SmallItemSize}" TextAlignment="Left" FontSize="{StaticResource SmallTextSize}" Padding="1"/>
                             </Border>
                             <Border>
-                                <StackPanel Orientation="Horizontal" DataContext="{Binding Path=Statistics}">
-                                    <TextBlock Text="{Binding Path=Name}" ToolTipService.ToolTip="{Binding Path=Description}" Width="{StaticResource LargerItemSize}" TextAlignment="Left" FontSize="{StaticResource LargeTextSize}" Padding="1"/>
-                                    <TextBlock Text="{Binding Path=Value}" Foreground="{Binding Quality, Converter={StaticResource stringToColorConverter}}" ToolTipService.ToolTip="{Binding Path=Quality}" Width="{StaticResource LargeItemSize}" TextAlignment="Center" FontSize="{StaticResource LargeTextSize}" FontWeight="Bold" Padding="1"/>
-                                    <TextBlock Text="{Binding Path=TimeTag}" Width="{StaticResource LargerItemSize}" TextAlignment="Center" FontSize="{StaticResource LargeTextSize}" Padding="1"/>
-                                </StackPanel>
+                                <ListView DataContext="{Binding Path=Statistics}">
+                                    <ListViewItem>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Path=Name}" ToolTipService.ToolTip="{Binding Path=Description}" Width="{StaticResource LargerItemSize}" TextAlignment="Left" FontSize="{StaticResource LargeTextSize}" Padding="1"/>
+                                            <TextBlock Text="{Binding Path=Value}" Foreground="{Binding Quality, Converter={StaticResource stringToColorConverter}}" ToolTipService.ToolTip="{Binding Path=Quality}" Width="{StaticResource LargeItemSize}" TextAlignment="Center" FontSize="{StaticResource LargeTextSize}" FontWeight="Bold" Padding="1"/>
+                                            <TextBlock Text="{Binding Path=TimeTag}" Width="{StaticResource LargerItemSize}" TextAlignment="Center" FontSize="{StaticResource LargeTextSize}" Padding="1"/>
+                                        </StackPanel>
+                                    </ListViewItem>
+                                </ListView>
                             </Border>
                         </StackPanel>
                     </HierarchicalDataTemplate>
 
-                    <HierarchicalDataTemplate x:Key="DeviceTemplate" ItemsSource="{Binding Path=StatisticList, Mode=TwoWay}">
+                    <HierarchicalDataTemplate x:Key="DeviceTemplate" ItemTemplate="{StaticResource StatisticTemplate}" ItemsSource="{Binding Path=StatisticList, Mode=TwoWay}">
                         <StackPanel Orientation="Vertical">
-                            <!--<TextBlock Text="" Width="{StaticResource BlankItemSize}" TextAlignment="Center" FontSize="{StaticResource LargeTextSize}" FontWeight="Bold"/>-->
                             <StackPanel Orientation="Horizontal">
-                                <!--<Border Style="{StaticResource ContentRowCellBorderStyle}">-->
                                 <TextBlock Text="{Binding Path=Acronym}" Width="{StaticResource LargeItemSize}" TextAlignment="Left" Padding="1"/>
-                                <!--</Border>
-                                <Border Style="{StaticResource ContentRowCellBorderStyle}">-->
                                 <TextBlock Text="{Binding Path=Name}" Width="{StaticResource XXLargeItemSize}" TextAlignment="Left" Padding="1"/>
-                                <!--</Border>-->
                             </StackPanel>
                         </StackPanel>
                     </HierarchicalDataTemplate>
 
-                    <HierarchicalDataTemplate x:Key="SourceTemplate" ItemsSource="{Binding Path=DeviceStatisticList, Mode=TwoWay}">
+                    <HierarchicalDataTemplate x:Key="SourceTemplate" ItemsSource="{Binding Path=DeviceStatisticList, Mode=TwoWay}" ItemTemplate="{StaticResource DeviceTemplate}">
                         <StackPanel Orientation="Vertical">
-                            <!--<TextBlock Text="" Width="{StaticResource BlankItemSize}" TextAlignment="Center" FontSize="{StaticResource LargeTextSize}" FontWeight="Bold"/>-->
                             <Border>
                                 <StackPanel Orientation="Horizontal" Margin="2">
-                                    <Ellipse Width="16" Height="16" Margin="5, 0, 5, 0" VerticalAlignment="Center" Fill="{Binding Path=StatusColor, Converter={StaticResource ConvertStringToSymbol}}"/>
                                     <TextBlock Text="{Binding Path=Acronym}" Width="{StaticResource LargerItemSize}" VerticalAlignment="Center" TextAlignment="Left" FontSize="{StaticResource LargeTextSize}" FontWeight="Bold" Padding="1"/>
                                     <TextBlock Text="{Binding Path=Name}" Width="530" TextAlignment="Left" VerticalAlignment="Center" FontSize="{StaticResource LargerTextSize}" FontWeight="Bold" Padding="1"/>
                                 </StackPanel>
@@ -91,12 +88,7 @@
                     <TextBlock x:Name="TextBlockRefreshInterval" Text="Refresh Interval: 10 sec" Grid.Column="1"  Foreground="#FFFFFFFF" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="{StaticResource SmallTextSize}"/>
                     <TextBlock x:Name="TextBlockLastRefresh" Grid.Column="2" Foreground="#FFFFFFFF" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="{StaticResource SmallTextSize}" />
                 </Grid>
-
-                <!--<ScrollViewer BorderThickness="0" Padding="0">
-                    <ScrollViewer.Content>-->
-                <TreeView x:Name="TreeViewRealTimeStatistics" ItemsSource="{Binding Path=StatisticMeasurementDataList, Mode=TwoWay}"  ItemTemplate="{StaticResource RootTemplate}" Height="770" ItemContainerStyle="{StaticResource ExpandedItemStyle}"/>
-                <!--</ScrollViewer.Content>
-                </ScrollViewer>-->
+                <TreeView x:Name="TreeViewRealTimeStatistics" ItemsSource="{Binding Path=StatisticMeasurementDataList, Mode=TwoWay}"  ItemTemplate="{StaticResource RootTemplate}" Height="770" ItemContainerStyle="{StaticResource ExpandedItemStyle}" Background="Transparent"/>
             </StackPanel>
         </Border>
     </Grid>

@@ -45,6 +45,7 @@ namespace TimeSeriesFramework.UI.UserControls
             m_dataForBinding = new StatisticMeasurementDataForBinding();
             m_statisticMeasurementDataList = new ObservableCollection<StatisticMeasurementData>();
             m_minMaxPointIDs = new KeyValuePair<int?, int?>();
+            m_nodeID = (Guid)database.CurrentNodeID();
 
             int interval = 10;
 
@@ -164,14 +165,14 @@ namespace TimeSeriesFramework.UI.UserControls
         {
             GetStatisticMeasurementData();
             GetMinMaxPointIDs();
-            m_nodeID = (Guid)database.CurrentNodeID();
+            
             if (string.IsNullOrEmpty(database.RealTimeStatisticServiceUrl()))
             {
                 m_url = string.Empty;
             }
             else
             {
-                m_url = database.RealTimeStatisticServiceUrl() + "/timeseriesdata/read/current/" + m_minMaxPointIDs.Key.ToString() + "-" + m_minMaxPointIDs.Value.ToString() + "/XML";
+                m_url = database.RealTimeStatisticServiceUrl() + "/timeseriesdata/read/current/1" + "-" + "49/XML";
             }
             GetTimeTaggedMeasurements(m_url);
         }
