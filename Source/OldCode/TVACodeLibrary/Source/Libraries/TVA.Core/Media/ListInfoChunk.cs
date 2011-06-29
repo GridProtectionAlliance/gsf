@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  WaveDataChunk.cs - Gbtc
+//  ListInfoChunk.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2009
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -9,10 +9,8 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  07/29/2009 - J. Ritchie Carroll
+//  06/27/2011 - J. Ritchie Carroll
 //       Generated original version of source code.
-//  09/14/2009 - Stephen C. Wills
-//       Added new header and license agreement.
 //
 //*******************************************************************************************************
 
@@ -235,7 +233,7 @@
 #region [ Contributor License Agreements ]
 
 /**************************************************************************\
-   Copyright © 2009 - J. Ritchie Carroll
+   Copyright © 2011 - J. Ritchie Carroll
    All rights reserved.
   
    Redistribution and use in source and binary forms, with or without
@@ -269,79 +267,73 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using TVA.Parsing;
+using System.Text;
 
 namespace TVA.Media
 {
     /// <summary>
-    /// Represents the data chunk in a WAVE media format file.
+    /// Represents the list info chunk in a WAVE media format file.
     /// </summary>
-    public class WaveDataChunk : RiffChunk, ISupportBinaryImage
+    public class ListInfoChunk : RiffChunk
     {
         #region [ Members ]
 
         // Constants
-        
+
         /// <summary>
-        /// Type ID of a WAVE data chunk.
+        /// Type ID of a WAVE list chunk.
         /// </summary>
-        public const string RiffTypeID = "data";
+        public const string RiffTypeID = "LIST";
 
         // Fields
-        private WaveFormatChunk m_waveFormat;
-        private List<LittleBinaryValue[]> m_sampleBlocks;
-        private int m_chunkSize;
+        private Dictionary<string, string> m_infoStrings;
 
         #endregion
 
         #region [ Constructors ]
 
-        /// <summary>
-        /// Constructs a new WAVE data chunk for the specified format.
-        /// </summary>
-        /// <param name="waveFormat"><see cref="WaveFormatChunk"/> that describes this <see cref="WaveDataChunk"/>.</param>
-        public WaveDataChunk(WaveFormatChunk waveFormat)
-            : base(RiffTypeID)
-        {
-            m_waveFormat = waveFormat;
-            m_sampleBlocks = new List<LittleBinaryValue[]>();
-            m_chunkSize = -1;
-        }
-
-        /// <summary>Reads a new WAVE format section from the specified stream.</summary>
+        /// <summary>Reads a new WAVE list info section from the specified stream.</summary>
         /// <param name="preRead">Pre-parsed <see cref="RiffChunk"/> header.</param>
         /// <param name="source">Source stream to read data from.</param>
-        /// <param name="waveFormat">Format of the data section to be parsed.</param>
-        /// <exception cref="InvalidOperationException">WAVE format or extra parameters section too small, wave file corrupted.</exception>
-        public WaveDataChunk(RiffChunk preRead, Stream source, WaveFormatChunk waveFormat)
+        /// <exception cref="InvalidOperationException">WAVE list info section is too small, wave file corrupted.</exception>
+        public ListInfoChunk(RiffChunk preRead, Stream source)
             : base(preRead, RiffTypeID)
         {
-            m_waveFormat = waveFormat;
-            m_sampleBlocks = new List<LittleBinaryValue[]>();
-            m_chunkSize = -1;
+            byte[] buffer = new byte[preRead.ChunkSize];
+            byte[] nullByte = new byte[] { 0 };
+            int bytesRead = source.Read(buffer, 0, buffer.Length);
+            int length, index = 0;
+            string key, value;
 
-            int blockSize = waveFormat.BlockAlignment;
-            int sampleSize = waveFormat.BitsPerSample / 8;
-            byte[] buffer = new byte[blockSize];
-            int channels = waveFormat.Channels;
-            TypeCode sampleTypeCode = m_waveFormat.GetSampleTypeCode();
-            LittleBinaryValue[] sampleBlock;
+            m_infoStrings = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 
-            int bytesRead = source.Read(buffer, 0, blockSize);
-
-            while (bytesRead == blockSize)
+            if (bytesRead >= 4 && string.Compare(Encoding.ASCII.GetString(buffer, index, 4), "INFO", true) == 0)
             {
-                // Create a new sample block, one little-endian formatted binary sample value for each channel
-                sampleBlock = new LittleBinaryValue[channels];
+                index += 4;
 
-                for (int x = 0; x < channels; x++)
+                while (index < bytesRead)
                 {
-                    sampleBlock[x] = new LittleBinaryValue(sampleTypeCode, buffer, x * sampleSize, sampleSize);
+                    // Read key
+                    length = buffer.IndexOfSequence(nullByte, index) - index + 1;
+                    key = Encoding.ASCII.GetString(buffer, index, length - 1).RemoveNull().RemoveControlCharacters();
+                    index += length;
+
+                    // Skip through null values
+                    while (index < bytesRead && buffer[index] == 0)
+                        index++;
+
+                    // Read value
+                    length = buffer.IndexOfSequence(nullByte, index) - index + 1;
+                    value = Encoding.ASCII.GetString(buffer, index, length - 1).RemoveNull().RemoveControlCharacters();
+                    index += length;
+
+                    // Skip through null values
+                    while (index < bytesRead && buffer[index] == 0)
+                        index++;
+
+                    if (!string.IsNullOrWhiteSpace(key))
+                        m_infoStrings[key] = value;
                 }
-
-                m_sampleBlocks.Add(sampleBlock);
-
-                bytesRead = source.Read(buffer, 0, blockSize);
             }
         }
 
@@ -350,113 +342,14 @@ namespace TVA.Media
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets associated <see cref="WaveFormatChunk"/> that defines the format of the data in this <see cref="WaveDataChunk"/>.
+        /// Gets list of info strings from list info blocks of this <see cref="ListInfoChunk"/>.
         /// </summary>
-        public WaveFormatChunk WaveFormat
+        public Dictionary<string, string> InfoStrings
         {
             get
             {
-                return m_waveFormat;
+                return m_infoStrings;
             }
-            set
-            {
-                m_waveFormat = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets list of little-endian formatted sample data blocks of this <see cref="WaveDataChunk"/>.
-        /// </summary>
-        public List<LittleBinaryValue[]> SampleBlocks
-        {
-            get
-            {
-                return m_sampleBlocks;
-            }
-        }
-
-        /// <summary>
-        /// Gets the chunk size of this <see cref="WaveDataChunk"/>.
-        /// </summary>
-        public override int ChunkSize
-        {
-            get
-            {
-                if (m_chunkSize == -1)
-                return m_sampleBlocks.Count * m_waveFormat.BlockAlignment;
-                return m_chunkSize;
-            }
-            set
-            {
-                m_chunkSize = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets binary representation of this <see cref="WaveDataChunk"/>.
-        /// </summary>
-        public override byte[] BinaryImage
-        {
-            get
-            {
-                byte[] binaryImage = new byte[BinaryLength];
-                int blockSize = m_waveFormat.BlockAlignment;
-                int sampleSize = m_waveFormat.BitsPerSample / 8;
-                int startIndex = base.BinaryLength;
-                LittleBinaryValue[] sampleChannels;
-
-                Buffer.BlockCopy(base.BinaryImage, 0, binaryImage, 0, startIndex);
-
-                for (int block = 0; block < m_sampleBlocks.Count; block++)
-                {
-                    sampleChannels = m_sampleBlocks[block];
-
-                    for (int sample = 0; sample < sampleChannels.Length; sample++)
-                    {
-                        Buffer.BlockCopy(sampleChannels[sample].Buffer, 0, binaryImage, startIndex + block * blockSize + sample * sampleSize, sampleSize);
-                    }
-                }
-
-                return binaryImage;
-            }
-        }
-
-        /// <summary>
-        /// Gets length of the binary representation of this <see cref="WaveDataChunk"/>.
-        /// </summary>
-        public new int BinaryLength
-        {
-            get
-            {
-                return base.BinaryLength + ChunkSize;
-            }
-        }
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Creates a deeply cloned copy of the <see cref="WaveDataChunk"/>.
-        /// </summary>
-        /// <returns>A deeply cloned copy of the <see cref="WaveDataChunk"/>.</returns>
-        public new WaveDataChunk Clone()
-        {
-            WaveDataChunk waveDataChunk = new WaveDataChunk(m_waveFormat);
-    
-            // Deep clone sample blocks
-            foreach (LittleBinaryValue[] samples in m_sampleBlocks)
-            {
-                waveDataChunk.SampleBlocks.Add(WaveFile.CloneSampleBlock(samples));
-            }
-    
-            return waveDataChunk;
-        }
-
-        // Data chunk is usually too large to parsed from a single binary image
-        int ISupportBinaryImage.Initialize(byte[] binaryImage, int startIndex, int length)
-        {
-            throw new NotImplementedException();
         }
 
         #endregion

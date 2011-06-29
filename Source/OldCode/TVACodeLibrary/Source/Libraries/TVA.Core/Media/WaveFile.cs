@@ -641,6 +641,7 @@ namespace TVA.Media
         private RiffHeaderChunk m_waveHeader;
         private WaveFormatChunk m_waveFormat;
         private WaveDataChunk m_waveData;
+        private ListInfoChunk m_listInfo;
 
         #endregion
 
@@ -716,12 +717,14 @@ namespace TVA.Media
         /// <param name="waveData">A <see cref="RiffHeaderChunk"/> header object.</param>
         /// <param name="waveFormat">A <see cref="WaveFormatChunk"/> format object.</param>
         /// <param name="waveHeader">A <see cref="WaveDataChunk"/> data object</param>
+        /// <param name="listInfo">Optional <see cref="ListInfoChunk"/> object.</param>
         [EditorBrowsable(EditorBrowsableState.Advanced)]
-        public WaveFile(RiffHeaderChunk waveHeader, WaveFormatChunk waveFormat, WaveDataChunk waveData)
+        public WaveFile(RiffHeaderChunk waveHeader, WaveFormatChunk waveFormat, WaveDataChunk waveData, ListInfoChunk listInfo = null)
         {
             m_waveHeader = waveHeader;
             m_waveFormat = waveFormat;
             m_waveData = waveData;
+            m_listInfo = listInfo;
         }
 
         #endregion
@@ -891,6 +894,33 @@ namespace TVA.Media
         }
 
         /// <summary>
+        /// Gets list of info strings available in this <see cref="WaveFile"/> if any were available during load; otherwise an empty dictionary.
+        /// </summary>
+        /// <remarks>
+        /// The current implementation only allows reading of loaded <see cref="WaveFile"/> metadata tags, not updating them.
+        /// </remarks>
+        public Dictionary<string, string> InfoStrings
+        {
+            get
+            {
+                if (m_listInfo != null)
+                    return m_listInfo.InfoStrings;
+                return new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            }
+        }
+
+        /// <summary>
+        /// Gets calculated audio length.
+        /// </summary>
+        public TimeSpan AudioLength
+        {
+            get
+            {
+                return new TimeSpan(Ticks.FromSeconds((m_waveData.ChunkSize / m_waveFormat.BlockAlignment) / (double)m_waveFormat.SampleRate));
+            }
+        }
+
+        /// <summary>
         /// Gets the size of the <see cref="ExtraParameters"/> buffer, if defined.
         /// </summary>
         public short ExtraParametersSize
@@ -963,6 +993,18 @@ namespace TVA.Media
             get
             {
                 return m_waveData;
+            }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="ListInfoChunk"/> of this <see cref="WaveFile"/>.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        public ListInfoChunk InfoChunk
+        {
+            get
+            {
+                return m_listInfo;
             }
         }
 
@@ -1167,11 +1209,12 @@ namespace TVA.Media
         /// Creates a new in-memory wave loaded from an existing wave file.
         /// </summary>
         /// <param name="waveFileName">File name of WAV file to load.</param>
+        /// <param name="loadData">Determines if wave data should be loaded into memory.</param>
         /// <returns>In-memory representation of wave file.</returns>
-        public static WaveFile Load(string waveFileName)
+        public static WaveFile Load(string waveFileName, bool loadData = true)
         {
             FileStream source = File.Open(waveFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-            WaveFile waveFile = WaveFile.Load(source);
+            WaveFile waveFile = WaveFile.Load(source, loadData);
             source.Close();
             return waveFile;
         }
@@ -1180,15 +1223,17 @@ namespace TVA.Media
         /// Creates a new in-memory wave loaded from an existing wave audio stream.
         /// </summary>
         /// <param name="source">Stream of WAV formatted audio data to load.</param>
+        /// <param name="loadData">Determines if wave data should be loaded into memory.</param>
         /// <returns>In-memory representation of wave file.</returns>
-        public static WaveFile Load(Stream source)
+        public static WaveFile Load(Stream source, bool loadData = true)
         {
             RiffChunk riffChunk;
             RiffHeaderChunk waveHeader = null;
             WaveFormatChunk waveFormat = null;
             WaveDataChunk waveData = null;
+            ListInfoChunk listInfo = null;
 
-            while (waveData == null)
+            while (source.Position < source.Length)
             {
                 riffChunk = RiffChunk.ReadNext(source);
 
@@ -1207,7 +1252,19 @@ namespace TVA.Media
                         if (waveFormat == null)
                             throw new InvalidDataException("WAVE data section encountered before format section, wave file corrupted");
 
-                        waveData = new WaveDataChunk(riffChunk, source, waveFormat);
+                        if (loadData)
+                        {
+                            waveData = new WaveDataChunk(riffChunk, source, waveFormat);
+                        }
+                        else
+                        {
+                            source.Seek(riffChunk.ChunkSize, SeekOrigin.Current);
+                            waveData = new WaveDataChunk(waveFormat);
+                            waveData.ChunkSize = riffChunk.ChunkSize;
+                        }
+                        break;
+                    case ListInfoChunk.RiffTypeID:
+                        listInfo = new ListInfoChunk(riffChunk, source);
                         break;
                     default:
                         // Skip unidentified section
@@ -1216,7 +1273,7 @@ namespace TVA.Media
                 }
             }
 
-            return new WaveFile(waveHeader, waveFormat, waveData);
+            return new WaveFile(waveHeader, waveFormat, waveData, listInfo);
         }
 
         /// <summary>
@@ -1444,7 +1501,7 @@ namespace TVA.Media
                     (double)value1.ConvertToType(TypeCode.Double) +
                     (double)value2.ConvertToType(TypeCode.Double) * value2Volume;
             }
-            
+
             return result.ConvertToType(value1.TypeCode);
         }
 

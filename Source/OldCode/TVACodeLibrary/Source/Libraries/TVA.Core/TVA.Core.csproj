@@ -193,6 +193,7 @@
     <Compile Include="IProvideStatus.cs" />
     <Compile Include="ISupportLifecycle.cs" />
     <Compile Include="LittleBinaryValue.cs" />
+    <Compile Include="Media\ListInfoChunk.cs" />
     <Compile Include="Media\Music\Damping.cs" />
     <Compile Include="Media\Music\Dynamic.cs" />
     <Compile Include="Media\Music\MeasureSize.cs" />
