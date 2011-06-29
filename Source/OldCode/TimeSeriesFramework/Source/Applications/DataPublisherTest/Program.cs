@@ -53,14 +53,19 @@ namespace DataPublisherTest
             while (true)
             {
                 List<Measurement> measurements = new List<Measurement>();
-                Measurement newMeasurement, measurement = new Measurement(0, "DEVARCHIVE", double.NaN, DateTime.UtcNow.Ticks);
+
+                Measurement measurement;
 
                 for (int i = 1; i < 11; i++)
                 {
-                    newMeasurement = Measurement.Clone(measurement);
-                    newMeasurement.ID = (uint)i;
-                    newMeasurement.Value = TVA.Security.Cryptography.Random.Between(-65535.0D, 65536.0D);
-                    measurements.Add(newMeasurement);
+                    measurement = new Measurement()
+                    {
+                        Key = new MeasurementKey((uint)i, "DEVARCHIVE"),
+                        Value = TVA.Security.Cryptography.Random.Between(-65535.0D, 65536.0D),
+                        Timestamp = DateTime.UtcNow.Ticks
+                    };
+
+                    measurements.Add(measurement);
                 }
 
                 publisher.QueueMeasurementsForProcessing(measurements);

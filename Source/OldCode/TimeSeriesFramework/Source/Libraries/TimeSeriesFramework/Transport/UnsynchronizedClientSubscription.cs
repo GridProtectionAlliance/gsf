@@ -287,9 +287,17 @@ namespace TimeSeriesFramework.Transport
                         // Create a new set of measurements that represent the latest known values setting value to NaN if it is old
                         foreach (TemporalMeasurement measurement in LatestMeasurements)
                         {
-                            newMeasurement = new Measurement(measurement.ID, measurement.Source, measurement.SignalID, measurement.GetAdjustedValue(RealTime), measurement.Adder, measurement.Multiplier, measurement.Timestamp);
-                            newMeasurement.TimestampQualityIsGood = measurement.TimestampQualityIsGood;
-                            newMeasurement.ValueQualityIsGood = measurement.ValueQualityIsGood;
+                            newMeasurement = new Measurement()
+                            {
+                                ID = measurement.ID,
+                                Key = measurement.Key,
+                                Value = measurement.GetValue(RealTime),
+                                Adder = measurement.Adder,
+                                Multiplier = measurement.Multiplier,
+                                Timestamp = measurement.Timestamp,
+                                StateFlags = measurement.StateFlags
+                            };
+
                             currentMeasurements.Add(newMeasurement);
                         }
 

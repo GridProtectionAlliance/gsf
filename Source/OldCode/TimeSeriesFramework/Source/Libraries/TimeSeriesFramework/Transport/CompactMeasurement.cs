@@ -31,6 +31,134 @@ using TVA.Parsing;
 
 namespace TimeSeriesFramework.Transport
 {
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// <see cref="CompactMeasurement"/> state flags.
+    /// </summary>
+    [Flags]
+    internal enum CompactMeasurementStateFlags : byte
+    {
+        /// <summary>
+        /// A data range flag was set.
+        /// </summary>
+        DataRange = (byte)Bits.Bit00,
+        /// <summary>
+        /// A data quality flag was set.
+        /// </summary>
+        DataQuality = (byte)Bits.Bit01,
+        /// <summary>
+        /// Time quality flag was set.
+        /// </summary>
+        TimeQuality = (byte)Bits.Bit02,
+        /// <summary>
+        /// System flag was set.
+        /// </summary>
+        SystemIssue = (byte)Bits.Bit03,
+        /// <summary>
+        /// Calculated bit was set.
+        /// </summary>
+        CalculatedValue = (byte)Bits.Bit04,
+        /// <summary>
+        /// Discarded bit was set.
+        /// </summary>
+        DiscardedValue = (byte)Bits.Bit05,
+        /// <summary>
+        /// A user flag was set.
+        /// </summary>
+        UserFlag = (byte)Bits.Bit06,
+        /// <summary>
+        /// Use even time index when set; odd time index when not set.
+        /// </summary>
+        TimeIndex = (byte)Bits.Bit07,
+        /// <summary>
+        /// No flags.
+        /// </summary>
+        NoFlags = (byte)Bits.Nil
+    }
+
+    /// <summary>
+    /// Defines static methods for mapping between compact and full measurement states.
+    /// </summary>
+    internal static class MeasurementStateMappingExtensions
+    {
+        private const MeasurementStateFlags DataRangeMask = MeasurementStateFlags.OverRangeError | MeasurementStateFlags.UnderRangeError | MeasurementStateFlags.AlarmHigh | MeasurementStateFlags.AlarmLow | MeasurementStateFlags.WarningHigh | MeasurementStateFlags.WarningLow;
+        private const MeasurementStateFlags DataQualityMask = MeasurementStateFlags.BadData | MeasurementStateFlags.SuspectData | MeasurementStateFlags.FlatlineAlarm | MeasurementStateFlags.ComparisonAlarm | MeasurementStateFlags.ROCAlarm | MeasurementStateFlags.ReceivedAsBad | MeasurementStateFlags.CalculationError | MeasurementStateFlags.CalculationWarning | MeasurementStateFlags.ReservedQualityFlag;
+        private const MeasurementStateFlags TimeQualityMask = MeasurementStateFlags.BadTime | MeasurementStateFlags.SuspectTime | MeasurementStateFlags.LateTimeAlarm | MeasurementStateFlags.FutureTimeAlarm | MeasurementStateFlags.UpSampled | MeasurementStateFlags.DownSampled | MeasurementStateFlags.ReservedTimeFlag;
+        private const MeasurementStateFlags SystemIssueMask = MeasurementStateFlags.SystemError | MeasurementStateFlags.SystemWarning | MeasurementStateFlags.MeasurementError;
+        private const MeasurementStateFlags UserFlagMask = MeasurementStateFlags.UserDefinedFlag1 | MeasurementStateFlags.UserDefinedFlag2 | MeasurementStateFlags.UserDefinedFlag3 | MeasurementStateFlags.UserDefinedFlag4 | MeasurementStateFlags.UserDefinedFlag5;
+        private const MeasurementStateFlags CalculatedValueMask = MeasurementStateFlags.CalcuatedValue;
+        private const MeasurementStateFlags DiscardedValueMask = MeasurementStateFlags.DiscardedValue;
+
+        /// <summary>
+        /// Maps <see cref="MeasurementStateFlags"/> to <see cref="CompactMeasurementStateFlags"/>.
+        /// </summary>
+        /// <param name="stateFlags">Flags to map.</param>
+        /// <returns><see cref="CompactMeasurementStateFlags"/> mapped from <see cref="MeasurementStateFlags"/>.</returns>
+        public static CompactMeasurementStateFlags MapToCompactFlags(this MeasurementStateFlags stateFlags)
+        {
+            CompactMeasurementStateFlags mappedStateFlags = CompactMeasurementStateFlags.NoFlags;
+
+            if ((stateFlags & DataRangeMask) > 0)
+                mappedStateFlags |= CompactMeasurementStateFlags.DataRange;
+
+            if ((stateFlags & DataQualityMask) > 0)
+                mappedStateFlags |= CompactMeasurementStateFlags.DataQuality;
+
+            if ((stateFlags & TimeQualityMask) > 0)
+                mappedStateFlags |= CompactMeasurementStateFlags.DataQuality;
+
+            if ((stateFlags & SystemIssueMask) > 0)
+                mappedStateFlags |= CompactMeasurementStateFlags.DataQuality;
+
+            if ((stateFlags & UserFlagMask) > 0)
+                mappedStateFlags |= CompactMeasurementStateFlags.DataQuality;
+
+            if ((stateFlags & CalculatedValueMask) > 0)
+                mappedStateFlags |= CompactMeasurementStateFlags.CalculatedValue;
+
+            if ((stateFlags & DiscardedValueMask) > 0)
+                mappedStateFlags |= CompactMeasurementStateFlags.DiscardedValue;
+
+            return mappedStateFlags;
+        }
+
+        /// <summary>
+        /// Maps <see cref="CompactMeasurementStateFlags"/> to <see cref="MeasurementStateFlags"/>.
+        /// </summary>
+        /// <param name="stateFlags">Flags to map.</param>
+        /// <returns><see cref="MeasurementStateFlags"/> mapped from <see cref="CompactMeasurementStateFlags"/>.</returns>
+        public static MeasurementStateFlags MapToFullFlags(this CompactMeasurementStateFlags stateFlags)
+        {
+            MeasurementStateFlags mappedStateFlags = MeasurementStateFlags.Normal;
+
+            if ((stateFlags & CompactMeasurementStateFlags.DataRange) > 0)
+                mappedStateFlags |= DataRangeMask;
+
+            if ((stateFlags & CompactMeasurementStateFlags.DataQuality) > 0)
+                mappedStateFlags |= DataQualityMask;
+
+            if ((stateFlags & CompactMeasurementStateFlags.DataQuality) > 0)
+                mappedStateFlags |= TimeQualityMask;
+
+            if ((stateFlags & CompactMeasurementStateFlags.DataQuality) > 0)
+                mappedStateFlags |= SystemIssueMask;
+
+            if ((stateFlags & CompactMeasurementStateFlags.DataQuality) > 0)
+                mappedStateFlags |= UserFlagMask;
+
+            if ((stateFlags & CompactMeasurementStateFlags.CalculatedValue) > 0)
+                mappedStateFlags |= CalculatedValueMask;
+
+            if ((stateFlags & CompactMeasurementStateFlags.DiscardedValue) > 0)
+                mappedStateFlags |= DiscardedValueMask;
+
+            return mappedStateFlags;
+        }
+    }
+
+    #endregion
+
     /// <summary>
     /// Represents a <see cref="IMeasurement"/> that can be serialized with minimal size.
     /// </summary>
@@ -43,52 +171,6 @@ namespace TimeSeriesFramework.Transport
     public class CompactMeasurement : Measurement, ISupportBinaryImage
     {
         #region [ Members ]
-
-        // Nested Types
-
-        /// <summary>
-        /// <see cref="CompactMeasurement"/> state flags.
-        /// </summary>
-        [Flags]
-        public enum StateFlags : byte
-        {
-            /// <summary>
-            /// Use even time index when set; odd time index when not set.
-            /// </summary>
-            TimeIndex = (byte)Bits.Bit00,
-            /// <summary>
-            /// Value quality is good is true when set; otherwise false.
-            /// </summary>
-            ValueQualityIsGood = (byte)Bits.Bit01,
-            /// <summary>
-            /// Time quality is good is true when set; otherwise false.
-            /// </summary>
-            TimeQualityIsGood = (byte)Bits.Bit02,
-            /// <summary>
-            /// Discarded is true when set; otherwise false.
-            /// </summary>
-            Discarded = (byte)Bits.Bit03,
-            /// <summary>
-            /// Bit reserved for future use.
-            /// </summary>
-            Reserved01 = (byte)Bits.Bit04,
-            /// <summary>
-            /// Bit reserved for future use.
-            /// </summary>
-            Reserved02 = (byte)Bits.Bit05,
-            /// <summary>
-            /// Bit reserved for future use.
-            /// </summary>
-            Reserved03 = (byte)Bits.Bit06,
-            /// <summary>
-            /// Bit reserved for future use.
-            /// </summary>
-            Reserved04 = (byte)Bits.Bit07,
-            /// <summary>
-            /// No flags.
-            /// </summary>
-            NoFlags = (byte)Bits.Nil
-        }
 
         // Constants
 
@@ -133,10 +215,15 @@ namespace TimeSeriesFramework.Transport
         /// <param name="baseTimeOffsets">Base time offset array - set to <c>null</c> to use full fidelity measurement time.</param>
         /// <param name="timeIndex">Time index to use for base offset.</param>
         public CompactMeasurement(IMeasurement measurement, SignalIndexCache signalIndexCache, bool includeTime = true, long[] baseTimeOffsets = null, int timeIndex = 0)
-            : base(measurement.ID, measurement.Source, measurement.SignalID, measurement.Value, measurement.Adder, measurement.Multiplier, measurement.Timestamp)
         {
-            this.ValueQualityIsGood = measurement.ValueQualityIsGood;
-            this.TimestampQualityIsGood = measurement.TimestampQualityIsGood;
+            ID = measurement.ID;
+            Key = measurement.Key;
+            Value = measurement.Value;
+            Adder = measurement.Adder;
+            Multiplier = measurement.Multiplier;
+            Timestamp = measurement.Timestamp;
+            StateFlags = measurement.StateFlags;
+
             m_signalIndexCache = signalIndexCache;
             m_includeTime = includeTime;
 
@@ -187,11 +274,7 @@ namespace TimeSeriesFramework.Transport
                 int index = 0;
 
                 // Encode flags
-                StateFlags flags =
-                    (m_timeIndex == 0 ? StateFlags.NoFlags : StateFlags.TimeIndex) |
-                    (ValueQualityIsGood ? StateFlags.ValueQualityIsGood : StateFlags.NoFlags) |
-                    (TimestampQualityIsGood ? StateFlags.TimeQualityIsGood : StateFlags.NoFlags) |
-                    (IsDiscarded ? StateFlags.Discarded : StateFlags.NoFlags);
+                CompactMeasurementStateFlags flags = StateFlags.MapToCompactFlags() | (m_timeIndex == 0 ? CompactMeasurementStateFlags.NoFlags : CompactMeasurementStateFlags.TimeIndex);
 
                 // Allocate buffer to hold binary image
                 long baseTimeOffset = m_baseTimeOffsets[m_timeIndex];
@@ -257,11 +340,10 @@ namespace TimeSeriesFramework.Transport
                 throw new InvalidOperationException("Not enough buffer available to deserialize measurement.");
 
             // Decode flags
-            StateFlags flags = (StateFlags)buffer[startIndex];
-            m_timeIndex = (byte)(flags & StateFlags.TimeIndex) > 0 ? 1 : 0;
-            ValueQualityIsGood = ((byte)(flags & StateFlags.ValueQualityIsGood) > 0);
-            TimestampQualityIsGood = ((byte)(flags & StateFlags.TimeQualityIsGood) > 0);
-            IsDiscarded = ((byte)(flags & StateFlags.Discarded) > 0);
+            CompactMeasurementStateFlags flags = (CompactMeasurementStateFlags)buffer[startIndex];
+
+            StateFlags = flags.MapToFullFlags();
+            m_timeIndex = (byte)(flags & CompactMeasurementStateFlags.TimeIndex) > 0 ? 1 : 0;
 
             long baseTimeOffset = m_baseTimeOffsets[m_timeIndex];
             int length = FixedLength + (m_includeTime ? (baseTimeOffset > 0 ? 2 : 8) : 0);
@@ -281,7 +363,7 @@ namespace TimeSeriesFramework.Transport
 
             if (m_signalIndexCache.Reference.TryGetValue(id, out tuple))
             {
-                SignalID = tuple.Item1;
+                ID = tuple.Item1;
                 Key = tuple.Item2;
             }
             else

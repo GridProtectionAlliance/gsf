@@ -47,23 +47,29 @@ namespace TimeSeriesFramework
         /// <param name="lagTime">Past time deviation tolerance, in seconds - this becomes the amount of time to wait before publishing begins.</param>
         /// <param name="leadTime">Future time deviation tolerance, in seconds - this becomes the tolerated +/- accuracy of the local clock to real-time.</param>
         public TemporalMeasurement(double lagTime, double leadTime)
-            : this(uint.MaxValue, null, Guid.Empty, double.NaN, 0, lagTime, leadTime)
+            : this(null, lagTime, leadTime)
         {
         }
 
         /// <summary>
         /// Constructs a new <see cref="TemporalMeasurement"/> given the specified parameters.
         /// </summary>
-        /// <param name="id">Numeric ID of the <see cref="TemporalMeasurement"/>.</param>
-        /// <param name="source">Source of the <see cref="TemporalMeasurement"/>(e.g., name of archive).</param>
-        /// <param name="signalID"><see cref="Guid"/> based signal ID of measurement.</param>
-        /// <param name="value">Value of the <see cref="TemporalMeasurement"/>.</param>
-        /// <param name="timestamp">Timestamp of the <see cref="TemporalMeasurement"/>.</param>
+        /// <param name="measurement">Source <see cref="IMeasurement"/> value.</param>
         /// <param name="lagTime">Past time deviation tolerance, in seconds - this becomes the amount of time to wait before publishing begins.</param>
         /// <param name="leadTime">Future time deviation tolerance, in seconds - this becomes the tolerated +/- accuracy of the local clock to real-time.</param>
-        public TemporalMeasurement(uint id, string source, Guid signalID, double value, Ticks timestamp, double lagTime, double leadTime)
-            : base(id, source, signalID, value, 0.0D, 1.0D, timestamp)
+        public TemporalMeasurement(IMeasurement measurement, double lagTime, double leadTime)
         {
+            if (measurement != null)
+            {
+                ID = measurement.ID;
+                Key = measurement.Key;
+                Value = measurement.Value;
+                Adder = measurement.Adder;
+                Multiplier = measurement.Multiplier;
+                Timestamp = measurement.Timestamp;
+                StateFlags = measurement.StateFlags;
+            }
+
             if (lagTime <= 0)
                 throw new ArgumentOutOfRangeException("lagTime", "lagTime must be greater than zero, but it can be less than one");
 
@@ -174,7 +180,7 @@ namespace TimeSeriesFramework
 
             return false;
         }
-        
+
         #endregion
     }
 }

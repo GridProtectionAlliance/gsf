@@ -36,56 +36,164 @@ namespace TimeSeriesFramework
     /// <returns>Result of filter applied to sequence of <see cref="IMeasurement"/> values.</returns>
     public delegate double MeasurementValueFilterFunction(IEnumerable<IMeasurement> source);
 
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Measurement state flags.
+    /// </summary>
+    [Flags]
+    public enum MeasurementStateFlags : uint
+    {
+        /// <summary>
+        /// Defines normal state.
+        /// </summary>
+        Normal = (uint)Bits.Nil,
+        /// <summary>
+        /// Defines bad data state.
+        /// </summary>
+        BadData = (uint)Bits.Bit00,
+        /// <summary>
+        /// Defines suspect data state.
+        /// </summary>
+        SuspectData = (uint)Bits.Bit01,
+        /// <summary>
+        /// Defines over range error, i.e., unreasonable high value.
+        /// </summary>
+        OverRangeError = (uint)Bits.Bit02,
+        /// <summary>
+        /// Defines under range error, i.e., unreasonable low value.
+        /// </summary>
+        UnderRangeError = (uint)Bits.Bit03,
+        /// <summary>
+        /// Defines alarm for high value.
+        /// </summary>
+        AlarmHigh = (uint)Bits.Bit04,
+        /// <summary>
+        /// Defines alarm for low value.
+        /// </summary>
+        AlarmLow = (uint)Bits.Bit05,
+        /// <summary>
+        /// Defines warning for high value.
+        /// </summary>
+        WarningHigh = (uint)Bits.Bit06,
+        /// <summary>
+        /// Defines warning for low value.
+        /// </summary>
+        WarningLow = (uint)Bits.Bit07,
+        /// <summary>
+        /// Defines alarm for flat-lined value, i.e., latched value test alarm.
+        /// </summary>
+        FlatlineAlarm = (uint)Bits.Bit08,
+        /// <summary>
+        /// Defines comparision alarm, i.e., outside threshold of comparison with a real-time value.
+        /// </summary>
+        ComparisonAlarm = (uint)Bits.Bit09,
+        /// <summary>
+        /// Defines rate-of-change alarm.
+        /// </summary>
+        ROCAlarm = (uint)Bits.Bit10,
+        /// <summary>
+        /// Defines bad value received.
+        /// </summary>
+        ReceivedAsBad = (uint)Bits.Bit11,
+        /// <summary>
+        /// Defines calculated value state.
+        /// </summary>
+        CalcuatedValue = (uint)Bits.Bit12,
+        /// <summary>
+        /// Defines calculation error with the value.
+        /// </summary>
+        CalculationError = (uint)Bits.Bit13,
+        /// <summary>
+        /// Defines calculation warning with the value.
+        /// </summary>
+        CalculationWarning = (uint)Bits.Bit14,
+        /// <summary>
+        /// Defines reserved quality flag.
+        /// </summary>
+        ReservedQualityFlag = (uint)Bits.Bit15,
+        /// <summary>
+        /// Defines bad time state.
+        /// </summary>
+        BadTime = (uint)Bits.Bit16,
+        /// <summary>
+        /// Defines suspect time state.
+        /// </summary>
+        SuspectTime = (uint)Bits.Bit17,
+        /// <summary>
+        /// Defines late time alarm.
+        /// </summary>
+        LateTimeAlarm = (uint)Bits.Bit18,
+        /// <summary>
+        /// Defines future time alarm.
+        /// </summary>
+        FutureTimeAlarm = (uint)Bits.Bit19,
+        /// <summary>
+        /// Defines upsampled state.
+        /// </summary>
+        UpSampled = (uint)Bits.Bit20,
+        /// <summary>
+        /// Defines downsampled state.
+        /// </summary>
+        DownSampled = (uint)Bits.Bit21,
+        /// <summary>
+        /// Defines discarded value state.
+        /// </summary>
+        DiscardedValue = (uint)Bits.Bit22,
+        /// <summary>
+        /// Defines reserved time flag.
+        /// </summary>
+        ReservedTimeFlag = (uint)Bits.Bit23,
+        /// <summary>
+        /// Defines user defined flag 1.
+        /// </summary>
+        UserDefinedFlag1 = (uint)Bits.Bit24,
+        /// <summary>
+        /// Defines user defined flag 2.
+        /// </summary>
+        UserDefinedFlag2 = (uint)Bits.Bit25,
+        /// <summary>
+        /// Defines user defined flag 3.
+        /// </summary>
+        UserDefinedFlag3 = (uint)Bits.Bit26,
+        /// <summary>
+        /// Defines user defined flag 4.
+        /// </summary>
+        UserDefinedFlag4 = (uint)Bits.Bit27,
+        /// <summary>
+        /// Defines user defined flag 5.
+        /// </summary>
+        UserDefinedFlag5 = (uint)Bits.Bit28,
+        /// <summary>
+        /// Defines system error state.
+        /// </summary>
+        SystemError = (uint)Bits.Bit29,
+        /// <summary>
+        /// Defines system warning state.
+        /// </summary>
+        SystemWarning = (uint)Bits.Bit30,
+        /// <summary>
+        /// Defines measurement error flag.
+        /// </summary>
+        MeasurementError = (uint)Bits.Bit31
+    }
+
+    #endregion
+
     /// <summary>
     /// Represents an interface for an abstract measurement value measured by a device at an exact time.
     /// </summary>
     /// <remarks>
     /// This interface abstractly represents a measured value at an exact time interval.
     /// </remarks>
-    public interface IMeasurement : IEquatable<IMeasurement>, IComparable<IMeasurement>, IComparable
+    public interface IMeasurement : ITimeSeriesValue<double>, IEquatable<ITimeSeriesValue>, IComparable<ITimeSeriesValue>, IComparable
     {
-        /// <summary>
-        /// Gets or sets the numeric ID of this <see cref="IMeasurement"/>.
-        /// </summary>
-        /// <remarks>
-        /// <para>In most implementations, this will be a required field.</para>
-        /// <para>Note that this field, in addition to Source, typically creates the primary key for a <see cref="IMeasurement"/>.</para>
-        /// </remarks>
-        uint ID
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the source of this <see cref="IMeasurement"/>.
-        /// </summary>
-        /// <remarks>
-        /// <para>In most implementations, this will be a required field.</para>
-        /// <para>Note that this field, in addition to ID, typically creates the primary key for a <see cref="IMeasurement"/>.</para>
-        /// <para>This value is typically used to track the archive name in which <see cref="IMeasurement"/> is stored.</para>
-        /// </remarks>
-        string Source
-        {
-            get;
-            set;
-        }
-
         /// <summary>
         /// Returns the primary key of this <see cref="IMeasurement"/>.
         /// </summary>
         MeasurementKey Key
         {
             get;
-        }
-
-        /// <summary>
-        /// Gets or sets the <see cref="Guid"/> based signal ID of this <see cref="IMeasurement"/>, if available.
-        /// </summary>
-        Guid SignalID
-        {
-            get;
-            set;
         }
 
         /// <summary>
@@ -98,20 +206,11 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>
-        /// Gets or sets the raw value of this <see cref="IMeasurement"/> (i.e., the numeric value that is not offset by <see cref="Adder"/> and <see cref="Multiplier"/>).
-        /// </summary>
-        double Value
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
         /// Gets the adjusted numeric value of this <see cref="IMeasurement"/>, taking into account the specified <see cref="Adder"/> and <see cref="Multiplier"/> offsets.
         /// </summary>
         /// <remarks>
         /// <para>Implementors need to account for <see cref="Adder"/> and <see cref="Multiplier"/> in return value, e.g.:<br/>
-        /// <c>return <see cref="Value"/> * <see cref="Multiplier"/> + <see cref="Adder"/></c>
+        /// <c>return <see cref="ITimeSeriesValue{T}.Value"/> * <see cref="Multiplier"/> + <see cref="Adder"/></c>
         /// </para>
         /// </remarks>
         double AdjustedValue
@@ -144,12 +243,9 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="IMeasurement"/>.
+        /// Gets or sets <see cref="MeasurementStateFlags"/> associated with this <see cref="IMeasurement"/>.
         /// </summary>
-        /// <remarks>
-        /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
-        /// </remarks>
-        Ticks Timestamp
+        MeasurementStateFlags StateFlags
         {
             get;
             set;
@@ -181,33 +277,6 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that determines if the quality of the numeric value of this <see cref="IMeasurement"/> is good.
-        /// </summary>
-        bool ValueQualityIsGood
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that determines if the quality of the timestamp of this <see cref="IMeasurement"/> is good.
-        /// </summary>
-        bool TimestampQualityIsGood
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that determines if this <see cref="IMeasurement"/> has been discarded during sorting.
-        /// </summary>
-        bool IsDiscarded
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
         /// Gets or sets function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values.
         /// </summary>
         MeasurementValueFilterFunction MeasurementValueFilter
@@ -215,12 +284,54 @@ namespace TimeSeriesFramework
             get;
             set;
         }
+    }
+
+    /// <summary>
+    /// Defines static extension functions for <see cref="IMeasurement"/> implementations.
+    /// </summary>
+    /// <remarks>
+    /// These helper functions map to the previously defined corresponding properties to help with the transition of <see cref="MeasurementStateFlags"/>.
+    /// </remarks>
+    public static class IMeasurementExtensions
+    {
+        /// <summary>
+        /// Returns <c>true</c> if <see cref="MeasurementStateFlags.BadData"/> is not set.
+        /// </summary>
+        /// <param name="measurement"><see cref="IMeasurement"/> instance to test.</param>
+        /// <returns><c>true</c> if <see cref="MeasurementStateFlags.BadData"/> is not set.</returns>
+        public static bool ValueQualityIsGood(this IMeasurement measurement)
+        {
+            return (measurement.StateFlags & MeasurementStateFlags.BadData) == 0;
+        }
 
         /// <summary>
-        /// Get the hash code for the <see cref="IMeasurement"/>.<see cref="MeasurementKey"/>.
+        /// Returns <c>true</c> if <see cref="MeasurementStateFlags.BadTime"/> is not set.
         /// </summary>
-        /// <returns>Hash code for the <see cref="IMeasurement"/>.<see cref="MeasurementKey"/>.</returns>
-        /// <remarks>Implementors should always return the hash code based on <see cref="MeasurementKey"/> of measurement.</remarks>
-        int GetHashCode();
+        /// <param name="measurement"><see cref="IMeasurement"/> instance to test.</param>
+        /// <returns><c>true</c> if <see cref="MeasurementStateFlags.BadTime"/> is not set.</returns>
+        public static bool TimestampQualityIsGood(this IMeasurement measurement)
+        {
+            return (measurement.StateFlags & MeasurementStateFlags.BadTime) == 0;
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if <see cref="MeasurementStateFlags.DiscardedValue"/> is set.
+        /// </summary>
+        /// <param name="measurement"><see cref="IMeasurement"/> instance to test.</param>
+        /// <returns><c>true</c> if <see cref="MeasurementStateFlags.DiscardedValue"/> is not set.</returns>
+        public static bool IsDiscarded(this IMeasurement measurement)
+        {
+            return (measurement.StateFlags & MeasurementStateFlags.DiscardedValue) > 0;
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if <see cref="MeasurementStateFlags.CalcuatedValue"/> is set.
+        /// </summary>
+        /// <param name="measurement"><see cref="IMeasurement"/> instance to test.</param>
+        /// <returns><c>true</c> if <see cref="MeasurementStateFlags.CalcuatedValue"/> is not set.</returns>
+        public static bool IsCalculated(this IMeasurement measurement)
+        {
+            return (measurement.StateFlags & MeasurementStateFlags.CalcuatedValue) > 0;
+        }
     }
 }

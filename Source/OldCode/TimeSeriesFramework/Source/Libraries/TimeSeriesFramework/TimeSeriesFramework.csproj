@@ -104,6 +104,7 @@
     <Compile Include="InstallerBase.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="ITimeSeriesValue.cs" />
     <Compile Include="Measurement.cs" />
     <Compile Include="MeasurementKey.cs" />
     <Compile Include="NamespaceDoc.cs" />

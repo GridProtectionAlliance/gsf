@@ -48,7 +48,7 @@ namespace TimeSeriesFramework
         /// <summary>
         /// Fixed byte length of a <see cref="SerializableMeasurement"/>.
         /// </summary>
-        public const int FixedLength = 61;
+        public const int FixedLength = 64;
 
         #endregion
 
@@ -66,10 +66,14 @@ namespace TimeSeriesFramework
         /// </summary>
         /// <param name="measurement">Source <see cref="IMeasurement"/> value.</param>
         public SerializableMeasurement(IMeasurement measurement)
-            : base(measurement.ID, measurement.Source, measurement.SignalID, measurement.Value, measurement.Adder, measurement.Multiplier, measurement.Timestamp)
         {
-            this.ValueQualityIsGood = measurement.ValueQualityIsGood;
-            this.TimestampQualityIsGood = measurement.TimestampQualityIsGood;
+            ID = measurement.ID;
+            Key = measurement.Key;
+            Value = measurement.Value;
+            Adder = measurement.Adder;
+            Multiplier = measurement.Multiplier;
+            Timestamp = measurement.Timestamp;
+            StateFlags = measurement.StateFlags;
         }
 
         #endregion
@@ -83,20 +87,20 @@ namespace TimeSeriesFramework
         /// <para>
         /// Field:      Bytes:   <br/>
         /// ---------   ---------<br/>
-        ///   ID            4    <br/>
+        ///  Key ID         4    <br/>
         /// SourceLen       4    <br/>
         ///  Source     SourceLen<br/>
-        /// SignalID       16    <br/>
+        /// Signal ID      16    <br/>
         ///  TagLen         4    <br/>
         ///   Tag        TagLen  <br/>
         ///   Value         8    <br/>
         ///   Adder         8    <br/>
         /// Multipler       8    <br/>
         ///   Ticks         8    <br/>
-        ///   Flags         1    <br/>
+        ///   Flags         4    <br/>
         /// </para>
         /// <para>
-        /// Constant Length = 61<br/>
+        /// Constant Length = 64<br/>
         /// Variable Length = SourceLen + TagLen
         /// </para>
         /// </remarks>
@@ -106,7 +110,7 @@ namespace TimeSeriesFramework
             {
                 byte[] bytes, buffer;
                 int length, index = 0;
-                string source = Source.ToNonNullString();
+                string source = Key.Source.ToNonNullString();
                 string tagName = TagName.ToNonNullString();
 
                 // Encode source string length
@@ -120,17 +124,17 @@ namespace TimeSeriesFramework
                 // Allocate buffer to hold binary image
                 buffer = new byte[FixedLength + length];
 
-                // Encode ID
-                EndianOrder.BigEndian.CopyBytes(ID, buffer, index);
+                // Encode key ID
+                EndianOrder.BigEndian.CopyBytes(Key.ID, buffer, index);
                 index += 4;
 
-                // Encode source string length
+                // Encode key source string length
                 bytes = Encoding.Unicode.GetBytes(source);
                 length = bytes.Length;
                 EndianOrder.BigEndian.CopyBytes(length, buffer, index);
                 index += 4;
 
-                // Encode source string
+                // Encode key source string
                 if (length > 0)
                 {
                     Buffer.BlockCopy(bytes, 0, buffer, index, length);
@@ -138,7 +142,7 @@ namespace TimeSeriesFramework
                 }
 
                 // Encode signal ID
-                EndianOrder.BigEndian.CopyBytes(SignalID, buffer, index);
+                EndianOrder.BigEndian.CopyBytes(ID, buffer, index);
                 index += 16;
 
                 // Encode tag name string length
@@ -170,8 +174,8 @@ namespace TimeSeriesFramework
                 EndianOrder.BigEndian.CopyBytes((long)Timestamp, buffer, index);
                 index += 8;
 
-                // Encode flags
-                buffer[index] = (byte)((ValueQualityIsGood ? Bits.Bit00 : Bits.Nil) | (TimestampQualityIsGood ? Bits.Bit01 : Bits.Nil) | (IsDiscarded ? Bits.Bit02 : Bits.Nil));
+                // Encode state flags
+                EndianOrder.BigEndian.CopyBytes((uint)StateFlags, buffer, index);
 
                 return buffer;
             }
@@ -184,7 +188,7 @@ namespace TimeSeriesFramework
         {
             get
             {
-                return FixedLength + Source.ToNonNullString().Length + TagName.ToNonNullString().Length;
+                return FixedLength + Key.Source.ToNonNullString().Length + TagName.ToNonNullString().Length;
             }
         }
 
@@ -205,26 +209,29 @@ namespace TimeSeriesFramework
                 throw new InvalidOperationException("Not enough buffer available to deserialize measurement.");
 
             int length, index = startIndex;
+            uint id;
+            string source = "";
 
-            // Decode ID
-            ID = EndianOrder.BigEndian.ToUInt32(buffer, index);
+            // Decode key ID
+            id = EndianOrder.BigEndian.ToUInt32(buffer, index);
             index += 4;
 
-            // Decode source string length
+            // Decode key source string length
             length = EndianOrder.BigEndian.ToInt32(buffer, index);
             index += 4;
 
-            // Decode source string
+            // Decode key source string
             if (length > 0)
             {
-                Source = Encoding.Unicode.GetString(buffer, index, length);
+                source = Encoding.Unicode.GetString(buffer, index, length);
                 index += length;
             }
-            else
-                Source = "";
+
+            // Apply parsed key changes
+            Key = new MeasurementKey(id, source);
 
             // Decode signal ID
-            SignalID = EndianOrder.BigEndian.ToGuid(buffer, index);
+            ID = EndianOrder.BigEndian.ToGuid(buffer, index);
             index += 16;
 
             // Decode tag name string length
@@ -256,11 +263,9 @@ namespace TimeSeriesFramework
             Timestamp = EndianOrder.BigEndian.ToInt64(buffer, index);
             index += 8;
 
-            // Decode flags
-            ValueQualityIsGood = ((buffer[index] & (byte)Bits.Bit00) > 0);
-            TimestampQualityIsGood = ((buffer[index] & (byte)Bits.Bit01) > 0);
-            IsDiscarded = ((buffer[index] & (byte)Bits.Bit02) > 0);
-            index++;
+            // Decode state flags
+            StateFlags = (MeasurementStateFlags)EndianOrder.BigEndian.ToUInt32(buffer, index);
+            index += 4;
 
             return (index - startIndex);
         }

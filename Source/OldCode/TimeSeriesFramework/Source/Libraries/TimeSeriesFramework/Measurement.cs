@@ -40,20 +40,16 @@ namespace TimeSeriesFramework
         #region [ Members ]
 
         // Fields
-        private uint m_id;
-        private string m_source;
+        private Guid m_id;
         private MeasurementKey m_key;
-        private Guid m_signalID;
+        private MeasurementStateFlags m_stateFlags;
         private string m_tagName;
-        private Ticks m_timestamp;
-        private Ticks m_receivedTimestamp;
-        private Ticks m_publishedTimestamp;
         private double m_value;
         private double m_adder;
         private double m_multiplier;
-        private bool m_valueQualityIsGood;
-        private bool m_timestampQualityIsGood;
-        private bool m_isDiscarded;
+        private Ticks m_timestamp;
+        private Ticks m_receivedTimestamp;
+        private Ticks m_publishedTimestamp;
         private MeasurementValueFilterFunction m_measurementValueFilter;
 
         #endregion
@@ -64,93 +60,12 @@ namespace TimeSeriesFramework
         /// Constructs a new <see cref="Measurement"/> using default settings.
         /// </summary>
         public Measurement()
-            : this(uint.MaxValue, "__", Guid.Empty, double.NaN, 0.0, 1.0, 0)
         {
-        }
-
-        /// <summary>
-        /// Constructs a new <see cref="Measurement"/> given the specified parameters.
-        /// </summary>
-        /// <param name="id">Numeric ID of the new measurement.</param>
-        /// <param name="source">Source name of the new measurement.</param>
-        public Measurement(uint id, string source)
-            : this(id, source, Guid.Empty, double.NaN, 0.0, 1.0, 0)
-        {
-        }
-
-        /// <summary>
-        /// Constructs a new <see cref="Measurement"/> given the specified parameters.
-        /// </summary>
-        /// <param name="signalID"><see cref="Guid"/> based signal ID of the new measurement.</param>
-        public Measurement(Guid signalID)
-            : this(uint.MaxValue, "__", signalID, double.NaN, 0.0, 1.0, 0)
-        {
-        }
-
-        /// <summary>
-        /// Constructs a new <see cref="Measurement"/> given the specified parameters.
-        /// </summary>
-        /// <param name="id">Numeric ID of the new measurement.</param>
-        /// <param name="source">Source name of the new measurement.</param>
-        /// <param name="value">Value of the new measurement.</param>
-        /// <param name="timestamp">Timestamp, in ticks, of the new measurement.</param>
-        public Measurement(uint id, string source, double value, Ticks timestamp)
-            : this(id, source, Guid.Empty, value, 0.0, 1.0, timestamp)
-        {
-        }
-
-        /// <summary>
-        /// Constructs a new <see cref="Measurement"/> given the specified parameters.
-        /// </summary>
-        /// <param name="signalID"><see cref="Guid"/> based signal ID of the new measurement.</param>
-        /// <param name="value">Value of the new measurement.</param>
-        /// <param name="timestamp">Timestamp, in ticks, of the new measurement.</param>
-        public Measurement(Guid signalID, double value, Ticks timestamp)
-            : this(uint.MaxValue, "__", signalID, value, 0.0, 1.0, timestamp)
-        {
-        }
-
-        /// <summary>
-        /// Constructs a new <see cref="Measurement"/> given the specified parameters.
-        /// </summary>
-        /// <param name="id">Numeric ID of the new measurement.</param>
-        /// <param name="source">Source name of the new measurement.</param>
-        /// <param name="tagName">Text based tag name of the new measurement.</param>
-        /// <param name="adder">Defined adder to apply to the new measurement.</param>
-        /// <param name="multiplier">Defined multiplier to apply to the new measurement.</param>
-        public Measurement(uint id, string source, string tagName, double adder, double multiplier)
-            : this(id, source, Guid.Empty, double.NaN, adder, multiplier, 0)
-        {
-            m_tagName = tagName;
-        }
-
-        /// <summary>
-        /// Constructs a new <see cref="Measurement"/> given the specified parameters.
-        /// </summary>
-        /// <param name="id">Numeric ID of the new measurement.</param>
-        /// <param name="source">Source name of the new measurement.</param>
-        /// <param name="signalID"><see cref="Guid"/> based signal ID of the new measurement.</param>
-        /// <param name="value">Value of the new measurement.</param>
-        /// <param name="adder">Defined adder to apply to the new measurement.</param>
-        /// <param name="multiplier">Defined multiplier to apply to the new measurement.</param>
-        /// <param name="timestamp">Timestamp, in ticks, of the new measurement.</param>
-        public Measurement(uint id, string source, Guid signalID, double value, double adder, double multiplier, Ticks timestamp)
-        {
-            m_id = id;
-            m_source = source;
-            m_key = new MeasurementKey(m_id, m_source);
-            m_signalID = signalID;
-            m_value = value;
-            m_adder = adder;
-            m_multiplier = multiplier;
-            m_timestamp = timestamp;
 #if UseHighResolutionTime
             m_receivedTimestamp = PrecisionTimer.UtcNow.Ticks;
 #else
             m_receivedTimestamp = DateTime.UtcNow.Ticks;
 #endif
-            m_valueQualityIsGood = true;
-            m_timestampQualityIsGood = true;
         }
 
         #endregion
@@ -158,13 +73,9 @@ namespace TimeSeriesFramework
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the numeric ID of this <see cref="Measurement"/>.
+        /// Gets or sets the <see cref="Guid"/> based signal ID of this <see cref="Measurement"/>, if available.
         /// </summary>
-        /// <remarks>
-        /// <para>In most implementations, this will be a required field.</para>
-        /// <para>Note that this field, in addition to <see cref="Source"/>, typically creates the primary key for a <see cref="Measurement"/>.</para>
-        /// </remarks>
-        public virtual uint ID
+        public virtual Guid ID
         {
             get
             {
@@ -172,40 +83,12 @@ namespace TimeSeriesFramework
             }
             set
             {
-                if (m_id != value)
-                {
-                    m_id = value;
-                    m_key = new MeasurementKey(m_id, m_source);
-                }
+                m_id = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets the source of this <see cref="Measurement"/>.
-        /// </summary>
-        /// <remarks>
-        /// <para>In most implementations, this will be a required field.</para>
-        /// <para>Note that this field, in addition to <see cref="ID"/>, typically creates the primary key for a <see cref="Measurement"/>.</para>
-        /// <para>This value is typically used to track the archive name in which measurement is stored.</para>
-        /// </remarks>
-        public virtual string Source
-        {
-            get
-            {
-                return m_source;
-            }
-            set
-            {
-                if (m_source != value)
-                {
-                    m_source = value;
-                    m_key = new MeasurementKey(m_id, m_source);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Gets the primary key (a <see cref="MeasurementKey"/>), of this <see cref="Measurement"/>.
+        /// Gets or sets the primary <see cref="MeasurementKey"/> of this <see cref="Measurement"/>.
         /// </summary>
         public virtual MeasurementKey Key
         {
@@ -213,26 +96,24 @@ namespace TimeSeriesFramework
             {
                 return m_key;
             }
-            protected set
+            set
             {
                 m_key = value;
-                m_source = m_key.Source;
-                m_id = m_key.ID;
             }
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="Guid"/> based signal ID of this <see cref="Measurement"/>, if available.
+        /// 
         /// </summary>
-        public virtual Guid SignalID
+        public virtual MeasurementStateFlags StateFlags
         {
             get
             {
-                return m_signalID;
+                return m_stateFlags;
             }
             set
             {
-                m_signalID = value;
+                m_stateFlags = value;
             }
         }
 
@@ -370,51 +251,6 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that determines if the quality of the numeric value of this <see cref="Measurement"/> is good.
-        /// </summary>
-        public virtual bool ValueQualityIsGood
-        {
-            get
-            {
-                return m_valueQualityIsGood;
-            }
-            set
-            {
-                m_valueQualityIsGood = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that determines if the quality of the timestamp of this <see cref="Measurement"/> is good.
-        /// </summary>
-        public virtual bool TimestampQualityIsGood
-        {
-            get
-            {
-                return m_timestampQualityIsGood;
-            }
-            set
-            {
-                m_timestampQualityIsGood = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that determines if this <see cref="Measurement"/> has been discarded during sorting.
-        /// </summary>
-        public virtual bool IsDiscarded
-        {
-            get
-            {
-                return m_isDiscarded;
-            }
-            set
-            {
-                m_isDiscarded = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values.
         /// </summary>
         public virtual MeasurementValueFilterFunction MeasurementValueFilter
@@ -426,6 +262,65 @@ namespace TimeSeriesFramework
             set
             {
                 m_measurementValueFilter = value;
+            }
+        }
+
+        // Big-Endian binary value interpretation
+        BigBinaryValue ITimeSeriesValue.Value
+        {
+            get
+            {
+                return m_value;
+            }
+            set
+            {
+                switch (value.TypeCode)
+                {
+                    case TypeCode.Byte:
+                        m_value = (Byte)value;
+                        break;
+                    case TypeCode.SByte:
+                        m_value = (SByte)value;
+                        break;
+                    case TypeCode.Int16:
+                        m_value = (Int16)value;
+                        break;
+                    case TypeCode.UInt16:
+                        m_value = (UInt16)value;
+                        break;
+                    case TypeCode.Int32:
+                        m_value = (Int32)value;
+                        break;
+                    case TypeCode.UInt32:
+                        m_value = (UInt32)value;
+                        break;
+                    case TypeCode.Int64:
+                        m_value = (Int64)value;
+                        break;
+                    case TypeCode.UInt64:
+                        m_value = (UInt64)value;
+                        break;
+                    case TypeCode.Single:
+                        m_value = (Single)value;
+                        break;
+                    case TypeCode.Double:
+                        m_value = (Double)value;
+                        break;
+                    //case TypeCode.Boolean:
+                    //    break;
+                    //case TypeCode.Char:
+                    //    break;
+                    //case TypeCode.DateTime:
+                    //    break;
+                    //case TypeCode.Decimal:
+                    //    break;
+                    //case TypeCode.String:
+                    //    m_value = double.Parse(value);
+                    //    break;
+                    default:
+                        m_value = value;
+                        break;
+                }
             }
         }
 
@@ -443,14 +338,14 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>
-        /// Determines whether the specified <see cref="IMeasurement"/> is equal to the current <see cref="Measurement"/>.
+        /// Determines whether the specified <see cref="ITimeSeriesValue"/> is equal to the current <see cref="Measurement"/>.
         /// </summary>
-        /// <param name="other">The <see cref="IMeasurement"/> to compare with the current <see cref="Measurement"/>.</param>
+        /// <param name="other">The <see cref="ITimeSeriesValue"/> to compare with the current <see cref="Measurement"/>.</param>
         /// <returns>
-        /// true if the specified <see cref="IMeasurement"/> is equal to the current <see cref="Measurement"/>;
+        /// true if the specified <see cref="ITimeSeriesValue"/> is equal to the current <see cref="Measurement"/>;
         /// otherwise, false.
         /// </returns>
-        public bool Equals(IMeasurement other)
+        public bool Equals(ITimeSeriesValue other)
         {
             return (CompareTo(other) == 0);
         }
@@ -466,7 +361,7 @@ namespace TimeSeriesFramework
         /// <exception cref="ArgumentException"><paramref name="obj"/> is not an <see cref="IMeasurement"/>.</exception>
         public override bool Equals(object obj)
         {
-            IMeasurement other = obj as IMeasurement;
+            ITimeSeriesValue other = obj as ITimeSeriesValue;
 
             if ((object)other != null)
                 return Equals(other);
@@ -475,12 +370,12 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>
-        /// Compares the <see cref="Measurement"/> with an <see cref="IMeasurement"/>.
+        /// Compares the <see cref="Measurement"/> with an <see cref="ITimeSeriesValue"/>.
         /// </summary>
-        /// <param name="other">The <see cref="IMeasurement"/> to compare with the current <see cref="Measurement"/>.</param>
+        /// <param name="other">The <see cref="ITimeSeriesValue"/> to compare with the current <see cref="Measurement"/>.</param>
         /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
         /// <remarks>Measurement implementations should compare by hash code.</remarks>
-        public int CompareTo(IMeasurement other)
+        public int CompareTo(ITimeSeriesValue other)
         {
             if ((object)other != null)
                 return GetHashCode().CompareTo(other.GetHashCode());
@@ -497,12 +392,12 @@ namespace TimeSeriesFramework
         /// <remarks>Measurement implementations should compare by hash code.</remarks>
         public int CompareTo(object obj)
         {
-            IMeasurement other = obj as IMeasurement;
+            ITimeSeriesValue other = obj as ITimeSeriesValue;
 
             if ((object)other != null)
                 return CompareTo(other);
 
-            throw new ArgumentException("Measurement can only be compared with other IMeasurements");
+            throw new ArgumentException("Measurement can only be compared with other measurements or time-series values");
         }
 
         /// <summary>
@@ -512,7 +407,7 @@ namespace TimeSeriesFramework
         /// <remarks>Hash code based on value of measurement.</remarks>
         public override int GetHashCode()
         {
-            return m_key.GetHashCode();
+            return m_id.GetHashCode();
         }
 
         #endregion
@@ -589,38 +484,38 @@ namespace TimeSeriesFramework
 
         #region [ Static ]
 
-        /// <summary>
-        /// Creates a copy of the specified measurement.
-        /// </summary>
-        /// <param name="measurementToClone">Specified measurement to clone.</param>
-        /// <returns>A copy of the <see cref="Measurement"/> object.</returns>
-        public static Measurement Clone(IMeasurement measurementToClone)
-        {
-            return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.SignalID, measurementToClone.Value, measurementToClone.Adder, measurementToClone.Multiplier, measurementToClone.Timestamp);
-        }
+        ///// <summary>
+        ///// Creates a copy of the specified measurement.
+        ///// </summary>
+        ///// <param name="measurementToClone">Specified measurement to clone.</param>
+        ///// <returns>A copy of the <see cref="Measurement"/> object.</returns>
+        //public static Measurement Clone(IMeasurement measurementToClone)
+        //{
+        //    return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.SignalID, measurementToClone.Value, measurementToClone.Adder, measurementToClone.Multiplier, measurementToClone.Timestamp);
+        //}
 
-        /// <summary>
-        /// Creates a copy of the specified measurement using a new timestamp.
-        /// </summary>
-        /// <param name="measurementToClone">Specified measurement to clone.</param>
-        /// <param name="timestamp">New timestamp, in ticks, for cloned measurement.</param>
-        /// <returns>A copy of the <see cref="Measurement"/> object.</returns>
-        public static Measurement Clone(IMeasurement measurementToClone, Ticks timestamp)
-        {
-            return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.SignalID, measurementToClone.Value, measurementToClone.Adder, measurementToClone.Multiplier, timestamp);
-        }
+        ///// <summary>
+        ///// Creates a copy of the specified measurement using a new timestamp.
+        ///// </summary>
+        ///// <param name="measurementToClone">Specified measurement to clone.</param>
+        ///// <param name="timestamp">New timestamp, in ticks, for cloned measurement.</param>
+        ///// <returns>A copy of the <see cref="Measurement"/> object.</returns>
+        //public static Measurement Clone(IMeasurement measurementToClone, Ticks timestamp)
+        //{
+        //    return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.SignalID, measurementToClone.Value, measurementToClone.Adder, measurementToClone.Multiplier, timestamp);
+        //}
 
-        /// <summary>
-        /// Creates a copy of the specified measurement using a new value and timestamp.
-        /// </summary>
-        /// <param name="measurementToClone">Specified measurement to clone.</param>
-        /// <param name="value">New value for cloned measurement.</param>
-        /// <param name="timestamp">New timestamp, in ticks, for cloned measurement.</param>
-        /// <returns>A copy of the <see cref="Measurement"/> object.</returns>
-        public static Measurement Clone(IMeasurement measurementToClone, double value, Ticks timestamp)
-        {
-            return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.SignalID, value, measurementToClone.Adder, measurementToClone.Multiplier, timestamp);
-        }
+        ///// <summary>
+        ///// Creates a copy of the specified measurement using a new value and timestamp.
+        ///// </summary>
+        ///// <param name="measurementToClone">Specified measurement to clone.</param>
+        ///// <param name="value">New value for cloned measurement.</param>
+        ///// <param name="timestamp">New timestamp, in ticks, for cloned measurement.</param>
+        ///// <returns>A copy of the <see cref="Measurement"/> object.</returns>
+        //public static Measurement Clone(IMeasurement measurementToClone, double value, Ticks timestamp)
+        //{
+        //    return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.SignalID, value, measurementToClone.Adder, measurementToClone.Multiplier, timestamp);
+        //}
 
         /// <summary>
         /// Returns a <see cref="String"/> that represents the specified <see cref="IMeasurement"/>.

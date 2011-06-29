@@ -558,7 +558,7 @@ namespace TimeSeriesFramework.Adapters
                     {
                         status.Append(OutputMeasurements[i].ToString().TruncateRight(25).PadLeft(25));
                         status.Append(" ");
-                        status.AppendLine(OutputMeasurements[i].SignalID.ToString());
+                        status.AppendLine(OutputMeasurements[i].ID.ToString());
                     }
 
                     if (OutputMeasurements.Length > MaxMeasurementsToShow)
@@ -849,6 +849,8 @@ namespace TimeSeriesFramework.Adapters
         public static MeasurementKey[] ParseInputMeasurementKeys(DataSet dataSource, string value)
         {
             List<MeasurementKey> keys = new List<MeasurementKey>();
+            MeasurementKey key;
+            Guid id;
             Match filterMatch;
 
             value = value.Trim();
@@ -868,7 +870,8 @@ namespace TimeSeriesFramework.Adapters
 
                     foreach (DataRow row in dataSource.Tables[tableName].Select(expression, sortField))
                     {
-                        keys.Add(MeasurementKey.Parse(row["ID"].ToString()));
+                        if (MeasurementKey.TryParse(row["ID"].ToString(), out key))
+                            keys.Add(key);
                     }
                 }
                 else
@@ -877,7 +880,26 @@ namespace TimeSeriesFramework.Adapters
                     foreach (string item in value.Split(';'))
                     {
                         if (!string.IsNullOrWhiteSpace(item))
-                            keys.Add(MeasurementKey.Parse(item));
+                        {
+                            if (MeasurementKey.TryParse(item, out key))
+                            {
+                                keys.Add(key);
+                            }
+                            else if (Guid.TryParse(item, out id))
+                            {
+                                if (dataSource.Tables.Contains("ActiveMeasurements"))
+                                {
+                                    DataRow[] filteredRows = dataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalID = '{0}'", id));
+
+                                    if (filteredRows.Length > 0 && MeasurementKey.TryParse(filteredRows[0]["ID"].ToString(), out key))
+                                        keys.Add(key);
+                                }
+                            }
+                            else
+                            {
+                                throw new InvalidOperationException(string.Format("Could not parse input measurement definition \"{0}\" as a filter expression, measurement key or Guid", item));
+                            }
+                        }
                     }
                 }
             }
@@ -915,9 +937,15 @@ namespace TimeSeriesFramework.Adapters
 
                     foreach (DataRow row in dataSource.Tables[tableName].Select(expression, sortField))
                     {
-                        key = MeasurementKey.Parse(row["ID"].ToString());
-                        measurement = new Measurement(key.ID, key.Source, row["PointTag"].ToNonNullString(), double.Parse(row["Adder"].ToString()), double.Parse(row["Multiplier"].ToString()));
-                        measurement.SignalID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
+                        measurement = new Measurement()
+                        {
+                            ID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(),
+                            Key = MeasurementKey.Parse(row["ID"].ToString()),
+                            TagName = row["PointTag"].ToNonNullString(),
+                            Adder = double.Parse(row["Adder"].ToString()),
+                            Multiplier = double.Parse(row["Multiplier"].ToString())
+                        };
+
                         measurements.Add(measurement);
                     }
                 }
@@ -925,6 +953,7 @@ namespace TimeSeriesFramework.Adapters
                 {
                     string[] elem;
                     double adder, multipler;
+                    Guid id;
 
                     foreach (string item in value.Split(';'))
                     {
@@ -932,7 +961,23 @@ namespace TimeSeriesFramework.Adapters
                         {
                             elem = item.Trim().Split(',');
 
-                            key = MeasurementKey.Parse(elem[0]);
+                            if (!MeasurementKey.TryParse(elem[0], out key))
+                            {
+                                if (Guid.TryParse(item, out id))
+                                {
+                                    if (dataSource.Tables.Contains("ActiveMeasurements"))
+                                    {
+                                        DataRow[] filteredRows = dataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalID = '{0}'", id));
+
+                                        if (filteredRows.Length > 0)
+                                            MeasurementKey.TryParse(filteredRows[0]["ID"].ToString(), out key);
+                                    }
+                                }
+                                else
+                                {
+                                    throw new InvalidOperationException(string.Format("Could not parse output measurement definition \"{0}\" as a filter expression, measurement key or Guid", item));
+                                }
+                            }
 
                             // Adder and multipler may be optionally specified
                             if (elem.Length > 1)
@@ -941,7 +986,9 @@ namespace TimeSeriesFramework.Adapters
                                     adder = 0.0D;
                             }
                             else
+                            {
                                 adder = 0.0D;
+                            }
 
                             if (elem.Length > 2)
                             {
@@ -949,10 +996,17 @@ namespace TimeSeriesFramework.Adapters
                                     multipler = 1.0D;
                             }
                             else
+                            {
                                 multipler = 1.0D;
+                            }
 
                             // Create a new measurement for the provided field level information
-                            measurement = new Measurement(key.ID, key.Source, string.Empty, adder, multipler);
+                            measurement = new Measurement()
+                            {
+                                Key = key,
+                                Adder = adder,
+                                Multiplier = multipler
+                            };
 
                             // Attempt to lookup other associated measurement meta-data from default measurement table, if defined
                             try
@@ -965,10 +1019,10 @@ namespace TimeSeriesFramework.Adapters
                                     {
                                         DataRow row = filteredRows[0];
 
-                                        measurement.SignalID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
+                                        measurement.ID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
                                         measurement.TagName = row["PointTag"].ToNonNullString();
 
-                                        // Manually specified adder and multiplier take precedence but if none were specified,
+                                        // Manually specified adder and multiplier take precedence, but if none were specified,
                                         // then those defined in the meta-data are used instead
                                         if (elem.Length < 3)
                                             measurement.Multiplier = double.Parse(row["Multiplier"].ToString());
@@ -981,7 +1035,7 @@ namespace TimeSeriesFramework.Adapters
                             catch
                             {
                                 // Errors here are not catastrophic, this simply limits the available meta-data
-                                measurement.SignalID = Guid.Empty;
+                                measurement.ID = Guid.Empty;
                                 measurement.TagName = string.Empty;
                             }
 

@@ -39,8 +39,8 @@ namespace TimeSeriesFramework
 
         // Fields
         private ConcentratorBase m_parent;
-        private Dictionary<MeasurementKey, TemporalMeasurement> m_measurements;
-        private Dictionary<string, List<MeasurementKey>> m_taggedMeasurements;
+        private Dictionary<Guid, TemporalMeasurement> m_measurements;
+        private Dictionary<string, List<Guid>> m_taggedMeasurements;
         private Func<Ticks> m_realTimeFunction;
         private double m_lagTime;                           // Allowed past time deviation tolerance, in seconds
         private double m_leadTime;                          // Allowed future time deviation tolerance, in seconds
@@ -55,8 +55,8 @@ namespace TimeSeriesFramework
         /// </summary>
         public ImmediateMeasurements()
         {
-            m_measurements = new Dictionary<MeasurementKey, TemporalMeasurement>();
-            m_taggedMeasurements = new Dictionary<string, List<MeasurementKey>>();
+            m_measurements = new Dictionary<Guid, TemporalMeasurement>();
+            m_taggedMeasurements = new Dictionary<string, List<Guid>>();
             m_realTimeFunction = () => PrecisionTimer.UtcNow.Ticks;
         }
 
@@ -86,30 +86,18 @@ namespace TimeSeriesFramework
         #region [ Properties ]
 
         /// <summary>We retrieve adjusted measurement values within time tolerance of concentrator real-time.</summary>
-        /// <param name="measurementID">An <see cref="UInt32"/> representing the measurement id.</param>
-        /// <param name="source">A <see cref="String"/> indicating the source.</param>
+        /// <param name="id">A <see cref="Guid"/> representing the measurement ID.</param>
         /// <returns>A <see cref="Double"/> representing the adjusted measurement value.</returns>
-        public double this[uint measurementID, string source]
+        public double this[Guid id]
         {
             get
             {
-                return this[new MeasurementKey(measurementID, source)];
+                return Measurement(id).GetAdjustedValue(m_realTimeFunction());
             }
         }
 
-        /// <summary>We retrieve adjusted measurement values within time tolerance of concentrator real-time.</summary>
-        /// <param name="key">An <see cref="MeasurementKey"/> representing the measurement key.</param>
-        /// <returns>A <see cref="Double"/> representing the adjusted measurement value.</returns>
-        public double this[MeasurementKey key]
-        {
-            get
-            {
-                return Measurement(key, Guid.Empty).GetAdjustedValue(m_realTimeFunction());
-            }
-        }
-
-        /// <summary>Returns key collection of measurement keys.</summary>
-        public Dictionary<MeasurementKey, TemporalMeasurement>.KeyCollection MeasurementKeys
+        /// <summary>Returns collection of measurement ID's.</summary>
+        public Dictionary<Guid, TemporalMeasurement>.KeyCollection MeasurementIDs
         {
             get
             {
@@ -117,8 +105,8 @@ namespace TimeSeriesFramework
             }
         }
 
-        /// <summary>Returns key collection for measurement tags.</summary>
-        public Dictionary<string, List<MeasurementKey>>.KeyCollection Tags
+        /// <summary>Returns ID collection for measurement tags.</summary>
+        public Dictionary<string, List<Guid>>.KeyCollection Tags
         {
             get
             {
@@ -137,9 +125,9 @@ namespace TimeSeriesFramework
 
                 lock (m_measurements)
                 {
-                    foreach (MeasurementKey key in m_measurements.Keys)
+                    foreach (Guid id in m_measurements.Keys)
                     {
-                        measurement = this[key];
+                        measurement = this[id];
                         if (!double.IsNaN(measurement))
                         {
                             if (measurement < minValue)
@@ -165,9 +153,9 @@ namespace TimeSeriesFramework
 
                 lock (m_measurements)
                 {
-                    foreach (MeasurementKey key in m_measurements.Keys)
+                    foreach (Guid id in m_measurements.Keys)
                     {
-                        measurement = this[key];
+                        measurement = this[id];
                         if (!double.IsNaN(measurement))
                         {
                             if (measurement > maxValue)
@@ -220,12 +208,12 @@ namespace TimeSeriesFramework
                     throw new ArgumentOutOfRangeException("value", "LagTime must be greater than zero, but it can be less than one");
 
                 m_lagTime = value;
-                
+
                 lock (m_measurements)
                 {
-                    foreach (MeasurementKey key in m_measurements.Keys)
+                    foreach (Guid id in m_measurements.Keys)
                     {
-                        Measurement(key, Guid.Empty).LagTime = m_lagTime;
+                        Measurement(id).LagTime = m_lagTime;
                     }
                 }
             }
@@ -254,9 +242,9 @@ namespace TimeSeriesFramework
 
                 lock (m_measurements)
                 {
-                    foreach (MeasurementKey key in m_measurements.Keys)
+                    foreach (Guid id in m_measurements.Keys)
                     {
-                        Measurement(key, Guid.Empty).LeadTime = m_leadTime;
+                        Measurement(id).LeadTime = m_leadTime;
                     }
                 }
             }
@@ -314,53 +302,61 @@ namespace TimeSeriesFramework
             }
         }
 
-        /// <summary>Returns measurement key list of specified tag, if it exists.</summary>
+        /// <summary>Returns measurement list of specified tag, if it exists.</summary>
         /// <param name="tag">A <see cref="String"/> that indicates the tag to use.</param>
         /// <returns>A collection of measurement keys.</returns>
-        public ReadOnlyCollection<MeasurementKey> TaggedMeasurementKeys(string tag)
+        public ReadOnlyCollection<Guid> TaggedMeasurementKeys(string tag)
         {
-            return new ReadOnlyCollection<MeasurementKey>(m_taggedMeasurements[tag]);
+            return new ReadOnlyCollection<Guid>(m_taggedMeasurements[tag]);
         }
 
-        /// <summary>We only store a new measurement value that is newer than the cached value.</summary>
+        /// <summary>Store new measurement.</summary>
         /// <param name="newMeasurement">New measurement value to update.</param>
+        /// <remarks>Value is only stored if it is newer than the cached value.</remarks>
         public void UpdateMeasurementValue(IMeasurement newMeasurement)
         {
-            TemporalMeasurement measurement = Measurement(newMeasurement.Key, newMeasurement.SignalID);
+            TemporalMeasurement measurement = Measurement(newMeasurement);
 
+            // Set new value updating state flags if value was updated...
             if (measurement.SetValue(newMeasurement.Timestamp, newMeasurement.Value))
-            {
-                // Update quality flags if value was updated...
-                measurement.TimestampQualityIsGood = newMeasurement.TimestampQualityIsGood;
-                measurement.ValueQualityIsGood = newMeasurement.ValueQualityIsGood;
-            }
+                measurement.StateFlags = newMeasurement.StateFlags;
         }
 
         /// <summary>Retrieves the specified immediate temporal measurement, creating it if needed.</summary>
-        /// <param name="measurementID">An <see cref="UInt32"/> representing the measurement id.</param>
-        /// <param name="source">A <see cref="String"/> indicating the source.</param>
-        /// <param name="signalID"><see cref="Guid"/> based signal ID of measurement.</param>
+        /// <param name="id"><see cref="Guid"/> based signal ID of measurement.</param>
         /// <returns>A <see cref="TemporalMeasurement"/> object.</returns>
-        public TemporalMeasurement Measurement(uint measurementID, string source, Guid signalID)
-        {
-            return Measurement(new MeasurementKey(measurementID, source), signalID);
-        }
-
-        /// <summary>Retrieves the specified immediate temporal measurement, creating it if needed.</summary>
-        /// <param name="key">A <see cref="MeasurementKey"/> object indicating the key to use.</param>
-        /// <param name="signalID"><see cref="Guid"/> based signal ID of measurement.</param>
-        /// <returns>A <see cref="TemporalMeasurement"/> object.</returns>
-        public TemporalMeasurement Measurement(MeasurementKey key, Guid signalID)
+        public TemporalMeasurement Measurement(Guid id)
         {
             lock (m_measurements)
             {
                 TemporalMeasurement value;
 
-                if (!m_measurements.TryGetValue(key, out value))
+                if (!m_measurements.TryGetValue(id, out value))
                 {
                     // Create new temporal measurement if it doesn't exist
-                    value = new TemporalMeasurement(key.ID, key.Source, signalID, double.NaN, m_realTimeFunction(), m_lagTime, m_leadTime);
-                    m_measurements.Add(key, value);
+                    value = new TemporalMeasurement(m_lagTime, m_leadTime);
+                    value.ID = id;
+                    m_measurements.Add(id, value);
+                }
+
+                return value;
+            }
+        }
+
+        /// <summary>Retrieves the specified immediate temporal measurement, creating it if needed.</summary>
+        /// <param name="measurement">Source <see cref="IMeasurement"/> value.</param>
+        /// <returns>A <see cref="TemporalMeasurement"/> object.</returns>
+        public TemporalMeasurement Measurement(IMeasurement measurement)
+        {
+            lock (m_measurements)
+            {
+                TemporalMeasurement value;
+
+                if (!m_measurements.TryGetValue(measurement.ID, out value))
+                {
+                    // Create new temporal measurement if it doesn't exist
+                    value = new TemporalMeasurement(measurement, m_lagTime, m_leadTime);
+                    m_measurements.Add(measurement.ID, value);
                 }
 
                 return value;
@@ -379,32 +375,32 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>Defines tagged measurements from a data table.</summary>
-        /// <remarks>Expects tag field to be aliased as "Tag", measurement ID field to be aliased as "ID" and source field to be aliased as "Source".</remarks>
+        /// <remarks>Expects <see cref="String"/> based tag field to be aliased as "Tag" and <see cref="Guid"/> based measurement ID field to be aliased as "ID".</remarks>
         /// <param name="taggedMeasurements">A <see cref="DataTable"/> to use for defining the tagged measurements.</param>
         public void DefineTaggedMeasurements(DataTable taggedMeasurements)
         {
             foreach (DataRow row in taggedMeasurements.Rows)
             {
-                AddTaggedMeasurement(row["Tag"].ToNonNullString("_tag_"), new MeasurementKey(uint.Parse(row["ID"].ToNonNullString(uint.MaxValue.ToString())), row["Source"].ToNonNullString("__")));
+                AddTaggedMeasurement(row["Tag"].ToNonNullString("_tag_"), row["ID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>());
             }
         }
 
         /// <summary>Associates a new measurement ID with a tag, creating the new tag if needed.</summary>
         /// <remarks>Allows you to define "grouped" points so you can aggregate certain measurements.</remarks>
-        /// <param name="key">A <see cref="MeasurementKey"/> to associate with the tag.</param>
         /// <param name="tag">A <see cref="String"/> to represent the key.</param>
-        public void AddTaggedMeasurement(string tag, MeasurementKey key)
+        /// <param name="id">A <see cref="Guid"/> ID to associate with the tag.</param>
+        public void AddTaggedMeasurement(string tag, Guid id)
         {
             // Check for new tag
             if (!m_taggedMeasurements.ContainsKey(tag))
-                m_taggedMeasurements.Add(tag, new List<MeasurementKey>());
+                m_taggedMeasurements.Add(tag, new List<Guid>());
 
             // Add measurement to tag's measurement list
-            List<MeasurementKey> measurements = m_taggedMeasurements[tag];
+            List<Guid> measurements = m_taggedMeasurements[tag];
 
-            if (measurements.BinarySearch(key) < 0)
+            if (measurements.BinarySearch(id) < 0)
             {
-                measurements.Add(key);
+                measurements.Add(id);
                 measurements.Sort();
             }
         }
@@ -420,9 +416,9 @@ namespace TimeSeriesFramework
 
             lock (m_measurements)
             {
-                foreach (MeasurementKey key in m_measurements.Keys)
+                foreach (Guid id in m_measurements.Keys)
                 {
-                    measurement = this[key];
+                    measurement = this[id];
                     if (!double.IsNaN(measurement))
                     {
                         total += measurement;
@@ -443,9 +439,9 @@ namespace TimeSeriesFramework
             double measurement;
             double total = 0.0D;
 
-            foreach (MeasurementKey key in m_taggedMeasurements[tag])
+            foreach (Guid id in m_taggedMeasurements[tag])
             {
-                measurement = this[key];
+                measurement = this[id];
                 if (!double.IsNaN(measurement))
                 {
                     total += measurement;
@@ -464,9 +460,9 @@ namespace TimeSeriesFramework
             double minValue = double.MaxValue;
             double measurement;
 
-            foreach (MeasurementKey key in m_taggedMeasurements[tag])
+            foreach (Guid id in m_taggedMeasurements[tag])
             {
-                measurement = this[key];
+                measurement = this[id];
                 if (!double.IsNaN(measurement))
                 {
                     if (measurement < minValue)
@@ -487,9 +483,9 @@ namespace TimeSeriesFramework
             double maxValue = double.MinValue;
             double measurement;
 
-            foreach (MeasurementKey key in m_taggedMeasurements[tag])
+            foreach (Guid id in m_taggedMeasurements[tag])
             {
-                measurement = this[key];
+                measurement = this[id];
                 if (!double.IsNaN(measurement))
                 {
                     if (measurement > maxValue)

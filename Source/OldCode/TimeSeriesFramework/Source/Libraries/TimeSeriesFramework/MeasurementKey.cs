@@ -23,7 +23,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Threading;
 using System.Collections.Generic;
 
 namespace TimeSeriesFramework
@@ -294,6 +293,26 @@ namespace TimeSeriesFramework
                 return new MeasurementKey(uint.Parse(elem[1].Trim()), elem[0].Trim());
 
             throw new FormatException("The value is not in the correct format for a MeasurementKey value");
+        }
+
+        /// <summary>
+        /// Attempts to convert the string representation of a <see cref="MeasurementKey"/> into its value equivalent.
+        /// </summary>
+        /// <param name="value">A string representing the <see cref="MeasurementKey"/> to convert.</param>
+        /// <param name="key">Output <see cref="MeasurementKey"/> in which to stored parsed value.</param>
+        /// <returns>A <c>true</c> if <see cref="MeasurementKey"/>representation contained in <paramref name="value"/> could be parsed; otherwise <c>false</c>.</returns>
+        public static bool TryParse(string value, out MeasurementKey key)
+        {
+            try
+            {
+                key = Parse(value);
+                return true;
+            }
+            catch
+            {
+                key = default(MeasurementKey);
+                return false;
+            }
         }
 
         #endregion

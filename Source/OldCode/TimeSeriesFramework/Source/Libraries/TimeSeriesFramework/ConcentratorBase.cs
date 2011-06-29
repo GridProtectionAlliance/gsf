@@ -1647,7 +1647,7 @@ namespace TimeSeriesFramework
                 discardMeasurement = false;
 
                 // Check for a bad measurement timestamp.
-                if (!m_ignoreBadTimestamps && !measurement.TimestampQualityIsGood)
+                if (!m_ignoreBadTimestamps && (measurement.StateFlags & MeasurementStateFlags.BadTime) > 0)
                 {
                     if (m_allowSortsByArrival)
                     {
@@ -1772,7 +1772,7 @@ namespace TimeSeriesFramework
                 if (discardMeasurement)
                 {
                     // This measurement was marked to be discarded.
-                    measurement.IsDiscarded = true;
+                    measurement.StateFlags |= MeasurementStateFlags.DiscardedValue;
                     Interlocked.Exchange(ref m_lastDiscardedMeasurement, measurement);
                     Interlocked.Exchange(ref m_lastDiscardedMeasurementLatency, RealTime - m_lastDiscardedMeasurement.Timestamp);
 

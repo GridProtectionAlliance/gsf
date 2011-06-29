@@ -449,7 +449,7 @@ namespace TimeSeriesFramework.Adapters
                     {
                         status.Append(OutputMeasurements[i].ToString().TruncateRight(25).PadLeft(25));
                         status.Append(" ");
-                        status.AppendLine(OutputMeasurements[i].SignalID.ToString());
+                        status.AppendLine(OutputMeasurements[i].ID.ToString());
                     }
 
                     if (OutputMeasurements.Length > MaxMeasurementsToShow)

@@ -236,9 +236,9 @@ namespace TimeSeriesFramework
                                 if
                                 (
                                     (
-                                        (!derivedMeasurement.ValueQualityIsGood || !derivedMeasurement.TimestampQualityIsGood)
+                                        (!derivedMeasurement.ValueQualityIsGood() || !derivedMeasurement.TimestampQualityIsGood())
                                             &&
-                                        (measurement.ValueQualityIsGood || measurement.TimestampQualityIsGood)
+                                        (measurement.ValueQualityIsGood() || measurement.TimestampQualityIsGood())
                                     )
                                         ||
                                     (

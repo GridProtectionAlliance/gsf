@@ -475,6 +475,7 @@ namespace TimeSeriesFramework.Transport
             connectionString.AppendFormat("leadTime={0}; ", leadTime);
             connectionString.AppendFormat("inputMeasurementKeys={{{0}}}; ", filterExpression.ToNonNullString());
             connectionString.AppendFormat("dataChannel={{{0}}}; ", dataChannel.ToNonNullString());
+            connectionString.AppendFormat("includeTime=false; ");
             connectionString.AppendFormat("useLocalClockAsRealTime={0}; ", useLocalClockAsRealTime);
             connectionString.AppendFormat("ignoreBadTimestamps={0}; ", ignoreBadTimestamps);
             connectionString.AppendFormat("allowSortsByArrival={0}; ", allowSortsByArrival);
@@ -508,9 +509,6 @@ namespace TimeSeriesFramework.Transport
             connectionString.AppendFormat("lagTime={0}; ", lagTime);
             connectionString.AppendFormat("leadTime={0}; ", leadTime);
             connectionString.AppendFormat("useLocalClockAsRealTime={0}", useLocalClockAsRealTime);
-
-            // Track specified time inclusion for later deserialization
-            m_includeTime = includeTime;
 
             return Subscribe(false, compactFormat, connectionString.ToString());
         }
@@ -553,6 +551,12 @@ namespace TimeSeriesFramework.Transport
                         dataChannel.ReceiveBufferSize = ushort.MaxValue;
                         dataChannel.ConnectAsync();
                     }
+
+                    // Track specified time inclusion for later deserialization
+                    if (settings.TryGetValue("includeTime", out setting))
+                        m_includeTime = setting.ParseBoolean();
+                    else
+                        m_includeTime = true;
 
                     // Assign data channel client reference and attach to needed events
                     this.DataChannel = dataChannel;
