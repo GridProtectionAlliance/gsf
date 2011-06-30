@@ -1509,6 +1509,302 @@
             <param name="cryptoKey">The key to be used for encrypting the data in the <paramref name="buffer"/>.</param>
             <param name="compressLevel">One of the <see cref="T:TVA.IO.Compression.CompressionStrength"/> values.</param>
         </member>
+        <member name="T:TVA.Communication.Radius.AttributeType">
+            <summary>
+            Specifies the type of <see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.UserName">
+            <summary>
+            Attribute indicates the name of the user to be authenticated.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.UserPassword">
+            <summary>
+            Attribute indicates the password of the user to be authenticated.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.ChapPassword">
+            <summary>
+            Attribute indicates the response provided by a PPP CHAP user in reponse to the challenge.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.NasIpAddress">
+            <summary>
+            Attribute indicates the identifying IP address of the NAS requesting user authentication.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.NasPort">
+            <summary>
+            Attribute indicates the physical port number of the NAS which is authenticating the user.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.ServiceType">
+            <summary>
+            Attribute indicates the type of service the user has requested, or the type of service to be provided.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.FramedProtocol">
+            <summary>
+            Attribute indicates the framing to be used for framed access.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.FramedIpAddress">
+            <summary>
+            Attribute indicates the address to be configured for the user.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.FramedIpNetmask">
+            <summary>
+            Attribute indicates the IP netmask to be configured for the user when user is a router to a network.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.FramedRouting">
+            <summary>
+            Attribute indicates the routing method for the user when user is a router to a network.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.FilterId">
+            <summary>
+            Attribute indicates the name of the filter list for this user.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.FramedMtu">
+            <summary>
+            Attribute indicates the MTU to be configured for the user when it is not negotiated by some other means.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.FramedCompression">
+            <summary>
+            Attribute indicates a compression protocol to be used for the link.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.LoginIpHost">
+            <summary>
+            Attribute indicates the system with which to connect the user when <see cref="F:TVA.Communication.Radius.AttributeType.LoginService"/> attribute is included.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.LoginService">
+            <summary>
+            Attribute indicates the service to use to connect the user to the login host.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.LoginTcpPort">
+            <summary>
+            Attribute indicates the TCP port with which the user is to be connected when <see cref="F:TVA.Communication.Radius.AttributeType.LoginService"/> attribute is included.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.ReplyMessage">
+            <summary>
+            Attribute indicates the text which may be displayed to the user.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.CallbackNumber">
+            <summary>
+            Attribute indicates a dialing string to be used for callback.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.CallbackId">
+            <summary>
+            Attribute indicates the name of a place to be called.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.FramedRoute">
+            <summary>
+            Attribute provides routing information to be configured for the user on the NAS.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.FramedIpxNetwork">
+            <summary>
+            Attribute indicates the IPX Network number to be configured for the user.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.State">
+            <summary>
+            Attribute available to be sent by the server to the client in an <see cref="F:TVA.Communication.Radius.PacketType.AccessChallenge"/> and must be 
+            sent unmodified from the client to the server in the new <see cref="F:TVA.Communication.Radius.PacketType.AccessRequest"/> reply to the challenge.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.Class">
+            <summary>
+            Attribute available to be sent by the server to the client in an <see cref="F:TVA.Communication.Radius.PacketType.AccessAccept"/> and should 
+            be sent unmodified by the client to the accounting server as part of the <see cref="F:TVA.Communication.Radius.PacketType.AccountingRequest"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.VendorSpecific">
+            <summary>
+            Attribute available to allow vendors to support their own extended attributes.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.SessionTimeout">
+            <summary>
+            Attribute sets the maximum number of seconds of service to be provided to the user before termination of the session or prompt.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.IdleTimeout">
+            <summary>
+            Attribute sets the maximum number of consecutive seconds of idle connection allowed to the user before termination of the session or prompt.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.TerminationAction">
+            <summary>
+            Attribute indicates the action the NAS should take when the specified service is complete.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.CallerStationId">
+            <summary>
+            Attribute indicates the phone number that the user called using DNIS or similar technology.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.CallingStationId">
+            <summary>
+            Attribute indicates the phone number the call came from using ANI or similar technology.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.NasIdentifier">
+            <summary>
+            Attribute indicates a string identifier for the NAS originating the AccessRequest.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.ProxyState">
+            <summary>
+            Attribute indicates the state a proxy server forwarding requests to the server.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.LoginLatService">
+            <summary>
+            Attribute indicates the system with which the user is to be connected by LAT.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.LoginLatNode">
+            <summary>
+            Attribute indicates the Node with which the user is to be automatically connected by LAT.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.LoginLatGroup">
+            <summary>
+            Attribute indicates the string identifier for the LAT group codes which the user is authorized to use.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.FramedAppleTalkLink">
+            <summary>
+            Attribute indicates the AppleTalk network number which should be used for the serial link to the user.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.FramedAppleTalkNetwork">
+            <summary>
+            Attribute indicates the AppleTalk Network number which the NAS should probe to allocate an AppleTalk node for the user.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.FramedAppleTalkZone">
+            <summary>
+            Attribute indicates the AppleTalk Default Zone to be used for this user.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.ChapChallenge">
+            <summary>
+            Attribute contains the CHAP Challenge sent by the NAS to a PPP CHAP user.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.NasPortType">
+            <summary>
+            Attribute indicates the type of physical port of the NAS which is authenticating the user.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.PortLimit">
+            <summary>
+            Attribute sets the maximum number of ports to be provided to the user by the NAS.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.AttributeType.LoginLatPort">
+            <summary>
+            Attribute indicates the Port with which the user is to be connected by the LAT.
+            </summary>
+        </member>
+        <member name="T:TVA.Communication.Radius.RadiusPacketAttribute">
+            <summary>
+            Represents an attribute of <see cref="T:TVA.Communication.Radius.RadiusPacket"/>.
+            </summary>
+            <seealso cref="T:TVA.Communication.Radius.RadiusPacket"/>
+            <seealso cref="T:TVA.Communication.Radius.RadiusClient"/>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusPacketAttribute.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/> class.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusPacketAttribute.#ctor(TVA.Communication.Radius.AttributeType,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/> class.
+            </summary>
+            <param name="type">Type of the <see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/>.</param>
+            <param name="value">Text value of the <see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/>.</param>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusPacketAttribute.#ctor(TVA.Communication.Radius.AttributeType,System.UInt32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/> class.
+            </summary>
+            <param name="type">Type of the <see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/>.</param>
+            <param name="value">32-bit unsigned integer value of the <see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/>.</param>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusPacketAttribute.#ctor(TVA.Communication.Radius.AttributeType,System.Net.IPAddress)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/> class.
+            </summary>
+            <param name="type">Type of the <see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/>.</param>
+            <param name="value">IP address value of the <see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/>.</param>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusPacketAttribute.#ctor(TVA.Communication.Radius.AttributeType,System.Byte[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/> class.
+            </summary>
+            <param name="type">Type of the <see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/>.</param>
+            <param name="value">Byte array value of the <see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/>.</param>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusPacketAttribute.#ctor(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/> class.
+            </summary>
+            <param name="binaryImage">Binary image to be used for initializing <see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/>.</param>
+            <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
+            <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusPacketAttribute.Initialize(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Initializes <see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/> from the specified <paramref name="binaryImage"/>.
+            </summary>
+            <param name="binaryImage">Binary image to be used for initializing <see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/>.</param>
+            <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
+            <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
+            <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/>.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="binaryImage"/> is null.</exception>
+        </member>
+        <member name="P:TVA.Communication.Radius.RadiusPacketAttribute.Type">
+            <summary>
+            Gets or sets the type of the <see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Communication.Radius.RadiusPacketAttribute.Value">
+            <summary>
+            Gets or sets the value of the <see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/>.
+            </summary>
+            <exception cref="T:System.ArgumentNullException">The value being assigned is null or zero-length byte array.</exception>
+        </member>
+        <member name="P:TVA.Communication.Radius.RadiusPacketAttribute.BinaryLength">
+            <summary>
+            Gets the lenght of the <see cref="P:TVA.Communication.Radius.RadiusPacketAttribute.BinaryImage"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Communication.Radius.RadiusPacketAttribute.BinaryImage">
+            <summary>
+            Gets the binary representation of the <see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/>.
+            </summary>
+        </member>
+        <member name="T:TVA.Communication.Radius.NamespaceDoc">
+            <summary>
+            Contains classes for RADIUS (Remote Authentication Dial In User Service) based server and client communication.
+            </summary>
+        </member>
         <member name="F:TVA.Communication.GoodbyeMessage.MessageIdentifier">
             <summary>
             2-Byte identifier for <see cref="T:TVA.Communication.GoodbyeMessage"/>.
@@ -1767,6 +2063,239 @@
             <summary>
             Gets the <see cref="T:TVA.Units.Time"/> for which the client has been connected to the server.
             </summary>
+        </member>
+        <member name="T:TVA.Communication.Radius.RadiusClient">
+            <summary>
+            Represents a RADIUS communication client.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.RadiusClient.DefaultServerPort">
+            <summary>
+            Default port of the RADIUS server.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.RadiusClient.DefaultNewPinModeMessage1">
+            <summary>
+            Default text for comparing with the text of ReplyMessage attribute in an AccessChallenge
+            server response to determine whether or not Step 1 (ensuring that the user account is in
+            the "New Pin" mode) of creating a new pin was successful.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.RadiusClient.DefaultNewPinModeMessage2">
+            <summary>
+            Default text for comparing with the text of ReplyMessage attribute in an AccessChallenge
+            server response to determine whether or not Step 2 (new pin is accepted in attempt #1)
+             of creating a new pin was successful.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.RadiusClient.DefaultNewPinModeMessage3">
+            <summary>
+            Default text for comparing with the text of ReplyMessage attribute in an AccessChallenge
+            server response to determine whether or not Step 3 (new pin is accepted in attempts #2)
+            of creating a new pin was successful.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.RadiusClient.DefaultNextTokenModeMessage">
+            <summary>
+            Default text for comparing with the text of ReplyMessage attribute in an AccessChallenge
+            server response to determine whether or not a user account is in the "Next Token" mode.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusClient.#ctor(System.String,System.String)">
+            <summary>
+            Creates an instance of RADIUS client for sending request to a RADIUS server.
+            </summary>
+            <param name="serverName">Name or address of the RADIUS server.</param>
+            <param name="sharedSecret">Shared secret used for encryption and authentication.</param>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusClient.#ctor(System.String,System.Int32,System.String)">
+            <summary>
+            Creates an instance of RADIUS client for sending request to a RADIUS server.
+            </summary>
+            <param name="serverName">Name or address of the RADIUS server.</param>
+            <param name="serverPort">Port number of the RADIUS server.</param>
+            <param name="sharedSecret">Shared secret used for encryption and authentication.</param>
+            <remarks></remarks>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusClient.ProcessRequest(TVA.Communication.Radius.RadiusPacket)">
+            <summary>
+            Send a request to the server and waits for a response back.
+            </summary>
+            <param name="request">Request to be sent to the server.</param>
+            <returns>Response packet if a valid reponse is received from the server; otherwise Nothing.</returns>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusClient.CreateNewPin(System.String,System.String,System.String)">
+            <summary>
+            Create a new pin for the user.
+            </summary>
+            <param name="username">Name of the user.</param>
+            <param name="token">Current token of the user.</param>
+            <param name="pin">New pin of the user.</param>
+            <returns>True if a new pin is created for the user successfully; otherwise False.</returns>
+            <remarks>NOTE: This method is specific to RSA RADIUS implementation.</remarks>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusClient.Authenticate(System.String,System.String)">
+            <summary>
+            Authenticates the username and password against the RADIUS server.
+            </summary>
+            <param name="username">Username to be authenticated.</param>
+            <param name="password">Password to be authenticated.</param>
+            <returns>Response packet received from the server for the authentication request.</returns>
+            <remarks>
+            <para>
+            The type of response packet (if any) will be one of the following:
+            <list>
+            <item>AccessAccept: If the authentication is successful.</item>
+            <item>AccessReject: If the authentication is not successful.</item>
+            <item>AccessChallenge: If the server need more information from the user.</item>
+            </list>
+            </para>
+            <para>
+            When an AccessChallenge response packet is received from the server, it contains a State attribute
+            that must be included in the AccessRequest packet that is being sent in response to the AccessChallenge
+            response. So if this method returns an AccessChallenge packet, then this method is to be called again
+            with the requested information (from ReplyMessage attribute) in the password field and the value State
+            attribute.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusClient.Authenticate(System.String,System.String,System.Byte[])">
+            <summary>
+            Authenticates the username and password against the RADIUS server.
+            </summary>
+            <param name="username">Username to be authenticated.</param>
+            <param name="password">Password to be authenticated.</param>
+            <param name="state">State value from a previous challenge response.</param>
+            <returns>Response packet received from the server for the authentication request.</returns>
+            <remarks>
+            <para>
+            The type of response packet (if any) will be one of the following:
+            <list>
+            <item>AccessAccept: If the authentication is successful.</item>
+            <item>AccessReject: If the authentication is not successful.</item>
+            <item>AccessChallenge: If the server need more information from the user.</item>
+            </list>
+            </para>
+            <para>
+            When an AccessChallenge response packet is received from the server, it contains a State attribute
+            that must be included in the AccessRequest packet that is being sent in response to the AccessChallenge
+            response. So if this method returns an AccessChallenge packet, then this method is to be called again
+            with the requested information (from ReplyMessage attribute) in the password field and the value State
+            attribute.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusClient.IsUserInNewPinMode(TVA.Communication.Radius.RadiusPacket)">
+            <summary>
+            Determines whether or not the response indicates that the user account is in "New Pin" mode.
+            </summary>
+            <param name="response">Response packet sent by the server.</param>
+            <returns>True if the user account is in "New Pin" mode; otherwise False.</returns>
+            <remarks>
+            <para>A user's account can be in the "New Pin" mode when set on the server.</para>
+            <para>NOTE: This method is specific to RSA RADIUS implementation.</para>
+            </remarks>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusClient.IsUserInNextTokenMode(TVA.Communication.Radius.RadiusPacket)">
+            <summary>
+            Determines whether or not the response indicates that the user account is in "Next Token" mode.
+            </summary>
+            <param name="response">Response packet sent by the server.</param>
+            <returns>True if the user account is in "Next Token" mode; otherwise False.</returns>
+            <remarks>
+            <para>
+            A user's account can enter the "Next Token" mode after the user enters incorrect passwords for a few
+            times (3 times by default) and then enters the correct password. Note that repeatedly entering
+            incorrect passwords will disable the user account.
+            </para>
+            <para>NOTE: This method is specific to RSA RADIUS implementation.</para>
+            </remarks>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusClient.Dispose">
+            <summary>
+            Releases the used resources.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusClient.CheckDisposed">
+            <summary>
+            Helper method to check whether or not the object instance has been disposed.
+            </summary>
+            <remarks>This method is to be called before performing any operation.</remarks>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusClient.Dispose(System.Boolean)">
+            <summary>
+            Releases the used resources.
+            </summary>
+        </member>
+        <member name="P:TVA.Communication.Radius.RadiusClient.ServerName">
+            <summary>
+            Gets or sets the name or address of the RADIUS server.
+            </summary>
+            <value></value>
+            <returns>Name or address of RADIUS server.</returns>
+        </member>
+        <member name="P:TVA.Communication.Radius.RadiusClient.ServerPort">
+            <summary>
+            Gets or sets the port number of the RADIUS server.
+            </summary>
+            <value></value>
+            <returns>Port number of the RADIUS server.</returns>
+        </member>
+        <member name="P:TVA.Communication.Radius.RadiusClient.RequestAttempts">
+            <summary>
+            Gets or sets the number of time a request is to sent to the server until a valid response is received.
+            </summary>
+            <value></value>
+            <returns>Number of time a request is to sent to the server until a valid response is received.</returns>
+        </member>
+        <member name="P:TVA.Communication.Radius.RadiusClient.ReponseTimeout">
+            <summary>
+            Gets or sets the time (in milliseconds) to wait for a response from server after sending a request.
+            </summary>
+            <value></value>
+            <returns>Time (in milliseconds) to wait for a response from server after sending a request.</returns>
+        </member>
+        <member name="P:TVA.Communication.Radius.RadiusClient.SharedSecret">
+            <summary>
+            Gets or sets the shared secret used between the client and server for encryption and authentication.
+            </summary>
+            <value></value>
+            <returns>Shared secret used between the client and server for encryption and authentication.</returns>
+        </member>
+        <member name="P:TVA.Communication.Radius.RadiusClient.NewPinModeMessage1">
+            <summary>
+            Gets or sets the text for comparing with the text of ReplyMessage attribute in an AccessChallenge
+            server response to determine whether or not Step 1 (ensuring that the user account is in  the
+            "New Pin" mode) of creating a new pin was successful.
+            </summary>
+            <value></value>
+            <returns>Text for "New Pin" mode's first message.</returns>
+        </member>
+        <member name="P:TVA.Communication.Radius.RadiusClient.NewPinModeMessage2">
+            <summary>
+            Gets or sets the text for comparing with the text of ReplyMessage attribute in an AccessChallenge
+            server response to determine whether or not Step 2 (new pin is accepted in attempt #1) of creating
+            a new pin was successful.
+            </summary>
+            <value></value>
+            <returns>Text for "New Pin" mode's second message.</returns>
+        </member>
+        <member name="P:TVA.Communication.Radius.RadiusClient.NewPinModeMessage3">
+            <summary>
+            Gets or sets the text for comparing with the text of ReplyMessage attribute in an AccessChallenge
+            server response to determine whether or not Step 3 (new pin is accepted in attempts #2) of creating
+            a new pin was successful.
+            </summary>
+            <value></value>
+            <returns>Text for "New Pin" mode's third message.</returns>
+        </member>
+        <member name="P:TVA.Communication.Radius.RadiusClient.NextTokenModeMessage">
+            <summary>
+            Gets or sets the text for comparing with the text of ReplyMessage attribute in an AccessChallenge
+            server response to determine whether or not a user account is in the "Next Token" mode.
+            </summary>
+            <value></value>
+            <returns>Text for "Next Token" mode.</returns>
         </member>
         <member name="T:TVA.Communication.SerialClient">
             <summary>
@@ -2510,6 +3039,186 @@
         <member name="F:TVA.Communication.TransportProtocol.File">
             <summary>
             <see cref="T:TVA.Communication.TransportProtocol"/> is file-system based.
+            </summary>
+        </member>
+        <member name="T:TVA.Communication.Radius.PacketType">
+            <summary>
+            Specifies the type of the <see cref="T:TVA.Communication.Radius.RadiusPacket"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.PacketType.AccessRequest">
+            <summary>
+            Packet sent to a RADIUS server for verification of credentials.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.PacketType.AccessAccept">
+            <summary>
+            Packet sent by a RADIUS server when credential verification is successful.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.PacketType.AccessReject">
+            <summary>
+            Packet sent by a RADIUS server when credential verification is unsuccessful.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.PacketType.AccountingRequest">
+            <summary>
+            Not used. No description available. [RFC 2882]
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.PacketType.AccountingResponse">
+            <summary>
+            Not used. No description available. [RFC 2882]
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.PacketType.AccountingStatus">
+            <summary>
+            Not used. No description available. [RFC 2882]
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.PacketType.PasswordRequest">
+            <summary>
+            Not used. No description available. [RFC 2882]
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.PacketType.PasswordAccept">
+            <summary>
+            Not used. No description available. [RFC 2882]
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.PacketType.PasswordReject">
+            <summary>
+            Not used. No description available. [RFC 2882]
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.PacketType.AccountingMessage">
+            <summary>
+            Not used. No description available. [RFC 2882]
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.PacketType.AccessChallenge">
+            <summary>
+            Packet sent by a RADIUS server when further information is needed for credential verification.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.PacketType.StatuServer">
+            <summary>
+            Not used. No description available. [RFC 2882]
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.PacketType.StatusClient">
+            <summary>
+            Not used. No description available. [RFC 2882]
+            </summary>
+        </member>
+        <member name="T:TVA.Communication.Radius.RadiusPacket">
+            <summary>
+            Represents a data packet transferred between RADIUS client and server.
+            </summary>
+            <seealso cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/>
+            <seealso cref="T:TVA.Communication.Radius.RadiusClient"/>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusPacket.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Communication.Radius.RadiusPacket"/> class.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusPacket.#ctor(TVA.Communication.Radius.PacketType)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Communication.Radius.RadiusPacket"/> class.
+            </summary>
+            <param name="type">Type of the <see cref="T:TVA.Communication.Radius.RadiusPacket"/>.</param>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusPacket.#ctor(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Communication.Radius.RadiusPacket"/> class.
+            </summary>
+            <param name="binaryImage">Binary image to be used for initializing <see cref="T:TVA.Communication.Radius.RadiusPacket"/>.</param>
+            <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
+            <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusPacket.Initialize(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Initializes <see cref="T:TVA.Communication.Radius.RadiusPacket"/> from the specified <paramref name="binaryImage"/>.
+            </summary>
+            <param name="binaryImage">Binary image to be used for initializing <see cref="T:TVA.Communication.Radius.RadiusPacket"/>.</param>
+            <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
+            <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
+            <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="T:TVA.Communication.Radius.RadiusPacket"/>.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="binaryImage"/> is null.</exception>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusPacket.GetAttributeValue(TVA.Communication.Radius.AttributeType)">
+            <summary>
+            Gets the value of the specified <paramref name="attributeType"/> if it is present in the <see cref="T:TVA.Communication.Radius.RadiusPacket"/>.
+            </summary>
+            <param name="attributeType"><see cref="P:TVA.Communication.Radius.RadiusPacketAttribute.Type"/> of the <see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/> whose value is to be retrieved.</param>
+            <returns><see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/>.<see cref="P:TVA.Communication.Radius.RadiusPacketAttribute.Value"/> if <see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/> is present; otherwise null.</returns>
+        </member>
+        <member name="F:TVA.Communication.Radius.RadiusPacket.Encoding">
+            <summary>
+            <see cref="F:TVA.Communication.Radius.RadiusPacket.Encoding"/> format for encoding text.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Radius.RadiusPacket.EndianOrder">
+            <summary>
+            <see cref="F:TVA.Communication.Radius.RadiusPacket.EndianOrder"/> to use for byte conversion.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusPacket.CreateRequestAuthenticator(System.String)">
+            <summary>
+            Generates an "Authenticator" value used in a RADIUS request packet sent by the client to server.
+            </summary>
+            <param name="sharedSecret">The shared secret to be used in generating the output.</param>
+            <returns>A byte array.</returns>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusPacket.CreateResponseAuthenticator(System.String,TVA.Communication.Radius.RadiusPacket,TVA.Communication.Radius.RadiusPacket)">
+            <summary>
+            Generates an "Authenticator" value used in a RADIUS response packet sent by the server to client.
+            </summary>
+            <param name="sharedSecret">The shared secret key.</param>
+            <param name="requestPacket">RADIUS packet sent from client to server.</param>
+            <param name="responsePacket">RADIUS packet sent from server to client.</param>
+            <returns>A byte array.</returns>
+        </member>
+        <member name="M:TVA.Communication.Radius.RadiusPacket.EncryptPassword(System.String,System.String,System.Byte[])">
+            <summary>
+            Generates an encrypted password using the RADIUS protocol specification (RFC 2285).
+            </summary>
+            <param name="password">User's password.</param>
+            <param name="sharedSecret">Shared secret key.</param>
+            <param name="requestAuthenticator">Request authenticator byte array.</param>
+            <returns>A byte array.</returns>
+        </member>
+        <member name="P:TVA.Communication.Radius.RadiusPacket.Type">
+            <summary>
+            Gets or sets the type of the <see cref="T:TVA.Communication.Radius.RadiusPacket"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Communication.Radius.RadiusPacket.Identifier">
+            <summary>
+            Gets or sets the <see cref="T:TVA.Communication.Radius.RadiusPacket"/> identifier.
+            </summary>
+        </member>
+        <member name="P:TVA.Communication.Radius.RadiusPacket.Authenticator">
+            <summary>
+            Gets or sets the <see cref="T:TVA.Communication.Radius.RadiusPacket"/> authenticator.
+            </summary>
+            <exception cref="T:System.ArgumentNullException">The value being assigned is null.</exception>
+            <exception cref="T:System.ArgumentException">The value being assigned is not 16-bytes in length.</exception>
+        </member>
+        <member name="P:TVA.Communication.Radius.RadiusPacket.Attributes">
+            <summary>
+            Gets a list of <see cref="T:TVA.Communication.Radius.RadiusPacketAttribute"/>s.
+            </summary>
+        </member>
+        <member name="P:TVA.Communication.Radius.RadiusPacket.BinaryLength">
+            <summary>
+            Gets the lenght of the <see cref="P:TVA.Communication.Radius.RadiusPacket.BinaryImage"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Communication.Radius.RadiusPacket.BinaryImage">
+            <summary>
+            Gets the binary representation of the <see cref="T:TVA.Communication.Radius.RadiusPacket"/>.
             </summary>
         </member>
         <member name="T:TVA.Communication.TransportStatistics">
