@@ -114,10 +114,10 @@ namespace TVA.Historian.Packets
         public PacketType1(IMeasurement measurement)
             : this()
         {
-            HistorianID = (int)measurement.ID;
+            HistorianID = (int)measurement.Key.ID;
             Time = new TimeTag((DateTime)measurement.Timestamp);
             Value = (float)measurement.AdjustedValue;
-            Quality = (measurement.TimestampQualityIsGood && measurement.ValueQualityIsGood ? Quality.Good : Quality.SuspectData);
+            Quality = (measurement.TimestampQualityIsGood() && measurement.ValueQualityIsGood() ? Quality.Good : Quality.SuspectData);
         }
 
         /// <summary>

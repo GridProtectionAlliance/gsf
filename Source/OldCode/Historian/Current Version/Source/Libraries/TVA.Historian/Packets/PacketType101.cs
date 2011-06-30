@@ -100,10 +100,10 @@ namespace TVA.Historian.Packets
 
             foreach (IMeasurement measurement in measurements)
             {
-                m_data.Add(new PacketType101DataPoint((int)measurement.ID,
+                m_data.Add(new PacketType101DataPoint((int)measurement.Key.ID,
                                                  new TimeTag((DateTime)measurement.Timestamp),
                                                  (float)measurement.AdjustedValue,
-                                                 (measurement.TimestampQualityIsGood && measurement.ValueQualityIsGood ? Quality.Good : Quality.SuspectData)));
+                                                 (measurement.TimestampQualityIsGood() && measurement.ValueQualityIsGood() ? Quality.Good : Quality.SuspectData)));
             }
         }
 

@@ -116,7 +116,7 @@ namespace TVA.Historian.Files
         /// <param name="measurement">Object that implements the <see cref="IMeasurement"/> interface.</param>
         [CLSCompliant(false)]
         public ArchiveDataPoint(IMeasurement measurement)
-            : this(measurement, measurement.IsDiscarded ? Quality.DeletedFromProcessing : (measurement.ValueQualityIsGood ? (measurement.TimestampQualityIsGood ? Quality.Good : Quality.Old) : Quality.SuspectData))
+            : this(measurement, measurement.IsDiscarded() ? Quality.DeletedFromProcessing : (measurement.ValueQualityIsGood() ? (measurement.TimestampQualityIsGood() ? Quality.Good : Quality.Old) : Quality.SuspectData))
         {
         }
 
@@ -127,7 +127,7 @@ namespace TVA.Historian.Files
         /// <param name="quality">Specific <see cref="Quality"/> value to apply to new <see cref="ArchiveDataPoint"/>.</param>
         [CLSCompliant(false)]
         public ArchiveDataPoint(IMeasurement measurement, Quality quality)
-            : this((int)measurement.ID)
+            : this((int)measurement.Key.ID)
         {
             this.Time = new TimeTag((DateTime)measurement.Timestamp);
             this.Value = (float)measurement.AdjustedValue;
