@@ -450,6 +450,118 @@
             Returns true if FTP session is currently busy.
             </summary>
         </member>
+        <member name="T:TVA.Media.ListInfoChunk">
+            <summary>
+            Represents the list info chunk in a WAVE media format file.
+            </summary>
+        </member>
+        <member name="T:TVA.Media.RiffChunk">
+            <summary>
+            Represents the type ID and size for a "chunk" in a RIFF media format file.
+            </summary>
+            <remarks>
+            <para>
+            The Resource Interchange File Format (RIFF) is a generic meta-format for storing data in tagged chunks.
+            It was introduced in 1991 by Microsoft and IBM, and was presented by Microsoft as the default format for
+            Windows 3.1 multimedia files. It is based on Electronic Arts's Interchange File Format, introduced in 1985,
+            the only difference being that multi-byte integers are in little-endian format, native to the 80x86 processor
+            series used in IBM PCs, rather than the big-endian format native to the 68k processor series used in Amiga and
+            Apple Macintosh computers, where IFF files were heavily used. (The specification for AIFF, the big-endian
+            analogue of RIFF, was published by Apple Computer in 1988.) The Microsoft implementation is mostly known
+            through file formats like AVI, ANI and WAV, which use the RIFF meta-format as their basis.
+            </para>
+            <para>
+            Some common RIFF file types:
+            <list type="table">
+            <listheader>
+                <term>File extension</term>
+                <description>Description</description>
+            </listheader>
+            <item>
+                <term>WAV</term>
+                <description>Windows audio file</description>
+            </item>
+            <item>
+                <term>AVI</term>
+                <description>Windows audio/video file</description>
+            </item>
+            <item>
+                <term>ANI</term>
+                <description>Animated Windows cursors</description>
+            </item>
+            <item>
+                <term>RMI</term>
+                <description>Windows RIFF MIDI file</description>
+            </item>
+            <item>
+                <term>CDR</term>
+                <description>CorelDRAW vector graphics file</description>
+            </item>
+            </list>
+            </para>
+            </remarks>
+        </member>
+        <member name="M:TVA.Media.RiffChunk.#ctor(TVA.Media.RiffChunk,System.String)">
+            <summary>
+            Constructor for derived classes used to initialize and validate  <see cref="T:TVA.Media.RiffChunk"/> properties.
+            </summary>
+            <param name="preRead">Pre-parsed <see cref="T:TVA.Media.RiffChunk"/> header.</param>
+            <param name="typeID">Expected type ID.</param>
+        </member>
+        <member name="M:TVA.Media.RiffChunk.#ctor(System.String)">
+            <summary>
+            Constructs a new <see cref="T:TVA.Media.RiffChunk"/> for the given <paramref name="typeID"/>.
+            </summary>
+            <param name="typeID">Expected type ID.</param>
+        </member>
+        <member name="M:TVA.Media.RiffChunk.Clone">
+            <summary>
+            Creates a copy of the <see cref="T:TVA.Media.RiffChunk"/>.
+            </summary>
+            <returns>A new copy of the <see cref="T:TVA.Media.RiffChunk"/>.</returns>
+        </member>
+        <member name="M:TVA.Media.RiffChunk.ReadNext(System.IO.Stream)">
+            <summary>
+            Attempts to read the next RIFF chunk from the <paramref name="source"/> stream.
+            </summary>
+            <param name="source">Source stream for next RIFF chunk.</param>
+            <returns>Next RIFF chunk read from the <paramref name="source"/> stream.</returns>
+            <exception cref="T:System.InvalidOperationException">RIFF chunk too small, media file corrupted.</exception>
+        </member>
+        <member name="P:TVA.Media.RiffChunk.TypeID">
+            <summary>Four character text identifer for RIFF chunk.</summary>
+            <exception cref="T:System.ArgumentNullException">TypeID cannot be null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">TypeID must be extactly 4 characters in length.</exception>
+        </member>
+        <member name="P:TVA.Media.RiffChunk.ChunkSize">
+            <summary>Size of <see cref="T:TVA.Media.RiffChunk"/>.</summary>
+        </member>
+        <member name="P:TVA.Media.RiffChunk.BinaryImage">
+            <summary>
+            Returns a binary representation of this <see cref="T:TVA.Media.RiffChunk"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Media.RiffChunk.BinaryLength">
+            <summary>
+            Gets the length of a <see cref="T:TVA.Media.RiffChunk"/> consisting of type ID and chunk size (i.e., 8 bytes).
+            </summary>
+        </member>
+        <member name="F:TVA.Media.ListInfoChunk.RiffTypeID">
+            <summary>
+            Type ID of a WAVE list chunk.
+            </summary>
+        </member>
+        <member name="M:TVA.Media.ListInfoChunk.#ctor(TVA.Media.RiffChunk,System.IO.Stream)">
+            <summary>Reads a new WAVE list info section from the specified stream.</summary>
+            <param name="preRead">Pre-parsed <see cref="T:TVA.Media.RiffChunk"/> header.</param>
+            <param name="source">Source stream to read data from.</param>
+            <exception cref="T:System.InvalidOperationException">WAVE list info section is too small, wave file corrupted.</exception>
+        </member>
+        <member name="P:TVA.Media.ListInfoChunk.InfoStrings">
+            <summary>
+            Gets list of info strings from list info blocks of this <see cref="T:TVA.Media.ListInfoChunk"/>.
+            </summary>
+        </member>
         <member name="T:TVA.ISupportLifecycle">
             <summary>
             Specifies that this object provides support for performing tasks during the key stages of object lifecycle. 
@@ -7479,7 +7591,6 @@
             using TVA;
             using TVA.Adapters;
             using TVA.Security.Cryptography;
-            using TVA.Units;
             
             class Program
             {
@@ -7495,9 +7606,9 @@
                     s_adapterLoader.IsolateAdapters = true;
                     s_adapterLoader.MonitorAdapters = true;
                     s_adapterLoader.AdapterFileExtension = "*.exe";
-                    s_adapterLoader.AllowableProcessMemoryUsage = 200 * SI2.Mega;
+                    s_adapterLoader.AllowableProcessMemoryUsage = 200;
                     s_adapterLoader.AllowableProcessProcessorUsage = 50;
-                    s_adapterLoader.AllowableAdapterMemoryUsage = 100 * SI2.Mega;
+                    s_adapterLoader.AllowableAdapterMemoryUsage = 100;
                     s_adapterLoader.AllowableAdapterProcessorUsage = 25;
                     s_adapterLoader.AdapterLoaded += OnAdapterLoaded;
                     s_adapterLoader.AdapterUnloaded += OnAdapterUnloaded;
@@ -7675,6 +7786,18 @@
             </summary>
             <param name="adapterTypes">Collection of adapter <see cref="T:System.Type"/>s from which <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/> are to be created.</param>
         </member>
+        <member name="M:TVA.Adapters.AdapterLoader`1.SaveSettings">
+            <summary>
+            Saves <see cref="T:TVA.Adapters.AdapterLoader`1"/> settings to the config file if the <see cref="P:TVA.Adapters.AdapterLoader`1.PersistSettings"/> property is set to true.
+            </summary>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.Adapters.AdapterLoader`1.SettingsCategory"/> has a value of null or empty string.</exception>
+        </member>
+        <member name="M:TVA.Adapters.AdapterLoader`1.LoadSettings">
+            <summary>
+            Loads saved <see cref="T:TVA.Adapters.AdapterLoader`1"/> settings from the config file if the <see cref="P:TVA.Adapters.AdapterLoader`1.PersistSettings"/> property is set to true.
+            </summary>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.Adapters.AdapterLoader`1.SettingsCategory"/> has a value of null or empty string.</exception>
+        </member>
         <member name="M:TVA.Adapters.AdapterLoader`1.ProcessAdapter(System.String)">
             <summary>
             Processes the <paramref name="adapterFile"/> by deserializing it.
@@ -7827,7 +7950,7 @@
         </member>
         <member name="P:TVA.Adapters.AdapterLoader`1.WatchForAdapters">
             <summary>
-            Gets or sets a boolean value that indicates whether new assemblies added at runtime will be processed for <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/>.
+            Gets or sets a boolean value that indicates whether the <see cref="P:TVA.Adapters.AdapterLoader`1.AdapterDirectory"/> is to be monitored for new <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/>.
             </summary>
         </member>
         <member name="P:TVA.Adapters.AdapterLoader`1.IsolateAdapters">
@@ -7846,36 +7969,42 @@
         </member>
         <member name="P:TVA.Adapters.AdapterLoader`1.AllowableProcessMemoryUsage">
             <summary>
-            Gets or sets the processor time in % the current process is allowed to use before the internal monitoring process starts looking for offending <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/>.
+            Gets or sets the memory in megabytes the current process is allowed to use before the internal monitoring process starts looking for offending <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/>.
             </summary>
             <exception cref="T:System.ArgumentOutOfRangeException">The value being assigned is zero or negative.</exception>
         </member>
         <member name="P:TVA.Adapters.AdapterLoader`1.AllowableProcessProcessorUsage">
             <summary>
-            Gets or sets the memory in bytes the current process is allowed to use before the internal monitoring process starts looking for offending <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/>.
+            Gets or sets the processor time in % the current process is allowed to use before the internal monitoring process starts looking for offending <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/>.
             </summary>
             <exception cref="T:System.ArgumentOutOfRangeException">The value being assigned is zero or negative.</exception>
         </member>
         <member name="P:TVA.Adapters.AdapterLoader`1.AllowableAdapterMemoryUsage">
             <summary>
-            Gets or sets the processor time in % the <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/> are allowed to use before being flagged as culprits by the internal monitoring process.
+            Gets or sets the memory in megabytes the <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/> are allowed to use before being flagged as offending by the internal monitoring process.
             </summary>
             <exception cref="T:System.ArgumentOutOfRangeException">The value being assigned is zero or negative.</exception>
         </member>
         <member name="P:TVA.Adapters.AdapterLoader`1.AllowableAdapterProcessorUsage">
             <summary>
-            Gets or sets the memory in bytes the <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/> are allowed to use before being flagged as culprits by the internal monitoring process.
+            Gets or sets the processor time in % the <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/> are allowed to use before being flagged as offending by the internal monitoring process.
             </summary>
             <exception cref="T:System.ArgumentOutOfRangeException">The value being assigned is zero or negative.</exception>
+        </member>
+        <member name="P:TVA.Adapters.AdapterLoader`1.PersistSettings">
+            <summary>
+            Gets or sets a boolean value that indicates whether <see cref="T:TVA.Adapters.AdapterLoader`1"/> settings are to be saved to the config file.
+            </summary>
+        </member>
+        <member name="P:TVA.Adapters.AdapterLoader`1.SettingsCategory">
+            <summary>
+            Gets or sets the category under which <see cref="T:TVA.Adapters.AdapterLoader`1"/> settings are to be saved to the config file if the <see cref="P:TVA.Adapters.AdapterLoader`1.PersistSettings"/> property is set to true.
+            </summary>
+            <exception cref="T:System.ArgumentNullException">The value being assigned is a null or empty string.</exception>
         </member>
         <member name="P:TVA.Adapters.AdapterLoader`1.Enabled">
             <summary>
             Gets or sets a boolean value that indicates whether the <see cref="T:TVA.Adapters.AdapterLoader`1"/> is currently enabled.
-            </summary>
-        </member>
-        <member name="P:TVA.Adapters.AdapterLoader`1.Adapters">
-            <summary>
-            Gets a list of adapters loaded from the <see cref="P:TVA.Adapters.AdapterLoader`1.AdapterDirectory"/>.
             </summary>
         </member>
         <member name="P:TVA.Adapters.AdapterLoader`1.Name">
@@ -7886,6 +8015,11 @@
         <member name="P:TVA.Adapters.AdapterLoader`1.Status">
             <summary>
             Gets the descriptive status of the <see cref="T:TVA.Adapters.AdapterLoader`1"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Adapters.AdapterLoader`1.Adapters">
+            <summary>
+            Gets a list of adapters loaded from the <see cref="P:TVA.Adapters.AdapterLoader`1.AdapterDirectory"/>.
             </summary>
         </member>
         <member name="P:TVA.Adapters.AdapterLoader`1.AdapterWatcher">
@@ -10155,13 +10289,14 @@
             Consumer will need to apply appropriate data compression for non-PCM data formats.
             </remarks>
         </member>
-        <member name="M:TVA.Media.WaveFile.#ctor(TVA.Media.RiffHeaderChunk,TVA.Media.WaveFormatChunk,TVA.Media.WaveDataChunk)">
+        <member name="M:TVA.Media.WaveFile.#ctor(TVA.Media.RiffHeaderChunk,TVA.Media.WaveFormatChunk,TVA.Media.WaveDataChunk,TVA.Media.ListInfoChunk)">
             <summary>
             Creates a new empty in-memory wave file using existing constituent chunks.
             </summary>
             <param name="waveData">A <see cref="T:TVA.Media.RiffHeaderChunk"/> header object.</param>
             <param name="waveFormat">A <see cref="T:TVA.Media.WaveFormatChunk"/> format object.</param>
             <param name="waveHeader">A <see cref="T:TVA.Media.WaveDataChunk"/> data object</param>
+            <param name="listInfo">Optional <see cref="T:TVA.Media.ListInfoChunk"/> object.</param>
         </member>
         <member name="M:TVA.Media.WaveFile.AddSample(System.Double)">
             <summary>
@@ -10263,18 +10398,20 @@
             and <see cref="P:TVA.Media.WaveFile.AudioFormat"/>.
             </returns>
         </member>
-        <member name="M:TVA.Media.WaveFile.Load(System.String)">
+        <member name="M:TVA.Media.WaveFile.Load(System.String,System.Boolean)">
             <summary>
             Creates a new in-memory wave loaded from an existing wave file.
             </summary>
             <param name="waveFileName">File name of WAV file to load.</param>
+            <param name="loadData">Determines if wave data should be loaded into memory.</param>
             <returns>In-memory representation of wave file.</returns>
         </member>
-        <member name="M:TVA.Media.WaveFile.Load(System.IO.Stream)">
+        <member name="M:TVA.Media.WaveFile.Load(System.IO.Stream,System.Boolean)">
             <summary>
             Creates a new in-memory wave loaded from an existing wave audio stream.
             </summary>
             <param name="source">Stream of WAV formatted audio data to load.</param>
+            <param name="loadData">Determines if wave data should be loaded into memory.</param>
             <returns>In-memory representation of wave file.</returns>
         </member>
         <member name="M:TVA.Media.WaveFile.Combine(TVA.Media.WaveFile[])">
@@ -10416,6 +10553,19 @@
             formats.  Floating point wave file formats do not need such scaling.
             </remarks>
         </member>
+        <member name="P:TVA.Media.WaveFile.InfoStrings">
+            <summary>
+            Gets list of info strings available in this <see cref="T:TVA.Media.WaveFile"/> if any were available during load; otherwise an empty dictionary.
+            </summary>
+            <remarks>
+            The current implementation only allows reading of loaded <see cref="T:TVA.Media.WaveFile"/> metadata tags, not updating them.
+            </remarks>
+        </member>
+        <member name="P:TVA.Media.WaveFile.AudioLength">
+            <summary>
+            Gets calculated audio length.
+            </summary>
+        </member>
         <member name="P:TVA.Media.WaveFile.ExtraParametersSize">
             <summary>
             Gets the size of the <see cref="P:TVA.Media.WaveFile.ExtraParameters"/> buffer, if defined.
@@ -10447,6 +10597,11 @@
         <member name="P:TVA.Media.WaveFile.DataChunk">
             <summary>
             Gets or sets the <see cref="T:TVA.Media.WaveDataChunk"/> of this <see cref="T:TVA.Media.WaveFile"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Media.WaveFile.InfoChunk">
+            <summary>
+            Gets the <see cref="T:TVA.Media.ListInfoChunk"/> of this <see cref="T:TVA.Media.WaveFile"/>.
             </summary>
         </member>
         <member name="T:TVA.IO.Compression.CompressionStrength">
@@ -13229,6 +13384,80 @@
         <member name="T:TVA.Net.Ftp.FtpResumeNotSupportedException">
             <summary>
             FTP resume not supported exception.
+            </summary>
+        </member>
+        <member name="T:TVA.Media.WaveData">
+            <summary>
+            Represents wave data coming from a stream.
+            </summary>
+            <remarks>
+            This class is meant to be used when loading the entirety
+            of a wave file into memory is not a viable option. With
+            it, samples can be read directly from the data stream in
+            the order that they appear.
+            </remarks>
+        </member>
+        <member name="M:TVA.Media.WaveData.#ctor(TVA.Media.WaveFormatChunk,System.IO.Stream)">
+            <summary>
+            Creates a new instance of the <see cref="T:TVA.Media.WaveData"/> class.
+            </summary>
+            <param name="waveFormat">The format of the wave stream.</param>
+            <param name="waveStream">The stream containing wave data.</param>
+        </member>
+        <member name="M:TVA.Media.WaveData.#ctor(System.IO.Stream)">
+            <summary>
+            Creates a new instance of the <see cref="T:TVA.Media.WaveData"/> class.
+            </summary>
+            <param name="waveStream">The stream containing wave data.</param>
+        </member>
+        <member name="M:TVA.Media.WaveData.GetNextSample">
+            <summary>
+            Reads and returns the next sample from the stream.
+            </summary>
+            <returns>
+            The next sample from the stream. The sample is returned as
+            an array of <see cref="T:TVA.LittleBinaryValue"/>s. Each
+            LittleBinaryValue represents a different channel.
+            A return value of null indicates the end of stream has been reached.
+            </returns>
+        </member>
+        <member name="M:TVA.Media.WaveData.Close">
+            <summary>
+            Closes the underlying stream.
+            </summary>
+        </member>
+        <member name="M:TVA.Media.WaveData.Dispose">
+            <summary>
+            Disposes of the underlying stream.
+            </summary>
+        </member>
+        <member name="M:TVA.Media.WaveData.FromFile(System.String)">
+            <summary>
+            Creates a <see cref="T:TVA.Media.WaveData"/> instance created from a WAV file.
+            </summary>
+            <param name="fileName">The name of the WAV file.</param>
+            <returns>The WaveData instance created from a WAV file.</returns>
+        </member>
+        <member name="M:TVA.Media.WaveData.FromStream(System.IO.Stream)">
+            <summary>
+            Creates a <see cref="T:TVA.Media.WaveData"/> instance created from a WAV stream.
+            </summary>
+            <param name="waveStream">The WAV stream. The data in the stream must include all headers that would be present in a WAV file.</param>
+            <returns>The WaveData instance created from a WAV stream.</returns>
+            <remarks>
+            This method is similar to the <see cref="M:TVA.Media.WaveData.#ctor(System.IO.Stream)"/> constructor,
+            however this method will first search the stream for a format chunk in order to set
+            up the WaveData object with proper format info.
+            </remarks>
+        </member>
+        <member name="P:TVA.Media.WaveData.Format">
+            <summary>
+            Gets the format of the wave data.
+            </summary>
+        </member>
+        <member name="P:TVA.Media.WaveData.WaveStream">
+            <summary>
+            Gets the underlying stream providing wave data.
             </summary>
         </member>
         <member name="T:TVA.IO.IsamDataFileBase`1">
@@ -18367,97 +18596,6 @@
             Represents the header chunk in a RIFF media format file.
             </summary>
         </member>
-        <member name="T:TVA.Media.RiffChunk">
-            <summary>
-            Represents the type ID and size for a "chunk" in a RIFF media format file.
-            </summary>
-            <remarks>
-            <para>
-            The Resource Interchange File Format (RIFF) is a generic meta-format for storing data in tagged chunks.
-            It was introduced in 1991 by Microsoft and IBM, and was presented by Microsoft as the default format for
-            Windows 3.1 multimedia files. It is based on Electronic Arts's Interchange File Format, introduced in 1985,
-            the only difference being that multi-byte integers are in little-endian format, native to the 80x86 processor
-            series used in IBM PCs, rather than the big-endian format native to the 68k processor series used in Amiga and
-            Apple Macintosh computers, where IFF files were heavily used. (The specification for AIFF, the big-endian
-            analogue of RIFF, was published by Apple Computer in 1988.) The Microsoft implementation is mostly known
-            through file formats like AVI, ANI and WAV, which use the RIFF meta-format as their basis.
-            </para>
-            <para>
-            Some common RIFF file types:
-            <list type="table">
-            <listheader>
-                <term>File extension</term>
-                <description>Description</description>
-            </listheader>
-            <item>
-                <term>WAV</term>
-                <description>Windows audio file</description>
-            </item>
-            <item>
-                <term>AVI</term>
-                <description>Windows audio/video file</description>
-            </item>
-            <item>
-                <term>ANI</term>
-                <description>Animated Windows cursors</description>
-            </item>
-            <item>
-                <term>RMI</term>
-                <description>Windows RIFF MIDI file</description>
-            </item>
-            <item>
-                <term>CDR</term>
-                <description>CorelDRAW vector graphics file</description>
-            </item>
-            </list>
-            </para>
-            </remarks>
-        </member>
-        <member name="M:TVA.Media.RiffChunk.#ctor(TVA.Media.RiffChunk,System.String)">
-            <summary>
-            Constructor for derived classes used to initialize and validate  <see cref="T:TVA.Media.RiffChunk"/> properties.
-            </summary>
-            <param name="preRead">Pre-parsed <see cref="T:TVA.Media.RiffChunk"/> header.</param>
-            <param name="typeID">Expected type ID.</param>
-        </member>
-        <member name="M:TVA.Media.RiffChunk.#ctor(System.String)">
-            <summary>
-            Constructs a new <see cref="T:TVA.Media.RiffChunk"/> for the given <paramref name="typeID"/>.
-            </summary>
-            <param name="typeID">Expected type ID.</param>
-        </member>
-        <member name="M:TVA.Media.RiffChunk.Clone">
-            <summary>
-            Creates a copy of the <see cref="T:TVA.Media.RiffChunk"/>.
-            </summary>
-            <returns>A new copy of the <see cref="T:TVA.Media.RiffChunk"/>.</returns>
-        </member>
-        <member name="M:TVA.Media.RiffChunk.ReadNext(System.IO.Stream)">
-            <summary>
-            Attempts to read the next RIFF chunk from the <paramref name="source"/> stream.
-            </summary>
-            <param name="source">Source stream for next RIFF chunk.</param>
-            <returns>Next RIFF chunk read from the <paramref name="source"/> stream.</returns>
-            <exception cref="T:System.InvalidOperationException">RIFF chunk too small, media file corrupted.</exception>
-        </member>
-        <member name="P:TVA.Media.RiffChunk.TypeID">
-            <summary>Four character text identifer for RIFF chunk.</summary>
-            <exception cref="T:System.ArgumentNullException">TypeID cannot be null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">TypeID must be extactly 4 characters in length.</exception>
-        </member>
-        <member name="P:TVA.Media.RiffChunk.ChunkSize">
-            <summary>Size of <see cref="T:TVA.Media.RiffChunk"/>.</summary>
-        </member>
-        <member name="P:TVA.Media.RiffChunk.BinaryImage">
-            <summary>
-            Returns a binary representation of this <see cref="T:TVA.Media.RiffChunk"/>.
-            </summary>
-        </member>
-        <member name="P:TVA.Media.RiffChunk.BinaryLength">
-            <summary>
-            Gets the length of a <see cref="T:TVA.Media.RiffChunk"/> consisting of type ID and chunk size (i.e., 8 bytes).
-            </summary>
-        </member>
         <member name="F:TVA.Media.RiffHeaderChunk.RiffTypeID">
             <summary>
             Type ID of a RIFF header chunk.
@@ -18947,12 +19085,13 @@
             </summary>
             <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         </member>
-        <member name="M:TVA.Adapters.Adapter.OnStatusUpdate(TVA.UpdateType,System.String)">
+        <member name="M:TVA.Adapters.Adapter.OnStatusUpdate(TVA.UpdateType,System.String,System.Object[])">
             <summary>
             Raises the <see cref="E:TVA.Adapters.Adapter.StatusUpdate"/> event.
             </summary>
             <param name="updateType"><see cref="T:TVA.UpdateType"/> to send to <see cref="E:TVA.Adapters.Adapter.StatusUpdate"/> event.</param>
             <param name="updateMessage">Update message to send to <see cref="E:TVA.Adapters.Adapter.StatusUpdate"/> event.</param>
+            <param name="args">Arguments to be used when formatting the <paramref name="updateMessage"/>.</param>
         </member>
         <member name="M:TVA.Adapters.Adapter.OnExecutionException(System.String,System.Exception)">
             <summary>
@@ -27431,6 +27570,14 @@
             </para>
             </remarks>
         </member>
+        <member name="M:TVA.Security.Cryptography.Cipher.KeyIVExists(System.String,System.Int32)">
+            <summary>
+            Determines if a key and initialization vector exists for the given <paramref name="password"/> in the local system key cache.
+            </summary>
+            <param name="password">User password used for key lookups.</param>
+            <param name="keySize">Specifies the desired key size.</param>
+            <returns><c>true</c> if a key and initialization vector exists for the given <paramref name="password"/>; otherwise <c>false</c>.</returns>
+        </member>
         <member name="M:TVA.Security.Cryptography.Cipher.ImportKeyIV(System.String,System.Int32,System.String)">
             <summary>
             Imports a key and initialization vector into the local system key cache.
@@ -27815,6 +27962,14 @@
             <param name="keySize">Specifies the desired key size.</param>
             <returns>Crypto key, index 0, and initialization vector, index 1, for the given user password.</returns>
         </member>
+        <member name="M:TVA.Security.Cryptography.Cipher.KeyIVCache.KeyIVExists(System.String,System.Int32)">
+            <summary>
+            Determines if a key and initialization vector exists for the given <paramref name="password"/>.
+            </summary>
+            <param name="password">User password used for key lookups.</param>
+            <param name="keySize">Specifies the desired key size.</param>
+            <returns><c>true</c> if a key and initialization vector exists for the given <paramref name="password"/>; otherwise <c>false</c>.</returns>
+        </member>
         <member name="M:TVA.Security.Cryptography.Cipher.KeyIVCache.ImportKeyIV(System.String,System.Int32,System.String)">
             <summary>
             Imports a key and initialization vector into the local system key cache.
@@ -27877,6 +28032,12 @@
         <member name="P:TVA.Security.Cryptography.Cipher.KeyIVCache.KeyIVTable">
             <summary>
             Gets a copy of the internal key and initialization vector table.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.Cryptography.Cipher.KeyIVCache.ManagedEncryption">
+            <summary>
+            Gets or sets a boolean value that determines whether to use AesManaged
+            or the CAPI wrapper (AesCryptoServiceProvider) for encryption.
             </summary>
         </member>
         <member name="T:TVA.NumericalAnalysis.RealTimeSlope">

@@ -1163,10 +1163,107 @@
             To modify move field declaration from designer file to code-behind file.
             </remarks>
         </member>
+        <member name="T:TVA.Web.UI.MsgBoxStyle">
+            <summary>
+            Specifies the buttons to be displayed in a message box.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.UI.MsgBoxStyle.OKOnly">
+            <summary>
+            OK Button.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.UI.MsgBoxStyle.OKCancel">
+            <summary>
+            OK and Cancel buttons.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.UI.MsgBoxStyle.AbortRetryIgnore">
+            <summary>
+            Abort,Retry, and Ignore buttons.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.UI.MsgBoxStyle.YesNoCancel">
+            <summary>
+            Yes, No, and Cancel buttons.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.UI.MsgBoxStyle.YesNo">
+            <summary>
+            Yes and No buttons.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.UI.MsgBoxStyle.RetryCancel">
+            <summary>
+            Retry and Cancel buttons.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.UI.MsgBoxStyle.Critical">
+            <summary>
+            Critical message.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.UI.MsgBoxStyle.Question">
+            <summary>
+            Warning query.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.UI.MsgBoxStyle.Exclamation">
+            <summary>
+            Warning message.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.UI.MsgBoxStyle.Information">
+            <summary>
+            Information message.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.UI.MsgBoxStyle.DefaultButton1">
+            <summary>
+            First button is default.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.UI.MsgBoxStyle.DefaultButton2">
+            <summary>
+            Second button is default.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.UI.MsgBoxStyle.DefaultButton3">
+            <summary>
+            Third button is default.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.UI.MsgBoxStyle.DefaultButton4">
+            <summary>
+            Fourth button is default.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.UI.MsgBoxStyle.ApplicationModal">
+            <summary>
+            Application modal message box.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.UI.MsgBoxStyle.SystemModal">
+            <summary>
+            System modal message box.
+            </summary>
+        </member>
         <member name="T:TVA.Web.UI.ClientSideExtensions">
             <summary>
             Defines javascript client-side extensions for web controls.
             </summary>
+        </member>
+        <member name="M:TVA.Web.UI.ClientSideExtensions.JavaScriptEncode(System.String@)">
+            <summary>
+            Performs JavaScript encoding on given string.
+            </summary>
+            <param name="text">The string to be encoded.</param>
+        </member>
+        <member name="M:TVA.Web.UI.ClientSideExtensions.JavaScriptDecode(System.String@)">
+            <summary>
+            Decodes JavaScript characters from given string.
+            </summary>
+            <param name="text">The string to be decoded.</param>
         </member>
         <member name="M:TVA.Web.UI.ClientSideExtensions.SetDefaultButton(System.Web.UI.WebControls.TextBox,System.Web.UI.Control)">
             <summary>
@@ -1177,9 +1274,168 @@
         </member>
         <member name="M:TVA.Web.UI.ClientSideExtensions.SetSubmitOnce(System.Web.UI.WebControls.Button)">
             <summary>
-            Registers this <paramref name="button"/> to be disabled after one click to prevent multiple postbacks.
+            Registers the <paramref name="button"/> to be disabled after one click to prevent multiple postbacks.
             </summary>
             <param name="button"><see cref="T:System.Web.UI.WebControls.Button"/> for which submit once script is to be registered.</param>
+        </member>
+        <member name="M:TVA.Web.UI.ClientSideExtensions.BringToFront(System.Web.UI.Page)">
+            <summary>
+            Brings the <paramref name="page"/>'s browser window to the foreground.
+            </summary>
+            <param name="page"><see cref="T:System.Web.UI.Page"/> to be brought to the foreground.</param>
+        </member>
+        <member name="M:TVA.Web.UI.ClientSideExtensions.PushToBack(System.Web.UI.Page)">
+            <summary>
+            Pushes the <paramref name="page"/>'s browser window to the background.
+            </summary>
+            <param name="page"><see cref="T:System.Web.UI.Page"/> to be pushed to the background.</param>
+        </member>
+        <member name="M:TVA.Web.UI.ClientSideExtensions.Refresh(System.Web.UI.Page,System.Boolean)">
+            <summary>
+            Registers this <paramref name="page"/> to perform a page refresh.
+            </summary>
+            <param name="page"><see cref="T:System.Web.UI.Page"/> to refresh.</param>
+            <param name="refreshOnLoad">Refreshes the <paramref name="page"/> after the page content has loaded.</param>
+        </member>
+        <member name="M:TVA.Web.UI.ClientSideExtensions.Refresh(System.Web.UI.Control)">
+            <summary>
+            Registers the <paramref name="control"/> to perform a page refresh.
+            </summary>
+            <param name="control"><see cref="T:System.Web.UI.Control"/> that will perform a page refresh when clicked.</param>
+        </member>
+        <member name="M:TVA.Web.UI.ClientSideExtensions.Show(System.Web.UI.Page,System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Shows a modeless popup window for the specified web page <paramref name="url"/> when the <paramref name="page"/> has loaded.
+            </summary>
+            <param name="page"><see name="Page"/> that will show the popup window when loaded.</param>
+            <param name="url">Web page url for which the popup windows is to be shown.</param>
+            <param name="height">Height of the popup window.</param>
+            <param name="width">Width of the popup window.</param>
+            <param name="left">Location of the popup window on X-axis.</param>
+            <param name="top">Location of the popup window on Y-axis.</param>
+            <param name="center">True if the popup window is to be centered, otherwise False.</param>
+            <param name="help">True if help button is to be displayed, otherwise False.</param>
+            <param name="resizable">True if the popup window can be resized, otherwise False.</param>
+            <param name="status">True if the status bar is to be displayed, otherwise False.</param>
+        </member>
+        <member name="M:TVA.Web.UI.ClientSideExtensions.Show(System.Web.UI.Control,System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Shows a modeless popup window for the specified web page <paramref name="url"/> when the <paramref name="control"/> is clicked.
+            </summary>
+            <param name="control"><see name="Control"/> that will show the popup window when clicked.</param>
+            <param name="url">Web page url for which the popup windows is to be shown.</param>
+            <param name="height">Height of the popup window.</param>
+            <param name="width">Width of the popup window.</param>
+            <param name="left">Location of the popup window on X-axis.</param>
+            <param name="top">Location of the popup window on Y-axis.</param>
+            <param name="center">True if the popup window is to be centered, otherwise False.</param>
+            <param name="help">True if help button is to be displayed, otherwise False.</param>
+            <param name="resizable">True if the popup window can be resized, otherwise False.</param>
+            <param name="status">True if the status bar is to be displayed, otherwise False.</param>
+        </member>
+        <member name="M:TVA.Web.UI.ClientSideExtensions.ShowDialog(System.Web.UI.Page,System.String,System.Web.UI.Control,System.Int32,System.Int32,System.Int32,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Shows a modal popup window for the specified web page <paramref name="url"/> when the <paramref name="page"/> has loaded.
+            </summary>
+            <param name="page">Web page that will show the popup window when loaded.</param>
+            <param name="url">Web page url for which the popup windows is to be shown.</param>
+            <param name="dialogResultHolder"><see cref="T:System.Web.UI.Control"/> whose text is to updated with the text returned by the web page displayed in the popup window.</param>
+            <param name="height">Height of the popup window.</param>
+            <param name="width">Width of the popup window.</param>
+            <param name="left">Location of the popup window on X-axis.</param>
+            <param name="top">Location of the popup window on Y-axis.</param>
+            <param name="center">True if the popup window is to be centered, otherwise False.</param>
+            <param name="help">True if help button is to be displayed, otherwise False.</param>
+            <param name="resizable">True if the popup window can be resized, otherwise False.</param>
+            <param name="status">True if the status bar is to be displayed, otherwise False.</param>
+        </member>
+        <member name="M:TVA.Web.UI.ClientSideExtensions.ShowDialog(System.Web.UI.Control,System.String,System.Web.UI.Control,System.Int32,System.Int32,System.Int32,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Shows a modal popup window for the specified web page <paramref name="url"/> when the <paramref name="control"/> is clicked.
+            </summary>
+            <param name="control"><see cref="T:System.Web.UI.Control"/> that will show the popup window when clicked.</param>
+            <param name="url">Web page url for which the popup windows is to be shown.</param>
+            <param name="dialogResultHolder"><see cref="T:System.Web.UI.Control"/> whose text is to updated with the text returned by the web page displayed in the popup window.</param>
+            <param name="height">Height of the popup window.</param>
+            <param name="width">Width of the popup window.</param>
+            <param name="left">Location of the popup window on X-axis.</param>
+            <param name="top">Location of the popup window on Y-axis.</param>
+            <param name="center">True if the popup window is to be centered, otherwise False.</param>
+            <param name="help">True if help button is to be displayed, otherwise False.</param>
+            <param name="resizable">True if the popup window can be resized, otherwise False.</param>
+            <param name="status">True if the status bar is to be displayed, otherwise False.</param>
+        </member>
+        <member name="M:TVA.Web.UI.ClientSideExtensions.ShowPopup(System.Web.UI.Page,System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Shows a popup for the specified web page <paramref name="url"/> when the <paramref name="page"/> has loaded.
+            </summary>
+            <param name="page"><see cref="T:System.Web.UI.Page"/> that will show the popup when loaded.</param>
+            <param name="url">Web page url for which the popup is to be shown.</param>
+            <param name="height">Height of the popup.</param>
+            <param name="width">Width of the popup.</param>
+            <param name="left">Location of the popup on X-axis.</param>
+            <param name="top">Location of the popup on Y-axis.</param>
+            <param name="center">True if the popup is to be centered, otherwise False.</param>
+            <param name="resizable">True if the popup can be resized, otherwise False.</param>
+            <param name="scrollbars">True is the scrollbars are to be displayed, otherwise False.</param>
+            <param name="toolbar">True if the toolbar is to be displayed, otherwise False.</param>
+            <param name="menubar">True if the menu bar is to be displayed, otherwise False.</param>
+            <param name="location">True if the address bar is to be displayed, otherwise False.</param>
+            <param name="status">True if the status bar is to be displayed, otherwise False.</param>
+            <param name="directories">True if the directories buttons (Netscape only) are to be displayed, otherwise False.</param>
+        </member>
+        <member name="M:TVA.Web.UI.ClientSideExtensions.ShowPopup(System.Web.UI.Control,System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Shows a popup for the specified web page <paramref name="url"/> when the <paramref name="control"/> is clicked.
+            </summary>
+            <param name="control"><see cref="T:System.Web.UI.Control"/> that will show the popup when clicked.</param>
+            <param name="url">Web page url for which the popup is to be shown.</param>
+            <param name="height">Height of the popup.</param>
+            <param name="width">Width of the popup.</param>
+            <param name="left">Location of the popup on X-axis.</param>
+            <param name="top">Location of the popup on Y-axis.</param>
+            <param name="center">True if the popup is to be centered, otherwise False.</param>
+            <param name="resizable">True if the popup can be resized, otherwise False.</param>
+            <param name="scrollbars">True is the scrollbars are to be displayed, otherwise False.</param>
+            <param name="toolbar">True if the toolbar is to be displayed, otherwise False.</param>
+            <param name="menubar">True if the menu bar is to be displayed, otherwise False.</param>
+            <param name="location">True if the address bar is to be displayed, otherwise False.</param>
+            <param name="status">True if the status bar is to be displayed, otherwise False.</param>
+            <param name="directories">True if the directories buttons (Netscape only) are to be displayed, otherwise False.</param>
+        </member>
+        <member name="M:TVA.Web.UI.ClientSideExtensions.Close(System.Web.UI.Page,System.String)">
+            <summary>
+            Closes the current <paramref name="page"/> when it has finished loading in the browser and returns the specified <paramref name="returnValue"/> to the web page that opened it.
+            </summary>
+            <param name="page"><see cref="T:System.Web.UI.Page"/> to be closed.</param>
+            <param name="returnValue">Value to be returned to the parent web page.</param>
+        </member>
+        <member name="M:TVA.Web.UI.ClientSideExtensions.Close(System.Web.UI.Control,System.String)">
+            <summary>
+            Closes the current page when the <paramref name="control"/> is clicked and returns the specified <paramref name="returnValue"/> to the web page that opened it.
+            </summary>
+            <param name="control"><see cref="T:System.Web.UI.Control"/> that will close the current web page when clicked.</param>
+            <param name="returnValue">Value to be returned to the parent web page.</param>
+        </member>
+        <member name="M:TVA.Web.UI.ClientSideExtensions.MsgBox(System.Web.UI.Page,System.String,System.String,TVA.Web.UI.MsgBoxStyle,System.Boolean)">
+            <summary>
+            Shows a windows application style message box when the <paramref name="page"/> has loaded.
+            </summary>
+            <param name="page"><see cref="T:System.Web.UI.Page"/> that will show the message box when loaded.</param>
+            <param name="prompt">Text that is to be displayed in the message box.</param>
+            <param name="title">Title of the message box.</param>
+            <param name="buttons">Buttons to be displayed in the message box.</param>
+            <param name="doPostBack">True if a post-back is to be performed when either OK, Retry, or Yes buttons are clicked in the message box, otherwise False.</param>
+        </member>
+        <member name="M:TVA.Web.UI.ClientSideExtensions.MsgBox(System.Web.UI.Control,System.String,System.String,TVA.Web.UI.MsgBoxStyle,System.Boolean)">
+            <summary>
+            Shows a windows application style message box when the <paramref name="control"/> is clicked.
+            </summary>
+            <param name="control"><see cref="T:System.Web.UI.Control"/> that will show the message box when clicked.</param>
+            <param name="prompt">Text that is to be displayed in the message box.</param>
+            <param name="title">Title of the message box.</param>
+            <param name="buttons">Buttons to be displayed in the message box.</param>
+            <param name="doPostBack">True if a post-back is to be performed when either OK, Retry, or Yes buttons are clicked in the message box, otherwise False.</param>
         </member>
         <member name="M:TVA.Web.Embedded.SecurityServiceHostFactory.GetAuthenticationSchemes(System.Uri)">
             <summary>
