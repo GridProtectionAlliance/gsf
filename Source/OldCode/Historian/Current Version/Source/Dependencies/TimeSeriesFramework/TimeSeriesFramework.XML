@@ -9,6 +9,81 @@
             Marks a parameter as being a connection string parameter used to configure an <see cref="T:TimeSeriesFramework.Adapters.IAdapter"/>.
             </summary>
         </member>
+        <member name="T:TimeSeriesFramework.Adapters.RoutingTables">
+            <summary>
+            Represents the routing tables for the Iaon adapters.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.RoutingTables.#ctor">
+            <summary>
+            Creates a new instance of the <see cref="T:TimeSeriesFramework.Adapters.RoutingTables"/> class.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.RoutingTables.Finalize">
+            <summary>
+            Releases the unmanaged resources before the <see cref="T:TimeSeriesFramework.Adapters.RoutingTables"/> object is reclaimed by <see cref="T:System.GC"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.RoutingTables.Dispose">
+            <summary>
+            Releases all the resources used by the <see cref="T:TimeSeriesFramework.Adapters.RoutingTables"/> object.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.RoutingTables.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.Adapters.RoutingTables"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.RoutingTables.CalculateRoutingTables">
+            <summary>
+            Spawn routing tables recalculation.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.RoutingTables.RoutedMeasurementsHandler(System.Object,TVA.EventArgs{System.Collections.Generic.ICollection{TimeSeriesFramework.IMeasurement}})">
+            <summary>
+            Event handler for distributing new measurements in a routed fashion.
+            </summary>
+            <param name="sender">Event source reference to adapter that generated new measurements.</param>
+            <param name="e">Event arguments containing a collection of new measurements.</param>
+            <remarks>
+            Time-series framework uses this handler to directly route new measurements to the action and output adapters.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.RoutingTables.RoutedMeasurementsHandler(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
+            <summary>
+            Method for distributing new measurements in a routed fashion.
+            </summary>
+            <param name="newMeasurements">Collection of new measurements.</param>
+            <remarks>
+            Time-series framework uses this handler to directly route new measurements to the action and output adapters.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.RoutingTables.BroadcastMeasurementsHandler(System.Object,TVA.EventArgs{System.Collections.Generic.ICollection{TimeSeriesFramework.IMeasurement}})">
+            <summary>
+            Event handler for distributing new measurements in a broadcast fashion.
+            </summary>
+            <param name="sender">Event source reference to adapter that generated new measurements.</param>
+            <param name="e">Event arguments containing a collection of new measurements.</param>
+            <remarks>
+            Time-series framework uses this handler to route new measurements to the action and output adapters; adapter will handle filtering.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.RoutingTables.InputAdapters">
+            <summary>
+            Gets or sets the active <see cref="T:TimeSeriesFramework.Adapters.InputAdapterCollection"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.RoutingTables.ActionAdapters">
+            <summary>
+            Gets or sets the active <see cref="T:TimeSeriesFramework.Adapters.ActionAdapterCollection"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.RoutingTables.OutputAdapters">
+            <summary>
+            Gets or sets the active <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterCollection"/>.
+            </summary>
+        </member>
         <member name="T:TimeSeriesFramework.DownsamplingMethod">
             <summary>
             Downsampling method enumeration.
@@ -1004,6 +1079,176 @@
             <param name="source">Sequence of <see cref="T:TimeSeriesFramework.IMeasurement"/> values over which to apply filter.</param>
             <returns>Result of filter applied to sequence of <see cref="T:TimeSeriesFramework.IMeasurement"/> values.</returns>
         </member>
+        <member name="T:TimeSeriesFramework.MeasurementStateFlags">
+            <summary>
+            Measurement state flags.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.Normal">
+            <summary>
+            Defines normal state.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.BadData">
+            <summary>
+            Defines bad data state.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.SuspectData">
+            <summary>
+            Defines suspect data state.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.OverRangeError">
+            <summary>
+            Defines over range error, i.e., unreasonable high value.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.UnderRangeError">
+            <summary>
+            Defines under range error, i.e., unreasonable low value.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.AlarmHigh">
+            <summary>
+            Defines alarm for high value.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.AlarmLow">
+            <summary>
+            Defines alarm for low value.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.WarningHigh">
+            <summary>
+            Defines warning for high value.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.WarningLow">
+            <summary>
+            Defines warning for low value.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.FlatlineAlarm">
+            <summary>
+            Defines alarm for flat-lined value, i.e., latched value test alarm.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.ComparisonAlarm">
+            <summary>
+            Defines comparision alarm, i.e., outside threshold of comparison with a real-time value.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.ROCAlarm">
+            <summary>
+            Defines rate-of-change alarm.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.ReceivedAsBad">
+            <summary>
+            Defines bad value received.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.CalcuatedValue">
+            <summary>
+            Defines calculated value state.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.CalculationError">
+            <summary>
+            Defines calculation error with the value.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.CalculationWarning">
+            <summary>
+            Defines calculation warning with the value.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.ReservedQualityFlag">
+            <summary>
+            Defines reserved quality flag.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.BadTime">
+            <summary>
+            Defines bad time state.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.SuspectTime">
+            <summary>
+            Defines suspect time state.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.LateTimeAlarm">
+            <summary>
+            Defines late time alarm.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.FutureTimeAlarm">
+            <summary>
+            Defines future time alarm.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.UpSampled">
+            <summary>
+            Defines upsampled state.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.DownSampled">
+            <summary>
+            Defines downsampled state.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.DiscardedValue">
+            <summary>
+            Defines discarded value state.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.ReservedTimeFlag">
+            <summary>
+            Defines reserved time flag.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.UserDefinedFlag1">
+            <summary>
+            Defines user defined flag 1.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.UserDefinedFlag2">
+            <summary>
+            Defines user defined flag 2.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.UserDefinedFlag3">
+            <summary>
+            Defines user defined flag 3.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.UserDefinedFlag4">
+            <summary>
+            Defines user defined flag 4.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.UserDefinedFlag5">
+            <summary>
+            Defines user defined flag 5.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.SystemError">
+            <summary>
+            Defines system error state.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.SystemWarning">
+            <summary>
+            Defines system warning state.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementStateFlags.MeasurementError">
+            <summary>
+            Defines measurement error flag.
+            </summary>
+        </member>
         <member name="T:TimeSeriesFramework.IMeasurement">
             <summary>
             Represents an interface for an abstract measurement value measured by a device at an exact time.
@@ -1012,50 +1257,58 @@
             This interface abstractly represents a measured value at an exact time interval.
             </remarks>
         </member>
-        <member name="M:TimeSeriesFramework.IMeasurement.GetHashCode">
+        <member name="T:TimeSeriesFramework.ITimeSeriesValue`1">
             <summary>
-            Get the hash code for the <see cref="T:TimeSeriesFramework.IMeasurement"/>.<see cref="T:TimeSeriesFramework.MeasurementKey"/>.
+            Represents the fundamental typed interface for a time-series value.
             </summary>
-            <returns>Hash code for the <see cref="T:TimeSeriesFramework.IMeasurement"/>.<see cref="T:TimeSeriesFramework.MeasurementKey"/>.</returns>
-            <remarks>Implementors should always return the hash code based on <see cref="T:TimeSeriesFramework.MeasurementKey"/> of measurement.</remarks>
+            <typeparam name="T"><see cref="T:System.Type"/> of the time-series value.</typeparam>
         </member>
-        <member name="P:TimeSeriesFramework.IMeasurement.ID">
+        <member name="T:TimeSeriesFramework.ITimeSeriesValue">
             <summary>
-            Gets or sets the numeric ID of this <see cref="T:TimeSeriesFramework.IMeasurement"/>.
+            Represents the fundamental binary value interface for a time-series value.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.ITimeSeriesValue.GetHashCode">
+            <summary>
+            Get the hash code for the <see cref="P:TimeSeriesFramework.ITimeSeriesValue.ID"/>.
+            </summary>
+            <returns>Hash code for the <see cref="P:TimeSeriesFramework.ITimeSeriesValue.ID"/>.</returns>
+            <remarks>Implementors should always return the hash code based on <see cref="P:TimeSeriesFramework.ITimeSeriesValue.ID"/> of measurement.</remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.ITimeSeriesValue.ID">
+            <summary>
+            Gets or sets the <see cref="T:System.Guid"/> based signal ID of this <see cref="T:TimeSeriesFramework.ITimeSeriesValue`1"/>.
             </summary>
             <remarks>
-            <para>In most implementations, this will be a required field.</para>
-            <para>Note that this field, in addition to Source, typically creates the primary key for a <see cref="T:TimeSeriesFramework.IMeasurement"/>.</para>
+            This is the fundamental identifier of the <see cref="T:TimeSeriesFramework.ITimeSeriesValue`1"/>.
             </remarks>
         </member>
-        <member name="P:TimeSeriesFramework.IMeasurement.Source">
+        <member name="P:TimeSeriesFramework.ITimeSeriesValue.Value">
             <summary>
-            Gets or sets the source of this <see cref="T:TimeSeriesFramework.IMeasurement"/>.
+            Gets or sets the raw value of this <see cref="T:TimeSeriesFramework.ITimeSeriesValue`1"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.ITimeSeriesValue.Timestamp">
+            <summary>
+            Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="T:TimeSeriesFramework.ITimeSeriesValue`1"/>.
             </summary>
             <remarks>
-            <para>In most implementations, this will be a required field.</para>
-            <para>Note that this field, in addition to ID, typically creates the primary key for a <see cref="T:TimeSeriesFramework.IMeasurement"/>.</para>
-            <para>This value is typically used to track the archive name in which <see cref="T:TimeSeriesFramework.IMeasurement"/> is stored.</para>
+            The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
             </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.ITimeSeriesValue`1.Value">
+            <summary>
+            Gets or sets the raw typed value of this <see cref="T:TimeSeriesFramework.ITimeSeriesValue`1"/>.
+            </summary>
         </member>
         <member name="P:TimeSeriesFramework.IMeasurement.Key">
             <summary>
             Returns the primary key of this <see cref="T:TimeSeriesFramework.IMeasurement"/>.
             </summary>
         </member>
-        <member name="P:TimeSeriesFramework.IMeasurement.SignalID">
-            <summary>
-            Gets or sets the <see cref="T:System.Guid"/> based signal ID of this <see cref="T:TimeSeriesFramework.IMeasurement"/>, if available.
-            </summary>
-        </member>
         <member name="P:TimeSeriesFramework.IMeasurement.TagName">
             <summary>
             Gets or sets the text based tag name of this <see cref="T:TimeSeriesFramework.IMeasurement"/>.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.IMeasurement.Value">
-            <summary>
-            Gets or sets the raw value of this <see cref="T:TimeSeriesFramework.IMeasurement"/> (i.e., the numeric value that is not offset by <see cref="P:TimeSeriesFramework.IMeasurement.Adder"/> and <see cref="P:TimeSeriesFramework.IMeasurement.Multiplier"/>).
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.IMeasurement.AdjustedValue">
@@ -1064,7 +1317,7 @@
             </summary>
             <remarks>
             <para>Implementors need to account for <see cref="P:TimeSeriesFramework.IMeasurement.Adder"/> and <see cref="P:TimeSeriesFramework.IMeasurement.Multiplier"/> in return value, e.g.:<br/>
-            <c>return <see cref="P:TimeSeriesFramework.IMeasurement.Value"/> * <see cref="P:TimeSeriesFramework.IMeasurement.Multiplier"/> + <see cref="P:TimeSeriesFramework.IMeasurement.Adder"/></c>
+            <c>return <see cref="P:TimeSeriesFramework.ITimeSeriesValue`1.Value"/> * <see cref="P:TimeSeriesFramework.IMeasurement.Multiplier"/> + <see cref="P:TimeSeriesFramework.IMeasurement.Adder"/></c>
             </para>
             </remarks>
         </member>
@@ -1084,13 +1337,10 @@
             Implementors should make sure this value defaults to one.
             </remarks>
         </member>
-        <member name="P:TimeSeriesFramework.IMeasurement.Timestamp">
+        <member name="P:TimeSeriesFramework.IMeasurement.StateFlags">
             <summary>
-            Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="T:TimeSeriesFramework.IMeasurement"/>.
+            Gets or sets <see cref="T:TimeSeriesFramework.MeasurementStateFlags"/> associated with this <see cref="T:TimeSeriesFramework.IMeasurement"/>.
             </summary>
-            <remarks>
-            The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
-            </remarks>
         </member>
         <member name="P:TimeSeriesFramework.IMeasurement.ReceivedTimestamp">
             <summary>
@@ -1109,25 +1359,53 @@
             The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
             </remarks>
         </member>
-        <member name="P:TimeSeriesFramework.IMeasurement.ValueQualityIsGood">
-            <summary>
-            Gets or sets a boolean value that determines if the quality of the numeric value of this <see cref="T:TimeSeriesFramework.IMeasurement"/> is good.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.IMeasurement.TimestampQualityIsGood">
-            <summary>
-            Gets or sets a boolean value that determines if the quality of the timestamp of this <see cref="T:TimeSeriesFramework.IMeasurement"/> is good.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.IMeasurement.IsDiscarded">
-            <summary>
-            Gets or sets a boolean value that determines if this <see cref="T:TimeSeriesFramework.IMeasurement"/> has been discarded during sorting.
-            </summary>
-        </member>
         <member name="P:TimeSeriesFramework.IMeasurement.MeasurementValueFilter">
             <summary>
             Gets or sets function used to apply a downsampling filter over a sequence of <see cref="T:TimeSeriesFramework.IMeasurement"/> values.
             </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.IMeasurementExtensions">
+            <summary>
+            Defines static extension functions for <see cref="T:TimeSeriesFramework.IMeasurement"/> implementations.
+            </summary>
+            <remarks>
+            These helper functions map to the previously defined corresponding properties to help with the transition of <see cref="T:TimeSeriesFramework.MeasurementStateFlags"/>.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.IMeasurementExtensions.ValueQualityIsGood(TimeSeriesFramework.IMeasurement)">
+            <summary>
+            Returns <c>true</c> if <see cref="F:TimeSeriesFramework.MeasurementStateFlags.BadData"/> is not set.
+            </summary>
+            <param name="measurement"><see cref="T:TimeSeriesFramework.IMeasurement"/> instance to test.</param>
+            <returns><c>true</c> if <see cref="F:TimeSeriesFramework.MeasurementStateFlags.BadData"/> is not set.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.IMeasurementExtensions.TimestampQualityIsGood(TimeSeriesFramework.IMeasurement)">
+            <summary>
+            Returns <c>true</c> if <see cref="F:TimeSeriesFramework.MeasurementStateFlags.BadTime"/> is not set.
+            </summary>
+            <param name="measurement"><see cref="T:TimeSeriesFramework.IMeasurement"/> instance to test.</param>
+            <returns><c>true</c> if <see cref="F:TimeSeriesFramework.MeasurementStateFlags.BadTime"/> is not set.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.IMeasurementExtensions.IsDiscarded(TimeSeriesFramework.IMeasurement)">
+            <summary>
+            Returns <c>true</c> if <see cref="F:TimeSeriesFramework.MeasurementStateFlags.DiscardedValue"/> is set.
+            </summary>
+            <param name="measurement"><see cref="T:TimeSeriesFramework.IMeasurement"/> instance to test.</param>
+            <returns><c>true</c> if <see cref="F:TimeSeriesFramework.MeasurementStateFlags.DiscardedValue"/> is not set.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.IMeasurementExtensions.IsCalculated(TimeSeriesFramework.IMeasurement)">
+            <summary>
+            Returns <c>true</c> if <see cref="F:TimeSeriesFramework.MeasurementStateFlags.CalcuatedValue"/> is set.
+            </summary>
+            <param name="measurement"><see cref="T:TimeSeriesFramework.IMeasurement"/> instance to test.</param>
+            <returns><c>true</c> if <see cref="F:TimeSeriesFramework.MeasurementStateFlags.CalcuatedValue"/> is not set.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.IMeasurementExtensions.RuntimeSignalID(TimeSeriesFramework.IMeasurement)">
+            <summary>
+            Returns the measurement ID if defined, otherwise the run-time signal ID associated with the measurement key.
+            </summary>
+            <param name="measurement"><see cref="T:TimeSeriesFramework.IMeasurement"/> instance to test.</param>
+            <returns>Measurement ID if defined, otherwise the run-time signal ID associated with the measurement key.</returns>
         </member>
         <member name="T:TimeSeriesFramework.ImmediateMeasurements">
             <summary>
@@ -1156,25 +1434,23 @@
             <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         </member>
         <member name="M:TimeSeriesFramework.ImmediateMeasurements.TaggedMeasurementKeys(System.String)">
-            <summary>Returns measurement key list of specified tag, if it exists.</summary>
+            <summary>Returns measurement list of specified tag, if it exists.</summary>
             <param name="tag">A <see cref="T:System.String"/> that indicates the tag to use.</param>
             <returns>A collection of measurement keys.</returns>
         </member>
         <member name="M:TimeSeriesFramework.ImmediateMeasurements.UpdateMeasurementValue(TimeSeriesFramework.IMeasurement)">
-            <summary>We only store a new measurement value that is newer than the cached value.</summary>
+            <summary>Store new measurement.</summary>
             <param name="newMeasurement">New measurement value to update.</param>
+            <remarks>Value is only stored if it is newer than the cached value.</remarks>
         </member>
-        <member name="M:TimeSeriesFramework.ImmediateMeasurements.Measurement(System.UInt32,System.String,System.Guid)">
+        <member name="M:TimeSeriesFramework.ImmediateMeasurements.Measurement(System.Guid)">
             <summary>Retrieves the specified immediate temporal measurement, creating it if needed.</summary>
-            <param name="measurementID">An <see cref="T:System.UInt32"/> representing the measurement id.</param>
-            <param name="source">A <see cref="T:System.String"/> indicating the source.</param>
-            <param name="signalID"><see cref="T:System.Guid"/> based signal ID of measurement.</param>
+            <param name="id"><see cref="T:System.Guid"/> based signal ID of measurement.</param>
             <returns>A <see cref="T:TimeSeriesFramework.TemporalMeasurement"/> object.</returns>
         </member>
-        <member name="M:TimeSeriesFramework.ImmediateMeasurements.Measurement(TimeSeriesFramework.MeasurementKey,System.Guid)">
+        <member name="M:TimeSeriesFramework.ImmediateMeasurements.Measurement(TimeSeriesFramework.IMeasurement)">
             <summary>Retrieves the specified immediate temporal measurement, creating it if needed.</summary>
-            <param name="key">A <see cref="T:TimeSeriesFramework.MeasurementKey"/> object indicating the key to use.</param>
-            <param name="signalID"><see cref="T:System.Guid"/> based signal ID of measurement.</param>
+            <param name="measurement">Source <see cref="T:TimeSeriesFramework.IMeasurement"/> value.</param>
             <returns>A <see cref="T:TimeSeriesFramework.TemporalMeasurement"/> object.</returns>
         </member>
         <member name="M:TimeSeriesFramework.ImmediateMeasurements.ClearMeasurementCache">
@@ -1184,14 +1460,14 @@
         </member>
         <member name="M:TimeSeriesFramework.ImmediateMeasurements.DefineTaggedMeasurements(System.Data.DataTable)">
             <summary>Defines tagged measurements from a data table.</summary>
-            <remarks>Expects tag field to be aliased as "Tag", measurement ID field to be aliased as "ID" and source field to be aliased as "Source".</remarks>
+            <remarks>Expects <see cref="T:System.String"/> based tag field to be aliased as "Tag" and <see cref="T:System.Guid"/> based measurement ID field to be aliased as "ID".</remarks>
             <param name="taggedMeasurements">A <see cref="T:System.Data.DataTable"/> to use for defining the tagged measurements.</param>
         </member>
-        <member name="M:TimeSeriesFramework.ImmediateMeasurements.AddTaggedMeasurement(System.String,TimeSeriesFramework.MeasurementKey)">
+        <member name="M:TimeSeriesFramework.ImmediateMeasurements.AddTaggedMeasurement(System.String,System.Guid)">
             <summary>Associates a new measurement ID with a tag, creating the new tag if needed.</summary>
             <remarks>Allows you to define "grouped" points so you can aggregate certain measurements.</remarks>
-            <param name="key">A <see cref="T:TimeSeriesFramework.MeasurementKey"/> to associate with the tag.</param>
             <param name="tag">A <see cref="T:System.String"/> to represent the key.</param>
+            <param name="id">A <see cref="T:System.Guid"/> ID to associate with the tag.</param>
         </member>
         <member name="M:TimeSeriesFramework.ImmediateMeasurements.CalculateAverage(System.Int32@)">
             <summary>Calculates an average of all measurements.</summary>
@@ -1227,22 +1503,16 @@
             </summary>
             <param name="leadTime">New lead time.</param>
         </member>
-        <member name="P:TimeSeriesFramework.ImmediateMeasurements.Item(System.UInt32,System.String)">
+        <member name="P:TimeSeriesFramework.ImmediateMeasurements.Item(System.Guid)">
             <summary>We retrieve adjusted measurement values within time tolerance of concentrator real-time.</summary>
-            <param name="measurementID">An <see cref="T:System.UInt32"/> representing the measurement id.</param>
-            <param name="source">A <see cref="T:System.String"/> indicating the source.</param>
+            <param name="id">A <see cref="T:System.Guid"/> representing the measurement ID.</param>
             <returns>A <see cref="T:System.Double"/> representing the adjusted measurement value.</returns>
         </member>
-        <member name="P:TimeSeriesFramework.ImmediateMeasurements.Item(TimeSeriesFramework.MeasurementKey)">
-            <summary>We retrieve adjusted measurement values within time tolerance of concentrator real-time.</summary>
-            <param name="key">An <see cref="T:TimeSeriesFramework.MeasurementKey"/> representing the measurement key.</param>
-            <returns>A <see cref="T:System.Double"/> representing the adjusted measurement value.</returns>
-        </member>
-        <member name="P:TimeSeriesFramework.ImmediateMeasurements.MeasurementKeys">
-            <summary>Returns key collection of measurement keys.</summary>
+        <member name="P:TimeSeriesFramework.ImmediateMeasurements.MeasurementIDs">
+            <summary>Returns collection of measurement ID's.</summary>
         </member>
         <member name="P:TimeSeriesFramework.ImmediateMeasurements.Tags">
-            <summary>Returns key collection for measurement tags.</summary>
+            <summary>Returns ID collection for measurement tags.</summary>
         </member>
         <member name="P:TimeSeriesFramework.ImmediateMeasurements.Minimum">
             <summary>Returns the minimum value of all measurements.</summary>
@@ -1290,6 +1560,9 @@
             <summary>
             Called when system settings are loaded.
             </summary>
+            <remarks>
+            This method will only be called if implementor overrides <see cref="P:TimeSeriesFramework.InstallerBase.ConfigurationName"/> with a valid config name.
+            </remarks>
             <param name="configurationFile">Open xml document containing configuration settings.</param>
             <param name="systemSettingsNode">Xml node containing system settings.</param>
         </member>
@@ -1314,71 +1587,19 @@
             Constructs a new <see cref="T:TimeSeriesFramework.Measurement"/> using default settings.
             </summary>
         </member>
-        <member name="M:TimeSeriesFramework.Measurement.#ctor(System.UInt32,System.String)">
-            <summary>
-            Constructs a new <see cref="T:TimeSeriesFramework.Measurement"/> given the specified parameters.
-            </summary>
-            <param name="id">Numeric ID of the new measurement.</param>
-            <param name="source">Source name of the new measurement.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Measurement.#ctor(System.Guid)">
-            <summary>
-            Constructs a new <see cref="T:TimeSeriesFramework.Measurement"/> given the specified parameters.
-            </summary>
-            <param name="signalID"><see cref="T:System.Guid"/> based signal ID of the new measurement.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Measurement.#ctor(System.UInt32,System.String,System.Double,TVA.Ticks)">
-            <summary>
-            Constructs a new <see cref="T:TimeSeriesFramework.Measurement"/> given the specified parameters.
-            </summary>
-            <param name="id">Numeric ID of the new measurement.</param>
-            <param name="source">Source name of the new measurement.</param>
-            <param name="value">Value of the new measurement.</param>
-            <param name="timestamp">Timestamp, in ticks, of the new measurement.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Measurement.#ctor(System.Guid,System.Double,TVA.Ticks)">
-            <summary>
-            Constructs a new <see cref="T:TimeSeriesFramework.Measurement"/> given the specified parameters.
-            </summary>
-            <param name="signalID"><see cref="T:System.Guid"/> based signal ID of the new measurement.</param>
-            <param name="value">Value of the new measurement.</param>
-            <param name="timestamp">Timestamp, in ticks, of the new measurement.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Measurement.#ctor(System.UInt32,System.String,System.String,System.Double,System.Double)">
-            <summary>
-            Constructs a new <see cref="T:TimeSeriesFramework.Measurement"/> given the specified parameters.
-            </summary>
-            <param name="id">Numeric ID of the new measurement.</param>
-            <param name="source">Source name of the new measurement.</param>
-            <param name="tagName">Text based tag name of the new measurement.</param>
-            <param name="adder">Defined adder to apply to the new measurement.</param>
-            <param name="multiplier">Defined multiplier to apply to the new measurement.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Measurement.#ctor(System.UInt32,System.String,System.Guid,System.Double,System.Double,System.Double,TVA.Ticks)">
-            <summary>
-            Constructs a new <see cref="T:TimeSeriesFramework.Measurement"/> given the specified parameters.
-            </summary>
-            <param name="id">Numeric ID of the new measurement.</param>
-            <param name="source">Source name of the new measurement.</param>
-            <param name="signalID"><see cref="T:System.Guid"/> based signal ID of the new measurement.</param>
-            <param name="value">Value of the new measurement.</param>
-            <param name="adder">Defined adder to apply to the new measurement.</param>
-            <param name="multiplier">Defined multiplier to apply to the new measurement.</param>
-            <param name="timestamp">Timestamp, in ticks, of the new measurement.</param>
-        </member>
         <member name="M:TimeSeriesFramework.Measurement.ToString">
             <summary>
             Returns a <see cref="T:System.String"/> that represents the current <see cref="T:TimeSeriesFramework.Measurement"/>.
             </summary>
             <returns>A <see cref="T:System.String"/> that represents the current <see cref="T:TimeSeriesFramework.Measurement"/>.</returns>
         </member>
-        <member name="M:TimeSeriesFramework.Measurement.Equals(TimeSeriesFramework.IMeasurement)">
+        <member name="M:TimeSeriesFramework.Measurement.Equals(TimeSeriesFramework.ITimeSeriesValue)">
             <summary>
-            Determines whether the specified <see cref="T:TimeSeriesFramework.IMeasurement"/> is equal to the current <see cref="T:TimeSeriesFramework.Measurement"/>.
+            Determines whether the specified <see cref="T:TimeSeriesFramework.ITimeSeriesValue"/> is equal to the current <see cref="T:TimeSeriesFramework.Measurement"/>.
             </summary>
-            <param name="other">The <see cref="T:TimeSeriesFramework.IMeasurement"/> to compare with the current <see cref="T:TimeSeriesFramework.Measurement"/>.</param>
+            <param name="other">The <see cref="T:TimeSeriesFramework.ITimeSeriesValue"/> to compare with the current <see cref="T:TimeSeriesFramework.Measurement"/>.</param>
             <returns>
-            true if the specified <see cref="T:TimeSeriesFramework.IMeasurement"/> is equal to the current <see cref="T:TimeSeriesFramework.Measurement"/>;
+            true if the specified <see cref="T:TimeSeriesFramework.ITimeSeriesValue"/> is equal to the current <see cref="T:TimeSeriesFramework.Measurement"/>;
             otherwise, false.
             </returns>
         </member>
@@ -1393,11 +1614,11 @@
             </returns>
             <exception cref="T:System.ArgumentException"><paramref name="obj"/> is not an <see cref="T:TimeSeriesFramework.IMeasurement"/>.</exception>
         </member>
-        <member name="M:TimeSeriesFramework.Measurement.CompareTo(TimeSeriesFramework.IMeasurement)">
+        <member name="M:TimeSeriesFramework.Measurement.CompareTo(TimeSeriesFramework.ITimeSeriesValue)">
             <summary>
-            Compares the <see cref="T:TimeSeriesFramework.Measurement"/> with an <see cref="T:TimeSeriesFramework.IMeasurement"/>.
+            Compares the <see cref="T:TimeSeriesFramework.Measurement"/> with an <see cref="T:TimeSeriesFramework.ITimeSeriesValue"/>.
             </summary>
-            <param name="other">The <see cref="T:TimeSeriesFramework.IMeasurement"/> to compare with the current <see cref="T:TimeSeriesFramework.Measurement"/>.</param>
+            <param name="other">The <see cref="T:TimeSeriesFramework.ITimeSeriesValue"/> to compare with the current <see cref="T:TimeSeriesFramework.Measurement"/>.</param>
             <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
             <remarks>Measurement implementations should compare by hash code.</remarks>
         </member>
@@ -1465,30 +1686,6 @@
             <param name="measurement2">A <see cref="T:TimeSeriesFramework.Measurement"/> right hand operand.</param>
             <returns>A boolean representing the result.</returns>
         </member>
-        <member name="M:TimeSeriesFramework.Measurement.Clone(TimeSeriesFramework.IMeasurement)">
-            <summary>
-            Creates a copy of the specified measurement.
-            </summary>
-            <param name="measurementToClone">Specified measurement to clone.</param>
-            <returns>A copy of the <see cref="T:TimeSeriesFramework.Measurement"/> object.</returns>
-        </member>
-        <member name="M:TimeSeriesFramework.Measurement.Clone(TimeSeriesFramework.IMeasurement,TVA.Ticks)">
-            <summary>
-            Creates a copy of the specified measurement using a new timestamp.
-            </summary>
-            <param name="measurementToClone">Specified measurement to clone.</param>
-            <param name="timestamp">New timestamp, in ticks, for cloned measurement.</param>
-            <returns>A copy of the <see cref="T:TimeSeriesFramework.Measurement"/> object.</returns>
-        </member>
-        <member name="M:TimeSeriesFramework.Measurement.Clone(TimeSeriesFramework.IMeasurement,System.Double,TVA.Ticks)">
-            <summary>
-            Creates a copy of the specified measurement using a new value and timestamp.
-            </summary>
-            <param name="measurementToClone">Specified measurement to clone.</param>
-            <param name="value">New value for cloned measurement.</param>
-            <param name="timestamp">New timestamp, in ticks, for cloned measurement.</param>
-            <returns>A copy of the <see cref="T:TimeSeriesFramework.Measurement"/> object.</returns>
-        </member>
         <member name="M:TimeSeriesFramework.Measurement.ToString(TimeSeriesFramework.IMeasurement)">
             <summary>
             Returns a <see cref="T:System.String"/> that represents the specified <see cref="T:TimeSeriesFramework.IMeasurement"/>.
@@ -1512,31 +1709,17 @@
         </member>
         <member name="P:TimeSeriesFramework.Measurement.ID">
             <summary>
-            Gets or sets the numeric ID of this <see cref="T:TimeSeriesFramework.Measurement"/>.
+            Gets or sets the <see cref="T:System.Guid"/> based signal ID of this <see cref="T:TimeSeriesFramework.Measurement"/>, if available.
             </summary>
-            <remarks>
-            <para>In most implementations, this will be a required field.</para>
-            <para>Note that this field, in addition to <see cref="P:TimeSeriesFramework.Measurement.Source"/>, typically creates the primary key for a <see cref="T:TimeSeriesFramework.Measurement"/>.</para>
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.Measurement.Source">
-            <summary>
-            Gets or sets the source of this <see cref="T:TimeSeriesFramework.Measurement"/>.
-            </summary>
-            <remarks>
-            <para>In most implementations, this will be a required field.</para>
-            <para>Note that this field, in addition to <see cref="P:TimeSeriesFramework.Measurement.ID"/>, typically creates the primary key for a <see cref="T:TimeSeriesFramework.Measurement"/>.</para>
-            <para>This value is typically used to track the archive name in which measurement is stored.</para>
-            </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Measurement.Key">
             <summary>
-            Gets the primary key (a <see cref="T:TimeSeriesFramework.MeasurementKey"/>, of this <see cref="T:TimeSeriesFramework.Measurement"/>.
+            Gets or sets the primary <see cref="T:TimeSeriesFramework.MeasurementKey"/> of this <see cref="T:TimeSeriesFramework.Measurement"/>.
             </summary>
         </member>
-        <member name="P:TimeSeriesFramework.Measurement.SignalID">
+        <member name="P:TimeSeriesFramework.Measurement.StateFlags">
             <summary>
-            Gets or sets the <see cref="T:System.Guid"/> based signal ID of this <see cref="T:TimeSeriesFramework.Measurement"/>, if available.
+            
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Measurement.TagName">
@@ -1594,21 +1777,6 @@
             The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
             </remarks>
         </member>
-        <member name="P:TimeSeriesFramework.Measurement.ValueQualityIsGood">
-            <summary>
-            Gets or sets a boolean value that determines if the quality of the numeric value of this <see cref="T:TimeSeriesFramework.Measurement"/> is good.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.Measurement.TimestampQualityIsGood">
-            <summary>
-            Gets or sets a boolean value that determines if the quality of the timestamp of this <see cref="T:TimeSeriesFramework.Measurement"/> is good.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.Measurement.IsDiscarded">
-            <summary>
-            Gets or sets a boolean value that determines if this <see cref="T:TimeSeriesFramework.Measurement"/> has been discarded during sorting.
-            </summary>
-        </member>
         <member name="P:TimeSeriesFramework.Measurement.MeasurementValueFilter">
             <summary>
             Gets or sets function used to apply a downsampling filter over a sequence of <see cref="T:TimeSeriesFramework.IMeasurement"/> values.
@@ -1619,13 +1787,20 @@
             Represents a primary key for a measurement.
             </summary>
         </member>
-        <member name="M:TimeSeriesFramework.MeasurementKey.#ctor(System.UInt32,System.String)">
+        <member name="M:TimeSeriesFramework.MeasurementKey.#ctor(System.Guid,System.UInt32,System.String)">
             <summary>
             Constructs a new <see cref="T:TimeSeriesFramework.MeasurementKey"/> given the specified parameters.
             </summary>
+            <param name="signalID"><see cref="T:System.Guid"/> ID of associated signal, if defined.</param>
             <param name="id">Numeric ID of the measurement that this <see cref="T:TimeSeriesFramework.MeasurementKey"/> represents.</param>
             <param name="source">Source of the measurement that this <see cref="T:TimeSeriesFramework.MeasurementKey"/> represents (e.g., name of archive).</param>
             <exception cref="T:System.ArgumentNullException">source cannot be null.</exception>
+        </member>
+        <member name="M:TimeSeriesFramework.MeasurementKey.UpdateSignalID(System.Guid)">
+            <summary>
+            Update the signal ID of this <see cref="T:TimeSeriesFramework.MeasurementKey"/>.
+            </summary>
+            <param name="signalID">New <see cref="T:System.Guid"/> based signal ID to update this <see cref="T:TimeSeriesFramework.MeasurementKey"/> with.</param>
         </member>
         <member name="M:TimeSeriesFramework.MeasurementKey.ToString">
             <summary>
@@ -1723,13 +1898,28 @@
             <param name="key2">A <see cref="T:TimeSeriesFramework.MeasurementKey"/> right hand operand.</param>
             <returns>A boolean representing the result.</returns>
         </member>
-        <member name="M:TimeSeriesFramework.MeasurementKey.Parse(System.String)">
+        <member name="M:TimeSeriesFramework.MeasurementKey.Parse(System.String,System.Guid)">
             <summary>
             Converts the string representation of a <see cref="T:TimeSeriesFramework.MeasurementKey"/> into its value equivalent.
             </summary>
             <param name="value">A string representing the <see cref="T:TimeSeriesFramework.MeasurementKey"/> to convert.</param>
+            <param name="signalID"><see cref="T:System.Guid"/> based signal ID associated with this <see cref="T:TimeSeriesFramework.MeasurementKey"/>, if defined.</param>
             <returns>A <see cref="T:TimeSeriesFramework.MeasurementKey"/> value equivalent the representation contained in <paramref name="value"/>.</returns>
             <exception cref="T:System.FormatException">The value is not in the correct format for a <see cref="T:TimeSeriesFramework.MeasurementKey"/> value.</exception>
+        </member>
+        <member name="M:TimeSeriesFramework.MeasurementKey.TryParse(System.String,System.Guid,TimeSeriesFramework.MeasurementKey@)">
+            <summary>
+            Attempts to convert the string representation of a <see cref="T:TimeSeriesFramework.MeasurementKey"/> into its value equivalent.
+            </summary>
+            <param name="value">A string representing the <see cref="T:TimeSeriesFramework.MeasurementKey"/> to convert.</param>
+            <param name="signalID"><see cref="T:System.Guid"/> based signal ID associated with this <see cref="T:TimeSeriesFramework.MeasurementKey"/>, if defined.</param>
+            <param name="key">Output <see cref="T:TimeSeriesFramework.MeasurementKey"/> in which to stored parsed value.</param>
+            <returns>A <c>true</c> if <see cref="T:TimeSeriesFramework.MeasurementKey"/>representation contained in <paramref name="value"/> could be parsed; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="P:TimeSeriesFramework.MeasurementKey.SignalID">
+            <summary>
+            Gets or sets <see cref="T:System.Guid"/> ID of signal associated with this <see cref="T:TimeSeriesFramework.MeasurementKey"/>.
+            </summary>
         </member>
         <member name="P:TimeSeriesFramework.MeasurementKey.ID">
             <summary>
@@ -1914,12 +2104,12 @@
         </member>
         <member name="P:TimeSeriesFramework.Adapters.IAdapter.OutputMeasurements">
             <summary>
-            Gets or sets output measurements that the action adapter will produce, if any.
+            Gets or sets output measurements that the adapter will produce, if any.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.IAdapter.InputMeasurementKeys">
             <summary>
-            Gets or sets primary keys of input measurements the action adapter expects.
+            Gets or sets primary keys of input measurements the adapter expects.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.IAdapter.ProcessedMeasurements">
@@ -3697,106 +3887,269 @@
             destined for archival.
             </summary>
         </member>
-        <member name="T:TimeSeriesFramework.SerializableMeasurementSlim">
+        <member name="T:TimeSeriesFramework.Transport.ClientConnection">
             <summary>
-            Represents a <see cref="T:TimeSeriesFramework.IMeasurement"/> that can be serialized with minimal size.
+            Represents a <see cref="T:TimeSeriesFramework.Transport.DataSubscriber"/> client connection to the <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/>.
             </summary>
         </member>
-        <member name="F:TimeSeriesFramework.SerializableMeasurementSlim.FixedLength">
+        <member name="M:TimeSeriesFramework.Transport.ClientConnection.#ctor(TimeSeriesFramework.Transport.DataPublisher,System.Guid,TVA.Communication.TcpServer)">
             <summary>
-            Fixed byte length of a <see cref="T:TimeSeriesFramework.SerializableMeasurementSlim"/>.
+            Creates a new <see cref="T:TimeSeriesFramework.Transport.ClientConnection"/> instance.
+            </summary>
+            <param name="parent">Parent data publisher.</param>
+            <param name="clientID">Client ID of associated connection.</param>
+            <param name="commandChannel"><see cref="T:TVA.Communication.TcpServer"/> command channel used to lookup connection information.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.ClientConnection.Finalize">
+            <summary>
+            Releases the unmanaged resources before the <see cref="T:TimeSeriesFramework.Transport.ClientConnection"/> object is reclaimed by <see cref="T:System.GC"/>.
             </summary>
         </member>
-        <member name="M:TimeSeriesFramework.SerializableMeasurementSlim.#ctor(System.Boolean)">
+        <member name="M:TimeSeriesFramework.Transport.ClientConnection.Dispose">
             <summary>
-            Creates a new <see cref="T:TimeSeriesFramework.SerializableMeasurementSlim"/>.
-            </summary>
-            <param name="includeTime">Determines if time is included in binary images.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.SerializableMeasurementSlim.#ctor(TimeSeriesFramework.IMeasurement,System.Boolean)">
-            <summary>
-            Creates a new <see cref="T:TimeSeriesFramework.SerializableMeasurementSlim"/> from source <see cref="T:TimeSeriesFramework.IMeasurement"/> value.
-            </summary>
-            <param name="m">Source <see cref="T:TimeSeriesFramework.IMeasurement"/> value.</param>
-            <param name="includeTime">Determines if time is included in binary images.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.SerializableMeasurementSlim.Initialize(System.Byte[],System.Int32,System.Int32)">
-            <summary>
-            Initializes <see cref="T:TimeSeriesFramework.SerializableMeasurementSlim"/> from the specified binary image.
-            </summary>
-            <param name="buffer">Binary image to be used for initialization.</param>
-            <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to be used for initialization.</param>
-            <param name="count">Valid number of bytes within binary image.</param>
-            <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed).</returns>
-        </member>
-        <member name="P:TimeSeriesFramework.SerializableMeasurementSlim.IncludeTime">
-            <summary>
-            Gets or sets flags that determines if time is included in binary images.
+            Releases all the resources used by the <see cref="T:TimeSeriesFramework.Transport.ClientConnection"/> object.
             </summary>
         </member>
-        <member name="P:TimeSeriesFramework.SerializableMeasurementSlim.BinaryImage">
+        <member name="M:TimeSeriesFramework.Transport.ClientConnection.Dispose(System.Boolean)">
             <summary>
-            Gets the binary image of the <see cref="T:TimeSeriesFramework.SerializableMeasurementSlim"/>.
+            Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.Transport.ClientConnection"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.ClientConnection.UpdateKeyIVs">
+            <summary>
+            Creates or updates cipher keys.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.ClientConnection.RotateCipherKeys">
+            <summary>
+            Rotates or initializes the crypto keys for this <see cref="T:TimeSeriesFramework.Transport.ClientConnection"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.ClientConnection.ClientID">
+            <summary>
+            Gets client ID of this <see cref="T:TimeSeriesFramework.Transport.ClientConnection"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.ClientConnection.DataChannel">
+            <summary>
+            Gets or sets reference to <see cref="T:TVA.Communication.UdpServer"/> data channel, attaching to or detaching from events as needed, associated with this <see cref="T:TimeSeriesFramework.Transport.ClientConnection"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.ClientConnection.PublishChannel">
+            <summary>
+            Gets <see cref="T:TVA.Communication.IServer"/> publication channel - that is, data channel if defined otherwise command channel.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.ClientConnection.SubscriberID">
+            <summary>
+            Gets or sets the <see cref="T:System.Guid"/> based subscriber ID of this <see cref="T:TimeSeriesFramework.Transport.ClientConnection"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.ClientConnection.SubscriberAcronym">
+            <summary>
+            Gets or sets the subscriber acronym of this <see cref="T:TimeSeriesFramework.Transport.ClientConnection"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.ClientConnection.SubscriberName">
+            <summary>
+            Gets or sets the subscriber name of this <see cref="T:TimeSeriesFramework.Transport.ClientConnection"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.ClientConnection.ConnectionID">
+            <summary>
+            Gets the connection identification of this <see cref="T:TimeSeriesFramework.Transport.ClientConnection"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.ClientConnection.Authenticated">
+            <summary>
+            Gets or sets authenticated state of this <see cref="T:TimeSeriesFramework.Transport.ClientConnection"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.ClientConnection.SharedSecret">
+            <summary>
+            Gets or sets shared secret used to lookup cipher keys only known to client and server.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.ClientConnection.Key">
+            <summary>
+            Gets active cipher key, if any.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.ClientConnection.IV">
+            <summary>
+            Gets active intitialization vector, if any.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.ClientConnection.KeyIVs">
+            <summary>
+            Gets active keys and initialization vectors.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.ClientConnection.CipherIndex">
+            <summary>
+            Gets current cipher index.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.ClientConnection.IPAddress">
+            <summary>
+            Gets the IP address of the remote client connection.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.ClientConnection.Subscription">
+            <summary>
+            Gets or sets subscription associated with this <see cref="T:TimeSeriesFramework.Transport.ClientConnection"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.ClientConnection.Name">
+            <summary>
+            Gets the subscriber name of this <see cref="T:TimeSeriesFramework.Transport.ClientConnection"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.ClientConnection.Status">
+            <summary>
+            Gets a formatted message describing the status of this <see cref="T:TimeSeriesFramework.Transport.ClientConnection"/>.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.Transport.Common">
+            <summary>
+            Common static methods and extensions for transport library.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.Common.IsSolicited(TimeSeriesFramework.Transport.ServerResponse)">
+            <summary>
+            Returns <c>true</c> if <see cref="T:TimeSeriesFramework.Transport.ServerResponse"/> code is for a solicited <see cref="T:TimeSeriesFramework.Transport.ServerCommand"/>.
             </summary>
             <remarks>
-            <para>
-            Field:     Bytes: <br/>
-            --------   -------<br/>
-            SignalID     16   <br/>
-             Value        8   <br/>
-             [Time]       8?  <br/>
-             Flags        1   <br/>
-            </para>
-            <para>
-            Constant Length = 25<br/>
-            Variable Length = 8 (time is optional)
-            </para>
+            Only the <see cref="F:TimeSeriesFramework.Transport.ServerResponse.Succeeded"/> and <see cref="F:TimeSeriesFramework.Transport.ServerResponse.Failed"/> response codes are from solicited server commands.
             </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.SerializableMeasurementSlim.BinaryLength">
-            <summary>
-            Gets the length of the <see cref="P:TimeSeriesFramework.SerializableMeasurementSlim.BinaryImage"/>.
-            </summary>
+            <param name="responseCode"><see cref="T:TimeSeriesFramework.Transport.ServerResponse"/> code to test.</param>
+            <returns><c>true</c> if <see cref="T:TimeSeriesFramework.Transport.ServerResponse"/> code is for a solicited <see cref="T:TimeSeriesFramework.Transport.ServerCommand"/>; otherwise <c>false</c>.</returns>
         </member>
         <member name="T:TimeSeriesFramework.Transport.ServerCommand">
             <summary>
-            <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/> server commands.
+            Server commands received by <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/> and sent by <see cref="T:TimeSeriesFramework.Transport.DataSubscriber"/>.
             </summary>
+            <remarks>
+            Solicited server commands will receive a <see cref="F:TimeSeriesFramework.Transport.ServerResponse.Succeeded"/> or <see cref="F:TimeSeriesFramework.Transport.ServerResponse.Failed"/>
+            response code along with an associated success or failure message. Message type for successful responses will be based
+            on server command - for example, server response for a successful MetaDataRefresh command will return a serialized
+            <see cref="T:System.Data.DataSet"/> of the available server metadata. Message type for failed responses will always be a string of
+            text respresenting the error message.
+            </remarks>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.ServerCommand.Authenticate">
+            <summary>
+            Authenticate command.
+            </summary>
+            <remarks>
+            Requests that server authenticate client with the following encrypted authentication packet.
+            Successful return message type will be string indicating client ID was validated.
+            Client should not attempt further steps if authentication fails, user will need to take action.
+            Client should send MetaDataRefresh and Subscribe commands upon successful authentication.
+            If server is setup to not require authentication, authentication step can be skipped - however
+            it will be up to the implementation to know if authentication is required - the server cannot be
+            queried to determine if authentication is required.
+            It is expected that use of this protocol between gateways over a shared network (i.e., the lower
+            security zone) will require authentication.
+            It is expected that use of this protocol between gateway and other systems (e.g., a PDC) in a
+            private network (i.e., the higher security zone) can be setup to not require authentication.
+            </remarks>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.ServerCommand.MetaDataRefresh">
+            <summary>
+            Meta data refresh command.
+            </summary>
+            <remarks>
+            Requests that server send an updated set of metadata so client can refresh its point list.
+            Successful return message type will be a <see cref="T:System.Data.DataSet"/> containing server device and measurement metadata.
+            Received device list should be defined as children of the "parent" server device connection similar to the way
+            PMUs are defined as children of a parent PDC device connection.
+            Devices and measurements contain unique Guids that should be used to key metadata updates in local repository.
+            </remarks>
         </member>
         <member name="F:TimeSeriesFramework.Transport.ServerCommand.Subscribe">
             <summary>
             Subscribe command.
             </summary>
+            <remarks>
+            Requests a subscription of streaming data from server based on connection string that follows.
+            It will not be necessary to stop an existing subscription before requesting a new one.
+            Successful return message type will be string indicating total number of allowed points.
+            Client should wait for UpdateSignalIndexCache and UpdateBaseTime response codes before attempting
+            to parse data when using the compact measurement format.
+            Client should wait for UpdateCipherKey response code before attempting to parse data to know if
+            data packets will be encrypted as well as which keys to use if they are.
+            </remarks>
         </member>
         <member name="F:TimeSeriesFramework.Transport.ServerCommand.Unsubscribe">
             <summary>
             Unsubscribe command.
             </summary>
-        </member>
-        <member name="F:TimeSeriesFramework.Transport.ServerCommand.QueryPoints">
-            <summary>
-            Query points command.
-            </summary>
+            <remarks>
+            Requests that server stop sending streaming data to the client and cancel the current subcription.
+            </remarks>
         </member>
         <member name="T:TimeSeriesFramework.Transport.ServerResponse">
             <summary>
-            <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/> server responses.
+            Server responses sent by <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/> and received by <see cref="T:TimeSeriesFramework.Transport.DataSubscriber"/>.
             </summary>
         </member>
         <member name="F:TimeSeriesFramework.Transport.ServerResponse.Succeeded">
             <summary>
             Command succeeded response.
             </summary>
+            <remarks>
+            Informs client that its solicited server command succeeded, original command and success message follow.
+            </remarks>
         </member>
         <member name="F:TimeSeriesFramework.Transport.ServerResponse.Failed">
             <summary>
             Command failed response.
             </summary>
+            <remarks>
+            Informs client that its solicited server command failed, original command and failure message follow.
+            </remarks>
         </member>
         <member name="F:TimeSeriesFramework.Transport.ServerResponse.DataPacket">
             <summary>
             Data packet response.
             </summary>
+            <remarks>
+            Unsolicited response informs client that a data packet follows.
+            </remarks>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.ServerResponse.UpdateSignalIndexCache">
+            <summary>
+            Update signal index cache response.
+            </summary>
+            <remarks>
+            Unsolicited response requests that client update its runtime signal index cache with the one that follows.
+            </remarks>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.ServerResponse.UpdateBaseTime">
+            <summary>
+            Update runtime base-timestamp offsets response.
+            </summary>
+            <remarks>
+            Unsolicited response requests that client update its runtime base-timestamp offsets with those that follow.
+            </remarks>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.ServerResponse.UpdateCipherKey">
+            <summary>
+            Update runtime cipher keys response.
+            </summary>
+            <remarks>
+            Unsolicited response requests that client update its runtime data cipher keys with those that follow.
+            </remarks>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.ServerResponse.NoOP">
+            <summary>
+            No operation keep-alive ping.
+            </summary>
+            <remarks>
+            The command channel can remain quiet for some time, this command allows a period test of client connectivity.
+            </remarks>
         </member>
         <member name="T:TimeSeriesFramework.Transport.DataPacketFlags">
             <summary>
@@ -3805,27 +4158,31 @@
         </member>
         <member name="F:TimeSeriesFramework.Transport.DataPacketFlags.Synchronized">
             <summary>
-            Determines if data packet is synchronized. Bit set = synchronized, bit clear = unsynchronized.
+            Determines if data packet is synchronized.
             </summary>
+            <remarks>
+            Bit set = synchronized, bit clear = unsynchronized.
+            </remarks>
         </member>
         <member name="F:TimeSeriesFramework.Transport.DataPacketFlags.Compact">
             <summary>
-            Determines if serialized measurement is compact. Bit set = compact, bit clear = full fidelity.
+            Determines if serialized measurement is compact.
             </summary>
+            <remarks>
+            Bit set = compact, bit clear = full fidelity.
+            </remarks>
         </member>
         <member name="F:TimeSeriesFramework.Transport.DataPacketFlags.NoFlags">
             <summary>
-            No flags set. This would represent unsynchronized, full fidelity measurement data packets.
+            No flags set.
             </summary>
+            <remarks>
+            This would represent unsynchronized, full fidelity measurement data packets.
+            </remarks>
         </member>
         <member name="T:TimeSeriesFramework.Transport.DataPublisher">
             <summary>
             Represents a data publishing server that allows multiple connections for data subscriptions.
-            </summary>
-        </member>
-        <member name="F:TimeSeriesFramework.Transport.DataPublisher.CipherLookupKey">
-            <summary>
-            Lookup string for cipher key used for encryption of transport password.
             </summary>
         </member>
         <member name="M:TimeSeriesFramework.Transport.DataPublisher.#ctor">
@@ -3849,6 +4206,12 @@
             Intializes <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/>.
             </summary>
         </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
+            <summary>
+            Queues a collection of measurements for processing to each <see cref="T:TimeSeriesFramework.Adapters.IActionAdapter"/> connected to this <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/>.
+            </summary>
+            <param name="measurements">Measurements to queue for processing.</param>
+        </member>
         <member name="M:TimeSeriesFramework.Transport.DataPublisher.Start">
             <summary>
             Establish <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/> and start listening for client connections.
@@ -3866,11 +4229,37 @@
             <param name="maxLength">Maximum number of available characters for display.</param>
             <returns>A short one-line summary of the current status of the <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/>.</returns>
         </member>
-        <member name="M:TimeSeriesFramework.Transport.DataPublisher.DisposeItem(TimeSeriesFramework.Adapters.IActionAdapter)">
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.UpdateSignalIndexCache(System.Guid,TimeSeriesFramework.Transport.SignalIndexCache,TimeSeriesFramework.MeasurementKey[])">
             <summary>
-            Unwires events and disposes of <see cref="T:TimeSeriesFramework.Adapters.IActionAdapter"/> implementation.
+            Updates signal index cache based on input measurement keys.
             </summary>
-            <param name="item"><see cref="T:TimeSeriesFramework.Adapters.IActionAdapter"/> to dispose.</param>
+            <param name="clientID">Client ID of connection over which to update signal index cache.</param>
+            <param name="signalIndexCache">New signal index cache.</param>
+            <param name="inputMeasurementKeys">Subscribed measurement keys.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.SubscriberHasRights(System.Guid,System.Guid)">
+            <summary>
+            Determines if subscriber has rights to specified <paramref name="signalID"/>.
+            </summary>
+            <param name="subscriberID"><see cref="T:System.Guid"/> based subscriber ID.</param>
+            <param name="signalID"><see cref="T:System.Guid"/> signal ID to lookup.</param>
+            <returns><c>true</c> if subscriber has rights to specified <see cref="T:TimeSeriesFramework.MeasurementKey"/>; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.SubscriberHasRights(System.Guid,TimeSeriesFramework.MeasurementKey,System.Guid@)">
+            <summary>
+            Determines if subscriber has rights to specified <see cref="T:TimeSeriesFramework.MeasurementKey"/>.
+            </summary>
+            <param name="subscriberID"><see cref="T:System.Guid"/> based subscriber ID.</param>
+            <param name="key"><see cref="T:TimeSeriesFramework.MeasurementKey"/> to lookup.</param>
+            <param name="signalID"><see cref="T:System.Guid"/> signal ID if found; otherwise an empty Guid.</param>
+            <returns><c>true</c> if subscriber has rights to specified <see cref="T:TimeSeriesFramework.MeasurementKey"/>; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.LookupSignalID(TimeSeriesFramework.MeasurementKey)">
+            <summary>
+            Looks up <see cref="T:System.Guid"/> signal ID for given <see cref="T:TimeSeriesFramework.MeasurementKey"/>.
+            </summary>
+            <param name="key"><see cref="T:TimeSeriesFramework.MeasurementKey"/> to lookup.</param>
+            <returns><see cref="T:System.Guid"/> signal ID if found; otherwise an empty Guid.</returns>
         </member>
         <member name="M:TimeSeriesFramework.Transport.DataPublisher.SendClientResponse(System.Guid,TimeSeriesFramework.Transport.ServerResponse,TimeSeriesFramework.Transport.ServerCommand)">
             <summary>
@@ -3912,6 +4301,11 @@
             <param name="data">Data to return to client; null if none.</param>
             <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
         </member>
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.RequireAuthentication">
+            <summary>
+            Gets or sets flag that determines if <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/> should require subscribers to authenticate before making data requests.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Transport.DataPublisher.Status">
             <summary>
             Gets the status of this <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/>.
@@ -3928,139 +4322,20 @@
             The assigned name is used as the settings category when persisting the TCP server settings.
             </remarks>
         </member>
-        <member name="P:TimeSeriesFramework.Transport.DataPublisher.SharedSecret">
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.MetadataTables">
             <summary>
-            Gets or sets shared secret required to access transport data.
+            Gets or sets comma seperated list of tables to include in meta-data exchange.
             </summary>
         </member>
-        <member name="P:TimeSeriesFramework.Transport.DataPublisher.IClientSubscription.ClientID">
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.ClientConnections">
             <summary>
-            Gets the <see cref="T:System.Guid"/> client identifier of this <see cref="T:TimeSeriesFramework.Transport.DataPublisher.IClientSubscription"/>.
+            Gets dictionary of connected clients.
             </summary>
         </member>
-        <member name="P:TimeSeriesFramework.Transport.DataPublisher.IClientSubscription.UseCompactMeasurementFormat">
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.CommandChannel">
             <summary>
-            Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="T:TimeSeriesFramework.Transport.DataPublisher.IClientSubscription"/>.
+            Gets or sets reference to <see cref="T:TVA.Communication.TcpServer"/> command channel, attaching and/or detaching to events as needed.
             </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription.#ctor(TimeSeriesFramework.Transport.DataPublisher,System.Guid)">
-            <summary>
-            Creates a new <see cref="T:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription"/>.
-            </summary>
-            <param name="parent">Reference to parent.</param>
-            <param name="clientID"></param>
-        </member>
-        <member name="M:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription.Dispose(System.Boolean)">
-            <summary>
-            Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription"/> object and optionally releases the managed resources.
-            </summary>
-            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription.PublishFrame(TimeSeriesFramework.IFrame,System.Int32)">
-            <summary>
-            Publish <see cref="T:TimeSeriesFramework.IFrame"/> of time-aligned collection of <see cref="T:TimeSeriesFramework.IMeasurement"/> values that arrived within the
-            concentrator's defined <see cref="P:TimeSeriesFramework.ConcentratorBase.LagTime"/>.
-            </summary>
-            <param name="frame"><see cref="T:TimeSeriesFramework.IFrame"/> of measurements with the same timestamp that arrived within <see cref="P:TimeSeriesFramework.ConcentratorBase.LagTime"/> that are ready for processing.</param>
-            <param name="index">Index of <see cref="T:TimeSeriesFramework.IFrame"/> within a second ranging from zero to <c><see cref="P:TimeSeriesFramework.ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription.QueueMeasurementForProcessing(TimeSeriesFramework.IMeasurement)">
-            <summary>
-            Queues a single measurement for processing.
-            </summary>
-            <param name="measurement">Measurement to queue for processing.</param>
-            <remarks>
-            Measurement is filtered against the defined <see cref="P:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription.InputMeasurementKeys"/> so we override method
-            so that dynamic updates to keys will be synchronized with filtering to prevent interference.
-            </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
-            <summary>
-            Queues a collection of measurements for processing.
-            </summary>
-            <param name="measurements">Collection of measurements to queue for processing.</param>
-            <remarks>
-            Measurements are filtered against the defined <see cref="P:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription.InputMeasurementKeys"/> so we override method
-            so that dynamic updates to keys will be synchronized with filtering to prevent interference.
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription.ClientID">
-            <summary>
-            Gets the <see cref="T:System.Guid"/> client identifier of this <see cref="T:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription"/>.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription.UseCompactMeasurementFormat">
-            <summary>
-            Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="T:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription"/>.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription.InputMeasurementKeys">
-            <summary>
-            Gets or sets primary keys of input measurements the <see cref="T:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription"/> expects, if any.
-            </summary>
-            <remarks>
-            We override method so assignment can be synchronized such that dynamic updates won't interfere
-            with filtering in <see cref="M:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})"/>.
-            </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription.#ctor(TimeSeriesFramework.Transport.DataPublisher,System.Guid)">
-            <summary>
-            Creates a new <see cref="T:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription"/>.
-            </summary>
-            <param name="parent">Reference to parent.</param>
-            <param name="clientID"></param>
-        </member>
-        <member name="M:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription.Dispose(System.Boolean)">
-            <summary>
-            Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription"/> object and optionally releases the managed resources.
-            </summary>
-            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription.GetShortStatus(System.Int32)">
-            <summary>
-            Gets a short one-line status of this <see cref="T:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription"/>.
-            </summary>
-            <param name="maxLength">Maximum number of available characters for display.</param>
-            <returns>A short one-line summary of the current status of this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.</returns>
-        </member>
-        <member name="M:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription.QueueMeasurementForProcessing(TimeSeriesFramework.IMeasurement)">
-            <summary>
-            Queues a single measurement for processing.
-            </summary>
-            <param name="measurement">Measurement to queue for processing.</param>
-            <remarks>
-            Measurement is filtered against the defined <see cref="P:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription.InputMeasurementKeys"/> so we override method
-            so that dyanmic updates to keys will be synchronized with filtering to prevent interference.
-            </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
-            <summary>
-            Queues a collection of measurements for processing.
-            </summary>
-            <param name="measurements">Collection of measurements to queue for processing.</param>
-            <remarks>
-            Measurements are filtered against the defined <see cref="P:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription.InputMeasurementKeys"/> so we override method
-            so that dyanmic updates to keys will be synchronized with filtering to prevent interference.
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription.ClientID">
-            <summary>
-            Gets the <see cref="T:System.Guid"/> client identifier of this <see cref="T:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription"/>.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription.UseCompactMeasurementFormat">
-            <summary>
-            Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="T:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription"/>.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription.InputMeasurementKeys">
-            <summary>
-            Gets or sets primary keys of input measurements the <see cref="T:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription"/> expects, if any.
-            </summary>
-            <remarks>
-            We override method so assignment can be synchronized such that dynamic updates won't interfere
-            with filtering in <see cref="M:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})"/>.
-            </remarks>
         </member>
         <member name="T:TimeSeriesFramework.Transport.DataSubscriber">
             <summary>
@@ -4083,36 +4358,45 @@
             Initializes <see cref="T:TimeSeriesFramework.Transport.DataSubscriber"/>.
             </summary>
         </member>
-        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.SynchronizedSubscribe(System.Boolean,System.String,System.Int32,System.Double,System.Double,System.String,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Boolean,TimeSeriesFramework.DownsamplingMethod)">
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.Authenticate(System.String,System.String)">
+            <summary>
+            Authenticates subcriber to a data publisher.
+            </summary>
+            <param name="sharedSecret">Shared secret used to look up private crypto key and initialization vector.</param>
+            <param name="authenticationID">Authentication ID that publisher will use to validate subscriber identity.</param>
+            <returns><c>true</c> if authentication transmission was successful; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.SynchronizedSubscribe(System.Boolean,System.Int32,System.Double,System.Double,System.String,System.String,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Boolean,TimeSeriesFramework.DownsamplingMethod)">
             <summary>
             Subscribes (or re-subscribes) to a data publisher for a synchronized set of data points.
             </summary>
             <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>true</c> for bandwidth conservation.</param>
-            <param name="password">Pass-phrase required to connect to subscriber.</param>
             <param name="framesPerSecond">The desired number of data frames per second.</param>
             <param name="lagTime">Allowed past time deviation tolerance, in seconds (can be subsecond).</param>
             <param name="leadTime">Allowed future time deviation tolerance, in seconds (can be subsecond).</param>
             <param name="filterExpression">Filtering expression that defines the measurements that are being subscribed.</param>
+            <param name="dataChannel">Desired UDP return data channel connection string to use for data packet transmission. Set to <c>null</c> to use TCP channel for data transmission.</param>
             <param name="useLocalClockAsRealTime">Boolean value that determines whether or not to use the local clock time as real-time.</param>
             <param name="ignoreBadTimestamps">Boolean value that determines if bad timestamps (as determined by measurement's timestamp quality) should be ignored when sorting measurements.</param>
             <param name="allowSortsByArrival"> Gets or sets flag that determines whether or not to allow incoming measurements with bad timestamps to be sorted by arrival time.</param>
             <param name="timeResolution">Gets or sets the maximum time resolution, in ticks, to use when sorting measurements by timestamps into their proper destination frame.</param>
             <param name="allowPreemptivePublishing">Gets or sets flag that allows system to preemptively publish frames assuming all expected measurements have arrived.</param>
             <param name="downsamplingMethod">Gets the total number of downsampled measurements processed by the concentrator.</param>
-            <returns><c>true</c> if subscribe was successful; otherwise <c>false</c>.</returns>
+            <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
         </member>
-        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.UnsynchronizedSubscribe(System.Boolean,System.String,System.Boolean,System.String,System.Double,System.Double,System.Boolean)">
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.UnsynchronizedSubscribe(System.Boolean,System.Boolean,System.String,System.String,System.Boolean,System.Double,System.Double,System.Boolean)">
             <summary>
             Subscribes (or re-subscribes) to a data publisher for an unsynchronized set of data points.
             </summary>
             <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>true</c> for bandwidth conservation.</param>
-            <param name="password">Pass-phrase required to connect to subscriber.</param>
             <param name="throttled">Boolean value that determines if data should be throttled at a set transmission interval or sent on change.</param>
             <param name="filterExpression">Filtering expression that defines the measurements that are being subscribed.</param>
+            <param name="dataChannel">Desired UDP return data channel connection string to use for data packet transmission. Set to <c>null</c> to use TCP channel for data transmission.</param>
+            <param name="includeTime">Boolean value that determines if time is a necessary component in streaming data.</param>
             <param name="lagTime">When <paramref name="throttled"/> is <c>true</c>, defines the data transmission speed in seconds (can be subsecond).</param>
             <param name="leadTime">When <paramref name="throttled"/> is <c>true</c>, defines the allowed time deviation tolerance to real-time in seconds (can be subsecond).</param>
             <param name="useLocalClockAsRealTime">When <paramref name="throttled"/> is <c>true</c>, defines boolean value that determines whether or not to use the local clock time as real-time. Set to <c>false</c> to use latest received measurement timestamp as real-time.</param>
-            <returns><c>true</c> if subscribe was successful; otherwise <c>false</c>.</returns>
+            <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
         </member>
         <member name="M:TimeSeriesFramework.Transport.DataSubscriber.Subscribe(System.Boolean,System.Boolean,System.String)">
             <summary>
@@ -4121,13 +4405,13 @@
             <param name="synchronized">Boolean value that determines if subscription should be synchronized.</param>
             <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>true</c> for bandwidth conservation.</param>
             <param name="connectionString">Connection string that defines required and optional parameters for the subscription.</param>
-            <returns><c>true</c> if subscribe was successful; otherwise <c>false</c>.</returns>
+            <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
         </member>
         <member name="M:TimeSeriesFramework.Transport.DataSubscriber.Unsubscribe">
             <summary>
             Unsubscribes from a data publisher.
             </summary>
-            <returns><c>true</c> if unsubscribe was successful; otherwise <c>false</c>.</returns>
+            <returns><c>true</c> if unsubscribe transmission was successful; otherwise <c>false</c>.</returns>
         </member>
         <member name="M:TimeSeriesFramework.Transport.DataSubscriber.SendServerCommand(TimeSeriesFramework.Transport.ServerCommand,System.Byte[])">
             <summary>
@@ -4135,7 +4419,7 @@
             </summary>
             <param name="commandCode"><see cref="T:TimeSeriesFramework.Transport.ServerCommand"/> to send.</param>
             <param name="data">Command data to send.</param>
-            <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
+            <returns><c>true</c> if <paramref name="commandCode"/> transmission was successful; otherwise <c>false</c>.</returns>
         </member>
         <member name="M:TimeSeriesFramework.Transport.DataSubscriber.AttemptConnection">
             <summary>
@@ -4173,9 +4457,34 @@
             Occurs when client connection to the data publication server is terminated.
             </summary>
         </member>
-        <member name="P:TimeSeriesFramework.Transport.DataSubscriber.UseAsyncConnect">
+        <member name="E:TimeSeriesFramework.Transport.DataSubscriber.ConnectionAuthenticated">
             <summary>
-            Gets a flag that determines if this <see cref="T:TimeSeriesFramework.Transport.DataSubscriber"/> uses an asynchronous connection.
+            Occurs when client connection to the data publication server has successfully authenticated.
+            </summary>
+        </member>
+        <member name="E:TimeSeriesFramework.Transport.DataSubscriber.MetaDataReceived">
+            <summary>
+            Occurs when client receives requested meta-data transmitted by data publication server.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataSubscriber.RequireAuthentication">
+            <summary>
+            Gets or sets flag that determines if <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/> requires subscribers to authenticate before making data requests.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataSubscriber.AutoConnect">
+            <summary>
+            Gets or sets flag that determines if <see cref="T:TimeSeriesFramework.Transport.DataSubscriber"/> should attempt to autoconnection to <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/> using defined connection settings.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataSubscriber.Authenticated">
+            <summary>
+            Gets flag that determines if this <see cref="T:TimeSeriesFramework.Transport.DataSubscriber"/> has successfully authenticated with the <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataSubscriber.TotalBytesReceived">
+            <summary>
+            Gets total data packet bytes received during this session.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.DataSubscriber.Status">
@@ -4185,6 +4494,21 @@
             <remarks>
             Derived classes should provide current status information about the adapter for display purposes.
             </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataSubscriber.UseAsyncConnect">
+            <summary>
+            Gets a flag that determines if this <see cref="T:TimeSeriesFramework.Transport.DataSubscriber"/> uses an asynchronous connection.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataSubscriber.DataChannel">
+            <summary>
+            Gets or sets reference to <see cref="T:TVA.Communication.UdpClient"/> data channel, attaching and/or detaching to events as needed.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataSubscriber.CommandChannel">
+            <summary>
+            Gets or sets reference to <see cref="T:TVA.Communication.TcpClient"/> command channel, attaching and/or detaching to events as needed.
+            </summary>
         </member>
         <member name="T:TimeSeriesFramework.DebugHostBase">
             <summary>
@@ -4237,6 +4561,12 @@
             <summary>
             Represents a <see cref="T:TimeSeriesFramework.IMeasurement"/> that can be serialized.
             </summary>
+            <remarks>
+            This measurement implementation is serialized through <see cref="T:TVA.Parsing.ISupportBinaryImage"/>
+            to allow complete control of binary format. All measurement properties are serialized
+            at their full resolution and no attempt is made to optimize the binary image for
+            purposes of size reduction.
+            </remarks>
         </member>
         <member name="F:TimeSeriesFramework.SerializableMeasurement.FixedLength">
             <summary>
@@ -4250,9 +4580,9 @@
         </member>
         <member name="M:TimeSeriesFramework.SerializableMeasurement.#ctor(TimeSeriesFramework.IMeasurement)">
             <summary>
-            Creates a new <see cref="T:TimeSeriesFramework.SerializableMeasurement"/> from source <see cref="T:TimeSeriesFramework.IMeasurement"/> value.
+            Creates a new <see cref="T:TimeSeriesFramework.SerializableMeasurement"/> from an existing <see cref="T:TimeSeriesFramework.IMeasurement"/> value.
             </summary>
-            <param name="m">Source <see cref="T:TimeSeriesFramework.IMeasurement"/> value.</param>
+            <param name="measurement">Source <see cref="T:TimeSeriesFramework.IMeasurement"/> value.</param>
         </member>
         <member name="M:TimeSeriesFramework.SerializableMeasurement.Initialize(System.Byte[],System.Int32,System.Int32)">
             <summary>
@@ -4271,20 +4601,20 @@
             <para>
             Field:      Bytes:   <br/>
             ---------   ---------<br/>
-              ID            4    <br/>
+             Key ID         4    <br/>
             SourceLen       4    <br/>
              Source     SourceLen<br/>
-            SignalID       16    <br/>
+            Signal ID      16    <br/>
              TagLen         4    <br/>
               Tag        TagLen  <br/>
               Value         8    <br/>
               Adder         8    <br/>
             Multipler       8    <br/>
               Ticks         8    <br/>
-              Flags         1    <br/>
+              Flags         4    <br/>
             </para>
             <para>
-            Constant Length = 61<br/>
+            Constant Length = 64<br/>
             Variable Length = SourceLen + TagLen
             </para>
             </remarks>
@@ -4438,26 +4768,6 @@
             <param name="configuration">Configuration <see cref="T:System.Data.DataSet"/>.</param>
             <remarks>
             This method allows caching of the current system configuration so it can be used if primary configuration source is unavailable.
-            </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.ServiceHostBase.RoutedMeasurementsHandler(System.Object,TVA.EventArgs{System.Collections.Generic.ICollection{TimeSeriesFramework.IMeasurement}})">
-            <summary>
-            Event handler for distributing new measurements in a routed fashion.
-            </summary>
-            <param name="sender">Event source reference to adapter that generated new measurements.</param>
-            <param name="e">Event arguments containing a collection of new measurements.</param>
-            <remarks>
-            Time-series framework uses this handler to directly route new measurements to the action and output adapters.
-            </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.ServiceHostBase.BroadcastMeasurementsHandler(System.Object,TVA.EventArgs{System.Collections.Generic.ICollection{TimeSeriesFramework.IMeasurement}})">
-            <summary>
-            Event handler for distributing new measurements in a broadcast fashion.
-            </summary>
-            <param name="sender">Event source reference to adapter that generated new measurements.</param>
-            <param name="e">Event arguments containing a collection of new measurements.</param>
-            <remarks>
-            Time-series framework uses this handler to route new measurements to the action and output adapters; adapter will handle filtering.
             </remarks>
         </member>
         <member name="M:TimeSeriesFramework.ServiceHostBase.UnpublishedSamplesHandler(System.Object,TVA.EventArgs{System.Int32})">
@@ -4781,15 +5091,11 @@
             <param name="lagTime">Past time deviation tolerance, in seconds - this becomes the amount of time to wait before publishing begins.</param>
             <param name="leadTime">Future time deviation tolerance, in seconds - this becomes the tolerated +/- accuracy of the local clock to real-time.</param>
         </member>
-        <member name="M:TimeSeriesFramework.TemporalMeasurement.#ctor(System.UInt32,System.String,System.Guid,System.Double,TVA.Ticks,System.Double,System.Double)">
+        <member name="M:TimeSeriesFramework.TemporalMeasurement.#ctor(TimeSeriesFramework.IMeasurement,System.Double,System.Double)">
             <summary>
             Constructs a new <see cref="T:TimeSeriesFramework.TemporalMeasurement"/> given the specified parameters.
             </summary>
-            <param name="id">Numeric ID of the <see cref="T:TimeSeriesFramework.TemporalMeasurement"/>.</param>
-            <param name="source">Source of the <see cref="T:TimeSeriesFramework.TemporalMeasurement"/>(e.g., name of archive).</param>
-            <param name="signalID"><see cref="T:System.Guid"/> based signal ID of measurement.</param>
-            <param name="value">Value of the <see cref="T:TimeSeriesFramework.TemporalMeasurement"/>.</param>
-            <param name="timestamp">Timestamp of the <see cref="T:TimeSeriesFramework.TemporalMeasurement"/>.</param>
+            <param name="measurement">Source <see cref="T:TimeSeriesFramework.IMeasurement"/> value.</param>
             <param name="lagTime">Past time deviation tolerance, in seconds - this becomes the amount of time to wait before publishing begins.</param>
             <param name="leadTime">Future time deviation tolerance, in seconds - this becomes the tolerated +/- accuracy of the local clock to real-time.</param>
         </member>
@@ -4872,6 +5178,391 @@
         <member name="P:TimeSeriesFramework.TrackingFrame.Lock">
             <summary>
             Gets the <see cref="T:TimeSeriesFramework.TrackingFrame"/> locking primitive.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.Transport.CompactMeasurementStateFlags">
+            <summary>
+            <see cref="T:TimeSeriesFramework.Transport.CompactMeasurement"/> state flags.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.CompactMeasurementStateFlags.DataRange">
+            <summary>
+            A data range flag was set.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.CompactMeasurementStateFlags.DataQuality">
+            <summary>
+            A data quality flag was set.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.CompactMeasurementStateFlags.TimeQuality">
+            <summary>
+            Time quality flag was set.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.CompactMeasurementStateFlags.SystemIssue">
+            <summary>
+            System flag was set.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.CompactMeasurementStateFlags.CalculatedValue">
+            <summary>
+            Calculated bit was set.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.CompactMeasurementStateFlags.DiscardedValue">
+            <summary>
+            Discarded bit was set.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.CompactMeasurementStateFlags.UserFlag">
+            <summary>
+            A user flag was set.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.CompactMeasurementStateFlags.TimeIndex">
+            <summary>
+            Use even time index when set; odd time index when not set.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.CompactMeasurementStateFlags.NoFlags">
+            <summary>
+            No flags.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.Transport.MeasurementStateMappingExtensions">
+            <summary>
+            Defines static methods for mapping between compact and full measurement states.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.MeasurementStateMappingExtensions.MapToCompactFlags(TimeSeriesFramework.MeasurementStateFlags)">
+            <summary>
+            Maps <see cref="T:TimeSeriesFramework.MeasurementStateFlags"/> to <see cref="T:TimeSeriesFramework.Transport.CompactMeasurementStateFlags"/>.
+            </summary>
+            <param name="stateFlags">Flags to map.</param>
+            <returns><see cref="T:TimeSeriesFramework.Transport.CompactMeasurementStateFlags"/> mapped from <see cref="T:TimeSeriesFramework.MeasurementStateFlags"/>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.MeasurementStateMappingExtensions.MapToFullFlags(TimeSeriesFramework.Transport.CompactMeasurementStateFlags)">
+            <summary>
+            Maps <see cref="T:TimeSeriesFramework.Transport.CompactMeasurementStateFlags"/> to <see cref="T:TimeSeriesFramework.MeasurementStateFlags"/>.
+            </summary>
+            <param name="stateFlags">Flags to map.</param>
+            <returns><see cref="T:TimeSeriesFramework.MeasurementStateFlags"/> mapped from <see cref="T:TimeSeriesFramework.Transport.CompactMeasurementStateFlags"/>.</returns>
+        </member>
+        <member name="T:TimeSeriesFramework.Transport.CompactMeasurement">
+            <summary>
+            Represents a <see cref="T:TimeSeriesFramework.IMeasurement"/> that can be serialized with minimal size.
+            </summary>
+            <remarks>
+            This measurement implementation is serialized through <see cref="T:TVA.Parsing.ISupportBinaryImage"/>
+            to allow complete control of binary format. Only critical measurements properties are
+            serialized and every attempt is made to optimize the binary image for purposes of size
+            reduction.
+            </remarks>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.CompactMeasurement.FixedLength">
+            <summary>
+            Fixed byte length of a <see cref="T:TimeSeriesFramework.Transport.CompactMeasurement"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.CompactMeasurement.#ctor(TimeSeriesFramework.Transport.SignalIndexCache,System.Boolean,System.Int64[])">
+            <summary>
+            Creates a new <see cref="T:TimeSeriesFramework.Transport.CompactMeasurement"/>.
+            </summary>
+            <param name="signalIndexCache">Signal index cache used to serialize or deserialize runtime information.</param>
+            <param name="includeTime">Set to <c>true</c> to include time in serialized packet; otherwise <c>false</c>.</param>
+            <param name="baseTimeOffsets">Base time offset array - set to <c>null</c> to use full fidelity measurement time.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.CompactMeasurement.#ctor(TimeSeriesFramework.IMeasurement,TimeSeriesFramework.Transport.SignalIndexCache,System.Boolean,System.Int64[],System.Int32)">
+            <summary>
+            Creates a new <see cref="T:TimeSeriesFramework.Transport.CompactMeasurement"/> from an existing <see cref="T:TimeSeriesFramework.IMeasurement"/> value.
+            </summary>
+            <param name="measurement">Source <see cref="T:TimeSeriesFramework.IMeasurement"/> value.</param>
+            <param name="signalIndexCache">Signal index cache used to serialize or deserialize runtime information.</param>
+            <param name="includeTime">Set to <c>true</c> to include time in serialized packet; otherwise <c>false</c>.</param>
+            <param name="baseTimeOffsets">Base time offset array - set to <c>null</c> to use full fidelity measurement time.</param>
+            <param name="timeIndex">Time index to use for base offset.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.CompactMeasurement.Initialize(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Initializes <see cref="T:TimeSeriesFramework.Transport.CompactMeasurement"/> from the specified binary image.
+            </summary>
+            <param name="buffer">Binary image to be used for initialization.</param>
+            <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to be used for initialization.</param>
+            <param name="count">Valid number of bytes within binary image.</param>
+            <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed).</returns>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.CompactMeasurement.IncludeTime">
+            <summary>
+            Gets flag that determines if time is serialized into measurement binary image.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.CompactMeasurement.BinaryImage">
+            <summary>
+            Gets the binary image of the <see cref="T:TimeSeriesFramework.Transport.CompactMeasurement"/>.
+            </summary>
+            <remarks>
+            <para>
+            Field:     Bytes: <br/>
+            --------   -------<br/>
+             Flags        1   <br/>
+              ID          2   <br/>
+             Value        4   <br/>
+             [Time]       2?  <br/>
+            </para>
+            <para>
+            Constant Length = 7<br/>
+            Variable Length = 2 or 8 (milliseconds plus offset or full fidelity time)
+            </para>
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.CompactMeasurement.BinaryLength">
+            <summary>
+            Gets the length of the <see cref="P:TimeSeriesFramework.Transport.CompactMeasurement.BinaryImage"/>.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.Transport.IClientSubscription">
+            <summary>
+            Represents a common set of interfaces for a client adapter subscription to the <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.IClientSubscription.ClientID">
+            <summary>
+            Gets the <see cref="T:System.Guid"/> client TCP connection identifier of this <see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.IClientSubscription.SubscriberID">
+            <summary>
+            Gets the <see cref="T:System.Guid"/> based subscriber ID of this <see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.IClientSubscription.SignalIndexCache">
+            <summary>
+            Gets the current signal index cache of this <see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.IClientSubscription.UseCompactMeasurementFormat">
+            <summary>
+            Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.Transport.SignalIndexCache">
+            <summary>
+            Represents a serializable <see cref="T:System.Guid"/> signal ID to <see cref="T:System.UInt16"/> index cross reference.
+            </summary>
+            <remarks>
+            This class is used to create a runtime index to be used for data exchange so that a 16-bit integer
+            is exchanged in the data packets for signal identification instead of the 128-bit Guid signal ID
+            to reduce bandwidth required for signal exchange. This means the total number of unique signal
+            IDs that could be exchanged using this method in a single session is 65,535. This number seems
+            reasonable for the currently envisioned use cases, however, multiple sessions each with their own
+            runtime signal index cache could be established if this is a limitation for a given data set.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.SignalIndexCache.#ctor(System.Guid)">
+            <summary>
+            Creates a new <see cref="T:TimeSeriesFramework.Transport.SignalIndexCache"/> instance.
+            </summary>
+            <param name="subscriberID"><see cref="T:System.Guid"/> based subscriber ID.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.SignalIndexCache.GetSignalIndex(System.Guid)">
+            <summary>
+            Gets runtime signal index for given <see cref="T:System.Guid"/> signal ID.
+            </summary>
+            <param name="signalID"><see cref="T:System.Guid"/> signal ID used to lookup associated runtime signal index.</param>
+            <returns>Runtime signal index for given <see cref="T:System.Guid"/> <paramref name="signalID"/>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.SignalIndexCache.GetSignalIndex(TimeSeriesFramework.MeasurementKey)">
+            <summary>
+            Gets runtime signal index for given <see cref="T:TimeSeriesFramework.MeasurementKey"/>.
+            </summary>
+            <param name="key"><see cref="T:TimeSeriesFramework.MeasurementKey"/> used to lookup associated runtime signal index.</param>
+            <returns>Runtime signal index for given <see cref="T:TimeSeriesFramework.MeasurementKey"/> <paramref name="key"/>.</returns>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SignalIndexCache.SubscriberID">
+            <summary>
+            Gets the <see cref="T:System.Guid"/> based subscriber ID of this <see cref="T:TimeSeriesFramework.Transport.SignalIndexCache"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SignalIndexCache.Reference">
+            <summary>
+            Gets or sets integer signal index cross reference dictionary.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SignalIndexCache.AuthorizedKeys">
+            <summary>
+            Gets reference to array of requested input measurement keys that were authorized.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SignalIndexCache.UnauthorizedKeys">
+            <summary>
+            Gets or sets reference to array of requested input measurement keys that were unauthorized.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription">
+            <summary>
+            Represents a synchronized client subscription to the <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.SynchronizedClientSubscription.#ctor(TimeSeriesFramework.Transport.DataPublisher,System.Guid,System.Guid)">
+            <summary>
+            Creates a new <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/>.
+            </summary>
+            <param name="parent">Reference to parent.</param>
+            <param name="clientID"><see cref="T:System.Guid"/> based client connection ID.</param>
+            <param name="subscriberID"><see cref="T:System.Guid"/> based subscriber ID.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.SynchronizedClientSubscription.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.SynchronizedClientSubscription.PublishFrame(TimeSeriesFramework.IFrame,System.Int32)">
+            <summary>
+            Publish <see cref="T:TimeSeriesFramework.IFrame"/> of time-aligned collection of <see cref="T:TimeSeriesFramework.IMeasurement"/> values that arrived within the
+            concentrator's defined <see cref="P:TimeSeriesFramework.ConcentratorBase.LagTime"/>.
+            </summary>
+            <param name="frame"><see cref="T:TimeSeriesFramework.IFrame"/> of measurements with the same timestamp that arrived within <see cref="P:TimeSeriesFramework.ConcentratorBase.LagTime"/> that are ready for processing.</param>
+            <param name="index">Index of <see cref="T:TimeSeriesFramework.IFrame"/> within a second ranging from zero to <c><see cref="P:TimeSeriesFramework.ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.SynchronizedClientSubscription.QueueMeasurementForProcessing(TimeSeriesFramework.IMeasurement)">
+            <summary>
+            Queues a single measurement for processing.
+            </summary>
+            <param name="measurement">Measurement to queue for processing.</param>
+            <remarks>
+            Measurement is filtered against the defined <see cref="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.InputMeasurementKeys"/> so we override method
+            so that dynamic updates to keys will be synchronized with filtering to prevent interference.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.SynchronizedClientSubscription.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
+            <summary>
+            Queues a collection of measurements for processing.
+            </summary>
+            <param name="measurements">Collection of measurements to queue for processing.</param>
+            <remarks>
+            Measurements are filtered against the defined <see cref="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.InputMeasurementKeys"/> so we override method
+            so that dynamic updates to keys will be synchronized with filtering to prevent interference.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.ClientID">
+            <summary>
+            Gets the <see cref="T:System.Guid"/> client TCP connection identifier of this <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.SubscriberID">
+            <summary>
+            Gets the <see cref="T:System.Guid"/> based subscriber ID of this <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.SignalIndexCache">
+            <summary>
+            Gets the current signal index cache of this <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.UseCompactMeasurementFormat">
+            <summary>
+            Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.InputMeasurementKeys">
+            <summary>
+            Gets or sets primary keys of input measurements the <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/> expects, if any.
+            </summary>
+            <remarks>
+            We override method so assignment can be synchronized such that dynamic updates won't interfere
+            with filtering in <see cref="M:TimeSeriesFramework.Transport.SynchronizedClientSubscription.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})"/>.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.Status">
+            <summary>
+            Gets a formatted message describing the status of this <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription">
+            <summary>
+            Represents an unsynchronized client subscription to the <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.#ctor(TimeSeriesFramework.Transport.DataPublisher,System.Guid,System.Guid)">
+            <summary>
+            Creates a new <see cref="T:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription"/>.
+            </summary>
+            <param name="parent">Reference to parent.</param>
+            <param name="clientID"><see cref="T:System.Guid"/> based client connection ID.</param>
+            <param name="subscriberID"><see cref="T:System.Guid"/> based subscriber ID.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.Initialize">
+            <summary>
+            Initializes <see cref="T:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.GetShortStatus(System.Int32)">
+            <summary>
+            Gets a short one-line status of this <see cref="T:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription"/>.
+            </summary>
+            <param name="maxLength">Maximum number of available characters for display.</param>
+            <returns>A short one-line summary of the current status of this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.QueueMeasurementForProcessing(TimeSeriesFramework.IMeasurement)">
+            <summary>
+            Queues a single measurement for processing.
+            </summary>
+            <param name="measurement">Measurement to queue for processing.</param>
+            <remarks>
+            Measurement is filtered against the defined <see cref="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.InputMeasurementKeys"/> so we override method
+            so that dyanmic updates to keys will be synchronized with filtering to prevent interference.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
+            <summary>
+            Queues a collection of measurements for processing.
+            </summary>
+            <param name="measurements">Collection of measurements to queue for processing.</param>
+            <remarks>
+            Measurements are filtered against the defined <see cref="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.InputMeasurementKeys"/> so we override method
+            so that dyanmic updates to keys will be synchronized with filtering to prevent interference.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.ClientID">
+            <summary>
+            Gets the <see cref="T:System.Guid"/> client TCP connection identifier of this <see cref="T:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.SubscriberID">
+            <summary>
+            Gets the <see cref="T:System.Guid"/> based subscriber ID of this <see cref="T:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.SignalIndexCache">
+            <summary>
+            Gets the current signal index cache of this <see cref="T:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.UseCompactMeasurementFormat">
+            <summary>
+            Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="T:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.InputMeasurementKeys">
+            <summary>
+            Gets or sets primary keys of input measurements the <see cref="T:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription"/> expects, if any.
+            </summary>
+            <remarks>
+            We override method so assignment can be synchronized such that dynamic updates won't interfere
+            with filtering in <see cref="M:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})"/>.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.Status">
+            <summary>
+            Gets a formatted message describing the status of this <see cref="T:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription"/>.
             </summary>
         </member>
     </members>
