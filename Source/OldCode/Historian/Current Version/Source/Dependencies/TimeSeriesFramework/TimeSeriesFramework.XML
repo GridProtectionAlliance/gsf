@@ -1303,7 +1303,7 @@
         </member>
         <member name="P:TimeSeriesFramework.IMeasurement.Key">
             <summary>
-            Returns the primary key of this <see cref="T:TimeSeriesFramework.IMeasurement"/>.
+            Gets or sets the primary key of this <see cref="T:TimeSeriesFramework.IMeasurement"/>.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.IMeasurement.TagName">
@@ -1719,7 +1719,7 @@
         </member>
         <member name="P:TimeSeriesFramework.Measurement.StateFlags">
             <summary>
-            
+            Gets or sets <see cref="T:TimeSeriesFramework.MeasurementStateFlags"/> associated with this <see cref="T:TimeSeriesFramework.Measurement"/>.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Measurement.TagName">
