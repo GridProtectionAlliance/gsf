@@ -484,38 +484,68 @@ namespace TimeSeriesFramework
 
         #region [ Static ]
 
-        ///// <summary>
-        ///// Creates a copy of the specified measurement.
-        ///// </summary>
-        ///// <param name="measurementToClone">Specified measurement to clone.</param>
-        ///// <returns>A copy of the <see cref="Measurement"/> object.</returns>
-        //public static Measurement Clone(IMeasurement measurementToClone)
-        //{
-        //    return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.SignalID, measurementToClone.Value, measurementToClone.Adder, measurementToClone.Multiplier, measurementToClone.Timestamp);
-        //}
+        /// <summary>
+        /// Creates a copy of the specified measurement.
+        /// </summary>
+        /// <param name="measurementToClone">Specified measurement to clone.</param>
+        /// <returns>A copy of the <see cref="Measurement"/> object.</returns>
+        public static Measurement Clone(IMeasurement measurementToClone)
+        {
+            return new Measurement()
+            {
+                ID = measurementToClone.ID,
+                Key = measurementToClone.Key,
+                Value = measurementToClone.Value,
+                Adder = measurementToClone.Adder,
+                Multiplier = measurementToClone.Multiplier,
+                Timestamp = measurementToClone.Timestamp,
+                TagName = measurementToClone.TagName,
+                StateFlags = measurementToClone.StateFlags
+            };
+        }
 
-        ///// <summary>
-        ///// Creates a copy of the specified measurement using a new timestamp.
-        ///// </summary>
-        ///// <param name="measurementToClone">Specified measurement to clone.</param>
-        ///// <param name="timestamp">New timestamp, in ticks, for cloned measurement.</param>
-        ///// <returns>A copy of the <see cref="Measurement"/> object.</returns>
-        //public static Measurement Clone(IMeasurement measurementToClone, Ticks timestamp)
-        //{
-        //    return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.SignalID, measurementToClone.Value, measurementToClone.Adder, measurementToClone.Multiplier, timestamp);
-        //}
+        /// <summary>
+        /// Creates a copy of the specified measurement using a new timestamp.
+        /// </summary>
+        /// <param name="measurementToClone">Specified measurement to clone.</param>
+        /// <param name="timestamp">New timestamp, in ticks, for cloned measurement.</param>
+        /// <returns>A copy of the <see cref="Measurement"/> object.</returns>
+        public static Measurement Clone(IMeasurement measurementToClone, Ticks timestamp)
+        {
+            return new Measurement()
+            {
+                ID = measurementToClone.ID,
+                Key = measurementToClone.Key,
+                Value = measurementToClone.Value,
+                Adder = measurementToClone.Adder,
+                Multiplier = measurementToClone.Multiplier,
+                Timestamp = timestamp,
+                TagName = measurementToClone.TagName,
+                StateFlags = measurementToClone.StateFlags
+            };
+        }
 
-        ///// <summary>
-        ///// Creates a copy of the specified measurement using a new value and timestamp.
-        ///// </summary>
-        ///// <param name="measurementToClone">Specified measurement to clone.</param>
-        ///// <param name="value">New value for cloned measurement.</param>
-        ///// <param name="timestamp">New timestamp, in ticks, for cloned measurement.</param>
-        ///// <returns>A copy of the <see cref="Measurement"/> object.</returns>
-        //public static Measurement Clone(IMeasurement measurementToClone, double value, Ticks timestamp)
-        //{
-        //    return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.SignalID, value, measurementToClone.Adder, measurementToClone.Multiplier, timestamp);
-        //}
+        /// <summary>
+        /// Creates a copy of the specified measurement using a new value and timestamp.
+        /// </summary>
+        /// <param name="measurementToClone">Specified measurement to clone.</param>
+        /// <param name="value">New value for cloned measurement.</param>
+        /// <param name="timestamp">New timestamp, in ticks, for cloned measurement.</param>
+        /// <returns>A copy of the <see cref="Measurement"/> object.</returns>
+        public static Measurement Clone(IMeasurement measurementToClone, double value, Ticks timestamp)
+        {
+            return new Measurement()
+            {
+                ID = measurementToClone.ID,
+                Key = measurementToClone.Key,
+                Value = value,
+                Adder = measurementToClone.Adder,
+                Multiplier = measurementToClone.Multiplier,
+                Timestamp = timestamp,
+                TagName = measurementToClone.TagName,
+                StateFlags = measurementToClone.StateFlags
+            };
+        }
 
         /// <summary>
         /// Returns a <see cref="String"/> that represents the specified <see cref="IMeasurement"/>.

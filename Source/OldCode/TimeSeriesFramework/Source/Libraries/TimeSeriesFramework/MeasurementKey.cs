@@ -334,7 +334,7 @@ namespace TimeSeriesFramework
         /// <param name="signalID"><see cref="Guid"/> based signal ID associated with this <see cref="MeasurementKey"/>, if defined.</param>
         /// <returns>A <see cref="MeasurementKey"/> value equivalent the representation contained in <paramref name="value"/>.</returns>
         /// <exception cref="FormatException">The value is not in the correct format for a <see cref="MeasurementKey"/> value.</exception>
-        public static MeasurementKey Parse(string value, Guid signalID)
+        public static MeasurementKey Parse(string value, Guid signalID = default(Guid))
         {
             string[] elem = value.Trim().Split(':');
 
