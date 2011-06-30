@@ -1686,6 +1686,30 @@
             <param name="measurement2">A <see cref="T:TimeSeriesFramework.Measurement"/> right hand operand.</param>
             <returns>A boolean representing the result.</returns>
         </member>
+        <member name="M:TimeSeriesFramework.Measurement.Clone(TimeSeriesFramework.IMeasurement)">
+            <summary>
+            Creates a copy of the specified measurement.
+            </summary>
+            <param name="measurementToClone">Specified measurement to clone.</param>
+            <returns>A copy of the <see cref="T:TimeSeriesFramework.Measurement"/> object.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Measurement.Clone(TimeSeriesFramework.IMeasurement,TVA.Ticks)">
+            <summary>
+            Creates a copy of the specified measurement using a new timestamp.
+            </summary>
+            <param name="measurementToClone">Specified measurement to clone.</param>
+            <param name="timestamp">New timestamp, in ticks, for cloned measurement.</param>
+            <returns>A copy of the <see cref="T:TimeSeriesFramework.Measurement"/> object.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Measurement.Clone(TimeSeriesFramework.IMeasurement,System.Double,TVA.Ticks)">
+            <summary>
+            Creates a copy of the specified measurement using a new value and timestamp.
+            </summary>
+            <param name="measurementToClone">Specified measurement to clone.</param>
+            <param name="value">New value for cloned measurement.</param>
+            <param name="timestamp">New timestamp, in ticks, for cloned measurement.</param>
+            <returns>A copy of the <see cref="T:TimeSeriesFramework.Measurement"/> object.</returns>
+        </member>
         <member name="M:TimeSeriesFramework.Measurement.ToString(TimeSeriesFramework.IMeasurement)">
             <summary>
             Returns a <see cref="T:System.String"/> that represents the specified <see cref="T:TimeSeriesFramework.IMeasurement"/>.
