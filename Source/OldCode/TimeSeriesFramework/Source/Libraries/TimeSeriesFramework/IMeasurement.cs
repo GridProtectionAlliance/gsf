@@ -333,5 +333,18 @@ namespace TimeSeriesFramework
         {
             return (measurement.StateFlags & MeasurementStateFlags.CalcuatedValue) > 0;
         }
+
+        /// <summary>
+        /// Returns the measurement ID if defined, otherwise the run-time signal ID associated with the measurement key.
+        /// </summary>
+        /// <param name="measurement"><see cref="IMeasurement"/> instance to test.</param>
+        /// <returns>Measurement ID if defined, otherwise the run-time signal ID associated with the measurement key.</returns>
+        public static Guid RuntimeSignalID(this IMeasurement measurement)
+        {
+            if (measurement.ID == Guid.Empty)
+                return measurement.Key.SignalID;
+
+            return measurement.ID;
+        }
     }
 }

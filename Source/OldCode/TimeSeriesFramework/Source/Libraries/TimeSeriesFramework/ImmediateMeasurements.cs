@@ -351,12 +351,13 @@ namespace TimeSeriesFramework
             lock (m_measurements)
             {
                 TemporalMeasurement value;
+                Guid signalID = measurement.RuntimeSignalID();
 
-                if (!m_measurements.TryGetValue(measurement.ID, out value))
+                if (!m_measurements.TryGetValue(signalID, out value))
                 {
                     // Create new temporal measurement if it doesn't exist
                     value = new TemporalMeasurement(measurement, m_lagTime, m_leadTime);
-                    m_measurements.Add(measurement.ID, value);
+                    m_measurements.Add(signalID, value);
                 }
 
                 return value;

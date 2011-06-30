@@ -166,7 +166,7 @@ namespace TimeSeriesFramework.Adapters
                             MeasurementKey[] sourceIDKeys = null;
 
                             if (filteredRows.Length > 0)
-                                sourceIDKeys = filteredRows.Select(row => MeasurementKey.Parse(row["ID"].ToNonNullString("_:0"))).ToArray();
+                                sourceIDKeys = filteredRows.Select(row => MeasurementKey.Parse(row["ID"].ToNonNullString("_:0"), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>())).ToArray();
 
                             if (sourceIDKeys != null)
                             {

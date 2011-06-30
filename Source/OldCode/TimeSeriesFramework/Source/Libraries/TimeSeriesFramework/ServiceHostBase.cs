@@ -112,11 +112,7 @@ namespace TimeSeriesFramework
         private bool m_allowRemoteRestart;
         private bool m_useMeasurementRouting;
         private Dictionary<object, string> m_derivedNameCache;
-        private Dictionary<MeasurementKey, List<IActionAdapter>> m_actionRoutes;
-        private Dictionary<MeasurementKey, List<IOutputAdapter>> m_outputRoutes;
-        private List<IActionAdapter> m_actionBroadcastRoutes;
-        private List<IOutputAdapter> m_outputBroadcastRoutes;
-        private ReaderWriterLockSlim m_adapterRoutesCacheLock;
+        private RoutingTables m_routingTables;
 
         // Threshold settings
         private int m_measurementWarningThreshold;
@@ -362,7 +358,6 @@ namespace TimeSeriesFramework
             m_allowRemoteRestart = systemSettings["AllowRemoteRestart"].ValueAsBoolean(true);
             m_useMeasurementRouting = systemSettings["UseMeasurementRouting"].ValueAsBoolean(true);
             m_derivedNameCache = new Dictionary<object, string>();
-            m_adapterRoutesCacheLock = new ReaderWriterLockSlim();
 
             // Define guid with query string delimeters according to database needs
             Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
@@ -464,6 +459,9 @@ namespace TimeSeriesFramework
             m_serviceHelper.AddScheduledProcess(HealthMonitorProcessHandler, "HealthMonitor", "* * * * *");    // Every minute
             m_serviceHelper.AddScheduledProcess(StatusExportProcessHandler, "StatusExport", "*/30 * * * *");   // Every 30 minutes
 
+            // Create a new set of routing tables
+            m_routingTables = new RoutingTables();
+
             // Create a collection to manage all input, action and output adapter collections as a unit
             m_allAdapters = new AllAdaptersCollection();
             m_allAdapters.StatusMessage += StatusMessageHandler;
@@ -473,27 +471,30 @@ namespace TimeSeriesFramework
             // Create input adapters collection
             m_inputAdapters = new InputAdapterCollection();
             if (m_useMeasurementRouting)
-                m_inputAdapters.NewMeasurements += RoutedMeasurementsHandler;
+                m_inputAdapters.NewMeasurements += m_routingTables.RoutedMeasurementsHandler;
             else
-                m_inputAdapters.NewMeasurements += BroadcastMeasurementsHandler;
+                m_inputAdapters.NewMeasurements += m_routingTables.BroadcastMeasurementsHandler;
             m_inputAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
             m_serviceHelper.ServiceComponents.Add(m_inputAdapters);
+            m_routingTables.InputAdapters = m_inputAdapters;
 
             // Create action adapters collection
             m_actionAdapters = new ActionAdapterCollection();
             if (m_useMeasurementRouting)
-                m_actionAdapters.NewMeasurements += RoutedMeasurementsHandler;
+                m_actionAdapters.NewMeasurements += m_routingTables.RoutedMeasurementsHandler;
             else
-                m_actionAdapters.NewMeasurements += BroadcastMeasurementsHandler;
+                m_actionAdapters.NewMeasurements += m_routingTables.BroadcastMeasurementsHandler;
             m_actionAdapters.UnpublishedSamples += UnpublishedSamplesHandler;
             m_actionAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
             m_serviceHelper.ServiceComponents.Add(m_actionAdapters);
+            m_routingTables.ActionAdapters = m_actionAdapters;
 
             // Create output adapters collection
             m_outputAdapters = new OutputAdapterCollection();
             m_outputAdapters.UnprocessedMeasurements += UnprocessedMeasurementsHandler;
             m_outputAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
             m_serviceHelper.ServiceComponents.Add(m_outputAdapters);
+            m_routingTables.OutputAdapters = m_outputAdapters;
 
             // We group these adapters such that they are initialized in the following order: output, input, action. This
             // is done so that the archival capabilities will be setup before we start receiving input and the input data
@@ -557,9 +558,9 @@ namespace TimeSeriesFramework
                 m_inputAdapters.Stop();
                 m_serviceHelper.ServiceComponents.Remove(m_inputAdapters);
                 if (m_useMeasurementRouting)
-                    m_inputAdapters.NewMeasurements -= RoutedMeasurementsHandler;
+                    m_inputAdapters.NewMeasurements -= m_routingTables.RoutedMeasurementsHandler;
                 else
-                    m_inputAdapters.NewMeasurements -= BroadcastMeasurementsHandler;
+                    m_inputAdapters.NewMeasurements -= m_routingTables.BroadcastMeasurementsHandler;
 
                 m_inputAdapters.Dispose();
             }
@@ -571,9 +572,9 @@ namespace TimeSeriesFramework
                 m_actionAdapters.Stop();
                 m_serviceHelper.ServiceComponents.Remove(m_actionAdapters);
                 if (m_useMeasurementRouting)
-                    m_actionAdapters.NewMeasurements -= RoutedMeasurementsHandler;
+                    m_actionAdapters.NewMeasurements -= m_routingTables.RoutedMeasurementsHandler;
                 else
-                    m_actionAdapters.NewMeasurements -= BroadcastMeasurementsHandler;
+                    m_actionAdapters.NewMeasurements -= m_routingTables.BroadcastMeasurementsHandler;
                 m_actionAdapters.UnpublishedSamples -= UnpublishedSamplesHandler;
                 m_actionAdapters.Dispose();
             }
@@ -598,6 +599,12 @@ namespace TimeSeriesFramework
                 m_allAdapters.Dispose();
             }
             m_allAdapters = null;
+
+            // Dispose of routing tables
+            if (m_routingTables != null)
+                m_routingTables.Dispose();
+
+            m_routingTables = null;
         }
 
         #endregion
@@ -617,7 +624,7 @@ namespace TimeSeriesFramework
                 m_allAdapters.Start();
 
                 // Spawn routing table calculation
-                ThreadPool.QueueUserWorkItem(CalculateRoutingTables);
+                m_routingTables.CalculateRoutingTables();
 
                 DisplayStatusMessage("System initialization complete.", UpdateType.Information);
 
@@ -789,87 +796,6 @@ namespace TimeSeriesFramework
             return configuration;
         }
 
-        private void CalculateRoutingTables(object state)
-        {
-            // Pre-calculate internal routes to improve performance
-            Dictionary<MeasurementKey, List<IActionAdapter>> actionRoutes = new Dictionary<MeasurementKey, List<IActionAdapter>>();
-            Dictionary<MeasurementKey, List<IOutputAdapter>> outputRoutes = new Dictionary<MeasurementKey, List<IOutputAdapter>>();
-            List<IActionAdapter> actionAdapters, actionBroadcastRoutes = new List<IActionAdapter>();
-            List<IOutputAdapter> outputAdapters, outputBroadcastRoutes = new List<IOutputAdapter>();
-            MeasurementKey[] measurementKeys;
-
-            foreach (IActionAdapter actionAdapter in m_actionAdapters)
-            {
-                // Make sure adapter is initialized before calculating route
-                if (actionAdapter.WaitForInitialize(actionAdapter.InitializationTimeout))
-                {
-                    measurementKeys = actionAdapter.InputMeasurementKeys;
-
-                    if (measurementKeys != null)
-                    {
-                        foreach (MeasurementKey key in actionAdapter.InputMeasurementKeys)
-                        {
-                            if (!actionRoutes.TryGetValue(key, out actionAdapters))
-                            {
-                                actionAdapters = new List<IActionAdapter>();
-                                actionRoutes.Add(key, actionAdapters);
-                            }
-
-                            if (!actionAdapters.Contains(actionAdapter))
-                                actionAdapters.Add(actionAdapter);
-                        }
-                    }
-                    else
-                        actionBroadcastRoutes.Add(actionAdapter);
-                }
-                else
-                    actionBroadcastRoutes.Add(actionAdapter);
-            }
-
-            foreach (IOutputAdapter outputAdapter in m_outputAdapters)
-            {
-                // Make sure adapter is initialized before calculating route
-                if (outputAdapter.WaitForInitialize(outputAdapter.InitializationTimeout))
-                {
-                    measurementKeys = outputAdapter.InputMeasurementKeys;
-
-                    if (measurementKeys != null)
-                    {
-                        foreach (MeasurementKey key in outputAdapter.InputMeasurementKeys)
-                        {
-                            if (!outputRoutes.TryGetValue(key, out outputAdapters))
-                            {
-                                outputAdapters = new List<IOutputAdapter>();
-                                outputRoutes.Add(key, outputAdapters);
-                            }
-
-                            if (!outputAdapters.Contains(outputAdapter))
-                                outputAdapters.Add(outputAdapter);
-                        }
-                    }
-                    else
-                        outputBroadcastRoutes.Add(outputAdapter);
-                }
-                else
-                    outputBroadcastRoutes.Add(outputAdapter);
-
-            }
-
-            // Synchronously update adapter routing cache
-            m_adapterRoutesCacheLock.EnterWriteLock();
-            try
-            {
-                m_actionRoutes = actionRoutes;
-                m_outputRoutes = outputRoutes;
-                m_actionBroadcastRoutes = actionBroadcastRoutes;
-                m_outputBroadcastRoutes = outputBroadcastRoutes;
-            }
-            finally
-            {
-                m_adapterRoutesCacheLock.ExitWriteLock();
-            }
-        }
-
         // Execute any defined startup data operations
         private void ExecuteStartupDataOperations(IDbConnection connection, Type adapterType)
         {
@@ -1001,110 +927,6 @@ namespace TimeSeriesFramework
         #endregion
 
         #region [ Primary Adapter Event Handlers ]
-
-        /// <summary>
-        /// Event handler for distributing new measurements in a routed fashion.
-        /// </summary>
-        /// <param name="sender">Event source reference to adapter that generated new measurements.</param>
-        /// <param name="e">Event arguments containing a collection of new measurements.</param>
-        /// <remarks>
-        /// Time-series framework uses this handler to directly route new measurements to the action and output adapters.
-        /// </remarks>
-        protected virtual void RoutedMeasurementsHandler(object sender, EventArgs<ICollection<IMeasurement>> e)
-        {
-            ICollection<IMeasurement> newMeasurements = e.Argument;
-            List<IActionAdapter> actionRoutes;
-            List<IOutputAdapter> outputRoutes;
-            Dictionary<IActionAdapter, List<IMeasurement>> actionMeasurements = new Dictionary<IActionAdapter, List<IMeasurement>>();
-            Dictionary<IOutputAdapter, List<IMeasurement>> outputMeasurements = new Dictionary<IOutputAdapter, List<IMeasurement>>();
-            List<IMeasurement> measurements;
-            MeasurementKey key;
-
-            m_adapterRoutesCacheLock.EnterReadLock();
-
-            try
-            {
-                // Loop through each new measurement and look for destination routes
-                foreach (IMeasurement measurement in newMeasurements)
-                {
-                    key = measurement.Key;
-
-                    if (m_actionRoutes.TryGetValue(key, out actionRoutes))
-                    {
-                        // Add measurements for each destination action adapter route
-                        foreach (IActionAdapter actionAdapter in actionRoutes)
-                        {
-                            if (!actionMeasurements.TryGetValue(actionAdapter, out measurements))
-                            {
-                                measurements = new List<IMeasurement>();
-                                actionMeasurements.Add(actionAdapter, measurements);
-                            }
-
-                            measurements.Add(measurement);
-                        }
-                    }
-
-                    if (m_outputRoutes.TryGetValue(key, out outputRoutes))
-                    {
-                        // Add measurements for each destination output adapter route
-                        foreach (IOutputAdapter outputAdapter in outputRoutes)
-                        {
-                            if (!outputMeasurements.TryGetValue(outputAdapter, out measurements))
-                            {
-                                measurements = new List<IMeasurement>();
-                                outputMeasurements.Add(outputAdapter, measurements);
-                            }
-
-                            measurements.Add(measurement);
-                        }
-                    }
-                }
-
-                // Send broadcast action measurements
-                foreach (IActionAdapter actionAdapter in m_actionBroadcastRoutes)
-                {
-                    actionAdapter.QueueMeasurementsForProcessing(newMeasurements);
-                }
-
-                // Send broadcast output measurements
-                foreach (IOutputAdapter outputAdapter in m_outputBroadcastRoutes)
-                {
-                    outputAdapter.QueueMeasurementsForProcessing(newMeasurements);
-                }
-            }
-            finally
-            {
-                m_adapterRoutesCacheLock.ExitReadLock();
-            }
-
-            // Send routed action measurements
-            foreach (KeyValuePair<IActionAdapter, List<IMeasurement>> actionAdapterMeasurements in actionMeasurements)
-            {
-                actionAdapterMeasurements.Key.QueueMeasurementsForProcessing(actionAdapterMeasurements.Value);
-            }
-
-            // Send routed output measurements
-            foreach (KeyValuePair<IOutputAdapter, List<IMeasurement>> outputAdapterMeasurements in outputMeasurements)
-            {
-                outputAdapterMeasurements.Key.QueueMeasurementsForProcessing(outputAdapterMeasurements.Value);
-            }
-        }
-
-        /// <summary>
-        /// Event handler for distributing new measurements in a broadcast fashion.
-        /// </summary>
-        /// <param name="sender">Event source reference to adapter that generated new measurements.</param>
-        /// <param name="e">Event arguments containing a collection of new measurements.</param>
-        /// <remarks>
-        /// Time-series framework uses this handler to route new measurements to the action and output adapters; adapter will handle filtering.
-        /// </remarks>
-        protected virtual void BroadcastMeasurementsHandler(object sender, EventArgs<ICollection<IMeasurement>> e)
-        {
-            ICollection<IMeasurement> newMeasurements = e.Argument;
-
-            m_actionAdapters.QueueMeasurementsForProcessing(newMeasurements);
-            m_outputAdapters.QueueMeasurementsForProcessing(newMeasurements);
-        }
 
         /// <summary>
         /// Event handler for monitoring unpublished samples.
@@ -1909,7 +1731,7 @@ namespace TimeSeriesFramework
 
 
                         // Spawn routing table calculation updates
-                        ThreadPool.QueueUserWorkItem(CalculateRoutingTables);
+                        m_routingTables.CalculateRoutingTables();
                     }
                     else
                         SendResponse(requestInfo, false, "Failed to load system configuration.");
@@ -1945,7 +1767,7 @@ namespace TimeSeriesFramework
             else
             {
                 // Spawn routing table calculation updates
-                ThreadPool.QueueUserWorkItem(CalculateRoutingTables);
+                m_routingTables.CalculateRoutingTables();
                 SendResponse(requestInfo, true, "Spawned request to refresh routing tables.");
             }
         }

@@ -365,7 +365,7 @@ namespace TimeSeriesFramework.Transport
                         MeasurementKey[] subscribedKeys = null;
 
                         if (filteredRows.Length > 0)
-                            subscribedKeys = filteredRows.Select(row => MeasurementKey.Parse(row["ID"].ToNonNullString("_:0"))).ToArray();
+                            subscribedKeys = filteredRows.Select(row => MeasurementKey.Parse(row["ID"].ToNonNullString("_:0"), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>())).ToArray();
 
                         if (subscribedKeys != null)
                         {

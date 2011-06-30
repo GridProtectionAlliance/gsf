@@ -1,9 +1,31 @@
-﻿using System;
+﻿//******************************************************************************************************
+//  Program.cs - Gbtc
+//
+//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  06/30/2011 - J. Ritchie Carroll
+//       Generated original version of source code.
+//
+//******************************************************************************************************
+
+using System;
 using System.Collections.Generic;
 using TimeSeriesFramework;
 using TimeSeriesFramework.Transport;
 using TVA;
-using TVA.Collections;
 
 namespace DataSubscriberTest
 {
@@ -73,12 +95,16 @@ namespace DataSubscriberTest
 
         static void subscriber_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
         {
-            //Console.WriteLine(string.Format("{0} total measurements received so far: {1}", e.Argument.Count, e.Argument.ToDelimitedString(", ")));
+            // Check to see if total number of added points will exceed process interval used to show periodic
+            // messages of how many points have been archived so far...
+            const int interval = 5 * 60;
+
+            bool showMessage = dataCount + e.Argument.Count >= (dataCount / interval + 1) * interval;
 
             dataCount += e.Argument.Count;
 
-            if (dataCount % (5 * 60) == 0)
-                Console.WriteLine(string.Format("{0} total measurements received so far: {1}", dataCount, e.Argument.ToDelimitedString(", ")));
+            if (showMessage)
+                Console.WriteLine(string.Format("{0:N0} measurements have been processed so far...", dataCount));
         }
 
         static void subscriber_ConnectionEstablished(object sender, EventArgs e)

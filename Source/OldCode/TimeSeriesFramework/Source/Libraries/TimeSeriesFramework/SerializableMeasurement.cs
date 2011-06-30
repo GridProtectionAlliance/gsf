@@ -209,11 +209,11 @@ namespace TimeSeriesFramework
                 throw new InvalidOperationException("Not enough buffer available to deserialize measurement.");
 
             int length, index = startIndex;
-            uint id;
-            string source = "";
+            uint keyID;
+            string keySource = "";
 
             // Decode key ID
-            id = EndianOrder.BigEndian.ToUInt32(buffer, index);
+            keyID = EndianOrder.BigEndian.ToUInt32(buffer, index);
             index += 4;
 
             // Decode key source string length
@@ -223,16 +223,16 @@ namespace TimeSeriesFramework
             // Decode key source string
             if (length > 0)
             {
-                source = Encoding.Unicode.GetString(buffer, index, length);
+                keySource = Encoding.Unicode.GetString(buffer, index, length);
                 index += length;
             }
-
-            // Apply parsed key changes
-            Key = new MeasurementKey(id, source);
 
             // Decode signal ID
             ID = EndianOrder.BigEndian.ToGuid(buffer, index);
             index += 16;
+
+            // Apply parsed key changes
+            Key = new MeasurementKey(ID, keyID, keySource);
 
             // Decode tag name string length
             length = EndianOrder.BigEndian.ToInt32(buffer, index);

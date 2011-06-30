@@ -220,6 +220,7 @@ namespace TimeSeriesFramework.Transport
         private ConcurrentDictionary<Guid, ClientConnection> m_clientConnections;
         private ConcurrentDictionary<Guid, IServer> m_clientPublicationChannels;
         private ConcurrentDictionary<MeasurementKey, Guid> m_signalIDCache;
+        private RoutingTables m_routingTables;
         private string m_metadataTables;
         private bool m_requireAuthentication;
         private bool m_disposed;
@@ -239,6 +240,10 @@ namespace TimeSeriesFramework.Transport
             m_clientPublicationChannels = new ConcurrentDictionary<Guid, IServer>();
             m_signalIDCache = new ConcurrentDictionary<MeasurementKey, Guid>();
             m_metadataTables = "DeviceDetail,MeasurementDetail";
+            m_routingTables = new RoutingTables()
+            {
+                ActionAdapters = this
+            };
         }
 
         /// <summary>
@@ -405,6 +410,13 @@ namespace TimeSeriesFramework.Transport
 
                         if (m_clientConnections != null)
                             m_clientConnections.Values.AsParallel().ForAll(cc => cc.Dispose());
+
+                        m_clientConnections = null;
+
+                        if (m_routingTables != null)
+                            m_routingTables.Dispose();
+
+                        m_routingTables = null;
                     }
                 }
                 finally
@@ -450,7 +462,18 @@ namespace TimeSeriesFramework.Transport
             commandChannel.Initialize();
 
             Initialized = true;
-            ProcessMeasurementFilter = true;
+        }
+
+        /// <summary>
+        /// Queues a collection of measurements for processing to each <see cref="IActionAdapter"/> connected to this <see cref="DataPublisher"/>.
+        /// </summary>
+        /// <param name="measurements">Measurements to queue for processing.</param>
+        public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
+        {
+            if (this.ProcessMeasurementFilter)
+                base.QueueMeasurementsForProcessing(measurements);
+            else
+                m_routingTables.RoutedMeasurementsHandler(measurements);
         }
 
         /// <summary>
@@ -1050,6 +1073,9 @@ namespace TimeSeriesFramework.Transport
                             subscription.Initialize();
                             subscription.Initialized = true;
                         }
+
+                        // Spawn routing table recalculation
+                        m_routingTables.CalculateRoutingTables();
 
                         // Make sure adapter is started
                         subscription.Start();

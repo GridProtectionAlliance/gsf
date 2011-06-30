@@ -154,7 +154,7 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
-        /// Gets or sets output measurements that the action adapter will produce, if any.
+        /// Gets or sets output measurements that the adapter will produce, if any.
         /// </summary>
         IMeasurement[] OutputMeasurements
         {
@@ -163,7 +163,7 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
-        /// Gets or sets primary keys of input measurements the action adapter expects.
+        /// Gets or sets primary keys of input measurements the adapter expects.
         /// </summary>
         MeasurementKey[] InputMeasurementKeys
         {

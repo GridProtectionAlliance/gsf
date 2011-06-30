@@ -106,13 +106,13 @@ namespace TimeSeriesFramework.Transport
                 mappedStateFlags |= CompactMeasurementStateFlags.DataQuality;
 
             if ((stateFlags & TimeQualityMask) > 0)
-                mappedStateFlags |= CompactMeasurementStateFlags.DataQuality;
+                mappedStateFlags |= CompactMeasurementStateFlags.TimeQuality;
 
             if ((stateFlags & SystemIssueMask) > 0)
-                mappedStateFlags |= CompactMeasurementStateFlags.DataQuality;
+                mappedStateFlags |= CompactMeasurementStateFlags.SystemIssue;
 
             if ((stateFlags & UserFlagMask) > 0)
-                mappedStateFlags |= CompactMeasurementStateFlags.DataQuality;
+                mappedStateFlags |= CompactMeasurementStateFlags.UserFlag;
 
             if ((stateFlags & CalculatedValueMask) > 0)
                 mappedStateFlags |= CompactMeasurementStateFlags.CalculatedValue;
@@ -138,13 +138,13 @@ namespace TimeSeriesFramework.Transport
             if ((stateFlags & CompactMeasurementStateFlags.DataQuality) > 0)
                 mappedStateFlags |= DataQualityMask;
 
-            if ((stateFlags & CompactMeasurementStateFlags.DataQuality) > 0)
+            if ((stateFlags & CompactMeasurementStateFlags.TimeQuality) > 0)
                 mappedStateFlags |= TimeQualityMask;
 
-            if ((stateFlags & CompactMeasurementStateFlags.DataQuality) > 0)
+            if ((stateFlags & CompactMeasurementStateFlags.SystemIssue) > 0)
                 mappedStateFlags |= SystemIssueMask;
 
-            if ((stateFlags & CompactMeasurementStateFlags.DataQuality) > 0)
+            if ((stateFlags & CompactMeasurementStateFlags.UserFlag) > 0)
                 mappedStateFlags |= UserFlagMask;
 
             if ((stateFlags & CompactMeasurementStateFlags.CalculatedValue) > 0)
@@ -285,7 +285,11 @@ namespace TimeSeriesFramework.Transport
                 buffer[index++] = (byte)flags;
 
                 // Encode runtime ID
-                EndianOrder.BigEndian.CopyBytes(m_signalIndexCache.GetSignalIndex(Key), buffer, index);
+                if (ID == Guid.Empty)
+                    EndianOrder.BigEndian.CopyBytes(m_signalIndexCache.GetSignalIndex(Key), buffer, index);
+                else
+                    EndianOrder.BigEndian.CopyBytes(m_signalIndexCache.GetSignalIndex(ID), buffer, index);
+
                 index += 2;
 
                 // Encode adjusted value (accounts for adder and multipler)

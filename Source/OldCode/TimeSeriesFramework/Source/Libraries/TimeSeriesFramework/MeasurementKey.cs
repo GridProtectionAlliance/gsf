@@ -36,6 +36,7 @@ namespace TimeSeriesFramework
         #region [ Members ]
 
         // Fields
+        private Guid m_signalID;
         private uint m_id;
         private string m_source;
         private int m_hashCode;
@@ -47,28 +48,78 @@ namespace TimeSeriesFramework
         /// <summary>
         /// Constructs a new <see cref="MeasurementKey"/> given the specified parameters.
         /// </summary>
+        /// <param name="signalID"><see cref="Guid"/> ID of associated signal, if defined.</param>
         /// <param name="id">Numeric ID of the measurement that this <see cref="MeasurementKey"/> represents.</param>
         /// <param name="source">Source of the measurement that this <see cref="MeasurementKey"/> represents (e.g., name of archive).</param>
         /// <exception cref="ArgumentNullException">source cannot be null.</exception>
-        public MeasurementKey(uint id, string source)
+        public MeasurementKey(Guid signalID, uint id, string source)
         {
             if (string.IsNullOrWhiteSpace(source))
                 throw new ArgumentNullException("source", "MeasurementKey source cannot be null or empty");
 
-            ConcurrentDictionary<uint, MeasurementKey> keys = s_cache.GetOrAdd(source, key => new ConcurrentDictionary<uint, MeasurementKey>());
-
-            if (!keys.TryGetValue(id, out this))
+            if (signalID == Guid.Empty)
             {
-                m_id = id;
-                m_source = source.ToUpper();
-                GenHashCode();
-                keys[id] = this;
+                ConcurrentDictionary<uint, MeasurementKey> keys = s_keyCache.GetOrAdd(source, key => new ConcurrentDictionary<uint, MeasurementKey>());
+
+                if (!keys.TryGetValue(id, out this))
+                {
+                    m_id = id;
+                    m_source = source.ToUpper();
+
+                    // Generate a static runtime signal ID associated with this measurement key
+                    m_signalID = Guid.NewGuid();
+                    GenHashCode();
+
+                    // Cache measurement
+                    s_idCache[m_signalID] = this;
+                    keys[id] = this;
+                }
+            }
+            else
+            {
+                if (!s_idCache.TryGetValue(signalID, out this))
+                {
+                    m_id = id;
+                    m_source = source.ToUpper();
+                    m_signalID = signalID;
+                    GenHashCode();
+
+                    // Cache measurement based on signal ID
+                    s_idCache[m_signalID] = this;
+                    s_keyCache.GetOrAdd(source, key => new ConcurrentDictionary<uint, MeasurementKey>())[id] = this;
+                }
             }
         }
 
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets <see cref="Guid"/> ID of signal associated with this <see cref="MeasurementKey"/>.
+        /// </summary>
+        public Guid SignalID
+        {
+            get
+            {
+                return m_signalID;
+            }
+            set
+            {
+                if (m_signalID != value)
+                {
+                    MeasurementKey old;
+                    s_idCache.TryRemove(m_signalID, out old);
+
+                    m_signalID = value;
+                    GenHashCode();
+
+                    // Update measurement caches
+                    s_idCache[m_signalID] = this;
+                    s_keyCache.GetOrAdd(m_source, key => new ConcurrentDictionary<uint, MeasurementKey>())[m_id] = this;
+                }
+            }
+        }
 
         /// <summary>
         /// Gets or sets the numeric ID of this <see cref="MeasurementKey"/>.
@@ -81,11 +132,7 @@ namespace TimeSeriesFramework
             }
             set
             {
-                if (m_id != value)
-                {
-                    m_id = value;
-                    GenHashCode();
-                }
+                m_id = value;
             }
         }
 
@@ -103,17 +150,22 @@ namespace TimeSeriesFramework
             }
             set
             {
-                if (string.Compare(m_source, value, true) != 0)
-                {
-                    m_source = value.ToUpper();
-                    GenHashCode();
-                }
+                m_source = value.ToUpper();
             }
         }
 
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Update the signal ID of this <see cref="MeasurementKey"/>.
+        /// </summary>
+        /// <param name="signalID">New <see cref="Guid"/> based signal ID to update this <see cref="MeasurementKey"/> with.</param>
+        public void UpdateSignalID(Guid signalID)
+        {
+            SignalID = signalID;
+        }
 
         /// <summary>
         /// Returns a <see cref="String"/> that represents the current <see cref="MeasurementKey"/>.
@@ -143,7 +195,7 @@ namespace TimeSeriesFramework
         /// </returns>
         public bool Equals(MeasurementKey other)
         {
-            return (m_hashCode == other.m_hashCode);
+            return (m_signalID == other.m_signalID);
         }
 
         /// <summary>
@@ -171,12 +223,7 @@ namespace TimeSeriesFramework
         /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
         public int CompareTo(MeasurementKey other)
         {
-            int sourceCompare = string.Compare(m_source, other.Source, true);
-
-            if (sourceCompare == 0)
-                return (m_id < other.ID ? -1 : (m_id > other.ID ? 1 : 0));
-            else
-                return sourceCompare;
+            return m_signalID.CompareTo(other.m_signalID);
         }
 
         /// <summary>
@@ -197,7 +244,7 @@ namespace TimeSeriesFramework
         private void GenHashCode()
         {
             // We cache hash code during construction or after element value change to speed structure usage
-            m_hashCode = (m_source + m_id.ToString()).GetHashCode();
+            m_hashCode = m_signalID.GetHashCode();
         }
 
         #endregion
@@ -275,7 +322,8 @@ namespace TimeSeriesFramework
         #region [ Static ]
 
         // Static Fields
-        private static ConcurrentDictionary<string, ConcurrentDictionary<uint, MeasurementKey>> s_cache = new ConcurrentDictionary<string, ConcurrentDictionary<uint, MeasurementKey>>(StringComparer.InvariantCultureIgnoreCase);
+        private static ConcurrentDictionary<Guid, MeasurementKey> s_idCache = new ConcurrentDictionary<Guid, MeasurementKey>();
+        private static ConcurrentDictionary<string, ConcurrentDictionary<uint, MeasurementKey>> s_keyCache = new ConcurrentDictionary<string, ConcurrentDictionary<uint, MeasurementKey>>(StringComparer.InvariantCultureIgnoreCase);
 
         // Static Methods
 
@@ -283,14 +331,15 @@ namespace TimeSeriesFramework
         /// Converts the string representation of a <see cref="MeasurementKey"/> into its value equivalent.
         /// </summary>
         /// <param name="value">A string representing the <see cref="MeasurementKey"/> to convert.</param>
+        /// <param name="signalID"><see cref="Guid"/> based signal ID associated with this <see cref="MeasurementKey"/>, if defined.</param>
         /// <returns>A <see cref="MeasurementKey"/> value equivalent the representation contained in <paramref name="value"/>.</returns>
         /// <exception cref="FormatException">The value is not in the correct format for a <see cref="MeasurementKey"/> value.</exception>
-        public static MeasurementKey Parse(string value)
+        public static MeasurementKey Parse(string value, Guid signalID)
         {
             string[] elem = value.Trim().Split(':');
 
             if (elem.Length == 2)
-                return new MeasurementKey(uint.Parse(elem[1].Trim()), elem[0].Trim());
+                return new MeasurementKey(signalID, uint.Parse(elem[1].Trim()), elem[0].Trim());
 
             throw new FormatException("The value is not in the correct format for a MeasurementKey value");
         }
@@ -299,13 +348,14 @@ namespace TimeSeriesFramework
         /// Attempts to convert the string representation of a <see cref="MeasurementKey"/> into its value equivalent.
         /// </summary>
         /// <param name="value">A string representing the <see cref="MeasurementKey"/> to convert.</param>
+        /// <param name="signalID"><see cref="Guid"/> based signal ID associated with this <see cref="MeasurementKey"/>, if defined.</param>
         /// <param name="key">Output <see cref="MeasurementKey"/> in which to stored parsed value.</param>
         /// <returns>A <c>true</c> if <see cref="MeasurementKey"/>representation contained in <paramref name="value"/> could be parsed; otherwise <c>false</c>.</returns>
-        public static bool TryParse(string value, out MeasurementKey key)
+        public static bool TryParse(string value, Guid signalID, out MeasurementKey key)
         {
             try
             {
-                key = Parse(value);
+                key = Parse(value, signalID);
                 return true;
             }
             catch
