@@ -42,6 +42,9 @@
 //  06/10/2011 - Pinal C. Patel
 //       Renamed RetryDelayInterval and MaximumRetryAttempts settings persisted to the config file 
 //       to CacheRetryDelayInterval and CacheMaximumRetryAttempts for clarity.
+//  06/30/2011 - Stephen C. Wills - applying changes from Jian (Ryan) Zuo
+//       Added ManagedEncryption setting to the config file to allow the user to switch to
+//       wrappers over FIPS-compliant algorithms.
 //
 //*******************************************************************************************************
 
@@ -330,6 +333,9 @@ namespace TVA.Security.Cryptography
         // Default wait interval, in milliseconds, before retrying load of cryptographic key and initialization vector cache
         private const double DefaultRetryDelayInterval = 200.0D;
 
+        // Default managed encryption, use managed encryption algorithms
+        private const bool DefaultManagedEncryption = true;
+
         // The standard settings category for cryptography information
         private const string CryptoServicesSettingsCategory = "CryptographyServices";
 
@@ -342,6 +348,9 @@ namespace TVA.Security.Cryptography
 
             // Internal key and initialization vector table
             private Dictionary<string, byte[][]> m_keyIVTable = new Dictionary<string, byte[][]>();
+
+            // Flag to choose between AesManaged and AesCryptoServiceProvider for encryption
+            private bool m_managedEncryption;
 
             #endregion
 
@@ -367,6 +376,22 @@ namespace TVA.Security.Cryptography
                     }
 
                     return keyIVTable;
+                }
+            }
+
+            /// <summary>
+            /// Gets or sets a boolean value that determines whether to use AesManaged
+            /// or the CAPI wrapper (AesCryptoServiceProvider) for encryption.
+            /// </summary>
+            public bool ManagedEncryption
+            {
+                get
+                {
+                    return m_managedEncryption;
+                }
+                set
+                {
+                    m_managedEncryption = value;
                 }
             }
 
@@ -396,8 +421,18 @@ namespace TVA.Security.Cryptography
                     // Lookup crypto key based on password hash in persisted key table
                     if (!m_keyIVTable.TryGetValue(hash, out keyIV))
                     {
+                        Aes symmetricAlgorithm;
+
                         // Key for password hash doesn't exist, create a new one
-                        AesManaged symmetricAlgorithm = new AesManaged();
+                        if (m_managedEncryption)
+                        {
+                            symmetricAlgorithm = new AesManaged();
+                        }
+                        else
+                        {
+                            // Switch from AesManaged to AesCryptoServiceProvider complying with FIPS
+                            symmetricAlgorithm = new AesCryptoServiceProvider();
+                        }
 
                         symmetricAlgorithm.KeySize = keySize;
                         symmetricAlgorithm.GenerateKey();
@@ -602,6 +637,9 @@ namespace TVA.Security.Cryptography
         // Password hash table (run-time optimization)
         private static Dictionary<string, string> s_passwordHash = new Dictionary<string, string>();
 
+        // Switch to turn off managed encryption and use wrappers over FIPS-compliant algorithms.
+        private static bool s_managedEncryption;
+
         /// <summary>
         /// Static constructor for the <see cref="Cipher"/> class.
         /// </summary>
@@ -611,6 +649,7 @@ namespace TVA.Security.Cryptography
             string localCacheFileName = DefaultCacheFileName;
             double retryDelayInterval = DefaultRetryDelayInterval;
             int maximumRetryAttempts = DefaultMaximumRetryAttempts;
+            s_managedEncryption = DefaultManagedEncryption;
 
             // Load cryptographic settings
             ConfigurationFile config = ConfigurationFile.Current;
@@ -619,10 +658,12 @@ namespace TVA.Security.Cryptography
             settings.Add("CryptoCache", localCacheFileName, "Path and file name of cryptographic key and initialization vector cache.");
             settings.Add("CacheRetryDelayInterval", retryDelayInterval, "Wait interval, in milliseconds, before retrying load of cryptographic key and initialization vector cache.");
             settings.Add("CacheMaximumRetryAttempts", maximumRetryAttempts, "Maximum retry attempts allowed for loading cryptographic key and initialization vector cache.");
+            settings.Add("ManagedEncryption", s_managedEncryption, "Turn this off if the security policy for FIPS-compliant algorithms is enabled in order to use the .NET wrappers for FIPS-compliant encryption algorithms.");
 
             localCacheFileName = FilePath.GetAbsolutePath(settings["CryptoCache"].ValueAs(localCacheFileName));
             retryDelayInterval = settings["CacheRetryDelayInterval"].ValueAs(retryDelayInterval);
             maximumRetryAttempts = settings["CacheMaximumRetryAttempts"].ValueAs(maximumRetryAttempts);
+            s_managedEncryption = settings["ManagedEncryption"].ValueAs(s_managedEncryption);
 
             // Initialize local cryptographic key and initialization vector cache (application may only have read-only access to this cache)
             localKeyIVCache = new KeyIVCache()
@@ -630,6 +671,7 @@ namespace TVA.Security.Cryptography
                 FileName = localCacheFileName,
                 RetryDelayInterval = retryDelayInterval,
                 MaximumRetryAttempts = maximumRetryAttempts,
+                ManagedEncryption = s_managedEncryption,
                 ReloadOnChange = true,
                 AutoSave = false
             };
@@ -773,7 +815,18 @@ namespace TVA.Security.Cryptography
                 if (!s_passwordHash.TryGetValue(password, out hash))
                 {
                     // Password hash doesn't exist, create one
-                    hash = Convert.ToBase64String((new SHA256Managed()).ComputeHash(Encoding.Default.GetBytes(password)));
+                    if (s_managedEncryption)
+                    {
+                        hash = Convert.ToBase64String((new SHA256Managed()).ComputeHash(Encoding.Default.GetBytes(password)));
+                    }
+                    else
+                    {
+                        // Switch from SHA256Managed to SHA256CryptoServiceProvider complying with FIPS
+                        // http://msdn.microsoft.com/en-us/library/system.security.cryptography.sha256cryptoserviceprovider.aspx
+                        // http://msdn.microsoft.com/en-us/library/system.security.cryptography.sha256managed.sha256managed.aspx
+                        hash = Convert.ToBase64String((new SHA256CryptoServiceProvider()).ComputeHash(Encoding.Default.GetBytes(password)));
+                    }
+
                     s_passwordHash.Add(password, hash);
                 }
             }
@@ -862,7 +915,12 @@ namespace TVA.Security.Cryptography
             if (strength == CipherStrength.None)
                 return source;
 
-            AesManaged symmetricAlgorithm = new AesManaged();
+            Aes symmetricAlgorithm;
+
+            if (s_managedEncryption)
+                symmetricAlgorithm = new AesManaged();
+            else
+                symmetricAlgorithm = new AesCryptoServiceProvider();
 
             symmetricAlgorithm.KeySize = (int)strength;
 
@@ -1061,7 +1119,12 @@ namespace TVA.Security.Cryptography
             if (strength == CipherStrength.None)
                 return source;
 
-            AesManaged symmetricAlgorithm = new AesManaged();
+            Aes symmetricAlgorithm;
+
+            if (s_managedEncryption)
+                symmetricAlgorithm = new AesManaged();
+            else
+                symmetricAlgorithm = new AesCryptoServiceProvider();
 
             symmetricAlgorithm.KeySize = (int)strength;
 

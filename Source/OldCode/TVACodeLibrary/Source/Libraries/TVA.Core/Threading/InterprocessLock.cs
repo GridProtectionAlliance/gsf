@@ -11,6 +11,9 @@
 //  -----------------------------------------------------------------------------------------------------
 //  03/21/2011 - Ritchie
 //       Generated original version of source code.
+//  06/30/2011 - Stephen Wills - applying changes from Jian (Ryan) Zuo
+//       Updated to allow unauthorized users to attempt to grant
+//       themselves access to existing mutexes and semaphores.
 //
 //*******************************************************************************************************
 
@@ -252,6 +255,8 @@
 using System;
 using System.Threading;
 using TVA.Security.Cryptography;
+using System.Security.AccessControl;
+using System.Security.Principal;
 
 namespace TVA.Threading
 {
@@ -295,6 +300,8 @@ namespace TVA.Threading
 
             Mutex namedMutex = null;
             bool doesNotExist = false;
+            bool unauthorized = false;
+            bool mutexWasCreated = false;
 
             // Create a mutex name that is specific to an object (e.g., a path and file name).
             // Prefix mutext name with "Global\" such that mutex will apply to all active
@@ -310,10 +317,40 @@ namespace TVA.Threading
             {
                 doesNotExist = true;
             }
+            catch (UnauthorizedAccessException)
+            {
+                unauthorized = true;
+            }
 
             // If mutex does not exist we create it
             if (doesNotExist)
-                namedMutex = new Mutex(false, mutexName);
+            {
+                MutexSecurity mSec = new MutexSecurity();
+                MutexAccessRule rule = new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), MutexRights.Synchronize | MutexRights.Modify, AccessControlType.Allow);
+                mSec.AddAccessRule(rule);
+                namedMutex = new Mutex(false, mutexName, out mutexWasCreated, mSec);
+                if (!mutexWasCreated)
+                {
+                    throw new ArgumentException("Unable to create the mutex");
+                }
+            }
+            else if (unauthorized)
+            {
+                namedMutex = Mutex.OpenExisting(mutexName, MutexRights.ReadPermissions | MutexRights.ChangePermissions);
+
+                // Get the current ACL. This requires MutexRights.ReadPermission
+                MutexSecurity mSec = namedMutex.GetAccessControl();
+                MutexAccessRule rule = new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), MutexRights.Synchronize | MutexRights.Modify, AccessControlType.Allow);
+                mSec.RemoveAccessRule(rule);
+
+                // Now grant the user the correct rights
+                rule = new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), MutexRights.Synchronize | MutexRights.Modify, AccessControlType.Allow);
+                mSec.AddAccessRule(rule);
+
+                // Update the ACL. This requires MutexRighs.ChangePermission.
+                namedMutex.SetAccessControl(mSec);
+                namedMutex = Mutex.OpenExisting(mutexName);
+            }
 
             return namedMutex;
         }
@@ -350,6 +387,8 @@ namespace TVA.Threading
 
             Semaphore namedSemaphore = null;
             bool doesNotExist = false;
+            bool unauthorized = false;
+            bool semaphoreWasCreated = false;
 
             if (initialCount < 0)
                 initialCount = maximumCount;
@@ -366,10 +405,40 @@ namespace TVA.Threading
             {
                 doesNotExist = true;
             }
+            catch (UnauthorizedAccessException)
+            {
+                unauthorized = true;
+            }
 
             // If semaphore does not exist we create it
             if (doesNotExist)
-                namedSemaphore = new Semaphore(initialCount, maximumCount, semaphoreName);
+            {
+                SemaphoreSecurity sSec = new SemaphoreSecurity();
+                SemaphoreAccessRule rule = new SemaphoreAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), SemaphoreRights.Synchronize | SemaphoreRights.Modify, AccessControlType.Allow);
+                sSec.AddAccessRule(rule);
+                namedSemaphore = new Semaphore(initialCount, maximumCount, semaphoreName, out semaphoreWasCreated, sSec);
+                if (!semaphoreWasCreated)
+                {
+                    throw new ArgumentException("Unable to create the mutex");
+                }
+            }
+            else if (unauthorized)
+            {
+                namedSemaphore = Semaphore.OpenExisting(semaphoreName, SemaphoreRights.ReadPermissions | SemaphoreRights.ChangePermissions);
+
+                // Get the current ACL. This requires MutexRights.ReadPermission
+                SemaphoreSecurity sSec = new SemaphoreSecurity();
+                SemaphoreAccessRule rule = new SemaphoreAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), SemaphoreRights.Synchronize | SemaphoreRights.Modify, AccessControlType.Allow);
+                sSec.RemoveAccessRule(rule);
+
+                // Now grant the user the correct rights
+                rule = new SemaphoreAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), SemaphoreRights.Synchronize | SemaphoreRights.Modify, AccessControlType.Allow);
+                sSec.AddAccessRule(rule);
+
+                // Update the ACL. This requires MutexRighs.ChangePermission.
+                namedSemaphore.SetAccessControl(sSec);
+                namedSemaphore = Semaphore.OpenExisting(semaphoreName);
+            }
 
             return namedSemaphore;
         }
