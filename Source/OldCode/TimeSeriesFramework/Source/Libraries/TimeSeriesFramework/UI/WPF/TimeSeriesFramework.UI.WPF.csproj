@@ -90,7 +90,8 @@
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
-    <Reference Include="TVA.Communication, Version=4.0.2.32, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="TVA.Communication, Version=4.0.2.60, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\Dependencies\TVA\TVA.Communication.dll</HintPath>
     </Reference>
     <Reference Include="TVA.Core, Version=4.0.2.27, Culture=neutral, processorArchitecture=MSIL">
