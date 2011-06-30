@@ -103,7 +103,7 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>
-        /// 
+        /// Gets or sets <see cref="MeasurementStateFlags"/> associated with this <see cref="Measurement"/>.
         /// </summary>
         public virtual MeasurementStateFlags StateFlags
         {

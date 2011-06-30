@@ -189,11 +189,12 @@ namespace TimeSeriesFramework
     public interface IMeasurement : ITimeSeriesValue<double>, IEquatable<ITimeSeriesValue>, IComparable<ITimeSeriesValue>, IComparable
     {
         /// <summary>
-        /// Returns the primary key of this <see cref="IMeasurement"/>.
+        /// Gets or sets the primary key of this <see cref="IMeasurement"/>.
         /// </summary>
         MeasurementKey Key
         {
             get;
+            set;
         }
 
         /// <summary>
