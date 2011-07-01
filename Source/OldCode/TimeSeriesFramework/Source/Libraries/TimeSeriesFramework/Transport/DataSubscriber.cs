@@ -533,6 +533,12 @@ namespace TimeSeriesFramework.Transport
                     UdpClient dataChannel = null;
                     string setting;
 
+                    // Track specified time inclusion for later deserialization
+                    if (settings.TryGetValue("includeTime", out setting))
+                        m_includeTime = setting.ParseBoolean();
+                    else
+                        m_includeTime = true;
+
                     settings.TryGetValue("dataChannel", out setting);
                     if (!string.IsNullOrWhiteSpace(setting))
                     {
@@ -551,12 +557,6 @@ namespace TimeSeriesFramework.Transport
                         dataChannel.ReceiveBufferSize = ushort.MaxValue;
                         dataChannel.ConnectAsync();
                     }
-
-                    // Track specified time inclusion for later deserialization
-                    if (settings.TryGetValue("includeTime", out setting))
-                        m_includeTime = setting.ParseBoolean();
-                    else
-                        m_includeTime = true;
 
                     // Assign data channel client reference and attach to needed events
                     this.DataChannel = dataChannel;
