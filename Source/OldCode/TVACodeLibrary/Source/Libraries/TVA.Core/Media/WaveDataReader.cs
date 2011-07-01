@@ -285,7 +285,7 @@ namespace TVA.Media
     /// it, samples can be read directly from the data stream in
     /// the order that they appear.
     /// </remarks>
-    public class WaveData : IDisposable
+    public class WaveDataReader : IDisposable
     {
         #region [ Members ]
 
@@ -302,11 +302,11 @@ namespace TVA.Media
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new instance of the <see cref="WaveData"/> class.
+        /// Creates a new instance of the <see cref="WaveDataReader"/> class.
         /// </summary>
         /// <param name="waveFormat">The format of the wave stream.</param>
         /// <param name="waveStream">The stream containing wave data.</param>
-        public WaveData(WaveFormatChunk waveFormat, Stream waveStream)
+        public WaveDataReader(WaveFormatChunk waveFormat, Stream waveStream)
         {
             m_format = waveFormat ?? DEFAULT_WAVE_FORMAT_CHUNK;
             m_waveStream = waveStream;
@@ -317,10 +317,10 @@ namespace TVA.Media
         }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="WaveData"/> class.
+        /// Creates a new instance of the <see cref="WaveDataReader"/> class.
         /// </summary>
         /// <param name="waveStream">The stream containing wave data.</param>
-        public WaveData(Stream waveStream)
+        public WaveDataReader(Stream waveStream)
             : this(null, waveStream)
         {
         }
@@ -415,30 +415,30 @@ namespace TVA.Media
         // Static Methods
 
         /// <summary>
-        /// Creates a <see cref="WaveData"/> instance created from a WAV file.
+        /// Creates a <see cref="WaveDataReader"/> instance created from a WAV file.
         /// </summary>
         /// <param name="fileName">The name of the WAV file.</param>
         /// <returns>The WaveData instance created from a WAV file.</returns>
-        public static WaveData FromFile(string fileName)
+        public static WaveDataReader FromFile(string fileName)
         {
             return FromStream(File.OpenRead(fileName));
         }
 
         /// <summary>
-        /// Creates a <see cref="WaveData"/> instance created from a WAV stream.
+        /// Creates a <see cref="WaveDataReader"/> instance created from a WAV stream.
         /// </summary>
         /// <param name="waveStream">The WAV stream. The data in the stream must include all headers that would be present in a WAV file.</param>
         /// <returns>The WaveData instance created from a WAV stream.</returns>
         /// <remarks>
-        /// This method is similar to the <see cref="WaveData.WaveData(Stream)"/> constructor,
+        /// This method is similar to the <see cref="WaveDataReader.WaveDataReader(Stream)"/> constructor,
         /// however this method will first search the stream for a format chunk in order to set
         /// up the WaveData object with proper format info.
         /// </remarks>
-        public static WaveData FromStream(Stream waveStream)
+        public static WaveDataReader FromStream(Stream waveStream)
         {
             RiffChunk riffChunk;
             WaveFormatChunk waveFormat = null;
-            WaveData waveData = null;
+            WaveDataReader waveData = null;
 
             while (waveData == null)
             {
@@ -453,7 +453,7 @@ namespace TVA.Media
                         waveFormat = new WaveFormatChunk(riffChunk, waveStream);
                         break;
                     case WaveDataChunk.RiffTypeID:
-                        waveData = new WaveData(waveFormat, waveStream);
+                        waveData = new WaveDataReader(waveFormat, waveStream);
                         break;
                     default:
                         // Skip unnecessary sections

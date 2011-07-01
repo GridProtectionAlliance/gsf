@@ -210,7 +210,7 @@
     <Compile Include="Media\Sound\DTMF.cs" />
     <Compile Include="Media\Sound\NamespaceDoc.cs" />
     <Compile Include="Media\Sound\TouchTone.cs" />
-    <Compile Include="Media\WaveData.cs" />
+    <Compile Include="Media\WaveDataReader.cs" />
     <Compile Include="Media\WaveDataChunk.cs" />
     <Compile Include="Media\WaveFile.cs" />
     <Compile Include="Media\WaveFormatChunk.cs" />
