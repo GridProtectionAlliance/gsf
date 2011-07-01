@@ -410,7 +410,7 @@ namespace TVA.Media
         #region [ Static ]
 
         // Static Fields
-        private static readonly WaveFormatChunk DEFAULT_WAVE_FORMAT_CHUNK = new WaveFormatChunk(16, 16, 2, (ushort)WaveFormat.Unknown);
+        private static readonly WaveFormatChunk DEFAULT_WAVE_FORMAT_CHUNK = new WaveFormatChunk(44100, 16, 2, 0x1);
 
         // Static Methods
 
