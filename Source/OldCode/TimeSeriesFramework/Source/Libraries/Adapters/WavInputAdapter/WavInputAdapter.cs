@@ -53,7 +53,6 @@ namespace WavInputAdapter
         private TimeSpan m_audioLength;
         private PrecisionTimer m_timer;
         private long m_startTime;
-
         private bool m_disposed;
 
         #endregion
@@ -130,10 +129,11 @@ namespace WavInputAdapter
         protected override void AttemptConnection()
         {
             PrecisionTimer.SetMinimumTimerResolution(1);
-            WaveFile fileInfo = WaveFile.Load(WavFileName, false);
 
             m_data = WaveDataReader.FromFile(WavFileName);
             m_dataIndex = 0;
+
+            WaveFile fileInfo = WaveFile.Load(WavFileName, false);
             m_channels = fileInfo.Channels;
             m_sampleRate = fileInfo.SampleRate;
             m_numSamples = fileInfo.DataChunk.ChunkSize / fileInfo.BlockAlignment;
@@ -145,8 +145,8 @@ namespace WavInputAdapter
             m_timer = new PrecisionTimer();
             m_timer.Period = 1;
             m_timer.Tick += Timer_Tick;
-
             m_timer.Start();
+
             m_startTime = PrecisionTimer.UtcNow.Ticks;
         }
 
@@ -161,13 +161,13 @@ namespace WavInputAdapter
                 m_timer.Stop();
                 m_timer.Dispose();
             }
+            m_timer = null;
 
             if (m_data != null)
             {
                 m_data.Close();
+                m_data.Dispose();
             }
-
-            m_timer = null;
             m_data = null;
 
             PrecisionTimer.ClearMinimumTimerResolution(1);
@@ -183,11 +183,19 @@ namespace WavInputAdapter
             {
                 try
                 {
-                    // This will be done regardless of whether the object is finalized or disposed.
-
                     if (disposing)
                     {
-                        // This will be done only when the object is disposed by calling Dispose().
+                        if (m_timer != null)
+                        {
+                            m_timer.Tick -= Timer_Tick;
+                            m_timer.Dispose();
+                        }
+                        m_timer = null;
+
+                        if (m_data != null)
+                            m_data.Dispose();
+
+                        m_data = null;
                     }
                 }
                 finally
@@ -205,7 +213,7 @@ namespace WavInputAdapter
         /// <returns>A short one-line summary of the current status of this <see cref="AdapterBase"/>.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            TimeSpan time = new TimeSpan(Ticks.FromSeconds(m_dataIndex / (double)m_sampleRate));
+            TimeSpan time = Ticks.FromSeconds(m_dataIndex / (double)m_sampleRate);
             return string.Format("Streaming {0} at time {1} / {2} - {3:0.00%}.", Path.GetFileName(WavFileName), time.ToString("m:ss"), m_audioLength.ToString("m:ss"), time.TotalSeconds / m_audioLength.TotalSeconds);
         }
 
