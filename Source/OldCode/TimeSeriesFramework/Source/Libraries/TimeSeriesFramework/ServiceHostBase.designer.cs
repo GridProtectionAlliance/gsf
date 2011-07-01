@@ -107,7 +107,7 @@ namespace TimeSeriesFramework
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.m_serviceHelper = new TVA.Services.ServiceProcess.ServiceHelper(this.components);
+            this.m_serviceHelper = new TVA.ServiceProcess.ServiceHelper(this.components);
             this.m_remotingServer = new TVA.Communication.TcpServer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper.ErrorLogger)).BeginInit();
@@ -168,7 +168,7 @@ namespace TimeSeriesFramework
 
         #endregion
 
-        private TVA.Services.ServiceProcess.ServiceHelper m_serviceHelper;
+        private TVA.ServiceProcess.ServiceHelper m_serviceHelper;
         private TVA.Communication.TcpServer m_remotingServer;
     }
 }

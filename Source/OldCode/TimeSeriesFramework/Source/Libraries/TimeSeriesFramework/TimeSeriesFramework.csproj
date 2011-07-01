@@ -89,8 +89,8 @@
     <Reference Include="TVA.Core">
       <HintPath>..\..\Dependencies\TVA\TVA.Core.dll</HintPath>
     </Reference>
-    <Reference Include="TVA.Services">
-      <HintPath>..\..\Dependencies\TVA\TVA.Services.dll</HintPath>
+    <Reference Include="TVA.ServiceProcess">
+      <HintPath>..\..\Dependencies\TVA\TVA.ServiceProcess.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

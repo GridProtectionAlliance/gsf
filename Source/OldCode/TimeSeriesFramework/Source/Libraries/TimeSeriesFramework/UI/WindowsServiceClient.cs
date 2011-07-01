@@ -26,7 +26,7 @@ using System.Collections.Generic;
 using TVA;
 using TVA.Communication;
 using TVA.Security.Cryptography;
-using TVA.Services.ServiceProcess;
+using TVA.ServiceProcess;
 
 namespace TimeSeriesFramework.UI
 {

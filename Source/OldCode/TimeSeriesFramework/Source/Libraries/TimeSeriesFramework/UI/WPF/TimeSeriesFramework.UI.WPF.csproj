@@ -105,9 +105,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\Dependencies\TVA\TVA.Security.dll</HintPath>
     </Reference>
-    <Reference Include="TVA.Services, Version=4.0.2.28, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Dependencies\TVA\TVA.Services.dll</HintPath>
+    <Reference Include="TVA.ServiceProcess">
+      <HintPath>..\..\..\..\Dependencies\TVA\TVA.ServiceProcess.dll</HintPath>
     </Reference>
     <Reference Include="TVA.Windows">
       <HintPath>..\..\..\..\Dependencies\TVA\TVA.Windows.dll</HintPath>

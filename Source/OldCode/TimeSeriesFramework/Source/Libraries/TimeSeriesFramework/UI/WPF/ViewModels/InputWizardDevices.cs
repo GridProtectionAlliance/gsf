@@ -40,7 +40,7 @@ using TimeSeriesFramework.UI.Modal;
 using TVA;
 using TVA.Data;
 using TVA.PhasorProtocols;
-using TVA.Services.ServiceProcess;
+using TVA.ServiceProcess;
 
 namespace TimeSeriesFramework.UI.ViewModels
 {

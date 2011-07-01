@@ -27,7 +27,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 using TVA;
-using TVA.Services.ServiceProcess;
+using TVA.ServiceProcess;
 
 namespace TimeSeriesFramework.UI.UserControls
 {
