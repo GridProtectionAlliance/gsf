@@ -1,0 +1,105 @@
+﻿<UserControl x:Class="TimeSeriesFramework.UI.UserControls.DeviceMeasurementsUserControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:converter="clr-namespace:TimeSeriesFramework.UI.Converters;assembly=TimeseriesFramework.UI"
+             mc:Ignorable="d">
+    
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/TimeSeriesFramework.UI.WPF;Component/Resources/CommonResource.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid x:Name="LayoutRoot">
+        <StackPanel Orientation="Vertical">
+            <StackPanel.Resources>
+                <HierarchicalDataTemplate x:Key="SecondChildNodeTemplate">
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel.Resources>
+                            <converter:StringToColorConverter x:Key="stringToColorConverter" />
+                        </StackPanel.Resources>
+                        <Border>
+                            <TextBlock Text="{Binding Path=Description}" TextWrapping="Wrap" ToolTipService.ToolTip="{Binding Path=SignalID}" Width="{StaticResource XXLargeItemSize}" TextAlignment="Left" Padding="1"/>
+                        </Border>
+                        <Border>
+                            <TextBlock Text="{Binding Path=PointID}" ToolTipService.ToolTip="Measurement Point ID" Width="{StaticResource XSmallItemSize}" TextAlignment="Center" Padding="1"/>
+                        </Border>
+                        <Border>
+                            <TextBlock Text="{Binding Path=PointTag}" ToolTipService.ToolTip="{Binding Path=Description}" Width="{StaticResource LargerItemSize}" TextAlignment="Left" Padding="1"/>
+                        </Border>
+                        <Border>
+                            <TextBlock Text="{Binding Path=SignalAcronym}" ToolTipService.ToolTip="{Binding Path=SignalName}" Width="{StaticResource XSmallItemSize}" TextAlignment="Left" Padding="1"/>
+                        </Border>
+                        <Border>
+                            <TextBlock Text="{Binding Path=CurrentTimeTag}" FontWeight="Bold" ToolTipService.ToolTip="Measurement Current Time Tag" Width="{StaticResource LargerItemSize}" TextAlignment="Center" Padding="1"/>
+                        </Border>
+                        <Border>
+                            <TextBlock Text="{Binding Path=CurrentValue}" FontWeight="Bold" Width="{StaticResource SmallItemSize}" Foreground="{Binding CurrentQuality, Converter={StaticResource stringToColorConverter}}" ToolTipService.ToolTip="{Binding Path=CurrentQuality}" TextAlignment="Center" Padding="1"/>
+                        </Border>
+                        <Border>
+                            <TextBlock Text="{Binding Path=EngineeringUnits}" Width="{StaticResource XSmallItemSize}" TextAlignment="Left" Padding="1"/>
+                        </Border>
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+                <HierarchicalDataTemplate x:Key="FirstChildNodeTemplate" ItemTemplate="{StaticResource SecondChildNodeTemplate}" ItemsSource="{Binding Path=MeasurementList, Mode=TwoWay}">
+                    <StackPanel Orientation="Horizontal">
+                        <Border>
+                            <TextBlock Text="{Binding Path=Acronym}" ToolTipService.ToolTip="Device Acronym" Width="{StaticResource LargeItemSize}" TextAlignment="Left" FontWeight="Bold" Padding="1"/>
+                        </Border>
+                        <Border>
+                            <TextBlock Text="{Binding Path=Name}" ToolTipService.ToolTip="Device Name" Width="{StaticResource XLargeItemSize}" TextAlignment="Left" FontWeight="Bold" Padding="1"/>
+                        </Border>
+                        <Border>
+                            <TextBlock Text="{Binding Path=ProtocolName}" ToolTipService.ToolTip="Device Protocol" Width="{StaticResource LargeItemSize}" TextAlignment="Left" FontWeight="Bold" Padding="1"/>
+                        </Border>
+                        <Border>
+                            <TextBlock Text="{Binding Path=VendorDeviceName}" ToolTipService.ToolTip="Device Vendor Name" Width="{StaticResource SmallItemSize}" TextAlignment="Center" FontWeight="Bold" Padding="1"/>
+                        </Border>
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+                <HierarchicalDataTemplate x:Key="RootNodeTemplate" ItemTemplate="{StaticResource FirstChildNodeTemplate}" ItemsSource="{Binding Path=DeviceList, Mode=TwoWay}" >
+                    <StackPanel Orientation="Vertical">
+                        <!--<TextBlock Text="{Binding Path=AdapterType}" FontSize="{StaticResource LargerTextSize}" VerticalAlignment="Center" HorizontalAlignment="Left" FontWeight="Bold" Margin="5"/>-->
+                        <Border>
+                            <StackPanel Orientation="Horizontal" Margin="2">
+                                <TextBlock Text="" Width="{StaticResource BlankItemSize}" TextAlignment="Center" FontSize="{StaticResource LargeTextSize}" FontWeight="Bold"/>
+                                <Border>
+                                    <TextBlock Text="{Binding Path=Acronym}" ToolTipService.ToolTip="Concentrator Acronym" Width="{StaticResource LargeItemSize}" FontSize="{StaticResource LargeTextSize}" FontWeight="Bold" Padding="1"/>
+                                </Border>
+                                <Border>
+                                    <TextBlock Text="{Binding Path=Name}" ToolTipService.ToolTip="Concentrator Name" Width="{StaticResource XXLargeItemSize}" FontSize="{StaticResource LargeTextSize}" FontWeight="Bold" Padding="1"/>
+                                </Border>
+                                <Border>
+                                    <TextBlock Text="{Binding Path=CompanyName}" ToolTipService.ToolTip="Concentrator Company Name" Width="{StaticResource XXXLargeItemSize}" FontSize="{StaticResource LargeTextSize}" FontWeight="Bold" Padding="1"/>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+                <Style x:Key="ExpandedItemStyle" TargetType="TreeViewItem">
+                    <Setter Property="IsExpanded" Value="{Binding Path=IsExpanded, Mode=TwoWay}" />
+                </Style>
+            </StackPanel.Resources>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Real-Time Measurements" Grid.Column="0"  Foreground="#FFFFFFFF" HorizontalAlignment="Center" FontSize="{StaticResource LargerTextSize}" Padding="5" />
+                <TextBlock x:Name="TextBlockRefreshInterval" Text="Refresh Interval: 10 sec" Grid.Column="1"  Foreground="#FFFFFFFF" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="{StaticResource SmallTextSize}"/>
+                <TextBlock x:Name="TextBlockLastRefresh" Grid.Column="2" Foreground="#FFFFFFFF" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="{StaticResource SmallTextSize}" />
+            </Grid>
+
+            <!--<ScrollViewer BorderThickness="0" Padding="0">
+                    <ScrollViewer.Content>-->
+            <TreeView x:Name="TreeViewDeviceMeasurements" ItemsSource="{Binding Path=DeviceMeasurementDataList, Mode=TwoWay}" ItemContainerStyle="{StaticResource ExpandedItemStyle}" ItemTemplate="{StaticResource RootNodeTemplate}" Height="772" Background="Transparent"/>
+            <!--</ScrollViewer.Content>
+                </ScrollViewer>-->
+        </StackPanel>
+    </Grid>
+</UserControl>

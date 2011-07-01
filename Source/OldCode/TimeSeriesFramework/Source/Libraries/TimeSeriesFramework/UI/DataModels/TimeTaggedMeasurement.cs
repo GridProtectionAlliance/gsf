@@ -96,6 +96,9 @@ namespace TimeSeriesFramework.UI.DataModels
         #endregion        
     }
 
+    /// <summary>
+    /// Represents a statistic measurement data object.
+    /// </summary>
     public class StatisticMeasurementData
     {
         public string SourceType { get; set; }
@@ -103,6 +106,9 @@ namespace TimeSeriesFramework.UI.DataModels
         public ObservableCollection<StreamInfo> SourceStreamInfoList { get; set; }
     }
 
+    /// <summary>
+    /// Represents a stream info object.
+    /// </summary>
     public class StreamInfo
     {
         public int ID { get; set; }
@@ -114,6 +120,9 @@ namespace TimeSeriesFramework.UI.DataModels
         public ObservableCollection<DetailStatisticInfo> StatisticList { get; set; }
     }
 
+    /// <summary>
+    /// Class to hold device statistic info.
+    /// </summary>
     public class DeviceStatistic
     {
         public int ID { get; set; }
@@ -123,6 +132,9 @@ namespace TimeSeriesFramework.UI.DataModels
         public ObservableCollection<DetailStatisticInfo> StatisticList { get; set; }
     }
 
+    /// <summary>
+    /// Class to hold detail statistic info.
+    /// </summary>
     public class DetailStatisticInfo
     {
         public int DeviceID { get; set; }
@@ -133,11 +145,14 @@ namespace TimeSeriesFramework.UI.DataModels
         public BasicStatisticInfo Statistics { get; set; }
     }
 
-
+    /// <summary>
+    /// Class to bind statistic measurement data to view.
+    /// </summary>
     public class StatisticMeasurementDataForBinding
     {
         public ObservableCollection<StatisticMeasurementData> StatisticMeasurementDataList { get; set; }
         public bool IsExpanded { get; set; }
     }
     
+
 }

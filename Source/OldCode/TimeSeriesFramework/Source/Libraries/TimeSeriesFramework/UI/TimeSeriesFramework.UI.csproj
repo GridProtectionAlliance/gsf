@@ -120,6 +120,7 @@
     <Compile Include="DataModels\CalculatedMeasurement.cs" />
     <Compile Include="DataModels\Company.cs" />
     <Compile Include="DataModels\Device.cs" />
+    <Compile Include="DataModels\DeviceMeasurementData.cs" />
     <Compile Include="DataModels\ErrorLog.cs" />
     <Compile Include="DataModels\Historian.cs" />
     <Compile Include="DataModels\IaonTree.cs" />

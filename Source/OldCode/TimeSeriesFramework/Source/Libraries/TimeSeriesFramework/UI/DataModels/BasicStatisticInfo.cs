@@ -197,6 +197,9 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets the load order for the current <see cref="BasicStatisticInfo"/>.
+        /// </summary>
         public int LoadOrder
         {
             get
@@ -218,6 +221,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Loads <see cref="BasicStatisticInfo"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
         /// <param name="database">Connection to database</param>
+        /// <param name="nodeID">Current node ID</param>
         /// <returns>Collection of <see cref="BasicStatisticInfo"/></returns>
         public static Dictionary<int, BasicStatisticInfo> Load(AdoDataConnection database, Guid nodeID)
         {

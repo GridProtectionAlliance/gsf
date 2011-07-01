@@ -8,6 +8,7 @@
       <MenuDataItem Icon="" MenuText="Input Wizard" Description="Input Device Configuration Wizard" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.InputWizardUserControl" />
       <MenuDataItem Icon="" MenuText="" Description="" Roles="*" UserControlAssembly="" UserControlPath=""/>
       <MenuDataItem Icon="" MenuText="Real-Time Statistics" Description="Real-Time Statistics" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.RealTimeStatisticsUserControl"/>
+      <MenuDataItem Icon="" MenuText="Real-Time Measurements" Description="Real-Time Measurements" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.DeviceMeasurementsUserControl"/>
     </SubMenuItems>
   </MenuDataItem>
   <MenuDataItem Icon="" MenuText="Monitoring" Description="" Roles="*" UserControlAssembly="" UserControlPath="">

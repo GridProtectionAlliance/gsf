@@ -35,7 +35,9 @@ namespace TimeSeriesFramework.UI.UserControls
         AdoDataConnection database; 
 
         #endregion
-
+        /// <summary>
+        /// Creates a <see cref="RealTimeStatisticsUserControl"/>.
+        /// </summary>
         public RealTimeStatisticsUserControl()
         {
             InitializeComponent();

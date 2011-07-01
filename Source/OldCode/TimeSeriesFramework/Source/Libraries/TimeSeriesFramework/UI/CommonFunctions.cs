@@ -569,6 +569,12 @@ namespace TimeSeriesFramework.UI
             return parityList;
         }
 
+        /// <summary>
+        /// Retrieves a dictionary of <see cref=" TimeTaggedMeasurement"/> objects
+        /// </summary>
+        /// <param name="statisticDataUrl">URL that points to the service</param>
+        /// <param name="nodeID">Current node ID</param>
+        /// <returns>Dictionary of <see cref="TimeTaggedMeasurement"/> objects</returns>
         public static Dictionary<int, TimeTaggedMeasurement> GetStatisticMeasurements(string statisticDataUrl, string nodeID)
         {
             Dictionary<int, TimeTaggedMeasurement> statisticMeasurementList = new Dictionary<int, TimeTaggedMeasurement>();
@@ -617,6 +623,12 @@ namespace TimeSeriesFramework.UI
             return statisticMeasurementList;
         }
 
+        /// <summary>
+        /// Converts xml element to datatype
+        /// </summary>
+        /// <param name="xmlValue"></param>
+        /// <param name="xmlDataType"></param>
+        /// <returns></returns>
         static object ConvertValueToType(string xmlValue, string xmlDataType)
         {
             Type dataType = Type.GetType(xmlDataType);
@@ -636,6 +648,12 @@ namespace TimeSeriesFramework.UI
             return "".ConvertToType<object>(dataType);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <param name="nodeID"></param>
+        /// <returns></returns>
         public static KeyValuePair<int?, int?> GetMinMaxPointIDs(AdoDataConnection connection, Guid nodeID)
         {
             KeyValuePair<int?, int?> minMaxPointIDs = new KeyValuePair<int?, int?>(1, 5000);
@@ -661,6 +679,12 @@ namespace TimeSeriesFramework.UI
             return minMaxPointIDs;
         }
 
+        /// <summary>
+        /// Stores exception in the database
+        /// </summary>
+        /// <param name="connection"><see cref="AdoDataConnection"/> object to connect to database</param>
+        /// <param name="source">Source of exception</param>
+        /// <param name="ex">Exception to be logged</param>
         public static void LogException(AdoDataConnection connection, string source, Exception ex)
         {
             bool createdConnection = false;
@@ -681,6 +705,12 @@ namespace TimeSeriesFramework.UI
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <param name="nodeID"></param>
+        /// <returns></returns>
         public static ObservableCollection<StatisticMeasurementData> GetStatisticMeasurementData(AdoDataConnection connection, Guid nodeID)
         {
             bool createdConnection = false;
@@ -841,6 +871,9 @@ namespace TimeSeriesFramework.UI
                     connection.Dispose();
             }
         }
+
+        
+        
         #endregion
 
     }
