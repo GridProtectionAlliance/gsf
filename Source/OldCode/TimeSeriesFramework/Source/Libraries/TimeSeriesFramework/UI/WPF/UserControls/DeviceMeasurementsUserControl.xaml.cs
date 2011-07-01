@@ -215,9 +215,9 @@ namespace TimeSeriesFramework.UI.UserControls
                             {
                                 foreach (IMeasurement measurement in e.Argument)
                                 {
-                                    if (measurement.SignalID.ToString().ToUpper() == measurementInfo.SignalID.ToUpper())
+                                    if (measurement.ID.ToString().ToUpper() == measurementInfo.SignalID.ToUpper())
                                     {
-                                        measurementInfo.CurrentQuality = measurement.ValueQualityIsGood ? "GOOD" : "BAD";
+                                        measurementInfo.CurrentQuality = measurement.ValueQualityIsGood() ? "GOOD" : "BAD";
                                         measurementInfo.CurrentTimeTag = measurement.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff");
                                         measurementInfo.CurrentValue = measurement.Value.ToString("0.###");
                                     }
