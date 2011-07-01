@@ -56,6 +56,16 @@ namespace TimeSeriesFramework.Adapters
         public event EventHandler<EventArgs<string>> StatusMessage;
 
         /// <summary>
+        /// Event is raised when <see cref="InputMeasurementKeys"/> are updated.
+        /// </summary>
+        public event EventHandler InputMeasurementKeysUpdated;
+
+        /// <summary>
+        /// Event is raised when <see cref="OutputMeasurements"/> are updated.
+        /// </summary>
+        public event EventHandler OutputMeasurementsUpdated;
+
+        /// <summary>
         /// Provides new measurements from action adapter.
         /// </summary>
         /// <remarks>
@@ -245,21 +255,6 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
-        /// Gets or sets output measurements that the action adapter will produce, if any.
-        /// </summary>
-        public virtual IMeasurement[] OutputMeasurements
-        {
-            get
-            {
-                return m_outputMeasurements;
-            }
-            set
-            {
-                m_outputMeasurements = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets primary keys of input measurements the action adapter expects.
         /// </summary>
         public virtual MeasurementKey[] InputMeasurementKeys
@@ -287,6 +282,24 @@ namespace TimeSeriesFramework.Adapters
                     m_inputMeasurementKeysHash = null;
                     ExpectedMeasurements = 0;
                 }
+
+                OnInputMeasurementKeysUpdated();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets output measurements that the action adapter will produce, if any.
+        /// </summary>
+        public virtual IMeasurement[] OutputMeasurements
+        {
+            get
+            {
+                return m_outputMeasurements;
+            }
+            set
+            {
+                m_outputMeasurements = value;
+                OnOutputMeasurementsUpdated();
             }
         }
 
@@ -839,6 +852,24 @@ namespace TimeSeriesFramework.Adapters
         {
             if (StatusMessage != null)
                 StatusMessage(this, new EventArgs<string>(string.Format(formattedStatus, args)));
+        }
+
+        /// <summary>
+        /// Raises <see cref="InputMeasurementKeysUpdated"/> event.
+        /// </summary>
+        protected virtual void OnInputMeasurementKeysUpdated()
+        {
+            if (InputMeasurementKeysUpdated != null)
+                InputMeasurementKeysUpdated(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Raises <see cref="OutputMeasurementsUpdated"/> event.
+        /// </summary>
+        protected virtual void OnOutputMeasurementsUpdated()
+        {
+            if (OutputMeasurementsUpdated != null)
+                OutputMeasurementsUpdated(this, EventArgs.Empty);
         }
 
         private void GenHashCode()

@@ -466,6 +466,8 @@ namespace TimeSeriesFramework
             m_allAdapters = new AllAdaptersCollection();
             m_allAdapters.StatusMessage += StatusMessageHandler;
             m_allAdapters.ProcessException += ProcessExceptionHandler;
+            m_allAdapters.InputMeasurementKeysUpdated += AdapterMeasurementsUpdated;
+            m_allAdapters.OutputMeasurementsUpdated += AdapterMeasurementsUpdated;
             m_allAdapters.Disposed += DisposedHandler;
 
             // Create input adapters collection
@@ -595,6 +597,8 @@ namespace TimeSeriesFramework
             {
                 m_allAdapters.StatusMessage -= StatusMessageHandler;
                 m_allAdapters.ProcessException -= ProcessExceptionHandler;
+                m_allAdapters.InputMeasurementKeysUpdated -= AdapterMeasurementsUpdated;
+                m_allAdapters.OutputMeasurementsUpdated -= AdapterMeasurementsUpdated;
                 m_allAdapters.Disposed -= DisposedHandler;
                 m_allAdapters.Dispose();
             }
@@ -624,7 +628,7 @@ namespace TimeSeriesFramework
                 m_allAdapters.Start();
 
                 // Spawn routing table calculation
-                m_routingTables.CalculateRoutingTables();
+                RecalculateRoutingTables();
 
                 DisplayStatusMessage("System initialization complete.", UpdateType.Information);
 
@@ -924,6 +928,15 @@ namespace TimeSeriesFramework
             }
         }
 
+        /// <summary>
+        /// Recalculates routing tables as long as all adapters have been initialized.
+        /// </summary>
+        protected virtual void RecalculateRoutingTables()
+        {
+            if (m_useMeasurementRouting && m_routingTables != null && m_allAdapters != null && m_allAdapters.Initialized)
+                m_routingTables.CalculateRoutingTables();
+        }
+
         #endregion
 
         #region [ Primary Adapter Event Handlers ]
@@ -1016,6 +1029,17 @@ namespace TimeSeriesFramework
 
             m_serviceHelper.ErrorLogger.Log(ex, false);
             DisplayStatusMessage("[{0}] {1}", UpdateType.Alarm, GetDerivedName(sender), ex.Message);
+        }
+
+        /// <summary>
+        /// Handler for updates to adapter input or output measurement definitions.
+        /// </summary>
+        /// <param name="sender">Sending object.</param>
+        /// <param name="e">Event arguments, if any.</param>
+        protected virtual void AdapterMeasurementsUpdated(object sender, EventArgs e)
+        {
+            // When adapter measurement keys are dynamically updated, routing tables need to be updated
+            RecalculateRoutingTables();
         }
 
         /// <summary>
@@ -1729,9 +1753,8 @@ namespace TimeSeriesFramework
                                 SendResponse(requestInfo, false, "Requested collection was unavailable.");
                         }
 
-
                         // Spawn routing table calculation updates
-                        m_routingTables.CalculateRoutingTables();
+                        RecalculateRoutingTables();
                     }
                     else
                         SendResponse(requestInfo, false, "Failed to load system configuration.");
@@ -1767,7 +1790,7 @@ namespace TimeSeriesFramework
             else
             {
                 // Spawn routing table calculation updates
-                m_routingTables.CalculateRoutingTables();
+                RecalculateRoutingTables();
                 SendResponse(requestInfo, true, "Spawned request to refresh routing tables.");
             }
         }

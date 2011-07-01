@@ -60,6 +60,16 @@ namespace TimeSeriesFramework.Adapters
         event EventHandler<EventArgs<Exception>> ProcessException;
 
         /// <summary>
+        /// Event is raised when <see cref="InputMeasurementKeys"/> are updated.
+        /// </summary>
+        event EventHandler InputMeasurementKeysUpdated;
+
+        /// <summary>
+        /// Event is raised when <see cref="OutputMeasurements"/> are updated.
+        /// </summary>
+        event EventHandler OutputMeasurementsUpdated;
+
+        /// <summary>
         /// Event is raised when <see cref="IAdapter"/> is disposed.
         /// </summary>
         /// <remarks>
@@ -154,18 +164,18 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
-        /// Gets or sets output measurements that the adapter will produce, if any.
+        /// Gets or sets primary keys of input measurements the adapter expects.
         /// </summary>
-        IMeasurement[] OutputMeasurements
+        MeasurementKey[] InputMeasurementKeys
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Gets or sets primary keys of input measurements the adapter expects.
+        /// Gets or sets output measurements that the adapter will produce, if any.
         /// </summary>
-        MeasurementKey[] InputMeasurementKeys
+        IMeasurement[] OutputMeasurements
         {
             get;
             set;

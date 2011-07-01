@@ -44,6 +44,8 @@ namespace TimeSeriesFramework.Adapters
         private List<IActionAdapter> m_actionBroadcastRoutes;
         private List<IOutputAdapter> m_outputBroadcastRoutes;
         private ReaderWriterLockSlim m_adapterRoutesCacheLock;
+        private AutoResetEvent m_calculationComplete;
+        private object m_queuedCalculationPending;
         private bool m_disposed;
 
         #endregion
@@ -56,6 +58,8 @@ namespace TimeSeriesFramework.Adapters
         public RoutingTables()
         {
             m_adapterRoutesCacheLock = new ReaderWriterLockSlim();
+            m_calculationComplete = new AutoResetEvent(true);
+            m_queuedCalculationPending = new object();
         }
 
         /// <summary>
@@ -152,6 +156,11 @@ namespace TimeSeriesFramework.Adapters
                             m_adapterRoutesCacheLock.Dispose();
 
                         m_adapterRoutesCacheLock = null;
+
+                        if (m_calculationComplete != null)
+                            m_calculationComplete.Dispose();
+
+                        m_calculationComplete = null;
                     }
                 }
                 finally
@@ -166,93 +175,123 @@ namespace TimeSeriesFramework.Adapters
         /// </summary>
         public virtual void CalculateRoutingTables()
         {
-            ThreadPool.QueueUserWorkItem(CalculateRoutingTables);
+            ThreadPool.QueueUserWorkItem(QueueRoutingTableCalculation);
+        }
+
+        private void QueueRoutingTableCalculation(object state)
+        {
+            // Queue up a routing table calculation unless another thread has already requested one
+            if (Monitor.TryEnter(m_queuedCalculationPending))
+            {
+                try
+                {
+                    // Queue new routing table calculation after waiting for any prior calculation to complete
+                    if (m_calculationComplete.WaitOne())
+                        ThreadPool.QueueUserWorkItem(CalculateRoutingTables);
+                }
+                finally
+                {
+                    Monitor.Exit(m_queuedCalculationPending);
+                }
+            }
         }
 
         private void CalculateRoutingTables(object state)
         {
-            // Pre-calculate internal routes to improve performance
-            Dictionary<MeasurementKey, List<IActionAdapter>> actionRoutes = new Dictionary<MeasurementKey, List<IActionAdapter>>();
-            Dictionary<MeasurementKey, List<IOutputAdapter>> outputRoutes = new Dictionary<MeasurementKey, List<IOutputAdapter>>();
-            List<IActionAdapter> actionAdapters, actionBroadcastRoutes = new List<IActionAdapter>();
-            List<IOutputAdapter> outputAdapters, outputBroadcastRoutes = new List<IOutputAdapter>();
-            MeasurementKey[] measurementKeys;
-
-            if (m_actionAdapters != null)
-            {
-                foreach (IActionAdapter actionAdapter in m_actionAdapters)
-                {
-                    // Make sure adapter is initialized before calculating route
-                    if (actionAdapter.WaitForInitialize(actionAdapter.InitializationTimeout))
-                    {
-                        measurementKeys = actionAdapter.InputMeasurementKeys;
-
-                        if (measurementKeys != null)
-                        {
-                            foreach (MeasurementKey key in actionAdapter.InputMeasurementKeys)
-                            {
-                                if (!actionRoutes.TryGetValue(key, out actionAdapters))
-                                {
-                                    actionAdapters = new List<IActionAdapter>();
-                                    actionRoutes.Add(key, actionAdapters);
-                                }
-
-                                if (!actionAdapters.Contains(actionAdapter))
-                                    actionAdapters.Add(actionAdapter);
-                            }
-                        }
-                        else
-                            actionBroadcastRoutes.Add(actionAdapter);
-                    }
-                    else
-                        actionBroadcastRoutes.Add(actionAdapter);
-                }
-            }
-
-            if (m_outputAdapters != null)
-            {
-                foreach (IOutputAdapter outputAdapter in m_outputAdapters)
-                {
-                    // Make sure adapter is initialized before calculating route
-                    if (outputAdapter.WaitForInitialize(outputAdapter.InitializationTimeout))
-                    {
-                        measurementKeys = outputAdapter.InputMeasurementKeys;
-
-                        if (measurementKeys != null)
-                        {
-                            foreach (MeasurementKey key in outputAdapter.InputMeasurementKeys)
-                            {
-                                if (!outputRoutes.TryGetValue(key, out outputAdapters))
-                                {
-                                    outputAdapters = new List<IOutputAdapter>();
-                                    outputRoutes.Add(key, outputAdapters);
-                                }
-
-                                if (!outputAdapters.Contains(outputAdapter))
-                                    outputAdapters.Add(outputAdapter);
-                            }
-                        }
-                        else
-                            outputBroadcastRoutes.Add(outputAdapter);
-                    }
-                    else
-                        outputBroadcastRoutes.Add(outputAdapter);
-
-                }
-            }
-
-            // Synchronously update adapter routing cache
-            m_adapterRoutesCacheLock.EnterWriteLock();
             try
             {
-                m_actionRoutes = actionRoutes;
-                m_outputRoutes = outputRoutes;
-                m_actionBroadcastRoutes = actionBroadcastRoutes;
-                m_outputBroadcastRoutes = outputBroadcastRoutes;
+                // Pre-calculate internal routes to improve performance
+                Dictionary<MeasurementKey, List<IActionAdapter>> actionRoutes = new Dictionary<MeasurementKey, List<IActionAdapter>>();
+                Dictionary<MeasurementKey, List<IOutputAdapter>> outputRoutes = new Dictionary<MeasurementKey, List<IOutputAdapter>>();
+                List<IActionAdapter> actionAdapters, actionBroadcastRoutes = new List<IActionAdapter>();
+                List<IOutputAdapter> outputAdapters, outputBroadcastRoutes = new List<IOutputAdapter>();
+                MeasurementKey[] measurementKeys;
+
+                if (m_actionAdapters != null)
+                {
+                    lock (m_actionAdapters)
+                    {
+                        foreach (IActionAdapter actionAdapter in m_actionAdapters)
+                        {
+                            // Make sure adapter is initialized before calculating route
+                            if (actionAdapter.WaitForInitialize(actionAdapter.InitializationTimeout))
+                            {
+                                measurementKeys = actionAdapter.InputMeasurementKeys;
+
+                                if (measurementKeys != null)
+                                {
+                                    foreach (MeasurementKey key in actionAdapter.InputMeasurementKeys)
+                                    {
+                                        if (!actionRoutes.TryGetValue(key, out actionAdapters))
+                                        {
+                                            actionAdapters = new List<IActionAdapter>();
+                                            actionRoutes.Add(key, actionAdapters);
+                                        }
+
+                                        if (!actionAdapters.Contains(actionAdapter))
+                                            actionAdapters.Add(actionAdapter);
+                                    }
+                                }
+                                else
+                                    actionBroadcastRoutes.Add(actionAdapter);
+                            }
+                            else
+                                actionBroadcastRoutes.Add(actionAdapter);
+                        }
+                    }
+                }
+
+                if (m_outputAdapters != null)
+                {
+                    lock (m_outputAdapters)
+                    {
+                        foreach (IOutputAdapter outputAdapter in m_outputAdapters)
+                        {
+                            // Make sure adapter is initialized before calculating route
+                            if (outputAdapter.WaitForInitialize(outputAdapter.InitializationTimeout))
+                            {
+                                measurementKeys = outputAdapter.InputMeasurementKeys;
+
+                                if (measurementKeys != null)
+                                {
+                                    foreach (MeasurementKey key in outputAdapter.InputMeasurementKeys)
+                                    {
+                                        if (!outputRoutes.TryGetValue(key, out outputAdapters))
+                                        {
+                                            outputAdapters = new List<IOutputAdapter>();
+                                            outputRoutes.Add(key, outputAdapters);
+                                        }
+
+                                        if (!outputAdapters.Contains(outputAdapter))
+                                            outputAdapters.Add(outputAdapter);
+                                    }
+                                }
+                                else
+                                    outputBroadcastRoutes.Add(outputAdapter);
+                            }
+                            else
+                                outputBroadcastRoutes.Add(outputAdapter);
+                        }
+                    }
+                }
+
+                // Synchronously update adapter routing cache
+                m_adapterRoutesCacheLock.EnterWriteLock();
+                try
+                {
+                    m_actionRoutes = actionRoutes;
+                    m_outputRoutes = outputRoutes;
+                    m_actionBroadcastRoutes = actionBroadcastRoutes;
+                    m_outputBroadcastRoutes = outputBroadcastRoutes;
+                }
+                finally
+                {
+                    m_adapterRoutesCacheLock.ExitWriteLock();
+                }
             }
             finally
             {
-                m_adapterRoutesCacheLock.ExitWriteLock();
+                m_calculationComplete.Set();
             }
         }
 

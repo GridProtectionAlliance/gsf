@@ -68,6 +68,16 @@ namespace TimeSeriesFramework.Adapters
         public event EventHandler<EventArgs<Exception>> ProcessException;
 
         /// <summary>
+        /// Event is raised when <see cref="InputMeasurementKeys"/> are updated.
+        /// </summary>
+        public event EventHandler InputMeasurementKeysUpdated;
+
+        /// <summary>
+        /// Event is raised when <see cref="OutputMeasurements"/> are updated.
+        /// </summary>
+        public event EventHandler OutputMeasurementsUpdated;
+
+        /// <summary>
         /// Event is raised when <see cref="AdapterBase"/> is disposed.
         /// </summary>
         /// <remarks>
@@ -293,28 +303,6 @@ namespace TimeSeriesFramework.Adapters
             }
         }
 
-        // TODO: SignalID and measurement key I/O definition should be as transparent as possible - assigning one will
-        // load the other (and visa-versa). Define a "InputSignalIDs" and "OutputSignalIDs" property that will auto-
-        // assign the "InputMeasurementKeys" and "OutputMeasurements" based on an associated default "MeasurementDefinitionTable"
-
-        // Also, the static parsers should take an optional parameter for the default MeasurementDefinitionTable as well
-        // and allow lookup of the 
-
-        /// <summary>
-        /// Gets or sets output measurements that the <see cref="AdapterBase"/> will produce, if any.
-        /// </summary>
-        public virtual IMeasurement[] OutputMeasurements
-        {
-            get
-            {
-                return m_outputMeasurements;
-            }
-            set
-            {
-                m_outputMeasurements = value;
-            }
-        }
-
         /// <summary>
         /// Gets or sets primary keys of input measurements the <see cref="AdapterBase"/> expects, if any.
         /// </summary>
@@ -336,6 +324,24 @@ namespace TimeSeriesFramework.Adapters
                 }
                 else
                     m_inputMeasurementKeysHash = null;
+
+                OnInputMeasurementKeysUpdated();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets output measurements that the <see cref="AdapterBase"/> will produce, if any.
+        /// </summary>
+        public virtual IMeasurement[] OutputMeasurements
+        {
+            get
+            {
+                return m_outputMeasurements;
+            }
+            set
+            {
+                m_outputMeasurements = value;
+                OnOutputMeasurementsUpdated();
             }
         }
 
@@ -782,6 +788,24 @@ namespace TimeSeriesFramework.Adapters
         {
             if (ProcessException != null)
                 ProcessException(this, new EventArgs<Exception>(ex));
+        }
+
+        /// <summary>
+        /// Raises <see cref="InputMeasurementKeysUpdated"/> event.
+        /// </summary>
+        protected virtual void OnInputMeasurementKeysUpdated()
+        {
+            if (InputMeasurementKeysUpdated != null)
+                InputMeasurementKeysUpdated(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Raises <see cref="OutputMeasurementsUpdated"/> event.
+        /// </summary>
+        protected virtual void OnOutputMeasurementsUpdated()
+        {
+            if (OutputMeasurementsUpdated != null)
+                OutputMeasurementsUpdated(this, EventArgs.Empty);
         }
 
         /// <summary>

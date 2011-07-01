@@ -64,6 +64,16 @@ namespace TimeSeriesFramework.Adapters
         public event EventHandler<EventArgs<Exception>> ProcessException;
 
         /// <summary>
+        /// Event is raised when <see cref="InputMeasurementKeys"/> are updated.
+        /// </summary>
+        public event EventHandler InputMeasurementKeysUpdated;
+
+        /// <summary>
+        /// Event is raised when <see cref="OutputMeasurements"/> are updated.
+        /// </summary>
+        public event EventHandler OutputMeasurementsUpdated;
+
+        /// <summary>
         /// Event is raised when this <see cref="AdapterCollectionBase{T}"/> is disposed or an <see cref="IAdapter"/> in the collection is disposed.
         /// </summary>
         public event EventHandler Disposed;
@@ -295,32 +305,50 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
-        /// Gets or sets output measurements that the <see cref="AdapterCollectionBase{T}"/> will produce, if any.
-        /// </summary>
-        public virtual IMeasurement[] OutputMeasurements
-        {
-            get
-            {
-                return m_outputMeasurements;
-            }
-            set
-            {
-                m_outputMeasurements = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets primary keys of input measurements the <see cref="AdapterCollectionBase{T}"/> expects, if any.
         /// </summary>
         public virtual MeasurementKey[] InputMeasurementKeys
         {
             get
             {
-                return m_inputMeasurementKeys;
+                // If a specific set of input measurement keys has been assigned, use that set
+                if (m_inputMeasurementKeys != null)
+                    return m_inputMeasurementKeys;
+
+                // Otherwise return cumulative results of all child adapters
+                lock (this)
+                {
+                    return this.SelectMany<IAdapter, MeasurementKey>(item => item.InputMeasurementKeys).Distinct().ToArray();
+                }
             }
             set
             {
                 m_inputMeasurementKeys = value;
+                OnInputMeasurementKeysUpdated();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets output measurements that the <see cref="AdapterCollectionBase{T}"/> will produce, if any.
+        /// </summary>
+        public virtual IMeasurement[] OutputMeasurements
+        {
+            get
+            {
+                // If a specific set of output measurements has been assigned, use that set
+                if (m_outputMeasurements != null)
+                    return m_outputMeasurements;
+
+                // Otherwise return cumulative results of all child adapters
+                lock (this)
+                {
+                    return this.SelectMany<IAdapter, IMeasurement>(item => item.OutputMeasurements).Distinct().ToArray();
+                }
+            }
+            set
+            {
+                m_outputMeasurements = value;
+                OnOutputMeasurementsUpdated();
             }
         }
 
@@ -956,6 +984,24 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
+        /// Raises <see cref="InputMeasurementKeysUpdated"/> event.
+        /// </summary>
+        protected virtual void OnInputMeasurementKeysUpdated()
+        {
+            if (InputMeasurementKeysUpdated != null)
+                InputMeasurementKeysUpdated(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Raises <see cref="OutputMeasurementsUpdated"/> event.
+        /// </summary>
+        protected virtual void OnOutputMeasurementsUpdated()
+        {
+            if (OutputMeasurementsUpdated != null)
+                OutputMeasurementsUpdated(this, EventArgs.Empty);
+        }
+
+        /// <summary>
         /// Removes all elements from the <see cref="Collection{T}"/>.
         /// </summary>
         protected override void ClearItems()
@@ -1034,6 +1080,8 @@ namespace TimeSeriesFramework.Adapters
                 // Wire up events
                 item.StatusMessage += StatusMessage;
                 item.ProcessException += ProcessException;
+                item.InputMeasurementKeysUpdated += InputMeasurementKeysUpdated;
+                item.OutputMeasurementsUpdated += OutputMeasurementsUpdated;
                 item.Disposed += Disposed;
 
                 // Associate parent collection
@@ -1080,6 +1128,8 @@ namespace TimeSeriesFramework.Adapters
                 // Un-wire events
                 item.StatusMessage -= StatusMessage;
                 item.ProcessException -= ProcessException;
+                item.InputMeasurementKeysUpdated -= InputMeasurementKeysUpdated;
+                item.OutputMeasurementsUpdated -= OutputMeasurementsUpdated;
 
                 // Make sure initialization handles are cleared in case any failed
                 // initializations are still pending
