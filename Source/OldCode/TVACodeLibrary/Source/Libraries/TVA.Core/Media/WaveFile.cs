@@ -905,6 +905,7 @@ namespace TVA.Media
             {
                 if (m_listInfo != null)
                     return m_listInfo.InfoStrings;
+
                 return new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
             }
         }
@@ -916,7 +917,7 @@ namespace TVA.Media
         {
             get
             {
-                return new TimeSpan(Ticks.FromSeconds((m_waveData.ChunkSize / m_waveFormat.BlockAlignment) / (double)m_waveFormat.SampleRate));
+                return Ticks.FromSeconds((m_waveData.ChunkSize / m_waveFormat.BlockAlignment) / (double)m_waveFormat.SampleRate);
             }
         }
 
