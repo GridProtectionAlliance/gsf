@@ -26,24 +26,22 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.ComponentModel;
-using TimeSeriesFramework.Adapters;
-using TVA.Media;
-using TVA;
-using TimeSeriesFramework;
 using System.IO;
+using System.Linq;
+using TimeSeriesFramework;
+using TimeSeriesFramework.Adapters;
+using TVA;
+using TVA.Media;
 
 namespace WavInputAdapter
 {
     /// <summary>
     /// Represents an input adapter that reads measurements from a WAV file.
     /// </summary>
-    [Description("WAV: reads measurements from a WAV file.")]
+    [Description("WAV: Reads measurements from a WAV file.")]
     public class WavInputAdapter : InputAdapterBase
     {
-
         #region [ Members ]
 
         // Fields
@@ -52,7 +50,7 @@ namespace WavInputAdapter
         private int m_channels;
         private int m_sampleRate;
         private int m_numSamples;
-
+        private TimeSpan m_audioLength;
         private PrecisionTimer m_timer;
         private long m_startTime;
 
@@ -65,9 +63,12 @@ namespace WavInputAdapter
         /// <summary>
         /// Gets or sets the name of the file from which to read measurements.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("The name of the file from which to read measurements.")]
-        public string WavFileName { get; set; }
+        [ConnectionStringParameter, Description("The name of the file from which to read measurements.")]
+        public string WavFileName
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the output measurements.
@@ -97,7 +98,10 @@ namespace WavInputAdapter
         /// </remarks>
         protected override bool UseAsyncConnect
         {
-            get { return false; }
+            get
+            {
+                return false;
+            }
         }
 
         #endregion
@@ -133,6 +137,7 @@ namespace WavInputAdapter
             m_channels = fileInfo.Channels;
             m_sampleRate = fileInfo.SampleRate;
             m_numSamples = fileInfo.DataChunk.ChunkSize / fileInfo.BlockAlignment;
+            m_audioLength = fileInfo.AudioLength;
 
             //if (file.Channels != OutputMeasurements.Length)
             //    throw new ArgumentException(string.Format("The number of channels in the WAV file must match the number of output measurements. Channels: {0}, Measurements: {1}", file.Channels, OutputMeasurements.Length));
@@ -200,11 +205,8 @@ namespace WavInputAdapter
         /// <returns>A short one-line summary of the current status of this <see cref="AdapterBase"/>.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            DateTime time = DateTime.Today;
-            DateTime length = DateTime.Today;
-            time = time.AddSeconds(m_dataIndex / (double)m_sampleRate);
-            length = length.AddSeconds(m_numSamples / (double)m_sampleRate);
-            return string.Format("Streaming {0} at time {1} / {2}.", Path.GetFileName(WavFileName), time.ToString("m:ss"), length.ToString("m:ss"));
+            TimeSpan time = new TimeSpan(0, 0, (int)(m_dataIndex / (double)m_sampleRate));
+            return string.Format("Streaming {0} at time {1} / {2} - {3:0.00%}.", Path.GetFileName(WavFileName), time.ToString("m:ss"), m_audioLength.ToString("m:ss"), time.TotalSeconds / m_audioLength.TotalSeconds);
         }
 
         // Generates new measurements since the last time this was called.
@@ -244,7 +246,7 @@ namespace WavInputAdapter
                 for (int i = 0; i < m_channels; i++)
                 {
                     channelMeasurement = Measurement.Clone(OutputMeasurements[i]);
-                    channelMeasurement.Value = sample[i].ConvertToType(TypeCode.Double).ToDouble();
+                    channelMeasurement.Value = sample[i].ConvertToType(TypeCode.Double);
                     channelMeasurement.Timestamp = timestamp;
                     measurements.Add(channelMeasurement);
                 }
