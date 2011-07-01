@@ -205,7 +205,7 @@ namespace WavInputAdapter
         /// <returns>A short one-line summary of the current status of this <see cref="AdapterBase"/>.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            TimeSpan time = new TimeSpan(0, 0, (int)(m_dataIndex / (double)m_sampleRate));
+            TimeSpan time = new TimeSpan(Ticks.FromSeconds(m_dataIndex / (double)m_sampleRate));
             return string.Format("Streaming {0} at time {1} / {2} - {3:0.00%}.", Path.GetFileName(WavFileName), time.ToString("m:ss"), m_audioLength.ToString("m:ss"), time.TotalSeconds / m_audioLength.TotalSeconds);
         }
 
