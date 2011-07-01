@@ -130,14 +130,14 @@ namespace WavInputAdapter
         {
             PrecisionTimer.SetMinimumTimerResolution(1);
 
-            m_data = WaveDataReader.FromFile(WavFileName);
-            m_dataIndex = 0;
-
             WaveFile fileInfo = WaveFile.Load(WavFileName, false);
             m_channels = fileInfo.Channels;
             m_sampleRate = fileInfo.SampleRate;
             m_numSamples = fileInfo.DataChunk.ChunkSize / fileInfo.BlockAlignment;
             m_audioLength = fileInfo.AudioLength;
+
+            m_data = WaveDataReader.FromFile(WavFileName);
+            m_dataIndex = 0;
 
             //if (file.Channels != OutputMeasurements.Length)
             //    throw new ArgumentException(string.Format("The number of channels in the WAV file must match the number of output measurements. Channels: {0}, Measurements: {1}", file.Channels, OutputMeasurements.Length));
@@ -157,8 +157,8 @@ namespace WavInputAdapter
         {
             if (m_timer != null)
             {
-                m_timer.Tick -= Timer_Tick;
                 m_timer.Stop();
+                m_timer.Tick -= Timer_Tick;
                 m_timer.Dispose();
             }
             m_timer = null;
@@ -187,14 +187,17 @@ namespace WavInputAdapter
                     {
                         if (m_timer != null)
                         {
+                            m_timer.Stop();
                             m_timer.Tick -= Timer_Tick;
                             m_timer.Dispose();
                         }
                         m_timer = null;
 
                         if (m_data != null)
+                        {
+                            m_data.Close();
                             m_data.Dispose();
-
+                        }
                         m_data = null;
                     }
                 }
@@ -230,7 +233,6 @@ namespace WavInputAdapter
             // Declare the variables use in this method.
             List<IMeasurement> measurements = new List<IMeasurement>();
             LittleBinaryValue[] sample;
-            IMeasurement channelMeasurement;
 
             // Keep generating measurements until
             // we catch up to the current time.
@@ -243,8 +245,11 @@ namespace WavInputAdapter
                 if (sample == null)
                 {
                     m_data.Close();
+                    m_data.Dispose();
+
                     m_data = WaveDataReader.FromFile(WavFileName);
                     m_dataIndex = 0;
+
                     m_startTime = timestamp;
                     sample = m_data.GetNextSample();
                 }
@@ -253,10 +258,7 @@ namespace WavInputAdapter
                 // and add them to the measurements list.
                 for (int i = 0; i < m_channels; i++)
                 {
-                    channelMeasurement = Measurement.Clone(OutputMeasurements[i]);
-                    channelMeasurement.Value = sample[i].ConvertToType(TypeCode.Double);
-                    channelMeasurement.Timestamp = timestamp;
-                    measurements.Add(channelMeasurement);
+                    measurements.Add(Measurement.Clone(OutputMeasurements[i], sample[i].ConvertToType(TypeCode.Double), timestamp));
                 }
 
                 // Update the data index and recalculate
