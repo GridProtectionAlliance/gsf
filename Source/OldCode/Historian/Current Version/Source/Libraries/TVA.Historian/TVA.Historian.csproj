@@ -96,8 +96,8 @@
       <HintPath Condition=" '$(SignAssembly)' != 'true' ">..\..\Dependencies\TVA\TVA.Core.dll</HintPath>
       <HintPath Condition=" '$(SignAssembly)' == 'true' ">..\..\Dependencies\TVA\Signed\TVA.Core.dll</HintPath>
     </Reference>
-    <Reference Include="TVA.Services">
-      <HintPath>..\..\Dependencies\TVA\TVA.Services.dll</HintPath>
+    <Reference Include="TVA.ServiceModel">
+      <HintPath>..\..\Dependencies\TVA\TVA.ServiceModel.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
@@ -129,13 +129,9 @@
     </Compile>
     <Compile Include="Files\ArchiveFileAllocationTable.cs" />
     <Compile Include="Files\ArchiveFileStatistics.cs" />
-    <Compile Include="Files\IntercomFile.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="Files\IntercomFile.cs" />
     <Compile Include="Files\IntercomRecord.cs" />
-    <Compile Include="Files\MetadataFile.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="Files\MetadataFile.cs" />
     <Compile Include="Files\MetadataRecord.cs" />
     <Compile Include="Files\MetadataRecordAlarmFlags.cs" />
     <Compile Include="Files\MetadataRecordAnalogFields.cs" />
@@ -146,9 +142,7 @@
     <Compile Include="Files\MetadataRecordSecurityFlags.cs" />
     <Compile Include="Files\MetadataRecordSummary.cs" />
     <Compile Include="Files\NamespaceDoc.cs" />
-    <Compile Include="Files\StateFile.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="Files\StateFile.cs" />
     <Compile Include="Files\StateRecord.cs" />
     <Compile Include="Files\StateRecordDataPoint.cs" />
     <Compile Include="Files\StateRecordSummary.cs" />

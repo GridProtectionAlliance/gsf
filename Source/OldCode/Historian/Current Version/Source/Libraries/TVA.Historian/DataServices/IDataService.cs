@@ -25,7 +25,7 @@
 //
 //******************************************************************************************************
 
-using TVA.Services.ServiceModel;
+using TVA.ServiceModel;
 
 namespace TVA.Historian.DataServices
 {

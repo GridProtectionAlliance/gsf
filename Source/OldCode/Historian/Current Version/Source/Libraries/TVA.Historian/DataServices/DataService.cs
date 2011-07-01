@@ -39,7 +39,7 @@
 using System;
 using System.ServiceModel.Description;
 using TVA.Configuration;
-using TVA.Services.ServiceModel;
+using TVA.ServiceModel;
 
 namespace TVA.Historian.DataServices
 {
