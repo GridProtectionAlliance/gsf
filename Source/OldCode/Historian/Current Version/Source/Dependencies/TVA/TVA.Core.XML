@@ -13386,80 +13386,6 @@
             FTP resume not supported exception.
             </summary>
         </member>
-        <member name="T:TVA.Media.WaveData">
-            <summary>
-            Represents wave data coming from a stream.
-            </summary>
-            <remarks>
-            This class is meant to be used when loading the entirety
-            of a wave file into memory is not a viable option. With
-            it, samples can be read directly from the data stream in
-            the order that they appear.
-            </remarks>
-        </member>
-        <member name="M:TVA.Media.WaveData.#ctor(TVA.Media.WaveFormatChunk,System.IO.Stream)">
-            <summary>
-            Creates a new instance of the <see cref="T:TVA.Media.WaveData"/> class.
-            </summary>
-            <param name="waveFormat">The format of the wave stream.</param>
-            <param name="waveStream">The stream containing wave data.</param>
-        </member>
-        <member name="M:TVA.Media.WaveData.#ctor(System.IO.Stream)">
-            <summary>
-            Creates a new instance of the <see cref="T:TVA.Media.WaveData"/> class.
-            </summary>
-            <param name="waveStream">The stream containing wave data.</param>
-        </member>
-        <member name="M:TVA.Media.WaveData.GetNextSample">
-            <summary>
-            Reads and returns the next sample from the stream.
-            </summary>
-            <returns>
-            The next sample from the stream. The sample is returned as
-            an array of <see cref="T:TVA.LittleBinaryValue"/>s. Each
-            LittleBinaryValue represents a different channel.
-            A return value of null indicates the end of stream has been reached.
-            </returns>
-        </member>
-        <member name="M:TVA.Media.WaveData.Close">
-            <summary>
-            Closes the underlying stream.
-            </summary>
-        </member>
-        <member name="M:TVA.Media.WaveData.Dispose">
-            <summary>
-            Disposes of the underlying stream.
-            </summary>
-        </member>
-        <member name="M:TVA.Media.WaveData.FromFile(System.String)">
-            <summary>
-            Creates a <see cref="T:TVA.Media.WaveData"/> instance created from a WAV file.
-            </summary>
-            <param name="fileName">The name of the WAV file.</param>
-            <returns>The WaveData instance created from a WAV file.</returns>
-        </member>
-        <member name="M:TVA.Media.WaveData.FromStream(System.IO.Stream)">
-            <summary>
-            Creates a <see cref="T:TVA.Media.WaveData"/> instance created from a WAV stream.
-            </summary>
-            <param name="waveStream">The WAV stream. The data in the stream must include all headers that would be present in a WAV file.</param>
-            <returns>The WaveData instance created from a WAV stream.</returns>
-            <remarks>
-            This method is similar to the <see cref="M:TVA.Media.WaveData.#ctor(System.IO.Stream)"/> constructor,
-            however this method will first search the stream for a format chunk in order to set
-            up the WaveData object with proper format info.
-            </remarks>
-        </member>
-        <member name="P:TVA.Media.WaveData.Format">
-            <summary>
-            Gets the format of the wave data.
-            </summary>
-        </member>
-        <member name="P:TVA.Media.WaveData.WaveStream">
-            <summary>
-            Gets the underlying stream providing wave data.
-            </summary>
-        </member>
         <member name="T:TVA.IO.IsamDataFileBase`1">
             <summary>
             An abstract class that defines the read/write capabilities for ISAM (Indexed Sequential Access Method) file.
@@ -25805,6 +25731,80 @@
             <summary>
             Contains classes and extension functions used to simplify and standardize usage of basic cryptography using a combination 
             of standard and proprietary encryption algorithms to produce decent obfuscations of strings, buffers and streams of data.
+            </summary>
+        </member>
+        <member name="T:TVA.Media.WaveDataReader">
+            <summary>
+            Represents wave data coming from a stream.
+            </summary>
+            <remarks>
+            This class is meant to be used when loading the entirety
+            of a wave file into memory is not a viable option. With
+            it, samples can be read directly from the data stream in
+            the order that they appear.
+            </remarks>
+        </member>
+        <member name="M:TVA.Media.WaveDataReader.#ctor(TVA.Media.WaveFormatChunk,System.IO.Stream)">
+            <summary>
+            Creates a new instance of the <see cref="T:TVA.Media.WaveDataReader"/> class.
+            </summary>
+            <param name="waveFormat">The format of the wave stream.</param>
+            <param name="waveStream">The stream containing wave data.</param>
+        </member>
+        <member name="M:TVA.Media.WaveDataReader.#ctor(System.IO.Stream)">
+            <summary>
+            Creates a new instance of the <see cref="T:TVA.Media.WaveDataReader"/> class.
+            </summary>
+            <param name="waveStream">The stream containing wave data.</param>
+        </member>
+        <member name="M:TVA.Media.WaveDataReader.GetNextSample">
+            <summary>
+            Reads and returns the next sample from the stream.
+            </summary>
+            <returns>
+            The next sample from the stream. The sample is returned as
+            an array of <see cref="T:TVA.LittleBinaryValue"/>s. Each
+            LittleBinaryValue represents a different channel.
+            A return value of null indicates the end of stream has been reached.
+            </returns>
+        </member>
+        <member name="M:TVA.Media.WaveDataReader.Close">
+            <summary>
+            Closes the underlying stream.
+            </summary>
+        </member>
+        <member name="M:TVA.Media.WaveDataReader.Dispose">
+            <summary>
+            Disposes of the underlying stream.
+            </summary>
+        </member>
+        <member name="M:TVA.Media.WaveDataReader.FromFile(System.String)">
+            <summary>
+            Creates a <see cref="T:TVA.Media.WaveDataReader"/> instance created from a WAV file.
+            </summary>
+            <param name="fileName">The name of the WAV file.</param>
+            <returns>The WaveData instance created from a WAV file.</returns>
+        </member>
+        <member name="M:TVA.Media.WaveDataReader.FromStream(System.IO.Stream)">
+            <summary>
+            Creates a <see cref="T:TVA.Media.WaveDataReader"/> instance created from a WAV stream.
+            </summary>
+            <param name="waveStream">The WAV stream. The data in the stream must include all headers that would be present in a WAV file.</param>
+            <returns>The WaveData instance created from a WAV stream.</returns>
+            <remarks>
+            This method is similar to the <see cref="M:TVA.Media.WaveDataReader.#ctor(System.IO.Stream)"/> constructor,
+            however this method will first search the stream for a format chunk in order to set
+            up the WaveData object with proper format info.
+            </remarks>
+        </member>
+        <member name="P:TVA.Media.WaveDataReader.Format">
+            <summary>
+            Gets the format of the wave data.
+            </summary>
+        </member>
+        <member name="P:TVA.Media.WaveDataReader.WaveStream">
+            <summary>
+            Gets the underlying stream providing wave data.
             </summary>
         </member>
         <member name="T:TVA.Media.Music.MeasureSize">
