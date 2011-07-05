@@ -217,7 +217,7 @@ namespace WavInputAdapter
         public override string GetShortStatus(int maxLength)
         {
             TimeSpan time = Ticks.FromSeconds(m_dataIndex / (double)m_sampleRate);
-            return string.Format("Streaming {0} at time {1} / {2} - {3:0.00%}.", Path.GetFileName(WavFileName), time.ToString("m:ss"), m_audioLength.ToString("m:ss"), time.TotalSeconds / m_audioLength.TotalSeconds);
+            return string.Format("Streaming {0} at time {1} / {2} - {3:0.00%}.", Path.GetFileName(WavFileName), time.ToString(@"m\:ss"), m_audioLength.ToString(@"m\:ss"), time.TotalSeconds / m_audioLength.TotalSeconds);
         }
 
         // Generates new measurements since the last time this was called.
