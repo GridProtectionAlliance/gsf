@@ -21,11 +21,13 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.ComponentModel;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
+using System.Reflection;
 using System.Text;
-using MySql.Data.MySqlClient;
 using TimeSeriesFramework;
 using TimeSeriesFramework.Adapters;
 using TVA;
@@ -42,7 +44,7 @@ namespace MySqlAdapters
 
         // Fields
         private string m_mySqlConnectionString;
-        private MySqlConnection m_connection;
+        private DbConnection m_connection;
         private long m_measurementCount;
         private bool m_disposed;
 
@@ -129,7 +131,8 @@ namespace MySqlAdapters
             m_mySqlConnectionString = builder.ToString();
 
             // Create a new MySQL connection object
-            m_connection = new MySqlConnection(m_mySqlConnectionString);
+            m_connection = CreateConnection();
+            m_connection.ConnectionString = m_mySqlConnectionString;
             m_connection.StateChange += m_connection_StateChange;
         }
 
@@ -170,6 +173,7 @@ namespace MySqlAdapters
             {
                 // Create the command string to insert the measurement as a record in the table.
                 StringBuilder commandString = new StringBuilder("INSERT INTO Measurement VALUES ('");
+                IDbCommand command = m_connection.CreateCommand();
 
                 commandString.Append(measurement.ID);
                 commandString.Append("','");
@@ -178,7 +182,7 @@ namespace MySqlAdapters
                 commandString.Append(measurement.AdjustedValue);
                 commandString.Append(')');
 
-                MySqlCommand command = new MySqlCommand(commandString.ToString(), m_connection);
+                command.CommandText = commandString.ToString();
                 command.ExecuteNonQuery();
 
             }
@@ -211,6 +215,39 @@ namespace MySqlAdapters
                     base.Dispose(disposing);    // Call base class Dispose().
                 }
             }
+        }
+
+        private DbConnection CreateConnection()
+        {
+            string[] mySQLConnectorNetVersions = { "6.3.6.0", "6.3.4.0", "6.2.4.0", "6.1.5.0", "6.0.7.0", "5.2.7.0", "5.1.7.0", "5.0.9.0" };
+            string assemblyNameFormat = "MySql.Data, Version={0}, Culture=neutral, PublicKeyToken=c5687fc88969c44d";
+            string assemblyName;
+
+            // Attempt to load latest version of the MySQL connector net to creator the proper data provider string
+            foreach (string connectorNetVersion in mySQLConnectorNetVersions)
+            {
+                try
+                {
+                    Assembly mySqlAssembly;
+                    Type connectionType;
+
+                    // Create an assembly name based on this version of the MySQL Connector/NET
+                    assemblyName = string.Format(assemblyNameFormat, connectorNetVersion);
+
+                    // See if this version of the MySQL Connector/NET can be loaded
+                    mySqlAssembly = Assembly.Load(new AssemblyName(assemblyName));
+
+                    // If assembly load succeeded, create a valid data provider string
+                    connectionType = mySqlAssembly.GetType("MySql.Data.MySqlClient.MySqlConnection");
+                    return (DbConnection)Activator.CreateInstance(connectionType);
+                }
+                catch
+                {
+                    // Nothing to do but try next version
+                }
+            }
+
+            return null;
         }
 
         private void m_connection_StateChange(object sender, System.Data.StateChangeEventArgs e)

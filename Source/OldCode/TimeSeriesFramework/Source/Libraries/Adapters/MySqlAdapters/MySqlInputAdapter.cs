@@ -25,10 +25,11 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Timers;
-using MySql.Data.MySqlClient;
 using TimeSeriesFramework;
 using TimeSeriesFramework.Adapters;
 using TVA;
@@ -46,7 +47,7 @@ namespace MySqlAdapters
 
         // Fields
         private string m_mySqlConnectionString;
-        private MySqlConnection m_connection;
+        private DbConnection m_connection;
         private Timer m_timer;
         private int m_inputInterval;
         private int m_measurementsPerInput;
@@ -193,7 +194,8 @@ namespace MySqlAdapters
             m_mySqlConnectionString = builder.ToString();
 
             // Create a new MySql connection object
-            m_connection = new MySqlConnection(m_mySqlConnectionString);
+            m_connection = CreateConnection();
+            m_connection.ConnectionString = m_mySqlConnectionString;
             m_connection.StateChange += m_connection_StateChange;
 
             // Set up the timer to trigger inputs
@@ -265,20 +267,72 @@ namespace MySqlAdapters
             }
         }
 
+        private DbConnection CreateConnection()
+        {
+            string[] mySQLConnectorNetVersions = { "6.3.6.0", "6.3.4.0", "6.2.4.0", "6.1.5.0", "6.0.7.0", "5.2.7.0", "5.1.7.0", "5.0.9.0" };
+            string assemblyNameFormat = "MySql.Data, Version={0}, Culture=neutral, PublicKeyToken=c5687fc88969c44d";
+            string assemblyName;
+
+            // Attempt to load latest version of the MySQL connector net to creator the proper data provider string
+            foreach (string connectorNetVersion in mySQLConnectorNetVersions)
+            {
+                try
+                {
+                    Assembly mySqlAssembly;
+                    Type connectionType;
+
+                    // Create an assembly name based on this version of the MySQL Connector/NET
+                    assemblyName = string.Format(assemblyNameFormat, connectorNetVersion);
+
+                    // See if this version of the MySQL Connector/NET can be loaded
+                    mySqlAssembly = Assembly.Load(new AssemblyName(assemblyName));
+
+                    // If assembly load succeeded, create a valid data provider string
+                    connectionType = mySqlAssembly.GetType("MySql.Data.MySqlClient.MySqlConnection");
+                    return (DbConnection)Activator.CreateInstance(connectionType);
+                }
+                catch
+                {
+                    // Nothing to do but try next version
+                }
+            }
+
+            return null;
+        }
+
         private void m_timer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            string commandString = "SELECT SignalID,Timestamp,Value FROM Measurement LIMIT " + m_startingMeasurement + "," + m_measurementsPerInput;
-            MySqlCommand command = new MySqlCommand(commandString, m_connection);
-            MySqlDataReader reader = command.ExecuteReader();
             List<IMeasurement> measurements = new List<IMeasurement>();
+            StringBuilder columnString = new StringBuilder();
+
+            int timestampColumn = GetColumnIndex("Timestamp");
+            int idColumn = GetColumnIndex("SignalID");
+            int valueColumn = GetColumnIndex("Value");
+
+            string commandString;
+            IDbCommand command;
+            IDataReader reader;
+
+            foreach (string columnName in s_measurementColumns)
+            {
+                if (columnString.Length > 0)
+                    columnString.Append(',');
+
+                columnString.Append(columnName);
+            }
+
+            commandString = string.Format("SELECT {0} FROM Measurement LIMIT {1},{2}", columnString, m_startingMeasurement, m_measurementsPerInput);
+            command = m_connection.CreateCommand();
+            command.CommandText = commandString;
+            reader = command.ExecuteReader();
 
             while (reader.Read())
             {
-                Ticks timeStamp = m_fakeTimestamps ? new Ticks(DateTime.UtcNow) : new Ticks(reader.GetInt64("Timestamp"));
+                Ticks timeStamp = m_fakeTimestamps ? new Ticks(DateTime.UtcNow) : new Ticks(reader.GetInt64(timestampColumn));
                 measurements.Add(new Measurement()
                 {
-                    ID = reader.GetGuid("SignalID"),
-                    Value = reader.GetDouble("Value"),
+                    ID = reader.GetGuid(idColumn),
+                    Value = reader.GetDouble(valueColumn),
                     Timestamp = timeStamp
                 });
             }
@@ -304,6 +358,9 @@ namespace MySqlAdapters
 
         // Static Fields
 
+        // Collection of column names used in database queries.
+        private static string[] s_measurementColumns = { "SignalID", "Timestamp", "Value" };
+
         // Collection of keys that can be used in a MySQL connection string.
         private static string[] s_validKeys = 
         {
@@ -313,6 +370,20 @@ namespace MySqlAdapters
             "default command timeout", "connection timeout",
             "ignore prepare", "shared memory name"
         };
+
+        // Static Methods
+
+        // Gets the index of the column specified by the column name.
+        private static int GetColumnIndex(string columnName)
+        {
+            for (int i = 0; i < s_measurementColumns.Length; i++)
+            {
+                if (s_measurementColumns[i] == columnName)
+                    return i;
+            }
+
+            return -1;
+        }
 
         #endregion
     }
