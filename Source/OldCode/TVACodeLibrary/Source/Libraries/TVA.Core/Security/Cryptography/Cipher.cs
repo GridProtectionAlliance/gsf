@@ -45,6 +45,8 @@
 //  06/30/2011 - Stephen C. Wills - applying changes from Jian (Ryan) Zuo
 //       Added ManagedEncryption setting to the config file to allow the user to switch to
 //       wrappers over FIPS-compliant algorithms.
+//  07/05/2011 - Stephen C. Wills
+//       Removed config file setting for FIPS compliance. Checks the registry instead.
 //
 //*******************************************************************************************************
 
@@ -289,6 +291,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using Microsoft.Win32;
 using TVA.Collections;
 using TVA.Configuration;
 using TVA.IO;
@@ -649,7 +652,6 @@ namespace TVA.Security.Cryptography
             string localCacheFileName = DefaultCacheFileName;
             double retryDelayInterval = DefaultRetryDelayInterval;
             int maximumRetryAttempts = DefaultMaximumRetryAttempts;
-            s_managedEncryption = DefaultManagedEncryption;
 
             // Load cryptographic settings
             ConfigurationFile config = ConfigurationFile.Current;
@@ -658,12 +660,13 @@ namespace TVA.Security.Cryptography
             settings.Add("CryptoCache", localCacheFileName, "Path and file name of cryptographic key and initialization vector cache.");
             settings.Add("CacheRetryDelayInterval", retryDelayInterval, "Wait interval, in milliseconds, before retrying load of cryptographic key and initialization vector cache.");
             settings.Add("CacheMaximumRetryAttempts", maximumRetryAttempts, "Maximum retry attempts allowed for loading cryptographic key and initialization vector cache.");
-            settings.Add("ManagedEncryption", s_managedEncryption, "Turn this off if the security policy for FIPS-compliant algorithms is enabled in order to use the .NET wrappers for FIPS-compliant encryption algorithms.");
 
             localCacheFileName = FilePath.GetAbsolutePath(settings["CryptoCache"].ValueAs(localCacheFileName));
             retryDelayInterval = settings["CacheRetryDelayInterval"].ValueAs(retryDelayInterval);
             maximumRetryAttempts = settings["CacheMaximumRetryAttempts"].ValueAs(maximumRetryAttempts);
-            s_managedEncryption = settings["ManagedEncryption"].ValueAs(s_managedEncryption);
+
+            // Determine if the user needs to use FIPS-compliant algorithms.
+            s_managedEncryption = Registry.GetValue("HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\FipsAlgorithmPolicy", "Enabled", 0).ToString() == "0";
 
             // Initialize local cryptographic key and initialization vector cache (application may only have read-only access to this cache)
             localKeyIVCache = new KeyIVCache()
