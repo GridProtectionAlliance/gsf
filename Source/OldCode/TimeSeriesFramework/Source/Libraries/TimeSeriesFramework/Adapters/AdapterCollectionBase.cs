@@ -318,6 +318,10 @@ namespace TimeSeriesFramework.Adapters
                 // Otherwise return cumulative results of all child adapters
                 lock (this)
                 {
+                    // If any of the children expects all measurements (i.e., null InputMeasurementKeys) then the parent collection must expect all measurements
+                    if (this.Any<IAdapter>(item => item.InputMeasurementKeys == null))
+                        return null;
+
                     return this.SelectMany<IAdapter, MeasurementKey>(item => item.InputMeasurementKeys).Distinct().ToArray();
                 }
             }
@@ -342,7 +346,7 @@ namespace TimeSeriesFramework.Adapters
                 // Otherwise return cumulative results of all child adapters
                 lock (this)
                 {
-                    return this.SelectMany<IAdapter, IMeasurement>(item => item.OutputMeasurements).Distinct().ToArray();
+                    return this.Where<IAdapter>(item => item.OutputMeasurements != null).SelectMany<IAdapter, IMeasurement>(item => item.OutputMeasurements).Distinct().ToArray();
                 }
             }
             set
