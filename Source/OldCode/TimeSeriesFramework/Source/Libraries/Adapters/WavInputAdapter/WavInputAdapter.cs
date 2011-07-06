@@ -33,6 +33,7 @@ using TimeSeriesFramework;
 using TimeSeriesFramework.Adapters;
 using TVA;
 using TVA.Media;
+using System.Threading;
 
 namespace WavInputAdapter
 {
@@ -44,6 +45,10 @@ namespace WavInputAdapter
     {
         #region [ Members ]
 
+        // Constants
+        private const double DefaultRecoveryDelay = 5.0D;
+        private const long GapThreshold = Ticks.PerSecond;
+
         // Fields
         private WaveDataReader m_data;
         private int m_dataIndex;
@@ -51,7 +56,6 @@ namespace WavInputAdapter
         private int m_sampleRate;
         private int m_numSamples;
         private TimeSpan m_audioLength;
-        private PrecisionTimer m_timer;
         private long m_startTime;
         private bool m_disposed;
 
@@ -64,6 +68,18 @@ namespace WavInputAdapter
         /// </summary>
         [ConnectionStringParameter, Description("The name of the file from which to read measurements.")]
         public string WavFileName
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the amount of time, in seconds, needed to recover from a back log.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("The amount of time, in seconds, needed to recover from a back log."),
+        DefaultValue(DefaultRecoveryDelay)]
+        public double RecoveryDelay
         {
             get;
             set;
@@ -117,6 +133,11 @@ namespace WavInputAdapter
             Dictionary<string, string> settings = Settings;
             string setting;
 
+            if (settings.TryGetValue("recoveryDelay", out setting))
+                RecoveryDelay = double.Parse(setting);
+            else
+                RecoveryDelay = DefaultRecoveryDelay;
+
             if (!settings.TryGetValue("wavFileName", out setting))
                 throw new ArgumentException("wavFileName is missing from settings - Example: wavFileName=Bohemian Rhapsody.wav");
 
@@ -128,9 +149,8 @@ namespace WavInputAdapter
         /// </summary>
         protected override void AttemptConnection()
         {
-            PrecisionTimer.SetMinimumTimerResolution(1);
-
             WaveFile fileInfo = WaveFile.Load(WavFileName, false);
+
             m_channels = fileInfo.Channels;
             m_sampleRate = fileInfo.SampleRate;
             m_numSamples = fileInfo.DataChunk.ChunkSize / fileInfo.BlockAlignment;
@@ -142,12 +162,8 @@ namespace WavInputAdapter
             //if (file.Channels != OutputMeasurements.Length)
             //    throw new ArgumentException(string.Format("The number of channels in the WAV file must match the number of output measurements. Channels: {0}, Measurements: {1}", file.Channels, OutputMeasurements.Length));
 
-            m_timer = new PrecisionTimer();
-            m_timer.Period = 1;
-            m_timer.Tick += Timer_Tick;
-            m_timer.Start();
-
             m_startTime = PrecisionTimer.UtcNow.Ticks;
+            (new Thread(ProcessMeasurements)).Start();
         }
 
         /// <summary>
@@ -155,22 +171,12 @@ namespace WavInputAdapter
         /// </summary>
         protected override void AttemptDisconnection()
         {
-            if (m_timer != null)
-            {
-                m_timer.Stop();
-                m_timer.Tick -= Timer_Tick;
-                m_timer.Dispose();
-            }
-            m_timer = null;
-
             if (m_data != null)
             {
                 m_data.Close();
                 m_data.Dispose();
             }
             m_data = null;
-
-            PrecisionTimer.ClearMinimumTimerResolution(1);
         }
 
         /// <summary>
@@ -185,14 +191,6 @@ namespace WavInputAdapter
                 {
                     if (disposing)
                     {
-                        if (m_timer != null)
-                        {
-                            m_timer.Stop();
-                            m_timer.Tick -= Timer_Tick;
-                            m_timer.Dispose();
-                        }
-                        m_timer = null;
-
                         if (m_data != null)
                         {
                             m_data.Close();
@@ -221,53 +219,71 @@ namespace WavInputAdapter
         }
 
         // Generates new measurements since the last time this was called.
-        private void Timer_Tick(object sender, EventArgs e)
+        private void ProcessMeasurements()
         {
-            // Determine what time it is now.
-            long now = PrecisionTimer.UtcNow.Ticks;
-
-            // Assign a timestamp to the next sample based on its location
-            // in the file relative to the other samples in the file.
-            long timestamp = m_startTime + (m_dataIndex * Ticks.PerSecond / m_sampleRate);
-
-            // Declare the variables use in this method.
-            List<IMeasurement> measurements = new List<IMeasurement>();
-            LittleBinaryValue[] sample;
-
-            // Keep generating measurements until
-            // we catch up to the current time.
-            while (timestamp < now)
+            while (Enabled)
             {
-                sample = m_data.GetNextSample();
-
-                // If the sample is null, we've reached the end of the file.
-                // Close and reopen it, resetting the data index and start time.
-                if (sample == null)
+                try
                 {
-                    m_data.Close();
-                    m_data.Dispose();
+                    // Determine what time it is now.
+                    long now = PrecisionTimer.UtcNow.Ticks;
 
-                    m_data = WaveDataReader.FromFile(WavFileName);
-                    m_dataIndex = 0;
+                    // Assign a timestamp to the next sample based on its location
+                    // in the file relative to the other samples in the file.
+                    long timestamp = m_startTime + (m_dataIndex * Ticks.PerSecond / m_sampleRate);
 
-                    m_startTime = timestamp;
-                    sample = m_data.GetNextSample();
+                    // Declare the variables use in this method.
+                    List<IMeasurement> measurements = new List<IMeasurement>();
+                    LittleBinaryValue[] sample;
+
+                    if (now - timestamp > GapThreshold)
+                    {
+                        m_startTime = now - (m_dataIndex * Ticks.PerSecond / m_sampleRate) + Ticks.FromSeconds(RecoveryDelay);
+                        timestamp = now;
+                        OnStatusMessage("Start time reset.");
+                    }
+
+                    // Keep generating measurements until
+                    // we catch up to the current time.
+                    while (timestamp < now)
+                    {
+                        sample = m_data.GetNextSample();
+
+                        // If the sample is null, we've reached the end of the file.
+                        // Close and reopen it, resetting the data index and start time.
+                        if (sample == null)
+                        {
+                            m_data.Close();
+                            m_data.Dispose();
+
+                            m_data = WaveDataReader.FromFile(WavFileName);
+                            m_dataIndex = 0;
+
+                            m_startTime = timestamp;
+                            sample = m_data.GetNextSample();
+                        }
+
+                        // Create new measurements, one for each channel,
+                        // and add them to the measurements list.
+                        for (int i = 0; i < m_channels; i++)
+                        {
+                            measurements.Add(Measurement.Clone(OutputMeasurements[i], sample[i].ConvertToType(TypeCode.Double), timestamp));
+                        }
+
+                        // Update the data index and recalculate
+                        // the assigned timestamp for the next sample.
+                        m_dataIndex++;
+                        timestamp = m_startTime + (m_dataIndex * Ticks.PerSecond / m_sampleRate);
+                    }
+
+                    OnNewMeasurements(measurements);
+                    Thread.Sleep(1);
                 }
-
-                // Create new measurements, one for each channel,
-                // and add them to the measurements list.
-                for (int i = 0; i < m_channels; i++)
+                catch (Exception ex)
                 {
-                    measurements.Add(Measurement.Clone(OutputMeasurements[i], sample[i].ConvertToType(TypeCode.Double), timestamp));
+                    OnProcessException(ex);
                 }
-
-                // Update the data index and recalculate
-                // the assigned timestamp for the next sample.
-                m_dataIndex++;
-                timestamp = m_startTime + (m_dataIndex * Ticks.PerSecond / m_sampleRate);
             }
-
-            OnNewMeasurements(measurements);
         }
 
         #endregion
