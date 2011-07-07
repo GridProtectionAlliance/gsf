@@ -71,6 +71,7 @@ namespace TimeSeriesFramework.Transport
         private volatile byte[][][] m_keyIVs;
         private volatile int m_cipherIndex;
         private volatile bool m_authenticated;
+        private volatile int m_lastBytesReceived;
         private long m_totalBytesReceived;
         private List<ServerCommand> m_requests;
         private bool m_synchronizedSubscription;
@@ -218,7 +219,6 @@ namespace TimeSeriesFramework.Transport
                     m_dataChannel.ConnectionException -= m_dataChannel_ConnectionException;
                     m_dataChannel.ReceiveDataException -= m_dataChannel_ReceiveDataException;
                     m_dataChannel.ReceiveDataTimeout -= m_dataChannel_ReceiveDataTimeout;
-                    //m_dataChannel.ReceiveDataComplete -= m_dataChannel_ReceiveDataComplete;
                     m_dataChannel.ReceiveDataHandler = null;
 
                     if (m_dataChannel != value)
@@ -234,8 +234,7 @@ namespace TimeSeriesFramework.Transport
                     m_dataChannel.ConnectionException += m_dataChannel_ConnectionException;
                     m_dataChannel.ReceiveDataException += m_dataChannel_ReceiveDataException;
                     m_dataChannel.ReceiveDataTimeout += m_dataChannel_ReceiveDataTimeout;
-                    //m_dataChannel.ReceiveDataComplete += m_dataChannel_ReceiveDataComplete;
-                    m_dataChannel.ReceiveDataHandler = HandleDataChannelReceived;
+                    m_dataChannel.ReceiveDataHandler = HandleReceivedData;
                 }
             }
         }
@@ -260,10 +259,10 @@ namespace TimeSeriesFramework.Transport
                     m_commandChannel.ConnectionTerminated -= m_commandChannel_ConnectionTerminated;
                     m_commandChannel.HandshakeProcessTimeout -= m_commandChannel_HandshakeProcessTimeout;
                     m_commandChannel.HandshakeProcessUnsuccessful -= m_commandChannel_HandshakeProcessUnsuccessful;
-                    m_commandChannel.ReceiveDataComplete -= m_commandChannel_ReceiveDataComplete;
                     m_commandChannel.ReceiveDataException -= m_commandChannel_ReceiveDataException;
                     m_commandChannel.ReceiveDataTimeout -= m_commandChannel_ReceiveDataTimeout;
                     m_commandChannel.SendDataException -= m_commandChannel_SendDataException;
+                    m_commandChannel.ReceiveDataHandler = null;
 
                     if (m_commandChannel != value)
                         m_commandChannel.Dispose();
@@ -281,10 +280,10 @@ namespace TimeSeriesFramework.Transport
                     m_commandChannel.ConnectionTerminated += m_commandChannel_ConnectionTerminated;
                     m_commandChannel.HandshakeProcessTimeout += m_commandChannel_HandshakeProcessTimeout;
                     m_commandChannel.HandshakeProcessUnsuccessful += m_commandChannel_HandshakeProcessUnsuccessful;
-                    m_commandChannel.ReceiveDataComplete += m_commandChannel_ReceiveDataComplete;
                     m_commandChannel.ReceiveDataException += m_commandChannel_ReceiveDataException;
                     m_commandChannel.ReceiveDataTimeout += m_commandChannel_ReceiveDataTimeout;
                     m_commandChannel.SendDataException += m_commandChannel_SendDataException;
+                    m_commandChannel.ReceiveDataHandler = HandleReceivedData;
                 }
             }
         }
@@ -673,6 +672,7 @@ namespace TimeSeriesFramework.Transport
             m_authenticated = false;
             m_keyIVs = null;
             Interlocked.Exchange(ref m_totalBytesReceived, 0L);
+            m_lastBytesReceived = 0;
         }
 
         /// <summary>
@@ -785,6 +785,9 @@ namespace TimeSeriesFramework.Transport
                             DataPacketFlags flags;
                             Ticks timestamp = 0;
                             int count;
+
+                            // Track total data packet bytes received from any channel
+                            Interlocked.Add(ref m_totalBytesReceived, m_lastBytesReceived);
 
                             // Decrypt data packet payload if keys are available
                             if (m_keyIVs != null)
@@ -935,12 +938,15 @@ namespace TimeSeriesFramework.Transport
             ThreadPool.QueueUserWorkItem(SynchronizeMetadata, e.Argument);
         }
 
-        #region [ Command Channel Event Handlers ]
-
-        private void m_commandChannel_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
+        // Handles data reception from either the command or data channel
+        private void HandleReceivedData(byte[] buffer, int offset, int length)
         {
-            ProcessServerResponse(e.Argument1, e.Argument2);
+            m_lastBytesReceived = length;
+            Payload.ProcessReceived(ref buffer, ref offset, ref length, m_dataChannel.Encryption, m_dataChannel.SharedSecret, m_dataChannel.Compression);
+            ProcessServerResponse(buffer, length);
         }
+
+        #region [ Command Channel Event Handlers ]
 
         private void m_commandChannel_ConnectionEstablished(object sender, EventArgs e)
         {
@@ -1019,13 +1025,6 @@ namespace TimeSeriesFramework.Transport
         #endregion
 
         #region [ Data Channel Event Handlers ]
-
-        private void HandleDataChannelReceived(byte[] buffer, int offset, int length)
-        {
-            Interlocked.Add(ref m_totalBytesReceived, length);
-            Payload.ProcessReceived(ref buffer, ref offset, ref length, m_dataChannel.Encryption, m_dataChannel.SharedSecret, m_dataChannel.Compression);
-            ProcessServerResponse(buffer, length);
-        }
 
         private void m_dataChannel_ConnectionException(object sender, EventArgs<Exception> e)
         {
