@@ -4077,7 +4077,7 @@
         </member>
         <member name="P:TimeSeriesFramework.Transport.ClientConnection.KeyIVs">
             <summary>
-            Gets active keys and initialization vectors.
+            Gets active and standby keys and initialization vectors.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.ClientConnection.CipherIndex">
@@ -4172,8 +4172,6 @@
             Successful return message type will be string indicating total number of allowed points.
             Client should wait for UpdateSignalIndexCache and UpdateBaseTime response codes before attempting
             to parse data when using the compact measurement format.
-            Client should wait for UpdateCipherKey response code before attempting to parse data to know if
-            data packets will be encrypted as well as which keys to use if they are.
             </remarks>
         </member>
         <member name="F:TimeSeriesFramework.Transport.ServerCommand.Unsubscribe">
@@ -4181,7 +4179,15 @@
             Unsubscribe command.
             </summary>
             <remarks>
-            Requests that server stop sending streaming data to the client and cancel the current subcription.
+            Requests that server stop sending streaming data to the client and cancel the current subscription.
+            </remarks>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.ServerCommand.RotateCipherKeys">
+            <summary>
+            Rotate cipher keys.
+            </summary>
+            <remarks>
+            Manually requests that server send a new set of cipher keys for data packet encryption.
             </remarks>
         </member>
         <member name="T:TimeSeriesFramework.Transport.ServerResponse">
@@ -4221,7 +4227,7 @@
             Unsolicited response requests that client update its runtime signal index cache with the one that follows.
             </remarks>
         </member>
-        <member name="F:TimeSeriesFramework.Transport.ServerResponse.UpdateBaseTime">
+        <member name="F:TimeSeriesFramework.Transport.ServerResponse.UpdateBaseTimes">
             <summary>
             Update runtime base-timestamp offsets response.
             </summary>
@@ -4229,12 +4235,20 @@
             Unsolicited response requests that client update its runtime base-timestamp offsets with those that follow.
             </remarks>
         </member>
-        <member name="F:TimeSeriesFramework.Transport.ServerResponse.UpdateCipherKey">
+        <member name="F:TimeSeriesFramework.Transport.ServerResponse.UpdateCipherKeys">
             <summary>
             Update runtime cipher keys response.
             </summary>
             <remarks>
-            Unsolicited response requests that client update its runtime data cipher keys with those that follow.
+            Response, solicited or unsolicited, requests that client update its runtime data cipher keys with those that follow.
+            </remarks>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.ServerResponse.StartTime">
+            <summary>
+            Data start time response packet.
+            </summary>
+            <remarks>
+            Unsolicited response provides the start time of data being processed from the first measurement.
             </remarks>
         </member>
         <member name="F:TimeSeriesFramework.Transport.ServerResponse.NoOP">
@@ -4354,6 +4368,13 @@
             </summary>
             <param name="key"><see cref="T:TimeSeriesFramework.MeasurementKey"/> to lookup.</param>
             <returns><see cref="T:System.Guid"/> signal ID if found; otherwise an empty Guid.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.SendStartTime(System.Guid,TVA.Ticks)">
+            <summary>
+            Sends the <see cref="!:StartTime"/> of the first measurement in a connection transmission.
+            </summary>
+            <param name="clientID">ID of client to send response.</param>
+            <param name="startTime">Start time, in <see cref="T:TVA.Ticks"/>, of first measurement transmitted.</param>
         </member>
         <member name="M:TimeSeriesFramework.Transport.DataPublisher.SendClientResponse(System.Guid,TimeSeriesFramework.Transport.ServerResponse,TimeSeriesFramework.Transport.ServerCommand)">
             <summary>
@@ -4541,6 +4562,33 @@
             <param name="length">Length of response message.</param>
             <returns>Decoded response string.</returns>
         </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.OnConnectionEstablished">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Transport.DataSubscriber.ConnectionEstablished"/> event.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.OnConnectionTerminated">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Transport.DataSubscriber.ConnectionTerminated"/> event.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.OnConnectionAuthenticated">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Transport.DataSubscriber.ConnectionAuthenticated"/> event.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.OnMetaDataReceived(System.Data.DataSet)">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Transport.DataSubscriber.MetaDataReceived"/> event.
+            </summary>
+            <param name="metadata">Meta-data <see cref="T:System.Data.DataSet"/> instance to send to client subscription.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.OnStartTime(TVA.Ticks)">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Transport.DataSubscriber.StartTime"/> event.
+            </summary>
+            <param name="startTime">Start time, in <see cref="T:TVA.Ticks"/>, of first measurement transmitted.</param>
+        </member>
         <member name="E:TimeSeriesFramework.Transport.DataSubscriber.ConnectionEstablished">
             <summary>
             Occurs when client connection to the data publication server is established.
@@ -4559,6 +4607,11 @@
         <member name="E:TimeSeriesFramework.Transport.DataSubscriber.MetaDataReceived">
             <summary>
             Occurs when client receives requested meta-data transmitted by data publication server.
+            </summary>
+        </member>
+        <member name="E:TimeSeriesFramework.Transport.DataSubscriber.StartTime">
+            <summary>
+            Occurs when first measurement is transmitted by data publication server.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.DataSubscriber.RequireAuthentication">
@@ -5518,29 +5571,16 @@
             <param name="clientID"><see cref="T:System.Guid"/> based client connection ID.</param>
             <param name="subscriberID"><see cref="T:System.Guid"/> based subscriber ID.</param>
         </member>
+        <member name="M:TimeSeriesFramework.Transport.SynchronizedClientSubscription.Start">
+            <summary>
+            Starts the <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/> or restarts it if it is already running.
+            </summary>
+        </member>
         <member name="M:TimeSeriesFramework.Transport.SynchronizedClientSubscription.Dispose(System.Boolean)">
             <summary>
             Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/> object and optionally releases the managed resources.
             </summary>
             <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Transport.SynchronizedClientSubscription.PublishFrame(TimeSeriesFramework.IFrame,System.Int32)">
-            <summary>
-            Publish <see cref="T:TimeSeriesFramework.IFrame"/> of time-aligned collection of <see cref="T:TimeSeriesFramework.IMeasurement"/> values that arrived within the
-            concentrator's defined <see cref="P:TimeSeriesFramework.ConcentratorBase.LagTime"/>.
-            </summary>
-            <param name="frame"><see cref="T:TimeSeriesFramework.IFrame"/> of measurements with the same timestamp that arrived within <see cref="P:TimeSeriesFramework.ConcentratorBase.LagTime"/> that are ready for processing.</param>
-            <param name="index">Index of <see cref="T:TimeSeriesFramework.IFrame"/> within a second ranging from zero to <c><see cref="P:TimeSeriesFramework.ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Transport.SynchronizedClientSubscription.QueueMeasurementForProcessing(TimeSeriesFramework.IMeasurement)">
-            <summary>
-            Queues a single measurement for processing.
-            </summary>
-            <param name="measurement">Measurement to queue for processing.</param>
-            <remarks>
-            Measurement is filtered against the defined <see cref="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.InputMeasurementKeys"/> so we override method
-            so that dynamic updates to keys will be synchronized with filtering to prevent interference.
-            </remarks>
         </member>
         <member name="M:TimeSeriesFramework.Transport.SynchronizedClientSubscription.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
             <summary>
@@ -5551,6 +5591,14 @@
             Measurements are filtered against the defined <see cref="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.InputMeasurementKeys"/> so we override method
             so that dynamic updates to keys will be synchronized with filtering to prevent interference.
             </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.SynchronizedClientSubscription.PublishFrame(TimeSeriesFramework.IFrame,System.Int32)">
+            <summary>
+            Publish <see cref="T:TimeSeriesFramework.IFrame"/> of time-aligned collection of <see cref="T:TimeSeriesFramework.IMeasurement"/> values that arrived within the
+            concentrator's defined <see cref="P:TimeSeriesFramework.ConcentratorBase.LagTime"/>.
+            </summary>
+            <param name="frame"><see cref="T:TimeSeriesFramework.IFrame"/> of measurements with the same timestamp that arrived within <see cref="P:TimeSeriesFramework.ConcentratorBase.LagTime"/> that are ready for processing.</param>
+            <param name="index">Index of <see cref="T:TimeSeriesFramework.IFrame"/> within a second ranging from zero to <c><see cref="P:TimeSeriesFramework.ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
         </member>
         <member name="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.ClientID">
             <summary>
@@ -5610,22 +5658,17 @@
             Initializes <see cref="T:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription"/>.
             </summary>
         </member>
+        <member name="M:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.Start">
+            <summary>
+            Starts the <see cref="T:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription"/> or restarts it if it is already running.
+            </summary>
+        </member>
         <member name="M:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.GetShortStatus(System.Int32)">
             <summary>
             Gets a short one-line status of this <see cref="T:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription"/>.
             </summary>
             <param name="maxLength">Maximum number of available characters for display.</param>
             <returns>A short one-line summary of the current status of this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.</returns>
-        </member>
-        <member name="M:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.QueueMeasurementForProcessing(TimeSeriesFramework.IMeasurement)">
-            <summary>
-            Queues a single measurement for processing.
-            </summary>
-            <param name="measurement">Measurement to queue for processing.</param>
-            <remarks>
-            Measurement is filtered against the defined <see cref="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.InputMeasurementKeys"/> so we override method
-            so that dyanmic updates to keys will be synchronized with filtering to prevent interference.
-            </remarks>
         </member>
         <member name="M:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
             <summary>
