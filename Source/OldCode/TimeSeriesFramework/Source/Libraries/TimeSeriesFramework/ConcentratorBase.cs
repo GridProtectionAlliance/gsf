@@ -664,8 +664,9 @@ namespace TimeSeriesFramework
                     m_framesPerSecond = value;
                     m_ticksPerFrame = Ticks.PerSecond / (double)m_framesPerSecond;
 
-                    // We calculate the default maximum wait time for frame publication in whole milliseconds per frame plus 2%
-                    m_maximumPublicationTimeout = (int)((m_ticksPerFrame + m_ticksPerFrame * 0.02D) / Ticks.PerMillisecond);
+                    // We calculate the default maximum wait time for frame publication in whole milliseconds per frame plus 10%,
+                    // this comes out to be 40 milliseconds at 30 frames per second and 20 milliseconds at 60 frames per second
+                    m_maximumPublicationTimeout = (int)Math.Round((m_ticksPerFrame + m_ticksPerFrame * 0.2D) / Ticks.PerMillisecond);
 
                     if (m_frameQueue != null)
                         m_frameQueue.FramesPerSecond = m_framesPerSecond;
@@ -2055,7 +2056,7 @@ namespace TimeSeriesFramework
 
                 // Wait for next publication signal, timing out if signal takes too long
                 if (m_publicationWaitHandle != null && !m_publicationWaitHandle.WaitOne(m_maximumPublicationTimeout))
-                    Interlocked.Increment(ref m_waitHandleExpirations);
+                    m_waitHandleExpirations++;
             }
         }
 
