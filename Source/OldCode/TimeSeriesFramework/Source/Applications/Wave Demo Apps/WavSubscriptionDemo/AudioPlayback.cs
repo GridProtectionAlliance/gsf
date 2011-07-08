@@ -475,7 +475,9 @@ namespace NAudioWpfDemo
         // Handles the subscriber's StartTime event.
         private void DataSubscriber_StartTime(object sender, EventArgs<Ticks> e)
         {
-            m_startTime = e.Argument;
+            // We cannot use the time sent by the server because we don't
+            // know whether our clock is synchronized with the server's.
+            m_startTime = PrecisionTimer.UtcNow.Ticks;
         }
 
         // Handles the subscriber's NewMeasurements event.
