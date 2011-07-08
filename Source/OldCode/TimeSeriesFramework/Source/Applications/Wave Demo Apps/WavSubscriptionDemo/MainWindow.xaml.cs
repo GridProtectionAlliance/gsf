@@ -22,9 +22,11 @@
 //******************************************************************************************************
 
 using System;
+using System.Linq;
 using System.Configuration;
 using System.Threading;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using NAudioWpfDemo;
@@ -55,6 +57,44 @@ namespace WavSubscriptionDemo
             m_viewModel.AudioGraph.PlaybackStateChanged += new EventHandler<TVA.EventArgs<PlaybackState, string>>(AudioGraph_PlaybackStateChanged);
         }
 
+        // Gets the header name of the selected visualization.
+        private string GetSelectedVisualizationHeaderName()
+        {
+            MenuItem selectedItem = VisualizationMenu.Items.Cast<MenuItem>()
+                .Where(item => item.Icon is RadioButton)
+                .SingleOrDefault(item => ((RadioButton)item.Icon).IsChecked == true);
+
+            if (selectedItem != null)
+                return selectedItem.Header.ToString();
+
+            return null;
+        }
+
+        // Sets the selected visualization to the option matching the given header name.
+        private void SetSelectedVisualization(string headerName)
+        {
+            MenuItem selectedItem;
+
+            if (headerName == null)
+            {
+                selectedItem = VisualizationMenu.Items.Cast<MenuItem>().First();
+            }
+            else
+            {
+                selectedItem = VisualizationMenu.Items.Cast<MenuItem>()
+                    .Where(item => item.Header != null)
+                    .SingleOrDefault(item => item.Header.ToString() == headerName);
+            }
+
+            if (selectedItem != null)
+            {
+                RadioButton itemIcon = selectedItem.Icon as RadioButton;
+
+                if (itemIcon != null)
+                    itemIcon.IsChecked = true;
+            }
+        }
+
         // Handles the main window's Loaded event. Restores application settings from last run.
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
@@ -62,6 +102,7 @@ namespace WavSubscriptionDemo
             string enableCompression = ConfigurationManager.AppSettings["EnableCompression"];
             string enableEncryption = ConfigurationManager.AppSettings["EnableEncryption"];
             string ipv6Enabled = ConfigurationManager.AppSettings["IPv6Enabled"];
+            string visualization = ConfigurationManager.AppSettings["Visualization"];
 
             if (connectionUri != null)
                 m_viewModel.ConnectionUri = connectionUri;
@@ -74,6 +115,8 @@ namespace WavSubscriptionDemo
 
             if (ipv6Enabled != null)
                 m_viewModel.IPv6Enabled = ipv6Enabled.ParseBoolean();
+
+            SetSelectedVisualization(visualization);
         }
 
         // Handles the main window's Closing event. Stores application settings from this run.
@@ -85,11 +128,13 @@ namespace WavSubscriptionDemo
             config.AppSettings.Settings.Remove("EnableCompression");
             config.AppSettings.Settings.Remove("EnableEncryption");
             config.AppSettings.Settings.Remove("IPv6Enabled");
+            config.AppSettings.Settings.Remove("Visualization");
 
             config.AppSettings.Settings.Add("ConnectionUri", m_viewModel.ConnectionUri);
             config.AppSettings.Settings.Add("EnableCompression", m_viewModel.EnableCompression.ToString());
             config.AppSettings.Settings.Add("EnableEncryption", m_viewModel.EnableEncryption.ToString());
             config.AppSettings.Settings.Add("IPv6Enabled", m_viewModel.IPv6Enabled.ToString());
+            config.AppSettings.Settings.Add("Visualization", GetSelectedVisualizationHeaderName());
             config.Save(ConfigurationSaveMode.Modified);
 
             m_viewModel.Dispose();
@@ -168,9 +213,19 @@ namespace WavSubscriptionDemo
             string localNamespace = this.GetType().Namespace;
             AboutDialog aboutDialog = new AboutDialog();
             aboutDialog.SetCompanyUrl("http://www.openpdc.com/");
-            aboutDialog.SetCompanyLogo(AssemblyInfo.EntryAssembly.GetEmbeddedResource(localNamespace + ".res.HelpAboutLogo.png"));
-            aboutDialog.SetCompanyDisclaimer(AssemblyInfo.EntryAssembly.GetEmbeddedResource(localNamespace + ".res.Disclaimer.txt"));
+            aboutDialog.SetCompanyLogo(AssemblyInfo.EntryAssembly.GetEmbeddedResource(localNamespace + ".Resources.HelpAboutLogo.png"));
+            aboutDialog.SetCompanyDisclaimer(AssemblyInfo.EntryAssembly.GetEmbeddedResource(localNamespace + ".Resources.Disclaimer.txt"));
             aboutDialog.ShowDialog();
+        }
+
+        // Handles the "Tools > Visualization > ..." menu items' Click event.
+        private void VisualizationMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem source = e.Source as MenuItem;
+            RadioButton sourceIcon = (source == null) ? null : source.Icon as RadioButton;
+
+            if (sourceIcon != null)
+                sourceIcon.IsChecked = true;
         }
     }
 }

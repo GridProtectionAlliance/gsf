@@ -114,29 +114,36 @@ namespace NAudioWpfDemo
 
         void RenderTimer_Tick(object sender, EventArgs e)
         {
-            float maxValue, minValue;
-            int pixelWidth;
-
-            while (maxValues.Count * 200 > SampleRate)
+            if (Visibility != System.Windows.Visibility.Visible)
             {
-                pixelWidth = (int)ActualWidth;
+                renderTimer.Stop();
+            }
+            else
+            {
+                float maxValue, minValue;
+                int pixelWidth;
 
-                if (pixelWidth > 0)
+                while (maxValues.Count * 200 > SampleRate)
                 {
-                    maxValues.TryDequeue(out maxValue);
-                    minValues.TryDequeue(out minValue);
-                    CreatePoint(maxValue, minValue);
+                    pixelWidth = (int)ActualWidth;
 
-                    if (renderPosition > ActualWidth)
+                    if (pixelWidth > 0)
                     {
-                        renderPosition = 0;
-                    }
-                    int erasePosition = (renderPosition + blankZone) % pixelWidth;
-                    if (erasePosition < topLine.Points.Count)
-                    {
-                        double yPos = SampleToYPosition(0);
-                        topLine.Points[erasePosition] = new Point(erasePosition, yPos);
-                        bottomLine.Points[erasePosition] = new Point(erasePosition, yPos);
+                        maxValues.TryDequeue(out maxValue);
+                        minValues.TryDequeue(out minValue);
+                        CreatePoint(maxValue, minValue);
+
+                        if (renderPosition > ActualWidth)
+                        {
+                            renderPosition = 0;
+                        }
+                        int erasePosition = (renderPosition + blankZone) % pixelWidth;
+                        if (erasePosition < topLine.Points.Count)
+                        {
+                            double yPos = SampleToYPosition(0);
+                            topLine.Points[erasePosition] = new Point(erasePosition, yPos);
+                            bottomLine.Points[erasePosition] = new Point(erasePosition, yPos);
+                        }
                     }
                 }
             }
@@ -150,12 +157,15 @@ namespace NAudioWpfDemo
 
         public void AddValue(float maxValue, float minValue)
         {
-            maxValues.Enqueue(maxValue);
-            minValues.Enqueue(minValue);
-
-            if (!renderTimer.IsEnabled)
+            if (Visibility == System.Windows.Visibility.Visible)
             {
-                renderTimer.Start();
+                maxValues.Enqueue(maxValue);
+                minValues.Enqueue(minValue);
+
+                if (!renderTimer.IsEnabled)
+                {
+                    renderTimer.Start();
+                }
             }
         }
 

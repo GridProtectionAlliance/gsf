@@ -4,9 +4,37 @@
         xmlns:demo="clr-namespace:WavSubscriptionDemo"
         xmlns:naudio="clr-namespace:NAudioWpfDemo"
         Title="Wave Subscriber" Height="350" Width="600" MinHeight="350" MinWidth="500">
+    
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </Window.Resources>
+    
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_Tools">
+                <MenuItem x:Name="VisualizationMenu" Header="_Visualization" Click="VisualizationMenuItem_Click">
+                    <MenuItem.Resources>
+                        <Style TargetType="{x:Type RadioButton}">
+                            <Style.Setters>
+                                <Setter Property="HorizontalAlignment" Value="Center" />
+                                <Setter Property="GroupName" Value="VisualizationGroup" />
+                                <Setter Property="IsHitTestVisible" Value="False" />
+                            </Style.Setters>
+                        </Style>
+                    </MenuItem.Resources>
+                    
+                    <MenuItem Header="_Polyline">
+                        <MenuItem.Icon>
+                            <RadioButton x:Name="PolylineRadioButton" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    
+                    <MenuItem Header="_None">
+                        <MenuItem.Icon>
+                            <RadioButton />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </MenuItem>
                 <MenuItem Header="_Options" Click="OptionsMenuItem_Click" />
             </MenuItem>
             <MenuItem Header="_Help">
@@ -22,7 +50,9 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <naudio:PolylineWaveFormControl x:Name="WaveForm" Foreground="Yellow" Background="Black" />
+            <Grid Background="Black">
+                <naudio:PolylineWaveFormControl x:Name="WaveForm" Foreground="Yellow" Background="Black" Visibility="{Binding ElementName=PolylineRadioButton, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            </Grid>
             <Label x:Name="PlaybackStateLabel" Foreground="White" />
             <demo:StatControl x:Name="Stat" Grid.Row="1" />
             <naudio:ControlPanel x:Name="ControlPanel" Grid.Row="2" />
