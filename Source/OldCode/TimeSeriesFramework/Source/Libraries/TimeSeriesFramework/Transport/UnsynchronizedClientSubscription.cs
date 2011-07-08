@@ -249,7 +249,7 @@ namespace TimeSeriesFramework.Transport
         /// </remarks>
         public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
-            if (!m_startTimeSent)
+            if (!m_startTimeSent && measurements != null && measurements.Count() > 0)
             {
                 m_startTimeSent = true;
 

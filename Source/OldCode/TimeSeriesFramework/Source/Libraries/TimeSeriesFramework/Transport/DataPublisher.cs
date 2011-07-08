@@ -648,13 +648,15 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
-        /// Sends the <see cref="StartTime"/> of the first measurement in a connection transmission.
+        /// Sends the start time of the first measurement in a connection transmission.
         /// </summary>
         /// <param name="clientID">ID of client to send response.</param>
         /// <param name="startTime">Start time, in <see cref="Ticks"/>, of first measurement transmitted.</param>
         internal protected virtual bool SendStartTime(Guid clientID, Ticks startTime)
         {
-            return SendClientResponse(clientID, ServerResponse.StartTime, ServerCommand.Subscribe, EndianOrder.BigEndian.GetBytes((long)startTime));
+            bool result = SendClientResponse(clientID, ServerResponse.StartTime, ServerCommand.Subscribe, EndianOrder.BigEndian.GetBytes((long)startTime));
+            OnStatusMessage("Start time sent to {0}.", m_clientConnections[clientID].ConnectionID);
+            return result;
         }
 
         /// <summary>
@@ -1077,6 +1079,9 @@ namespace TimeSeriesFramework.Transport
                         // Update measurement serialization format type
                         subscription.UseCompactMeasurementFormat = useCompactMeasurementFormat;
 
+                        // Track subscription in connection information
+                        connection.Subscription = subscription;
+
                         // Subscribed signals (i.e., input measurement keys) will be parsed from connection string during
                         // initialization of adapter. This should also gracefully handle "resubscribing" which can add and
                         // remove subscribed points since assignment and use of input measurement keys is synchronized
@@ -1101,9 +1106,6 @@ namespace TimeSeriesFramework.Transport
 
                         // Make sure adapter is started
                         subscription.Start();
-
-                        // Track subscription in connection information
-                        connection.Subscription = subscription;
 
                         // Send updated signal index cache to client with validated rights of the selected input measurement keys
                         SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, Serialization.Serialize(subscription.SignalIndexCache, TVA.SerializationFormat.Binary));

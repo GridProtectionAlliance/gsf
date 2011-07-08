@@ -370,13 +370,15 @@ namespace TimeSeriesFramework.Adapters
                 // Send broadcast action measurements
                 foreach (IActionAdapter actionAdapter in m_actionBroadcastRoutes)
                 {
-                    actionAdapter.QueueMeasurementsForProcessing(newMeasurements);
+                    if (actionAdapter.Enabled)
+                        actionAdapter.QueueMeasurementsForProcessing(newMeasurements);
                 }
 
                 // Send broadcast output measurements
                 foreach (IOutputAdapter outputAdapter in m_outputBroadcastRoutes)
                 {
-                    outputAdapter.QueueMeasurementsForProcessing(newMeasurements);
+                    if (outputAdapter.Enabled)
+                        outputAdapter.QueueMeasurementsForProcessing(newMeasurements);
                 }
             }
             finally
@@ -387,13 +389,19 @@ namespace TimeSeriesFramework.Adapters
             // Send routed action measurements
             foreach (KeyValuePair<IActionAdapter, List<IMeasurement>> actionAdapterMeasurements in actionMeasurements)
             {
-                actionAdapterMeasurements.Key.QueueMeasurementsForProcessing(actionAdapterMeasurements.Value);
+                IActionAdapter actionAdapter = actionAdapterMeasurements.Key;
+
+                if (actionAdapter.Enabled)
+                    actionAdapter.QueueMeasurementsForProcessing(actionAdapterMeasurements.Value);
             }
 
             // Send routed output measurements
             foreach (KeyValuePair<IOutputAdapter, List<IMeasurement>> outputAdapterMeasurements in outputMeasurements)
             {
-                outputAdapterMeasurements.Key.QueueMeasurementsForProcessing(outputAdapterMeasurements.Value);
+                IOutputAdapter outputAdapter = outputAdapterMeasurements.Key;
+
+                if (outputAdapter.Enabled)
+                    outputAdapter.QueueMeasurementsForProcessing(outputAdapterMeasurements.Value);
             }
         }
 
