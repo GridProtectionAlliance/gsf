@@ -63,6 +63,11 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         public event EventHandler<EventArgs<DataSet>> MetaDataReceived;
 
+        /// <summary>
+        /// Occurs when first measurement is transmitted by data publication server.
+        /// </summary>
+        public event EventHandler<EventArgs<Ticks>> StartTime;
+
         // Fields
         private TcpClient m_commandChannel;
         private UdpClient m_dataChannel;
@@ -234,7 +239,7 @@ namespace TimeSeriesFramework.Transport
                     m_dataChannel.ConnectionException += m_dataChannel_ConnectionException;
                     m_dataChannel.ReceiveDataException += m_dataChannel_ReceiveDataException;
                     m_dataChannel.ReceiveDataTimeout += m_dataChannel_ReceiveDataTimeout;
-                    m_dataChannel.ReceiveDataHandler = HandleReceivedData;
+                    m_dataChannel.ReceiveDataHandler = HandleDataChannelDataReceived;
                 }
             }
         }
@@ -283,7 +288,7 @@ namespace TimeSeriesFramework.Transport
                     m_commandChannel.ReceiveDataException += m_commandChannel_ReceiveDataException;
                     m_commandChannel.ReceiveDataTimeout += m_commandChannel_ReceiveDataTimeout;
                     m_commandChannel.SendDataException += m_commandChannel_SendDataException;
-                    m_commandChannel.ReceiveDataHandler = HandleReceivedData;
+                    m_commandChannel.ReceiveDataHandler = HandleCommandChannelDataReceived;
                 }
             }
         }
@@ -748,24 +753,16 @@ namespace TimeSeriesFramework.Transport
                                 {
                                     case ServerCommand.Authenticate:
                                         OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
-
                                         m_authenticated = true;
-
-                                        if (ConnectionAuthenticated != null)
-                                            ConnectionAuthenticated(this, EventArgs.Empty);
+                                        OnConnectionAuthenticated();
                                         break;
                                     case ServerCommand.MetaDataRefresh:
                                         OnStatusMessage("Success code received in response to server command \"{0}\": latest meta-data received.", commandCode);
-
-                                        // Deserialize metadata
-                                        DataSet metadata = Serialization.Deserialize<DataSet>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary);
-
-                                        // Raise metadata received event
-                                        if (MetaDataReceived != null)
-                                            MetaDataReceived(this, new EventArgs<DataSet>(metadata));
+                                        OnMetaDataReceived(Serialization.Deserialize<DataSet>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary));
                                         break;
                                     case ServerCommand.Subscribe:
                                     case ServerCommand.Unsubscribe:
+                                    case ServerCommand.RotateCipherKeys:
                                         OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
                                         break;
                                 }
@@ -842,15 +839,19 @@ namespace TimeSeriesFramework.Transport
                             // Expose new measurements to consumer
                             OnNewMeasurements(measurements);
                             break;
+                        case ServerResponse.StartTime:
+                            // Raise data start time event
+                            OnStartTime(EndianOrder.BigEndian.ToInt64(buffer, responseIndex));
+                            break;
                         case ServerResponse.UpdateSignalIndexCache:
                             // Deserialize new signal index cache
                             m_signalIndexCache = Serialization.Deserialize<SignalIndexCache>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary);
                             break;
-                        case ServerResponse.UpdateBaseTime:
+                        case ServerResponse.UpdateBaseTimes:
                             // Deserialize new base time offsets
                             m_baseTimeOffsets = Serialization.Deserialize<long[]>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary);
                             break;
-                        case ServerResponse.UpdateCipherKey:
+                        case ServerResponse.UpdateCipherKeys:
                             // Get active cipher index
                             m_cipherIndex = EndianOrder.BigEndian.ToInt32(buffer, responseIndex);
 
@@ -938,15 +939,62 @@ namespace TimeSeriesFramework.Transport
             ThreadPool.QueueUserWorkItem(SynchronizeMetadata, e.Argument);
         }
 
-        // Handles data reception from either the command or data channel
-        private void HandleReceivedData(byte[] buffer, int offset, int length)
+        /// <summary>
+        /// Raises the <see cref="ConnectionEstablished"/> event.
+        /// </summary>
+        protected void OnConnectionEstablished()
         {
-            m_lastBytesReceived = length;
-            Payload.ProcessReceived(ref buffer, ref offset, ref length, m_dataChannel.Encryption, m_dataChannel.SharedSecret, m_dataChannel.Compression);
-            ProcessServerResponse(buffer, length);
+            if (ConnectionEstablished != null)
+                ConnectionEstablished(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ConnectionTerminated"/> event.
+        /// </summary>
+        protected void OnConnectionTerminated()
+        {
+            if (ConnectionTerminated != null)
+                ConnectionTerminated(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ConnectionAuthenticated"/> event.
+        /// </summary>
+        protected void OnConnectionAuthenticated()
+        {
+            if (ConnectionAuthenticated != null)
+                ConnectionAuthenticated(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="MetaDataReceived"/> event.
+        /// </summary>
+        /// <param name="metadata">Meta-data <see cref="DataSet"/> instance to send to client subscription.</param>
+        protected void OnMetaDataReceived(DataSet metadata)
+        {
+            if (MetaDataReceived != null)
+                MetaDataReceived(this, new EventArgs<DataSet>(metadata));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="StartTime"/> event.
+        /// </summary>
+        /// <param name="startTime">Start time, in <see cref="Ticks"/>, of first measurement transmitted.</param>
+        protected void OnStartTime(Ticks startTime)
+        {
+            if (StartTime != null)
+                StartTime(this, new EventArgs<Ticks>(startTime));
         }
 
         #region [ Command Channel Event Handlers ]
+
+        // Handles data reception from the command channel
+        private void HandleCommandChannelDataReceived(byte[] buffer, int offset, int length)
+        {
+            m_lastBytesReceived = length;
+            Payload.ProcessReceived(ref buffer, ref offset, ref length, m_commandChannel.Encryption, m_commandChannel.SharedSecret, m_commandChannel.Compression);
+            ProcessServerResponse(buffer, length);
+        }
 
         private void m_commandChannel_ConnectionEstablished(object sender, EventArgs e)
         {
@@ -956,8 +1004,7 @@ namespace TimeSeriesFramework.Transport
                 m_requests.Clear();
             }
 
-            if (ConnectionEstablished != null)
-                ConnectionEstablished(sender, e);
+            OnConnectionEstablished();
 
             OnStatusMessage("Data subscriber command channel connection to publisher was established.");
 
@@ -973,9 +1020,7 @@ namespace TimeSeriesFramework.Transport
 
         private void m_commandChannel_ConnectionTerminated(object sender, EventArgs e)
         {
-            if (ConnectionTerminated != null)
-                ConnectionTerminated(sender, e);
-
+            OnConnectionTerminated();
             OnStatusMessage("Data subscriber connection to publisher was terminated.");
             DataChannel = null;
         }
@@ -1025,6 +1070,14 @@ namespace TimeSeriesFramework.Transport
         #endregion
 
         #region [ Data Channel Event Handlers ]
+
+        // Handles data reception from the data channel
+        private void HandleDataChannelDataReceived(byte[] buffer, int offset, int length)
+        {
+            m_lastBytesReceived = length;
+            Payload.ProcessReceived(ref buffer, ref offset, ref length, m_dataChannel.Encryption, m_dataChannel.SharedSecret, m_dataChannel.Compression);
+            ProcessServerResponse(buffer, length);
+        }
 
         private void m_dataChannel_ConnectionException(object sender, EventArgs<Exception> e)
         {

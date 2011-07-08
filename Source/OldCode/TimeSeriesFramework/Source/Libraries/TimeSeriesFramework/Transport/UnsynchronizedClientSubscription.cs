@@ -47,6 +47,7 @@ namespace TimeSeriesFramework.Transport
         private bool m_useCompactMeasurementFormat;
         private long m_lastPublishTime;
         private bool m_includeTime;
+        private volatile bool m_startTimeSent;
         private bool m_disposed;
 
         #endregion
@@ -210,6 +211,17 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
+        /// Starts the <see cref="UnsynchronizedClientSubscription"/> or restarts it if it is already running.
+        /// </summary>
+        public override void Start()
+        {
+            if (!Enabled)
+                m_startTimeSent = false;
+
+            base.Start();
+        }
+
+        /// <summary>
         /// Gets a short one-line status of this <see cref="UnsynchronizedClientSubscription"/>.
         /// </summary>
         /// <param name="maxLength">Maximum number of available characters for display.</param>
@@ -228,19 +240,6 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
-        /// Queues a single measurement for processing.
-        /// </summary>
-        /// <param name="measurement">Measurement to queue for processing.</param>
-        /// <remarks>
-        /// Measurement is filtered against the defined <see cref="InputMeasurementKeys"/> so we override method
-        /// so that dyanmic updates to keys will be synchronized with filtering to prevent interference.
-        /// </remarks>
-        public override void QueueMeasurementForProcessing(IMeasurement measurement)
-        {
-            QueueMeasurementsForProcessing(new IMeasurement[] { measurement });
-        }
-
-        /// <summary>
         /// Queues a collection of measurements for processing.
         /// </summary>
         /// <param name="measurements">Collection of measurements to queue for processing.</param>
@@ -250,6 +249,19 @@ namespace TimeSeriesFramework.Transport
         /// </remarks>
         public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
+            if (!m_startTimeSent)
+            {
+                m_startTimeSent = true;
+
+                IMeasurement measurement = measurements.FirstOrDefault(m => m != null);
+                Ticks timestamp = 0;
+
+                if (measurement != null)
+                    timestamp = measurement.Timestamp;
+
+                m_parent.SendStartTime(m_clientID, timestamp);
+            }
+
             if (ProcessMeasurementFilter)
             {
                 List<IMeasurement> filteredMeasurements = new List<IMeasurement>();
@@ -337,7 +349,7 @@ namespace TimeSeriesFramework.Transport
                 // packet size, process the current packet and start a new packet.
                 if (packetSize + binaryLength > DataPublisher.MaxPacketSize)
                 {
-                    ProcessBinaryMeasurements(packet);
+                    ProcessBinaryMeasurements(packet, useCompactMeasurementFormat);
                     packet.Clear();
                     packetSize = 5;
                 }
@@ -348,13 +360,12 @@ namespace TimeSeriesFramework.Transport
             }
 
             // Process the remaining measurements.
-            ProcessBinaryMeasurements(packet);
+            ProcessBinaryMeasurements(packet, useCompactMeasurementFormat);
         }
 
-        private void ProcessBinaryMeasurements(IEnumerable<ISupportBinaryImage> measurements)
+        private void ProcessBinaryMeasurements(IEnumerable<ISupportBinaryImage> measurements, bool useCompactMeasurementFormat)
         {
             MemoryStream data = new MemoryStream();
-            bool useCompactMeasurementFormat = m_useCompactMeasurementFormat;
             byte[] buffer;
 
             // Serialize data packet flags into response

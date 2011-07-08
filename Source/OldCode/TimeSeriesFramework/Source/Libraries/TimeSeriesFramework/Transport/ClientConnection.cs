@@ -316,7 +316,7 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
-        /// Gets active keys and initialization vectors.
+        /// Gets active and standby keys and initialization vectors.
         /// </summary>
         public byte[][][] KeyIVs
         {
@@ -514,7 +514,7 @@ namespace TimeSeriesFramework.Transport
             response.Write(bytes, 0, bytes.Length);
 
             // Send cipher key updates
-            m_parent.SendClientResponse(m_clientID, ServerResponse.UpdateCipherKey, ServerCommand.Subscribe, response.ToArray());
+            m_parent.SendClientResponse(m_clientID, ServerResponse.UpdateCipherKeys, ServerCommand.Subscribe, response.ToArray());
         }
 
         private void m_pingTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)

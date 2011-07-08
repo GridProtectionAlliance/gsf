@@ -82,9 +82,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MySqlAdapters", "Libraries\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestingAdapters", "Libraries\Adapters\TestingAdapters\TestingAdapters.csproj", "{69846364-E3F5-4086-B9FE-D447BB7E56C3}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Wave Demo Apps", "Wave Demo Apps", "{7877F254-782B-4221-83B4-DB31D9107A43}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WavSubscriptionDemo", "Applications\Wave Demo Apps\WavSubscriptionDemo\WavSubscriptionDemo.csproj", "{D78C3B1B-F673-45EB-86CB-93DCB4572905}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UpdateWAVMetaData", "Applications\Wave Demo Apps\UpdateWAVMetaData\UpdateWAVMetaData.csproj", "{5E75D20E-228E-4ACC-B73D-E9471D9E0852}"
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 14
+		SccNumberOfProjects = 16
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs07
 		SccLocalPath0 = .
@@ -140,6 +146,14 @@ Global
 		SccProjectTopLevelParentUniqueName13 = TimeSeriesFramework.sln
 		SccProjectName13 = Libraries/Adapters/TestingAdapters
 		SccLocalPath13 = Libraries\\Adapters\\TestingAdapters
+		SccProjectUniqueName14 = Applications\\Wave\u0020Demo\u0020Apps\\UpdateWAVMetaData\\UpdateWAVMetaData.csproj
+		SccProjectTopLevelParentUniqueName14 = TimeSeriesFramework.sln
+		SccProjectName14 = Applications/Wave\u0020Demo\u0020Apps/UpdateWAVMetaData
+		SccLocalPath14 = Applications\\Wave\u0020Demo\u0020Apps\\UpdateWAVMetaData
+		SccProjectUniqueName15 = Applications\\Wave\u0020Demo\u0020Apps\\WavSubscriptionDemo\\WavSubscriptionDemo.csproj
+		SccProjectTopLevelParentUniqueName15 = TimeSeriesFramework.sln
+		SccProjectName15 = Applications/Wave\u0020Demo\u0020Apps/WavSubscriptionDemo
+		SccLocalPath15 = Applications\\Wave\u0020Demo\u0020Apps\\WavSubscriptionDemo
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -252,6 +266,22 @@ Global
 		{69846364-E3F5-4086-B9FE-D447BB7E56C3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{69846364-E3F5-4086-B9FE-D447BB7E56C3}.Release|x86.ActiveCfg = Release|x86
 		{69846364-E3F5-4086-B9FE-D447BB7E56C3}.Release|x86.Build.0 = Release|x86
+		{D78C3B1B-F673-45EB-86CB-93DCB4572905}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{D78C3B1B-F673-45EB-86CB-93DCB4572905}.Debug|Any CPU.Build.0 = Debug|x86
+		{D78C3B1B-F673-45EB-86CB-93DCB4572905}.Debug|x86.ActiveCfg = Debug|x86
+		{D78C3B1B-F673-45EB-86CB-93DCB4572905}.Debug|x86.Build.0 = Debug|x86
+		{D78C3B1B-F673-45EB-86CB-93DCB4572905}.Release|Any CPU.ActiveCfg = Release|x86
+		{D78C3B1B-F673-45EB-86CB-93DCB4572905}.Release|Any CPU.Build.0 = Release|x86
+		{D78C3B1B-F673-45EB-86CB-93DCB4572905}.Release|x86.ActiveCfg = Release|x86
+		{D78C3B1B-F673-45EB-86CB-93DCB4572905}.Release|x86.Build.0 = Release|x86
+		{5E75D20E-228E-4ACC-B73D-E9471D9E0852}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E75D20E-228E-4ACC-B73D-E9471D9E0852}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E75D20E-228E-4ACC-B73D-E9471D9E0852}.Debug|x86.ActiveCfg = Debug|x86
+		{5E75D20E-228E-4ACC-B73D-E9471D9E0852}.Debug|x86.Build.0 = Debug|x86
+		{5E75D20E-228E-4ACC-B73D-E9471D9E0852}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E75D20E-228E-4ACC-B73D-E9471D9E0852}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E75D20E-228E-4ACC-B73D-E9471D9E0852}.Release|x86.ActiveCfg = Release|x86
+		{5E75D20E-228E-4ACC-B73D-E9471D9E0852}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -260,6 +290,7 @@ Global
 		{DEAE7327-1628-4D6D-B682-257335B86B22} = {F2F990DA-EC53-4B01-86FC-5557EF149769}
 		{4508009C-7011-4981-B35F-594F42CC0D1F} = {F2F990DA-EC53-4B01-86FC-5557EF149769}
 		{FC5B2769-89FD-420B-9722-D6E0B029ABDD} = {F2F990DA-EC53-4B01-86FC-5557EF149769}
+		{7877F254-782B-4221-83B4-DB31D9107A43} = {F2F990DA-EC53-4B01-86FC-5557EF149769}
 		{D2F52E0C-FDD4-4AC7-BF60-F2C589A3A61C} = {0DB3505F-CC49-4D22-A67F-14688BABB192}
 		{305DB059-5B1C-4BBF-85C1-D41148D90CE5} = {0DB3505F-CC49-4D22-A67F-14688BABB192}
 		{F08ECF09-C90D-4CCD-864D-8ECDD9F2CB9C} = {0DB3505F-CC49-4D22-A67F-14688BABB192}
@@ -276,5 +307,7 @@ Global
 		{383F4F83-8228-4B9A-9757-250043B6E30B} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
 		{1FEC4033-C80F-4CF1-835C-BBEE0E7F6803} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
 		{69846364-E3F5-4086-B9FE-D447BB7E56C3} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
+		{D78C3B1B-F673-45EB-86CB-93DCB4572905} = {7877F254-782B-4221-83B4-DB31D9107A43}
+		{5E75D20E-228E-4ACC-B73D-E9471D9E0852} = {7877F254-782B-4221-83B4-DB31D9107A43}
 	EndGlobalSection
 EndGlobal

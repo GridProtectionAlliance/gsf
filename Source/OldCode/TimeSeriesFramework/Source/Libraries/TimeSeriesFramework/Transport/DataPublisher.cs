@@ -97,17 +97,22 @@ namespace TimeSeriesFramework.Transport
         /// Successful return message type will be string indicating total number of allowed points.
         /// Client should wait for UpdateSignalIndexCache and UpdateBaseTime response codes before attempting
         /// to parse data when using the compact measurement format.
-        /// Client should wait for UpdateCipherKey response code before attempting to parse data to know if
-        /// data packets will be encrypted as well as which keys to use if they are.
         /// </remarks>
         Subscribe = 0x02,
         /// <summary>
         /// Unsubscribe command.
         /// </summary>
         /// <remarks>
-        /// Requests that server stop sending streaming data to the client and cancel the current subcription.
+        /// Requests that server stop sending streaming data to the client and cancel the current subscription.
         /// </remarks>
-        Unsubscribe = 0x03
+        Unsubscribe = 0x03,
+        /// <summary>
+        /// Rotate cipher keys.
+        /// </summary>
+        /// <remarks>
+        /// Manually requests that server send a new set of cipher keys for data packet encryption.
+        /// </remarks>
+        RotateCipherKeys = 0x04
     }
 
     /// <summary>
@@ -152,14 +157,21 @@ namespace TimeSeriesFramework.Transport
         /// <remarks>
         /// Unsolicited response requests that client update its runtime base-timestamp offsets with those that follow.
         /// </remarks>
-        UpdateBaseTime = 0x84,
+        UpdateBaseTimes = 0x84,
         /// <summary>
         /// Update runtime cipher keys response.
         /// </summary>
         /// <remarks>
-        /// Unsolicited response requests that client update its runtime data cipher keys with those that follow.
+        /// Response, solicited or unsolicited, requests that client update its runtime data cipher keys with those that follow.
         /// </remarks>
-        UpdateCipherKey = 0x85,
+        UpdateCipherKeys = 0x85,
+        /// <summary>
+        /// Data start time response packet.
+        /// </summary>
+        /// <remarks>
+        /// Unsolicited response provides the start time of data being processed from the first measurement.
+        /// </remarks>
+        StartTime = 0x86,
         /// <summary>
         /// No operation keep-alive ping.
         /// </summary>
@@ -633,6 +645,16 @@ namespace TimeSeriesFramework.Transport
 
                 return Guid.Empty;
             });
+        }
+
+        /// <summary>
+        /// Sends the <see cref="StartTime"/> of the first measurement in a connection transmission.
+        /// </summary>
+        /// <param name="clientID">ID of client to send response.</param>
+        /// <param name="startTime">Start time, in <see cref="Ticks"/>, of first measurement transmitted.</param>
+        internal protected virtual bool SendStartTime(Guid clientID, Ticks startTime)
+        {
+            return SendClientResponse(clientID, ServerResponse.StartTime, ServerCommand.Subscribe, EndianOrder.BigEndian.GetBytes((long)startTime));
         }
 
         /// <summary>
@@ -1171,6 +1193,17 @@ namespace TimeSeriesFramework.Transport
             }
         }
 
+        // Handles request to rotate cipher keys on client session
+        private void HandleRotateCipherKeys(ClientConnection connection)
+        {
+            Guid clientID = connection.ClientID;
+
+            connection.RotateCipherKeys();
+
+            SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.RotateCipherKeys, "New cipher keys established.");
+            OnStatusMessage(connection.ConnectionID + " cipher keys rotated.");
+        }
+
         #endregion
 
         #region [ Command Channel Handlers ]
@@ -1251,6 +1284,10 @@ namespace TimeSeriesFramework.Transport
                         case ServerCommand.MetaDataRefresh:
                             // Handle meta data refresh
                             HandleMetadataRefresh(connection);
+                            break;
+                        case ServerCommand.RotateCipherKeys:
+                            // Handle rotation of cipher keys
+                            HandleRotateCipherKeys(connection);
                             break;
                     }
                 }
