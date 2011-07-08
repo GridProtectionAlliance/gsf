@@ -135,7 +135,7 @@ namespace UpdateWAVMetaData
                     connection.ExecuteNonQuery("UPDATE Measurement SET Enabled=@enabled WHERE DeviceID=@deviceID AND SignalTypeID <> @signalTypeID", false, deviceID, signalTypeID);
 
                     // Update connection string with newly added measurements
-                    connection.ExecuteNonQuery("UPDATE Device SET ConnectionString=@connectionString WHERE ID=@deviceID", string.Format("wavFileName={0}; outputMeasurements={{{1}}}", sourceFileName, outputMeasurements), deviceID);
+                    connection.ExecuteNonQuery("UPDATE Device SET ConnectionString=@connectionString WHERE ID=@deviceID", string.Format("wavFileName={0}; outputMeasurements={{{1}}}", FilePath.GetAbsolutePath(sourceFileName), outputMeasurements), deviceID);
                 }
             }
 
