@@ -38,12 +38,6 @@ namespace UpdateWAVMetaData
     {
         static int Main(string[] args)
         {
-            if (args.Length != 1)
-            {
-                Console.WriteLine("USAGE:\r\n\r\nUpdateWAVMetaData.exe \"SourcePath\"");
-                return 1;
-            }
-
             // System settings
             ConfigurationFile configFile = ConfigurationFile.Current;
             CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
@@ -87,7 +81,7 @@ namespace UpdateWAVMetaData
             int protocolID = Convert.ToInt32(connection.ExecuteScalar("SELECT ID FROM Protocol WHERE Acronym='WAV'"));
             int signalTypeID = Convert.ToInt32(connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym='ALOG'"));
 
-            string pathRoot = FilePath.GetDirectoryName(args[0]);
+            string pathRoot = FilePath.GetDirectoryName((args.Length > 0) ? args[0] : systemSettings["MusicDirectory"].Value);
             string sourcePath = pathRoot + "*\\*.wav";
 
             foreach (string sourceFileName in FilePath.GetFileList(sourcePath))
