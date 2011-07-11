@@ -105,7 +105,7 @@ namespace UpdateWAVMetaData
                 if (Convert.ToInt32(connection.ExecuteScalar("SELECT COUNT(*) FROM Device WHERE Acronym=@acronym", acronym)) == 0)
                 {
                     // Insert new device record
-                    connection.ExecuteNonQuery(string.Format("INSERT INTO Device(NodeID, Acronym, Name, ProtocolID, FramesPerSecond, Enabled) VALUES({0}, @acronym, @name, @protocolID, @framesPerSecond, @enabled )", nodeIDQueryString), acronym, name, protocolID, sourceWave.SampleRate, true);
+                    connection.ExecuteNonQuery(string.Format("INSERT INTO Device(NodeID, Acronym, Name, ProtocolID, FramesPerSecond, MeasurementReportingInterval, Enabled) VALUES({0}, @acronym, @name, @protocolID, @framesPerSecond, @measurementReportingInterval, @enabled )", nodeIDQueryString), acronym, name, protocolID, sourceWave.SampleRate, 1000000, true);
                     int deviceID = Convert.ToInt32(connection.ExecuteScalar("SELECT ID FROM Device WHERE Acronym=@acronym", acronym));
                     string pointTag, outputMeasurements = "";
 
