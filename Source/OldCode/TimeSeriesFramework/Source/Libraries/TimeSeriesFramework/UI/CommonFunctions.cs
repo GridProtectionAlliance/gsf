@@ -629,7 +629,7 @@ namespace TimeSeriesFramework.UI
         /// <param name="xmlValue"></param>
         /// <param name="xmlDataType"></param>
         /// <returns></returns>
-        static object ConvertValueToType(string xmlValue, string xmlDataType)
+        public static object ConvertValueToType(string xmlValue, string xmlDataType)
         {
             Type dataType = Type.GetType(xmlDataType);
             float value;
