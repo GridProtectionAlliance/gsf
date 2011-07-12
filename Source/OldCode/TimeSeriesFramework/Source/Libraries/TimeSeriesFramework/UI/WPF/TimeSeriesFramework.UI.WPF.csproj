@@ -98,9 +98,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\Dependencies\TVA\TVA.Core.dll</HintPath>
     </Reference>
-    <Reference Include="TVA.PhasorProtocols">
-      <HintPath>..\..\..\..\Dependencies\TVA\TVA.PhasorProtocols.dll</HintPath>
-    </Reference>
     <Reference Include="TVA.Security, Version=4.0.2.27, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\Dependencies\TVA\TVA.Security.dll</HintPath>
@@ -118,17 +115,8 @@
   <ItemGroup>
     <Compile Include="Commands\MenuCommand.cs" />
     <Compile Include="Commands\RelayCommand.cs" />
-    <Compile Include="ConnectionSettings.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="IViewModel.cs" />
     <Compile Include="MenuDataItem.cs" />
-    <Compile Include="Modal\ConfigurationCreator.xaml.cs">
-      <DependentUpon>ConfigurationCreator.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Modal\ConnectionStringBuilder.xaml.cs">
-      <DependentUpon>ConnectionStringBuilder.xaml</DependentUpon>
-    </Compile>
     <Compile Include="PagedViewModelBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
@@ -142,9 +130,6 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
-    <Compile Include="UserControls\CalculatedMeasurementUserControl.xaml.cs">
-      <DependentUpon>CalculatedMeasurementUserControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="UserControls\AdapterUserControl.xaml.cs">
       <DependentUpon>AdapterUserControl.xaml</DependentUpon>
@@ -167,26 +152,11 @@
     <Compile Include="UserControls\DetailViewFooterUserControl.xaml.cs">
       <DependentUpon>DetailViewFooterUserControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UserControls\DeviceListUserControl.xaml.cs">
-      <DependentUpon>DeviceListUserControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="UserControls\DeviceMeasurementsUserControl.xaml.cs">
-      <DependentUpon>DeviceMeasurementsUserControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="UserControls\DeviceUserControl.xaml.cs">
-      <DependentUpon>DeviceUserControl.xaml</DependentUpon>
-    </Compile>
     <Compile Include="UserControls\HistorianUserControl.xaml.cs">
       <DependentUpon>HistorianUserControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="UserControls\IaonTreeUserControl.xaml.cs">
       <DependentUpon>IaonTreeUserControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="UserControls\InputWizardUserControl.xaml.cs">
-      <DependentUpon>InputWizardUserControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="UserControls\MeasurementGroupUserControl.xaml.cs">
-      <DependentUpon>MeasurementGroupUserControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="UserControls\MeasurementUserControl.xaml.cs">
       <DependentUpon>MeasurementUserControl.xaml</DependentUpon>
@@ -197,32 +167,11 @@
     <Compile Include="UserControls\NodeUserControl.xaml.cs">
       <DependentUpon>NodeUserControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UserControls\PhasorUserControl.xaml.cs">
-      <DependentUpon>PhasorUserControl.xaml</DependentUpon>
-    </Compile>
     <Compile Include="UserControls\ProtocolGroupUserControl.xaml.cs">
       <DependentUpon>ProtocolGroupUserControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UserControls\RealTimeStatisticsUserControl.xaml.cs">
-      <DependentUpon>RealTimeStatisticsUserControl.xaml</DependentUpon>
-    </Compile>
     <Compile Include="UserControls\SecurityUserControl.xaml.cs">
       <DependentUpon>SecurityUserControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="UserControls\SelectMeasurementUserControl.xaml.cs">
-      <DependentUpon>SelectMeasurementUserControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="UserControls\SubscribeMeasurementUserControl.xaml.cs">
-      <DependentUpon>SubscribeMeasurementUserControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="UserControls\SubscriberMeasurementUserControl.xaml.cs">
-      <DependentUpon>SubscriberMeasurementUserControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="UserControls\SubscriberRequestUserControl.xaml.cs">
-      <DependentUpon>SubscriberRequestUserControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="UserControls\SubscriberUserControl.xaml.cs">
-      <DependentUpon>SubscriberUserControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="UserControls\VendorDeviceUserControl.xaml.cs">
       <DependentUpon>VendorDeviceUserControl.xaml</DependentUpon>
@@ -236,24 +185,14 @@
     <Compile Include="ViewModelBase.cs" />
     <Compile Include="ViewModels\AdapterConnectionStringParameter.cs" />
     <Compile Include="ViewModels\ApplicationRoles.cs" />
-    <Compile Include="ViewModels\CalculatedMeasurements.cs" />
     <Compile Include="ViewModels\Adapters.cs" />
     <Compile Include="ViewModels\Companies.cs" />
-    <Compile Include="ViewModels\Devices.cs" />
     <Compile Include="ViewModels\Historians.cs" />
     <Compile Include="ViewModels\IaonTrees.cs" />
-    <Compile Include="ViewModels\InputWizardDevices.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ViewModels\MeasurementGroups.cs" />
     <Compile Include="ViewModels\Measurements.cs" />
     <Compile Include="ViewModels\Nodes.cs" />
-    <Compile Include="ViewModels\Phasors.cs" />
     <Compile Include="ViewModels\Protocols.cs" />
     <Compile Include="ViewModels\SecurityGroups.cs" />
-    <Compile Include="ViewModels\SelectMeasurements.cs" />
-    <Compile Include="ViewModels\SubscribeMeasurements.cs" />
-    <Compile Include="ViewModels\Subscribers.cs" />
     <Compile Include="ViewModels\UserAccounts.cs" />
     <Compile Include="ViewModels\VendorDevices.cs" />
     <Compile Include="ViewModels\Vendors.cs" />
@@ -281,18 +220,6 @@
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="Modal\ConfigurationCreator.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Modal\ConnectionStringBuilder.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="UserControls\CalculatedMeasurementUserControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="UserControls\AdapterUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -317,31 +244,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="UserControls\DeviceListUserControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="UserControls\DeviceMeasurementsUserControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="UserControls\DeviceUserControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="UserControls\HistorianUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UserControls\IaonTreeUserControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="UserControls\InputWizardUserControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="UserControls\MeasurementGroupUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -357,39 +264,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="UserControls\PhasorUserControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="UserControls\ProtocolGroupUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="UserControls\RealTimeStatisticsUserControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="UserControls\SecurityUserControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="UserControls\SelectMeasurementUserControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="UserControls\SubscribeMeasurementUserControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="UserControls\SubscriberMeasurementUserControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="UserControls\SubscriberRequestUserControl.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="UserControls\SubscriberUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

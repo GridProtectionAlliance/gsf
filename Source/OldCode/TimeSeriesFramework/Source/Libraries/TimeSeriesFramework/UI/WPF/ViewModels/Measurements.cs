@@ -34,29 +34,31 @@ namespace TimeSeriesFramework.UI.ViewModels
     /// <summary>
     /// Class to hold bindable <see cref="TimeSeriesFramework.UI.DataModels.Measurement"/> collection.
     /// </summary>
-    internal class Measurements : PagedViewModelBase<TimeSeriesFramework.UI.DataModels.Measurement, Guid>
+    public class Measurements : PagedViewModelBase<TimeSeriesFramework.UI.DataModels.Measurement, Guid>
     {
         #region [ Members ]
 
         private Dictionary<int, string> m_historianLookupList;
-        private Dictionary<int, string> m_deviceLookupList;
         private Dictionary<int, string> m_signalTypeLookupList;
-        private Dictionary<int, string> m_phasorLookupList;
         private int m_deviceID;
 
         #endregion
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Creates a new instance of the <see cref="Measurements"/> class.
+        /// </summary>
+        /// <param name="deviceID">The ID of the device that the current measurement is associated with..</param>
+        /// <param name="itemsPerPage">The number of measurements to display on each page of the data grid.</param>
+        /// <param name="autosave">Determines whether the current item is saved automatically when a new item is selected.</param>
         public Measurements(int deviceID, int itemsPerPage, bool autosave = true)
             : base(0, autosave)     // Set ItemsPerPage to zero to avoid load() in the base class.
         {
             m_deviceID = deviceID;
             ItemsPerPage = itemsPerPage;
             m_historianLookupList = Historian.GetLookupList(null);
-            m_deviceLookupList = Device.GetLookupList(null);
             m_signalTypeLookupList = SignalType.GetLookupList(null);
-            PhasorLookupList = Phasor.GetLookupList(null, m_deviceID);
             Load();
         }
 
@@ -78,7 +80,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// <summary>
         /// Gets <see cref="Dictionary{T1,T2}"/> type collection of historians defined in the database.
         /// </summary>
-        public Dictionary<int, string> HistorianLookupList
+        public virtual Dictionary<int, string> HistorianLookupList
         {
             get
             {
@@ -87,40 +89,13 @@ namespace TimeSeriesFramework.UI.ViewModels
         }
 
         /// <summary>
-        /// Gets <see cref="Dictionary{T1,T2}"/> type collection of devices defined in the database.
-        /// </summary>
-        public Dictionary<int, string> DeviceLookupList
-        {
-            get
-            {
-                return m_deviceLookupList;
-            }
-        }
-
-        /// <summary>
         /// Gets <see cref="Dictionary{T1,T2}"/> type collection of signal types defined in the database.
         /// </summary>
-        public Dictionary<int, string> SignalTypeLookupList
+        public virtual Dictionary<int, string> SignalTypeLookupList
         {
             get
             {
                 return m_signalTypeLookupList;
-            }
-        }
-
-        /// <summary>
-        /// Gets <see cref="Dictionary{T1,T2}"/> type collection of phasors defined in the database.
-        /// </summary>
-        public Dictionary<int, string> PhasorLookupList
-        {
-            get
-            {
-                return m_phasorLookupList;
-            }
-            set
-            {
-                m_phasorLookupList = value;
-                OnPropertyChanged("PhasorLookupList");
             }
         }
 
@@ -157,12 +132,6 @@ namespace TimeSeriesFramework.UI.ViewModels
 
             if (m_signalTypeLookupList.Count > 0)
                 CurrentItem.SignalTypeID = m_signalTypeLookupList.First().Key;
-
-            if (m_deviceLookupList.Count > 0)
-                CurrentItem.DeviceID = m_deviceLookupList.First().Key;
-
-            if (m_phasorLookupList.Count > 0)
-                CurrentItem.PhasorSourceIndex = m_phasorLookupList.First().Key;
         }
 
         /// <summary>
@@ -174,7 +143,6 @@ namespace TimeSeriesFramework.UI.ViewModels
             try
             {
                 ItemsSource = TimeSeriesFramework.UI.DataModels.Measurement.Load(null, m_deviceID);
-                PhasorLookupList = Phasor.GetLookupList(null, CurrentItem.DeviceID == null ? 0 : (int)CurrentItem.DeviceID);
             }
             catch (Exception ex)
             {
@@ -184,19 +152,6 @@ namespace TimeSeriesFramework.UI.ViewModels
             {
                 Mouse.OverrideCursor = null;
             }
-        }
-
-        /// <summary>
-        /// Handles PropertyChanged event on CurrentItem. If DeviceID is changed then get the associated phasors list.
-        /// </summary>
-        /// <param name="sender">Source of the event.</param>
-        /// <param name="e">Event arguments.</param>
-        protected override void m_currentItem_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            base.m_currentItem_PropertyChanged(sender, e);
-
-            if (string.Compare(e.PropertyName, "DeviceID", true) == 0)
-                PhasorLookupList = Phasor.GetLookupList(null, CurrentItem.DeviceID == null ? 0 : (int)CurrentItem.DeviceID);
         }
 
         #endregion

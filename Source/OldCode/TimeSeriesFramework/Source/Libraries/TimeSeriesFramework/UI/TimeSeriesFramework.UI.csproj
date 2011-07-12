@@ -112,27 +112,16 @@
     <Compile Include="DataModelBase.cs" />
     <Compile Include="DataModels\Adapter.cs" />
     <Compile Include="DataModels\ApplicationRole.cs" />
-    <Compile Include="DataModels\BasicStatisticInfo.cs" />
-    <Compile Include="DataModels\CalculatedMeasurement.cs" />
     <Compile Include="DataModels\Company.cs" />
-    <Compile Include="DataModels\Device.cs" />
-    <Compile Include="DataModels\DeviceMeasurementData.cs" />
     <Compile Include="DataModels\ErrorLog.cs" />
     <Compile Include="DataModels\Historian.cs" />
     <Compile Include="DataModels\IaonTree.cs" />
-    <Compile Include="DataModels\InputWizardDevice.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="DataModels\Interconnection.cs" />
     <Compile Include="DataModels\Measurement.cs" />
-    <Compile Include="DataModels\MeasurementGroup.cs" />
     <Compile Include="DataModels\Node.cs" />
-    <Compile Include="DataModels\Phasor.cs" />
     <Compile Include="DataModels\Protocol.cs" />
     <Compile Include="DataModels\SecurityGroup.cs" />
     <Compile Include="DataModels\SignalType.cs" />
-    <Compile Include="DataModels\Subscriber.cs" />
-    <Compile Include="DataModels\TimeTaggedMeasurement.cs" />
     <Compile Include="DataModels\UserAccount.cs" />
     <Compile Include="DataModels\Vendor.cs" />
     <Compile Include="DataModels\VendorDevice.cs" />
