@@ -21,9 +21,7 @@
     <StackPanel Orientation="Vertical">
         <StackPanel.Resources>
             <CollectionViewSource Source="{Binding Path=HistorianLookupList}" x:Key="HistorianLookupList"/>
-            <CollectionViewSource Source="{Binding Path=DeviceLookupList}" x:Key="DeviceLookupList"/>
             <CollectionViewSource Source="{Binding Path=SignalTypeLookupList}" x:Key="SignalTypeLookupList"/>
-            <CollectionViewSource Source="{Binding Path=PhasorLookupList}" x:Key="PhasorLookupList"/>
         </StackPanel.Resources>
 
         <Grid x:Name="GridDetailView" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="5" DataContext="{Binding Path=CurrentItem, Mode=TwoWay}">
