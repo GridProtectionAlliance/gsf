@@ -4371,7 +4371,7 @@
         </member>
         <member name="M:TimeSeriesFramework.Transport.DataPublisher.SendStartTime(System.Guid,TVA.Ticks)">
             <summary>
-            Sends the <see cref="!:StartTime"/> of the first measurement in a connection transmission.
+            Sends the start time of the first measurement in a connection transmission.
             </summary>
             <param name="clientID">ID of client to send response.</param>
             <param name="startTime">Start time, in <see cref="T:TVA.Ticks"/>, of first measurement transmitted.</param>
