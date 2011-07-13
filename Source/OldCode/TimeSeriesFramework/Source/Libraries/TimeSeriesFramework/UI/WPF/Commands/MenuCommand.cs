@@ -31,6 +31,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using TVA.IO;
 
 namespace TimeSeriesFramework.UI.Commands
 {
@@ -161,7 +162,7 @@ namespace TimeSeriesFramework.UI.Commands
 
             if (frame != null)
             {
-                Assembly assembly = Assembly.LoadFrom(m_userControlAssembly);
+                Assembly assembly = Assembly.LoadFrom(FilePath.GetAbsolutePath(m_userControlAssembly));
                 UserControl userControl = Activator.CreateInstance(assembly.GetType(m_userControlPath)) as UserControl;
 
                 if (userControl != null)
