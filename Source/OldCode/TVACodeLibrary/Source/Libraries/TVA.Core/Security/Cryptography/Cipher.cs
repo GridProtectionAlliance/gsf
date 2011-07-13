@@ -48,8 +48,7 @@
 //  07/05/2011 - Stephen C. Wills
 //       Removed config file setting for FIPS compliance. Checks the registry instead.
 //  07/13/2011 - Stephen C. Wills
-//       Fixed a NullReferenceException that occurs when a computer does not have the registry
-//       key that contains the setting for FIPS compliance.
+//       Modified check for FIPS compliance to work with Windows XP and Windows Server 2003.
 //
 //*******************************************************************************************************
 
@@ -655,6 +654,8 @@ namespace TVA.Security.Cryptography
             string localCacheFileName = DefaultCacheFileName;
             double retryDelayInterval = DefaultRetryDelayInterval;
             int maximumRetryAttempts = DefaultMaximumRetryAttempts;
+            string fipsKeyOld = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa";
+            string fipsKeyNew = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\FipsAlgorithmPolicy";
 
             // Load cryptographic settings
             ConfigurationFile config = ConfigurationFile.Current;
@@ -669,7 +670,7 @@ namespace TVA.Security.Cryptography
             maximumRetryAttempts = settings["CacheMaximumRetryAttempts"].ValueAs(maximumRetryAttempts);
 
             // Determine if the user needs to use FIPS-compliant algorithms.
-            s_managedEncryption = (Registry.GetValue("HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\FipsAlgorithmPolicy", "Enabled", 0) ?? 0).ToString() == "0";
+            s_managedEncryption = (Registry.GetValue(fipsKeyNew, "Enabled", 0) ?? Registry.GetValue(fipsKeyOld, "FipsAlgorithmPolicy", 0)).ToString() == "0";
 
             // Initialize local cryptographic key and initialization vector cache (application may only have read-only access to this cache)
             localKeyIVCache = new KeyIVCache()
