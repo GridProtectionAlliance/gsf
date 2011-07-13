@@ -9,20 +9,6 @@
             Contains classes and interfaces that provide the basic infrastructure for writting web services.
             </summary>
         </member>
-        <member name="T:TVA.ServiceModel.Activation.SecureDataServiceHostFactory">
-            <summary>
-            A service host factory for WCF Data Services that enables role-based security using <see cref="T:TVA.ServiceModel.SecurityPolicy"/>.
-            </summary>
-            <see cref="T:TVA.ServiceModel.SecurityPolicy"/>
-        </member>
-        <member name="M:TVA.ServiceModel.Activation.SecureDataServiceHostFactory.CreateServiceHost(System.Type,System.Uri[])">
-            <summary>
-            Creates a new <see cref="T:System.Data.Services.DataServiceHost"/> from the URI.
-            </summary>
-            <param name="serviceType">Specifies the type of WCF service to host.</param>
-            <param name="baseAddresses">An array of base addresses for the service.</param>
-            <returns>New <see cref="T:System.Data.Services.DataServiceHost"/>.</returns>
-        </member>
         <member name="T:TVA.ServiceModel.SelfHostingService">
             <summary>
             A base class for web service that can send and receive data over REST (Representational State Transfer) interface.
@@ -350,6 +336,20 @@
             By default, the <see cref="P:TVA.ServiceModel.SelfHostingService.ServiceHost"/> only has <see cref="T:System.ServiceModel.WebHttpBinding"/> endpoint at the <see cref="P:TVA.ServiceModel.SelfHostingService.Endpoints"/>. 
             Additional endpoints can be added to the <see cref="P:TVA.ServiceModel.SelfHostingService.ServiceHost"/> when <see cref="E:TVA.ServiceModel.SelfHostingService.ServiceHostCreated"/> event is fired.
             </remarks>
+        </member>
+        <member name="T:TVA.ServiceModel.Activation.SecureDataServiceHostFactory">
+            <summary>
+            A service host factory for WCF Data Services that enables role-based security using <see cref="T:TVA.ServiceModel.SecurityPolicy"/>.
+            </summary>
+            <see cref="T:TVA.ServiceModel.SecurityPolicy"/>
+        </member>
+        <member name="M:TVA.ServiceModel.Activation.SecureDataServiceHostFactory.CreateServiceHost(System.Type,System.Uri[])">
+            <summary>
+            Creates a new <see cref="T:System.Data.Services.DataServiceHost"/> from the URI.
+            </summary>
+            <param name="serviceType">Specifies the type of WCF service to host.</param>
+            <param name="baseAddresses">An array of base addresses for the service.</param>
+            <returns>New <see cref="T:System.Data.Services.DataServiceHost"/>.</returns>
         </member>
         <member name="T:TVA.ServiceModel.SecurityPolicy">
             <summary>
