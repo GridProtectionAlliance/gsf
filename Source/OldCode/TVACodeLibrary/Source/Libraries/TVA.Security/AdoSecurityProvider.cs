@@ -11,6 +11,9 @@
 //  ----------------------------------------------------------------------------------------------------
 //  11/24/2010 - Mehulbhai P Thakkar
 //       Generated original version of source code.
+//  07/18/2011 - Stephen C. Wills
+//       Modified a SELECT statement in RefreshData to explicitly alias columns to
+//       fix an error when using SQLite databases.
 //
 //******************************************************************************************************
 
@@ -502,7 +505,7 @@ namespace TVA.Security
 
                     // Load explicitly assigned roles
                     userRoleDataTable.Load(dbConnection.ExecuteReader("SELECT ApplicationRoleID, ApplicationRoleName, ApplicationRoleDescription FROM ApplicationRoleUserAccountDetail WHERE UserName = @name", UserData.Username));
-                    userRoleDataTable.Load(dbConnection.ExecuteReader("SELECT ApplicationRoleSecurityGroupDetail.ApplicationRoleID, ApplicationRoleSecurityGroupDetail.ApplicationRoleName, ApplicationRoleSecurityGroupDetail.ApplicationRoleDescription FROM ApplicationRoleSecurityGroupDetail, SecurityGroupUserAccountDetail WHERE ApplicationRoleSecurityGroupDetail.SecurityGroupID = SecurityGroupUserAccountDetail.SecurityGroupID AND SecurityGroupUserAccountDetail.UserName = @name", UserData.Username));
+                    userRoleDataTable.Load(dbConnection.ExecuteReader("SELECT ApplicationRoleSecurityGroupDetail.ApplicationRoleID AS ApplicationRoleID, ApplicationRoleSecurityGroupDetail.ApplicationRoleName AS ApplicationRoleName, ApplicationRoleSecurityGroupDetail.ApplicationRoleDescription AS ApplicationRoleDescription FROM ApplicationRoleSecurityGroupDetail, SecurityGroupUserAccountDetail WHERE ApplicationRoleSecurityGroupDetail.SecurityGroupID = SecurityGroupUserAccountDetail.SecurityGroupID AND SecurityGroupUserAccountDetail.UserName = @name", UserData.Username));
 
                     foreach (DataRow role in userRoleDataTable.Rows)
                     {
