@@ -300,38 +300,6 @@ namespace TimeSeriesFramework.UI
         #endregion
 
         /// <summary>
-        /// Provides strongly-typed access to each of the column values in the specified row.
-        /// Automatically applies type conversion to the column values.
-        /// </summary>
-        /// <typeparam name="T">A generic parameter that specifies the return type of the column.</typeparam>
-        /// <param name="row">The input <see cref="DataRow"/>, which acts as the this instance for the extension method.</param>
-        /// <param name="field">The name of the column to return the value of.</param>
-        /// <returns>The value, of type T, of the <see cref="DataColumn"/> specified by columnName.</returns>
-        public static T ConvertField<T>(this DataRow row, string field)
-        {
-            object value = row.Field<object>(field);
-            return (T)Convert.ChangeType(value, typeof(T));
-        }
-
-        /// <summary>
-        /// Provides strongly-typed access to each of the column values in the specified row.
-        /// Automatically applies type conversion to the column values.
-        /// </summary>
-        /// <typeparam name="T">A generic parameter that specifies the return type of the column.</typeparam>
-        /// <param name="row">The input <see cref="DataRow"/>, which acts as the this instance for the extension method.</param>
-        /// <param name="field">The name of the column to return the value of.</param>
-        /// <returns>The value, of type T, of the <see cref="DataColumn"/> specified by columnName.</returns>
-        public static Nullable<T> ConvertNullableField<T>(this DataRow row, string field) where T : struct
-        {
-            object value = row.Field<object>(field);
-
-            if (value == null)
-                return null;
-            else
-                return (T)Convert.ChangeType(value, typeof(T));
-        }
-
-        /// <summary>
         /// Assigns <see cref="CurrentNodeID"/> based ID of currently active node.
         /// </summary>
         /// <param name="nodeID">Current node ID <see cref="CurrentNodeID"/> to assign.</param>
