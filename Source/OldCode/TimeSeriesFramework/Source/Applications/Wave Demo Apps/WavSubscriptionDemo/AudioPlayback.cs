@@ -367,7 +367,7 @@ namespace NAudioWpfDemo
             subscriber.ConnectionEstablished += DataSubscriber_ConnectionEstablished;
             subscriber.ConnectionTerminated += DataSubscriber_ConnectionTerminated;
             subscriber.MetaDataReceived += DataSubscriber_MetaDataReceived;
-            subscriber.StartTime += DataSubscriber_StartTime;
+            subscriber.DataStartTime += DataSubscriber_DataStartTime;
             subscriber.NewMeasurements += DataSubscriber_NewMeasurements;
 
             subscriber.ConnectionString = string.Format("server={0}; interface={1}", server, IPv6Enabled ? "::0" : "0.0.0.0");
@@ -390,7 +390,7 @@ namespace NAudioWpfDemo
                 subscriber.ConnectionEstablished -= DataSubscriber_ConnectionEstablished;
                 subscriber.ConnectionTerminated -= DataSubscriber_ConnectionTerminated;
                 subscriber.MetaDataReceived -= DataSubscriber_MetaDataReceived;
-                subscriber.StartTime -= DataSubscriber_StartTime;
+                subscriber.DataStartTime -= DataSubscriber_DataStartTime;
                 subscriber.NewMeasurements -= DataSubscriber_NewMeasurements;
 
                 subscriber.Dispose();
@@ -472,8 +472,8 @@ namespace NAudioWpfDemo
             OnStateChanged(PlaybackState.Connected);
         }
 
-        // Handles the subscriber's StartTime event.
-        private void DataSubscriber_StartTime(object sender, EventArgs<Ticks> e)
+        // Handles the subscriber's DataStartTime event.
+        private void DataSubscriber_DataStartTime(object sender, EventArgs<Ticks> e)
         {
             // We cannot use the time sent by the server because we don't
             // know whether our clock is synchronized with the server's.
