@@ -88,6 +88,7 @@ namespace TimeSeriesFramework.Adapters
         private DataSet m_dataSource;
         private string m_dataMember;
         private int m_initializationTimeout;
+        private bool m_autoStart;
         private bool m_processMeasurementFilter;
         private IMeasurement[] m_outputMeasurements;
         private MeasurementKey[] m_inputMeasurementKeys;
@@ -113,6 +114,7 @@ namespace TimeSeriesFramework.Adapters
             m_name = this.GetType().Name;
             m_settings = new Dictionary<string, string>();
             m_initializationTimeout = AdapterBase.DefaultInitializationTimeout;
+            m_autoStart = true;
 
             m_monitorTimer = new System.Timers.Timer();
             m_monitorTimer.Elapsed += m_monitorTimer_Elapsed;
@@ -279,6 +281,21 @@ namespace TimeSeriesFramework.Adapters
             set
             {
                 m_initializationTimeout = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag indicating if adapter collection should automatically start items when <see cref="AutoInitialize"/> is <c>false</c>.
+        /// </summary>
+        public virtual bool AutoStart
+        {
+            get
+            {
+                return m_autoStart;
+            }
+            set
+            {
+                m_autoStart = value;
             }
         }
 
@@ -839,10 +856,10 @@ namespace TimeSeriesFramework.Adapters
                                     // Dispose old item, initialize new item
                                     this[i] = newAdapter;
 
-                                    // Start new item
+                                    // Attempt to start new item
                                     if (AutoInitialize)
                                         ThreadPool.QueueUserWorkItem(StartItem, newAdapter);
-                                    else
+                                    else if (AutoStart)
                                         newAdapter.Start();
 
                                     foundItem = true;
@@ -859,7 +876,7 @@ namespace TimeSeriesFramework.Adapters
                                 // Start new item
                                 if (AutoInitialize)
                                     ThreadPool.QueueUserWorkItem(StartItem, newAdapter);
-                                else
+                                else if (AutoStart)
                                     newAdapter.Start();
                             }
 
@@ -898,7 +915,7 @@ namespace TimeSeriesFramework.Adapters
                         // start will block and wait for initialization to complete
                         if (AutoInitialize)
                             ThreadPool.QueueUserWorkItem(StartItem, item);
-                        else
+                        else if (AutoStart)
                             item.Start();
                     }
                     catch (Exception ex)
@@ -921,7 +938,16 @@ namespace TimeSeriesFramework.Adapters
 
             try
             {
-                item.Start();
+                // Wait for adapter intialization to complete and see if item is set to auto-start
+                if (item.WaitForInitialize(item.InitializationTimeout))
+                {
+                    if (item.AutoStart)
+                        item.Start();
+                }
+                else
+                {
+                    OnProcessException(new TimeoutException("Timeout waiting for adapter initialization."));
+                }
             }
             catch (Exception ex)
             {

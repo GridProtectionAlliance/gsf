@@ -155,6 +155,15 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
+        /// Gets or sets flag indicating if adapter should automatically start or connect on demand.
+        /// </summary>
+        bool AutoStart
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets or sets flag that determines if measurements being queued for processing should be tested to see if they are in the <see cref="InputMeasurementKeys"/>.
         /// </summary>
         bool ProcessMeasurementFilter

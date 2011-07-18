@@ -95,6 +95,7 @@ namespace TimeSeriesFramework.Adapters
         private Dictionary<string, string> m_settings;
         private DataSet m_dataSource;
         private int m_initializationTimeout;
+        private bool m_autoStart;
         private bool m_processMeasurementFilter;
         private ManualResetEvent m_initializeWaitHandle;
         private MeasurementKey[] m_inputMeasurementKeys;
@@ -286,6 +287,21 @@ namespace TimeSeriesFramework.Adapters
             set
             {
                 m_initializationTimeout = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag indicating if adapter should automatically start or otherwise connect on demand.
+        /// </summary>
+        public virtual bool AutoStart
+        {
+            get
+            {
+                return m_autoStart;
+            }
+            set
+            {
+                m_autoStart = value;
             }
         }
 
@@ -510,19 +526,21 @@ namespace TimeSeriesFramework.Adapters
                 }
                 status.AppendFormat("    Initialization timeout: {0}", InitializationTimeout < 0 ? "Infinite" : InitializationTimeout.ToString() + " milliseconds");
                 status.AppendLine();
+                status.AppendFormat(" Using measurement routing: {0}", !ProcessMeasurementFilter);
+                status.AppendLine();
                 status.AppendFormat("       Adapter initialized: {0}", Initialized);
                 status.AppendLine();
                 status.AppendFormat("         Parent collection: {0}", m_parent == null ? "Undefined" : m_parent.Name);
                 status.AppendLine();
                 status.AppendFormat("         Operational state: {0}", Enabled ? "Running" : "Stopped");
                 status.AppendLine();
+                status.AppendFormat("         Connect on demand: {0}", !AutoStart);
+                status.AppendLine();
                 status.AppendFormat("    Processed measurements: {0}", ProcessedMeasurements);
                 status.AppendLine();
                 status.AppendFormat("    Total adapter run time: {0}", RunTime.ToString());
                 status.AppendLine();
                 status.AppendFormat("   Item reporting interval: {0}", MeasurementReportingInterval);
-                status.AppendLine();
-                status.AppendFormat(" Using measurement routing: {0}", !ProcessMeasurementFilter);
                 status.AppendLine();
                 status.AppendFormat("                Adpater ID: {0}", ID);
                 status.AppendLine();
@@ -656,6 +674,11 @@ namespace TimeSeriesFramework.Adapters
                 MeasurementReportingInterval = int.Parse(setting);
             else
                 MeasurementReportingInterval = DefaultMeasurementReportingInterval;
+
+            if (settings.TryGetValue("connectOnDemand", out setting))
+                AutoStart = !setting.ParseBoolean();
+            else
+                AutoStart = true;
         }
 
         /// <summary>

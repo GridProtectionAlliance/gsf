@@ -81,6 +81,7 @@ namespace TimeSeriesFramework.Adapters
         private Dictionary<string, string> m_settings;
         private DataSet m_dataSource;
         private int m_initializationTimeout;
+        private bool m_autoStart;
         private bool m_processMeasurementFilter;
         private MeasurementKey[] m_inputMeasurementKeys;
         private List<MeasurementKey> m_inputMeasurementKeysHash;
@@ -238,6 +239,21 @@ namespace TimeSeriesFramework.Adapters
             set
             {
                 m_initializationTimeout = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag indicating if adapter should automatically start or otherwise connect on demand.
+        /// </summary>
+        public virtual bool AutoStart
+        {
+            get
+            {
+                return m_autoStart;
+            }
+            set
+            {
+                m_autoStart = value;
             }
         }
 
@@ -489,6 +505,12 @@ namespace TimeSeriesFramework.Adapters
                 status.AppendLine();
                 status.AppendFormat("         Operational state: {0}", Enabled ? "Running" : "Stopped");
                 status.AppendLine();
+                status.AppendFormat("         Connect on demand: {0}", !AutoStart);
+                status.AppendLine();
+                status.AppendFormat("    Processed measurements: {0}", ProcessedMeasurements);
+                status.AppendLine();
+                status.AppendFormat("    Total adapter run time: {0}", RunTime.ToString());
+                status.AppendLine();
                 status.AppendFormat("                Adpater ID: {0}", ID);
                 status.AppendLine();
 
@@ -666,6 +688,11 @@ namespace TimeSeriesFramework.Adapters
 
             if (settings.TryGetValue("outputSourceIDs", out setting))
                 OutputSourceIDs = setting.Split(',');
+
+            if (settings.TryGetValue("connectOnDemand", out setting))
+                AutoStart = !setting.ParseBoolean();
+            else
+                AutoStart = true;
         }
 
         /// <summary>
