@@ -23,6 +23,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
@@ -221,7 +222,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     signalTypeList.Add(new SignalType()
                     {
-                        ID = row.Field<int>("ID"),
+                        ID = row.ConvertField<int>("ID"),
                         Acronym = row.Field<string>("Acronym"),
                         Name = row.Field<string>("Name"),
                         Suffix = row.Field<string>("Suffix"),
@@ -262,7 +263,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 signalTypeTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM SignalType ORDER BY Name");
 
                 foreach (DataRow row in signalTypeTable.Rows)
-                    signalTypeList[row.Field<int>("ID")] = row.Field<string>("Name");
+                    signalTypeList[row.ConvertField<int>("ID")] = row.Field<string>("Name");
 
                 return signalTypeList;
             }

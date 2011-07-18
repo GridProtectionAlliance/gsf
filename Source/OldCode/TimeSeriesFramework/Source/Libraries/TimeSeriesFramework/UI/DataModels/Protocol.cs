@@ -25,6 +25,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -223,7 +224,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 protocolTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM Protocol ORDER BY LoadOrder");
 
                 foreach (DataRow row in protocolTable.Rows)
-                    protocolList[row.Field<int>("ID")] = row.Field<string>("Acronym");
+                    protocolList[row.ConvertField<int>("ID")] = row.Field<string>("Acronym");
 
                 return protocolList;
             }

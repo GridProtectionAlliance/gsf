@@ -395,7 +395,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 DataTable securityGroupTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM SecurityGroup ORDER BY Name");
 
                 foreach (DataRow row in securityGroupTable.Rows)
-                    securityGroupList[row.Field<int>("ID")] = row.Field<string>("Name");
+                    securityGroupList[row.ConvertField<int>("ID")] = row.Field<string>("Name");
 
                 return securityGroupList;
             }

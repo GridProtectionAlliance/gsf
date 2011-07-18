@@ -381,7 +381,7 @@ namespace TimeSeriesFramework.UI.DataModels
                     historianList.Add(new Historian()
                         {
                             NodeID = database.Guid(row, "NodeID"),
-                            ID = row.Field<int>("ID"),
+                            ID = row.ConvertField<int>("ID"),
                             Acronym = row.Field<string>("Acronym"),
                             Name = row.Field<string>("Name"),
                             AssemblyName = row.Field<string>("AssemblyName"),
@@ -389,9 +389,9 @@ namespace TimeSeriesFramework.UI.DataModels
                             ConnectionString = row.Field<string>("ConnectionString"),
                             IsLocal = Convert.ToBoolean(row.Field<object>("IsLocal")),
                             Description = row.Field<string>("Description"),
-                            LoadOrder = row.Field<int>("LoadOrder"),
+                            LoadOrder = row.ConvertField<int>("LoadOrder"),
                             Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
-                            MeasurementReportingInterval = row.Field<int>("MeasurementReportingInterval"),
+                            MeasurementReportingInterval = row.ConvertField<int>("MeasurementReportingInterval"),
                             m_nodeName = row.Field<string>("NodeName")
                         });
                 }
@@ -428,7 +428,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 foreach (DataRow row in historianTable.Rows)
                 {
-                    historianList[row.Field<int>("ID")] = row.Field<string>("Acronym");
+                    historianList[row.ConvertField<int>("ID")] = row.Field<string>("Acronym");
                 }
 
                 return historianList;
@@ -534,7 +534,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 Historian historian = new Historian()
                 {
                     NodeID = database.Guid(row, "NodeID"),
-                    ID = row.Field<int>("ID"),
+                    ID = row.ConvertField<int>("ID"),
                     Acronym = row.Field<string>("Acronym"),
                     Name = row.Field<string>("Name"),
                     AssemblyName = row.Field<string>("AssemblyName"),
@@ -542,9 +542,9 @@ namespace TimeSeriesFramework.UI.DataModels
                     ConnectionString = row.Field<string>("ConnectionString"),
                     IsLocal = Convert.ToBoolean(row.Field<object>("IsLocal")),
                     Description = row.Field<string>("Description"),
-                    LoadOrder = row.Field<int>("LoadOrder"),
+                    LoadOrder = row.ConvertField<int>("LoadOrder"),
                     Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
-                    MeasurementReportingInterval = row.Field<int>("MeasurementReportingInterval"),
+                    MeasurementReportingInterval = row.ConvertField<int>("MeasurementReportingInterval"),
                     m_nodeName = row.Field<string>("NodeName")
                 };
 

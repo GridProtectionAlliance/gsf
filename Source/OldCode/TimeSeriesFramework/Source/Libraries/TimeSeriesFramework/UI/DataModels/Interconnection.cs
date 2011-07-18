@@ -23,6 +23,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -145,7 +146,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 interconnectionTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM Interconnection ORDER BY LoadOrder");
 
                 foreach (DataRow row in interconnectionTable.Rows)
-                    interconnectionList[row.Field<int>("ID")] = row.Field<string>("Name");
+                    interconnectionList[row.ConvertField<int>("ID")] = row.Field<string>("Name");
 
                 return interconnectionList;
             }

@@ -257,12 +257,12 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     companyList.Add(new Company()
                     {
-                        ID = row.Field<int>("ID"),
+                        ID = row.ConvertField<int>("ID"),
                         Acronym = row.Field<string>("Acronym"),
                         MapAcronym = row.Field<string>("MapAcronym"),
                         Name = row.Field<string>("Name"),
                         URL = row.Field<string>("URL"),
-                        LoadOrder = row.Field<int>("LoadOrder")
+                        LoadOrder = row.ConvertField<int>("LoadOrder")
                     });
                 }
 
@@ -295,7 +295,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 DataTable companyTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM Company ORDER BY LoadOrder");
 
                 foreach (DataRow row in companyTable.Rows)
-                    companyList[row.Field<int>("ID")] = row.Field<string>("Name");
+                    companyList[row.ConvertField<int>("ID")] = row.Field<string>("Name");
 
                 return companyList;
             }

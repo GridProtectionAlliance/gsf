@@ -371,12 +371,12 @@ namespace TimeSeriesFramework.UI.DataModels
                     adapterList.Add(new Adapter()
                     {
                         NodeID = database.Guid(row, "NodeID"),
-                        ID = row.Field<int>("ID"),
+                        ID = row.ConvertField<int>("ID"),
                         AdapterName = row.Field<string>("AdapterName"),
                         AssemblyName = row.Field<string>("AssemblyName"),
                         TypeName = row.Field<string>("TypeName"),
                         ConnectionString = row.Field<string>("ConnectionString"),
-                        LoadOrder = row.Field<int>("LoadOrder"),
+                        LoadOrder = row.ConvertField<int>("LoadOrder"),
                         Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
                         NodeName = row.Field<string>("NodeName"),
                         Type = adapterType
@@ -424,7 +424,7 @@ namespace TimeSeriesFramework.UI.DataModels
                     "ORDER BY LoadOrder", DefaultTimeout, true);
 
                 foreach (DataRow row in adapterTable.Rows)
-                    adapterList[row.Field<int>("ID")] = row.Field<string>("Name");
+                    adapterList[row.ConvertField<int>("ID")] = row.Field<string>("Name");
 
                 return adapterList;
             }

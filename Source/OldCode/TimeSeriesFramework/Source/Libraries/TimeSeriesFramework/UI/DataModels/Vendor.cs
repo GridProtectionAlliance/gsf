@@ -253,7 +253,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     vendorList.Add(new Vendor()
                         {
-                            ID = row.Field<int>("ID"),
+                            ID = row.ConvertField<int>("ID"),
                             Acronym = row.Field<string>("Acronym"),
                             Name = row.Field<string>("Name"),
                             PhoneNumber = row.Field<string>("PhoneNumber"),
@@ -292,7 +292,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 DataTable vendorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM Vendor ORDER BY Name");
 
                 foreach (DataRow row in vendorTable.Rows)
-                    vendorList[row.Field<int>("ID")] = row.Field<string>("Name");
+                    vendorList[row.ConvertField<int>("ID")] = row.Field<string>("Name");
 
                 return vendorList;
             }

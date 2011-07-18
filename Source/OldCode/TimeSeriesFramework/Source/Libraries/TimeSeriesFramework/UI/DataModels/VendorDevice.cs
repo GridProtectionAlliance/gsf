@@ -240,8 +240,8 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     vendorDeviceList.Add(new VendorDevice()
                     {
-                        ID = row.Field<int>("ID"),
-                        VendorID = row.Field<int>("VendorID"),
+                        ID = row.ConvertField<int>("ID"),
+                        VendorID = row.ConvertField<int>("VendorID"),
                         Name = row.Field<string>("Name"),
                         Description = row.Field<string>("Description"),
                         URL = row.Field<string>("URL"),
@@ -278,7 +278,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 DataTable vendorDeviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM VendorDevice ORDER BY Name");
 
                 foreach (DataRow row in vendorDeviceTable.Rows)
-                    vendorDeviceList[row.Field<int>("ID")] = row.Field<string>("Name");
+                    vendorDeviceList[row.ConvertField<int>("ID")] = row.Field<string>("Name");
 
                 return vendorDeviceList;
             }

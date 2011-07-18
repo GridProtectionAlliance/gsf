@@ -553,7 +553,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 DataTable applicationRoleTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM ApplicationRole ORDER BY Name");
 
                 foreach (DataRow row in applicationRoleTable.Rows)
-                    applicationRoleList[row.Field<int>("ID")] = row.Field<string>("Name");
+                    applicationRoleList[row.ConvertField<int>("ID")] = row.Field<string>("Name");
 
                 return applicationRoleList;
             }
