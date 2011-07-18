@@ -39,5 +39,18 @@ namespace TimeSeriesFramework.Adapters
         /// <see cref="EventArgs{T}.Argument"/> is a collection of new measurements for host to process.
         /// </remarks>
         event EventHandler<EventArgs<ICollection<IMeasurement>>> NewMeasurements;
-    }	
+
+        /// <summary>
+        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter output measurements.
+        /// </summary>
+        /// <remarks>
+        /// This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+        /// Set to <c>null</c> apply no filter.
+        /// </remarks>
+        string[] OutputSourceIDs
+        {
+            get;
+            set;
+        }
+    }
 }

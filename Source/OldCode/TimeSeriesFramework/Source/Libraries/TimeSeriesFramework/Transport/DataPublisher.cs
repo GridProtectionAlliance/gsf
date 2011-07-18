@@ -171,7 +171,7 @@ namespace TimeSeriesFramework.Transport
         /// <remarks>
         /// Unsolicited response provides the start time of data being processed from the first measurement.
         /// </remarks>
-        StartTime = 0x86,
+        DataStartTime = 0x86,
         /// <summary>
         /// No operation keep-alive ping.
         /// </summary>
@@ -652,9 +652,9 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         /// <param name="clientID">ID of client to send response.</param>
         /// <param name="startTime">Start time, in <see cref="Ticks"/>, of first measurement transmitted.</param>
-        internal protected virtual bool SendStartTime(Guid clientID, Ticks startTime)
+        internal protected virtual bool SendDataStartTime(Guid clientID, Ticks startTime)
         {
-            bool result = SendClientResponse(clientID, ServerResponse.StartTime, ServerCommand.Subscribe, EndianOrder.BigEndian.GetBytes((long)startTime));
+            bool result = SendClientResponse(clientID, ServerResponse.DataStartTime, ServerCommand.Subscribe, EndianOrder.BigEndian.GetBytes((long)startTime));
             OnStatusMessage("Start time sent to {0}.", m_clientConnections[clientID].ConnectionID);
             return result;
         }

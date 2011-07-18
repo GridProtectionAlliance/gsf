@@ -664,7 +664,7 @@ namespace TimeSeriesFramework
                     m_framesPerSecond = value;
                     m_ticksPerFrame = Ticks.PerSecond / (double)m_framesPerSecond;
 
-                    // We calculate the default maximum wait time for frame publication in whole milliseconds per frame plus 10%,
+                    // We calculate the default maximum wait time for frame publication in whole milliseconds per frame plus 20%,
                     // this comes out to be 40 milliseconds at 30 frames per second and 20 milliseconds at 60 frames per second
                     m_maximumPublicationTimeout = (int)Math.Round((m_ticksPerFrame + m_ticksPerFrame * 0.2D) / Ticks.PerMillisecond);
 

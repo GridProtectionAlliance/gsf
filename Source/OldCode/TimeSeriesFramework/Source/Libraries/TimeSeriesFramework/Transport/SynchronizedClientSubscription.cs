@@ -224,7 +224,7 @@ namespace TimeSeriesFramework.Transport
                 if (measurement != null)
                     timestamp = measurement.Timestamp;
 
-                m_parent.SendStartTime(m_clientID, timestamp);
+                m_parent.SendDataStartTime(m_clientID, timestamp);
             }
 
             if (ProcessMeasurementFilter)

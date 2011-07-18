@@ -57,6 +57,32 @@ namespace TimeSeriesFramework.Adapters
         event EventHandler<EventArgs<IEnumerable<IMeasurement>>> DiscardingMeasurements;
 
         /// <summary>
+        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter input measurement keys.
+        /// </summary>
+        /// <remarks>
+        /// This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+        /// Set to <c>null</c> apply no filter.
+        /// </remarks>
+        string[] InputSourceIDs
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter output measurements.
+        /// </summary>
+        /// <remarks>
+        /// This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+        /// Set to <c>null</c> apply no filter.
+        /// </remarks>
+        string[] OutputSourceIDs
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Queues measurements for calculation processing.  Measurements are automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
         /// </summary>
         /// <param name="measurements">Collection of measurements to queue for calculation processing.</param>

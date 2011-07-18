@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -845,6 +846,165 @@ namespace TimeSeriesFramework.Adapters
 
         // Static Methods
 
+        /// <summary>
+        /// Loads an <see cref="IOutputAdapter"/> or <see cref="IActionAdapter"/> instance's input measurement keys from a specific set of source ID's.
+        /// </summary>
+        /// <param name="adapter"><see cref="IAdapter"/> to load input measurement keys for.</param>
+        /// <param name="measurementTable">Measurement table name used to load input source ID's.</param>
+        /// <remarks>
+        /// Any existing input measurement keys will be distinctly merged with those associated with specified source ID's.
+        /// </remarks>
+        public static void LoadInputSourceIDs(IAdapter adapter, string measurementTable = "ActiveMeasurements")
+        {
+            string[] sourceIDs = null;
+
+            if (adapter is IOutputAdapter)
+                sourceIDs = (adapter as IOutputAdapter).InputSourceIDs;
+            else if (adapter is IActionAdapter)
+                sourceIDs = (adapter as IActionAdapter).InputSourceIDs;
+
+            if (sourceIDs != null)
+            {
+                // Attempt to lookup input measurement keys for given source IDs from default measurement table, if defined
+                try
+                {
+                    if (adapter.DataSource.Tables.Contains(measurementTable))
+                    {
+                        StringBuilder likeExpression = new StringBuilder();
+
+                        // Build like expression for each source ID
+                        foreach (string sourceID in sourceIDs)
+                        {
+                            if (likeExpression.Length > 0)
+                                likeExpression.Append(" OR ");
+
+                            likeExpression.AppendFormat("ID LIKE '{0}:*'", sourceID);
+                        }
+
+                        DataRow[] filteredRows = adapter.DataSource.Tables[measurementTable].Select(likeExpression.ToString());
+                        MeasurementKey[] sourceIDKeys = null;
+
+                        if (filteredRows.Length > 0)
+                            sourceIDKeys = filteredRows.Select(row => MeasurementKey.Parse(row["ID"].ToNonNullString("_:0"), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>())).ToArray();
+
+                        if (sourceIDKeys != null)
+                        {
+                            // Combine input measurement keys for source IDs with any existing input measurement keys and return unique set
+                            if (adapter.InputMeasurementKeys == null)
+                                adapter.InputMeasurementKeys = sourceIDKeys;
+                            else
+                                adapter.InputMeasurementKeys = sourceIDKeys.Concat(adapter.InputMeasurementKeys).Distinct().ToArray();
+                        }
+                    }
+                }
+                catch
+                {
+                    // Errors here are not catastrophic, this simply limits the auto-assignment of input measurement keys based on specified source ID's
+                }
+            }
+        }
+
+        /// <summary>
+        /// Loads an <see cref="IInputAdapter"/> or <see cref="IActionAdapter"/> instance's output measurements from a specific set of source ID's.
+        /// </summary>
+        /// <param name="adapter"><see cref="IAdapter"/> to load output measurements for.</param>
+        /// <param name="measurementTable">Measurement table name used to load output source ID's.</param>
+        /// <remarks>
+        /// Any existing output measurements will be distinctly merged with those associated with specified source ID's.
+        /// </remarks>
+        public static void LoadOutputSourceIDs(IAdapter adapter, string measurementTable = "ActiveMeasurements")
+        {
+            string[] sourceIDs = null;
+
+            if (adapter is IInputAdapter)
+                sourceIDs = (adapter as IInputAdapter).OutputSourceIDs;
+            else if (adapter is IActionAdapter)
+                sourceIDs = (adapter as IActionAdapter).OutputSourceIDs;
+
+            if (sourceIDs != null)
+            {
+                // Attempt to lookup output measurements for given source IDs from default measurement table, if defined
+                try
+                {
+                    if (adapter.DataSource.Tables.Contains(measurementTable))
+                    {
+                        StringBuilder likeExpression = new StringBuilder();
+
+                        // Build like expression for each source ID
+                        foreach (string sourceID in sourceIDs)
+                        {
+                            if (likeExpression.Length > 0)
+                                likeExpression.Append(" OR ");
+
+                            likeExpression.AppendFormat("ID LIKE '{0}:*'", sourceID);
+                        }
+
+                        DataRow[] filteredRows = adapter.DataSource.Tables[measurementTable].Select(likeExpression.ToString());
+                        MeasurementKey[] sourceIDKeys = null;
+
+                        if (filteredRows.Length > 0)
+                            sourceIDKeys = filteredRows.Select(row => MeasurementKey.Parse(row["ID"].ToNonNullString("_:0"), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>())).ToArray();
+
+                        if (sourceIDKeys != null)
+                        {
+                            List<IMeasurement> measurements = new List<IMeasurement>();
+
+                            foreach (MeasurementKey key in sourceIDKeys)
+                            {
+                                // Create a new measurement for the provided field level information
+                                Measurement measurement = new Measurement()
+                                {
+                                    Key = key
+                                };
+
+                                // Attempt to lookup other associated measurement meta-data from default measurement table, if defined
+                                try
+                                {
+                                    if (adapter.DataSource.Tables.Contains(measurementTable))
+                                    {
+                                        filteredRows = adapter.DataSource.Tables[measurementTable].Select(string.Format("ID = '{0}'", key.ToString()));
+
+                                        if (filteredRows.Length > 0)
+                                        {
+                                            DataRow row = filteredRows[0];
+
+                                            measurement.ID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
+                                            measurement.TagName = row["PointTag"].ToNonNullString();
+
+                                            // Attempt to update empty signal ID if available
+                                            if (measurement.Key.SignalID == Guid.Empty)
+                                                measurement.Key.UpdateSignalID(measurement.ID);
+
+                                            measurement.Multiplier = double.Parse(row["Multiplier"].ToString());
+                                            measurement.Adder = double.Parse(row["Adder"].ToString());
+                                        }
+                                    }
+                                }
+                                catch
+                                {
+                                    // Errors here are not catastrophic, this simply limits the available meta-data
+                                    measurement.ID = Guid.Empty;
+                                    measurement.TagName = string.Empty;
+                                }
+
+                                measurements.Add(measurement);
+                            }
+
+                            // Combine output measurements for source IDs with any existing output measurements and return unique set
+                            if (adapter.OutputMeasurements == null)
+                                adapter.OutputMeasurements = measurements.ToArray();
+                            else
+                                adapter.OutputMeasurements = measurements.Concat(adapter.OutputMeasurements).Distinct().ToArray();
+                        }
+                    }
+                }
+                catch
+                {
+                    // Errors here are not catastrophic, this simply limits the auto-assignment of input measurement keys based on specified source ID's
+                }
+            }
+        }
+
         // Input keys can use DataSource for filtering desired set of input or output measurements
         // based on any table and fields in the data set by using a filter expression instead of
         // a list of measurement ID's. The format is as follows:
@@ -867,10 +1027,11 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Parses input measurement keys from connection string setting.
         /// </summary>
-        /// <param name="dataSource">The <see cref="DataSet"/> used to filter measurments when user specifies a FILTER expression to define input measurement keys.</param>
+        /// <param name="dataSource">The <see cref="DataSet"/> used to define input measurement keys.</param>
         /// <param name="value">Value of setting used to define input measurement keys, typically "inputMeasurementKeys".</param>
+        /// <param name="measurementTable">Measurement table name used to load additional meta-data; this is not used when specifying a FILTER expression.</param>
         /// <returns>User selected input measurement keys.</returns>
-        public static MeasurementKey[] ParseInputMeasurementKeys(DataSet dataSource, string value)
+        public static MeasurementKey[] ParseInputMeasurementKeys(DataSet dataSource, string value, string measurementTable = "ActiveMeasurements")
         {
             List<MeasurementKey> keys = new List<MeasurementKey>();
             MeasurementKey key;
@@ -910,9 +1071,9 @@ namespace TimeSeriesFramework.Adapters
                                 // Attempt to update empty signal ID if available
                                 if (key.SignalID == Guid.Empty)
                                 {
-                                    if (dataSource.Tables.Contains("ActiveMeasurements"))
+                                    if (dataSource.Tables.Contains(measurementTable))
                                     {
-                                        DataRow[] filteredRows = dataSource.Tables["ActiveMeasurements"].Select(string.Format("ID = '{0}'", key.ToString()));
+                                        DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("ID = '{0}'", key.ToString()));
 
                                         if (filteredRows.Length > 0)
                                             key.SignalID = filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
@@ -923,9 +1084,9 @@ namespace TimeSeriesFramework.Adapters
                             }
                             else if (Guid.TryParse(item, out id))
                             {
-                                if (dataSource.Tables.Contains("ActiveMeasurements"))
+                                if (dataSource.Tables.Contains(measurementTable))
                                 {
-                                    DataRow[] filteredRows = dataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalID = '{0}'", id));
+                                    DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("SignalID = '{0}'", id));
 
                                     if (filteredRows.Length > 0 && MeasurementKey.TryParse(filteredRows[0]["ID"].ToString(), id, out key))
                                         keys.Add(key);
@@ -946,10 +1107,11 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Parses output measurements from connection string setting.
         /// </summary>
-        /// <param name="dataSource">The <see cref="DataSet"/> used to filter measurments when user specifies a FILTER expression to define output measurements.</param>
+        /// <param name="dataSource">The <see cref="DataSet"/> used to define output measurements.</param>
         /// <param name="value">Value of setting used to define output measurements, typically "outputMeasurements".</param>
+        /// <param name="measurementTable">Measurement table name used to load additional meta-data; this is not used when specifying a FILTER expression.</param>
         /// <returns>User selected output measurements.</returns>
-        public static IMeasurement[] ParseOutputMeasurements(DataSet dataSource, string value)
+        public static IMeasurement[] ParseOutputMeasurements(DataSet dataSource, string value, string measurementTable = "ActiveMeasurements")
         {
             List<IMeasurement> measurements = new List<IMeasurement>();
             Measurement measurement;
@@ -1003,9 +1165,9 @@ namespace TimeSeriesFramework.Adapters
                             {
                                 if (Guid.TryParse(item, out id))
                                 {
-                                    if (dataSource.Tables.Contains("ActiveMeasurements"))
+                                    if (dataSource.Tables.Contains(measurementTable))
                                     {
-                                        DataRow[] filteredRows = dataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalID = '{0}'", id));
+                                        DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("SignalID = '{0}'", id));
 
                                         if (filteredRows.Length > 0)
                                             MeasurementKey.TryParse(filteredRows[0]["ID"].ToString(), id, out key);
@@ -1049,9 +1211,9 @@ namespace TimeSeriesFramework.Adapters
                             // Attempt to lookup other associated measurement meta-data from default measurement table, if defined
                             try
                             {
-                                if (dataSource.Tables.Contains("ActiveMeasurements"))
+                                if (dataSource.Tables.Contains(measurementTable))
                                 {
-                                    DataRow[] filteredRows = dataSource.Tables["ActiveMeasurements"].Select(string.Format("ID = '{0}'", key.ToString()));
+                                    DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("ID = '{0}'", key.ToString()));
 
                                     if (filteredRows.Length > 0)
                                     {

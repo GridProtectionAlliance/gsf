@@ -23,7 +23,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -62,7 +61,7 @@ namespace TimeSeriesFramework.Adapters
 
         // Fields
         private ProcessQueue<IMeasurement> m_measurementQueue;
-        private List<string> m_sourceIDs;
+        private List<string> m_inputSourceIDs;
         private System.Timers.Timer m_connectionTimer;
         private System.Timers.Timer m_monitorTimer;
         private bool m_disposed;
@@ -117,72 +116,35 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
-        /// Gets or sets <see cref="IMeasurement"/> source ID's used to filter output measurements.
+        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter input measurements.
         /// </summary>
         /// <remarks>
-        /// Set to <c>null</c> apply no filter (i.e., adapter expects all measurements).
+        /// This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+        /// Set to <c>null</c> apply no filter.
         /// </remarks>
-        public virtual string[] SourceIDs
+        public virtual string[] InputSourceIDs
         {
             get
             {
-                if (m_sourceIDs == null)
+                if (m_inputSourceIDs == null)
                     return null;
 
-                return m_sourceIDs.ToArray();
+                return m_inputSourceIDs.ToArray();
             }
             set
             {
                 if (value == null)
                 {
-                    m_sourceIDs = null;
+                    m_inputSourceIDs = null;
                 }
                 else
                 {
-                    m_sourceIDs = new List<string>(value);
-                    m_sourceIDs.Sort();
+                    m_inputSourceIDs = new List<string>(value);
+                    m_inputSourceIDs.Sort();
                 }
 
                 // Filter measurements to list of specified source IDs
-                if (m_sourceIDs != null)
-                {
-                    // Attempt to lookup input measurement keys for given source IDs from default measurement table, if defined
-                    try
-                    {
-                        if (DataSource.Tables.Contains("ActiveMeasurements"))
-                        {
-                            StringBuilder likeExpression = new StringBuilder();
-
-                            // Build like expression for each source ID
-                            foreach (string sourceID in m_sourceIDs)
-                            {
-                                if (likeExpression.Length > 0)
-                                    likeExpression.Append(" OR ");
-
-                                likeExpression.AppendFormat("ID LIKE '{0}:*'", sourceID);
-                            }
-
-                            DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select(likeExpression.ToString());
-                            MeasurementKey[] sourceIDKeys = null;
-
-                            if (filteredRows.Length > 0)
-                                sourceIDKeys = filteredRows.Select(row => MeasurementKey.Parse(row["ID"].ToNonNullString("_:0"), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>())).ToArray();
-
-                            if (sourceIDKeys != null)
-                            {
-                                // Combine input measurement keys for source IDs with any existing input measurement keys and return unique set
-                                if (InputMeasurementKeys == null)
-                                    InputMeasurementKeys = sourceIDKeys;
-                                else
-                                    InputMeasurementKeys = sourceIDKeys.Concat(InputMeasurementKeys).Distinct().ToArray();
-                            }
-                        }
-                    }
-                    catch
-                    {
-                        // Errors here are not catastrophic, this simply limits the auto-assignment of input measurement keys based on specified source ID's
-                    }
-                }
+                AdapterBase.LoadInputSourceIDs(this);
             }
         }
 
@@ -247,7 +209,7 @@ namespace TimeSeriesFramework.Adapters
                 StringBuilder status = new StringBuilder();
 
                 status.Append(base.Status);
-                status.AppendFormat("     Source ID filter list: {0}", (m_sourceIDs == null ? "[No filter applied]" : m_sourceIDs.ToDelimitedString(',')));
+                status.AppendFormat("     Source ID filter list: {0}", (m_inputSourceIDs == null ? "[No filter applied]" : m_inputSourceIDs.ToDelimitedString(',')));
                 status.AppendLine();
                 status.AppendFormat("   Asynchronous connection: {0}", UseAsyncConnect);
                 status.AppendLine();
@@ -318,10 +280,10 @@ namespace TimeSeriesFramework.Adapters
             string setting;
 
             // Load optional parameters
-            if (settings.TryGetValue("sourceids", out setting))
-                SourceIDs = setting.Split(',');
+            if (settings.TryGetValue("inputSourceIDs", out setting) || settings.TryGetValue("sourceids", out setting))
+                InputSourceIDs = setting.Split(',');
             else
-                SourceIDs = null;
+                InputSourceIDs = null;
 
             // Start data monitor...
             m_monitorTimer.Start();
@@ -341,7 +303,7 @@ namespace TimeSeriesFramework.Adapters
             else
                 InputMeasurementKeys = null;
 
-            SourceIDs = SourceIDs;
+            InputSourceIDs = InputSourceIDs;
         }
 
         /// <summary>

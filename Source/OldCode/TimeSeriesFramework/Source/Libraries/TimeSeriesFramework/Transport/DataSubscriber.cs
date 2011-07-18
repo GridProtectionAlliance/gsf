@@ -66,7 +66,7 @@ namespace TimeSeriesFramework.Transport
         /// <summary>
         /// Occurs when first measurement is transmitted by data publication server.
         /// </summary>
-        public event EventHandler<EventArgs<Ticks>> StartTime;
+        public event EventHandler<EventArgs<Ticks>> DataStartTime;
 
         // Fields
         private TcpClient m_commandChannel;
@@ -839,9 +839,9 @@ namespace TimeSeriesFramework.Transport
                             // Expose new measurements to consumer
                             OnNewMeasurements(measurements);
                             break;
-                        case ServerResponse.StartTime:
+                        case ServerResponse.DataStartTime:
                             // Raise data start time event
-                            OnStartTime(EndianOrder.BigEndian.ToInt64(buffer, responseIndex));
+                            OnDataStartTime(EndianOrder.BigEndian.ToInt64(buffer, responseIndex));
                             break;
                         case ServerResponse.UpdateSignalIndexCache:
                             // Deserialize new signal index cache
@@ -977,13 +977,13 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
-        /// Raises the <see cref="StartTime"/> event.
+        /// Raises the <see cref="DataStartTime"/> event.
         /// </summary>
         /// <param name="startTime">Start time, in <see cref="Ticks"/>, of first measurement transmitted.</param>
-        protected void OnStartTime(Ticks startTime)
+        protected void OnDataStartTime(Ticks startTime)
         {
-            if (StartTime != null)
-                StartTime(this, new EventArgs<Ticks>(startTime));
+            if (DataStartTime != null)
+                DataStartTime(this, new EventArgs<Ticks>(startTime));
         }
 
         #region [ Command Channel Event Handlers ]

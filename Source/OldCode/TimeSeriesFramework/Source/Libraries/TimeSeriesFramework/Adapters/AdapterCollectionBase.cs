@@ -91,6 +91,8 @@ namespace TimeSeriesFramework.Adapters
         private bool m_processMeasurementFilter;
         private IMeasurement[] m_outputMeasurements;
         private MeasurementKey[] m_inputMeasurementKeys;
+        private string[] m_inputSourceIDs;
+        private string[] m_outputSourceIDs;
         private Ticks m_lastProcessTime;
         private Time m_totalProcessTime;
         private long m_processedMeasurements;
@@ -353,6 +355,42 @@ namespace TimeSeriesFramework.Adapters
             {
                 m_outputMeasurements = value;
                 OnOutputMeasurementsUpdated();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter input measurement keys.
+        /// </summary>
+        /// <remarks>
+        /// The collection classes simply track this value if assigned, no automatic action is taken.
+        /// </remarks>
+        public virtual string[] InputSourceIDs
+        {
+            get
+            {
+                return m_inputSourceIDs;
+            }
+            set
+            {
+                m_inputSourceIDs = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter output measurements.
+        /// </summary>
+        /// <remarks>
+        /// The collection classes simply track this value if assigned, no automatic action is taken.
+        /// </remarks>
+        public virtual string[] OutputSourceIDs
+        {
+            get
+            {
+                return m_outputSourceIDs;
+            }
+            set
+            {
+                m_outputSourceIDs = value;
             }
         }
 

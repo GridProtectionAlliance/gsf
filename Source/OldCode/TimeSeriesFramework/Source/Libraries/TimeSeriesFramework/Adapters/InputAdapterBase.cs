@@ -50,6 +50,7 @@ namespace TimeSeriesFramework.Adapters
         public event EventHandler<EventArgs<ICollection<IMeasurement>>> NewMeasurements;
 
         // Fields
+        private List<string> m_outputSourceIDs;
         private System.Timers.Timer m_connectionTimer;
         private bool m_isConnected;
         private bool m_disposed;
@@ -76,6 +77,39 @@ namespace TimeSeriesFramework.Adapters
         #region [ Properties ]
 
         /// <summary>
+        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter output measurements.
+        /// </summary>
+        /// <remarks>
+        /// This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+        /// Set to <c>null</c> apply no filter.
+        /// </remarks>
+        public virtual string[] OutputSourceIDs
+        {
+            get
+            {
+                if (m_outputSourceIDs == null)
+                    return null;
+
+                return m_outputSourceIDs.ToArray();
+            }
+            set
+            {
+                if (value == null)
+                {
+                    m_outputSourceIDs = null;
+                }
+                else
+                {
+                    m_outputSourceIDs = new List<string>(value);
+                    m_outputSourceIDs.Sort();
+                }
+
+                // Filter measurements to list of specified source IDs
+                AdapterBase.LoadOutputSourceIDs(this);
+            }
+        }
+
+        /// <summary>
         /// Gets flag that determines if <see cref="InputAdapterBase"/> is connected.
         /// </summary>
         public virtual bool IsConnected
@@ -96,7 +130,10 @@ namespace TimeSeriesFramework.Adapters
         /// <remarks>
         /// Derived classes should return true when data input source is connects asynchronously, otherwise return false.
         /// </remarks>
-        protected abstract bool UseAsyncConnect { get; }
+        protected abstract bool UseAsyncConnect
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets or sets the connection attempt interval, in milliseconds, for the data input source.
@@ -170,6 +207,23 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
+        /// Initializes <see cref="InputAdapterBase"/>.
+        /// </summary>
+        public override void Initialize()
+        {
+            base.Initialize();
+
+            Dictionary<string, string> settings = Settings;
+            string setting;
+
+            // Load optional parameters
+            if (settings.TryGetValue("outputSourceIDs", out setting) || settings.TryGetValue("sourceids", out setting))
+                OutputSourceIDs = setting.Split(',');
+            else
+                OutputSourceIDs = null;
+        }
+
+        /// <summary>
         /// Starts this <see cref="InputAdapterBase"/> and initiates connection cycle to data input source.
         /// </summary>
         public override void Start()
@@ -209,7 +263,7 @@ namespace TimeSeriesFramework.Adapters
             try
             {
                 bool performedDisconnect = Enabled;
-                
+
                 // Stop the connection cycle
                 m_connectionTimer.Enabled = false;
 
@@ -303,5 +357,5 @@ namespace TimeSeriesFramework.Adapters
         }
 
         #endregion
-    }	
+    }
 }

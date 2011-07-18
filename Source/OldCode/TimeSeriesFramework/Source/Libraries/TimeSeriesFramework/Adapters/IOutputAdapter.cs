@@ -47,6 +47,19 @@ namespace TimeSeriesFramework.Adapters
         event EventHandler<EventArgs<int>> UnprocessedMeasurements;
 
         /// <summary>
+        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter input measurements.
+        /// </summary>
+        /// <remarks>
+        /// This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+        /// Set to <c>null</c> apply no filter.
+        /// </remarks>
+        string[] InputSourceIDs
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Returns a flag that determines if measurements sent to this <see cref="IOutputAdapter"/> are
         /// destined for archival.
         /// </summary>

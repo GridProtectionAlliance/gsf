@@ -85,6 +85,8 @@ namespace TimeSeriesFramework.Adapters
         private MeasurementKey[] m_inputMeasurementKeys;
         private List<MeasurementKey> m_inputMeasurementKeysHash;
         private IMeasurement[] m_outputMeasurements;
+        private List<string> m_inputSourceIDs;
+        private List<string> m_outputSourceIDs;
         private int m_minimumMeasurementsToUse;
         private ManualResetEvent m_initializeWaitHandle;
         private int m_hashCode;
@@ -300,6 +302,72 @@ namespace TimeSeriesFramework.Adapters
             {
                 m_outputMeasurements = value;
                 OnOutputMeasurementsUpdated();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter input measurement keys.
+        /// </summary>
+        /// <remarks>
+        /// This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+        /// Set to <c>null</c> apply no filter.
+        /// </remarks>
+        public virtual string[] InputSourceIDs
+        {
+            get
+            {
+                if (m_inputSourceIDs == null)
+                    return null;
+
+                return m_inputSourceIDs.ToArray();
+            }
+            set
+            {
+                if (value == null)
+                {
+                    m_inputSourceIDs = null;
+                }
+                else
+                {
+                    m_inputSourceIDs = new List<string>(value);
+                    m_inputSourceIDs.Sort();
+                }
+
+                // Filter measurements to list of specified source IDs
+                AdapterBase.LoadInputSourceIDs(this);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter output measurements.
+        /// </summary>
+        /// <remarks>
+        /// This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+        /// Set to <c>null</c> apply no filter.
+        /// </remarks>
+        public virtual string[] OutputSourceIDs
+        {
+            get
+            {
+                if (m_outputSourceIDs == null)
+                    return null;
+
+                return m_outputSourceIDs.ToArray();
+            }
+            set
+            {
+                if (value == null)
+                {
+                    m_outputSourceIDs = null;
+                }
+                else
+                {
+                    m_outputSourceIDs = new List<string>(value);
+                    m_outputSourceIDs.Sort();
+                }
+
+                // Filter measurements to list of specified source IDs
+                AdapterBase.LoadOutputSourceIDs(this);
             }
         }
 
@@ -592,6 +660,12 @@ namespace TimeSeriesFramework.Adapters
 
             if (settings.TryGetValue("downsamplingMethod", out setting))
                 DownsamplingMethod = (DownsamplingMethod)Enum.Parse(typeof(DownsamplingMethod), setting, true);
+
+            if (settings.TryGetValue("inputSourceIDs", out setting))
+                InputSourceIDs = setting.Split(',');
+
+            if (settings.TryGetValue("outputSourceIDs", out setting))
+                OutputSourceIDs = setting.Split(',');
         }
 
         /// <summary>
