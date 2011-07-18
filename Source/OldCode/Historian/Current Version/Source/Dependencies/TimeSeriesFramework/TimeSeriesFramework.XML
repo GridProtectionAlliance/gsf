@@ -2131,6 +2131,11 @@
             Implementors should use value <see cref="F:System.Threading.Timeout.Infinite"/> to wait indefinitely.
             </remarks>
         </member>
+        <member name="P:TimeSeriesFramework.Adapters.IAdapter.AutoStart">
+            <summary>
+            Gets or sets flag indicating if adapter should automatically start or connect on demand.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Adapters.IAdapter.ProcessMeasurementFilter">
             <summary>
             Gets or sets flag that determines if measurements being queued for processing should be tested to see if they are in the <see cref="P:TimeSeriesFramework.Adapters.IAdapter.InputMeasurementKeys"/>.
@@ -2179,6 +2184,24 @@
             </summary>
             <remarks>
             <see cref="F:TVA.EventArgs`1.Argument"/> is the enumeration of <see cref="T:TimeSeriesFramework.IMeasurement"/> values that are being discarded during the sorting process.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.IActionAdapter.InputSourceIDs">
+            <summary>
+            Gets or sets <see cref="P:TimeSeriesFramework.MeasurementKey.Source"/> values used to filter input measurement keys.
+            </summary>
+            <remarks>
+            This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+            Set to <c>null</c> apply no filter.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.IActionAdapter.OutputSourceIDs">
+            <summary>
+            Gets or sets <see cref="P:TimeSeriesFramework.MeasurementKey.Source"/> values used to filter output measurements.
+            </summary>
+            <remarks>
+            This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+            Set to <c>null</c> apply no filter.
             </remarks>
         </member>
         <member name="M:TimeSeriesFramework.Adapters.ActionAdapterBase.#ctor">
@@ -2429,6 +2452,11 @@
             Set to <see cref="F:System.Threading.Timeout.Infinite"/> to wait indefinitely.
             </remarks>
         </member>
+        <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.AutoStart">
+            <summary>
+            Gets or sets flag indicating if adapter should automatically start or otherwise connect on demand.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.ProcessMeasurementFilter">
             <summary>
             Gets or sets flag that determines if measurements being queued for processing should be tested to see if they are in the <see cref="P:TimeSeriesFramework.Adapters.ActionAdapterBase.InputMeasurementKeys"/>.
@@ -2443,6 +2471,24 @@
             <summary>
             Gets or sets output measurements that the action adapter will produce, if any.
             </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.InputSourceIDs">
+            <summary>
+            Gets or sets <see cref="P:TimeSeriesFramework.MeasurementKey.Source"/> values used to filter input measurement keys.
+            </summary>
+            <remarks>
+            This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+            Set to <c>null</c> apply no filter.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.OutputSourceIDs">
+            <summary>
+            Gets or sets <see cref="P:TimeSeriesFramework.MeasurementKey.Source"/> values used to filter output measurements.
+            </summary>
+            <remarks>
+            This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+            Set to <c>null</c> apply no filter.
+            </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.MinimumMeasurementsToUse">
             <summary>
@@ -2814,6 +2860,11 @@
             Set to <see cref="F:System.Threading.Timeout.Infinite"/> to wait indefinitely.
             </remarks>
         </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.AutoStart">
+            <summary>
+            Gets or sets flag indicating if adapter collection should automatically start items when <see cref="P:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.AutoInitialize"/> is <c>false</c>.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.ProcessMeasurementFilter">
             <summary>
             Gets or sets flag that determines if measurements being queued for processing should be tested to see if they are in the <see cref="P:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.InputMeasurementKeys"/>.
@@ -2828,6 +2879,22 @@
             <summary>
             Gets or sets output measurements that the <see cref="T:TimeSeriesFramework.Adapters.AdapterCollectionBase`1"/> will produce, if any.
             </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.InputSourceIDs">
+            <summary>
+            Gets or sets <see cref="P:TimeSeriesFramework.MeasurementKey.Source"/> values used to filter input measurement keys.
+            </summary>
+            <remarks>
+            The collection classes simply track this value if assigned, no automatic action is taken.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.OutputSourceIDs">
+            <summary>
+            Gets or sets <see cref="P:TimeSeriesFramework.MeasurementKey.Source"/> values used to filter output measurements.
+            </summary>
+            <remarks>
+            The collection classes simply track this value if assigned, no automatic action is taken.
+            </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.ProcessedMeasurements">
             <summary>
@@ -3055,20 +3122,42 @@
             </summary>
             <param name="totalAdded"></param>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.ParseInputMeasurementKeys(System.Data.DataSet,System.String)">
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.LoadInputSourceIDs(TimeSeriesFramework.Adapters.IAdapter,System.String)">
+            <summary>
+            Loads an <see cref="T:TimeSeriesFramework.Adapters.IOutputAdapter"/> or <see cref="T:TimeSeriesFramework.Adapters.IActionAdapter"/> instance's input measurement keys from a specific set of source ID's.
+            </summary>
+            <param name="adapter"><see cref="T:TimeSeriesFramework.Adapters.IAdapter"/> to load input measurement keys for.</param>
+            <param name="measurementTable">Measurement table name used to load input source ID's.</param>
+            <remarks>
+            Any existing input measurement keys will be distinctly merged with those associated with specified source ID's.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.LoadOutputSourceIDs(TimeSeriesFramework.Adapters.IAdapter,System.String)">
+            <summary>
+            Loads an <see cref="T:TimeSeriesFramework.Adapters.IInputAdapter"/> or <see cref="T:TimeSeriesFramework.Adapters.IActionAdapter"/> instance's output measurements from a specific set of source ID's.
+            </summary>
+            <param name="adapter"><see cref="T:TimeSeriesFramework.Adapters.IAdapter"/> to load output measurements for.</param>
+            <param name="measurementTable">Measurement table name used to load output source ID's.</param>
+            <remarks>
+            Any existing output measurements will be distinctly merged with those associated with specified source ID's.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.ParseInputMeasurementKeys(System.Data.DataSet,System.String,System.String)">
             <summary>
             Parses input measurement keys from connection string setting.
             </summary>
-            <param name="dataSource">The <see cref="T:System.Data.DataSet"/> used to filter measurments when user specifies a FILTER expression to define input measurement keys.</param>
+            <param name="dataSource">The <see cref="T:System.Data.DataSet"/> used to define input measurement keys.</param>
             <param name="value">Value of setting used to define input measurement keys, typically "inputMeasurementKeys".</param>
+            <param name="measurementTable">Measurement table name used to load additional meta-data; this is not used when specifying a FILTER expression.</param>
             <returns>User selected input measurement keys.</returns>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.ParseOutputMeasurements(System.Data.DataSet,System.String)">
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.ParseOutputMeasurements(System.Data.DataSet,System.String,System.String)">
             <summary>
             Parses output measurements from connection string setting.
             </summary>
-            <param name="dataSource">The <see cref="T:System.Data.DataSet"/> used to filter measurments when user specifies a FILTER expression to define output measurements.</param>
+            <param name="dataSource">The <see cref="T:System.Data.DataSet"/> used to define output measurements.</param>
             <param name="value">Value of setting used to define output measurements, typically "outputMeasurements".</param>
+            <param name="measurementTable">Measurement table name used to load additional meta-data; this is not used when specifying a FILTER expression.</param>
             <returns>User selected output measurements.</returns>
         </member>
         <member name="E:TimeSeriesFramework.Adapters.AdapterBase.StatusMessage">
@@ -3191,6 +3280,11 @@
             <remarks>
             Set to <see cref="F:System.Threading.Timeout.Infinite"/> to wait indefinitely.
             </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.AutoStart">
+            <summary>
+            Gets or sets flag indicating if adapter should automatically start or otherwise connect on demand.
+            </summary>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.AdapterBase.ProcessMeasurementFilter">
             <summary>
@@ -3427,6 +3521,24 @@
             <see cref="F:TVA.EventArgs`1.Argument"/> is the enumeration of <see cref="T:TimeSeriesFramework.IMeasurement"/> values that are being discarded during the sorting process.
             </remarks>
         </member>
+        <member name="P:TimeSeriesFramework.Adapters.FacileActionAdapterBase.InputSourceIDs">
+            <summary>
+            Gets or sets <see cref="P:TimeSeriesFramework.MeasurementKey.Source"/> values used to filter input measurement keys.
+            </summary>
+            <remarks>
+            This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+            Set to <c>null</c> apply no filter.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.FacileActionAdapterBase.OutputSourceIDs">
+            <summary>
+            Gets or sets <see cref="P:TimeSeriesFramework.MeasurementKey.Source"/> values used to filter output measurements.
+            </summary>
+            <remarks>
+            This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+            Set to <c>null</c> apply no filter.
+            </remarks>
+        </member>
         <member name="P:TimeSeriesFramework.Adapters.FacileActionAdapterBase.FramesPerSecond">
             <summary>
             Gets or sets the frames per second to be used by the <see cref="T:TimeSeriesFramework.Adapters.FacileActionAdapterBase"/>.
@@ -3491,6 +3603,15 @@
             <see cref="F:TVA.EventArgs`1.Argument"/> is a collection of new measurements for host to process.
             </remarks>
         </member>
+        <member name="P:TimeSeriesFramework.Adapters.IInputAdapter.OutputSourceIDs">
+            <summary>
+            Gets or sets <see cref="P:TimeSeriesFramework.MeasurementKey.Source"/> values used to filter output measurements.
+            </summary>
+            <remarks>
+            This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+            Set to <c>null</c> apply no filter.
+            </remarks>
+        </member>
         <member name="T:TimeSeriesFramework.Adapters.InputAdapterBase">
             <summary>
             Represents the base class for any incoming input adapter.
@@ -3509,6 +3630,11 @@
             Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.Adapters.InputAdapterBase"/> object and optionally releases the managed resources.
             </summary>
             <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.InputAdapterBase.Initialize">
+            <summary>
+            Initializes <see cref="T:TimeSeriesFramework.Adapters.InputAdapterBase"/>.
+            </summary>
         </member>
         <member name="M:TimeSeriesFramework.Adapters.InputAdapterBase.Start">
             <summary>
@@ -3571,6 +3697,15 @@
             </summary>
             <remarks>
             <see cref="F:TVA.EventArgs`1.Argument"/> is a collection of new measurements for host to process.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.InputAdapterBase.OutputSourceIDs">
+            <summary>
+            Gets or sets <see cref="P:TimeSeriesFramework.MeasurementKey.Source"/> values used to filter output measurements.
+            </summary>
+            <remarks>
+            This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+            Set to <c>null</c> apply no filter.
             </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.InputAdapterBase.IsConnected">
@@ -3667,6 +3802,15 @@
             <para>
             <see cref="F:TVA.EventArgs`1.Argument"/> is total number of unprocessed measurements.
             </para>
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.IOutputAdapter.InputSourceIDs">
+            <summary>
+            Gets or sets <see cref="P:TimeSeriesFramework.MeasurementKey.Source"/> values used to filter input measurements.
+            </summary>
+            <remarks>
+            This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+            Set to <c>null</c> apply no filter.
             </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.IOutputAdapter.OutputIsForArchive">
@@ -3866,12 +4010,13 @@
             queue if an exception occurs while processing.  Defaults to false.
             </summary>
         </member>
-        <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.SourceIDs">
+        <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.InputSourceIDs">
             <summary>
-            Gets or sets <see cref="T:TimeSeriesFramework.IMeasurement"/> source ID's used to filter output measurements.
+            Gets or sets <see cref="P:TimeSeriesFramework.MeasurementKey.Source"/> values used to filter input measurements.
             </summary>
             <remarks>
-            Set to <c>null</c> apply no filter (i.e., adapter expects all measurements).
+            This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+            Set to <c>null</c> apply no filter.
             </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.OutputIsForArchive">
@@ -4243,7 +4388,7 @@
             Response, solicited or unsolicited, requests that client update its runtime data cipher keys with those that follow.
             </remarks>
         </member>
-        <member name="F:TimeSeriesFramework.Transport.ServerResponse.StartTime">
+        <member name="F:TimeSeriesFramework.Transport.ServerResponse.DataStartTime">
             <summary>
             Data start time response packet.
             </summary>
@@ -4369,7 +4514,7 @@
             <param name="key"><see cref="T:TimeSeriesFramework.MeasurementKey"/> to lookup.</param>
             <returns><see cref="T:System.Guid"/> signal ID if found; otherwise an empty Guid.</returns>
         </member>
-        <member name="M:TimeSeriesFramework.Transport.DataPublisher.SendStartTime(System.Guid,TVA.Ticks)">
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.SendDataStartTime(System.Guid,TVA.Ticks)">
             <summary>
             Sends the start time of the first measurement in a connection transmission.
             </summary>
@@ -4583,9 +4728,9 @@
             </summary>
             <param name="metadata">Meta-data <see cref="T:System.Data.DataSet"/> instance to send to client subscription.</param>
         </member>
-        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.OnStartTime(TVA.Ticks)">
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.OnDataStartTime(TVA.Ticks)">
             <summary>
-            Raises the <see cref="E:TimeSeriesFramework.Transport.DataSubscriber.StartTime"/> event.
+            Raises the <see cref="E:TimeSeriesFramework.Transport.DataSubscriber.DataStartTime"/> event.
             </summary>
             <param name="startTime">Start time, in <see cref="T:TVA.Ticks"/>, of first measurement transmitted.</param>
         </member>
@@ -4609,7 +4754,7 @@
             Occurs when client receives requested meta-data transmitted by data publication server.
             </summary>
         </member>
-        <member name="E:TimeSeriesFramework.Transport.DataSubscriber.StartTime">
+        <member name="E:TimeSeriesFramework.Transport.DataSubscriber.DataStartTime">
             <summary>
             Occurs when first measurement is transmitted by data publication server.
             </summary>
