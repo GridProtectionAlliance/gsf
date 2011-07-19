@@ -559,7 +559,7 @@
     <Message Text="Cleaning build output..."/>
     <ItemGroup>
       <FilesToDelete Include="$(BuildOutputFolder)\**\setup.exe"/>
-      <FilesToDelete Include="$(BuildOutputFolder)\**\*.pdb" Condition="'$(BuildFlavor)' == 'Release'"/>
+      <!-- <FilesToDelete Include="$(BuildOutputFolder)\**\*.pdb" Condition="'$(BuildFlavor)' == 'Release'"/> -->
       <FilesToDelete Include="$(BuildOutputFolder)\**\*.vshost.exe"/>
       <FilesToDelete Include="$(BuildOutputFolder)\**\*.vshost.exe.manifest"/>
     </ItemGroup>
