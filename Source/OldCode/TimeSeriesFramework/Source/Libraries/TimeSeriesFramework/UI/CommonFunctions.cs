@@ -265,6 +265,9 @@ namespace TimeSeriesFramework.UI
             if (database.IsJetEngine())
                 return "{" + guid.ToString() + "}";
 
+            if (database.IsSqlite())
+                return guid.ToString();
+
             //return "P" + guid.ToString();
 
             return guid;
