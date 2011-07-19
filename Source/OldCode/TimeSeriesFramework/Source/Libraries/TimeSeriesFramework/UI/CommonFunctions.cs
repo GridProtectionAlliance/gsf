@@ -155,6 +155,16 @@ namespace TimeSeriesFramework.UI
         }
 
         /// <summary>
+        /// Method to check if source database is SQLite.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to database.</param>
+        /// <returns>Boolean, indicating if source database is MySQL.</returns>
+        public static bool IsSqlite(this AdoDataConnection database)
+        {
+            return database.AdapterType.Name == "SQLiteDataAdapter";
+        }
+
+        /// <summary>
         /// Retrieves connection string to connect to backend windows service.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to database.</param>
@@ -269,7 +279,7 @@ namespace TimeSeriesFramework.UI
         /// <returns><see cref="System.Guid"/>.</returns>
         public static Guid Guid(this AdoDataConnection database, DataRow row, string fieldName)
         {
-            if (database.IsJetEngine() || database.IsMySQL())
+            if (database.IsJetEngine() || database.IsMySQL() || database.IsSqlite())
                 return System.Guid.Parse(row.Field<object>(fieldName).ToString());
 
             return row.Field<Guid>(fieldName);
