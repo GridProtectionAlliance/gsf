@@ -38,9 +38,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Debug\</OutputPath>
+    <OutputPath>..\..\..\..\Build\Output\Debug\Libraries\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DocumentationFile>..\..\..\..\..\Build\Output\Debug\Libraries\TimeSeriesFramework.UI.XML</DocumentationFile>
+    <DocumentationFile>..\..\..\..\Build\Output\Debug\Libraries\TimeSeriesFramework.UI.XML</DocumentationFile>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <CodeAnalysisLogFile>..\..\..\..\..\Build\Output\Debug\Libraries\TimeSeriesFramework.UI.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
