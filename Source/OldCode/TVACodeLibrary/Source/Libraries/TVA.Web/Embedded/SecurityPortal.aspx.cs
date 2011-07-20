@@ -19,6 +19,8 @@
 //       Updated UI for compatibility across multiple browsers including mobile devices.
 //  01/06/2011 - Pinal C. Patel
 //       Fixed a bug that required users to login before password could be reset.
+//  07/20/2011 - Pinal C. Patel
+//       Added tracing for diagnosing unexpected error conditions.
 //
 //*******************************************************************************************************
 
@@ -507,10 +509,11 @@ namespace TVA.Web.Embedded
                 // Show security related error messages.
                 ShowMessage(ex.Message.EnsureEnd('.'), true);
             }
-            catch
+            catch (Exception ex)
             {
                 // Show ambiguous message for other errors.
                 ShowMessage("Login failed due to an unexpected error.", true);
+                System.Diagnostics.Trace.WriteLine(string.Format("Login error: \r\n  {0}", ex.ToString()));
             }
             finally
             {
@@ -550,10 +553,11 @@ namespace TVA.Web.Embedded
                 // Show security related error messages.
                 ShowMessage(ex.Message.EnsureEnd('.'), true);
             }
-            catch
+            catch (Exception ex)
             {
                 // Show ambiguous message for other errors.
                 ShowMessage("Update failed due to an unexpected error.", true);
+                System.Diagnostics.Trace.WriteLine(string.Format("Update information error: \r\n  {0}", ex.ToString()));
             }
             finally
             {
@@ -610,10 +614,11 @@ namespace TVA.Web.Embedded
                 // Show security related error messages.
                 ShowMessage(ex.Message.EnsureEnd('.'), true);
             }
-            catch
+            catch (Exception ex)
             {
                 // Show ambiguous message for other errors.
                 ShowMessage("Password change failed due to an unexpected error.", true);
+                System.Diagnostics.Trace.WriteLine(string.Format("Password change error: \r\n  {0}", ex.ToString()));
             }
             finally
             {
@@ -660,10 +665,11 @@ namespace TVA.Web.Embedded
                 // Show security related error messages.
                 ShowMessage(ex.Message.EnsureEnd('.'), true);
             }
-            catch
+            catch (Exception ex)
             {
                 // Show ambiguous message for other errors.
                 ShowMessage("Password reset failed due to an unexpected error.", true);
+                System.Diagnostics.Trace.WriteLine(string.Format("Password reset error: \r\n  {0}", ex.ToString()));
             }
             finally
             {
@@ -709,10 +715,11 @@ namespace TVA.Web.Embedded
                 // Show security related error messages.
                 ShowMessage(ex.Message.EnsureEnd('.'), true);
             }
-            catch
+            catch (Exception ex)
             {
                 // Show ambiguous message for other errors.
                 ShowMessage("Password reset failed due to an unexpected error.", true);
+                System.Diagnostics.Trace.WriteLine(string.Format("Password reset error: \r\n  {0}", ex.ToString()));
             }
             finally
             {
