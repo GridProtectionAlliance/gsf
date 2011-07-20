@@ -31,7 +31,7 @@ using System.Windows;
 
 namespace TimeSeriesFramework.UI.Converters
 {
-    class StringToSymbolConverter : IValueConverter
+    public class StringToSymbolConverter : IValueConverter
     {
 
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
