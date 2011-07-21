@@ -835,7 +835,14 @@ namespace TVA.Diagnostics
         /// <param name="valueDivisor">The divisor to be applied to the statistical values of the <see cref="PerformanceCounter"/> object.</param>
         public void AddCounter(string categoryName, string counterName, string instanceName, string aliasName, string valueUnit, float valueDivisor)
         {
-            AddCounter(new PerformanceCounter(categoryName, counterName, instanceName, aliasName, valueUnit, valueDivisor));
+            try
+            {                
+                AddCounter(new PerformanceCounter(categoryName, counterName, instanceName, aliasName, valueUnit, valueDivisor));
+            }
+            catch
+            {
+                // Performance counter may not exist...
+            }
         }
 
         /// <summary>
