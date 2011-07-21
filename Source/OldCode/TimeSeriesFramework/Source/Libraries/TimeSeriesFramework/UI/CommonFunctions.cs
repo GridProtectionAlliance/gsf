@@ -25,17 +25,12 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO.Ports;
-using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Media;
 using TimeSeriesFramework.UI.DataModels;
 using TVA;
 using TVA.Data;
-using System.Collections.ObjectModel;
-using System.Net;
-using System.IO;
-using System.Xml.Linq;
 
 namespace TimeSeriesFramework.UI
 {
@@ -227,8 +222,8 @@ namespace TimeSeriesFramework.UI
             {
                 Dictionary<string, string> settings = node.Settings.ToLower().ParseKeyValuePairs();
 
-                if (settings.ContainsKey("remotestatusserviceurl"))
-                    s_remoteStatusServerConnectionString = settings["remotestatusserviceurl"];
+                if (settings.ContainsKey("remotestatusserverconnectionstring"))
+                    s_remoteStatusServerConnectionString = settings["remotestatusserverconnectionstring"];
 
                 if (settings.ContainsKey("realtimestatisticserviceurl"))
                     s_realTimeStatisticServiceUrl = settings["realtimestatisticserviceurl"];
@@ -663,7 +658,7 @@ namespace TimeSeriesFramework.UI
                     connection.Dispose();
             }
         }
-        
+
         #endregion
 
     }
