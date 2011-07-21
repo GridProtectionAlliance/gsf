@@ -132,7 +132,7 @@
     <ItemGroup>
       <NugetLibraries Include="$(LocalFolder)\Source\Libraries\**\*.csproj" Exclude="$(LocalFolder)\Source\Libraries\Tests\**\*.csproj"/>
     </ItemGroup>
-    <Exec Command="NuGet.exe pack %22%(NugetLibraries.FullPath)%22 /Symbols /Version $(Major).$(Minor).$(Build).$(Revision) /OutputDirectory %22$(NugetPackagesFolder)%22"/>
+    <Exec Command="NuGet.exe pack %22%(NugetLibraries.FullPath)%22 /Symbols /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NugetPackagesFolder)%22"/>
     <Message Text="Creating nuget sample packages..."/>
     <ItemGroup>
       <NugetSamples Include="$(LocalFolder)\Build\Scripts\**\*.nuspec"/>

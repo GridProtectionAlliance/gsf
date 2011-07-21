@@ -18,7 +18,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("Release Build")]
 #endif
 [assembly: AssemblyDefaultAlias("TVA.Core")]
-[assembly: AssemblyDescription("Library of .NET extensions and components.")]
+[assembly: AssemblyDescription("Library of .NET extensions and components - adapter framework, process queue, configuration api, diagnostics, error handling, active directory, interop, checksums, ftp, mail, unit conversion, binary parsing, scheduler, ntp time, precision timer, int24, unit24, console extensions, database extensions, drawing extension, reflection extensions, xml extensions, bit extensions, buffer extensions, char extensions, data-time extensions, enum extensions, string extensions.")]
 [assembly: AssemblyTitle("TVA.Core")]
 
 // Other configuration attributes.

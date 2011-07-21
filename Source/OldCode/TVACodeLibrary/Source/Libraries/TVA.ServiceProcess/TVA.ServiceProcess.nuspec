@@ -20,9 +20,9 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>TVACodeLibrary.Libraries.ServiceProcess</id>
-    <version>1.0.0.0</version>
-    <authors>TVA</authors>
-    <description>Library of components that facilitate remote interaction with a Windows Service from Console, Windows and Web application.</description>
+    <version>$version$</version>
+    <authors>$author$</authors>
+    <description>$description$</description>
     <projectUrl>http://tvacodelibrary.codeplex.com/</projectUrl>
     <licenseUrl>http://tvacodelibrary.codeplex.com/license</licenseUrl>
     <iconUrl>http://download.codeplex.com/Project/Download/FileDownload.aspx?ProjectName=tvacodelibrary&#x26;DownloadId=140265&#x26;Build=17672</iconUrl>
