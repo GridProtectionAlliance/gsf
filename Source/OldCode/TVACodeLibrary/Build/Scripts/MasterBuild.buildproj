@@ -51,6 +51,9 @@
 **  01/08/2011 - Pinal C. Patel
 **       Made TfsServer a must-override property.
 **       Allowed for customization of versioning scheme by consuming script.
+**  07/22/2011 - Pinal C. Patel
+**       Added VersionSource property to optionally skip versioning when building the latest version 
+**       of source code.
 **
 *******************************************************************************************************
 -->
@@ -87,6 +90,10 @@
     <BuildDeployFolder></BuildDeployFolder>
     <!-- Setting for enabling user propmts. -->
     <BuildInteractive></BuildInteractive>
+    <!-- Setting for forcing a build. -->
+    <ForceBuild></ForceBuild>
+    <!-- Setting for disabling versioning. -->
+    <VersionSource></VersionSource>
     <!-- File containing the build version. -->
     <VersionFile></VersionFile>
     <!-- Versioning scheme major number change type. -->
@@ -107,8 +114,6 @@
     <MSTest></MSTest>
     <!-- Path to Sandcastle Builder. -->
     <SandcastleBuilder></SandcastleBuilder>
-    <!-- Forces a build regardless of new changes since last build. -->
-    <ForceBuild></ForceBuild>
     <!-- Name of binaries archive file. -->
     <BinariesArchiveFileName></BinariesArchiveFileName>
     <!-- Name of installs archive file. -->
@@ -281,14 +286,16 @@
       <BuildTarget Condition="'$(BuildTarget)' == ''">Any CPU</BuildTarget>
       <BuildOutputFolder Condition="'$(BuildOutputFolder)' == ''">$(LocalFolder)\Build\Output\$(BuildFlavor)</BuildOutputFolder>
       <BuildInteractive Condition="'$(BuildInteractive)' == ''">true</BuildInteractive>
-      <VersionFile Condition="'$(VersionFile)' == ''">$(LocalFolder)\Build\Scripts\$(ProjectName).version</VersionFile>
       <SourceVersion Condition="'$(SourceVersion)' == ''">T</SourceVersion>
+      <ForceBuild Condition="'$(ForceBuild)' == ''">false</ForceBuild>
+      <ForceBuild Condition="'$(SourceVersion)' != 'T'">true</ForceBuild>
+      <VersionSource Condition="'$(SourceVersion)' != 'T'">false</VersionSource>
+      <VersionSource Condition="'$(VersionSource)' == '' And '$(SourceVersion)' == 'T'">true</VersionSource>
+      <VersionFile Condition="'$(VersionFile)' == ''">$(LocalFolder)\Build\Scripts\$(ProjectName).version</VersionFile>
       <TfsClient Condition="'$(TfsClient)' == ''">$(VS100COMNTOOLS)\..\IDE\tf.exe</TfsClient>
       <VisualStudio Condition="'$(VisualStudio)' == ''">$(VS100COMNTOOLS)\..\IDE\devenv.com</VisualStudio>
       <MSTest Condition="'$(MSTest)' == ''">$(VS100COMNTOOLS)\..\IDE\mstest.exe</MSTest>
       <SandcastleBuilder Condition="'$(SandcastleBuilder)' == ''">$(SHFBROOT)\SandcastleBuilderGUI.exe</SandcastleBuilder>
-      <ForceBuild Condition="'$(ForceBuild)' == ''">false</ForceBuild>
-      <ForceBuild Condition="'$(SourceVersion)' != 'T'">true</ForceBuild>
       <BinariesArchiveFileName Condition="'$(BinariesArchiveFileName)' == ''">$(LocalFolder)\$(ProjectName).Binaries.zip</BinariesArchiveFileName>
       <InstallsArchiveFileName Condition="'$(InstallsArchiveFileName)' == ''">$(LocalFolder)\$(ProjectName).Installs.zip</InstallsArchiveFileName>
       <BinariesArchiveWorkingDirectory Condition="'$(BinariesArchiveWorkingDirectory)' == ''">$(LocalFolder)\Archives\Binaries</BinariesArchiveWorkingDirectory>
@@ -356,7 +363,7 @@
 
   <Target Name="BeforeVersionSource"/>
 
-  <Target Name="CoreVersionSource" Condition="'$(SourceVersion)' == 'T' And '@(FilesToVersion)' != ''">
+  <Target Name="CoreVersionSource" Condition="'$(VersionSource)' == 'true' And '@(FilesToVersion)' != ''">
     <!-- Update version number of the source code. -->
     <Message Text="Versioning source code..."/>
     <Exec Command="%22$(TfsClient)%22 checkout /noprompt %22$(VersionFile)%22"/>
