@@ -16,6 +16,9 @@
 //       Changed XML serializer from DataContractSerializer to XmlSerializer for more control over 
 //       serialization of data.
 //       Added ResetPassword() and ChangePassword() methods.
+//  07/22/2011 - Pinal C. Patel
+//       Switched REST endpoints to using query string for input parameters instead of passing them
+//       as part of the URL so sensitive information like password gets encrypted when used with SSL.
 //
 //*******************************************************************************************************
 
@@ -249,15 +252,6 @@ namespace TVA.Web.Embedded
     public interface ISecurityService : ISelfHostingService
     {
         /// <summary>
-        /// Authenticates a user and caches the security context upon successful authentication for subsequent use.
-        /// </summary>
-        /// <param name="username">Username of the user.</param>
-        /// <param name="password">Password of the user.</param>
-        /// <returns>An <see cref="UserData"/> object of the user.</returns>
-        [OperationContract(), WebGet(UriTemplate = "/authenticate/{username}/{password}")]
-        UserData Authenticate(string username, string password);
-
-        /// <summary>
         /// Returns information about the current user. 
         /// </summary>
         /// <returns>An <see cref="UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
@@ -272,11 +266,20 @@ namespace TVA.Web.Embedded
         UserData RefreshUserData();
 
         /// <summary>
+        /// Authenticates a user and caches the security context upon successful authentication for subsequent use.
+        /// </summary>
+        /// <param name="username">Username of the user.</param>
+        /// <param name="password">Password of the user.</param>
+        /// <returns>An <see cref="UserData"/> object of the user.</returns>
+        [OperationContract(), WebGet(UriTemplate = "/authenticate?username={username}&password={password}")]
+        UserData Authenticate(string username, string password);
+
+        /// <summary>
         /// Resets user password.
         /// </summary>
         /// <param name="securityAnswer">Answer to user's security question.</param>
         /// <returns>true if password is reset, otherwise false.</returns>
-        [OperationContract(), WebGet(UriTemplate = "/resetpassword/{securityAnswer}")]
+        [OperationContract(), WebGet(UriTemplate = "/resetpassword?securityanswer={securityAnswer}")]
         bool ResetPassword(string securityAnswer);
 
         /// <summary>
@@ -285,7 +288,7 @@ namespace TVA.Web.Embedded
         /// <param name="oldPassword">User's current password.</param>
         /// <param name="newPassword">User's new password.</param>
         /// <returns>true if the password is changed, otherwise false.</returns>
-        [OperationContract(), WebGet(UriTemplate = "/changepassword/{oldPassword}/{newPassword}")]
+        [OperationContract(), WebGet(UriTemplate = "/changepassword?oldpassword={oldPassword}&newpassword={newPassword}")]
         bool ChangePassword(string oldPassword, string newPassword);
     }
 }

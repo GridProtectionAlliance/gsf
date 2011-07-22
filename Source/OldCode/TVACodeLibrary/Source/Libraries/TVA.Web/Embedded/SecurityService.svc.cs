@@ -316,21 +316,6 @@ namespace TVA.Web.Embedded
     public class SecurityService : SelfHostingService, ISecurityService
     {
         /// <summary>
-        /// Authenticates a user and caches the security context upon successful authentication for subsequent use.
-        /// </summary>
-        /// <param name="username">Username of the user.</param>
-        /// <param name="password">Password of the user.</param>
-        /// <returns>An <see cref="UserData"/> object of the user.</returns>
-        public UserData Authenticate(string username, string password)
-        {
-            ISecurityProvider provider = SecurityProviderUtility.CreateProvider(username);
-            if (provider.Authenticate(password))
-                SecurityProviderCache.CurrentProvider = provider;
-
-            return provider.UserData;
-        }
-
-        /// <summary>
         /// Returns information about the current user. 
         /// </summary>
         /// <returns>An <see cref="UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
@@ -355,6 +340,21 @@ namespace TVA.Web.Embedded
                 SecurityProviderCache.CurrentProvider.RefreshData();
 
             return SecurityProviderCache.CurrentProvider.UserData;
+        }
+
+        /// <summary>
+        /// Authenticates a user and caches the security context upon successful authentication for subsequent use.
+        /// </summary>
+        /// <param name="username">Username of the user.</param>
+        /// <param name="password">Password of the user.</param>
+        /// <returns>An <see cref="UserData"/> object of the user.</returns>
+        public UserData Authenticate(string username, string password)
+        {
+            ISecurityProvider provider = SecurityProviderUtility.CreateProvider(username);
+            if (provider.Authenticate(password))
+                SecurityProviderCache.CurrentProvider = provider;
+
+            return provider.UserData;
         }
 
         /// <summary>
