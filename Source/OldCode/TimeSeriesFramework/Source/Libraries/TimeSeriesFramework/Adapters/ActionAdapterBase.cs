@@ -86,6 +86,8 @@ namespace TimeSeriesFramework.Adapters
         private MeasurementKey[] m_inputMeasurementKeys;
         private List<MeasurementKey> m_inputMeasurementKeysHash;
         private IMeasurement[] m_outputMeasurements;
+        private MeasurementKey[] m_requestedInputMeasurementKeys;
+        private MeasurementKey[] m_requestedOutputMeasurementKeys;
         private List<string> m_inputSourceIDs;
         private List<string> m_outputSourceIDs;
         private int m_minimumMeasurementsToUse;
@@ -384,6 +386,36 @@ namespace TimeSeriesFramework.Adapters
 
                 // Filter measurements to list of specified source IDs
                 AdapterBase.LoadOutputSourceIDs(this);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets input measurement keys that are requested by other adapters based on what adapter says it can provide.
+        /// </summary>
+        public virtual MeasurementKey[] RequestedInputMeasurementKeys
+        {
+            get
+            {
+                return m_requestedInputMeasurementKeys;
+            }
+            set
+            {
+                m_requestedInputMeasurementKeys = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
+        /// </summary>
+        public virtual MeasurementKey[] RequestedOutputMeasurementKeys
+        {
+            get
+            {
+                return m_requestedOutputMeasurementKeys;
+            }
+            set
+            {
+                m_requestedOutputMeasurementKeys = value;
             }
         }
 

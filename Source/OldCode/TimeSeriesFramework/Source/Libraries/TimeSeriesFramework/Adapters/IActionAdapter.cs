@@ -83,7 +83,25 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
-        /// Queues measurements for calculation processing.  Measurements are automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
+        /// Gets or sets input measurement keys that are requested by other adapters based on what adapter says it can provide.
+        /// </summary>
+        MeasurementKey[] RequestedInputMeasurementKeys
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
+        /// </summary>
+        MeasurementKey[] RequestedOutputMeasurementKeys
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Queues measurements for processing.  Measurements are automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
         /// </summary>
         /// <param name="measurements">Collection of measurements to queue for calculation processing.</param>
         void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements);

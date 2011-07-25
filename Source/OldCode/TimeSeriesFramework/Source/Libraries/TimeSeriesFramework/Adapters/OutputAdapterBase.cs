@@ -62,6 +62,7 @@ namespace TimeSeriesFramework.Adapters
         // Fields
         private ProcessQueue<IMeasurement> m_measurementQueue;
         private List<string> m_inputSourceIDs;
+        private MeasurementKey[] m_requestedInputMeasurementKeys;
         private System.Timers.Timer m_connectionTimer;
         private System.Timers.Timer m_monitorTimer;
         private bool m_disposed;
@@ -145,6 +146,21 @@ namespace TimeSeriesFramework.Adapters
 
                 // Filter measurements to list of specified source IDs
                 AdapterBase.LoadInputSourceIDs(this);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets input measurement keys that are requested by other adapters based on what adapter says it can provide.
+        /// </summary>
+        public virtual MeasurementKey[] RequestedInputMeasurementKeys
+        {
+            get
+            {
+                return m_requestedInputMeasurementKeys;
+            }
+            set
+            {
+                m_requestedInputMeasurementKeys = value;
             }
         }
 

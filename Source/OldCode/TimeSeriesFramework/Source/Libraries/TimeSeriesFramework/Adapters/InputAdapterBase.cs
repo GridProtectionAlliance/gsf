@@ -51,6 +51,7 @@ namespace TimeSeriesFramework.Adapters
 
         // Fields
         private List<string> m_outputSourceIDs;
+        private MeasurementKey[] m_requestedOutputMeasurementKeys;
         private System.Timers.Timer m_connectionTimer;
         private bool m_isConnected;
         private bool m_disposed;
@@ -106,6 +107,21 @@ namespace TimeSeriesFramework.Adapters
 
                 // Filter measurements to list of specified source IDs
                 AdapterBase.LoadOutputSourceIDs(this);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
+        /// </summary>
+        public virtual MeasurementKey[] RequestedOutputMeasurementKeys
+        {
+            get
+            {
+                return m_requestedOutputMeasurementKeys;
+            }
+            set
+            {
+                m_requestedOutputMeasurementKeys = value;
             }
         }
 

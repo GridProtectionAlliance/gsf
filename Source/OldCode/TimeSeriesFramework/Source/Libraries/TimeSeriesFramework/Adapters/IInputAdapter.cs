@@ -52,5 +52,14 @@ namespace TimeSeriesFramework.Adapters
             get;
             set;
         }
+
+        /// <summary>
+        /// Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
+        /// </summary>
+        MeasurementKey[] RequestedOutputMeasurementKeys
+        {
+            get;
+            set;
+        }
     }
 }

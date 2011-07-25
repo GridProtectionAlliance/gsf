@@ -18,11 +18,15 @@
 //  ----------------------------------------------------------------------------------------------------
 //  06/30/2011 - J. Ritchie Carroll
 //       Generated original version of source code.
+//  07/25/2011 - J. Ritchie Carroll
+//       Added code to handle connect on demand adapters (i.e., where AutoStart = false).
 //
 //******************************************************************************************************
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading;
 using TVA;
 
@@ -277,6 +281,7 @@ namespace TimeSeriesFramework.Adapters
 
                 // Synchronously update adapter routing cache
                 m_adapterRoutesCacheLock.EnterWriteLock();
+
                 try
                 {
                     m_actionRoutes = actionRoutes;
@@ -288,6 +293,9 @@ namespace TimeSeriesFramework.Adapters
                 {
                     m_adapterRoutesCacheLock.ExitWriteLock();
                 }
+
+                // Start or stop any connect on demand adapters
+                HandleConnectOnDemandAdapters();
             }
             finally
             {
@@ -419,6 +427,279 @@ namespace TimeSeriesFramework.Adapters
 
             m_actionAdapters.QueueMeasurementsForProcessing(newMeasurements);
             m_outputAdapters.QueueMeasurementsForProcessing(newMeasurements);
+        }
+
+        /// <summary>
+        /// Starts or stops connect on demand adapters based on current state of demanded input or output measurements.
+        /// </summary>
+        protected virtual void HandleConnectOnDemandAdapters()
+        {
+            InputAdapterCollection inputAdapters;
+            ActionAdapterCollection actionAdapters;
+            OutputAdapterCollection outputAdapters;
+
+            m_adapterRoutesCacheLock.EnterReadLock();
+
+            try
+            {
+                inputAdapters = m_inputAdapters;
+                actionAdapters = m_actionAdapters;
+                outputAdapters = m_outputAdapters;
+            }
+            finally
+            {
+                m_adapterRoutesCacheLock.ExitReadLock();
+            }
+
+            // Get the full list of output measurements that can be provided in this Iaon session
+            IEnumerable<MeasurementKey> outputMeasurementKeys = null;
+
+            if (m_inputAdapters != null)
+                outputMeasurementKeys = m_inputAdapters.OutputMeasurements.Select(m => m.Key);
+
+            if (m_actionAdapters != null)
+            {
+                if (outputMeasurementKeys == null)
+                    outputMeasurementKeys = m_actionAdapters.OutputMeasurements.Select(m => m.Key);
+                else
+                    outputMeasurementKeys = outputMeasurementKeys.Concat(m_actionAdapters.OutputMeasurements.Select(m => m.Key)).Distinct();
+            }
+
+            // Handle connect on demand action adapters and output adapters based on currently provisioned output measurements
+            if (outputMeasurementKeys != null)
+            {
+                IEnumerable<MeasurementKey> demandedKeys;
+
+                if (actionAdapters != null)
+                {
+                    // Start or stop connect on demand action adapters based on need, i.e., they handle any of the currently created output measurements
+                    foreach (IActionAdapter actionAdapter in actionAdapters)
+                    {
+                        if (!actionAdapter.AutoStart)
+                        {
+                            if (actionAdapter.InputMeasurementKeys != null)
+                            {
+                                // Create an intersection between the measurements the adapter can handle and those that are demanded throughout this Iaon session
+                                demandedKeys = actionAdapter.InputMeasurementKeys.Intersect(outputMeasurementKeys);
+
+                                if (demandedKeys != null)
+                                {
+                                    StringBuilder requestedInputMeasurementKeys = new StringBuilder();
+
+                                    foreach (MeasurementKey key in demandedKeys)
+                                    {
+                                        if (requestedInputMeasurementKeys.Length > 0)
+                                            requestedInputMeasurementKeys.Append(";");
+
+                                        requestedInputMeasurementKeys.Append(key.ToString());
+                                    }
+
+                                    if (requestedInputMeasurementKeys.Length > 0)
+                                    {
+                                        // Let action adapter know which input measurements are being provided and start adapter
+                                        actionAdapter.RequestedInputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(actionAdapter.DataSource, requestedInputMeasurementKeys.ToString());
+                                        actionAdapter.Enabled = true;
+                                    }
+                                    else
+                                    {
+                                        actionAdapter.RequestedInputMeasurementKeys = null;
+                                        // Action adapter should only be stopped if it also has no requested output measurements keys, which will be determined later
+                                    }
+                                }
+                                else
+                                {
+                                    actionAdapter.RequestedInputMeasurementKeys = null;
+                                    // Action adapter should only be stopped if it also has no requested output measurements keys, which will be determined later
+                                }
+                            }
+                            else
+                            {
+                                actionAdapter.RequestedInputMeasurementKeys = null;
+                                // Action adapter should only be stopped if it also has no requested output measurements keys, which will be determined later
+                            }
+                        }
+                    }
+                }
+
+                if (outputAdapters != null)
+                {
+                    // Start or stop connect on demand output adapters based on need, i.e., they handle any of the currently created output measurements
+                    foreach (IOutputAdapter outputAdapter in outputAdapters)
+                    {
+                        if (!outputAdapter.AutoStart)
+                        {
+                            if (outputAdapter.InputMeasurementKeys != null)
+                            {
+                                // Create an intersection between the measurements the adapter can handle and those that are demanded throughout this Iaon session
+                                demandedKeys = outputAdapter.InputMeasurementKeys.Intersect(outputMeasurementKeys);
+
+                                if (demandedKeys != null)
+                                {
+                                    StringBuilder requestedInputMeasurementKeys = new StringBuilder();
+
+                                    foreach (MeasurementKey key in demandedKeys)
+                                    {
+                                        if (requestedInputMeasurementKeys.Length > 0)
+                                            requestedInputMeasurementKeys.Append(";");
+
+                                        requestedInputMeasurementKeys.Append(key.ToString());
+                                    }
+
+                                    if (requestedInputMeasurementKeys.Length > 0)
+                                    {
+                                        // Let output adapter know which input measurements are being provided and start adapter
+                                        outputAdapter.RequestedInputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(outputAdapter.DataSource, requestedInputMeasurementKeys.ToString());
+                                        outputAdapter.Enabled = true;
+                                    }
+                                    else
+                                    {
+                                        outputAdapter.RequestedInputMeasurementKeys = null;
+                                        outputAdapter.Enabled = false;
+                                    }
+                                }
+                                else
+                                {
+                                    outputAdapter.RequestedInputMeasurementKeys = null;
+                                    outputAdapter.Enabled = false;
+                                }
+                            }
+                            else
+                            {
+                                outputAdapter.RequestedInputMeasurementKeys = null;
+                                outputAdapter.Enabled = false;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Get the full list of input measurements that can are demanded in this Iaon session
+            IEnumerable<MeasurementKey> inputMeasurementKeys = null;
+
+            if (m_outputAdapters != null)
+                inputMeasurementKeys = m_outputAdapters.InputMeasurementKeys;
+
+            if (m_actionAdapters != null)
+            {
+                if (inputMeasurementKeys == null)
+                    inputMeasurementKeys = m_actionAdapters.InputMeasurementKeys;
+                else
+                    inputMeasurementKeys = inputMeasurementKeys.Concat(m_actionAdapters.InputMeasurementKeys).Distinct();
+            }
+
+            // Handle connect on demand action adapters and input adapters based on currently demanded input measurements
+            if (inputMeasurementKeys != null)
+            {
+                IEnumerable<MeasurementKey> demandedKeys;
+
+                if (actionAdapters != null)
+                {
+                    // Start or stop connect on demand action adapters based on need, i.e., they provide any of the currently demanded input measurements
+                    foreach (IActionAdapter actionAdapter in actionAdapters)
+                    {
+                        if (!actionAdapter.AutoStart)
+                        {
+                            if (actionAdapter.OutputMeasurements != null)
+                            {
+                                // Create an intersection between the measurements the adapter can provide and those that are demanded throughout this Iaon session
+                                demandedKeys = actionAdapter.OutputMeasurements.Select(m => m.Key).Intersect(inputMeasurementKeys);
+
+                                if (demandedKeys != null)
+                                {
+                                    StringBuilder requestedOutputMeasurementKeys = new StringBuilder();
+
+                                    foreach (MeasurementKey key in demandedKeys)
+                                    {
+                                        if (requestedOutputMeasurementKeys.Length > 0)
+                                            requestedOutputMeasurementKeys.Append(";");
+
+                                        requestedOutputMeasurementKeys.Append(key.ToString());
+                                    }
+
+                                    if (requestedOutputMeasurementKeys.Length > 0)
+                                    {
+                                        // Let action adapter know which output measurements are being demanded and start adapter
+                                        actionAdapter.RequestedOutputMeasurementKeys = AdapterBase.ParseOutputMeasurementKeys(actionAdapter.DataSource, requestedOutputMeasurementKeys.ToString());
+                                        actionAdapter.Enabled = true;
+                                    }
+                                    else
+                                    {
+                                        actionAdapter.RequestedOutputMeasurementKeys = null;
+
+                                        // Action adapter should only be stopped if it also has no requested input measurements keys, determined prior
+                                        actionAdapter.Enabled = (actionAdapter.RequestedInputMeasurementKeys != null);
+                                    }
+                                }
+                                else
+                                {
+                                    actionAdapter.RequestedOutputMeasurementKeys = null;
+
+                                    // Action adapter should only be stopped if it also has no requested input measurements keys, determined prior
+                                    actionAdapter.Enabled = (actionAdapter.RequestedInputMeasurementKeys != null);
+                                }
+                            }
+                            else
+                            {
+                                actionAdapter.RequestedOutputMeasurementKeys = null;
+
+                                // Action adapter should only be stopped if it also has no requested input measurements keys, determined prior
+                                actionAdapter.Enabled = (actionAdapter.RequestedInputMeasurementKeys != null);
+                            }
+                        }
+                    }
+                }
+
+                if (inputAdapters != null)
+                {
+                    // Start or stop connect on demand input adapters based on need, i.e., they provide any of the currently demanded input measurements
+                    foreach (IInputAdapter inputAdapter in inputAdapters)
+                    {
+                        if (!inputAdapter.AutoStart)
+                        {
+                            if (inputAdapter.InputMeasurementKeys != null)
+                            {
+                                // Create an intersection between the measurements the adapter can provide and those that are demanded throughout this Iaon session
+                                demandedKeys = inputAdapter.OutputMeasurements.Select(m => m.Key).Intersect(inputMeasurementKeys);
+
+                                if (demandedKeys != null)
+                                {
+                                    StringBuilder requestedOutputMeasurementKeys = new StringBuilder();
+
+                                    foreach (MeasurementKey key in demandedKeys)
+                                    {
+                                        if (requestedOutputMeasurementKeys.Length > 0)
+                                            requestedOutputMeasurementKeys.Append(";");
+
+                                        requestedOutputMeasurementKeys.Append(key.ToString());
+                                    }
+
+                                    if (requestedOutputMeasurementKeys.Length > 0)
+                                    {
+                                        // Let input adapter know which output measurements are being demanded and start adapter
+                                        inputAdapter.RequestedOutputMeasurementKeys = AdapterBase.ParseOutputMeasurementKeys(inputAdapter.DataSource, requestedOutputMeasurementKeys.ToString());
+                                        inputAdapter.Enabled = true;
+                                    }
+                                    else
+                                    {
+                                        inputAdapter.RequestedOutputMeasurementKeys = null;
+                                        inputAdapter.Enabled = false;
+                                    }
+                                }
+                                else
+                                {
+                                    inputAdapter.RequestedOutputMeasurementKeys = null;
+                                    inputAdapter.Enabled = false;
+                                }
+                            }
+                            else
+                            {
+                                inputAdapter.RequestedOutputMeasurementKeys = null;
+                                inputAdapter.Enabled = false;
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         #endregion

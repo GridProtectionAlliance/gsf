@@ -1128,6 +1128,18 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
+        /// Parses output measurement keys from connection string setting.
+        /// </summary>
+        /// <param name="dataSource">The <see cref="DataSet"/> used to define output measurements.</param>
+        /// <param name="value">Value of setting used to define output measurements, typically "outputMeasurements".</param>
+        /// <param name="measurementTable">Measurement table name used to load additional meta-data; this is not used when specifying a FILTER expression.</param>
+        /// <returns>User selected output measurements.</returns>
+        public static MeasurementKey[] ParseOutputMeasurementKeys(DataSet dataSource, string value, string measurementTable = "ActiveMeasurements")
+        {
+            return ParseOutputMeasurements(dataSource, value, measurementTable).Select(m => m.Key).ToArray();
+        }
+
+        /// <summary>
         /// Parses output measurements from connection string setting.
         /// </summary>
         /// <param name="dataSource">The <see cref="DataSet"/> used to define output measurements.</param>

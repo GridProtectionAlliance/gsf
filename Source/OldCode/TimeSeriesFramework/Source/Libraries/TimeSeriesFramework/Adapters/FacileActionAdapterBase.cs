@@ -71,11 +71,13 @@ namespace TimeSeriesFramework.Adapters
         // Fields
         private List<string> m_inputSourceIDs;
         private List<string> m_outputSourceIDs;
-        private int m_framesPerSecond;                      // Defined frames per second, if defined
-        private bool m_trackLatestMeasurements;             // Determines whether or not to track latest measurements
-        private ImmediateMeasurements m_latestMeasurements; // Absolute latest received measurement values
-        private bool m_useLocalClockAsRealTime;             // Determines whether or not to use local system clock as "real-time"
-        private long m_realTimeTicks;                       // Timstamp of real-time or the most recently received measurement
+        private MeasurementKey[] m_requestedInputMeasurementKeys;
+        private MeasurementKey[] m_requestedOutputMeasurementKeys;
+        private int m_framesPerSecond;                              // Defined frames per second, if defined
+        private bool m_trackLatestMeasurements;                     // Determines whether or not to track latest measurements
+        private ImmediateMeasurements m_latestMeasurements;         // Absolute latest received measurement values
+        private bool m_useLocalClockAsRealTime;                     // Determines whether or not to use local system clock as "real-time"
+        private long m_realTimeTicks;                               // Timstamp of real-time or the most recently received measurement
 
         #endregion
 
@@ -94,6 +96,25 @@ namespace TimeSeriesFramework.Adapters
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets primary keys of input measurements the <see cref="FacileActionAdapterBase"/> expects, if any.
+        /// </summary>
+        public override MeasurementKey[] InputMeasurementKeys
+        {
+            get
+            {
+                return base.InputMeasurementKeys;
+            }
+            set
+            {
+                base.InputMeasurementKeys = value;
+
+                // Clear measurement cache when updating input measurement keys
+                if (TrackLatestMeasurements)
+                    LatestMeasurements.ClearMeasurementCache();
+            }
+        }
 
         /// <summary>
         /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter input measurement keys.
@@ -158,6 +179,36 @@ namespace TimeSeriesFramework.Adapters
 
                 // Filter measurements to list of specified source IDs
                 AdapterBase.LoadOutputSourceIDs(this);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets input measurement keys that are requested by other adapters based on what adapter says it can provide.
+        /// </summary>
+        public virtual MeasurementKey[] RequestedInputMeasurementKeys
+        {
+            get
+            {
+                return m_requestedInputMeasurementKeys;
+            }
+            set
+            {
+                m_requestedInputMeasurementKeys = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
+        /// </summary>
+        public virtual MeasurementKey[] RequestedOutputMeasurementKeys
+        {
+            get
+            {
+                return m_requestedOutputMeasurementKeys;
+            }
+            set
+            {
+                m_requestedOutputMeasurementKeys = value;
             }
         }
 
@@ -247,25 +298,6 @@ namespace TimeSeriesFramework.Adapters
                     // Assume lastest measurement timestamp is the best value we have for real-time.
                     return m_realTimeTicks;
                 }
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets primary keys of input measurements the <see cref="FacileActionAdapterBase"/> expects, if any.
-        /// </summary>
-        public override MeasurementKey[] InputMeasurementKeys
-        {
-            get
-            {
-                return base.InputMeasurementKeys;
-            }
-            set
-            {
-                base.InputMeasurementKeys = value;
-
-                // Clear measurement cache when updating input measurement keys
-                if (TrackLatestMeasurements)
-                    LatestMeasurements.ClearMeasurementCache();
             }
         }
 

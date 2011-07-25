@@ -94,6 +94,8 @@ namespace TimeSeriesFramework.Adapters
         private MeasurementKey[] m_inputMeasurementKeys;
         private string[] m_inputSourceIDs;
         private string[] m_outputSourceIDs;
+        private MeasurementKey[] m_requestedInputMeasurementKeys;
+        private MeasurementKey[] m_requestedOutputMeasurementKeys;
         private Ticks m_lastProcessTime;
         private Time m_totalProcessTime;
         private long m_processedMeasurements;
@@ -408,6 +410,62 @@ namespace TimeSeriesFramework.Adapters
             set
             {
                 m_outputSourceIDs = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets input measurement keys that are requested by other adapters based on what adapter says it can provide.
+        /// </summary>
+        public virtual MeasurementKey[] RequestedInputMeasurementKeys
+        {
+            get
+            {
+                // If a specific set of input measurement keys has been assigned, use that set
+                if (m_requestedInputMeasurementKeys != null)
+                    return m_requestedInputMeasurementKeys;
+
+                // Otherwise return cumulative results of all child adapters
+                lock (this)
+                {
+                    if (typeof(T) is IActionAdapter)
+                        return this.Cast<IActionAdapter>().Where(item => item.RequestedInputMeasurementKeys != null).SelectMany(item => item.RequestedInputMeasurementKeys).Distinct().ToArray();
+                    else if (typeof(T) is IOutputAdapter)
+                        return this.Cast<IOutputAdapter>().Where(item => item.RequestedInputMeasurementKeys != null).SelectMany(item => item.RequestedInputMeasurementKeys).Distinct().ToArray();
+                }
+
+                return null;
+            }
+            set
+            {
+                m_requestedInputMeasurementKeys = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
+        /// </summary>
+        public virtual MeasurementKey[] RequestedOutputMeasurementKeys
+        {
+            get
+            {
+                // If a specific set of output measurement keys has been assigned, use that set
+                if (m_requestedOutputMeasurementKeys != null)
+                    return m_requestedOutputMeasurementKeys;
+
+                // Otherwise return cumulative results of all child adapters
+                lock (this)
+                {
+                    if (typeof(T) is IActionAdapter)
+                        return this.Cast<IActionAdapter>().Where(item => item.RequestedOutputMeasurementKeys != null).SelectMany(item => item.RequestedOutputMeasurementKeys).Distinct().ToArray();
+                    else if (typeof(T) is IInputAdapter)
+                        return this.Cast<IInputAdapter>().Where(item => item.RequestedOutputMeasurementKeys != null).SelectMany(item => item.RequestedOutputMeasurementKeys).Distinct().ToArray();
+                }
+
+                return null;
+            }
+            set
+            {
+                m_requestedOutputMeasurementKeys = value;
             }
         }
 
