@@ -107,7 +107,7 @@ namespace UpdateWAVMetaData
                     // Insert new device record
                     connection.ExecuteNonQuery(string.Format("INSERT INTO Device(NodeID, Acronym, Name, ProtocolID, FramesPerSecond, MeasurementReportingInterval, Enabled) VALUES({0}, @acronym, @name, @protocolID, @framesPerSecond, @measurementReportingInterval, @enabled )", nodeIDQueryString), acronym, name, protocolID, sourceWave.SampleRate, 1000000, true);
                     int deviceID = Convert.ToInt32(connection.ExecuteScalar("SELECT ID FROM Device WHERE Acronym=@acronym", acronym));
-                    string pointTag, outputMeasurements = "";
+                    string pointTag;
 
                     // Add a measurement for each defined wave channel
                     for (int i = 0; i < sourceWave.Channels; i++)
@@ -118,18 +118,13 @@ namespace UpdateWAVMetaData
                         // Insert new measurement record
                         connection.ExecuteNonQuery("INSERT INTO Measurement(DeviceID, PointTag, SignalTypeID, SignalReference, Description, Enabled) VALUES( @deviceID, @pointTag, @signalTypeID, @signalReference, @description, @enabled )", (object)deviceID, pointTag, signalTypeID, acronym + "-AV" + index, name + " - channel " + index, true);
                         index = Convert.ToInt32(connection.ExecuteScalar("SELECT PointID FROM Measurement WHERE PointTag=@pointTag", pointTag));
-
-                        // Define output measurement keys
-                        if (outputMeasurements.Length > 0)
-                            outputMeasurements += ";";
-                        outputMeasurements += acronym + ":" + index;
                     }
 
                     // Disable all non analog measurements that may be associated with this device
                     connection.ExecuteNonQuery("UPDATE Measurement SET Enabled=@enabled WHERE DeviceID=@deviceID AND SignalTypeID <> @signalTypeID", false, deviceID, signalTypeID);
 
                     // Update connection string with newly added measurements
-                    connection.ExecuteNonQuery("UPDATE Device SET ConnectionString=@connectionString WHERE ID=@deviceID", string.Format("wavFileName={0}; outputMeasurements={{{1}}}", FilePath.GetAbsolutePath(sourceFileName), outputMeasurements), deviceID);
+                    connection.ExecuteNonQuery("UPDATE Device SET ConnectionString=@connectionString WHERE ID=@deviceID", string.Format("wavFileName={0}; connectOnDemand=true; outputSourceIDs={1}", FilePath.GetAbsolutePath(sourceFileName), acronym), deviceID);
                 }
             }
 
