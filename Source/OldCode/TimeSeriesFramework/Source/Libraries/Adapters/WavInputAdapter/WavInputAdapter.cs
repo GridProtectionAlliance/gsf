@@ -29,11 +29,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using TimeSeriesFramework;
 using TimeSeriesFramework.Adapters;
 using TVA;
 using TVA.Media;
-using System.Threading;
 
 namespace WavInputAdapter
 {
