@@ -656,7 +656,7 @@ namespace TimeSeriesFramework.Adapters
                     {
                         if (!inputAdapter.AutoStart)
                         {
-                            if (inputAdapter.InputMeasurementKeys != null)
+                            if (inputAdapter.OutputMeasurements != null)
                             {
                                 // Create an intersection between the measurements the adapter can provide and those that are demanded throughout this Iaon session
                                 demandedKeys = inputAdapter.OutputMeasurements.Select(m => m.Key).Intersect(inputMeasurementKeys);
