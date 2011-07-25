@@ -12,6 +12,11 @@
                 <GradientStop Color="#FF07426F" Offset="5"/>
             </RadialGradientBrush>
 
+            <LinearGradientBrush x:Key="PageBackgroundBrush" EndPoint="0.5,1" StartPoint="0.5,0">
+                <GradientStop Color="#FF064885" Offset="0"/>
+                <GradientStop Color="#FF001933" Offset="1"/>                
+            </LinearGradientBrush>
+
             <LinearGradientBrush x:Key="MenuBackgroundBrush" EndPoint="0.5,1" StartPoint="0.5,0">
                 <GradientStop Color="#FFB3C8D6" Offset="0"/>
                 <GradientStop Color="#FFE1E9EE" Offset="0.25"/>
@@ -60,17 +65,23 @@
             </Style>
 
             <Style TargetType="{x:Type Menu}" x:Key="MenuStyle">
-                <Setter Property="Background" Value="Transparent"/>                                              
+                <Setter Property="Background" Value="Transparent"/>                 
             </Style>
-            
+
+            <DropShadowEffect x:Key="TextDarkShadowEffect" BlurRadius="2" Color="#FF064885" Direction="310" ShadowDepth="1"/>
+
             <Style TargetType="{x:Type MenuItem}" x:Key="MenuItemStyle">
                 <Setter Property="Command" Value="{Binding Command}" />                                                
-                <!--<Style.Triggers>
-                    <Trigger Property="MenuItem.IsMouseOver" Value="true">
-                        <Setter Property="FontWeight" Value="Bold"/>
-                        <Setter Property="MenuItem.Background" Value="{StaticResource MainBackgroundBrush}"/>
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="Background" Value="#FF064885"/> 
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="Margin" Value="1"/>
+                <Style.Triggers>                    
+                    <Trigger Property="MenuItem.IsMouseOver" Value="true">                        
+                        <Setter Property="Foreground" Value="#FFFFFFFF"/>
+                        <Setter Property="Effect" Value="{StaticResource TextDarkShadowEffect}"/>
                     </Trigger>
-                </Style.Triggers>-->
+                </Style.Triggers>
 
                 <!--<Setter Property="Icon">
                     <Setter.Value>
@@ -78,9 +89,7 @@
                     </Setter.Value>
                 </Setter>-->
             </Style>
-            
-            
-
+                        
             <util:MenuItemStyleSelector x:Key="MenuItemStyleSelector"/>
         
             <!--<ResourceDictionary.MergedDictionaries>

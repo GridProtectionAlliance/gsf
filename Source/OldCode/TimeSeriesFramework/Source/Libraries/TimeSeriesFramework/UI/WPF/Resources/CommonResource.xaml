@@ -172,4 +172,11 @@
         </StackPanel>
     </ControlTemplate>
 
+    <ControlTemplate x:Key="LargeImageButtonTemplate" TargetType="Button">
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <Image Source="{TemplateBinding Content}" Width="32" Height="32" />
+            <TextBlock Text="{TemplateBinding Tag}" />
+        </StackPanel>
+    </ControlTemplate>
+
 </ResourceDictionary>

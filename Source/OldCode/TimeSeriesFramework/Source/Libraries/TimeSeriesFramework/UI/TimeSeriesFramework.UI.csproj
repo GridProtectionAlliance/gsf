@@ -131,10 +131,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WindowsServiceClient.cs" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <Resource Include="Images\Copy.png" />
     <Resource Include="Images\EditConfiguration.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\GPALogo.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

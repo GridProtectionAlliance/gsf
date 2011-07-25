@@ -171,10 +171,11 @@ namespace TimeSeriesFramework.UI.Commands
 
                     Run run = new Run();
                     run.FontWeight = FontWeights.Bold;
-                    run.Foreground = new SolidColorBrush(Color.FromArgb(255, 25, 25, 200));
+                    run.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
                     run.Text = m_description;
 
                     TextBlock txt = new TextBlock();
+                    txt.Padding = new Thickness(5.0);
                     txt.Inlines.Add(run);
 
                     if (groupBox != null)

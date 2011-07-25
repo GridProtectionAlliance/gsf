@@ -67,7 +67,7 @@ namespace TsfManager
             m_errorLogger.Initialize();
 
             Version appVersion = AssemblyInfo.EntryAssembly.Version;
-            m_title = "openPG Manager" + " (v" + appVersion.Major + "." + appVersion.Minor + "." + appVersion.Build + ") ";
+            m_title = AssemblyInfo.EntryAssembly.Title + " (v" + appVersion.Major + "." + appVersion.Minor + "." + appVersion.Build + ") ";
         }
 
         #endregion
