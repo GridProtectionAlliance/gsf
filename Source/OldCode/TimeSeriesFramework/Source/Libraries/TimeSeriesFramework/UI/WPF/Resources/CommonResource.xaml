@@ -27,6 +27,76 @@
     <sys:Double x:Key="XXLargeItemSize">300</sys:Double>
     <sys:Double x:Key="XXXLargeItemSize">500</sys:Double>
 
+    <LinearGradientBrush x:Key="MenuBackgroundBrush" EndPoint="0.5,1" StartPoint="0.5,0">
+        <GradientStop Color="#FFB3C8D6" Offset="0"/>
+        <GradientStop Color="#FFE1E9EE" Offset="0.25"/>
+        <GradientStop Color="#FFE1E9EE" Offset="0.75"/>
+        <GradientStop Color="#FFB3C8D6" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!--<LinearGradientBrush x:Key="PageBackgroundBrush" EndPoint="0.5,1" StartPoint="0.5,0">        
+        <GradientStop Color="#FF001933" Offset="0"/>
+        <GradientStop Color="#FF064885" Offset="1"/>
+    </LinearGradientBrush>-->
+
+    <LinearGradientBrush x:Key="HeaderRowBackgroundBrush" EndPoint="0.5,1" StartPoint="0.5,0">
+        <GradientStop Color="#FFB3C8D6" Offset="0"/>
+        <GradientStop Color="#FFE1E9EE" Offset="1"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="MainTitleForegroundBrush" EndPoint="0.5,1" StartPoint="0.5,0">
+        <GradientStop Color="#FFFFFFFF" Offset="0.4"/>
+        <GradientStop Color="#FF3FA6FF" Offset="1"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="MainBackgroundBrush" EndPoint="1,0" StartPoint="0,1">
+        <GradientStop Color="#FF032236" Offset="0"/>
+        <GradientStop Color="#FF095188" Offset="0.20"/>
+        <GradientStop Color="#FF032236" Offset="0.35"/>
+        <GradientStop Color="#FF095188" Offset="0.50"/>
+        <GradientStop Color="#FF032236" Offset="0.65"/>
+        <GradientStop Color="#FF095188" Offset="0.80"/>
+        <GradientStop Color="#FF032236" Offset="1"/>
+    </LinearGradientBrush>
+
+    <RadialGradientBrush x:Key="RedRadialGradientBrush" GradientOrigin=".2,.2">
+        <GradientStop Offset="0.2" Color="#FFFF9999"/>
+        <GradientStop Offset="0.5" Color="#FFFC0808"/>
+    </RadialGradientBrush>
+
+    <RadialGradientBrush x:Key="GreenRadialGradientBrush" GradientOrigin=".2,.2">
+        <GradientStop Offset="0.2" Color="#FFB3FF46"/>
+        <GradientStop Offset="0.5" Color="#FF2EB30D"/>
+    </RadialGradientBrush>
+
+    <RadialGradientBrush x:Key="YellowRadialGradientBrush" GradientOrigin=".2,.2">
+        <GradientStop Offset="0.2" Color="#FFFFFFFF"/>
+        <GradientStop Offset="0.5" Color="#FFE8E831"/>
+    </RadialGradientBrush>
+
+    <RadialGradientBrush x:Key="GrayRadialGradientBrush" GradientOrigin=".2,.2">
+        <GradientStop Offset="0.2" Color="#FFA6A6A6"/>
+        <GradientStop Offset="0.5" Color="#FF767676"/>
+    </RadialGradientBrush>
+
+    <RadialGradientBrush x:Key="WhiteRadialGradientBrush" GradientOrigin=".2,.2">
+        <GradientStop Offset="0.5" Color="#FFF0F0F0"/>
+        <GradientStop Offset="0.2" Color="#FFD4D4D4"/>
+    </RadialGradientBrush>
+
+    <RadialGradientBrush x:Key="BlueRadialGradientBrush" GradientOrigin=".2,.2">
+        <GradientStop Offset="0.5" Color="#FF2588D8"/>
+        <GradientStop Offset="0.2" Color="#FF65AAE2"/>
+    </RadialGradientBrush>
+
+    <!--<RadialGradientBrush x:Key="ContentBackgroundBrush">
+        <GradientStop Color="#FFFFFFFF"/>
+        <GradientStop Color="#FF07426F" Offset="5"/>
+    </RadialGradientBrush>-->
+
+    <DropShadowEffect x:Key="TextDarkShadowEffect" BlurRadius="2" Color="#FF064885" Direction="310" ShadowDepth="1"/>
+    <DropShadowEffect x:Key="TextLightShadowEffect" BlurRadius="2" Color="#FFFFFFFF" Direction="310" ShadowDepth="1"/>
+    
     <Style TargetType="TextBlock" x:Key="RequiredLabel">
         <Setter Property="Margin" Value="5,5,0,5" />
     </Style>
@@ -37,11 +107,12 @@
         <Setter Property="Margin" Value="2,3,-1,5" />
     </Style>
 
-    <LinearGradientBrush x:Key="HeaderRowBackgroundBrush" EndPoint="0.5,1" StartPoint="0.5,0">
-        <GradientStop Color="#FFB3C8D6" Offset="0"/>
-        <GradientStop Color="#FFE1E9EE" Offset="1"/>
-    </LinearGradientBrush>
-    
+    <Style x:Key="MainTitleStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource MainTitleForegroundBrush}"/>
+        <Setter Property="Effect" Value="{StaticResource TextDarkShadowEffect}"/>
+        <Setter Property="FontSize" Value="{StaticResource XXLargeTextSize}"/>        
+    </Style>
+
     <Style x:Key="CenterAlignCellStyle" TargetType="sdk:DataGridCell">
         <Setter Property="Template">
             <Setter.Value>
@@ -88,21 +159,12 @@
         </Style.Triggers>
     </Style>
     
-    <Style TargetType="ComboBox">
+    <Style TargetType="{x:Type ComboBox}">
         <Setter Property="Width" Value="{StaticResource LargerItemSize}"/>
-        <Setter Property="Height" Value="22"/>
+        <Setter Property="Height" Value="25"/>
         <Setter Property="Margin" Value="5"/>
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="HorizontalAlignment" Value="Left"/>
-    </Style>
-    
-    <Style TargetType="TextBlock">
-        <Setter Property="Margin" Value="5" />
-        <Setter Property="TextAlignment" Value="Right" />
-        <Setter Property="HorizontalAlignment" Value="Right" />
-        <!--<Setter Property="Width" Value="{StaticResource ItemSize}" />-->
-        <Setter Property="FontSize" Value="{StaticResource TextSize}" />
-        <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
     
     <Style TargetType="CheckBox">
@@ -157,6 +219,52 @@
         <Setter Property="FontSize" Value="{StaticResource TextSize}"/>
     </Style>
 
+    <Style TargetType="{x:Type MenuItem}" x:Key="MenuSeparatorStyle">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type MenuItem}">
+                    <Separator HorizontalAlignment="Stretch" IsEnabled="false"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="{x:Type Menu}" x:Key="MenuStyle">
+        <Setter Property="Background" Value="Transparent"/>
+    </Style>
+
+    <Style TargetType="{x:Type MenuItem}" x:Key="MenuItemStyle">
+        <Setter Property="Command" Value="{Binding Command}" />
+        <!--<Setter Property="Foreground" Value="{StaticResource MainTitleForegroundBrush}"/>-->
+        <!--<Setter Property="Effect" Value="{StaticResource TextLightShadowEffect}"/>-->
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="Margin" Value="1"/>
+        <Setter Property="Background" Value="Transparent"/>        
+        <!--<Style.Triggers>
+            <Trigger Property="MenuItem.IsMouseOver" Value="true">
+                <Setter Property="Foreground" Value="#FFFFFFFF"/>
+                <Setter Property="Effect" Value="{StaticResource TextDarkShadowEffect}"/>
+            </Trigger>
+        </Style.Triggers>-->
+
+        <!--<Setter Property="Icon">
+                    <Setter.Value>
+                        <Image Source="{Binding Icon, Converter={StaticResource StringToBitmapConverter}}" />
+                    </Setter.Value>
+                </Setter>-->
+    </Style>
+
+    <Style TargetType="TextBlock">
+        <Setter Property="Margin" Value="5" />
+        <Setter Property="TextAlignment" Value="Right" />
+        <Setter Property="HorizontalAlignment" Value="Right" />
+        <!--<Setter Property="Width" Value="{StaticResource ItemSize}" />-->
+        <Setter Property="FontSize" Value="{StaticResource TextSize}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    
     <conv:NotConverter x:Key="NotConverter"/>
     <conv:DictionaryToKeyValuePairConverter x:Key="DictionaryToKeyValuePairConverter"/>
     <conv:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />

@@ -1,7 +1,7 @@
 ﻿<Window x:Class="TsfManager.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="750" Width="900"    
+        Title="MainWindow" Height="800" Width="900"    
         xmlns:tsfconv="clr-namespace:TimeSeriesFramework.UI.Converters;assembly=TimeSeriesFramework.UI"
         xmlns:tsf="clr-namespace:TimeSeriesFramework.UI;assembly=TimeSeriesFramework.UI.WPF"         
         >
@@ -12,25 +12,25 @@
         </HierarchicalDataTemplate>        
     </Window.Resources>
 
-    <StackPanel Orientation="Vertical" Background="{StaticResource PageBackgroundBrush}">
+    <Canvas Background="{StaticResource MainBackgroundBrush}">
+        <Canvas.RenderTransform>
+            <ScaleTransform x:Name="LayoutRootScale" ScaleX="1" ScaleY="1"/>
+        </Canvas.RenderTransform>
 
-        <!--<StackPanel.Resources>
-            <ResourceDictionary>
-                <ResourceDictionary.MergedDictionaries>
-                    <ResourceDictionary Source="/TimeSeriesFramework.UI.WPF;Component/Resources/CommonResource.xaml" />
-                </ResourceDictionary.MergedDictionaries>
-            </ResourceDictionary>
-        </StackPanel.Resources>
-        
-        <Button Template="{StaticResource LargeImageButtonTemplate}" Content="/TimeSeriesFramework.UI;component/images/GPALock.png" Tag="Grid Protection Alliance" 
-                Background="#FF032236" Foreground="White" FontWeight="Black" Width="Auto" HorizontalAlignment="Right" VerticalAlignment="Center" Height="Auto"/>-->
-        
-               
+        <StackPanel Orientation="Vertical">
 
-        <Grid>
+            <StackPanel.Resources>
+                <ResourceDictionary>
+                    <ResourceDictionary.MergedDictionaries>
+                        <ResourceDictionary Source="/TimeSeriesFramework.UI.WPF;Component/Resources/CommonResource.xaml" />
+                    </ResourceDictionary.MergedDictionaries>
+                </ResourceDictionary>
+            </StackPanel.Resources>
+
+                                                                                                                            <Grid>
             <Grid.ColumnDefinitions>                
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="5*"/>
+                <ColumnDefinition Width="2*"/>
             </Grid.ColumnDefinitions>
             
             <Grid.RowDefinitions>
@@ -38,22 +38,29 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right">
-                <ComboBox x:Name="ComboboxNode" DisplayMemberPath="Value" SelectionChanged="ComboboxNode_SelectionChanged" />
+            <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left">
+                <TextBlock Text="Node: " Foreground="White"/>
+                <ComboBox x:Name="ComboboxNode" DisplayMemberPath="Value" SelectionChanged="ComboboxNode_SelectionChanged" Width="150"/>
                 <Ellipse x:Name="EllipseConnectionState" Fill="{StaticResource RedRadialGradientBrush}" Width="16" Height="16" Margin="2,0,0,0" />
             </StackPanel>
+            
+            <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <TextBlock x:Name="TextBlockCurrentUser" Text="Current User: " Foreground="White" Margin="0,0,10,0"/>
+                <Image Source="/TimeSeriesFramework.UI;component/images/GPALock.png"/>
+                <TextBlock Text="Grid Protection Alliance" Foreground="White" FontWeight="Bold" Margin="0,0,10,0"/>
+            </StackPanel>
 
-            <Menu x:Name="MenuMain" ItemsSource="{Binding}" Style="{StaticResource MenuStyle}" ItemContainerStyleSelector="{StaticResource MenuItemStyleSelector}"
-                  VerticalAlignment="Center" HorizontalAlignment="Center" Margin="2" Grid.Row="1" Grid.Column="1" />
+            <TextBlock Text="TSF Manager" Grid.Row="1" Grid.Column="0" Style="{StaticResource MainTitleStyle}" Margin="5,-10,0,0"/>
 
-            <Border Background="White" CornerRadius="5" BorderThickness="1" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" HorizontalAlignment="Left" 
-                    VerticalAlignment="Center" Margin="2" Padding="2">
-                <Image Source="/TimeSeriesFramework.UI;component/images/GPALogo.png" Width="100" Height="47"/>
-            </Border>               
+            <Border Background="{StaticResource MenuBackgroundBrush}" BorderThickness="0" CornerRadius="5" VerticalAlignment="Bottom" 
+                    HorizontalAlignment="Right" Grid.Row="1" Grid.Column="1" Margin="0,0,5,0" Width="575" Height="32">
+                <Menu x:Name="MenuMain" ItemsSource="{Binding}" Style="{StaticResource MenuStyle}" ItemContainerStyleSelector="{StaticResource MenuItemStyleSelector}"
+                      HorizontalAlignment="Right"/>    
+            </Border>
             
         </Grid>
 
-        <GroupBox x:Name="GroupBoxMain">
+                            <GroupBox x:Name="GroupBoxMain" Margin="2,-5,2,2">
             <Border Padding="2" BorderThickness="1" Background="{StaticResource MenuBackgroundBrush}" CornerRadius="5">
                 <Frame x:Name="FrameContent" NavigationUIVisibility="Hidden" HorizontalAlignment="Center"/>
             </Border>
@@ -61,4 +68,5 @@
 
         </StackPanel>
 
+    </Canvas>
 </Window>

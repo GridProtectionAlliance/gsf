@@ -27,15 +27,9 @@
                             <ToolTipService.ToolTip>
                                 <TextBlock Width="500" TextWrapping="Wrap" Text="{Binding Path=ConnectionString}"/>
                             </ToolTipService.ToolTip>
-                            <Border>
-                                <TextBlock Width="{StaticResource LargeItemSize}" TextAlignment="Left" Padding="1" Text="{Binding Path=AdapterName}"/>
-                            </Border>
-                            <Border>
-                                <TextBlock Width="{StaticResource XXLargeItemSize}" TextAlignment="Left" Padding="1" Text="{Binding Path=AssemblyName}"/>
-                            </Border>
-                            <Border>
-                                <TextBlock Width="{StaticResource XXXLargeItemSize}" TextAlignment="Left" Padding="1" Text="{Binding Path=TypeName}"/>
-                            </Border>
+                            <TextBlock Width="{StaticResource LargeItemSize}" Text="{Binding Path=AdapterName}"/>
+                            <TextBlock Width="{StaticResource XLargeItemSize}" Text="{Binding Path=AssemblyName}"/>
+                            <TextBlock Width="{StaticResource XXLargeItemSize}" Text="{Binding Path=TypeName}"/>                            
                         </StackPanel>
                     </HierarchicalDataTemplate>
                     <HierarchicalDataTemplate x:Key="RootNodeTemplate" ItemTemplate="{StaticResource ChildNodeTemplate}" ItemsSource="{Binding Path=AdapterList}">
@@ -43,16 +37,10 @@
                             <TextBlock Text="{Binding Path=AdapterType}" FontSize="{StaticResource LargeTextSize}" VerticalAlignment="Center" HorizontalAlignment="Left" FontWeight="Bold" Margin="5"/>
                             <Border>
                                 <StackPanel Orientation="Horizontal" Margin="2">
-                                    <TextBlock Text="" Width="{StaticResource BlankItemSize}" TextAlignment="Center" FontSize="{StaticResource LargeTextSize}" FontWeight="Bold"/>
-                                    <Border>
-                                        <TextBlock Text="Adapter Name" Width="{StaticResource LargeItemSize}" TextAlignment="Center" FontSize="{StaticResource TextSize}" FontWeight="Bold" Padding="1"/>
-                                    </Border>
-                                    <Border>
-                                        <TextBlock Text="Assembly Name" Width="{StaticResource XXLargeItemSize}" TextAlignment="Center" FontSize="{StaticResource TextSize}" FontWeight="Bold" Padding="1"/>
-                                    </Border>
-                                    <Border>
-                                        <TextBlock Text="Type Name" Width="{StaticResource XXXLargeItemSize}" TextAlignment="Center" FontSize="{StaticResource TextSize}" FontWeight="Bold" Padding="1"/>
-                                    </Border>
+                                    <TextBlock Text="" Width="{StaticResource BlankItemSize}" TextAlignment="Center" FontSize="{StaticResource LargeTextSize}" FontWeight="Bold"/>                                    
+                                    <TextBlock Text="Adapter Name" Width="{StaticResource LargeItemSize}" TextAlignment="Center" FontWeight="Bold"/>
+                                    <TextBlock Text="Assembly Name" Width="{StaticResource XLargeItemSize}" TextAlignment="Center" FontWeight="Bold"/>
+                                    <TextBlock Text="Type Name" Width="{StaticResource XXLargeItemSize}" TextAlignment="Center" FontWeight="Bold"/>                                    
                                 </StackPanel>
                             </Border>
                         </StackPanel>
@@ -62,7 +50,8 @@
                     </Style>
                 </StackPanel.Resources>
                 
-                <TreeView x:Name="TreeViewIaon" ItemTemplate="{StaticResource RootNodeTemplate}" Height="772" ItemContainerStyle="{StaticResource ExpandedItemStyle}" ItemsSource="{tsfBinding:Column Path=ItemsSource}" Background="Transparent">
+                <TreeView x:Name="TreeViewIaon" ItemTemplate="{StaticResource RootNodeTemplate}" Height="610" ItemContainerStyle="{StaticResource ExpandedItemStyle}" 
+                          ItemsSource="{tsfBinding:Column Path=ItemsSource}" Background="Transparent" BorderThickness="0" HorizontalAlignment="Left">
                     
                 </TreeView>
             </StackPanel>

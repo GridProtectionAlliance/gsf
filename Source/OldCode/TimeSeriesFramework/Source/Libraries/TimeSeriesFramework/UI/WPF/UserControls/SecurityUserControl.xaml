@@ -54,7 +54,7 @@
 
             <Style TargetType="ComboBox">
                 <Setter Property="Width" Value="{StaticResource ItemSize}"/>
-                <Setter Property="Height" Value="22"/>
+                <Setter Property="Height" Value="25"/>
                 <Setter Property="Margin" Value="2"/>
                 <Setter Property="VerticalAlignment" Value="Center" />
                 <Setter Property="HorizontalAlignment" Value="Left"/>
@@ -96,7 +96,7 @@
                 <ComboBox ItemsSource="{tsfBinding:Column Path=ItemsSource}" SelectedItem="{tsfBinding:Column Path=CurrentItem}" Width="250">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{tsfBinding:Column Path=Name}" TextAlignment="Left" Padding="1" />
+                            <TextBlock Text="{tsfBinding:Column Path=Name}" TextAlignment="Left" />
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
@@ -174,7 +174,7 @@
                 <ComboBox ItemsSource="{tsfBinding:Column Path=ItemsSource}" SelectedItem="{tsfBinding:Column Path=CurrentItem}" Width="250">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{tsfBinding:Column Path=Name}" TextAlignment="Left" Padding="1" />
+                            <TextBlock Text="{tsfBinding:Column Path=Name}" TextAlignment="Left" />
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>

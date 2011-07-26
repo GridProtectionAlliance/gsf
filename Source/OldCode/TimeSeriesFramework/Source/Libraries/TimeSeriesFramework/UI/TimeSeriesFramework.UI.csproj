@@ -136,7 +136,7 @@
     <Resource Include="Images\EditConfiguration.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Images\GPALogo.png" />
+    <Resource Include="Images\GPALock.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
