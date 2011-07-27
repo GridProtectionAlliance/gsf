@@ -2,6 +2,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib"
                     xmlns:conv="clr-namespace:TimeSeriesFramework.UI.Converters;assembly=TimeSeriesFramework.UI"
+                    xmlns:util="clr-namespace:TimeSeriesFramework.UI;assembly=TimeSeriesFramework.UI.WPF"
                     xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
 
     <sys:Double x:Key="XXSmallTextSize">5</sys:Double>
@@ -33,11 +34,6 @@
         <GradientStop Color="#FFE1E9EE" Offset="0.75"/>
         <GradientStop Color="#FFB3C8D6" Offset="1"/>
     </LinearGradientBrush>
-
-    <!--<LinearGradientBrush x:Key="PageBackgroundBrush" EndPoint="0.5,1" StartPoint="0.5,0">        
-        <GradientStop Color="#FF001933" Offset="0"/>
-        <GradientStop Color="#FF064885" Offset="1"/>
-    </LinearGradientBrush>-->
 
     <LinearGradientBrush x:Key="HeaderRowBackgroundBrush" EndPoint="0.5,1" StartPoint="0.5,0">
         <GradientStop Color="#FFB3C8D6" Offset="0"/>
@@ -88,12 +84,7 @@
         <GradientStop Offset="0.5" Color="#FF2588D8"/>
         <GradientStop Offset="0.2" Color="#FF65AAE2"/>
     </RadialGradientBrush>
-
-    <!--<RadialGradientBrush x:Key="ContentBackgroundBrush">
-        <GradientStop Color="#FFFFFFFF"/>
-        <GradientStop Color="#FF07426F" Offset="5"/>
-    </RadialGradientBrush>-->
-
+   
     <DropShadowEffect x:Key="TextDarkShadowEffect" BlurRadius="2" Color="#FF064885" Direction="310" ShadowDepth="1"/>
     <DropShadowEffect x:Key="TextLightShadowEffect" BlurRadius="2" Color="#FFFFFFFF" Direction="310" ShadowDepth="1"/>
     
@@ -212,9 +203,10 @@
     
     <Style TargetType="Button" x:Key="HomeButtonStyle">
         <Setter Property="HorizontalAlignment" Value="Center"/>
-        <Setter Property="Padding" Value="3"/>
-        <Setter Property="Margin" Value="3"/>
-        <Setter Property="Width" Value="{StaticResource LargeItemSize}"/>
+        <Setter Property="Padding" Value="1"/>
+        <Setter Property="Margin" Value="2"/>
+        <Setter Property="Width" Value="{StaticResource XLargeItemSize}"/>
+        <Setter Property="Height" Value="Auto"/>
         <Setter Property="FontWeight" Value="Bold"/>
         <Setter Property="FontSize" Value="{StaticResource TextSize}"/>
     </Style>
@@ -234,9 +226,7 @@
     </Style>
 
     <Style TargetType="{x:Type MenuItem}" x:Key="MenuItemStyle">
-        <Setter Property="Command" Value="{Binding Command}" />
-        <!--<Setter Property="Foreground" Value="{StaticResource MainTitleForegroundBrush}"/>-->
-        <!--<Setter Property="Effect" Value="{StaticResource TextLightShadowEffect}"/>-->
+        <Setter Property="Command" Value="{Binding Command}" />        
         <Setter Property="FontSize" Value="12"/>
         <Setter Property="FontWeight" Value="Bold"/>
         <Setter Property="HorizontalAlignment" Value="Left"/>
@@ -259,12 +249,12 @@
     <Style TargetType="TextBlock">
         <Setter Property="Margin" Value="5" />
         <Setter Property="TextAlignment" Value="Right" />
-        <Setter Property="HorizontalAlignment" Value="Right" />
-        <!--<Setter Property="Width" Value="{StaticResource ItemSize}" />-->
+        <Setter Property="HorizontalAlignment" Value="Right" />        
         <Setter Property="FontSize" Value="{StaticResource TextSize}" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
     
+    <util:MenuItemStyleSelector x:Key="MenuItemStyleSelector"/>
     <conv:NotConverter x:Key="NotConverter"/>
     <conv:DictionaryToKeyValuePairConverter x:Key="DictionaryToKeyValuePairConverter"/>
     <conv:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />

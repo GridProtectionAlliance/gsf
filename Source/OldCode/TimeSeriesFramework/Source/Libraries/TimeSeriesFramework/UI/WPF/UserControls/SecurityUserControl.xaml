@@ -78,7 +78,7 @@
             <Style TargetType="ListBox">
                 <Setter Property="Width" Value="160" />
                 <Setter Property="SelectionMode" Value="Multiple"/>
-                <Setter Property="Height" Value="115" />
+                <Setter Property="Height" Value="130" />
             </Style>
             
             <Style TargetType="Grid">

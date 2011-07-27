@@ -32,6 +32,7 @@ using System.Xml.Serialization;
 using TimeSeriesFramework.UI;
 using TimeSeriesFramework.UI.DataModels;
 using TVA.IO;
+using TVA.Reflection;
 
 namespace TsfManager
 {
@@ -71,6 +72,7 @@ namespace TsfManager
             this.Loaded += new RoutedEventHandler(MainWindow_Loaded);
             this.Unloaded += new RoutedEventHandler(MainWindow_Unloaded);
             Title = ((App)Application.Current).Title;
+            TextBoxTitle.Text = AssemblyInfo.EntryAssembly.Title;
 
             if (!string.IsNullOrEmpty(CommonFunctions.CurrentUser))
                 Title += " Current User: " + CommonFunctions.CurrentUser;

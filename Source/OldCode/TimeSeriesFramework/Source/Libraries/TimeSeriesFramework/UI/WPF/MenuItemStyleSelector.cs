@@ -16,16 +16,15 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  03/29/2011 - Mehulbhai P Thakkar
+//  07/27/2011 - Mehulbhai P Thakkar
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using System.Windows;
 using System.Windows.Controls;
-using TimeSeriesFramework.UI;
 
-namespace TsfManager.Utility
+namespace TimeSeriesFramework.UI
 {
     /// <summary>
     /// Represents wrapper object around <see cref="StyleSelector"/> class.

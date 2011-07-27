@@ -34,7 +34,7 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <TextBlock Text="TSF Manager" Grid.Row="0" Grid.Column="0" Style="{StaticResource MainTitleStyle}" Margin="5,-10,0,0"/>
+            <TextBlock x:Name="TextBoxTitle" Grid.Row="0" Grid.Column="0" Style="{StaticResource MainTitleStyle}" Margin="5,-10,0,0"/>
 
             <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center">
                 <TextBlock Text="Current Node: " Foreground="White"/>

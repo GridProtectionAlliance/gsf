@@ -93,7 +93,7 @@
     <Reference Include="TVA.Communication">
       <HintPath>..\..\..\..\Dependencies\TVA\TVA.Communication.dll</HintPath>
     </Reference>
-    <Reference Include="TVA.Core">      
+    <Reference Include="TVA.Core">
       <HintPath>..\..\..\..\Dependencies\TVA\TVA.Core.dll</HintPath>
     </Reference>
     <Reference Include="TVA.Security">
@@ -114,6 +114,7 @@
     <Compile Include="Commands\RelayCommand.cs" />
     <Compile Include="IViewModel.cs" />
     <Compile Include="MenuDataItem.cs" />
+    <Compile Include="MenuItemStyleSelector.cs" />
     <Compile Include="PagedViewModelBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
@@ -151,6 +152,9 @@
     </Compile>
     <Compile Include="UserControls\HistorianUserControl.xaml.cs">
       <DependentUpon>HistorianUserControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\HomeUserControl.xaml.cs">
+      <DependentUpon>HomeUserControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="UserControls\IaonTreeUserControl.xaml.cs">
       <DependentUpon>IaonTreeUserControl.xaml</DependentUpon>
@@ -242,6 +246,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UserControls\HistorianUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\HomeUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

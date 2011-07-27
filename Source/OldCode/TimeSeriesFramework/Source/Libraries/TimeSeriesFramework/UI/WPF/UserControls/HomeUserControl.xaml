@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="TsfManager.HomeUserControl"
+﻿<UserControl x:Class="TimeSeriesFramework.UI.UserControls.HomeUserControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -30,13 +30,7 @@
         <StackPanel Orientation="Vertical" Grid.Column="0">
             <TextBlock Text="Quick Links" HorizontalAlignment="Left" FontSize="{StaticResource XLargeTextSize}"/>
             <Border>
-                <StackPanel Orientation="Vertical" ButtonBase.Click="CommonClickHandler">
-                    <Button x:Name="ButtonBrowseDevices" Content="Browse Devices" Style="{StaticResource HomeButtonStyle}"/>
-                    <Button x:Name="ButtonSubscriberRequest" Content="Create Request" Style="{StaticResource HomeButtonStyle}"/>
-                    <Button x:Name="ButtonSubscribers" Content="Browse Subscribers" Style="{StaticResource HomeButtonStyle}"/>
-                    <Button x:Name="ButtonMeasurementGroup" Content="Measurement Groups" Style="{StaticResource HomeButtonStyle}"/>
-                    <Button x:Name="ButtonSubscriberMeasurement" Content="Subscriber Measurements" Style="{StaticResource HomeButtonStyle}"/>
-                    <Button x:Name="ButtonMeasurementSubscription" Content="Measurement Subscriptions" Style="{StaticResource HomeButtonStyle}"/>
+                <StackPanel Orientation="Vertical" ButtonBase.Click="CommonClickHandler">                    
                     <Button x:Name="ButtonSecurity" Content="Manage Security" Style="{StaticResource HomeButtonStyle}"/>
                 </StackPanel>
             </Border>
