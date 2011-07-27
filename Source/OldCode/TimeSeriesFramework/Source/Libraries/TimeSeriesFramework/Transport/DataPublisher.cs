@@ -37,6 +37,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using TimeSeriesFramework.Adapters;
 using TVA;
 using TVA.Communication;
@@ -810,6 +811,15 @@ namespace TimeSeriesFramework.Transport
                 if (TryGetClientSubscription(clientID, out clientSubscription))
                     Remove(clientSubscription);
             }
+
+            // Notify system that subscriber disconnected therefore demanded measurements may have changed
+            ThreadPool.QueueUserWorkItem(NotifyHostOfSubscriptionRemoval);
+        }
+
+        // Handle notfication on input measurement key change
+        private void NotifyHostOfSubscriptionRemoval(object state)
+        {
+            OnInputMeasurementKeysUpdated();
         }
 
         // Attempt to find client subscription
