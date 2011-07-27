@@ -110,7 +110,7 @@
     <Style x:Key="MainTitleStyle" TargetType="TextBlock">
         <Setter Property="Foreground" Value="{StaticResource MainTitleForegroundBrush}"/>
         <Setter Property="Effect" Value="{StaticResource TextDarkShadowEffect}"/>
-        <Setter Property="FontSize" Value="{StaticResource XXLargeTextSize}"/>        
+        <Setter Property="FontSize" Value="32"/>        
     </Style>
 
     <Style x:Key="CenterAlignCellStyle" TargetType="sdk:DataGridCell">

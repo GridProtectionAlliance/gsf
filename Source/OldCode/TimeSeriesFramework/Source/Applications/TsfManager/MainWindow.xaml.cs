@@ -73,9 +73,7 @@ namespace TsfManager
             Title = ((App)Application.Current).Title;
 
             if (!string.IsNullOrEmpty(CommonFunctions.CurrentUser))
-                TextBlockCurrentUser.Text = "Current User: " + CommonFunctions.CurrentUser;
-
-            //Title += " Current User: " + CommonFunctions.CurrentUser;
+                Title += " Current User: " + CommonFunctions.CurrentUser;
 
             CommonFunctions.SetRetryServiceConnection(true);
         }

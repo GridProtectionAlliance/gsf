@@ -12,12 +12,7 @@
         </HierarchicalDataTemplate>        
     </Window.Resources>
 
-    <Canvas Background="{StaticResource MainBackgroundBrush}">
-        <Canvas.RenderTransform>
-            <ScaleTransform x:Name="LayoutRootScale" ScaleX="1" ScaleY="1"/>
-        </Canvas.RenderTransform>
-
-        <StackPanel Orientation="Vertical">
+        <StackPanel Orientation="Vertical" Background="{StaticResource MainBackgroundBrush}">
 
             <StackPanel.Resources>
                 <ResourceDictionary>
@@ -27,10 +22,11 @@
                 </ResourceDictionary>
             </StackPanel.Resources>
 
-                                                                                                                            <Grid>
+         <Grid Margin="0,5,0,0">
             <Grid.ColumnDefinitions>                
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="1.5*"/>
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             
             <Grid.RowDefinitions>
@@ -38,24 +34,23 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left">
-                <TextBlock Text="Node: " Foreground="White"/>
+            <TextBlock Text="TSF Manager" Grid.Row="0" Grid.Column="0" Style="{StaticResource MainTitleStyle}" Margin="5,-10,0,0"/>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="Current Node: " Foreground="White"/>
                 <ComboBox x:Name="ComboboxNode" DisplayMemberPath="Value" SelectionChanged="ComboboxNode_SelectionChanged" Width="150"/>
                 <Ellipse x:Name="EllipseConnectionState" Fill="{StaticResource RedRadialGradientBrush}" Width="16" Height="16" Margin="2,0,0,0" />
             </StackPanel>
             
-            <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
-                <TextBlock x:Name="TextBlockCurrentUser" Text="Current User: " Foreground="White" Margin="0,0,10,0"/>
+            <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center">                
                 <Image Source="/TimeSeriesFramework.UI;component/images/GPALock.png"/>
                 <TextBlock Text="Grid Protection Alliance" Foreground="White" FontWeight="Bold" Margin="0,0,10,0"/>
             </StackPanel>
 
-            <TextBlock Text="TSF Manager" Grid.Row="1" Grid.Column="0" Style="{StaticResource MainTitleStyle}" Margin="5,-10,0,0"/>
-
-            <Border Background="{StaticResource MenuBackgroundBrush}" BorderThickness="0" CornerRadius="5" VerticalAlignment="Bottom" 
-                    HorizontalAlignment="Right" Grid.Row="1" Grid.Column="1" Margin="0,0,5,0" Width="575" Height="32">
+            <Border Background="{StaticResource MenuBackgroundBrush}" BorderThickness="0" CornerRadius="5" VerticalAlignment="Top" 
+                    HorizontalAlignment="Right" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Margin="5,0,5,0" Width="875" Height="32">
                 <Menu x:Name="MenuMain" ItemsSource="{Binding}" Style="{StaticResource MenuStyle}" ItemContainerStyleSelector="{StaticResource MenuItemStyleSelector}"
-                      HorizontalAlignment="Right"/>    
+                      HorizontalAlignment="Center"/>    
             </Border>
             
         </Grid>
@@ -68,5 +63,4 @@
 
         </StackPanel>
 
-    </Canvas>
 </Window>
