@@ -69,6 +69,11 @@
             Time-series framework uses this handler to route new measurements to the action and output adapters; adapter will handle filtering.
             </remarks>
         </member>
+        <member name="M:TimeSeriesFramework.Adapters.RoutingTables.HandleConnectOnDemandAdapters">
+            <summary>
+            Starts or stops connect on demand adapters based on current state of demanded input or output measurements.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Adapters.RoutingTables.InputAdapters">
             <summary>
             Gets or sets the active <see cref="T:TimeSeriesFramework.Adapters.InputAdapterCollection"/>.
@@ -2158,7 +2163,7 @@
         </member>
         <member name="M:TimeSeriesFramework.Adapters.IActionAdapter.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
             <summary>
-            Queues measurements for calculation processing.  Measurements are automatically filtered to the defined <see cref="P:TimeSeriesFramework.Adapters.IAdapter.InputMeasurementKeys"/>.
+            Queues measurements for processing.  Measurements are automatically filtered to the defined <see cref="P:TimeSeriesFramework.Adapters.IAdapter.InputMeasurementKeys"/>.
             </summary>
             <param name="measurements">Collection of measurements to queue for calculation processing.</param>
         </member>
@@ -2203,6 +2208,16 @@
             This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
             Set to <c>null</c> apply no filter.
             </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.IActionAdapter.RequestedInputMeasurementKeys">
+            <summary>
+            Gets or sets input measurement keys that are requested by other adapters based on what adapter says it can provide.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.IActionAdapter.RequestedOutputMeasurementKeys">
+            <summary>
+            Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
+            </summary>
         </member>
         <member name="M:TimeSeriesFramework.Adapters.ActionAdapterBase.#ctor">
             <summary>
@@ -2489,6 +2504,16 @@
             This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
             Set to <c>null</c> apply no filter.
             </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.RequestedInputMeasurementKeys">
+            <summary>
+            Gets or sets input measurement keys that are requested by other adapters based on what adapter says it can provide.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.RequestedOutputMeasurementKeys">
+            <summary>
+            Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
+            </summary>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.MinimumMeasurementsToUse">
             <summary>
@@ -2896,6 +2921,16 @@
             The collection classes simply track this value if assigned, no automatic action is taken.
             </remarks>
         </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.RequestedInputMeasurementKeys">
+            <summary>
+            Gets or sets input measurement keys that are requested by other adapters based on what adapter says it can provide.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.RequestedOutputMeasurementKeys">
+            <summary>
+            Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.ProcessedMeasurements">
             <summary>
             Gets the total number of measurements processed thus far by each <see cref="T:TimeSeriesFramework.Adapters.IAdapter"/> implementation
@@ -3150,6 +3185,15 @@
             <param name="value">Value of setting used to define input measurement keys, typically "inputMeasurementKeys".</param>
             <param name="measurementTable">Measurement table name used to load additional meta-data; this is not used when specifying a FILTER expression.</param>
             <returns>User selected input measurement keys.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.ParseOutputMeasurementKeys(System.Data.DataSet,System.String,System.String)">
+            <summary>
+            Parses output measurement keys from connection string setting.
+            </summary>
+            <param name="dataSource">The <see cref="T:System.Data.DataSet"/> used to define output measurements.</param>
+            <param name="value">Value of setting used to define output measurements, typically "outputMeasurements".</param>
+            <param name="measurementTable">Measurement table name used to load additional meta-data; this is not used when specifying a FILTER expression.</param>
+            <returns>User selected output measurements.</returns>
         </member>
         <member name="M:TimeSeriesFramework.Adapters.AdapterBase.ParseOutputMeasurements(System.Data.DataSet,System.String,System.String)">
             <summary>
@@ -3521,6 +3565,11 @@
             <see cref="F:TVA.EventArgs`1.Argument"/> is the enumeration of <see cref="T:TimeSeriesFramework.IMeasurement"/> values that are being discarded during the sorting process.
             </remarks>
         </member>
+        <member name="P:TimeSeriesFramework.Adapters.FacileActionAdapterBase.InputMeasurementKeys">
+            <summary>
+            Gets or sets primary keys of input measurements the <see cref="T:TimeSeriesFramework.Adapters.FacileActionAdapterBase"/> expects, if any.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Adapters.FacileActionAdapterBase.InputSourceIDs">
             <summary>
             Gets or sets <see cref="P:TimeSeriesFramework.MeasurementKey.Source"/> values used to filter input measurement keys.
@@ -3538,6 +3587,16 @@
             This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
             Set to <c>null</c> apply no filter.
             </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.FacileActionAdapterBase.RequestedInputMeasurementKeys">
+            <summary>
+            Gets or sets input measurement keys that are requested by other adapters based on what adapter says it can provide.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.FacileActionAdapterBase.RequestedOutputMeasurementKeys">
+            <summary>
+            Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
+            </summary>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.FacileActionAdapterBase.FramesPerSecond">
             <summary>
@@ -3577,11 +3636,6 @@
             most recent measurement.
             </summary>
         </member>
-        <member name="P:TimeSeriesFramework.Adapters.FacileActionAdapterBase.InputMeasurementKeys">
-            <summary>
-            Gets or sets primary keys of input measurements the <see cref="T:TimeSeriesFramework.Adapters.FacileActionAdapterBase"/> expects, if any.
-            </summary>
-        </member>
         <member name="P:TimeSeriesFramework.Adapters.FacileActionAdapterBase.Status">
             <summary>
             Returns the detailed status of the data input source.
@@ -3611,6 +3665,11 @@
             This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
             Set to <c>null</c> apply no filter.
             </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.IInputAdapter.RequestedOutputMeasurementKeys">
+            <summary>
+            Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
+            </summary>
         </member>
         <member name="T:TimeSeriesFramework.Adapters.InputAdapterBase">
             <summary>
@@ -3707,6 +3766,11 @@
             This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
             Set to <c>null</c> apply no filter.
             </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.InputAdapterBase.RequestedOutputMeasurementKeys">
+            <summary>
+            Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
+            </summary>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.InputAdapterBase.IsConnected">
             <summary>
@@ -3812,6 +3876,11 @@
             This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
             Set to <c>null</c> apply no filter.
             </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.IOutputAdapter.RequestedInputMeasurementKeys">
+            <summary>
+            Gets or sets input measurement keys that are requested by other adapters based on what adapter says it can provide.
+            </summary>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.IOutputAdapter.OutputIsForArchive">
             <summary>
@@ -4018,6 +4087,11 @@
             This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
             Set to <c>null</c> apply no filter.
             </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.RequestedInputMeasurementKeys">
+            <summary>
+            Gets or sets input measurement keys that are requested by other adapters based on what adapter says it can provide.
+            </summary>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.OutputIsForArchive">
             <summary>
