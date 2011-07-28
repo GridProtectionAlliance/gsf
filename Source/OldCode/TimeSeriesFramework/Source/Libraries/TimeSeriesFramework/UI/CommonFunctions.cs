@@ -332,7 +332,12 @@ namespace TimeSeriesFramework.UI
         /// <returns><see cref="DBNull"/> if <paramref name="value"/> is <c>null</c>; otherwise <paramref name="value"/>.</returns>
         public static object ToNotNull(this object value)
         {
-            return value ?? (object)DBNull.Value;
+            if (value == null)
+                return (object)DBNull.Value;
+            if (value is int && (int)value == 0)
+                return (object)DBNull.Value;
+
+            return value;
         }
 
         /// <summary>
