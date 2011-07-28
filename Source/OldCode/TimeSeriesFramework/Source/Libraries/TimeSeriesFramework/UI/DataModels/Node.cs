@@ -590,7 +590,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         "Description = @description, ImagePath = @imagePath, Settings = @Settings, MenuType = @MenuType, MenuData = @MenuData, Master = @master, LoadOrder = @loadOrder, Enabled = @enabled, " +
                         "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, node.Name, node.CompanyID.ToNotNull(), node.Longitude.ToNotNull(),
                         node.Latitude.ToNotNull(), node.Description.ToNotNull(), node.ImagePath.ToNotNull(), node.Settings.ToNotNull(), node.MenuType, node.MenuData, node.Master, node.LoadOrder, node.Enabled,
-                        CommonFunctions.CurrentUser, database.UtcNow(), node.ID);
+                        CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(node.ID));
 
                 return "Node information saved successfully";
             }
