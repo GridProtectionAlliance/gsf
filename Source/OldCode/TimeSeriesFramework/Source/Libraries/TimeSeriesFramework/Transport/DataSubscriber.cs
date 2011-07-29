@@ -33,6 +33,7 @@ using TVA;
 using TVA.Communication;
 using TVA.IO.Compression;
 using TVA.Security.Cryptography;
+using TVA.Data;
 
 namespace TimeSeriesFramework.Transport
 {
@@ -76,8 +77,10 @@ namespace TimeSeriesFramework.Transport
         private volatile byte[][][] m_keyIVs;
         private volatile int m_cipherIndex;
         private volatile bool m_authenticated;
+        private volatile bool m_subscribed;
         private volatile int m_lastBytesReceived;
         private long m_totalBytesReceived;
+        private Guid m_nodeID;
         private List<ServerCommand> m_requests;
         private bool m_synchronizedSubscription;
         private bool m_requireAuthentication;
@@ -172,6 +175,8 @@ namespace TimeSeriesFramework.Transport
                 status.AppendFormat("  Pending command requests: {0}", m_requests.Count);
                 status.AppendLine();
                 status.AppendFormat("             Authenticated: {0}", m_authenticated);
+                status.AppendLine();
+                status.AppendFormat("                Subscribed: {0}", m_subscribed);
                 status.AppendLine();
 
                 if (m_dataChannel != null)
@@ -355,35 +360,35 @@ namespace TimeSeriesFramework.Transport
             {
                 ConnectionAuthenticated += DataSubscriber_ConnectionAuthenticated;
                 MetaDataReceived += DataSubscriber_MetaDataReceived;
-            }
 
-            // If active measurements are defined, attempt to defined desired subscription points from there
-            if (DataSource != null && DataSource.Tables != null && DataSource.Tables.Count > 0)
-            {
-                try
+                // If active measurements are defined, attempt to defined desired subscription points from there
+                if (DataSource != null && DataSource.Tables != null && DataSource.Tables.Count > 0)
                 {
-                    if (DataSource.Tables.Contains("ActiveMeasurements"))
+                    try
                     {
-                        // Filter to points requested for subscription that are enabled and not owned locally
-                        DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select("Internal = 0 AND Subscribed <> 0 AND Enabled <> 0");
-                        MeasurementKey[] subscribedKeys = null;
-
-                        if (filteredRows.Length > 0)
-                            subscribedKeys = filteredRows.Select(row => MeasurementKey.Parse(row["ID"].ToNonNullString("_:0"), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>())).ToArray();
-
-                        if (subscribedKeys != null)
+                        if (DataSource.Tables.Contains("ActiveMeasurements"))
                         {
-                            // Combine input measurement keys for source IDs with any existing input measurement keys and return unique set
-                            if (InputMeasurementKeys == null)
-                                InputMeasurementKeys = subscribedKeys;
-                            else
-                                InputMeasurementKeys = subscribedKeys.Concat(InputMeasurementKeys).Distinct().ToArray();
+                            // Filter to points associated with this subscriber that have been requested for subscription, are enabled and not owned locally
+                            DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select("Internal = 0 AND Subscribed <> 0 AND DeviceID = " + ID.ToString());
+                            MeasurementKey[] subscribedKeys = null;
+
+                            if (filteredRows.Length > 0)
+                                subscribedKeys = filteredRows.Select(row => MeasurementKey.Parse(row["ID"].ToNonNullString("_:0"), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>())).ToArray();
+
+                            if (subscribedKeys != null)
+                            {
+                                // Combine input measurement keys for source IDs with any existing input measurement keys and return unique set
+                                if (InputMeasurementKeys == null)
+                                    InputMeasurementKeys = subscribedKeys;
+                                else
+                                    InputMeasurementKeys = subscribedKeys.Concat(InputMeasurementKeys).Distinct().ToArray();
+                            }
                         }
                     }
-                }
-                catch
-                {
-                    // Errors here are not catastrophic, this simply limits the auto-assignment of input measurement keys desired for subscription
+                    catch
+                    {
+                        // Errors here are not catastrophic, this simply limits the auto-assignment of input measurement keys desired for subscription
+                    }
                 }
             }
 
@@ -675,6 +680,7 @@ namespace TimeSeriesFramework.Transport
         {
             m_commandChannel.ConnectAsync();
             m_authenticated = false;
+            m_subscribed = false;
             m_keyIVs = null;
             Interlocked.Exchange(ref m_totalBytesReceived, 0L);
             m_lastBytesReceived = 0;
@@ -756,14 +762,25 @@ namespace TimeSeriesFramework.Transport
                                         m_authenticated = true;
                                         OnConnectionAuthenticated();
                                         break;
+                                    case ServerCommand.Subscribe:
+                                        OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
+                                        m_subscribed = true;
+
+                                        // Initiate meta-data refresh when auto-connecting to publisher
+                                        if (m_autoConnect)
+                                            SendServerCommand(ServerCommand.MetaDataRefresh);
+
+                                        break;
+                                    case ServerCommand.Unsubscribe:
+                                        OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
+                                        m_subscribed = false;
+                                        break;
+                                    case ServerCommand.RotateCipherKeys:
+                                        OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
+                                        break;
                                     case ServerCommand.MetaDataRefresh:
                                         OnStatusMessage("Success code received in response to server command \"{0}\": latest meta-data received.", commandCode);
                                         OnMetaDataReceived(Serialization.Deserialize<DataSet>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary));
-                                        break;
-                                    case ServerCommand.Subscribe:
-                                    case ServerCommand.Unsubscribe:
-                                    case ServerCommand.RotateCipherKeys:
-                                        OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
                                         break;
                                 }
                             }
@@ -880,9 +897,6 @@ namespace TimeSeriesFramework.Transport
             StringBuilder filterExpression = new StringBuilder();
             string dataChannel = null;
 
-            // Request metadata refresh
-            SendServerCommand(ServerCommand.MetaDataRefresh, null);
-
             // If TCP command channel is defined separately, then base connection string defines data channel
             if (Settings.ContainsKey("commandChannel"))
                 dataChannel = ConnectionString;
@@ -906,8 +920,14 @@ namespace TimeSeriesFramework.Transport
             }
         }
 
-        // Handles auto-connection metadata synchronization
-        private void SynchronizeMetadata(object state)
+        /// <summary>
+        /// Handles auto-connection metadata synchronization to local system. 
+        /// </summary>
+        /// <param name="state"><see cref="DataSet"/> metadata collection passed into state parameter.</param>
+        /// <remarks>
+        /// This function is normally called from thread pool since synchronization can take some time.
+        /// </remarks>
+        protected virtual void SynchronizeMetadata(object state)
         {
             try
             {
@@ -915,9 +935,48 @@ namespace TimeSeriesFramework.Transport
 
                 if (metadata != null)
                 {
-                    // Synchronize devices
-                    // Synchronize phasors
-                    // Synchronize measurements
+                    AdoDataConnection adoDatabase = new AdoDataConnection("systemSettings");
+                    IDbConnection connection = adoDatabase.Connection;
+                    int parentID = Convert.ToInt32(connection.ExecuteScalar(string.Format("SELECT SourceID FROM Runtime WHERE ID = {0} AND SourceTable='Device';", ID)));
+                    string sourcePrefix = Name + "!";
+                    Dictionary<string, int> deviceIDs = new Dictionary<string, int>();
+                    Guid uniqueID;
+
+                    // Initialize active node ID
+                    if (m_nodeID == Guid.Empty)
+                        m_nodeID = Guid.Parse(connection.ExecuteScalar(string.Format("SELECT NodeID FROM IaonInputAdapter WHERE ID = {0};", ID)).ToString());
+
+                    if (metadata.Tables.Contains("DeviceDetail"))
+                    {
+                        foreach (DataRow row in metadata.Tables["DeviceDetail"].Rows)
+                        {
+                            uniqueID = row.Field<Guid>("UniqueID");
+
+                            if (Convert.ToInt32(connection.ExecuteScalar("SELECT COUNT(*) FROM Device WHERE UniqueID = @deviceGuid ;", uniqueID)) == 0)
+                                connection.ExecuteScalar("INSERT INTO Device(NodeID, ParentID, UniqueID, Acronym, Name, IsConcentrator, Enabled) VALUES ( @nodeID , @parentID , @uniqueID, @acronym , @name , 0, 1)", m_nodeID, parentID, uniqueID, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"));
+                            else
+                                connection.ExecuteScalar("UPDATE Device SET Acronym = @acronym , Name = @name WHERE UniqueID = @uniqueID ", sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), uniqueID);
+
+                            // Capture new device ID for measurement association
+                            deviceIDs[row.Field<string>("Acronym")] = Convert.ToInt32(connection.ExecuteScalar("SELECT ID FROM Device WHERE UniqueID = @deviceGuid ;", uniqueID));
+                        }
+                    }
+
+                    if (metadata.Tables.Contains("MeasurementDetail"))
+                    {
+                        foreach (DataRow row in metadata.Tables["MeasurementDetail"].Rows)
+                        {
+                            if (deviceIDs.ContainsKey(row.Field<string>("DeviceAcronym")))
+                            {
+                                uniqueID = row.Field<Guid>("SignalID");
+
+                                if (Convert.ToInt32(connection.ExecuteScalar("SELECT COUNT(*) FROM Measurement WHERE SignalID = @signalID ;", uniqueID)) == 0)
+                                    connection.ExecuteScalar("INSERT INTO Measurement(SignalID, DeviceID, PointTag, SignalTypeID, SignalReference, Description, Internal, Enabled) VALUES ( @signalID , @deviceID , @pointTag , @signalTypeID , @signalReference , @description , 0, 1)", uniqueID, deviceIDs[row.Field<string>("DeviceAcronym")], sourcePrefix + row.Field<string>("PointTag"), row.Field<int>("SignalTypeID"), sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description"));
+                                else
+                                    connection.ExecuteScalar("UPDATE Measurement SET PointTag = @pointTag , SignalTypeID = @signalTypeID , SignalReference = @signalReference , Description = @description WHERE SignalID = @signalID ", sourcePrefix + row.Field<string>("PointTag"), row.Field<int>("SignalTypeID"), sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description"), uniqueID);
+                            }
+                        }
+                    }
                 }
             }
             catch (Exception ex)
