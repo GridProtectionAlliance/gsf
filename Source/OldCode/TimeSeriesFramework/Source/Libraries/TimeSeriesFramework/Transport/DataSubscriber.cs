@@ -31,9 +31,9 @@ using System.Threading;
 using TimeSeriesFramework.Adapters;
 using TVA;
 using TVA.Communication;
+using TVA.Data;
 using TVA.IO.Compression;
 using TVA.Security.Cryptography;
-using TVA.Data;
 
 namespace TimeSeriesFramework.Transport
 {
@@ -765,11 +765,6 @@ namespace TimeSeriesFramework.Transport
                                     case ServerCommand.Subscribe:
                                         OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
                                         m_subscribed = true;
-
-                                        // Initiate meta-data refresh when auto-connecting to publisher
-                                        if (m_autoConnect)
-                                            SendServerCommand(ServerCommand.MetaDataRefresh);
-
                                         break;
                                     case ServerCommand.Unsubscribe:
                                         OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
@@ -919,6 +914,9 @@ namespace TimeSeriesFramework.Transport
             {
                 OnStatusMessage("WARNING: No measurements are currently defined for subscription.");
             }
+
+            // Initiate meta-data refresh
+            SendServerCommand(ServerCommand.MetaDataRefresh);
         }
 
         /// <summary>
@@ -954,7 +952,7 @@ namespace TimeSeriesFramework.Transport
                             uniqueID = row.Field<Guid>("UniqueID");
 
                             if (Convert.ToInt32(connection.ExecuteScalar("SELECT COUNT(*) FROM Device WHERE UniqueID = @deviceGuid ;", uniqueID)) == 0)
-                                connection.ExecuteScalar("INSERT INTO Device(NodeID, ParentID, UniqueID, Acronym, Name, IsConcentrator, Enabled) VALUES ( @nodeID , @parentID , @uniqueID, @acronym , @name , 0, 1)", m_nodeID, parentID, uniqueID, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"));
+                                connection.ExecuteScalar("INSERT INTO Device(NodeID, ParentID, UniqueID, Acronym, Name, IsConcentrator, Enabled) VALUES ( @nodeID , @parentID , @uniqueID , @acronym , @name , 0, 1)", m_nodeID, parentID, uniqueID, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"));
                             else
                                 connection.ExecuteScalar("UPDATE Device SET Acronym = @acronym , Name = @name WHERE UniqueID = @uniqueID ", sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), uniqueID);
 
@@ -967,12 +965,14 @@ namespace TimeSeriesFramework.Transport
                     {
                         foreach (DataRow row in metadata.Tables["MeasurementDetail"].Rows)
                         {
-                            if (deviceIDs.ContainsKey(row.Field<string>("DeviceAcronym")))
+                            string deviceAcronym = row.Field<string>("DeviceAcronym");
+
+                            if (deviceAcronym != null && deviceIDs.ContainsKey(deviceAcronym))
                             {
                                 uniqueID = row.Field<Guid>("SignalID");
 
                                 if (Convert.ToInt32(connection.ExecuteScalar("SELECT COUNT(*) FROM Measurement WHERE SignalID = @signalID ;", uniqueID)) == 0)
-                                    connection.ExecuteScalar("INSERT INTO Measurement(SignalID, DeviceID, PointTag, SignalTypeID, SignalReference, Description, Internal, Enabled) VALUES ( @signalID , @deviceID , @pointTag , @signalTypeID , @signalReference , @description , 0, 1)", uniqueID, deviceIDs[row.Field<string>("DeviceAcronym")], sourcePrefix + row.Field<string>("PointTag"), row.Field<int>("SignalTypeID"), sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description"));
+                                    connection.ExecuteScalar("INSERT INTO Measurement(SignalID, DeviceID, PointTag, SignalTypeID, SignalReference, Description, Internal, Enabled) VALUES ( @signalID , @deviceID , @pointTag , @signalTypeID , @signalReference , @description , 0, 1)", uniqueID, deviceIDs[deviceAcronym], sourcePrefix + row.Field<string>("PointTag"), row.Field<int>("SignalTypeID"), sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description"));
                                 else
                                     connection.ExecuteScalar("UPDATE Measurement SET PointTag = @pointTag , SignalTypeID = @signalTypeID , SignalReference = @signalReference , Description = @description WHERE SignalID = @signalID ", sourcePrefix + row.Field<string>("PointTag"), row.Field<int>("SignalTypeID"), sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description"), uniqueID);
                             }
@@ -989,7 +989,8 @@ namespace TimeSeriesFramework.Transport
         // This method is called when connection has been authenticated
         private void DataSubscriber_ConnectionAuthenticated(object sender, EventArgs e)
         {
-            StartSubscription();
+            if (m_autoConnect)
+                StartSubscription();
         }
 
         // This method is called then new metadata has been received
