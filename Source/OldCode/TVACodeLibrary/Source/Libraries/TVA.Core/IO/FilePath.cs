@@ -37,6 +37,8 @@
 //       Fixed bug in GetDirectoryName where last directory was being truncated as a file name.
 //  06/06/2011 - Stephen C. Wills
 //       Fixed bug in GetFileName where path suffix was being removed before extracting the file name.
+//  07/29/2011 - Pinal C. Patel
+//       Updated GetApplicationDataFolder() to use the TEMP directory for web applications.
 //
 //*******************************************************************************************************
 
@@ -640,11 +642,12 @@ namespace TVA.IO
         /// <returns>Path to the folder where data related to the current application can be stored.</returns>
         public static string GetApplicationDataFolder()
         {
+            string rootFolder;
             ApplicationType platform = Common.GetApplicationType();
-            string rootFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             if (platform == ApplicationType.Web)
             {
                 // Treat web application special.
+                rootFolder = Path.GetTempPath();
                 if (HostingEnvironment.ApplicationVirtualPath == "/")
                     return Path.Combine(rootFolder, HostingEnvironment.SiteName);
                 else
@@ -653,6 +656,7 @@ namespace TVA.IO
             else
             {
                 // Use entry assembly for everything else.
+                rootFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
                 if (string.IsNullOrEmpty(AssemblyInfo.EntryAssembly.Company))
                     return Path.Combine(rootFolder, AssemblyInfo.EntryAssembly.Name);
                 else
