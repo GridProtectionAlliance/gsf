@@ -24,6 +24,10 @@
 //       Implemented logic to use RestrictAccessAttribute for access control on the requested resource.
 //  06/09/2011 - Pinal C. Patel
 //       Added null reference check in IsAccessRestricted() method.
+//  07/29/2011 - Pinal C. Patel
+//       Made the referral URL passed to SecurityPortal.aspx page relative so redirection work correctly
+//       when reverse proxy is involved where requested URL that the web server sees is different than 
+//       what the user requested.
 //
 //*******************************************************************************************************
 
@@ -468,7 +472,7 @@ namespace TVA.Web
             }
 
             // Abruptly ending the processing caused by a redirect does not work well when processing static content.
-            string redirectUrl = string.Format("~/SecurityPortal.aspx?s={0}&r={1}", statusCode, HttpUtility.UrlEncode(m_application.Request.Url.AbsoluteUri));
+            string redirectUrl = string.Format("~/SecurityPortal.aspx?s={0}&r={1}", statusCode, HttpUtility.UrlEncode(VirtualPathUtility.ToAppRelative(m_application.Request.Url.PathAndQuery)));
             if (m_application.Context.Handler is DefaultHttpHandler)
                 // Accessed resource is static.
                 m_application.Context.Response.Redirect(redirectUrl, false);
