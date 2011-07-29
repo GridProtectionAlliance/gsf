@@ -939,7 +939,6 @@ namespace TimeSeriesFramework.Transport
                     int parentID = Convert.ToInt32(connection.ExecuteScalar(string.Format("SELECT SourceID FROM Runtime WHERE ID = {0} AND SourceTable='Device';", ID)));
                     string sourcePrefix = Name + "!";
                     Dictionary<string, int> deviceIDs = new Dictionary<string, int>();
-                    Guid uniqueID;
 
                     // Initialize active node ID
                     if (m_nodeID == Guid.Empty)
@@ -949,7 +948,7 @@ namespace TimeSeriesFramework.Transport
                     {
                         foreach (DataRow row in metadata.Tables["DeviceDetail"].Rows)
                         {
-                            uniqueID = row.Field<Guid>("UniqueID");
+                            Guid uniqueID = row.Field<Guid>("UniqueID");
 
                             if (Convert.ToInt32(connection.ExecuteScalar("SELECT COUNT(*) FROM Device WHERE UniqueID = @deviceGuid ;", uniqueID)) == 0)
                                 connection.ExecuteScalar("INSERT INTO Device(NodeID, ParentID, UniqueID, Acronym, Name, IsConcentrator, Enabled) VALUES ( @nodeID , @parentID , @uniqueID , @acronym , @name , 0, 1)", m_nodeID, parentID, uniqueID, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"));
@@ -969,12 +968,18 @@ namespace TimeSeriesFramework.Transport
 
                             if (deviceAcronym != null && deviceIDs.ContainsKey(deviceAcronym))
                             {
-                                uniqueID = row.Field<Guid>("SignalID");
+                                string pointTag = sourcePrefix + row.Field<string>("PointTag");
+                                Guid signalID = row.Field<Guid>("SignalID");
 
-                                if (Convert.ToInt32(connection.ExecuteScalar("SELECT COUNT(*) FROM Measurement WHERE SignalID = @signalID ;", uniqueID)) == 0)
-                                    connection.ExecuteScalar("INSERT INTO Measurement(SignalID, DeviceID, PointTag, SignalTypeID, SignalReference, Description, Internal, Enabled) VALUES ( @signalID , @deviceID , @pointTag , @signalTypeID , @signalReference , @description , 0, 1)", uniqueID, deviceIDs[deviceAcronym], sourcePrefix + row.Field<string>("PointTag"), row.Field<int>("SignalTypeID"), sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description"));
+                                if (Convert.ToInt32(connection.ExecuteScalar("SELECT COUNT(*) FROM Measurement WHERE SignalID = @signalID ;", signalID)) == 0)
+                                {
+                                    connection.ExecuteScalar("INSERT INTO Measurement(DeviceID, PointTag, SignalTypeID, SignalReference, Description, Internal, Enabled) VALUES ( @deviceID , @pointTag , @signalTypeID , @signalReference , @description , 0, 1)", deviceIDs[deviceAcronym], pointTag, row.Field<int>("SignalTypeID"), sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description"));
+                                    connection.ExecuteScalar("UPDATE Measurement SET SignalID = @signalID WHERE PointTag = @pointTag ", signalID, pointTag);
+                                }
                                 else
-                                    connection.ExecuteScalar("UPDATE Measurement SET PointTag = @pointTag , SignalTypeID = @signalTypeID , SignalReference = @signalReference , Description = @description WHERE SignalID = @signalID ", sourcePrefix + row.Field<string>("PointTag"), row.Field<int>("SignalTypeID"), sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description"), uniqueID);
+                                {
+                                    connection.ExecuteScalar("UPDATE Measurement SET PointTag = @pointTag , SignalTypeID = @signalTypeID , SignalReference = @signalReference , Description = @description WHERE SignalID = @signalID ", pointTag, row.Field<int>("SignalTypeID"), sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description"), signalID);
+                                }
                             }
                         }
                     }
