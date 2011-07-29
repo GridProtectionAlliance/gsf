@@ -936,13 +936,13 @@ namespace TimeSeriesFramework.Transport
                 {
                     AdoDataConnection adoDatabase = new AdoDataConnection("systemSettings");
                     IDbConnection connection = adoDatabase.Connection;
-                    int parentID = Convert.ToInt32(connection.ExecuteScalar(string.Format("SELECT SourceID FROM Runtime WHERE ID = {0} AND SourceTable='Device';", ID)));
+                    int parentID = Convert.ToInt32(connection.ExecuteScalar("SELECT SourceID FROM Runtime WHERE ID = @id AND SourceTable='Device';", 30, ID));
                     string sourcePrefix = Name + "!";
                     Dictionary<string, int> deviceIDs = new Dictionary<string, int>();
 
                     // Initialize active node ID
                     if (m_nodeID == Guid.Empty)
-                        m_nodeID = Guid.Parse(connection.ExecuteScalar(string.Format("SELECT NodeID FROM IaonInputAdapter WHERE ID = {0};", ID)).ToString());
+                        m_nodeID = Guid.Parse(connection.ExecuteScalar("SELECT NodeID FROM IaonInputAdapter WHERE ID = @id ;", 30, ID).ToString());
 
                     if (metadata.Tables.Contains("DeviceDetail"))
                     {
@@ -968,17 +968,17 @@ namespace TimeSeriesFramework.Transport
 
                             if (deviceAcronym != null && deviceIDs.ContainsKey(deviceAcronym))
                             {
-                                string pointTag = sourcePrefix + row.Field<string>("PointTag");
+                                string pointTag = sourcePrefix + row.Field<string>("PointTag") ?? string.Empty;
                                 Guid signalID = row.Field<Guid>("SignalID");
 
                                 if (Convert.ToInt32(connection.ExecuteScalar("SELECT COUNT(*) FROM Measurement WHERE SignalID = @signalID ;", signalID)) == 0)
                                 {
-                                    connection.ExecuteScalar("INSERT INTO Measurement(DeviceID, PointTag, SignalTypeID, SignalReference, Description, Internal, Enabled) VALUES ( @deviceID , @pointTag , @signalTypeID , @signalReference , @description , 0, 1)", deviceIDs[deviceAcronym], pointTag, row.Field<int>("SignalTypeID"), sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description"));
+                                    connection.ExecuteScalar("INSERT INTO Measurement (DeviceID, PointTag, SignalTypeID, SignalReference, Description, Internal, Enabled ) VALUES ( @deviceID , @pointTag , @signalTypeID , @signalReference , @description , 0 , 1 )", 30, deviceIDs[deviceAcronym], pointTag, row.Field<int>("SignalTypeID"), sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty);
                                     connection.ExecuteScalar("UPDATE Measurement SET SignalID = @signalID WHERE PointTag = @pointTag ", signalID, pointTag);
                                 }
                                 else
                                 {
-                                    connection.ExecuteScalar("UPDATE Measurement SET PointTag = @pointTag , SignalTypeID = @signalTypeID , SignalReference = @signalReference , Description = @description WHERE SignalID = @signalID ", pointTag, row.Field<int>("SignalTypeID"), sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description"), signalID);
+                                    connection.ExecuteScalar("UPDATE Measurement SET PointTag = @pointTag , SignalTypeID = @signalTypeID , SignalReference = @signalReference , Description = @description WHERE SignalID = @signalID ", pointTag, row.Field<int>("SignalTypeID"), sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, signalID);
                                 }
                             }
                         }
