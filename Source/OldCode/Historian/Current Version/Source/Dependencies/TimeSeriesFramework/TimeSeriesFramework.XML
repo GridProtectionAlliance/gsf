@@ -4781,6 +4781,15 @@
             <param name="length">Length of response message.</param>
             <returns>Decoded response string.</returns>
         </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.SynchronizeMetadata(System.Object)">
+            <summary>
+            Handles auto-connection metadata synchronization to local system. 
+            </summary>
+            <param name="state"><see cref="T:System.Data.DataSet"/> metadata collection passed into state parameter.</param>
+            <remarks>
+            This function is normally called from thread pool since synchronization can take some time.
+            </remarks>
+        </member>
         <member name="M:TimeSeriesFramework.Transport.DataSubscriber.OnConnectionEstablished">
             <summary>
             Raises the <see cref="E:TimeSeriesFramework.Transport.DataSubscriber.ConnectionEstablished"/> event.
