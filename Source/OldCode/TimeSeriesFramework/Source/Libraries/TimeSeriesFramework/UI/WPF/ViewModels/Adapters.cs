@@ -29,11 +29,11 @@ using System.Linq;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media;
 using TimeSeriesFramework.Adapters;
 using TimeSeriesFramework.UI.Commands;
 using TimeSeriesFramework.UI.DataModels;
 using TVA;
+using TVA.IO;
 using TVA.Reflection;
 
 namespace TimeSeriesFramework.UI.ViewModels
@@ -224,7 +224,7 @@ namespace TimeSeriesFramework.UI.ViewModels
             m_nodeLookupList = Node.GetLookupList(null);
             ItemsPerPage = itemsPerPage;
             m_adapterType = adapterType;
-            SearchDirectory = Directory.GetCurrentDirectory();
+            SearchDirectory = FilePath.GetAbsolutePath("");
             Load();
         }
 
