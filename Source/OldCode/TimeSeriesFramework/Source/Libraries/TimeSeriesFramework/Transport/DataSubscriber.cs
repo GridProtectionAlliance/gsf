@@ -936,13 +936,13 @@ namespace TimeSeriesFramework.Transport
                 {
                     AdoDataConnection adoDatabase = new AdoDataConnection("systemSettings");
                     IDbConnection connection = adoDatabase.Connection;
-                    int parentID = Convert.ToInt32(connection.ExecuteScalar("SELECT SourceID FROM Runtime WHERE ID = @id AND SourceTable='Device';", 30, ID));
+                    int parentID = Convert.ToInt32(connection.ExecuteScalar(string.Format("SELECT SourceID FROM Runtime WHERE ID = {0} AND SourceTable='Device';", ID)));
                     string sourcePrefix = Name + "!";
                     Dictionary<string, int> deviceIDs = new Dictionary<string, int>();
 
                     // Initialize active node ID
                     if (m_nodeID == Guid.Empty)
-                        m_nodeID = Guid.Parse(connection.ExecuteScalar("SELECT NodeID FROM IaonInputAdapter WHERE ID = @id ;", 30, ID).ToString());
+                        m_nodeID = Guid.Parse(connection.ExecuteScalar(string.Format("SELECT NodeID FROM IaonInputAdapter WHERE ID = {0};", ID)).ToString());
 
                     if (metadata.Tables.Contains("DeviceDetail"))
                     {
