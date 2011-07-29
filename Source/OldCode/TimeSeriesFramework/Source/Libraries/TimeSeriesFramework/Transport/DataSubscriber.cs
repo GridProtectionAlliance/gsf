@@ -908,7 +908,8 @@ namespace TimeSeriesFramework.Transport
                     if (filterExpression.Length > 0)
                         filterExpression.Append(';');
 
-                    filterExpression.Append(key.ToString());
+                    // Subscribe by associated Guid...
+                    filterExpression.Append(key.SignalID.ToString());
                 }
 
                 // Start unsynchronized subscription
