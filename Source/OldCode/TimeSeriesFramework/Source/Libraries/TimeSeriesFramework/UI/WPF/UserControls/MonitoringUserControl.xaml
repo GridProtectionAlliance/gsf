@@ -30,7 +30,7 @@
         <Border x:Name="BorderInterconnectionstatus" CornerRadius="5" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center">
             <StackPanel Orientation="Vertical" Margin="0">
                 <Border BorderThickness="0">
-                    <ScrollViewer x:Name="ScrollViewerMonitor" Background="Black" Margin="2,2,2,0" BorderThickness="0" Padding="0" Height="585" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" VerticalContentAlignment="Top">
+                    <ScrollViewer x:Name="ScrollViewerMonitor" Background="Black" Margin="2,2,2,0" BorderThickness="0" Padding="0" Height="550" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" VerticalContentAlignment="Top">
                         <ScrollViewer.Content>
                             <TextBlock x:Name="TextBlockServiceStatus" TextAlignment="Left" VerticalAlignment="Top" HorizontalAlignment="Left" Foreground="White" TextWrapping="Wrap" Margin="2" Height="Auto" Width="800"  FontFamily="Courier New" FontSize="{StaticResource TextSize}"/>
                         </ScrollViewer.Content>
