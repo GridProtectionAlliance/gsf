@@ -23,7 +23,10 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Data;
 using System.Linq;
+using TVA;
 
 namespace TimeSeriesFramework.Transport
 {
@@ -66,6 +69,44 @@ namespace TimeSeriesFramework.Transport
         {
             m_subscriberID = subscriberID;
             m_reference = new ConcurrentDictionary<ushort, Tuple<Guid, MeasurementKey>>();
+        }
+
+        /// <summary>
+        /// Creates a new local system cache from one that was received remotely.
+        /// </summary>
+        /// <param name="dataSource"><see cref="DataSet"/> based data source used to interpret local measurement keys.</param>
+        /// <param name="remoteCache">Deserialized remote signal index cache.</param>
+        public SignalIndexCache(DataSet dataSource, SignalIndexCache remoteCache)
+        {
+            m_subscriberID = remoteCache.SubscriberID;
+
+            // If active measurements are defined, interpret signal cache in context of current measurement key definitions
+            if (dataSource != null && dataSource.Tables != null && dataSource.Tables.Contains("ActiveMeasurements"))
+            {
+                DataTable activeMeasurements = dataSource.Tables["ActiveMeasurements"];
+                m_reference = new ConcurrentDictionary<ushort, Tuple<Guid, MeasurementKey>>();
+
+                foreach (KeyValuePair<ushort, Tuple<Guid, MeasurementKey>> signalIndex in remoteCache.Reference)
+                {
+                    Guid signalID = signalIndex.Value.Item1;
+                    DataRow[] filteredRows = activeMeasurements.Select("SignalID = '" + signalID.ToString() + "'");
+
+                    if (filteredRows.Length > 0)
+                    {
+                        DataRow row = filteredRows[0];
+                        m_reference.TryAdd(signalIndex.Key, new Tuple<Guid, MeasurementKey>(signalID, MeasurementKey.Parse(row["ID"].ToNonNullString("_:0"), signalID)));
+                    }
+                }
+
+                // TODO: These need to be changed to Guids since local and remote measurement keys may not match...
+                m_unauthorizedKeys = remoteCache.UnauthorizedKeys;
+            }
+            else
+            {
+                // Just use remote signal index cache as-is if no local configuration exists
+                m_reference = remoteCache.Reference;
+                m_unauthorizedKeys = remoteCache.UnauthorizedKeys;
+            }
         }
 
         #endregion

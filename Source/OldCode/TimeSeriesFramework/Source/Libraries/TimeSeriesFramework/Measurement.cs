@@ -66,6 +66,7 @@ namespace TimeSeriesFramework
 #else
             m_receivedTimestamp = DateTime.UtcNow.Ticks;
 #endif
+            m_multiplier = 1.0D;
         }
 
         #endregion

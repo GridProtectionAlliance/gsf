@@ -72,6 +72,7 @@ namespace TimeSeriesFramework.Transport
         // Fields
         private TcpClient m_commandChannel;
         private UdpClient m_dataChannel;
+        private volatile SignalIndexCache m_remoteSignalIndexCache;
         private volatile SignalIndexCache m_signalIndexCache;
         private volatile long[] m_baseTimeOffsets;
         private volatile byte[][][] m_keyIVs;
@@ -362,27 +363,42 @@ namespace TimeSeriesFramework.Transport
                 MetaDataReceived += DataSubscriber_MetaDataReceived;
 
                 // If active measurements are defined, attempt to defined desired subscription points from there
-                if (DataSource != null && DataSource.Tables != null && DataSource.Tables.Count > 0)
+                if (DataSource != null && DataSource.Tables != null && DataSource.Tables.Contains("ActiveMeasurements"))
                 {
                     try
                     {
-                        if (DataSource.Tables.Contains("ActiveMeasurements"))
+                        // Filter to points associated with this subscriber that have been requested for subscription, are enabled and not owned locally
+                        DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select("Internal = 0 AND Subscribed <> 0 AND DeviceID = " + ID.ToString());
+                        List<IMeasurement> subscribedMeasurements = new List<IMeasurement>();
+
+                        foreach (DataRow row in filteredRows)
                         {
-                            // Filter to points associated with this subscriber that have been requested for subscription, are enabled and not owned locally
-                            DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select("Internal = 0 AND Subscribed <> 0 AND DeviceID = " + ID.ToString());
-                            MeasurementKey[] subscribedKeys = null;
-
-                            if (filteredRows.Length > 0)
-                                subscribedKeys = filteredRows.Select(row => MeasurementKey.Parse(row["ID"].ToNonNullString("_:0"), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>())).ToArray();
-
-                            if (subscribedKeys != null)
+                            // Create a new measurement for the provided field level information
+                            Measurement measurement = new Measurement()
                             {
-                                // Combine input measurement keys for source IDs with any existing input measurement keys and return unique set
-                                if (InputMeasurementKeys == null)
-                                    InputMeasurementKeys = subscribedKeys;
-                                else
-                                    InputMeasurementKeys = subscribedKeys.Concat(InputMeasurementKeys).Distinct().ToArray();
-                            }
+                                Key = MeasurementKey.Parse(row["ID"].ToNonNullString("_:0"), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>())
+                            };
+
+                            measurement.ID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
+                            measurement.TagName = row["PointTag"].ToNonNullString();
+
+                            // Attempt to update empty signal ID if available
+                            if (measurement.Key.SignalID == Guid.Empty)
+                                measurement.Key.UpdateSignalID(measurement.ID);
+
+                            measurement.Multiplier = double.Parse(row["Multiplier"].ToString());
+                            measurement.Adder = double.Parse(row["Adder"].ToString());
+
+                            subscribedMeasurements.Add(measurement);
+                        }
+
+                        if (subscribedMeasurements.Count > 0)
+                        {
+                            // Combine subscribed output measurement with any existing output measurement and return unique set
+                            if (OutputMeasurements == null)
+                                OutputMeasurements = subscribedMeasurements.ToArray();
+                            else
+                                OutputMeasurements = subscribedMeasurements.Concat(OutputMeasurements).Distinct().ToArray();
                         }
                     }
                     catch
@@ -857,7 +873,8 @@ namespace TimeSeriesFramework.Transport
                             break;
                         case ServerResponse.UpdateSignalIndexCache:
                             // Deserialize new signal index cache
-                            m_signalIndexCache = Serialization.Deserialize<SignalIndexCache>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary);
+                            m_remoteSignalIndexCache = Serialization.Deserialize<SignalIndexCache>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary);
+                            m_signalIndexCache = new SignalIndexCache(DataSource, m_remoteSignalIndexCache);
                             break;
                         case ServerResponse.UpdateBaseTimes:
                             // Deserialize new base time offsets
@@ -896,15 +913,15 @@ namespace TimeSeriesFramework.Transport
             if (Settings.ContainsKey("commandChannel"))
                 dataChannel = ConnectionString;
 
-            if (InputMeasurementKeys != null)
+            if (OutputMeasurements != null)
             {
-                foreach (MeasurementKey key in InputMeasurementKeys)
+                foreach (IMeasurement measurement in OutputMeasurements)
                 {
                     if (filterExpression.Length > 0)
                         filterExpression.Append(';');
 
                     // Subscribe by associated Guid...
-                    filterExpression.Append(key.SignalID.ToString());
+                    filterExpression.Append(measurement.ID.ToString());
                 }
 
                 // Start unsynchronized subscription
@@ -983,6 +1000,9 @@ namespace TimeSeriesFramework.Transport
                             }
                         }
                     }
+
+                    // New signals may have been defined, take original remote signal index cache and apply changes
+                    m_signalIndexCache = new SignalIndexCache(DataSource, m_remoteSignalIndexCache);
                 }
             }
             catch (Exception ex)
