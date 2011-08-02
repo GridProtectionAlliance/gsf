@@ -656,12 +656,18 @@ namespace TVA.IO
                 // Create a user folder if ID is available.
                 string userID = UserInfo.RemoteUserID;
                 if (string.IsNullOrEmpty(userID))
+                {
+                    // ID is not available.
                     return rootFolder;
+                }
                 else
+                {
+                    // Remove domain from ID.
                     if (!userID.Contains("\\"))
                         return Path.Combine(rootFolder, userID);
                     else
                         return Path.Combine(rootFolder, userID.Remove(0, userID.IndexOf('\\') + 1));
+                }
             }
             else
             {

@@ -19,6 +19,10 @@
 //  02/03/2011 - Pinal C. Patel
 //       Updated the logic in IsResourceSecurable() and IsResourceAccessible() to allow for multiple
 //       resources to be specified delimited by ',' with the same role requirements in the config file.
+//  08/02/2011 - Pinal C. Patel
+//       Modified IsResourceAccessible() to skip security check if no role is specified for a resource
+//       in the config to allow security to be setup when accessing the resource but not enforced and 
+//       leave it to the resource to enforce it.
 //
 //*******************************************************************************************************
 
@@ -363,7 +367,14 @@ namespace TVA.Security
                 foreach (string item in inclusion.Key.Split(','))
                 {
                     if (IsRegexMatch(item.Trim(), resource))
-                        return Thread.CurrentPrincipal.IsInRole(inclusion.Value);
+                    { 
+                        if (string.IsNullOrEmpty(inclusion.Value))
+                            // Allow security to be implemented inside the resource.
+                            return true;
+                        else
+                            // Check resource role requirements against user's role subscription.
+                            return Thread.CurrentPrincipal.IsInRole(inclusion.Value);
+                    }
                 }
             }
 
