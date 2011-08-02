@@ -284,6 +284,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web.Hosting;
+using TVA.Identity;
 using TVA.Interop;
 using TVA.Reflection;
 
@@ -471,7 +472,7 @@ namespace TVA.IO
             }
 
             return true;
-        }  
+        }
 
         /// <summary>
         /// Gets the file name and extension from the specified file path.
@@ -647,11 +648,20 @@ namespace TVA.IO
             if (platform == ApplicationType.Web)
             {
                 // Treat web application special.
-                rootFolder = Path.GetTempPath();
                 if (HostingEnvironment.ApplicationVirtualPath == "/")
-                    return Path.Combine(rootFolder, HostingEnvironment.SiteName);
+                    rootFolder = Path.Combine(Path.GetTempPath(), HostingEnvironment.SiteName);
                 else
-                    return Path.Combine(rootFolder, HostingEnvironment.ApplicationVirtualPath.Trim('/'));
+                    rootFolder = Path.Combine(Path.GetTempPath(), HostingEnvironment.ApplicationVirtualPath.Trim('/'));
+
+                // Create a user folder if ID is available.
+                string userID = UserInfo.RemoteUserID;
+                if (string.IsNullOrEmpty(userID))
+                    return rootFolder;
+                else
+                    if (!userID.Contains("\\"))
+                        return Path.Combine(rootFolder, userID);
+                    else
+                        return Path.Combine(rootFolder, userID.Remove(0, userID.IndexOf('\\') + 1));
             }
             else
             {

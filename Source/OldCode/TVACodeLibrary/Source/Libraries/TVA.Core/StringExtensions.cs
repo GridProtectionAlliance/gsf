@@ -69,6 +69,8 @@
 //  03/23/2011 - J. Ritchie Carroll
 //       Modified ParseKeyValuePairs to optionally ignore duplicate keys (default behavior now).
 //       Removed overloads for ParseKeyValuePairs and JoinKeyValuePairs using optional parameters.
+//  08/02/2011 - Pinal C. Patel
+//       Added RemoveInvalidFileNameCharacters() and ReplaceInvalidFileNameCharacters() methods.
 //
 //*******************************************************************************************************
 
@@ -311,6 +313,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -949,6 +952,27 @@ namespace TVA
             }
 
             return result.ToString();
+        }
+
+        /// <summary>
+        /// Removes all invalid file name characters (\ / : * ? " &lt; &gt; |) from a string.
+        /// </summary>
+        /// <param name="value">Input string.</param>
+        /// <returns>Returns <paramref name="value" /> with all invalid file name characters removed.</returns>
+        public static string RemoveInvalidFileNameCharacters(this string value)
+        {
+            return value.RemoveCharacters(c => Array.IndexOf(Path.GetInvalidFileNameChars(), c) >= 0);
+        }
+
+        /// <summary>
+        /// Replaces all invalid file name characters (\ / : * ? " &lt; &gt; |) in a string with the specified <paramref name="replacementCharacter"/>.
+        /// </summary>
+        /// <param name="value">Input string.</param>
+        /// <param name="replacementCharacter">Character used to replace the invalid characters.</param>
+        /// <returns>>Returns <paramref name="value" /> with all invalid file name characters replaced.</returns>
+        public static string ReplaceInvalidFileNameCharacters(this string value, char replacementCharacter)
+        {
+            return value.ReplaceCharacters(replacementCharacter, c => Array.IndexOf(Path.GetInvalidFileNameChars(), c) >= 0);
         }
 
         /// <summary>
