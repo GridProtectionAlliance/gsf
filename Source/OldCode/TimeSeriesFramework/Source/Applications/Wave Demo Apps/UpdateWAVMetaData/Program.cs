@@ -105,7 +105,7 @@ namespace UpdateWAVMetaData
                 if (Convert.ToInt32(connection.ExecuteScalar("SELECT COUNT(*) FROM Device WHERE Acronym=@acronym", acronym)) == 0)
                 {
                     // Insert new device record
-                    connection.ExecuteNonQuery(string.Format("INSERT INTO Device(NodeID, Acronym, Name, ProtocolID, FramesPerSecond, MeasurementReportingInterval, Enabled) VALUES({0}, @acronym, @name, @protocolID, @framesPerSecond, @measurementReportingInterval, @enabled )", nodeIDQueryString), acronym, name, protocolID, sourceWave.SampleRate, 1000000, true);
+                    connection.ExecuteNonQuery(string.Format("INSERT INTO Device(NodeID, Acronym, Name, ProtocolID, FramesPerSecond, MeasurementReportingInterval, ConnectionString, Enabled) VALUES({0}, @acronym, @name, @protocolID, @framesPerSecond, @measurementReportingInterval, @connectionString, @enabled )", nodeIDQueryString), acronym, name, protocolID, sourceWave.SampleRate, 1000000, string.Format("wavFileName={0}; connectOnDemand=true; outputSourceIDs={1}", FilePath.GetAbsolutePath(sourceFileName), acronym), true);
                     int deviceID = Convert.ToInt32(connection.ExecuteScalar("SELECT ID FROM Device WHERE Acronym=@acronym", acronym));
                     string pointTag;
 
@@ -122,9 +122,6 @@ namespace UpdateWAVMetaData
 
                     // Disable all non analog measurements that may be associated with this device
                     connection.ExecuteNonQuery("UPDATE Measurement SET Enabled=@enabled WHERE DeviceID=@deviceID AND SignalTypeID <> @signalTypeID", false, deviceID, signalTypeID);
-
-                    // Update connection string with newly added measurements
-                    connection.ExecuteNonQuery("UPDATE Device SET ConnectionString=@connectionString WHERE ID=@deviceID", string.Format("wavFileName={0}; connectOnDemand=true; outputSourceIDs={1}", FilePath.GetAbsolutePath(sourceFileName), acronym), deviceID);
                 }
             }
 
