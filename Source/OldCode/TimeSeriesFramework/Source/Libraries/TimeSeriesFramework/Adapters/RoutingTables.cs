@@ -500,6 +500,33 @@ namespace TimeSeriesFramework.Adapters
                     }
                 }
             }
+            else
+            {
+                // Handle special case of clearing requested input keys for connect on demand action adapters when no output measurement keys are defined
+                if (m_actionAdapters != null)
+                {
+                    foreach (IActionAdapter actionAdapter in m_actionAdapters)
+                    {
+                        if (!actionAdapter.AutoStart && actionAdapter.RequestedInputMeasurementKeys != null)
+                            actionAdapter.RequestedInputMeasurementKeys = null;
+                    }
+                }
+
+                // Handle special case of clearing requested input keys and stopping connect on demand output adapters when no output measurement keys are defined
+                if (m_outputAdapters != null)
+                {
+                    foreach (IOutputAdapter outputAdapter in m_outputAdapters)
+                    {
+                        if (!outputAdapter.AutoStart)
+                        {
+                            if (outputAdapter.RequestedInputMeasurementKeys != null)
+                                outputAdapter.RequestedInputMeasurementKeys = null;
+
+                            outputAdapter.Enabled = false;
+                        }
+                    }
+                }
+            }
 
             // Get the full list of input measurements that can be demanded in this Iaon session
             if (m_outputAdapters != null)
@@ -567,15 +594,35 @@ namespace TimeSeriesFramework.Adapters
             }
             else
             {
-                // Handle special case of stopping connect on demand action adapters when no input measurement keys are defined
+                // Handle special case of clearing requested output keys and stopping connect on demand action adapters when no input measurement keys are defined
                 if (m_actionAdapters != null)
                 {
-                    // Stop connect on demand action adapters based on need
                     foreach (IActionAdapter actionAdapter in m_actionAdapters)
                     {
-                        // Action adapter should be stopped if it has no requested input measurements keys, as determined prior
-                        if (!actionAdapter.AutoStart && !(actionAdapter.RequestedInputMeasurementKeys != null && actionAdapter.RequestedInputMeasurementKeys.Length > 0))
-                            actionAdapter.Enabled = false;
+                        if (!actionAdapter.AutoStart)
+                        {
+                            if (actionAdapter.RequestedOutputMeasurementKeys != null)
+                                actionAdapter.RequestedOutputMeasurementKeys = null;
+
+                            // Action adapter should be stopped if it has no requested input measurements keys, as determined prior
+                            if (!(actionAdapter.RequestedInputMeasurementKeys != null && actionAdapter.RequestedInputMeasurementKeys.Length > 0))
+                                actionAdapter.Enabled = false;
+                        }
+                    }
+                }
+
+                // Handle special case of clearing requested output keys and stopping connect on demand input adapters when no input measurement keys are defined
+                if (m_inputAdapters != null)
+                {
+                    foreach (IInputAdapter inputAdapter in m_inputAdapters)
+                    {
+                        if (!inputAdapter.AutoStart)
+                        {
+                            if (inputAdapter.RequestedOutputMeasurementKeys != null)
+                                inputAdapter.RequestedOutputMeasurementKeys = null;
+
+                            inputAdapter.Enabled = false;
+                        }
                     }
                 }
             }
