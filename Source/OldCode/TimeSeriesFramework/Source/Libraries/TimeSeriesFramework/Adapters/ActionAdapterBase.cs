@@ -92,6 +92,8 @@ namespace TimeSeriesFramework.Adapters
         private List<string> m_outputSourceIDs;
         private int m_minimumMeasurementsToUse;
         private ManualResetEvent m_initializeWaitHandle;
+        private DateTime m_startTimeConstraint;
+        private DateTime m_stopTimeConstraint;
         private int m_hashCode;
         private bool m_initialized;
         private bool m_disposed;
@@ -108,6 +110,8 @@ namespace TimeSeriesFramework.Adapters
         {
             m_name = this.GetType().Name;
             m_settings = new Dictionary<string, string>();
+            m_startTimeConstraint = DateTime.MinValue;
+            m_stopTimeConstraint = DateTime.MaxValue;
             GenHashCode();
 
             // Create wait handle to use for adapter initialization
@@ -420,6 +424,36 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
+        /// Gets the start time temporal procesing constraint defined by call to <see cref="SetTemporalConstraint"/>.
+        /// </summary>
+        /// <remarks>
+        /// This value will be <see cref="DateTime.MinValue"/> when start time constraint is not set - meaning the adapter
+        /// is processing data in real-time.
+        /// </remarks>
+        public virtual DateTime StartTimeConstraint
+        {
+            get
+            {
+                return m_startTimeConstraint;
+            }
+        }
+
+        /// <summary>
+        /// Gets the stop time temporal processing constraint defined by call to <see cref="SetTemporalConstraint"/>.
+        /// </summary>
+        /// <remarks>
+        /// This value will be <see cref="DateTime.MaxValue"/> when stop time constraint is not set - meaning the adapter
+        /// is processing data in real-time.
+        /// </remarks>
+        public virtual DateTime StopTimeConstraint
+        {
+            get
+            {
+                return m_stopTimeConstraint;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets minimum number of input measurements required for adapter.  Set to -1 to require all.
         /// </summary>
         public virtual int MinimumMeasurementsToUse
@@ -542,6 +576,10 @@ namespace TimeSeriesFramework.Adapters
                 status.AppendFormat("    Processed measurements: {0}", ProcessedMeasurements);
                 status.AppendLine();
                 status.AppendFormat("    Total adapter run time: {0}", RunTime.ToString());
+                status.AppendLine();
+                status.AppendFormat("     Start time constraint: {0}", StartTimeConstraint == DateTime.MinValue ? "Unspecified" : StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                status.AppendLine();
+                status.AppendFormat("      Stop time constraint: {0}", StopTimeConstraint == DateTime.MaxValue ? "Unspecified" : StopTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"));
                 status.AppendLine();
                 status.AppendFormat("                Adpater ID: {0}", ID);
                 status.AppendLine();
@@ -889,6 +927,68 @@ namespace TimeSeriesFramework.Adapters
                 return m_initializeWaitHandle.WaitOne(timeout);
 
             return false;
+        }
+
+        /// <summary>
+        /// Defines a temporal processing constraint for the adapter.
+        /// </summary>
+        /// <param name="startTime">Defines a relative or exact start time for the temporal constraint.</param>
+        /// <param name="stopTime">Defines a relative or exact stop time for the temporal constraint.</param>
+        /// <param name="constraintParameters">Defines any temporal parameters related to the constraint.</param>
+        /// <remarks>
+        /// <para>
+        /// This method defines a temporal processing contraint for an adapter, i.e., the start and stop time over which an
+        /// adapter will process data. Actual implementation of the constraint will be adapter specific. Implementations
+        /// should be able to dynamically handle multitple calls to this function with new constraints. Passing in <c>null</c>
+        /// for the <paramref name="startTime"/> and <paramref name="stopTime"/> should cancel the temporal constraint and
+        /// return the adapter to standard / real-time operation.
+        /// </para>
+        /// <para>
+        /// The <paramref name="startTime"/> and <paramref name="stopTime"/> parameters can be specified in one of the
+        /// following formats:
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term>Time Format</term>
+        ///         <description>Format Description</description>
+        ///     </listheader>
+        ///     <item>
+        ///         <term>12-30-2000 23:59:59.033</term>
+        ///         <description>Absolute date and time.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*</term>
+        ///         <description>Evaluates to <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-20s</term>
+        ///         <description>Evaluates to 20 seconds before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-10m</term>
+        ///         <description>Evaluates to 10 minutes before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-1h</term>
+        ///         <description>Evaluates to 1 hour before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-1d</term>
+        ///         <description>Evaluates to 1 day before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        /// </list>
+        /// </para>
+        /// </remarks>
+        public virtual void SetTemporalConstraint(string startTime, string stopTime, string constraintParameters)
+        {
+            if (!string.IsNullOrWhiteSpace(startTime))
+                m_startTimeConstraint = AdapterBase.ParseTimeTag(startTime);
+            else
+                m_startTimeConstraint = DateTime.MinValue;
+
+            if (!string.IsNullOrWhiteSpace(stopTime))
+                m_stopTimeConstraint = AdapterBase.ParseTimeTag(stopTime);
+            else
+                m_stopTimeConstraint = DateTime.MaxValue;
         }
 
         /// <summary>

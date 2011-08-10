@@ -106,6 +106,8 @@ namespace TimeSeriesFramework.Adapters
         private bool m_enabled;
         private long m_startTime;
         private long m_stopTime;
+        private DateTime m_startTimeConstraint;
+        private DateTime m_stopTimeConstraint;
         private int m_hashCode;
         private bool m_initialized;
         private bool m_disposed;
@@ -121,6 +123,8 @@ namespace TimeSeriesFramework.Adapters
         {
             m_name = this.GetType().Name;
             m_settings = new Dictionary<string, string>();
+            m_startTimeConstraint = DateTime.MinValue;
+            m_stopTimeConstraint = DateTime.MaxValue;
             GenHashCode();
 
             // Create wait handle to use for adapter initialization
@@ -460,6 +464,36 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
+        /// Gets the start time temporal procesing constraint defined by call to <see cref="SetTemporalConstraint"/>.
+        /// </summary>
+        /// <remarks>
+        /// This value will be <see cref="DateTime.MinValue"/> when start time constraint is not set - meaning the adapter
+        /// is processing data in real-time.
+        /// </remarks>
+        public virtual DateTime StartTimeConstraint
+        {
+            get
+            {
+                return m_startTimeConstraint;
+            }
+        }
+
+        /// <summary>
+        /// Gets the stop time temporal processing constraint defined by call to <see cref="SetTemporalConstraint"/>.
+        /// </summary>
+        /// <remarks>
+        /// This value will be <see cref="DateTime.MaxValue"/> when stop time constraint is not set - meaning the adapter
+        /// is processing data in real-time.
+        /// </remarks>
+        public virtual DateTime StopTimeConstraint
+        {
+            get
+            {
+                return m_stopTimeConstraint;
+            }
+        }
+
+        /// <summary>
         /// Gets the total amount of time, in seconds, that the concentrator has been active.
         /// </summary>
         public virtual Time RunTime
@@ -539,6 +573,10 @@ namespace TimeSeriesFramework.Adapters
                 status.AppendFormat("    Processed measurements: {0}", ProcessedMeasurements);
                 status.AppendLine();
                 status.AppendFormat("    Total adapter run time: {0}", RunTime.ToString());
+                status.AppendLine();
+                status.AppendFormat("     Start time constraint: {0}", StartTimeConstraint == DateTime.MinValue ? "Unspecified" : StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                status.AppendLine();
+                status.AppendFormat("      Stop time constraint: {0}", StopTimeConstraint == DateTime.MaxValue ? "Unspecified" : StopTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"));
                 status.AppendLine();
                 status.AppendFormat("   Item reporting interval: {0}", MeasurementReportingInterval);
                 status.AppendLine();
@@ -772,6 +810,68 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
+        /// Defines a temporal processing constraint for the adapter.
+        /// </summary>
+        /// <param name="startTime">Defines a relative or exact start time for the temporal constraint.</param>
+        /// <param name="stopTime">Defines a relative or exact stop time for the temporal constraint.</param>
+        /// <param name="constraintParameters">Defines any temporal parameters related to the constraint.</param>
+        /// <remarks>
+        /// <para>
+        /// This method defines a temporal processing contraint for an adapter, i.e., the start and stop time over which an
+        /// adapter will process data. Actual implementation of the constraint will be adapter specific. Implementations
+        /// should be able to dynamically handle multitple calls to this function with new constraints. Passing in <c>null</c>
+        /// for the <paramref name="startTime"/> and <paramref name="stopTime"/> should cancel the temporal constraint and
+        /// return the adapter to standard / real-time operation.
+        /// </para>
+        /// <para>
+        /// The <paramref name="startTime"/> and <paramref name="stopTime"/> parameters can be specified in one of the
+        /// following formats:
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term>Time Format</term>
+        ///         <description>Format Description</description>
+        ///     </listheader>
+        ///     <item>
+        ///         <term>12-30-2000 23:59:59.033</term>
+        ///         <description>Absolute date and time.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*</term>
+        ///         <description>Evaluates to <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-20s</term>
+        ///         <description>Evaluates to 20 seconds before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-10m</term>
+        ///         <description>Evaluates to 10 minutes before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-1h</term>
+        ///         <description>Evaluates to 1 hour before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-1d</term>
+        ///         <description>Evaluates to 1 day before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        /// </list>
+        /// </para>
+        /// </remarks>
+        public virtual void SetTemporalConstraint(string startTime, string stopTime, string constraintParameters)
+        {
+            if (!string.IsNullOrWhiteSpace(startTime))
+                m_startTimeConstraint = ParseTimeTag(startTime);
+            else
+                m_startTimeConstraint = DateTime.MinValue;
+
+            if (!string.IsNullOrWhiteSpace(stopTime))
+                m_stopTimeConstraint = ParseTimeTag(stopTime);
+            else
+                m_stopTimeConstraint = DateTime.MaxValue;
+        }
+
+        /// <summary>
         /// Serves as a hash function for the current <see cref="AdapterBase"/>.
         /// </summary>
         /// <returns>A hash code for the current <see cref="AdapterBase"/>.</returns>
@@ -866,8 +966,122 @@ namespace TimeSeriesFramework.Adapters
 
         // Static Fields
         private static Regex s_filterExpression = new Regex("(FILTER[ ]+(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+)[ ]+ORDER[ ]+BY[ ]+(?<SortField>\\w+))|(FILTER[ ]+(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static Regex s_timetagExpression = new Regex("\\*(?<Offset>[+-]?\\d*\\.?\\d*)(?<Unit>\\w+)", RegexOptions.Compiled);
 
         // Static Methods
+
+        /// <summary>
+        /// Parses a string formatted as an absolute or relative time tag.
+        /// </summary>
+        /// <param name="timetag">String formatted as an absolute or relative time tag.</param>
+        /// <returns>
+        /// <see cref="DateTime"/> representing the parsed <paramref name="timetag"/> string formatted as an absolute or relative time tag.
+        /// </returns>
+        /// <remarks>
+        /// <para>
+        /// Relative times are parsed based on an offset to current time (UTC) specified by "*".
+        /// </para>
+        /// <para>
+        /// The <paramref name="timetag"/> parameter can be specified in one of the following formats:
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term>Time Format</term>
+        ///         <description>Format Description</description>
+        ///     </listheader>
+        ///     <item>
+        ///         <term>12-30-2000 23:59:59.033</term>
+        ///         <description>Absolute date and time.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*</term>
+        ///         <description>Evaluates to <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-20s</term>
+        ///         <description>Evaluates to 20 seconds before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-10m</term>
+        ///         <description>Evaluates to 10 minutes before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-1h</term>
+        ///         <description>Evaluates to 1 hour before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-1d</term>
+        ///         <description>Evaluates to 1 day before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        /// </list>
+        /// </para>
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="timetag"/> parameter cannot be null or empty.</exception>
+        /// <exception cref="FormatException"><paramref name="timetag"/> does not contain a valid string representation of a date and time.</exception>
+        public static DateTime ParseTimeTag(string timetag)
+        {
+            if (string.IsNullOrWhiteSpace(timetag))
+                throw new ArgumentNullException("timetag", "Timetag string cannot be null or empty.");
+
+            DateTime dateTime;
+
+            if (timetag.Contains("*"))
+            {
+                // Relative time is specified.
+                // Examples:
+                // 1) * (Now)
+                // 2) *-20s (20 seconds ago)
+                // 3) *-10m (10 minutes ago)
+                // 4) *-1h (1 hour ago)
+                // 5) *-1d (1 day ago)
+
+                dateTime = DateTime.UtcNow;
+                timetag = timetag.RemoveWhiteSpace();
+
+                if (timetag.Length > 1)
+                {
+                    Match timetagMatch;
+
+                    lock (s_timetagExpression)
+                    {
+                        timetagMatch = s_timetagExpression.Match(timetag);
+                    }
+
+                    if (timetagMatch.Success)
+                    {
+                        double offset = double.Parse(timetagMatch.Result("${Offset}").Trim());
+                        string unit = timetagMatch.Result("${Unit}").Trim().ToLower();
+
+                        switch (unit[0])
+                        {
+                            case 's':
+                                dateTime = dateTime.AddSeconds(offset);
+                                break;
+                            case 'm':
+                                dateTime = dateTime.AddMinutes(offset);
+                                break;
+                            case 'h':
+                                dateTime = dateTime.AddHours(offset);
+                                break;
+                            case 'd':
+                                dateTime = dateTime.AddDays(offset);
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        // Expression match failed, attempt to parse absolute time specification.
+                        dateTime = DateTime.Parse(timetag);
+                    }
+                }
+            }
+            else
+            {
+                // Absolute time is specified.
+                dateTime = DateTime.Parse(timetag);
+            }
+
+            return dateTime;
+        }
 
         /// <summary>
         /// Loads an <see cref="IOutputAdapter"/> or <see cref="IActionAdapter"/> instance's input measurement keys from a specific set of source ID's.
