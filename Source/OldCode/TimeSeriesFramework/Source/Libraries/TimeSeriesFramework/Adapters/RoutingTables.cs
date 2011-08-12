@@ -444,14 +444,21 @@ namespace TimeSeriesFramework.Adapters
 
             if (m_actionAdapters != null)
             {
-                if (outputMeasurementKeys == null)
+                if (outputMeasurementKeys == null || outputMeasurementKeys.Count() == 0)
+                {
                     outputMeasurementKeys = m_actionAdapters.OutputMeasurements.Select(m => m.Key);
+                }
                 else
-                    outputMeasurementKeys = outputMeasurementKeys.Concat(m_actionAdapters.OutputMeasurements.Select(m => m.Key)).Distinct();
+                {
+                    IEnumerable<MeasurementKey> actionAdapterOutputMeasurementKeys = m_actionAdapters.OutputMeasurements.Select(m => m.Key);
+
+                    if (actionAdapterOutputMeasurementKeys != null && actionAdapterOutputMeasurementKeys.Count() > 0)
+                        outputMeasurementKeys = outputMeasurementKeys.Concat(actionAdapterOutputMeasurementKeys).Distinct();
+                }
             }
 
             // Handle connect on demand action adapters and output adapters based on currently provisioned output measurements
-            if (outputMeasurementKeys != null)
+            if (outputMeasurementKeys != null && outputMeasurementKeys.Count() > 0)
             {
                 if (m_actionAdapters != null)
                 {
@@ -534,14 +541,21 @@ namespace TimeSeriesFramework.Adapters
 
             if (m_actionAdapters != null)
             {
-                if (inputMeasurementKeys == null)
+                if (inputMeasurementKeys == null || inputMeasurementKeys.Count() == 0)
+                {
                     inputMeasurementKeys = m_actionAdapters.InputMeasurementKeys;
+                }
                 else
-                    inputMeasurementKeys = inputMeasurementKeys.Concat(m_actionAdapters.InputMeasurementKeys).Distinct();
+                {
+                    MeasurementKey[] actionAdapterInputMeasurementKeys = m_actionAdapters.InputMeasurementKeys;
+
+                    if (actionAdapterInputMeasurementKeys != null && actionAdapterInputMeasurementKeys.Length > 0)
+                        inputMeasurementKeys = inputMeasurementKeys.Concat(actionAdapterInputMeasurementKeys).Distinct();
+                }
             }
 
             // Handle connect on demand action adapters and input adapters based on currently demanded input measurements
-            if (inputMeasurementKeys != null)
+            if (inputMeasurementKeys != null && inputMeasurementKeys.Count() > 0)
             {
                 if (m_actionAdapters != null)
                 {
