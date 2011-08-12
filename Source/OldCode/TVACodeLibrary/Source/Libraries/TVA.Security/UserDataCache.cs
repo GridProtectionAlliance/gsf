@@ -16,6 +16,9 @@
 //  06/10/2011 - Pinal C. Patel
 //       Renamed RetryDelayInterval and MaximumRetryAttempts settings persisted to the config file 
 //       to CacheRetryDelayInterval and CacheMaximumRetryAttempts for clarity.
+//  08/12/2011 - J. Ritchie Carroll
+//       Modifed static GetCurrentCache to accept settings category of host security provider
+//       implementation in case the category has been changed from the default value by the consumer.
 //
 //*******************************************************************************************************
 
@@ -491,9 +494,10 @@ namespace TVA.Security
         /// <summary>
         /// Loads the <see cref="UserDataCache"/> for the current local user.
         /// </summary>
-        /// <param name="providerID">Unique provider ID used to distinguish cached user data that may be different based on provider.</param>
+        /// <param name="settingsCategory">The security provider configuration file settings category.</param>
+        /// <param name="providerID">Unique security provider ID used to distinguish cached user data that may be different based on provider.</param>
         /// <returns>Loaded instance of the <see cref="UserDataCache"/>.</returns>
-        public static UserDataCache GetCurrentCache(int providerID = LdapSecurityProvider.ProviderID)
+        public static UserDataCache GetCurrentCache(string settingsCategory, int providerID)
         {
             // By default user data cache is stored in a path where user will have rights
             UserDataCache userDataCache;
@@ -504,11 +508,13 @@ namespace TVA.Security
 
             // Load user data cache settings
             ConfigurationFile config = ConfigurationFile.Current;
-            CategorizedSettingsElementCollection settings = config.Settings[SecurityProviderBase.DefaultSettingsCategory];
+            CategorizedSettingsElementCollection settings = config.Settings[settingsCategory];
 
+            // Add default values if they do not exist
             settings.Add("CacheRetryDelayInterval", retryDelayInterval, "Wait interval, in milliseconds, before retrying load of user data cache.");
             settings.Add("CacheMaximumRetryAttempts", maximumRetryAttempts, "Maximum retry attempts allowed for loading user data cache.");
 
+            // Get current settings
             retryDelayInterval = settings["CacheRetryDelayInterval"].ValueAs(retryDelayInterval);
             maximumRetryAttempts = settings["CacheMaximumRetryAttempts"].ValueAs(maximumRetryAttempts);
 

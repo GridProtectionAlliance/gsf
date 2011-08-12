@@ -419,7 +419,7 @@ namespace TVA.Security
                     if (dbConnection == null)
                         return false;
 
-                    userDataTable.Load(dbConnection.ExecuteReader("Select ID, Name, Password, FirstName, LastName, Phone, Email, LockedOut, UseADAuthentication, ChangePasswordOn, CreatedOn From UserAccount Where Name = @name", UserData.Username));
+                    userDataTable.Load(dbConnection.ExecuteReader("SELECT ID, Name, Password, FirstName, LastName, Phone, Email, LockedOut, UseADAuthentication, ChangePasswordOn, CreatedOn FROM UserAccount WHERE Name = @name", UserData.Username));
 
                     if (userDataTable.Rows.Count <= 0)
                     {
@@ -579,7 +579,7 @@ namespace TVA.Security
 
             try
             {
-                //Check if old and new passwords are different.
+                // Check if old and new passwords are different.
                 if (oldPassword == newPassword)
                     throw new Exception("New password cannot be same as old password.");
 
@@ -605,9 +605,9 @@ namespace TVA.Security
                     command.CommandType = CommandType.Text;
 
                     if (command.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB"))
-                        command.CommandText = "Update UserAccount Set [Password] = @newPassword Where Name = @name AND [Password] = @oldPassword";
+                        command.CommandText = "UPDATE UserAccount SET [Password] = @newPassword WHERE Name = @name AND [Password] = @oldPassword";
                     else
-                        command.CommandText = "Update UserAccount Set Password = @newPassword Where Name = @name AND Password = @oldPassword";
+                        command.CommandText = "UPDATE UserAccount SET Password = @newPassword WHERE Name = @name AND Password = @oldPassword";
 
                     IDbDataParameter param = command.CreateParameter();
                     param.ParameterName = "@newPassword";
@@ -661,7 +661,7 @@ namespace TVA.Security
                     IDbCommand command = dbConnection.CreateCommand();
                     command.CommandType = CommandType.Text;
                     IDbDataParameter param;
-                    command.CommandText = "Insert Into AccessLog (UserName, AccessGranted, Comment) Values (@userName, @accessGranted, @comment)";
+                    command.CommandText = "INSERT INTO AccessLog (UserName, AccessGranted, Comment) VALUES (@userName, @accessGranted, @comment)";
                     param = command.CreateParameter();
                     param.ParameterName = "@userName";
                     param.Value = UserData.Username;
@@ -699,7 +699,7 @@ namespace TVA.Security
                         IDbCommand command = dbConnection.CreateCommand();
                         command.CommandType = CommandType.Text;
                         IDbDataParameter param;
-                        command.CommandText = "Insert Into ErrorLog (Source, Message) Values (@source, @message)";
+                        command.CommandText = "INSERT INTO ErrorLog (Source, Message) VALUES (@source, @message)";
                         param = command.CreateParameter();
                         param.ParameterName = "@source";
                         param.Value = source;

@@ -480,7 +480,7 @@ namespace TVA.Security
             try
             {
                 // Get current local user data cache
-                using (UserDataCache userDataCache = UserDataCache.GetCurrentCache(providerID))
+                using (UserDataCache userDataCache = UserDataCache.GetCurrentCache(SettingsCategory, providerID))
                 {
                     string ldapPath = GetLdapPath();
 
