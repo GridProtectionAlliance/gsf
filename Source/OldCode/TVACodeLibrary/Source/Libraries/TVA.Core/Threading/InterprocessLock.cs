@@ -9,11 +9,13 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  03/21/2011 - Ritchie
+//  03/21/2011 - J. Ritchie Carroll
 //       Generated original version of source code.
-//  06/30/2011 - Stephen Wills - applying changes from Jian (Ryan) Zuo
-//       Updated to allow unauthorized users to attempt to grant
-//       themselves access to existing mutexes and semaphores.
+//  06/30/2011 - Stephen Wills
+//       Applying changes from Jian (Ryan) Zuo: updated to allow unauthorized users to attempt to grant
+//       themselves lower than full access to existing mutexes and semaphores.
+//  08/12/2011 - J. Ritchie Carroll
+//       Modified creation methods such that locking natives are created in a synchronized fashion.
 //
 //*******************************************************************************************************
 
@@ -253,10 +255,11 @@
 #endregion
 
 using System;
-using System.Threading;
-using TVA.Security.Cryptography;
+using System.Runtime.CompilerServices;
 using System.Security.AccessControl;
 using System.Security.Principal;
+using System.Threading;
+using TVA.Security.Cryptography;
 
 namespace TVA.Threading
 {
@@ -292,16 +295,16 @@ namespace TVA.Threading
         /// you need to interact with another application using a <see cref="Mutex"/> that does not use this function.
         /// </para>
         /// </remarks>
-        /// <exception cref="ArgumentNullException">Parameter <paramref name="name"/> cannot be empty, null or white space.</exception>
+        /// <exception cref="ArgumentNullException">Argument <paramref name="name"/> cannot be empty, null or white space.</exception>
+        [MethodImplAttribute(MethodImplOptions.Synchronized)]
         public static Mutex GetNamedMutex(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentNullException("name");
+                throw new ArgumentNullException("name", "Argument cannot be empty, null or white space.");
 
             Mutex namedMutex = null;
             bool doesNotExist = false;
             bool unauthorized = false;
-            bool mutexWasCreated = false;
 
             // Create a mutex name that is specific to an object (e.g., a path and file name).
             // Prefix mutext name with "Global\" such that mutex will apply to all active
@@ -325,30 +328,45 @@ namespace TVA.Threading
             // If mutex does not exist we create it
             if (doesNotExist)
             {
-                MutexSecurity mSec = new MutexSecurity();
-                MutexAccessRule rule = new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), MutexRights.Synchronize | MutexRights.Modify, AccessControlType.Allow);
-                mSec.AddAccessRule(rule);
-                namedMutex = new Mutex(false, mutexName, out mutexWasCreated, mSec);
-                if (!mutexWasCreated)
+                try
                 {
-                    throw new ArgumentException("Unable to create the mutex");
+                    MutexSecurity security = new MutexSecurity();
+                    bool mutexWasCreated;
+
+                    security.AddAccessRule(new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), MutexRights.FullControl, AccessControlType.Allow));
+                    namedMutex = new Mutex(false, mutexName, out mutexWasCreated, security);
+
+                    if (!mutexWasCreated)
+                        throw new InvalidOperationException("Failed to create mutex.");
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    MutexSecurity security = new MutexSecurity();
+                    bool mutexWasCreated;
+
+                    security.AddAccessRule(new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), MutexRights.Synchronize | MutexRights.Modify, AccessControlType.Allow));
+                    namedMutex = new Mutex(false, mutexName, out mutexWasCreated, security);
+
+                    if (!mutexWasCreated)
+                        throw new InvalidOperationException("Failed to create mutex.");
                 }
             }
-            else if (unauthorized)
+
+            if (unauthorized)
             {
                 namedMutex = Mutex.OpenExisting(mutexName, MutexRights.ReadPermissions | MutexRights.ChangePermissions);
 
                 // Get the current ACL. This requires MutexRights.ReadPermission
-                MutexSecurity mSec = namedMutex.GetAccessControl();
-                MutexAccessRule rule = new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), MutexRights.Synchronize | MutexRights.Modify, AccessControlType.Allow);
-                mSec.RemoveAccessRule(rule);
+                MutexSecurity security = namedMutex.GetAccessControl();
+                MutexAccessRule rule = new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), MutexRights.FullControl, AccessControlType.Allow);
+                security.RemoveAccessRule(rule);
 
-                // Now grant the user the correct rights
+                // Now grant specific user rights for less than full access
                 rule = new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), MutexRights.Synchronize | MutexRights.Modify, AccessControlType.Allow);
-                mSec.AddAccessRule(rule);
+                security.AddAccessRule(rule);
 
                 // Update the ACL. This requires MutexRighs.ChangePermission.
-                namedMutex.SetAccessControl(mSec);
+                namedMutex.SetAccessControl(security);
                 namedMutex = Mutex.OpenExisting(mutexName);
             }
 
@@ -379,16 +397,16 @@ namespace TVA.Threading
         /// such as when you need to interact with another application using a <see cref="Semaphore"/> that does not use this function.
         /// </para>
         /// </remarks>
-        /// <exception cref="ArgumentNullException">Parameter <paramref name="name"/> cannot be empty, null or white space.</exception>
+        /// <exception cref="ArgumentNullException">Argument <paramref name="name"/> cannot be empty, null or white space.</exception>
+        [MethodImplAttribute(MethodImplOptions.Synchronized)]
         public static Semaphore GetNamedSemaphore(string name, int maximumCount = 10, int initialCount = -1)
         {
             if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentNullException("name");
+                throw new ArgumentNullException("name", "Argument cannot be empty, null or white space.");
 
             Semaphore namedSemaphore = null;
             bool doesNotExist = false;
             bool unauthorized = false;
-            bool semaphoreWasCreated = false;
 
             if (initialCount < 0)
                 initialCount = maximumCount;
@@ -413,13 +431,27 @@ namespace TVA.Threading
             // If semaphore does not exist we create it
             if (doesNotExist)
             {
-                SemaphoreSecurity sSec = new SemaphoreSecurity();
-                SemaphoreAccessRule rule = new SemaphoreAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), SemaphoreRights.Synchronize | SemaphoreRights.Modify, AccessControlType.Allow);
-                sSec.AddAccessRule(rule);
-                namedSemaphore = new Semaphore(initialCount, maximumCount, semaphoreName, out semaphoreWasCreated, sSec);
-                if (!semaphoreWasCreated)
+                try
                 {
-                    throw new ArgumentException("Unable to create the mutex");
+                    SemaphoreSecurity security = new SemaphoreSecurity();
+                    bool semaphoreWasCreated;
+
+                    security.AddAccessRule(new SemaphoreAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), SemaphoreRights.FullControl, AccessControlType.Allow));
+                    namedSemaphore = new Semaphore(initialCount, maximumCount, semaphoreName, out semaphoreWasCreated, security);
+
+                    if (!semaphoreWasCreated)
+                        throw new InvalidOperationException("Failed to create semaphore.");
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    SemaphoreSecurity security = new SemaphoreSecurity();
+                    bool semaphoreWasCreated;
+
+                    security.AddAccessRule(new SemaphoreAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), SemaphoreRights.Synchronize | SemaphoreRights.Modify, AccessControlType.Allow));
+                    namedSemaphore = new Semaphore(initialCount, maximumCount, semaphoreName, out semaphoreWasCreated, security);
+
+                    if (!semaphoreWasCreated)
+                        throw new InvalidOperationException("Failed to create semaphore.");
                 }
             }
             else if (unauthorized)
@@ -427,16 +459,16 @@ namespace TVA.Threading
                 namedSemaphore = Semaphore.OpenExisting(semaphoreName, SemaphoreRights.ReadPermissions | SemaphoreRights.ChangePermissions);
 
                 // Get the current ACL. This requires MutexRights.ReadPermission
-                SemaphoreSecurity sSec = new SemaphoreSecurity();
-                SemaphoreAccessRule rule = new SemaphoreAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), SemaphoreRights.Synchronize | SemaphoreRights.Modify, AccessControlType.Allow);
-                sSec.RemoveAccessRule(rule);
+                SemaphoreSecurity security = new SemaphoreSecurity();
+                SemaphoreAccessRule rule = new SemaphoreAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), SemaphoreRights.FullControl, AccessControlType.Allow);
+                security.RemoveAccessRule(rule);
 
-                // Now grant the user the correct rights
+                // Now grant specific user rights for less than full access
                 rule = new SemaphoreAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), SemaphoreRights.Synchronize | SemaphoreRights.Modify, AccessControlType.Allow);
-                sSec.AddAccessRule(rule);
+                security.AddAccessRule(rule);
 
                 // Update the ACL. This requires MutexRighs.ChangePermission.
-                namedSemaphore.SetAccessControl(sSec);
+                namedSemaphore.SetAccessControl(security);
                 namedSemaphore = Semaphore.OpenExisting(semaphoreName);
             }
 
