@@ -45,6 +45,8 @@
 //  07/18/2011 - Stephen C. Wills
 //       Added DataRow extension functions to automatically convert from types that
 //       implement the IConvertible interface.
+//  08/12/2011 - Pinal C. Patel
+//       Modified AddParameterWithValue() to correctly implement backwards compatible.
 //
 //*******************************************************************************************************
 
@@ -1629,20 +1631,31 @@ namespace TVA.Data
         /// <exception cref="ArgumentException">Number of <see cref="IDbDataParameter"/> arguments in <paramref name="sql"/> expression, identified by '@', do not match number of supplied parameter <paramref name="values"/>.</exception>
         public static void AddParametersWithValues(this IDbCommand command, string sql, params object[] values)
         {
-            // Pick up all parameters that start with @ but skip key words such as @@IDENTITY
-            string[] tokens = sql.Split(' ', '(', ')', ',', '=').Where(token => token.StartsWith("@") && !token.StartsWith("@@")).ToArray();
-            int i = 0;
-
-            if (tokens.Length != values.Length)
-                throw new ArgumentException("Number of parameter arguments in sql expression do not match number of supplied values", "values");
-
-            foreach (string token in tokens)
+            if (values.FirstOrDefault(value => value is IDbDataParameter) != null)
             {
-                if (!command.Parameters.Contains(token))
-                    command.AddParameterWithValue(token, values[i++]);
+                // Values are already parameters.
+                foreach (object param in values)
+                {
+                    command.Parameters.Add(param);
+                }
             }
+            else
+            {
+                // Pick up all parameters that start with @ but skip key words such as @@IDENTITY
+                string[] tokens = sql.Split(' ', '(', ')', ',', '=').Where(token => token.StartsWith("@") && !token.StartsWith("@@")).ToArray();
+                int i = 0;
 
-            command.CommandText = sql;
+                if (tokens.Length != values.Length)
+                    throw new ArgumentException("Number of parameter arguments in sql expression do not match number of supplied values", "values");
+
+                foreach (string token in tokens)
+                {
+                    if (!command.Parameters.Contains(token))
+                        command.AddParameterWithValue(token, values[i++]);
+                }
+
+                command.CommandText = sql;
+            }
         }
 
         /// <summary>
