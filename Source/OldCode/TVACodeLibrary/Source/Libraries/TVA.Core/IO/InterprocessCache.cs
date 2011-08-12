@@ -745,7 +745,7 @@ namespace TVA.IO
             }
             catch
             {
-                // Other exceptions can happen (e.g., NullReferenceException) if the class is disposed middle way through this method while thread resumes
+                // Other exceptions can happen (e.g., NullReferenceException) if thread resumes and the class is disposed middle way through this method
             }
         }
 
@@ -817,7 +817,7 @@ namespace TVA.IO
             }
             catch
             {
-                // Other exceptions can happen (e.g., NullReferenceException) if the class is disposed middle way through this method while thread resumes
+                // Other exceptions can happen (e.g., NullReferenceException) if thread resumes and the class is disposed middle way through this method
             }
         }
 
@@ -845,7 +845,7 @@ namespace TVA.IO
                     m_retryCount++;
 
                     if (m_retryCount >= m_maximumRetryAttempts)
-                        throw new UnauthorizedAccessException("Failed to " + (eventType == WriteEvent ? "write" : "read") + " data to " + m_fileName + " after " + m_maximumRetryAttempts + " attempts: " + ex.Message, ex);
+                        throw new UnauthorizedAccessException("Failed to " + (eventType == WriteEvent ? "write data to " : "read data from ") + m_fileName + " after " + m_maximumRetryAttempts + " attempts: " + ex.Message, ex);
                 }
 
                 // Technically the interprocess mutex will handle serialized access to the file, but if the OS or other process
@@ -870,7 +870,7 @@ namespace TVA.IO
                 lock (m_retryQueue)
                 {
                     // Reads should always occur first since you may need to load any
-                    // newly written data before saving new data: users can override
+                    // newly written data before saving new data. Users can override
                     // load and save behavior to "merge" data sets if needed.
                     if (m_retryQueue[ReadEvent])
                     {
