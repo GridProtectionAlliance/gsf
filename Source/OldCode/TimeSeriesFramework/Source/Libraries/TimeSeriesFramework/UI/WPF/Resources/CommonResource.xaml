@@ -267,9 +267,16 @@
     </Style>
     
     <util:MenuItemStyleSelector x:Key="MenuItemStyleSelector"/>
-    <conv:NotConverter x:Key="NotConverter"/>
-    <conv:DictionaryToKeyValuePairConverter x:Key="DictionaryToKeyValuePairConverter"/>
+
+    <!-- Replace this one with ObjectToVisibilityConverter -->
     <conv:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
+    <conv:NotConverter x:Key="NotConverter"/>
+    <conv:DictionaryToKeyValuePairConverter x:Key="DictionaryToKeyValuePairConverter"/>    
+    <conv:ObjectToVisibilityConverter x:Key="ObjectToVisibilityConverter" />
+    <conv:RoleBasedVisibilityConverter x:Key="RoleBasedVisibilityConverter" />
+    <conv:StringToStatusColorConverter x:Key="StringToStatusColorConverter" />
+    <conv:StringToBooleanConverter x:Key="StringToBooleanConverter"/>
     
     <ControlTemplate x:Key="HyperlinkStyleButtonTemplate" TargetType="Button">
         <TextBlock Text="{TemplateBinding Content}" FontSize="{StaticResource TextSize}" TextDecorations="Underline" Cursor="Hand" HorizontalAlignment="Center" Width="Auto" Height="20"/>
