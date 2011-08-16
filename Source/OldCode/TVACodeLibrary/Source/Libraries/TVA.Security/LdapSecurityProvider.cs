@@ -19,6 +19,8 @@
 //       Modified provider to be able to use local accounts when user is not connected to a domain.
 //  06/09/2011 - Pinal C. Patel
 //       Fixed a bug in the caching logic of RefreshData() method.
+//  08/16/2011 - Pinal C. Patel
+//       Made offline caching of user data for authentication purpose optional and turned on by default.
 //
 //*******************************************************************************************************
 
@@ -264,6 +266,7 @@ using System.Reflection;
 using System.Security;
 using System.Security.Principal;
 using System.Threading;
+using TVA.Configuration;
 using TVA.Identity;
 
 namespace TVA.Security
@@ -301,6 +304,12 @@ namespace TVA.Security
     ///         encrypted="false" />
     ///       <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
     ///         encrypted="false" />
+    ///       <add name="EnableOfflineCaching" value="True" description="True to enable caching of user information for authentication in offline state, otherwise False."
+    ///         encrypted="false" />
+    ///       <add name="CacheRetryDelayInterval" value="200" description="Wait interval, in milliseconds, before retrying load of user data cache."
+    ///         encrypted="false" />
+    ///       <add name="CacheMaximumRetryAttempts" value="10" description="Maximum retry attempts allowed for loading user data cache."
+    ///         encrypted="false" />
     ///     </securityProvider>
     ///     <activeDirectory>
     ///       <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
@@ -319,12 +328,32 @@ namespace TVA.Security
     {
         #region [ Members ]
 
+        // Constants
+
         /// <summary>
         /// Defines the provider ID for the <see cref="LdapSecurityProvider"/>.
         /// </summary>
         public const int ProviderID = 0;
 
+        /// <summary>
+        /// Specifies the default value for the <see cref="EnableOfflineCaching"/> property.
+        /// </summary>
+        public const bool DefaultEnableOfflineCaching = true;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="CacheRetryDelayInterval"/> property.
+        /// </summary>
+        public const double DefaultCacheRetryDelayInterval = 200.0D;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="CacheMaximumRetryAttempts"/> property.
+        /// </summary>
+        public const int DefaultCacheMaximumRetryAttempts = 10;
+
         // Fields
+        private bool m_enableOfflineCaching;
+        private double m_cacheRetryDelayInterval;
+        private int m_cacheMaximumRetryAttempts;
         private WindowsPrincipal m_windowsPrincipal;
 
         #endregion
@@ -351,11 +380,59 @@ namespace TVA.Security
         protected LdapSecurityProvider(string username, bool canRefreshData, bool canUpdateData, bool canResetPassword, bool canChangePassword)
             : base(username, canRefreshData, canUpdateData, canResetPassword, canChangePassword)
         {
+            m_enableOfflineCaching = DefaultEnableOfflineCaching;
+            m_cacheRetryDelayInterval = DefaultCacheRetryDelayInterval;
+            m_cacheMaximumRetryAttempts = DefaultCacheMaximumRetryAttempts;
         }
 
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether user information is to be cached for offline authentication.
+        /// </summary>
+        public bool EnableOfflineCaching
+        {
+            get
+            {
+                return m_enableOfflineCaching;
+            }
+            set
+            {
+                m_enableOfflineCaching = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the wait interval (in milliseconds) before retrying load of offline user data cache.
+        /// </summary>
+        public double CacheRetryDelayInterval
+        {
+            get
+            {
+                return m_cacheRetryDelayInterval;
+            }
+            set
+            {
+                m_cacheRetryDelayInterval = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum retry attempts allowed for loading offline user data cache.
+        /// </summary>
+        public int CacheMaximumRetryAttempts
+        {
+            get
+            {
+                return m_cacheMaximumRetryAttempts;
+            }
+            set
+            {
+                m_cacheMaximumRetryAttempts = value;
+            }
+        }
 
         /// <summary>
         /// Gets the original <see cref="WindowsPrincipal"/> of the user if the user exists in Active Directory.
@@ -400,6 +477,44 @@ namespace TVA.Security
         }
 
         #endregion
+
+        /// <summary>
+        /// Saves <see cref="LdapSecurityProvider"/> settings to the config file if the <see cref="SecurityProviderBase.PersistSettings"/> property is set to true.
+        /// </summary>
+        public override void SaveSettings()
+        {
+            base.SaveSettings();
+            if (PersistSettings)
+            {
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                settings["EnableOfflineCaching", true].Update(m_enableOfflineCaching);
+                settings["CacheRetryDelayInterval", true].Update(m_cacheRetryDelayInterval);
+                settings["CacheMaximumRetryAttempts", true].Update(m_cacheMaximumRetryAttempts);
+                config.Save();
+            }
+        }
+
+        /// <summary>
+        /// Loads saved <see cref="LdapSecurityProvider"/> settings from the config file if the <see cref="SecurityProviderBase.PersistSettings"/> property is set to true.
+        /// </summary>
+        public override void LoadSettings()
+        {
+            base.LoadSettings();
+            if (PersistSettings)
+            {
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                settings.Add("EnableOfflineCaching", m_enableOfflineCaching, "True to enable caching of user information for authentication in offline state, otherwise False.");
+                settings.Add("CacheRetryDelayInterval", m_cacheRetryDelayInterval, "Wait interval, in milliseconds, before retrying load of user data cache.");
+                settings.Add("CacheMaximumRetryAttempts", m_cacheMaximumRetryAttempts, "Maximum retry attempts allowed for loading user data cache.");
+                EnableOfflineCaching = settings["EnableOfflineCaching"].ValueAs(m_enableOfflineCaching);
+                CacheRetryDelayInterval = settings["CacheRetryDelayInterval"].ValueAs(m_cacheRetryDelayInterval);
+                CacheMaximumRetryAttempts = settings["CacheMaximumRetryAttempts"].ValueAs(m_cacheMaximumRetryAttempts);
+            }
+        }
 
         /// <summary>
         /// Authenticates the user.
@@ -476,84 +591,93 @@ namespace TVA.Security
 
             // Populate user data
             UserInfo user = null;
-
+            UserDataCache userDataCache = null;
             try
             {
                 // Get current local user data cache
-                using (UserDataCache userDataCache = UserDataCache.GetCurrentCache(SettingsCategory, providerID))
+                if (m_enableOfflineCaching)
                 {
-                    string ldapPath = GetLdapPath();
+                    userDataCache = UserDataCache.GetCurrentCache(providerID);
+                    userDataCache.RetryDelayInterval = m_cacheRetryDelayInterval;
+                    userDataCache.MaximumRetryAttempts = m_cacheMaximumRetryAttempts;
+                    userDataCache.ReloadOnChange = true;
+                    userDataCache.AutoSave = true;
+                    userDataCache.Load();
+                }
 
-                    // Create user info object using specified LDAP path if provided
-                    if (string.IsNullOrEmpty(ldapPath))
-                        user = new UserInfo(UserData.Username);
-                    else
-                        user = new UserInfo(UserData.Username, ldapPath);
+                // Create user info object using specified LDAP path if provided
+                string ldapPath = GetLdapPath();
+                if (string.IsNullOrEmpty(ldapPath))
+                    user = new UserInfo(UserData.Username);
+                else
+                    user = new UserInfo(UserData.Username, ldapPath);
 
-                    user.PersistSettings = true;
+                user.PersistSettings = true;
 
-                    // Attempt to determine if user exists (this will initialize user object if not initialized already)
-                    UserData.IsDefined = user.Exists;
-                    UserData.LoginID = user.LoginID;
+                // Attempt to determine if user exists (this will initialize user object if not initialized already)
+                UserData.IsDefined = user.Exists;
+                UserData.LoginID = user.LoginID;
 
-                    if (UserData.IsDefined)
+                if (UserData.IsDefined)
+                {
+                    // Fill in user information from domain data if it is available
+                    if (user.DomainAvailable)
                     {
-                        // Fill in user information from domain data if it is available
-                        if (user.DomainAvailable)
+                        // Copy relevant user information
+                        UserData.FirstName = user.FirstName;
+                        UserData.LastName = user.LastName;
+                        UserData.CompanyName = user.Company;
+                        UserData.PhoneNumber = user.Telephone;
+                        UserData.EmailAddress = user.Email;
+                        UserData.IsLockedOut = user.AccountIsLockedOut;
+                        UserData.IsDisabled = user.AccountIsDisabled;
+                        UserData.PasswordChangeDateTime = user.NextPasswordChangeDate;
+                        UserData.AccountCreatedDateTime = user.AccountCreationDate;
+
+                        // Assign all groups the user is a member of
+                        foreach (string groupName in user.Groups)
                         {
-                            // Copy relevant user information
-                            UserData.FirstName = user.FirstName;
-                            UserData.LastName = user.LastName;
-                            UserData.CompanyName = user.Company;
-                            UserData.PhoneNumber = user.Telephone;
-                            UserData.EmailAddress = user.Email;
-                            UserData.IsLockedOut = user.AccountIsLockedOut;
-                            UserData.IsDisabled = user.AccountIsDisabled;
-                            UserData.PasswordChangeDateTime = user.NextPasswordChangeDate;
-                            UserData.AccountCreatedDateTime = user.AccountCreationDate;
+                            if (!groupCollection.Contains(groupName, StringComparer.InvariantCultureIgnoreCase))
+                                groupCollection.Add(groupName);
+                        }
 
-                            // Assign all groups the user is a member of
-                            foreach (string groupName in user.Groups)
-                            {
-                                if (!groupCollection.Contains(groupName, StringComparer.InvariantCultureIgnoreCase))
-                                    groupCollection.Add(groupName);
-                            }
-
+                        if (userDataCache != null)
+                        {
                             // Cache user data so that information can be loaded later if domain is unavailable
                             userDataCache[UserData.LoginID] = UserData;
 
                             // Wait for pending serialization since cache is scoped locally to this method and will be disposed before exit
                             userDataCache.WaitForSave();
                         }
+                    }
+                    else
+                    {
+                        // Attempt to load previously cached user information when domain is offline
+                        UserData cachedUserData = null;
+                        if (userDataCache != null && userDataCache.TryGetUserData(UserData.LoginID, out cachedUserData))
+                        {
+                            // Copy relevant cached user information
+                            UserData.FirstName = cachedUserData.FirstName;
+                            UserData.LastName = cachedUserData.LastName;
+                            UserData.CompanyName = cachedUserData.CompanyName;
+                            UserData.PhoneNumber = cachedUserData.PhoneNumber;
+                            UserData.EmailAddress = cachedUserData.EmailAddress;
+                            UserData.IsLockedOut = cachedUserData.IsLockedOut;
+                            UserData.IsDisabled = cachedUserData.IsDisabled;
+                            UserData.Roles.AddRange(cachedUserData.Roles);
+                            UserData.Groups.AddRange(cachedUserData.Groups);
+
+                            // If domain is offline, a password change cannot be initiated
+                            UserData.PasswordChangeDateTime = DateTime.MaxValue;
+                            UserData.AccountCreatedDateTime = cachedUserData.AccountCreatedDateTime;
+                        }
                         else
                         {
-                            // Attempt to load previously cached user information when domain is offline
-                            UserData cachedUserData = userDataCache[UserData.LoginID];
-                            if (cachedUserData != null)
-                            {
-                                // Copy relevant cached user information
-                                UserData.FirstName = cachedUserData.FirstName;
-                                UserData.LastName = cachedUserData.LastName;
-                                UserData.CompanyName = cachedUserData.CompanyName;
-                                UserData.PhoneNumber = cachedUserData.PhoneNumber;
-                                UserData.EmailAddress = cachedUserData.EmailAddress;
-                                UserData.IsLockedOut = cachedUserData.IsLockedOut;
-                                UserData.IsDisabled = cachedUserData.IsDisabled;
-                                UserData.Roles.AddRange(cachedUserData.Roles);
-                                UserData.Groups.AddRange(cachedUserData.Groups);
-
-                                // If domain is offline, a password change cannot be initiated
-                                UserData.PasswordChangeDateTime = DateTime.MaxValue;
-                                UserData.AccountCreatedDateTime = cachedUserData.AccountCreatedDateTime;
-                            }
-                            else
-                            {
-                                // No previous user data was cached but Windows allowed authentication, so all we know is that user exists
-                                UserData.IsLockedOut = false;
-                                UserData.IsDisabled = false;
-                                UserData.PasswordChangeDateTime = DateTime.MaxValue;
-                                UserData.AccountCreatedDateTime = DateTime.MinValue;
-                            }
+                            // No previous user data was cached but Windows allowed authentication, so all we know is that user exists
+                            UserData.IsLockedOut = false;
+                            UserData.IsDisabled = false;
+                            UserData.PasswordChangeDateTime = DateTime.MaxValue;
+                            UserData.AccountCreatedDateTime = DateTime.MinValue;
                         }
                     }
                 }
@@ -564,6 +688,9 @@ namespace TVA.Security
             {
                 if (user != null)
                     user.Dispose();
+
+                if (userDataCache != null)
+                    userDataCache.Dispose();
             }
         }
 

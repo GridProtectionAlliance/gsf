@@ -19,6 +19,9 @@
 //  08/12/2011 - J. Ritchie Carroll
 //       Modifed static GetCurrentCache to accept settings category of host security provider
 //       implementation in case the category has been changed from the default value by the consumer.
+//  08/16/2011 - Pinal C. Patel
+//       Modified GetCurrentCache() to just set the FileName property and not the RetryDelayInterval, 
+//       MaximumRetryAttempts, ReloadOnChange and AutoSave properties.
 //
 //*******************************************************************************************************
 
@@ -262,7 +265,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using TVA.Collections;
-using TVA.Configuration;
 using TVA.IO;
 using TVA.Security.Cryptography;
 using TVA.Threading;
@@ -494,46 +496,22 @@ namespace TVA.Security
         /// <summary>
         /// Loads the <see cref="UserDataCache"/> for the current local user.
         /// </summary>
-        /// <param name="settingsCategory">The security provider configuration file settings category.</param>
         /// <param name="providerID">Unique security provider ID used to distinguish cached user data that may be different based on provider.</param>
         /// <returns>Loaded instance of the <see cref="UserDataCache"/>.</returns>
-        public static UserDataCache GetCurrentCache(string settingsCategory, int providerID)
+        public static UserDataCache GetCurrentCache(int providerID)
         {
             // By default user data cache is stored in a path where user will have rights
             UserDataCache userDataCache;
-            string userCacheFolder = FilePath.AddPathSuffix(FilePath.GetApplicationDataFolder());
-            string userCacheFileName = userCacheFolder + FilePath.GetFileName(DefaultCacheFileName);
-            double retryDelayInterval = DefaultRetryDelayInterval;
-            int maximumRetryAttempts = DefaultMaximumRetryAttempts;
-
-            // Load user data cache settings
-            ConfigurationFile config = ConfigurationFile.Current;
-            CategorizedSettingsElementCollection settings = config.Settings[settingsCategory];
-
-            // Add default values if they do not exist
-            settings.Add("CacheRetryDelayInterval", retryDelayInterval, "Wait interval, in milliseconds, before retrying load of user data cache.");
-            settings.Add("CacheMaximumRetryAttempts", maximumRetryAttempts, "Maximum retry attempts allowed for loading user data cache.");
-
-            // Get current settings
-            retryDelayInterval = settings["CacheRetryDelayInterval"].ValueAs(retryDelayInterval);
-            maximumRetryAttempts = settings["CacheMaximumRetryAttempts"].ValueAs(maximumRetryAttempts);
+            string userCacheFolder = FilePath.GetApplicationDataFolder();
+            string userCacheFileName = Path.Combine(userCacheFolder, FilePath.GetFileName(DefaultCacheFileName));
 
             // Make sure user directory exists
             if (!Directory.Exists(userCacheFolder))
                 Directory.CreateDirectory(userCacheFolder);
 
             // Initialize user data cache for current local user
-            userDataCache = new UserDataCache(providerID)
-            {
-                FileName = userCacheFileName,
-                RetryDelayInterval = retryDelayInterval,
-                MaximumRetryAttempts = maximumRetryAttempts,
-                ReloadOnChange = true,
-                AutoSave = true
-            };
-
-            // Load initial user data
-            userDataCache.Load();
+            userDataCache = new UserDataCache(providerID);
+            userDataCache.FileName = userCacheFileName;
 
             return userDataCache;
         }

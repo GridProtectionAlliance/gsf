@@ -797,7 +797,7 @@ namespace TVA.Identity
                                 long maxPasswordAge = MaximumPasswordAge;
 
                                 // Ignore extremes
-                                if (maxPasswordAge >= 0 && maxPasswordAge != long.MaxValue)
+                                if (maxPasswordAge != long.MaxValue)
                                     passwordChangeDate = DateTime.FromFileTime(passwordSetOn).AddDays(TimeSpan.FromTicks(maxPasswordAge).Duration().Days);
                             }
                         }

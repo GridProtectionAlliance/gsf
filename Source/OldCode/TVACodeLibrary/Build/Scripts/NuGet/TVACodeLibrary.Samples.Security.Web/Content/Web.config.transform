@@ -19,6 +19,8 @@
         encrypted="false" />
       <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages."
         encrypted="false" />
+      <add name="EnableOfflineCaching" value="False" description="True to enable caching of user information for authentication in offline state, otherwise False."
+        encrypted="false" />
       <add name="CacheRetryDelayInterval" value="200" description="Wait interval, in milliseconds, before retrying load of user data cache."
         encrypted="false" />
       <add name="CacheMaximumRetryAttempts" value="10" description="Maximum retry attempts allowed for loading user data cache."
