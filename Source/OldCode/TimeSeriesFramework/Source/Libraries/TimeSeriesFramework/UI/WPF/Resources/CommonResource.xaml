@@ -268,9 +268,6 @@
     
     <util:MenuItemStyleSelector x:Key="MenuItemStyleSelector"/>
 
-    <!-- Replace this one with ObjectToVisibilityConverter -->
-    <conv:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-
     <conv:NotConverter x:Key="NotConverter"/>
     <conv:DictionaryToKeyValuePairConverter x:Key="DictionaryToKeyValuePairConverter"/>    
     <conv:ObjectToVisibilityConverter x:Key="ObjectToVisibilityConverter" />

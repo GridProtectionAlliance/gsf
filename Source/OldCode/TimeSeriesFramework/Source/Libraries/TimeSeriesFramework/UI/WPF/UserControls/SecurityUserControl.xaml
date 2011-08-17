@@ -205,10 +205,10 @@
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Description" />
                     <TextBox Grid.Row="1" Grid.Column="1" Text="{tsfBinding:Column Path=Description}" TextWrapping="Wrap" Height="70"/>
 
-                    <Grid Grid.Row="0" Grid.Column="2" Grid.RowSpan="2" Visibility="{Binding Path=DataContext.CanDelete, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=GroupBox}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Grid Grid.Row="0" Grid.Column="2" Grid.RowSpan="2" Visibility="{Binding Path=DataContext.CanDelete, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=GroupBox}, Converter={StaticResource ObjectToVisibilityConverter}}">
                         
                         <!--<Grid.Visibility>
-                            <Binding Path="DataContext.CanDelete" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=GroupBox}" Converter="{StaticResource BooleanToVisibilityConverter}">
+                            <Binding Path="DataContext.CanDelete" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=GroupBox}" Converter="{StaticResource ObjectToVisibilityConverter}">
                                 <Binding.ConverterParameter>
                                     <sys:Boolean>True</sys:Boolean>
                                 </Binding.ConverterParameter>

@@ -128,7 +128,7 @@
                         </StackPanel.Resources>
                         
                         <TextBox Name="ParameterValueTextBox" Height="{StaticResource XSmallItemSize}" Text="{tsfBinding:Column Path=Value}" TextWrapping="Wrap"
-                                 Visibility="{Binding Path=IsOther, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                 Visibility="{Binding Path=IsOther, Converter={StaticResource ObjectToVisibilityConverter}}" />
                         
                         <StackPanel>
                             <StackPanel.Style>
@@ -142,13 +142,13 @@
                             </StackPanel.Style>
 
                             <StackPanel Margin="5" Width="{Binding ElementName=ParameterValueTextBox, Path=Width}" Height="{Binding ElementName=ParameterValueTextBox, Path=Height}"
-                                        Visibility="{Binding Path=IsBoolean, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        Visibility="{Binding Path=IsBoolean, Converter={StaticResource ObjectToVisibilityConverter}}">
                                 <RadioButton Content="True" GroupName="BooleanParameter" IsChecked="{Binding Path=Value}" />
                                 <RadioButton Content="False" GroupName="BooleanParameter" IsChecked="{Binding Mode=OneWay, Path=IsFalseChecked}" />
                             </StackPanel>
                             
                             <StackPanel Margin="5" Height="{Binding ElementName=ParameterValueTextBox, Path=Height}"
-                                        Visibility="{Binding Path=IsEnum, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        Visibility="{Binding Path=IsEnum, Converter={StaticResource ObjectToVisibilityConverter}}">
                                 <ComboBox ItemsSource="{Binding Source={StaticResource EnumValues}}" SelectedItem="{Binding Path=Value}" />
                             </StackPanel>
                         </StackPanel>

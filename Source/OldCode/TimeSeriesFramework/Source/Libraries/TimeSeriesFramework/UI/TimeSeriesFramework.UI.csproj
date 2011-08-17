@@ -103,15 +103,12 @@
     <Compile Include="Binding\DataOperation.cs" />
     <Compile Include="Binding\GridButtonCommand.cs" />
     <Compile Include="CommonFunctions.cs" />
-    <Compile Include="Converters\BooleanToVisibilityConverter.cs" />
     <Compile Include="Converters\DictionaryToKeyValuePairConverter.cs" />
     <Compile Include="Converters\NotConverter.cs" />
     <Compile Include="Converters\ObjectToVisibilityConverter.cs" />
     <Compile Include="Converters\RoleBasedVisibilityConverter.cs" />
     <Compile Include="Converters\StringToBooleanConverter.cs" />
-    <Compile Include="Converters\StringToColorConverter.cs" />
     <Compile Include="Converters\StringToStatusColorConverter.cs" />
-    <Compile Include="Converters\StringToSymbolConverter.cs" />
     <Compile Include="DataModelBase.cs" />
     <Compile Include="DataModels\Adapter.cs" />
     <Compile Include="DataModels\ApplicationRole.cs" />
