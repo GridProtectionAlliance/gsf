@@ -359,6 +359,21 @@ namespace TVA.Web
 
         #endregion
 
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets the current <see cref="HttpApplication"/> instance.
+        /// </summary>
+        protected HttpApplication Application
+        {
+            get 
+            {
+                return m_application;
+            }
+        }
+
+        #endregion
+
         #region [ Methods ]
 
         /// <summary>
