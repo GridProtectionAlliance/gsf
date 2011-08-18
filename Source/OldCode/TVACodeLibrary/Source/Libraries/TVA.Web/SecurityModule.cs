@@ -28,6 +28,8 @@
 //       Made the referral URL passed to SecurityPortal.aspx page relative so redirection work correctly
 //       when reverse proxy is involved where requested URL that the web server sees is different than 
 //       what the user requested.
+//  08/18/2011 - Pinal C. Patel
+//       Made Redirect() overridable by deriving classes to control the redirection behavior.
 //
 //*******************************************************************************************************
 
@@ -248,6 +250,7 @@
 #endregion
 
 using System;
+using System.Net;
 using System.Web;
 using System.Web.Configuration;
 using System.Web.Hosting;
@@ -384,6 +387,36 @@ namespace TVA.Web
         }
 
         /// <summary>
+        /// Redirects the client browser based on the specified <paramref name="statusCode"/>
+        /// </summary>
+        /// <param name="statusCode"><see cref="HttpStatusCode"/> to be used for the redirect.</param>
+        protected virtual void Redirect(int statusCode)
+        {
+            if (m_application.Context.IsCustomErrorEnabled)
+            {
+                // Defer redirect to customErrors settings in the config file to allow for custom error pages.
+                ConfigurationFile configFile = ConfigurationFile.Current;
+                CustomErrorsSection customErrors = configFile.Configuration.GetSection("system.web/customErrors") as CustomErrorsSection;
+                if (customErrors != null && customErrors.Errors[statusCode.ToString()] != null)
+                {
+                    // Set status code for the response.
+                    m_application.Context.Response.StatusCode = statusCode;
+                    // Throw exception for ASP.NET pipeline to takeover processing.
+                    throw new HttpException(statusCode, string.Format("Security exception (HTTP status code: {0})", statusCode));
+                }
+            }
+
+            // Abruptly ending the processing caused by a redirect does not work well when processing static content.
+            string redirectUrl = string.Format("~/SecurityPortal.aspx?s={0}&r={1}", statusCode, HttpUtility.UrlEncode(VirtualPathUtility.ToAppRelative(m_application.Request.Url.PathAndQuery)));
+            if (m_application.Context.Handler is DefaultHttpHandler)
+                // Accessed resource is static.
+                m_application.Context.Response.Redirect(redirectUrl, false);
+            else
+                // Accessed resource is dynamic.
+                m_application.Context.Response.Redirect(redirectUrl, true);
+        }
+
+        /// <summary>
         /// Gets the name of resource being accessed.
         /// </summary>
         /// <returns><see cref="HttpApplication.Request"/>.<see cref="HttpRequest.Url"/>.<see cref="Uri.PathAndQuery"/> property value.</returns>
@@ -453,32 +486,6 @@ namespace TVA.Web
                 !SecurityProviderUtility.IsResourceAccessible(resource))
                 // User does not have access to the resource.
                 Redirect(403);
-        }
-
-        private void Redirect(int statusCode)
-        {
-            if (m_application.Context.IsCustomErrorEnabled)
-            {
-                // Defer redirect to customErrors settings in the config file to allow for custom error pages.
-                ConfigurationFile configFile = ConfigurationFile.Current;
-                CustomErrorsSection customErrors = configFile.Configuration.GetSection("system.web/customErrors") as CustomErrorsSection;
-                if (customErrors != null && customErrors.Errors[statusCode.ToString()] != null)
-                {
-                    // Set status code for the response.
-                    m_application.Context.Response.StatusCode = statusCode;
-                    // Throw exception for ASP.NET pipeline to takeover processing.
-                    throw new HttpException(statusCode, string.Format("Security exception (HTTP status code: {0})", statusCode));
-                }
-            }
-
-            // Abruptly ending the processing caused by a redirect does not work well when processing static content.
-            string redirectUrl = string.Format("~/SecurityPortal.aspx?s={0}&r={1}", statusCode, HttpUtility.UrlEncode(VirtualPathUtility.ToAppRelative(m_application.Request.Url.PathAndQuery)));
-            if (m_application.Context.Handler is DefaultHttpHandler)
-                // Accessed resource is static.
-                m_application.Context.Response.Redirect(redirectUrl, false);
-            else
-                // Accessed resource is dynamic.
-                m_application.Context.Response.Redirect(redirectUrl, true);
         }
 
         #endregion
