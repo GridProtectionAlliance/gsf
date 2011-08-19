@@ -30,6 +30,8 @@
 //       what the user requested.
 //  08/18/2011 - Pinal C. Patel
 //       Made Redirect() overridable by deriving classes to control the redirection behavior.
+//  08/19/2011 - Pinal C. Patel
+//       Changed the type input parameter for Redirect() from int to HttpStatusCode.
 //
 //*******************************************************************************************************
 
@@ -402,11 +404,12 @@ namespace TVA.Web
         }
 
         /// <summary>
-        /// Redirects the client browser based on the specified <paramref name="statusCode"/>
+        /// Redirects the client browser based on the specified <paramref name="httpStatusCode"/>
         /// </summary>
-        /// <param name="statusCode"><see cref="HttpStatusCode"/> to be used for the redirect.</param>
-        protected virtual void Redirect(int statusCode)
+        /// <param name="httpStatusCode"><see cref="HttpStatusCode"/> to be used for the redirect.</param>
+        protected virtual void Redirect(HttpStatusCode httpStatusCode)
         {
+            int statusCode = (int)httpStatusCode;
             if (m_application.Context.IsCustomErrorEnabled)
             {
                 // Defer redirect to customErrors settings in the config file to allow for custom error pages.
@@ -495,12 +498,12 @@ namespace TVA.Web
 
             if (!m_application.User.Identity.IsAuthenticated)
                 // Failed to authenticate user.
-                Redirect(401);
+                Redirect(HttpStatusCode.Unauthorized);
 
             if (IsAccessRestricted() || 
                 !SecurityProviderUtility.IsResourceAccessible(resource))
                 // User does not have access to the resource.
-                Redirect(403);
+                Redirect(HttpStatusCode.Forbidden);
         }
 
         #endregion
