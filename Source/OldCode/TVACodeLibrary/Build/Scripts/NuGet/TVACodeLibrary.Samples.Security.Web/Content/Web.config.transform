@@ -12,7 +12,7 @@
         description="The type to be used for enforcing security." encrypted="false" />
       <add name="IncludedResources" value="*/*=*" description="Semicolon delimited list of resources to be secured along with role names."
         encrypted="false" />
-      <add name="ExcludedResources" value="*/eurl.axd*;*/WebResource.axd*;*/SecurityPortal.aspx*"
+      <add name="ExcludedResources" value="/;*/WebResource.axd*;*/SecurityPortal.aspx*"
         description="Semicolon delimited list of resources to be excluded from being secured."
         encrypted="false" />
       <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
