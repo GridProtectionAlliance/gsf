@@ -35,6 +35,7 @@ namespace TimeSeriesFramework
     /// <summary>
     /// Implementation of a basic measurement.
     /// </summary>
+    [Serializable()]
     public class Measurement : IMeasurement
     {
         #region [ Members ]
