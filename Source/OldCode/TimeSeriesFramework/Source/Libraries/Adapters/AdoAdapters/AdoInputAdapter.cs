@@ -26,12 +26,14 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Timers;
+using System.Threading;
 using TimeSeriesFramework;
 using TimeSeriesFramework.Adapters;
 using TVA;
+using TVA.IO;
 
 namespace AdoAdapters
 {
@@ -41,7 +43,6 @@ namespace AdoAdapters
     [Description("ADO: reads measurements from any ADO data source (e.g., OSI-PI via ODBC).")]
     public class AdoInputAdapter : InputAdapterBase
     {
-
         #region [ Members ]
 
         // Fields
@@ -52,11 +53,12 @@ namespace AdoAdapters
         private string m_timestampFormat;
         private int m_framesPerSecond;
         private bool m_simulateTimestamps;
-
         private IList<IMeasurement> m_dbMeasurements;
-        private Timer m_timer;
+        private string m_cacheFileName;
         private int m_nextIndex;
-        private bool m_disposed;
+        private int m_frameWindowSize;
+        private int[] m_frameMilliseconds;
+        private int m_lastFrameIndex;
 
         #endregion
 
@@ -69,7 +71,6 @@ namespace AdoAdapters
         {
             m_fieldNames = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
             m_dbMeasurements = new List<IMeasurement>();
-            m_timer = new Timer();
         }
 
         #endregion
@@ -186,6 +187,23 @@ namespace AdoAdapters
         }
 
         /// <summary>
+        /// Gets or sets a cache file name so that when defined, future data loads will be from cache instead of the database as an optimization.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines a cache file name so that when defined, future data loads will be from cache instead of the database as an optimization.")]
+        public string CacheFileName
+        {
+            get
+            {
+                return m_cacheFileName;
+            }
+            set
+            {
+                m_cacheFileName = value;
+            }
+        }
+
+        /// <summary>
         /// Gets a flag that determines if this <see cref="AdoInputAdapter"/>
         /// uses an asynchronous connection.
         /// </summary>
@@ -248,13 +266,14 @@ namespace AdoAdapters
             else
                 m_simulateTimestamps = true;
 
-            // Set up the timer to trigger inputs.
-            m_timer.Interval = 1000.0 / m_framesPerSecond;
-            m_timer.AutoReset = true;
-            m_timer.Elapsed += Timer_Elapsed;
+            // Load cache file name, if defined
+            settings.TryGetValue("cacheFileName", out m_cacheFileName);
+
+            if (m_cacheFileName != null)
+                m_cacheFileName = FilePath.GetAbsolutePath(m_cacheFileName);
 
             // Get measurements from the database.
-            GetDbMeasurements();
+            ThreadPool.QueueUserWorkItem(GetDbMeasurements);
         }
 
         /// <summary>
@@ -262,7 +281,7 @@ namespace AdoAdapters
         /// </summary>
         protected override void AttemptConnection()
         {
-            m_timer.Start();
+            //m_timer.Start();
         }
 
         /// <summary>
@@ -270,7 +289,7 @@ namespace AdoAdapters
         /// </summary>
         protected override void AttemptDisconnection()
         {
-            m_timer.Stop();
+            //m_timer.Stop();
         }
 
         /// <summary>
@@ -283,48 +302,20 @@ namespace AdoAdapters
             return string.Format("{0} measurements read from database.", ProcessedMeasurements).CenterText(maxLength);
         }
 
-        /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="AdoInputAdapter"/> object and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        if (m_timer != null)
-                        {
-                            m_timer.Elapsed -= Timer_Elapsed;
-                            m_timer.Dispose();
-                        }
-                        m_timer = null;
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
-                }
-            }
-        }
-
         // Gets the database field names specified by the user in the connection string.
         private void GetFieldNames(Dictionary<string, string> settings)
         {
-            IEnumerable<string> measurementProperties = typeof(IMeasurement).GetProperties().Select(property => property.Name);
+            IEnumerable<string> measurementProperties = GetAllProperties(typeof(IMeasurement)).Select(property => property.Name);
             StringComparison ignoreCase = StringComparison.CurrentCultureIgnoreCase;
 
             // Parse database field names from the connection string.
-            foreach (string key in Settings.Keys)
+            foreach (string key in settings.Keys)
             {
                 if (key.EndsWith("FieldName", ignoreCase))
                 {
                     int fieldNameIndex = key.LastIndexOf("FieldName", ignoreCase);
                     string subKey = key.Substring(0, fieldNameIndex);
-                    string propertyName = measurementProperties.SingleOrDefault(name => name.Equals(subKey, ignoreCase));
+                    string propertyName = measurementProperties.FirstOrDefault(name => name.Equals(subKey, ignoreCase));
                     string fieldName = settings[key];
 
                     if (propertyName != null)
@@ -344,75 +335,170 @@ namespace AdoAdapters
         }
 
         // Retrieves the measurements from the database.
-        private void GetDbMeasurements()
+        private void GetDbMeasurements(object state)
         {
-            Dictionary<string, string> dataProviderSettings = m_dataProviderString.ParseKeyValuePairs();
-            Assembly assm = Assembly.Load(dataProviderSettings["AssemblyName"]);
-            Type connectionType = assm.GetType(dataProviderSettings["ConnectionType"]);
             IDbConnection connection = null;
 
             // Get measurements from the database.
             try
             {
-                IDbCommand command;
-                IDataReader dbReader;
+                long startTime = PrecisionTimer.UtcNow.Ticks;
 
-                connection = (IDbConnection)Activator.CreateInstance(connectionType);
-                connection.ConnectionString = m_dbConnectionString;
-                connection.Open();
-
-                command = connection.CreateCommand();
-                command.CommandText = string.Format("SELECT * FROM {0}", m_dbTableName);
-
-                dbReader = command.ExecuteReader();
-
-                while (dbReader.Read())
+                if (m_cacheFileName != null && File.Exists(m_cacheFileName))
                 {
-                    IMeasurement measurement = new Measurement();
+                    OnStatusMessage("Loading cached data...");
+                    Stream data = File.OpenRead(m_cacheFileName);
+                    m_dbMeasurements = Serialization.Deserialize<IList<IMeasurement>>(data, TVA.SerializationFormat.Binary);
+                    data.Close();
+                }
+                else
+                {
+                    const string MeasurementTable = "ActiveMeasurements";
 
-                    foreach (string fieldName in m_fieldNames.Keys)
+                    Dictionary<string, string> dataProviderSettings = m_dataProviderString.ParseKeyValuePairs();
+                    Assembly assm = Assembly.Load(dataProviderSettings["AssemblyName"]);
+                    Type connectionType = assm.GetType(dataProviderSettings["ConnectionType"]);
+
+                    Dictionary<Guid, MeasurementKey> lookupCache = new Dictionary<Guid, MeasurementKey>();
+                    IDbCommand command;
+                    IDataReader dbReader;
+                    MeasurementKey key;
+                    Guid id;
+
+                    connection = (IDbConnection)Activator.CreateInstance(connectionType);
+                    connection.ConnectionString = m_dbConnectionString;
+                    connection.Open();
+
+                    command = connection.CreateCommand();
+                    command.CommandText = string.Format("SELECT * FROM {0}", m_dbTableName);
+
+                    OnStatusMessage("Loading input data...");
+
+                    dbReader = command.ExecuteReader();
+
+                    while (dbReader.Read())
                     {
-                        object value = dbReader[fieldName];
-                        string propertyName = m_fieldNames[fieldName];
+                        Measurement measurement = new Measurement();
 
-                        if (propertyName == "Timestamp")
+                        foreach (string fieldName in m_fieldNames.Keys)
                         {
-                            // If the value is a timestamp, use the timestamp format
-                            // specified by the user when reading the timestamp.
-                            if (m_timestampFormat == null)
-                                measurement.Timestamp = long.Parse(value.ToNonNullString());
-                            else
-                                measurement.Timestamp = DateTime.ParseExact(value.ToNonNullString(), m_timestampFormat, CultureInfo.CurrentCulture);
-                        }
-                        else
-                        {
-                            PropertyInfo property = typeof(IMeasurement).GetProperty(propertyName);
-                            Type propertyType = property.PropertyType;
-                            Type valueType = value.GetType();
+                            object value = dbReader[fieldName];
+                            string propertyName = m_fieldNames[fieldName];
 
-                            if (property.PropertyType.IsAssignableFrom(value.GetType()))
-                                property.SetValue(measurement, value, null);
-                            else if (property.PropertyType == typeof(string))
-                                property.SetValue(measurement, value.ToNonNullString(), null);
-                            else if (valueType == typeof(string))
+                            switch (propertyName)
                             {
-                                MethodInfo parseMethod = valueType.GetMethod("Parse", new Type[] { typeof(string) });
+                                case "Timestamp":
+                                    // If the value is a timestamp, use the timestamp format
+                                    // specified by the user when reading the timestamp.
+                                    if (m_timestampFormat == null)
+                                        measurement.Timestamp = long.Parse(value.ToNonNullString());
+                                    else
+                                        measurement.Timestamp = DateTime.ParseExact(value.ToNonNullString(), m_timestampFormat, CultureInfo.CurrentCulture);
+                                    break;
+                                case "ID":
+                                    if (Guid.TryParse(value.ToString(), out id))
+                                    {
+                                        if (!lookupCache.TryGetValue(id, out key))
+                                        {
+                                            if (DataSource.Tables.Contains(MeasurementTable))
+                                            {
+                                                DataRow[] filteredRows = DataSource.Tables[MeasurementTable].Select(string.Format("SignalID = '{0}'", id));
 
-                                if (parseMethod != null && parseMethod.IsStatic)
-                                    property.SetValue(measurement, parseMethod.Invoke(null, new object[] { value }), null);
-                            }
-                            else
-                            {
-                                string exceptionMessage = string.Format("The type of field {0} could not be converted to the type of property {1}.", fieldName, propertyName);
-                                OnProcessException(new InvalidCastException(exceptionMessage));
+                                                if (filteredRows.Length > 0)
+                                                    MeasurementKey.TryParse(filteredRows[0]["ID"].ToString(), id, out key);
+                                            }
+                                        }
+
+                                        measurement.ID = id;
+                                        measurement.Key = key;
+                                    }
+                                    break;
+                                case "Key":
+                                    if (MeasurementKey.TryParse(value.ToString(), Guid.Empty, out key))
+                                    {
+                                        // Attempt to update empty signal ID if available
+                                        if (key.SignalID == Guid.Empty)
+                                        {
+                                            if (DataSource.Tables.Contains(MeasurementTable))
+                                            {
+                                                DataRow[] filteredRows = DataSource.Tables[MeasurementTable].Select(string.Format("ID = '{0}'", key.ToString()));
+
+                                                if (filteredRows.Length > 0)
+                                                    key.SignalID = filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
+                                            }
+                                        }
+
+                                        measurement.ID = key.SignalID;
+                                        measurement.Key = key;
+                                    }
+                                    break;
+                                case "Value":
+                                    measurement.Value = Convert.ToDouble(value);
+                                    break;
+                                default:
+                                    PropertyInfo property = GetAllProperties(typeof(IMeasurement)).FirstOrDefault(propertyInfo => propertyInfo.Name == propertyName);
+
+                                    if (property != null)
+                                    {
+                                        Type propertyType = property.PropertyType;
+                                        Type valueType = value.GetType();
+
+                                        if (property.PropertyType.IsAssignableFrom(value.GetType()))
+                                        {
+                                            property.SetValue(measurement, value, null);
+                                        }
+                                        else if (property.PropertyType == typeof(string))
+                                        {
+                                            property.SetValue(measurement, value.ToNonNullString(), null);
+                                        }
+                                        else if (valueType == typeof(string))
+                                        {
+                                            MethodInfo parseMethod = valueType.GetMethod("Parse", new Type[] { typeof(string) });
+
+                                            if (parseMethod != null && parseMethod.IsStatic)
+                                                property.SetValue(measurement, parseMethod.Invoke(null, new object[] { value }), null);
+                                        }
+                                        else
+                                        {
+                                            string exceptionMessage = string.Format("The type of field {0} could not be converted to the type of property {1}.", fieldName, propertyName);
+                                            OnProcessException(new InvalidCastException(exceptionMessage));
+                                        }
+                                    }
+                                    else
+                                    {
+                                        string exceptionMessage = string.Format("The type of field {0} could not be converted to the type of property {1} - no property match was found.", fieldName, propertyName);
+                                        OnProcessException(new InvalidCastException(exceptionMessage));
+                                    }
+                                    break;
                             }
                         }
+
+                        m_dbMeasurements.Add(measurement);
+
+                        if (m_dbMeasurements.Count % 50000 == 0)
+                            OnStatusMessage("Loaded {0} records so far...", m_dbMeasurements.Count);
                     }
 
-                    m_dbMeasurements.Add(measurement);
+                    OnStatusMessage("Sorting data by time...");
+
+                    m_dbMeasurements = m_dbMeasurements.OrderBy(m => (long)m.Timestamp).ToList();
+
+                    if (m_cacheFileName != null)
+                    {
+                        OnStatusMessage("Caching data for next initialization...");
+                        Stream data = File.OpenWrite(m_cacheFileName);
+                        Serialization.Serialize(m_dbMeasurements, TVA.SerializationFormat.Binary, ref data);
+                        data.Close();
+                    }
                 }
 
-                m_dbMeasurements = m_dbMeasurements.OrderBy(m => (long)m.Timestamp).ToList();
+                OnStatusMessage("Completed data load in {0}, entering data read cycle...", ((Ticks)(PrecisionTimer.UtcNow.Ticks - startTime)).ToElapsedTimeString(4));
+
+                ThreadPool.QueueUserWorkItem(PublishData);
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException("Failed during data load: " + ex.Message, ex));
             }
             finally
             {
@@ -421,28 +507,88 @@ namespace AdoAdapters
             }
         }
 
-        // Publishes the next frame of measurements.
-        private void Timer_Elapsed(object sender, ElapsedEventArgs e)
+        private PropertyInfo[] GetAllProperties(Type type)
         {
-            long nowTicks = DateTime.UtcNow.Ticks;
-            long timeTicks = m_dbMeasurements[m_nextIndex].Timestamp;
-            List<IMeasurement> measurements = new List<IMeasurement>();
+            List<Type> typeList = new List<Type>();
+            typeList.Add(type);
 
-            while (m_nextIndex < m_dbMeasurements.Count && m_dbMeasurements[m_nextIndex].Timestamp == timeTicks)
+            if (type.IsInterface)
             {
-                IMeasurement clone = Measurement.Clone(m_dbMeasurements[m_nextIndex]);
-
-                if (m_simulateTimestamps)
-                    clone.Timestamp = nowTicks;
-
-                measurements.Add(clone);
-                m_nextIndex++;
+                typeList.AddRange(type.GetInterfaces());
             }
 
-            if (m_nextIndex == m_dbMeasurements.Count)
-                m_nextIndex = 0;
+            List<PropertyInfo> propertyList = new List<PropertyInfo>();
 
-            OnNewMeasurements(measurements);
+            foreach (Type interfaceType in typeList)
+            {
+                foreach (PropertyInfo property in interfaceType.GetProperties())
+                {
+                    propertyList.Add(property);
+                }
+            }
+
+            return propertyList.ToArray();
+        }
+
+        // Publishes the frame measurements.
+        private void PublishData(object state)
+        {
+            m_frameWindowSize = (int)Math.Round(1000.0D / m_framesPerSecond) * 2;
+            m_frameMilliseconds = new int[m_framesPerSecond];
+
+            for (int frameIndex = 0; frameIndex < m_framesPerSecond; frameIndex++)
+            {
+                m_frameMilliseconds[frameIndex] = (int)(1.0D / m_framesPerSecond * (frameIndex * 1000.0D));
+            }
+
+            while (Enabled)
+            {
+                DateTime now = PrecisionTimer.UtcNow;
+                long timeTicks = m_dbMeasurements[m_nextIndex].Timestamp;
+
+                List<IMeasurement> measurements = new List<IMeasurement>();
+                int frameMilliseconds, milliseconds = now.Millisecond;
+
+                // Make sure current time is reasonably close to current frame index
+                if (Math.Abs(milliseconds - m_frameMilliseconds[m_lastFrameIndex]) > m_frameWindowSize)
+                    m_lastFrameIndex = 0;
+
+                // See if it is time to publish
+                for (int frameIndex = m_lastFrameIndex; frameIndex < m_frameMilliseconds.Length; frameIndex++)
+                {
+                    frameMilliseconds = m_frameMilliseconds[frameIndex];
+
+                    if (frameMilliseconds >= milliseconds)
+                    {
+                        long nowTicks = now.BaselinedTimestamp(BaselineTimeInterval.Second).AddMilliseconds(frameMilliseconds).Ticks;
+
+                        while (m_nextIndex < m_dbMeasurements.Count && m_dbMeasurements[m_nextIndex].Timestamp == timeTicks)
+                        {
+                            Measurement clone = Measurement.Clone(m_dbMeasurements[m_nextIndex]);
+
+                            if (m_simulateTimestamps)
+                                clone.Timestamp = nowTicks;
+
+                            measurements.Add(clone);
+                            m_nextIndex++;
+                        }
+
+                        OnNewMeasurements(measurements);
+
+                        // Prepare index for next check, time moving forward
+                        if (m_nextIndex == m_dbMeasurements.Count)
+                            m_nextIndex = 0;
+
+                        m_lastFrameIndex = frameIndex + 1;
+
+                        if (m_lastFrameIndex >= m_frameMilliseconds.Length)
+                            m_lastFrameIndex = 0;
+                        break;
+                    }
+                }
+
+                Thread.Sleep(1);
+            }
         }
 
         #endregion
