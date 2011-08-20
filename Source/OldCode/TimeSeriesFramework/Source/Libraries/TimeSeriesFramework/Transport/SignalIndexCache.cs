@@ -64,10 +64,8 @@ namespace TimeSeriesFramework.Transport
         /// <summary>
         /// Creates a new <see cref="SignalIndexCache"/> instance.
         /// </summary>
-        /// <param name="subscriberID"><see cref="Guid"/> based subscriber ID.</param>
-        public SignalIndexCache(Guid subscriberID)
+        public SignalIndexCache()
         {
-            m_subscriberID = subscriberID;
             m_reference = new ConcurrentDictionary<ushort, Tuple<Guid, MeasurementKey>>();
         }
 
@@ -114,13 +112,17 @@ namespace TimeSeriesFramework.Transport
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the <see cref="Guid"/> based subscriber ID of this <see cref="SignalIndexCache"/>.
+        /// Gets or sets the <see cref="Guid"/> based subscriber ID of this <see cref="SignalIndexCache"/>.
         /// </summary>
         public Guid SubscriberID
         {
             get
             {
                 return m_subscriberID;
+            }
+            set
+            {
+                m_subscriberID = value;
             }
         }
 

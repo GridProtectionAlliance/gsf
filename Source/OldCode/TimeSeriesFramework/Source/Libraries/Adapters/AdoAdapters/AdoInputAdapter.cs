@@ -32,6 +32,7 @@ using System.Reflection;
 using System.Threading;
 using TimeSeriesFramework;
 using TimeSeriesFramework.Adapters;
+using TimeSeriesFramework.Transport;
 using TVA;
 using TVA.IO;
 
@@ -342,17 +343,86 @@ namespace AdoAdapters
             // Get measurements from the database.
             try
             {
+                SignalIndexCache signalIndexCache = new SignalIndexCache();
+                CompactMeasurement measurement;
                 long startTime = PrecisionTimer.UtcNow.Ticks;
 
                 if (m_cacheFileName != null && File.Exists(m_cacheFileName))
                 {
-                    OnStatusMessage("Loading cached data...");
-                    Stream data = File.OpenRead(m_cacheFileName);
-                    m_dbMeasurements = Serialization.Deserialize<IList<IMeasurement>>(data, TVA.SerializationFormat.Binary);
-                    data.Close();
+                    OnStatusMessage("Loading cached input data...");
+
+                    try
+                    {
+                        using (FileStream data = File.OpenRead(m_cacheFileName))
+                        {
+                            byte[] buffer = new byte[4];
+                            int signalIndexCacheImageSize;
+                            int compactMeasurementSize;
+                            int totalMeasurements;
+
+                            // Read the signal index cache image size from the file
+                            if (data.Read(buffer, 0, 4) != 4)
+                                throw new EndOfStreamException();
+
+                            signalIndexCacheImageSize = EndianOrder.LittleEndian.ToInt32(buffer, 0);
+
+                            // Resize buffer to accomodate exact signal index cache
+                            buffer = new byte[signalIndexCacheImageSize];
+
+                            // Read the signal index cache image from the file
+                            if (data.Read(buffer, 0, signalIndexCacheImageSize) != signalIndexCacheImageSize)
+                                throw new EndOfStreamException();
+
+                            // Deserialize the signal index cache
+                            signalIndexCache = Serialization.Deserialize<SignalIndexCache>(buffer, TVA.SerializationFormat.Binary);
+
+                            // Read the size of each compact measurement from the file
+                            if (data.Read(buffer, 0, 4) != 4)
+                                throw new EndOfStreamException();
+
+                            compactMeasurementSize = EndianOrder.LittleEndian.ToInt32(buffer, 0);
+
+                            // Read the total number of compact measurements from the file
+                            if (data.Read(buffer, 0, 4) != 4)
+                                throw new EndOfStreamException();
+
+                            totalMeasurements = EndianOrder.LittleEndian.ToInt32(buffer, 0);
+
+                            // Resize buffer to accomodate compact measurement if needed (not likely)
+                            if (buffer.Length < compactMeasurementSize)
+                                buffer = new byte[compactMeasurementSize];
+
+                            // Read each compact measurement image from the file
+                            for (int i = 0; i < totalMeasurements; i++)
+                            {
+                                if (data.Read(buffer, 0, compactMeasurementSize) != compactMeasurementSize)
+                                    throw new EndOfStreamException();
+
+                                // Parse compact measurement
+                                measurement = new CompactMeasurement(signalIndexCache);
+                                measurement.Initialize(buffer, 0, compactMeasurementSize);
+
+                                m_dbMeasurements.Add(measurement);
+
+                                if (m_dbMeasurements.Count % 50000 == 0)
+                                    OnStatusMessage("Loaded {0} records so far...", m_dbMeasurements.Count);
+                            }
+
+                            OnStatusMessage("Completed data load in {0}", ((Ticks)(PrecisionTimer.UtcNow.Ticks - startTime)).ToElapsedTimeString(4));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        if (ex is EndOfStreamException)
+                            throw (EndOfStreamException)ex;
+
+                        throw new EndOfStreamException(ex.Message, ex);
+                    }
                 }
                 else
                 {
+                    OnStatusMessage("Loading database input data...");
+
                     const string MeasurementTable = "ActiveMeasurements";
 
                     Dictionary<string, string> dataProviderSettings = m_dataProviderString.ParseKeyValuePairs();
@@ -364,6 +434,7 @@ namespace AdoAdapters
                     IDataReader dbReader;
                     MeasurementKey key;
                     Guid id;
+                    ushort index = 0;
 
                     connection = (IDbConnection)Activator.CreateInstance(connectionType);
                     connection.ConnectionString = m_dbConnectionString;
@@ -372,13 +443,11 @@ namespace AdoAdapters
                     command = connection.CreateCommand();
                     command.CommandText = string.Format("SELECT * FROM {0}", m_dbTableName);
 
-                    OnStatusMessage("Loading input data...");
-
                     dbReader = command.ExecuteReader();
 
                     while (dbReader.Read())
                     {
-                        Measurement measurement = new Measurement();
+                        measurement = new CompactMeasurement(signalIndexCache);
 
                         foreach (string fieldName in m_fieldNames.Keys)
                         {
@@ -411,6 +480,15 @@ namespace AdoAdapters
 
                                         measurement.ID = id;
                                         measurement.Key = key;
+
+                                        if (measurement.Key != default(MeasurementKey) && !lookupCache.ContainsKey(measurement.ID))
+                                        {
+                                            // Cache measurement key associated with ID
+                                            lookupCache[measurement.ID] = key;
+
+                                            // Assign the runtime index optimization for distinct measurements.
+                                            signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(measurement.ID, measurement.Key));
+                                        }
                                     }
                                     break;
                                 case "Key":
@@ -430,6 +508,15 @@ namespace AdoAdapters
 
                                         measurement.ID = key.SignalID;
                                         measurement.Key = key;
+
+                                        if (measurement.ID != default(Guid) && !lookupCache.ContainsKey(measurement.ID))
+                                        {
+                                            // Cache measurement key associated with ID
+                                            lookupCache[measurement.ID] = key;
+
+                                            // Assign the runtime index optimization for distinct measurements.
+                                            signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(measurement.ID, measurement.Key));
+                                        }
                                     }
                                     break;
                                 case "Value":
@@ -483,18 +570,51 @@ namespace AdoAdapters
 
                     m_dbMeasurements = m_dbMeasurements.OrderBy(m => (long)m.Timestamp).ToList();
 
+                    OnStatusMessage("Completed data load in {0}", ((Ticks)(PrecisionTimer.UtcNow.Ticks - startTime)).ToElapsedTimeString(4));
+
                     if (m_cacheFileName != null)
                     {
                         OnStatusMessage("Caching data for next initialization...");
-                        Stream data = File.OpenWrite(m_cacheFileName);
-                        Serialization.Serialize(m_dbMeasurements, TVA.SerializationFormat.Binary, ref data);
-                        data.Close();
+
+                        using (FileStream data = File.OpenWrite(m_cacheFileName))
+                        {
+                            byte[] signalIndexCacheImage = Serialization.Serialize(signalIndexCache, TVA.SerializationFormat.Binary);
+                            int compactMeasurementSize = (new CompactMeasurement(signalIndexCache)).BinaryLength;
+
+                            // Write the signal index cache image size to the file
+                            data.Write(EndianOrder.LittleEndian.GetBytes(signalIndexCacheImage.Length), 0, 4);
+
+                            // Write the signal index cache image to the file
+                            data.Write(signalIndexCacheImage, 0, signalIndexCacheImage.Length);
+
+                            // Write the size of each compact measurement to the file
+                            data.Write(EndianOrder.LittleEndian.GetBytes(compactMeasurementSize), 0, 4);
+
+                            // Write the total number of compact measurements to the file
+                            data.Write(EndianOrder.LittleEndian.GetBytes(m_dbMeasurements.Count), 0, 4);
+
+                            // Write each compact measurement image to the file
+                            for (int i = 0; i < m_dbMeasurements.Count; i++)
+                            {
+                                data.Write(((CompactMeasurement)m_dbMeasurements[i]).BinaryImage, 0, compactMeasurementSize);
+                            }
+                        }
                     }
                 }
 
-                OnStatusMessage("Completed data load in {0}, entering data read cycle...", ((Ticks)(PrecisionTimer.UtcNow.Ticks - startTime)).ToElapsedTimeString(4));
-
+                OnStatusMessage("Entering data read cycle...");
                 ThreadPool.QueueUserWorkItem(PublishData);
+            }
+            catch (EndOfStreamException ex)
+            {
+                OnProcessException(new EndOfStreamException(string.Format("Failed load cached data from {0} due to file corruption{1} cache will be recreated from database", m_cacheFileName, string.IsNullOrWhiteSpace(ex.Message) ? "," : ": " + ex.Message + " - ")));
+
+                // If the cached file is corrupt, delete it and load from the database
+                if (File.Exists(m_cacheFileName))
+                    File.Delete(m_cacheFileName);
+
+                m_dbMeasurements.Clear();
+                GetDbMeasurements(null);
             }
             catch (Exception ex)
             {

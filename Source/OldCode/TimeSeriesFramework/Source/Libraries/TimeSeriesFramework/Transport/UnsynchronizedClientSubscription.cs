@@ -68,7 +68,7 @@ namespace TimeSeriesFramework.Transport
             m_parent = parent;
             m_clientID = clientID;
             m_subscriberID = subscriberID;
-            m_signalIndexCache = new SignalIndexCache(subscriberID);
+            m_signalIndexCache = new SignalIndexCache() { SubscriberID = subscriberID };
         }
 
         #endregion

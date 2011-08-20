@@ -25,10 +25,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using TimeSeriesFramework.Adapters;
 using TVA;
 using TVA.Parsing;
-using System.Text;
 
 namespace TimeSeriesFramework.Transport
 {
@@ -66,7 +66,7 @@ namespace TimeSeriesFramework.Transport
             m_parent = parent;
             m_clientID = clientID;
             m_subscriberID = subscriberID;
-            m_signalIndexCache = new SignalIndexCache(subscriberID);
+            m_signalIndexCache = new SignalIndexCache() { SubscriberID = subscriberID };
         }
 
         #endregion
