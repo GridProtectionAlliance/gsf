@@ -476,19 +476,19 @@ namespace AdoAdapters
                                                 if (filteredRows.Length > 0)
                                                     MeasurementKey.TryParse(filteredRows[0]["ID"].ToString(), id, out key);
                                             }
+
+                                            if (key != default(MeasurementKey))
+                                            {
+                                                // Cache measurement key associated with ID
+                                                lookupCache[id] = key;
+
+                                                // Assign a runtime index optimization for distinct measurements
+                                                signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(id, key));
+                                            }
                                         }
 
                                         measurement.ID = id;
                                         measurement.Key = key;
-
-                                        if (measurement.Key != default(MeasurementKey) && !lookupCache.ContainsKey(measurement.ID))
-                                        {
-                                            // Cache measurement key associated with ID
-                                            lookupCache[measurement.ID] = key;
-
-                                            // Assign the runtime index optimization for distinct measurements.
-                                            signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(measurement.ID, measurement.Key));
-                                        }
                                     }
                                     break;
                                 case "Key":
@@ -506,17 +506,21 @@ namespace AdoAdapters
                                             }
                                         }
 
-                                        measurement.ID = key.SignalID;
-                                        measurement.Key = key;
-
-                                        if (measurement.ID != default(Guid) && !lookupCache.ContainsKey(measurement.ID))
+                                        if (key.SignalID != Guid.Empty)
                                         {
-                                            // Cache measurement key associated with ID
-                                            lookupCache[measurement.ID] = key;
+                                            measurement.ID = key.SignalID;
 
-                                            // Assign the runtime index optimization for distinct measurements.
-                                            signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(measurement.ID, measurement.Key));
+                                            if (!lookupCache.ContainsKey(measurement.ID))
+                                            {
+                                                // Cache measurement key associated with ID
+                                                lookupCache[measurement.ID] = key;
+
+                                                // Assign a runtime index optimization for distinct measurements
+                                                signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(measurement.ID, key));
+                                            }
                                         }
+
+                                        measurement.Key = key;
                                     }
                                     break;
                                 case "Value":
@@ -653,58 +657,44 @@ namespace AdoAdapters
         // Publishes the frame measurements.
         private void PublishData(object state)
         {
-            m_frameWindowSize = (int)Math.Round(1000.0D / m_framesPerSecond) * 2;
-            m_frameMilliseconds = new int[m_framesPerSecond];
-
-            for (int frameIndex = 0; frameIndex < m_framesPerSecond; frameIndex++)
-            {
-                m_frameMilliseconds[frameIndex] = (int)(1.0D / m_framesPerSecond * (frameIndex * 1000.0D));
-            }
+            long now, currentDataTime, publicationTime = 0;
+            long ticksPerFrame = Ticks.PerSecond / m_framesPerSecond;
+            long toleranceWindow = ticksPerFrame / 2;
 
             while (Enabled)
             {
-                DateTime now = PrecisionTimer.UtcNow;
-                long timeTicks = m_dbMeasurements[m_nextIndex].Timestamp;
-
                 List<IMeasurement> measurements = new List<IMeasurement>();
-                int frameMilliseconds, milliseconds = now.Millisecond;
-
-                // Make sure current time is reasonably close to current frame index
-                if (Math.Abs(milliseconds - m_frameMilliseconds[m_lastFrameIndex]) > m_frameWindowSize)
-                    m_lastFrameIndex = 0;
+                now = PrecisionTimer.UtcNow.Ticks;
 
                 // See if it is time to publish
-                for (int frameIndex = m_lastFrameIndex; frameIndex < m_frameMilliseconds.Length; frameIndex++)
+                if (now - publicationTime >= ticksPerFrame)
                 {
-                    frameMilliseconds = m_frameMilliseconds[frameIndex];
+                    // Initialize publication time
+                    if (publicationTime == 0)
+                        publicationTime = ((Ticks)now).BaselinedTimestamp(BaselineTimeInterval.Second);
+                    else
+                        publicationTime += ticksPerFrame;
 
-                    if (frameMilliseconds >= milliseconds)
+                    currentDataTime = m_dbMeasurements[m_nextIndex].Timestamp;
+
+                    // Prepare next frame of data for all measurements with the current time
+                    while (m_nextIndex < m_dbMeasurements.Count && Math.Abs((long)m_dbMeasurements[m_nextIndex].Timestamp - currentDataTime) < toleranceWindow)
                     {
-                        long nowTicks = now.BaselinedTimestamp(BaselineTimeInterval.Second).AddMilliseconds(frameMilliseconds).Ticks;
+                        // Clone the measurement so we can safely update the timestamp
+                        IMeasurement measurement = Measurement.Clone(m_dbMeasurements[m_nextIndex]);
 
-                        while (m_nextIndex < m_dbMeasurements.Count && m_dbMeasurements[m_nextIndex].Timestamp == timeTicks)
-                        {
-                            Measurement clone = Measurement.Clone(m_dbMeasurements[m_nextIndex]);
+                        if (m_simulateTimestamps)
+                            measurement.Timestamp = publicationTime;
 
-                            if (m_simulateTimestamps)
-                                clone.Timestamp = nowTicks;
-
-                            measurements.Add(clone);
-                            m_nextIndex++;
-                        }
-
-                        OnNewMeasurements(measurements);
-
-                        // Prepare index for next check, time moving forward
-                        if (m_nextIndex == m_dbMeasurements.Count)
-                            m_nextIndex = 0;
-
-                        m_lastFrameIndex = frameIndex + 1;
-
-                        if (m_lastFrameIndex >= m_frameMilliseconds.Length)
-                            m_lastFrameIndex = 0;
-                        break;
+                        measurements.Add(measurement);
+                        m_nextIndex++;
                     }
+
+                    OnNewMeasurements(measurements);
+
+                    // Prepare index for next check, time moving forward
+                    if (m_nextIndex == m_dbMeasurements.Count)
+                        m_nextIndex = 0;
                 }
 
                 Thread.Sleep(1);
