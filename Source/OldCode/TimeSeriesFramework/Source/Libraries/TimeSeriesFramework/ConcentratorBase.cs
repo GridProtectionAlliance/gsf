@@ -655,9 +655,19 @@ namespace TimeSeriesFramework
                 if (m_usePrecisionTimer != value)
                 {
                     if (m_usePrecisionTimer)
+                    {
+                        // Unsubscribe from last frame rate timer, if any
                         DetachFromFrameRateTimer(m_framesPerSecond);
+
+                        // Make sure to release publication wait wandle if it's currently waiting...
+                        if (m_publicationWaitHandle != null)
+                            m_publicationWaitHandle.Set();
+                    }
                     else
+                    {
+                        // Subscribe to frame rate timer, creating it if it doesn't exist
                         AttachToFrameRateTimer(m_framesPerSecond);
+                    }
                 }
 
                 m_usePrecisionTimer = value;
