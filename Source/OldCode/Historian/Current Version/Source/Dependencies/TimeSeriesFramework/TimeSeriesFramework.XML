@@ -396,6 +396,11 @@
             Gets reference to the last published <see cref="T:TimeSeriesFramework.IFrame"/>.
             </summary>
         </member>
+        <member name="P:TimeSeriesFramework.ConcentratorBase.UsePrecisionTimer">
+            <summary>
+            Gets or sets flag that determines if precision timer should be used for frame publication.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.ConcentratorBase.FramesPerSecond">
             <summary>
             Gets or sets the number of frames per second.
@@ -2047,6 +2052,57 @@
             can call this method and wait for the adapter intialization to complete before using the adapter.
             </remarks>
         </member>
+        <member name="M:TimeSeriesFramework.Adapters.IAdapter.SetTemporalConstraint(System.String,System.String,System.String)">
+            <summary>
+            Defines a temporal processing constraint for the adapter.
+            </summary>
+            <param name="startTime">Defines a relative or exact start time for the temporal constraint.</param>
+            <param name="stopTime">Defines a relative or exact stop time for the temporal constraint.</param>
+            <param name="constraintParameters">Defines any temporal parameters related to the constraint.</param>
+            <remarks>
+            <para>
+            This method defines a temporal processing contraint for an adapter, i.e., the start and stop time over which an
+            adapter will process data. Actual implementation of the constraint will be adapter specific. Implementations
+            should be able to dynamically handle multitple calls to this function with new constraints. Passing in <c>null</c>
+            for the <paramref name="startTime"/> and <paramref name="stopTime"/> should cancel the temporal constraint and
+            return the adapter to standard / real-time operation.
+            </para>
+            <para>
+            The <paramref name="startTime"/> and <paramref name="stopTime"/> parameters can be specified in one of the
+            following formats:
+            <list type="table">
+                <listheader>
+                    <term>Time Format</term>
+                    <description>Format Description</description>
+                </listheader>
+                <item>
+                    <term>12-30-2000 23:59:59.033</term>
+                    <description>Absolute date and time.</description>
+                </item>
+                <item>
+                    <term>*</term>
+                    <description>Evaluates to <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-20s</term>
+                    <description>Evaluates to 20 seconds before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-10m</term>
+                    <description>Evaluates to 10 minutes before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-1h</term>
+                    <description>Evaluates to 1 hour before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-1d</term>
+                    <description>Evaluates to 1 day before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+            </list>
+            </para>
+            </remarks>
+        </member>
         <member name="E:TimeSeriesFramework.Adapters.IAdapter.StatusMessage">
             <summary>
             Provides status messages to consumer.
@@ -2160,6 +2216,24 @@
             <summary>
             Gets the total number of measurements processed thus far by the <see cref="T:TimeSeriesFramework.Adapters.IAdapter"/>.
             </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.IAdapter.StartTimeConstraint">
+            <summary>
+            Gets the start time temporal procesing constraint defined by call to <see cref="M:TimeSeriesFramework.Adapters.IAdapter.SetTemporalConstraint(System.String,System.String,System.String)"/>.
+            </summary>
+            <remarks>
+            This value will be <see cref="F:System.DateTime.MinValue"/> when start time constraint is not set - meaning the adapter
+            is processing data in real-time.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.IAdapter.StopTimeConstraint">
+            <summary>
+            Gets the stop time temporal processing constraint defined by call to <see cref="M:TimeSeriesFramework.Adapters.IAdapter.SetTemporalConstraint(System.String,System.String,System.String)"/>.
+            </summary>
+            <remarks>
+            This value will be <see cref="F:System.DateTime.MaxValue"/> when stop time constraint is not set - meaning the adapter
+            is processing data in real-time.
+            </remarks>
         </member>
         <member name="M:TimeSeriesFramework.Adapters.IActionAdapter.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
             <summary>
@@ -2305,6 +2379,57 @@
             </summary>
             <param name="timeout">The number of milliseconds to wait.</param>
             <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.ActionAdapterBase.SetTemporalConstraint(System.String,System.String,System.String)">
+            <summary>
+            Defines a temporal processing constraint for the adapter.
+            </summary>
+            <param name="startTime">Defines a relative or exact start time for the temporal constraint.</param>
+            <param name="stopTime">Defines a relative or exact stop time for the temporal constraint.</param>
+            <param name="constraintParameters">Defines any temporal parameters related to the constraint.</param>
+            <remarks>
+            <para>
+            This method defines a temporal processing contraint for an adapter, i.e., the start and stop time over which an
+            adapter will process data. Actual implementation of the constraint will be adapter specific. Implementations
+            should be able to dynamically handle multitple calls to this function with new constraints. Passing in <c>null</c>
+            for the <paramref name="startTime"/> and <paramref name="stopTime"/> should cancel the temporal constraint and
+            return the adapter to standard / real-time operation.
+            </para>
+            <para>
+            The <paramref name="startTime"/> and <paramref name="stopTime"/> parameters can be specified in one of the
+            following formats:
+            <list type="table">
+                <listheader>
+                    <term>Time Format</term>
+                    <description>Format Description</description>
+                </listheader>
+                <item>
+                    <term>12-30-2000 23:59:59.033</term>
+                    <description>Absolute date and time.</description>
+                </item>
+                <item>
+                    <term>*</term>
+                    <description>Evaluates to <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-20s</term>
+                    <description>Evaluates to 20 seconds before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-10m</term>
+                    <description>Evaluates to 10 minutes before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-1h</term>
+                    <description>Evaluates to 1 hour before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-1d</term>
+                    <description>Evaluates to 1 day before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+            </list>
+            </para>
+            </remarks>
         </member>
         <member name="M:TimeSeriesFramework.Adapters.ActionAdapterBase.GetHashCode">
             <summary>
@@ -2515,6 +2640,24 @@
             Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
             </summary>
         </member>
+        <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.StartTimeConstraint">
+            <summary>
+            Gets the start time temporal procesing constraint defined by call to <see cref="M:TimeSeriesFramework.Adapters.ActionAdapterBase.SetTemporalConstraint(System.String,System.String,System.String)"/>.
+            </summary>
+            <remarks>
+            This value will be <see cref="F:System.DateTime.MinValue"/> when start time constraint is not set - meaning the adapter
+            is processing data in real-time.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.StopTimeConstraint">
+            <summary>
+            Gets the stop time temporal processing constraint defined by call to <see cref="M:TimeSeriesFramework.Adapters.ActionAdapterBase.SetTemporalConstraint(System.String,System.String,System.String)"/>.
+            </summary>
+            <remarks>
+            This value will be <see cref="F:System.DateTime.MaxValue"/> when stop time constraint is not set - meaning the adapter
+            is processing data in real-time.
+            </remarks>
+        </member>
         <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.MinimumMeasurementsToUse">
             <summary>
             Gets or sets minimum number of input measurements required for adapter.  Set to -1 to require all.
@@ -2722,6 +2865,57 @@
             </summary>
             <param name="timeout">This parameter is ignored.</param>
             <returns><c>true</c> for <see cref="T:TimeSeriesFramework.Adapters.AdapterCollectionBase`1"/>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.SetTemporalConstraint(System.String,System.String,System.String)">
+            <summary>
+            Defines a temporal processing constraint for the adapter collection and applies this contraint to each adapter.
+            </summary>
+            <param name="startTime">Defines a relative or exact start time for the temporal constraint.</param>
+            <param name="stopTime">Defines a relative or exact stop time for the temporal constraint.</param>
+            <param name="constraintParameters">Defines any temporal parameters related to the constraint.</param>
+            <remarks>
+            <para>
+            This method defines a temporal processing contraint for an adapter, i.e., the start and stop time over which an
+            adapter will process data. Actual implementation of the constraint will be adapter specific. Implementations
+            should be able to dynamically handle multitple calls to this function with new constraints. Passing in <c>null</c>
+            for the <paramref name="startTime"/> and <paramref name="stopTime"/> should cancel the temporal constraint and
+            return the adapter to standard / real-time operation.
+            </para>
+            <para>
+            The <paramref name="startTime"/> and <paramref name="stopTime"/> parameters can be specified in one of the
+            following formats:
+            <list type="table">
+                <listheader>
+                    <term>Time Format</term>
+                    <description>Format Description</description>
+                </listheader>
+                <item>
+                    <term>12-30-2000 23:59:59.033</term>
+                    <description>Absolute date and time.</description>
+                </item>
+                <item>
+                    <term>*</term>
+                    <description>Evaluates to <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-20s</term>
+                    <description>Evaluates to 20 seconds before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-10m</term>
+                    <description>Evaluates to 10 minutes before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-1h</term>
+                    <description>Evaluates to 1 hour before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-1d</term>
+                    <description>Evaluates to 1 day before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+            </list>
+            </para>
+            </remarks>
         </member>
         <member name="M:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.OnStatusMessage(System.String)">
             <summary>
@@ -2931,6 +3125,24 @@
             Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
             </summary>
         </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.StartTimeConstraint">
+            <summary>
+            Gets the start time temporal procesing constraint defined by call to <see cref="M:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.SetTemporalConstraint(System.String,System.String,System.String)"/>.
+            </summary>
+            <remarks>
+            This value will be <see cref="F:System.DateTime.MinValue"/> when start time constraint is not set - meaning the adapter
+            is processing data in real-time.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.StopTimeConstraint">
+            <summary>
+            Gets the stop time temporal processing constraint defined by call to <see cref="M:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.SetTemporalConstraint(System.String,System.String,System.String)"/>.
+            </summary>
+            <remarks>
+            This value will be <see cref="F:System.DateTime.MaxValue"/> when stop time constraint is not set - meaning the adapter
+            is processing data in real-time.
+            </remarks>
+        </member>
         <member name="P:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.ProcessedMeasurements">
             <summary>
             Gets the total number of measurements processed thus far by each <see cref="T:TimeSeriesFramework.Adapters.IAdapter"/> implementation
@@ -3113,6 +3325,57 @@
             <param name="timeout">The number of milliseconds to wait.</param>
             <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
         </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.SetTemporalConstraint(System.String,System.String,System.String)">
+            <summary>
+            Defines a temporal processing constraint for the adapter.
+            </summary>
+            <param name="startTime">Defines a relative or exact start time for the temporal constraint.</param>
+            <param name="stopTime">Defines a relative or exact stop time for the temporal constraint.</param>
+            <param name="constraintParameters">Defines any temporal parameters related to the constraint.</param>
+            <remarks>
+            <para>
+            This method defines a temporal processing contraint for an adapter, i.e., the start and stop time over which an
+            adapter will process data. Actual implementation of the constraint will be adapter specific. Implementations
+            should be able to dynamically handle multitple calls to this function with new constraints. Passing in <c>null</c>
+            for the <paramref name="startTime"/> and <paramref name="stopTime"/> should cancel the temporal constraint and
+            return the adapter to standard / real-time operation.
+            </para>
+            <para>
+            The <paramref name="startTime"/> and <paramref name="stopTime"/> parameters can be specified in one of the
+            following formats:
+            <list type="table">
+                <listheader>
+                    <term>Time Format</term>
+                    <description>Format Description</description>
+                </listheader>
+                <item>
+                    <term>12-30-2000 23:59:59.033</term>
+                    <description>Absolute date and time.</description>
+                </item>
+                <item>
+                    <term>*</term>
+                    <description>Evaluates to <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-20s</term>
+                    <description>Evaluates to 20 seconds before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-10m</term>
+                    <description>Evaluates to 10 minutes before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-1h</term>
+                    <description>Evaluates to 1 hour before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-1d</term>
+                    <description>Evaluates to 1 day before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+            </list>
+            </para>
+            </remarks>
+        </member>
         <member name="M:TimeSeriesFramework.Adapters.AdapterBase.GetHashCode">
             <summary>
             Serves as a hash function for the current <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
@@ -3156,6 +3419,55 @@
             Safely increments the total processed measurements.
             </summary>
             <param name="totalAdded"></param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.ParseTimeTag(System.String)">
+            <summary>
+            Parses a string formatted as an absolute or relative time tag.
+            </summary>
+            <param name="timetag">String formatted as an absolute or relative time tag.</param>
+            <returns>
+            <see cref="T:System.DateTime"/> representing the parsed <paramref name="timetag"/> string formatted as an absolute or relative time tag.
+            </returns>
+            <remarks>
+            <para>
+            Relative times are parsed based on an offset to current time (UTC) specified by "*".
+            </para>
+            <para>
+            The <paramref name="timetag"/> parameter can be specified in one of the following formats:
+            <list type="table">
+                <listheader>
+                    <term>Time Format</term>
+                    <description>Format Description</description>
+                </listheader>
+                <item>
+                    <term>12-30-2000 23:59:59.033</term>
+                    <description>Absolute date and time.</description>
+                </item>
+                <item>
+                    <term>*</term>
+                    <description>Evaluates to <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-20s</term>
+                    <description>Evaluates to 20 seconds before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-10m</term>
+                    <description>Evaluates to 10 minutes before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-1h</term>
+                    <description>Evaluates to 1 hour before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-1d</term>
+                    <description>Evaluates to 1 day before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+            </list>
+            </para>
+            </remarks>
+            <exception cref="T:System.ArgumentNullException"><paramref name="timetag"/> parameter cannot be null or empty.</exception>
+            <exception cref="T:System.FormatException"><paramref name="timetag"/> does not contain a valid string representation of a date and time.</exception>
         </member>
         <member name="M:TimeSeriesFramework.Adapters.AdapterBase.LoadInputSourceIDs(TimeSeriesFramework.Adapters.IAdapter,System.String)">
             <summary>
@@ -3381,6 +3693,24 @@
             <summary>
             Gets the UTC time this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/> was stopped.
             </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.StartTimeConstraint">
+            <summary>
+            Gets the start time temporal procesing constraint defined by call to <see cref="M:TimeSeriesFramework.Adapters.AdapterBase.SetTemporalConstraint(System.String,System.String,System.String)"/>.
+            </summary>
+            <remarks>
+            This value will be <see cref="F:System.DateTime.MinValue"/> when start time constraint is not set - meaning the adapter
+            is processing data in real-time.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.StopTimeConstraint">
+            <summary>
+            Gets the stop time temporal processing constraint defined by call to <see cref="M:TimeSeriesFramework.Adapters.AdapterBase.SetTemporalConstraint(System.String,System.String,System.String)"/>.
+            </summary>
+            <remarks>
+            This value will be <see cref="F:System.DateTime.MaxValue"/> when stop time constraint is not set - meaning the adapter
+            is processing data in real-time.
+            </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.AdapterBase.RunTime">
             <summary>
@@ -5746,11 +6076,17 @@
             runtime signal index cache could be established if this is a limitation for a given data set.
             </remarks>
         </member>
-        <member name="M:TimeSeriesFramework.Transport.SignalIndexCache.#ctor(System.Guid)">
+        <member name="M:TimeSeriesFramework.Transport.SignalIndexCache.#ctor">
             <summary>
             Creates a new <see cref="T:TimeSeriesFramework.Transport.SignalIndexCache"/> instance.
             </summary>
-            <param name="subscriberID"><see cref="T:System.Guid"/> based subscriber ID.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.SignalIndexCache.#ctor(System.Data.DataSet,TimeSeriesFramework.Transport.SignalIndexCache)">
+            <summary>
+            Creates a new local system cache from one that was received remotely.
+            </summary>
+            <param name="dataSource"><see cref="T:System.Data.DataSet"/> based data source used to interpret local measurement keys.</param>
+            <param name="remoteCache">Deserialized remote signal index cache.</param>
         </member>
         <member name="M:TimeSeriesFramework.Transport.SignalIndexCache.GetSignalIndex(System.Guid)">
             <summary>
@@ -5768,7 +6104,7 @@
         </member>
         <member name="P:TimeSeriesFramework.Transport.SignalIndexCache.SubscriberID">
             <summary>
-            Gets the <see cref="T:System.Guid"/> based subscriber ID of this <see cref="T:TimeSeriesFramework.Transport.SignalIndexCache"/>.
+            Gets or sets the <see cref="T:System.Guid"/> based subscriber ID of this <see cref="T:TimeSeriesFramework.Transport.SignalIndexCache"/>.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.SignalIndexCache.Reference">
