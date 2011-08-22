@@ -540,23 +540,26 @@ namespace TimeSeriesFramework.Transport
             ushort index = 0;
             Guid signalID;
 
-            // We will now go through the client's requested keys and see which ones are authorized for subscription,
-            // this information will be available through the returned signal index cache which will also define
-            // a runtime index optimization for the allowed measurements.
-            foreach (MeasurementKey key in inputMeasurementKeys)
+            if (inputMeasurementKeys != null)
             {
-                if (m_requireAuthentication)
+                // We will now go through the client's requested keys and see which ones are authorized for subscription,
+                // this information will be available through the returned signal index cache which will also define
+                // a runtime index optimization for the allowed measurements.
+                foreach (MeasurementKey key in inputMeasurementKeys)
                 {
-                    // Validate that subscriber has rights to this signal
-                    if (SubscriberHasRights(signalIndexCache.SubscriberID, key, out signalID))
-                        reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(signalID, key));
+                    if (m_requireAuthentication)
+                    {
+                        // Validate that subscriber has rights to this signal
+                        if (SubscriberHasRights(signalIndexCache.SubscriberID, key, out signalID))
+                            reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(signalID, key));
+                        else
+                            unauthorizedKeys.Add(key);
+                    }
                     else
-                        unauthorizedKeys.Add(key);
-                }
-                else
-                {
-                    // When client authorization is not required, all points are assumed to be allowed
-                    reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(LookupSignalID(key), key));
+                    {
+                        // When client authorization is not required, all points are assumed to be allowed
+                        reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(LookupSignalID(key), key));
+                    }
                 }
             }
 
