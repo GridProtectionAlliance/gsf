@@ -395,6 +395,7 @@ namespace TimeSeriesFramework
         private FrameQueue m_frameQueue;                    // Queue of frames to be published
         private Thread m_publicationThread;                 // Thread that handles frame publication
         private AutoResetEvent m_publicationWaitHandle;     // Interframe publication wait handle
+        private bool m_usePrecisionTimer;                   // Flag that enables use of precision timer (over just simple thread sleep)
         private bool m_attachedToFrameRateTimer;            // Flag that tracks if instance is attached to a frame rate timer
         private System.Timers.Timer m_monitorTimer;         // Sample monitor - tracks total number of unpublished frames
         private int m_framesPerSecond;                      // Frames per second
@@ -448,6 +449,7 @@ namespace TimeSeriesFramework
         /// </remarks>
         protected ConcentratorBase()
         {
+            m_usePrecisionTimer = true;
             m_allowSortsByArrival = true;
             m_allowPreemptivePublishing = true;
             m_performTimestampReasonabilityCheck = true;
@@ -640,6 +642,29 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>
+        /// Gets or sets flag that determines if precision timer should be used for frame publication.
+        /// </summary>
+        public bool UsePrecisionTimer
+        {
+            get
+            {
+                return m_usePrecisionTimer;
+            }
+            set
+            {
+                if (m_usePrecisionTimer != value)
+                {
+                    if (m_usePrecisionTimer)
+                        DetachFromFrameRateTimer(m_framesPerSecond);
+                    else
+                        AttachToFrameRateTimer(m_framesPerSecond);
+                }
+
+                m_usePrecisionTimer = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the number of frames per second.
         /// </summary>
         /// <remarks>
@@ -672,7 +697,8 @@ namespace TimeSeriesFramework
                         m_frameQueue.FramesPerSecond = m_framesPerSecond;
 
                     // Subscribe to frame rate timer, creating it if it doesn't exist
-                    AttachToFrameRateTimer(m_framesPerSecond);
+                    if (m_usePrecisionTimer)
+                        AttachToFrameRateTimer(m_framesPerSecond);
                 }
             }
         }
@@ -1377,6 +1403,8 @@ namespace TimeSeriesFramework
                 status.AppendLine();
                 status.AppendFormat("      Loss due to timeouts: {0}", (MissedSortsByTimeout / (double)ProcessedMeasurements).ToString("##0.0000%"));
                 status.AppendLine();
+                status.AppendFormat("     Using precision timer: {0}", m_usePrecisionTimer);
+                status.AppendLine();
                 status.AppendFormat("       Wait handle timeout: {0} milliseconds", m_maximumPublicationTimeout);
                 status.AppendLine();
                 status.AppendFormat("   Wait handle expirations: {0}", WaitHandleExpirations);
@@ -2055,8 +2083,10 @@ namespace TimeSeriesFramework
                 }
 
                 // Wait for next publication signal, timing out if signal takes too long
-                if (m_publicationWaitHandle != null && !m_publicationWaitHandle.WaitOne(m_maximumPublicationTimeout))
+                if (m_usePrecisionTimer && m_publicationWaitHandle != null && !m_publicationWaitHandle.WaitOne(m_maximumPublicationTimeout))
                     m_waitHandleExpirations++;
+                else
+                    Thread.Sleep(1);
             }
         }
 

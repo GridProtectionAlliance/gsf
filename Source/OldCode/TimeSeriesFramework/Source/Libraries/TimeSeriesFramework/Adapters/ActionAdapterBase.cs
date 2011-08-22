@@ -714,14 +714,17 @@ namespace TimeSeriesFramework.Adapters
             base.LeadTime = double.Parse(setting);
 
             // Load optional parameters
+            if (settings.TryGetValue("usePrecisionTimer", out setting))
+                UsePrecisionTimer = setting.ParseBoolean();
+
             if (settings.TryGetValue("useLocalClockAsRealTime", out setting))
-                base.UseLocalClockAsRealTime = setting.ParseBoolean();
+                UseLocalClockAsRealTime = setting.ParseBoolean();
 
             if (settings.TryGetValue("ignoreBadTimestamps", out setting))
-                base.IgnoreBadTimestamps = setting.ParseBoolean();
+                IgnoreBadTimestamps = setting.ParseBoolean();
 
             if (settings.TryGetValue("allowSortsByArrival", out setting))
-                base.AllowSortsByArrival = setting.ParseBoolean();
+                AllowSortsByArrival = setting.ParseBoolean();
 
             if (settings.TryGetValue("inputMeasurementKeys", out setting))
                 InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, setting);
