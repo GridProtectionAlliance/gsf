@@ -14,6 +14,8 @@
 //       Converted to C#.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  08/18/2011 - J. Ritchie Carroll
+//       Minor code clean up and code review.
 //
 //*******************************************************************************************************
 
@@ -233,12 +235,34 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.Text;
 using TVA.Parsing;
 
 namespace TVA.Communication
 {
+    /// <summary>
+    /// Represents a handshake message to validate connecting client.
+    /// </summary>
     [Serializable()]
     internal class HandshakeMessage : ISupportBinaryImage
     {
@@ -263,17 +287,9 @@ namespace TVA.Communication
         /// Initializes a new instance of the <see cref="HandshakeMessage"/> class.
         /// </summary>
         public HandshakeMessage()
-            : this(Guid.Empty, string.Empty)
         {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="HandshakeMessage"/> class.
-        /// </summary>
-        public HandshakeMessage(Guid id, string secretkey)
-        {
-            ID = id;
-            Secretkey = secretkey;
+            ID = Guid.Empty;
+            Secretkey = "";
         }
 
         /// <summary>
@@ -281,7 +297,10 @@ namespace TVA.Communication
         /// </summary>
         public int BinaryLength
         {
-            get { return MessageIdentifier.Length + 16 + 260; }
+            get
+            {
+                return MessageIdentifier.Length + 16 + 260;
+            }
         }
 
         /// <summary>
@@ -291,14 +310,16 @@ namespace TVA.Communication
         {
             get
             {
-                // Create the image.
+                // Create the image buffer
                 byte[] image = new byte[BinaryLength];
-                // Populate the image.
+
+                // Populate the buffer
                 Secretkey = Secretkey.PadRight(260).TruncateRight(260);
                 Buffer.BlockCopy(MessageIdentifier, 0, image, 0, MessageIdentifier.Length);
                 Buffer.BlockCopy(ID.ToByteArray(), 0, image, MessageIdentifier.Length, 16);
                 Buffer.BlockCopy(Encoding.ASCII.GetBytes(Secretkey), 0, image, MessageIdentifier.Length + 16, 260);
-                // Return the image.
+
+                // Return the image
                 return image;
             }
         }
@@ -310,13 +331,13 @@ namespace TVA.Communication
         {
             if (length - startIndex >= BinaryLength)
             {
+                // Validate message identifier matches
                 if (binaryImage.CompareTo(0, MessageIdentifier, 0, MessageIdentifier.Length) != 0)
-                    // Message identifier don't match.
                     return -1;
 
                 try
                 {
-                    // Binary image has sufficient data.
+                    // Parse binary image
                     ID = new Guid(binaryImage.BlockCopy(startIndex + MessageIdentifier.Length, 16));
                     Secretkey = Encoding.ASCII.GetString(binaryImage, startIndex + MessageIdentifier.Length + 16, 260).Trim();
 
@@ -329,7 +350,7 @@ namespace TVA.Communication
             }
             else
             {
-                // Binary image doesn't have sufficient data.
+                // Binary image doesn't have sufficient data
                 return -1;
             }
         }

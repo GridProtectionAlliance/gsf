@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -251,6 +252,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -359,6 +379,11 @@ namespace TVA.Communication
         public new const int DefaultReceiveBufferSize = 32768;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="AllowDualStackSocket"/> property.
+        /// </summary>
+        public const bool DefaultAllowDualStackSocket = true;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="ServerBase.ConfigurationString"/> property.
         /// </summary>
         public const string DefaultConfigurationString = "Port=8888; Clients=localhost:8989";
@@ -371,6 +396,8 @@ namespace TVA.Communication
         // Fields
         private TransportProvider<Socket> m_udpServer;
         private Dictionary<Guid, TransportProvider<Socket>> m_udpClients;
+        private IPStack m_ipStack;
+        private bool m_allowDualStackSocket;
         private EndPoint m_udpClientEndPoint;
         private Dictionary<string, string> m_configData;
         private Func<TransportProvider<Socket>, bool> m_receivedGoodbye;
@@ -395,6 +422,7 @@ namespace TVA.Communication
             : base(TransportProtocol.Udp, configString)
         {
             base.ReceiveBufferSize = DefaultReceiveBufferSize;
+            m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_udpClients = new Dictionary<Guid, TransportProvider<Socket>>();
         }
 
@@ -412,6 +440,24 @@ namespace TVA.Communication
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets a boolean value that determines if dual-mode socket is allowed when endpoint address is IPv6.
+        /// </summary>
+        [Category("Settings"),
+        DefaultValue(DefaultAllowDualStackSocket),
+        Description("Determines if dual-mode socket is allowed when endpoint address is IPv6.")]
+        public bool AllowDualStackSocket
+        {
+            get
+            {
+                return m_allowDualStackSocket;
+            }
+            set
+            {
+                m_allowDualStackSocket = value;
+            }
+        }
 
         /// <summary>
         /// Gets the <see cref="Socket"/> object for the <see cref="UdpServer"/>.
@@ -459,16 +505,19 @@ namespace TVA.Communication
         {
             if (CurrentState == ServerState.NotRunning)
             {
-                // Initialize if unitialized.
+                // Initialize if unitialized
                 Initialize();
-                // Create end-point for receiving data.
-                m_udpClientEndPoint = Transport.CreateEndPoint(m_configData["interface"], 0);
-                // Bind server socket to local end-point.
+
+                // Create end-point for receiving data
+                m_udpClientEndPoint = Transport.CreateEndPoint(m_configData["interface"], 0, m_ipStack);
+
+                // Bind server socket to local end-point
                 m_udpServer = new TransportProvider<Socket>();
                 m_udpServer.ID = this.ServerID;
                 m_udpServer.ReceiveBuffer = new byte[ReceiveBufferSize];
-                m_udpServer.Provider = Transport.CreateSocket(m_configData["interface"], int.Parse(m_configData["port"]), ProtocolType.Udp);
-                // Notify that the server has been started successfully.
+                m_udpServer.Provider = Transport.CreateSocket(m_configData["interface"], int.Parse(m_configData["port"]), ProtocolType.Udp, m_ipStack, m_allowDualStackSocket);
+
+                // Notify that the server has been started successfully
                 OnServerStarted();
 
                 if (Handshake)
@@ -496,16 +545,19 @@ namespace TVA.Communication
                                 TransportProvider<Socket> udpClient = new TransportProvider<Socket>();
                                 udpClient.Secretkey = SharedSecret;
                                 udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
-                                udpClient.Provider = Transport.CreateSocket(m_configData["interface"], 0, ProtocolType.Udp);
-                                // Disable SocketError.ConnectionReset exception from being thrown when the enpoint is not listening.
+                                udpClient.Provider = Transport.CreateSocket(m_configData["interface"], 0, ProtocolType.Udp, m_ipStack, m_allowDualStackSocket);
+
+                                // Disable SocketError.ConnectionReset exception from being thrown when the enpoint is not listening
                                 udpClient.Provider.IOControl(SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
-                                // Connect socket to the client endpoint so communication on the socket is restricted to a single endpoint.
-                                udpClient.Provider.Connect(Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value)));
+
+                                // Connect socket to the client endpoint so communication on the socket is restricted to a single endpoint
+                                udpClient.Provider.Connect(Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack));
 
                                 lock (m_udpClients)
                                 {
                                     m_udpClients.Add(udpClient.ID, udpClient);
                                 }
+
                                 OnClientConnected(udpClient.ID);
 
                                 ReceivePayloadOneAsync(udpClient);
@@ -575,8 +627,8 @@ namespace TVA.Communication
         {
             m_configData = configurationString.ParseKeyValuePairs();
 
-            if (!m_configData.ContainsKey("interface"))
-                m_configData.Add("interface", string.Empty);
+            // Derive desired IP stack based on specified "interface" setting, adding setting if it's not defined
+            m_ipStack = Transport.GetInterfaceIPStack(m_configData);
 
             if (!m_configData.ContainsKey("port"))
                 throw new ArgumentException(string.Format("Port is missing (Example: {0})", DefaultConfigurationString));
@@ -655,7 +707,8 @@ namespace TVA.Communication
         private void ReceiveHandshakeAsync(TransportProvider<Socket> worker)
         {
             // Receive data asynchronously.
-            EndPoint client = Transport.CreateEndPoint(string.Empty, 0);
+            EndPoint client = Transport.CreateEndPoint(string.Empty, 0, m_ipStack);
+
             worker.Provider.BeginReceiveFrom(worker.ReceiveBuffer,
                                              worker.ReceiveBufferOffset,
                                              worker.ReceiveBuffer.Length,
@@ -671,50 +724,53 @@ namespace TVA.Communication
         private void ReceiveHandshakeAsyncCallback(IAsyncResult asyncResult)
         {
             TransportProvider<Socket> udpServer = (TransportProvider<Socket>)asyncResult.AsyncState;
-            // Received handshake data from client so we'll process it.
+
+            // Received handshake data from client so we'll process it
             try
             {
-                // Update statistics and pointers.
-                EndPoint client = Transport.CreateEndPoint(string.Empty, 0);
+                // Update statistics and pointers
+                EndPoint client = Transport.CreateEndPoint(string.Empty, 0, m_ipStack);
+
                 udpServer.Statistics.UpdateBytesReceived(udpServer.Provider.EndReceiveFrom(asyncResult, ref client));
                 udpServer.ReceiveBufferLength = udpServer.Statistics.LastBytesReceived;
 
-                // Process the received handshake message.
+                // Process the received handshake message
                 Payload.ProcessReceived(ref udpServer.ReceiveBuffer, ref udpServer.ReceiveBufferOffset, ref udpServer.ReceiveBufferLength, Encryption, SharedSecret, Compression);
 
                 HandshakeMessage handshake = new HandshakeMessage();
                 if (handshake.Initialize(udpServer.ReceiveBuffer, udpServer.ReceiveBufferOffset, udpServer.ReceiveBufferLength) != -1)
                 {
-                    // Received handshake message is parsed successfully.
+                    // Received handshake message is parsed successfully
                     if (handshake.ID != Guid.Empty)
                     {
-                        // Create a random socket and connect it to the client.
+                        // Create a random socket and connect it to the client
                         TransportProvider<Socket> udpClient = new TransportProvider<Socket>();
                         udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
                         udpClient.Secretkey = SharedSecret;
-                        udpClient.Provider = Transport.CreateSocket(m_configData["interface"], 0, ProtocolType.Udp);
+                        udpClient.Provider = Transport.CreateSocket(m_configData["interface"], 0, ProtocolType.Udp, m_ipStack, m_allowDualStackSocket);
                         udpClient.Provider.Connect(client);
 
-                        // Authentication is successful; respond to the handshake.
+                        // Authentication is successful; respond to the handshake
                         udpClient.ID = handshake.ID;
                         handshake.ID = this.ServerID;
+
                         if (SecureSession)
                         {
-                            // Create a secret key for ciphering client data.
+                            // Create a secret key for ciphering client data
                             udpClient.Secretkey = Guid.NewGuid().ToString();
                             handshake.Secretkey = udpClient.Secretkey;
                         }
 
-                        // Prepare binary image of handshake response to be transmitted.
+                        // Prepare binary image of handshake response to be transmitted
                         udpClient.SendBuffer = handshake.BinaryImage;
                         udpClient.SendBufferOffset = 0;
                         udpClient.SendBufferLength = udpClient.SendBuffer.Length;
                         Payload.ProcessTransmit(ref udpClient.SendBuffer, ref udpClient.SendBufferOffset, ref udpClient.SendBufferLength, Encryption, SharedSecret, Compression);
 
-                        // Transmit the prepared and processed handshake response message.
+                        // Transmit the prepared and processed handshake response message
                         udpClient.Provider.SendTo(udpClient.SendBuffer, udpClient.Provider.RemoteEndPoint);
 
-                        // Handshake process is complete and client is considered connected.
+                        // Handshake process is complete and client is considered connected
                         lock (m_udpClients)
                         {
                             m_udpClients.Add(udpClient.ID, udpClient);
@@ -727,28 +783,28 @@ namespace TVA.Communication
                         }
                         catch
                         {
-                            // Receive will fail if client disconnected before handshake is complete.
+                            // Receive will fail if client disconnected before handshake is complete
                             TerminateConnection(udpClient, true);
                         }
                     }
                     else
                     {
-                        // Validation during handshake failed.
+                        // Validation during handshake failed
                         OnHandshakeProcessUnsuccessful();
                     }
                 }
                 else
                 {
-                    // Handshake message could not be parsed.
+                    // Handshake message could not be parsed
                     OnHandshakeProcessUnsuccessful();
                 }
 
-                // Resume receiving of client handshake messages.
+                // Resume receiving of client handshake messages
                 ReceiveHandshakeAsync(udpServer);
             }
             catch
             {
-                // Server socket has been terminated.
+                // Server socket has been terminated
                 OnServerStopped();
             }
         }
@@ -781,6 +837,7 @@ namespace TVA.Communication
 
                 // Get a local copy of all connected clients.
                 TransportProvider<Socket>[] clients = null;
+
                 lock (m_udpClients)
                 {
                     clients = new TransportProvider<Socket>[m_udpClients.Count];

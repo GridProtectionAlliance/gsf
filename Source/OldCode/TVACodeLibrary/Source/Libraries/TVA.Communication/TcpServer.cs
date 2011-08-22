@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -245,6 +246,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -351,6 +371,11 @@ namespace TVA.Communication
         public const bool DefaultIntegratedSecurity = false;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="AllowDualStackSocket"/> property.
+        /// </summary>
+        public const bool DefaultAllowDualStackSocket = true;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="ServerBase.ConfigurationString"/> property.
         /// </summary>
         public const string DefaultConfigurationString = "Port=8888";
@@ -359,6 +384,8 @@ namespace TVA.Communication
         private bool m_payloadAware;
         private byte[] m_payloadMarker;
         private bool m_integratedSecurity;
+        private IPStack m_ipStack;
+        private bool m_allowDualStackSocket;
         private Socket m_tcpServer;
         private Dictionary<Guid, TransportProvider<Socket>> m_tcpClients;
         private Dictionary<string, string> m_configData;
@@ -385,6 +412,7 @@ namespace TVA.Communication
             m_payloadAware = DefaultPayloadAware;
             m_payloadMarker = Payload.DefaultMarker;
             m_integratedSecurity = DefaultIntegratedSecurity;
+            m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_tcpClients = new Dictionary<Guid, TransportProvider<Socket>>();
         }
 
@@ -451,13 +479,31 @@ namespace TVA.Communication
         Description("Indicates whether the client Windows account credentials are used for authentication.")]
         public bool IntegratedSecurity
         {
-            get 
+            get
             {
                 return m_integratedSecurity;
             }
             set
             {
                 m_integratedSecurity = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that determines if dual-mode socket is allowed when endpoint address is IPv6.
+        /// </summary>
+        [Category("Settings"),
+        DefaultValue(DefaultAllowDualStackSocket),
+        Description("Determines if dual-mode socket is allowed when endpoint address is IPv6.")]
+        public bool AllowDualStackSocket
+        {
+            get
+            {
+                return m_allowDualStackSocket;
+            }
+            set
+            {
+                m_allowDualStackSocket = value;
             }
         }
 
@@ -490,6 +536,7 @@ namespace TVA.Communication
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
                 settings["PayloadAware", true].Update(m_payloadAware);
                 settings["IntegratedSecurity", true].Update(m_integratedSecurity);
+                settings["AllowDualStackSocket", true].Update(m_allowDualStackSocket);
                 config.Save();
             }
         }
@@ -507,8 +554,10 @@ namespace TVA.Communication
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
                 settings.Add("PayloadAware", m_payloadAware, "True if payload boundaries are to be preserved during transmission, otherwise False.");
                 settings.Add("IntegratedSecurity", m_integratedSecurity, "True if the client Windows account credentials are used for authentication, otherwise False.");
+                settings.Add("AllowDualStackSocket", m_allowDualStackSocket, "True if dual-mode socket is allowed when IP address is IPv6, otherwise False.");
                 PayloadAware = settings["PayloadAware"].ValueAs(m_payloadAware);
                 IntegratedSecurity = settings["IntegratedSecurity"].ValueAs(m_integratedSecurity);
+                AllowDualStackSocket = settings["AllowDualStackSocket"].ValueAs(m_allowDualStackSocket);
             }
         }
 
@@ -534,11 +583,14 @@ namespace TVA.Communication
             {
                 // Initialize if unitialized.
                 Initialize();
+
                 // Bind server socket to local end-point and listen.
-                m_tcpServer = Transport.CreateSocket(m_configData["interface"], int.Parse(m_configData["port"]), ProtocolType.Tcp);
+                m_tcpServer = Transport.CreateSocket(m_configData["interface"], int.Parse(m_configData["port"]), ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
                 m_tcpServer.Listen(1);
+
                 // Begin accepting incoming connection asynchronously.
                 m_tcpServer.BeginAccept(AcceptAsyncCallback, null);
+
                 // Notify that the server has been started successfully.
                 OnServerStarted();
             }
@@ -588,8 +640,8 @@ namespace TVA.Communication
         {
             m_configData = configurationString.ParseKeyValuePairs();
 
-            if (!m_configData.ContainsKey("interface"))
-                m_configData.Add("interface", string.Empty);
+            // Derive desired IP stack based on specified "interface" setting, adding setting if it's not defined
+            m_ipStack = Transport.GetInterfaceIPStack(m_configData);
 
             if (!m_configData.ContainsKey("port"))
                 throw new ArgumentException(string.Format("Port property is missing (Example: {0})", DefaultConfigurationString));

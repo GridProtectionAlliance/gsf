@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -20,6 +21,9 @@
 //  01/30/2011 - Pinal C. Patel
 //       Fixed a bug in AddHeader() that created an insufficient return buffer when the specified offset 
 //       was non-zero resulting in "out of bounds" exception.
+//  08/18/2011 - J. Ritchie Carroll
+//       Added processing overloads to be able to use socket asynchronous event arguments and performed
+//       minor code clean up and code review.
 //
 //*******************************************************************************************************
 
@@ -239,8 +243,28 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.IO;
+using System.Net.Sockets;
 using TVA.IO.Compression;
 using TVA.Security.Cryptography;
 
@@ -270,16 +294,18 @@ namespace TVA.Communication
         /// <param name="marker">The byte sequence used to mark the beginning of the payload in a "Payload-Aware" transmissions.</param>
         public static void AddHeader(ref byte[] buffer, ref int offset, ref int length, byte[] marker)
         {
-            // The resulting buffer will be at least 4 bytes bigger than the payload.
+            // Note that the resulting buffer will be at least 4 bytes bigger than the payload
 
             // Resulting buffer = x bytes for payload marker + 4 bytes for the payload size + The payload
             byte[] result = new byte[length + marker.Length + LengthSegment];
 
-            // First, copy the the payload marker to the buffer.
+            // First, copy the the payload marker to the buffer
             Buffer.BlockCopy(marker, 0, result, 0, marker.Length);
-            // Then, copy the payload's size to the buffer after the payload marker.
+
+            // Then, copy the payload's size to the buffer after the payload marker
             Buffer.BlockCopy(BitConverter.GetBytes(length), 0, result, marker.Length, LengthSegment);
-            // At last, copy the payload after the payload marker and payload size.
+
+            // At last, copy the payload after the payload marker and payload size
             Buffer.BlockCopy(buffer, offset, result, marker.Length + LengthSegment, length);
 
             buffer = result;
@@ -295,7 +321,7 @@ namespace TVA.Communication
         /// <returns>true if the buffer contains "Payload-Aware" transmission header; otherwise false.</returns>
         public static bool HasHeader(byte[] buffer, byte[] marker)
         {
-            for (int i = 0; i <= marker.Length - 1; i++)
+            for (int i = 0; i < marker.Length; i++)
             {
                 if (buffer[i] != marker[i])
                     return false;
@@ -312,15 +338,11 @@ namespace TVA.Communication
         /// <returns>Length of the payload.</returns>
         public static int ExtractLength(byte[] buffer, byte[] marker)
         {
+            // Check to see if buffer is at least as big as the payload header and has the payload marker
             if (buffer.Length >= (marker.Length + LengthSegment) && HasHeader(buffer, marker))
-            {
-                // We have a buffer that's at least as big as the payload header and has the payload marker.
                 return BitConverter.ToInt32(buffer, marker.Length);
-            }
-            else
-            {
-                return -1;
-            }
+
+            return -1;
         }
 
         /// <summary>
@@ -336,56 +358,61 @@ namespace TVA.Communication
         {
             if (cryptoLevel != CipherStrength.None || compressLevel != CompressionStrength.NoCompression)
             {
-                // Make a copy of the data to be processed.
+                // Make a copy of the data to be processed
                 byte[] temp = buffer.BlockCopy(offset, length);
 
                 if (cryptoLevel != CipherStrength.None)
                 {
-                    // Decrypt the data.
+                    // Decrypt the data
                     temp = temp.Decrypt(cryptoKey, cryptoLevel);
                     offset = 0;
                     length = temp.Length;
                 }
-                
+
                 if (compressLevel != CompressionStrength.NoCompression)
                 {
-                    // Uncompress the data.
+                    // Uncompress the data
                     temp = new MemoryStream(temp).Decompress().ToArray();
                     offset = 0;
                     length = temp.Length;
                 }
 
+                // If processed data cannot fit in the existing buffer, use the new buffer - otherwise
+                // copy the processed data into the existing buffer
                 if (temp.Length > buffer.Length)
-                    // Processed data cannot fit in the existing buffer.
                     buffer = temp;
                 else
-                    // Copy the processed data into the existing buffer.
                     Buffer.BlockCopy(temp, offset, buffer, offset, length);
             }
+        }
+        /// <summary>
+        /// Performs the necessary uncompression and decryption on the data contained in the <paramref name="socketArgs"/>.
+        /// </summary>
+        /// <param name="socketArgs">Socket's asynchronous event arguments.</param>
+        /// <param name="cryptoLevel">One of the <see cref="CipherStrength"/> values.</param>
+        /// <param name="cryptoKey">The key to be used for decrypting the data in the <paramref name="socketArgs"/>.</param>
+        /// <param name="compressLevel">One of the <see cref="CompressionStrength"/> values.</param>
+        public static void ProcessReceived(SocketAsyncEventArgs socketArgs, CipherStrength cryptoLevel, string cryptoKey, CompressionStrength compressLevel)
+        {
+            if (cryptoLevel != CipherStrength.None || compressLevel != CompressionStrength.NoCompression)
+            {
+                // Make a copy of the data to be processed
+                byte[] temp = socketArgs.Buffer.BlockCopy(socketArgs.Offset, socketArgs.Count);
 
-            //if (cryptoLevel == CipherStrength.None && compressLevel == CompressionStrength.NoCompression)
-            //{
-            //    if (length - offset == data.Length)
-            //        return data;
-            //    else
-            //        return data.BlockCopy(offset, length);
-            //}
-            //else
-            //{
-            //    if (cryptoLevel != CipherStrength.None)
-            //    {
-            //        data = data.Decrypt(offset, length, Encoding.ASCII.GetBytes(cryptoKey), cryptoLevel);
-            //        offset = 0;
-            //        length = data.Length;
-            //    }
+                if (cryptoLevel != CipherStrength.None)
+                {
+                    // Decrypt the data
+                    temp = temp.Decrypt(cryptoKey, cryptoLevel);
+                    socketArgs.SetBuffer(temp, 0, temp.Length);
+                }
 
-            //    if (compressLevel != CompressionStrength.NoCompression)
-            //    {
-            //        data = new MemoryStream(data, offset, length).Decompress().ToArray();
-            //    }
-
-            //    return data;
-            //}
+                if (compressLevel != CompressionStrength.NoCompression)
+                {
+                    // Uncompress the data
+                    temp = new MemoryStream(temp).Decompress().ToArray();
+                    socketArgs.SetBuffer(temp, 0, temp.Length);
+                }
+            }
         }
 
         /// <summary>
@@ -401,7 +428,7 @@ namespace TVA.Communication
         {
             if (compressLevel != CompressionStrength.NoCompression)
             {
-                // Compress the data.
+                // Compress the data
                 buffer = new MemoryStream(buffer, offset, length).Compress(compressLevel).ToArray();
                 offset = 0;
                 length = buffer.Length;
@@ -409,37 +436,37 @@ namespace TVA.Communication
 
             if (cryptoLevel != CipherStrength.None)
             {
-                // Encrypt the data.
+                // Encrypt the data
                 buffer = buffer.Encrypt(offset, length, cryptoKey, cryptoLevel);
                 offset = 0;
                 length = buffer.Length;
             }
+        }
 
-            //if (cryptoLevel == CipherStrength.None && compressLevel == CompressionStrength.NoCompression)
-            //{
-            //    if (length - offset == data.Length)
-            //        return data;
-            //    else
-            //        return data.BlockCopy(offset, length);
-            //}
-            //else
-            //{
-            //    if (compressLevel != CompressionStrength.NoCompression)
-            //    {
-            //        // Compress the data.
-            //        data = new MemoryStream(data, offset, length).Compress(compressLevel).ToArray();
-            //        offset = 0;
-            //        length = data.Length;
-            //    }
+        /// <summary>
+        /// Performs the necessary compression and encryption on the data contained in the <paramref name="socketArgs"/>.
+        /// </summary>
+        /// <param name="socketArgs">Socket's asynchronous event arguments.</param>
+        /// <param name="cryptoLevel">One of the <see cref="CipherStrength"/> values.</param>
+        /// <param name="cryptoKey">The key to be used for encrypting the data in the <paramref name="socketArgs"/>.</param>
+        /// <param name="compressLevel">One of the <see cref="CompressionStrength"/> values.</param>
+        public static void ProcessTransmit(SocketAsyncEventArgs socketArgs, CipherStrength cryptoLevel, string cryptoKey, CompressionStrength compressLevel)
+        {
+            byte[] buffer;
 
-            //    if (cryptoLevel != CipherStrength.None)
-            //    {
-            //        // Encrypt the data.
-            //        data = data.Encrypt(offset, length, Encoding.ASCII.GetBytes(cryptoKey), cryptoLevel);
-            //    }
+            if (compressLevel != CompressionStrength.NoCompression)
+            {
+                // Compress the data
+                buffer = new MemoryStream(socketArgs.Buffer, socketArgs.Offset, socketArgs.Count).Compress(compressLevel).ToArray();
+                socketArgs.SetBuffer(buffer, 0, buffer.Length);
+            }
 
-            //    return data;
-            //}
+            if (cryptoLevel != CipherStrength.None)
+            {
+                // Encrypt the data
+                buffer = socketArgs.Buffer.Encrypt(socketArgs.Offset, socketArgs.Count, cryptoKey, cryptoLevel);
+                socketArgs.SetBuffer(buffer, 0, buffer.Length);
+            }
         }
     }
 }

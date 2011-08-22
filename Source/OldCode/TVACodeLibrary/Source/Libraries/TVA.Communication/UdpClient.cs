@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -259,6 +260,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -361,6 +381,11 @@ namespace TVA.Communication
         public new const int DefaultReceiveBufferSize = 32768;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="AllowDualStackSocket"/> property.
+        /// </summary>
+        public const bool DefaultAllowDualStackSocket = true;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="ClientBase.ConnectionString"/> property.
         /// </summary>
         public const string DefaultConnectionString = "Server=localhost:8888; Port=8989";
@@ -374,6 +399,8 @@ namespace TVA.Communication
         //private bool m_destinationReachableCheck;
         private EndPoint m_udpServer;
         private TransportProvider<Socket> m_udpClient;
+        private IPStack m_ipStack;
+        private bool m_allowDualStackSocket;
         private Dictionary<string, string> m_connectData;
         private Func<TransportProvider<Socket>, bool> m_receivedGoodbye;
         private ManualResetEvent m_connectionHandle;
@@ -404,6 +431,7 @@ namespace TVA.Communication
             : base(TransportProtocol.Udp, connectString)
         {
             base.ReceiveBufferSize = DefaultReceiveBufferSize;
+            m_allowDualStackSocket = DefaultAllowDualStackSocket;
         }
 
         /// <summary>
@@ -420,6 +448,24 @@ namespace TVA.Communication
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets a boolean value that determines if dual-mode socket is allowed when endpoint address is IPv6.
+        /// </summary>
+        [Category("Settings"),
+        DefaultValue(DefaultAllowDualStackSocket),
+        Description("Determines if dual-mode socket is allowed when endpoint address is IPv6.")]
+        public bool AllowDualStackSocket
+        {
+            get
+            {
+                return m_allowDualStackSocket;
+            }
+            set
+            {
+                m_allowDualStackSocket = value;
+            }
+        }
 
         /// <summary>
         /// Gets the <see cref="TransportProvider{Socket}"/> object for the <see cref="UdpClient"/>.
@@ -495,33 +541,9 @@ namespace TVA.Communication
                 // Client has a server endpoint specified.
                 Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
                 if (endpoint != Match.Empty)
-                {
-                    try
-                    {
-                        m_udpServer = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value));
-                    }
-                    catch
-                    {
-                        // On IPv6 enabled OSes like Windows 7 and Windows Server 2008 loopback entries are resolved by DNS resolver 
-                        // instead of the host file and this could result in resolution failure depending on group policy settings.
-                        if (string.Compare(endpoint.Groups["host"].Value, "localhost", true) == 0)
-                        {
-                            IPEndPoint randomEndpoint = Transport.CreateEndPoint(m_connectData["interface"], 0);
-                            if (Transport.IsIPv6IP(randomEndpoint.Address))
-                                // Use IPv6 loopback IP.
-                                m_udpServer = Transport.CreateEndPoint(IPAddress.IPv6Loopback.ToString(), int.Parse(endpoint.Groups["port"].Value));
-                            else
-                                // Use IPv4 loopback IP.
-                                m_udpServer = Transport.CreateEndPoint(IPAddress.Loopback.ToString(), int.Parse(endpoint.Groups["port"].Value));
-                        }
-                        else
-                            throw;
-                    }
-                }
+                    m_udpServer = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
                 else
-                {
                     throw new FormatException(string.Format("Server property in ConnectionString is invalid (Example: {0})", DefaultConnectionString));
-                }
             }
             else
             {
@@ -529,7 +551,7 @@ namespace TVA.Communication
                     throw new InvalidOperationException("Handshake requires Server property in the ConnectionString");
 
                 // Create a random server endpoint since one is not specified.
-                m_udpServer = Transport.CreateEndPoint(m_connectData["interface"], 0);
+                m_udpServer = Transport.CreateEndPoint(m_connectData["interface"], 0, m_ipStack);
             }
 
 #if ThreadTracking
@@ -579,9 +601,8 @@ namespace TVA.Communication
         {
             m_connectData = connectionString.ParseKeyValuePairs();
 
-            // Inject 'interface' property if missing.
-            if (!m_connectData.ContainsKey("interface"))
-                m_connectData.Add("interface", string.Empty);
+            // Derive desired IP stack based on specified "interface" setting, adding setting if it's not defined
+            m_ipStack = Transport.GetInterfaceIPStack(m_connectData);
 
             // Backwards compatibility adjustments.
             // New Format: Server=localhost:8888; Port=8989
@@ -625,7 +646,7 @@ namespace TVA.Communication
                 handshake.Secretkey = this.SharedSecret;
 
                 // Prepare binary image of handshake to be transmitted.
-                m_udpClient.Provider = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Udp);
+                m_udpClient.Provider = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Udp, m_ipStack, m_allowDualStackSocket);
                 m_udpClient.SendBuffer = handshake.BinaryImage;
                 m_udpClient.SendBufferOffset = 0;
                 m_udpClient.SendBufferLength = m_udpClient.SendBuffer.Length;
@@ -681,14 +702,14 @@ namespace TVA.Communication
                         OnConnectionAttempt();
 
                         // Disable SocketError.ConnectionReset exception from being thrown when the enpoint is not listening.
-                        m_udpClient.Provider = Transport.CreateSocket(m_connectData["interface"], int.Parse(m_connectData["port"]), ProtocolType.Udp);
+                        m_udpClient.Provider = Transport.CreateSocket(m_connectData["interface"], int.Parse(m_connectData["port"]), ProtocolType.Udp, m_ipStack, m_allowDualStackSocket);
                         m_udpClient.Provider.IOControl(SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
 
                         // If the IP specified for the server is a multicast IP, subscribe to the specified multicast group.
                         IPEndPoint serverEndpoint = (IPEndPoint)m_udpServer;
                         if (Transport.IsMulticastIP(serverEndpoint.Address))
                         {
-                            if (Transport.IsIPv6IP(serverEndpoint.Address))
+                            if (serverEndpoint.AddressFamily == AddressFamily.InterNetworkV6)
                                 m_udpClient.Provider.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.AddMembership, new MulticastOption(serverEndpoint.Address));
                             else
                                 m_udpClient.Provider.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(serverEndpoint.Address));

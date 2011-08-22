@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -24,6 +25,9 @@
 //       Fixed bug in CreateSocket() that was breaking one-way communication support in UDP components.
 //  04/29/2010 - Pinal C. Patel
 //       Added EndpointFormatRegex constant to be used for parsing endpoint strings.
+//  08/18/2011 - J. Ritchie Carroll
+//       Multiple additions and updates to accomodate easier IPv6 or IPv4 selection as well as
+//       dual-mode socket support.
 //
 //*******************************************************************************************************
 
@@ -243,14 +247,66 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 
 namespace TVA.Communication
 {
+    #region [ Enumerations ]
+
     /// <summary>
-    /// A helper class containing methods related to server-client communication.
+    /// IP stack enumeration.
+    /// </summary>
+    public enum IPStack
+    {
+        /// <summary>
+        /// IPv6 stack.
+        /// </summary>
+        /// <remarks>
+        /// Requests to use IPv6 stack if possible.
+        /// </remarks>
+        IPv6,
+        /// <summary>
+        /// IPv4 stack.
+        /// </summary>
+        /// <remarks>
+        /// Requests to use IPv4 stack if possible.
+        /// </remarks>
+        IPv4,
+        /// <summary>
+        /// Default stack.
+        /// </summary>
+        /// <remarks>
+        /// Requests to use the default OS IP stack.
+        /// </remarks>
+        Default
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Defines helper methods related to IP socket based communications.
     /// </summary>
     public static class Transport
     {
@@ -283,26 +339,48 @@ namespace TVA.Communication
         /// </summary>
         /// <param name="hostNameOrAddress">The host name or IP address to resolve.</param>
         /// <param name="port">The port number to be associated with the address.</param>
+        /// <param name="stack">Desired IP stack to use.</param>
         /// <returns>An <see cref="IPEndPoint"/> object.</returns>
-        public static IPEndPoint CreateEndPoint(string hostNameOrAddress, int port)
+        public static IPEndPoint CreateEndPoint(string hostNameOrAddress, int port, IPStack stack)
         {
-            if (string.IsNullOrEmpty(hostNameOrAddress))
+            // Determine system's default IP stack if the default stack was requested
+            if (stack == IPStack.Default)
+                stack = GetDefaultIPStack();
+
+            // Make sure system can support specified stack
+            if (stack == IPStack.IPv6 && !Socket.OSSupportsIPv6)
+                throw new NotSupportedException(string.Format("IPv6 stack is not available for socket creation on {0}:{1}", hostNameOrAddress.ToNonNullNorWhiteSpace("localhost"), port));
+            else if (stack == IPStack.IPv4 && !Socket.OSSupportsIPv4)
+                throw new NotSupportedException(string.Format("IPv4 stack is not available for socket creation on {0}:{1}", hostNameOrAddress.ToNonNullNorWhiteSpace("localhost"), port));
+
+            if (string.IsNullOrWhiteSpace(hostNameOrAddress))
             {
-                // Use all of the local IPs.
-                if (Socket.OSSupportsIPv6)
+                // No host name or IP address was specified, use local IPs
+                if (stack == IPStack.IPv6)
                     return new IPEndPoint(IPAddress.IPv6Any, port);
-                else
-                    return new IPEndPoint(IPAddress.Any, port);
+
+                return new IPEndPoint(IPAddress.Any, port);
             }
             else
             {
-                IPAddress address;
-                if (IPAddress.TryParse(hostNameOrAddress, out address))
-                    // Use the provided IP address.
-                    return new IPEndPoint(address, port);
-                else
-                    // Exception will occur if DNS lookup fails.
-                    return new IPEndPoint(Dns.GetHostEntry(hostNameOrAddress).AddressList[0], port);
+                // Host name or IP was provided, attempt lookup - note that exception can occur if DNS lookup fails
+                IPAddress[] addressList = Dns.GetHostEntry(hostNameOrAddress).AddressList;
+
+                if (addressList.Length > 0)
+                {
+                    // Traverse address list looking for first match on desired IP stack
+                    foreach (IPAddress address in addressList)
+                    {
+                        if ((stack == IPStack.IPv6 && address.AddressFamily == AddressFamily.InterNetworkV6) ||
+                            (stack == IPStack.IPv4 && address.AddressFamily == AddressFamily.InterNetwork))
+                            return new IPEndPoint(address, port);
+                    }
+
+                    // If no available matching address was found for desired IP stack, default to first address in list
+                    return new IPEndPoint(addressList[0], port);
+                }
+
+                throw new InvalidOperationException("No valid IP addresses could be found for host named " + hostNameOrAddress);
             }
         }
 
@@ -312,36 +390,100 @@ namespace TVA.Communication
         /// <param name="address">The local address where the <see cref="Socket"/> will be bound.</param>
         /// <param name="port">The port number at which the <see cref="Socket"/> will be bound.</param>
         /// <param name="protocol">One of the <see cref="ProtocolType"/> values.</param>
+        /// <param name="stack">Desired IP stack to use.</param>
+        /// <param name="allowDualStackSocket">Determines if dual-mode socket is allowed when endpoint address is IPv6.</param>
         /// <returns>An <see cref="Socket"/> object.</returns>
-        public static Socket CreateSocket(string address, int port, ProtocolType protocol)
+        public static Socket CreateSocket(string address, int port, ProtocolType protocol, IPStack stack, bool allowDualStackSocket = true)
         {
             Socket socket = null;
             IPEndPoint endpoint = null;
+
             switch (protocol)
             {
                 case ProtocolType.Tcp:
-                    endpoint = Transport.CreateEndPoint(address, port);
+                    endpoint = CreateEndPoint(address, port, stack);
                     socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+                    // If allowDualModeSocket is true and the enpoint is IPv6, we setup a dual-mode socket
+                    // by setting the IPv6Only socket option to false
+                    if (allowDualStackSocket && endpoint.AddressFamily == AddressFamily.InterNetworkV6)
+                        socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
+
+                    // Associate the socket with the local endpoint
                     socket.Bind(endpoint);
+
                     break;
                 case ProtocolType.Udp:
                     // Allow negative port number to be specified for unbound socket.
                     if (port >= 0)
                     {
-                        endpoint = Transport.CreateEndPoint(address, port);
+                        endpoint = CreateEndPoint(address, port, stack);
                         socket = new Socket(endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+
+                        // If allowDualModeSocket is true and the endpoint is IPv6, we setup a dual-mode socket
+                        // by setting the IPv6Only socket option to false
+                        if (allowDualStackSocket && endpoint.AddressFamily == AddressFamily.InterNetworkV6)
+                            socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
+
                         socket.Bind(endpoint);
                     }
                     else
                     {
-                        endpoint = Transport.CreateEndPoint(address, 0);
+                        // Create a socket with no binding when -1 is used for port number
+                        endpoint = CreateEndPoint(address, 0, stack);
                         socket = new Socket(endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
                     }
                     break;
                 default:
-                    throw new NotSupportedException(string.Format("{0} is not supported", protocol));
+                    throw new NotSupportedException("Communications library does not support socket creation for protocol " + protocol);
             }
             return socket;
+        }
+
+        /// <summary>
+        /// Gets the default IP stack for this system.
+        /// </summary>
+        /// <returns>
+        /// System's assumed default IP stack.
+        /// </returns>
+        public static IPStack GetDefaultIPStack()
+        {
+            try
+            {
+                IPHostEntry hostEntry = Dns.GetHostEntry(Dns.GetHostName());
+
+                // IP's are normally ordered with default IP stack first
+                if (hostEntry.AddressList.Length > 0)
+                    return (hostEntry.AddressList[0].AddressFamily == AddressFamily.InterNetworkV6 && Socket.OSSupportsIPv6 ? IPStack.IPv6 : IPStack.IPv4);
+            }
+            catch
+            {
+                // These calls are known to fail on Mono
+            }
+
+            // If default stack cannot be determined, assume IPv4
+            return IPStack.IPv4;
+        }
+
+        /// <summary>
+        /// Derives the desired <see cref="IPStack"/> from the "interface" setting in the connection string key/value pairs.
+        /// </summary>
+        /// <param name="connectionStringKVPairs">Connection string key/value pairs.</param>
+        /// <returns>Desired <see cref="IPStack"/> based on "interface" setting.</returns>
+        /// <remarks>
+        /// The "interface" setting will be added to the <paramref name="connectionStringKVPairs"/> if it
+        /// doesn't exist, in this case return value will be <see cref="IPStack.Default"/>.
+        /// </remarks>
+        public static IPStack GetInterfaceIPStack(Dictionary<string, string> connectionStringKVPairs)
+        {
+            string ipAddress = null;
+
+            if (connectionStringKVPairs.TryGetValue("interface", out ipAddress))
+                return IsIPv6IP(ipAddress) ? IPStack.IPv6 : IPStack.IPv4;
+
+            connectionStringKVPairs.Add("interface", string.Empty);
+
+            return IPStack.Default;
         }
 
         /// <summary>
@@ -349,17 +491,17 @@ namespace TVA.Communication
         /// </summary>
         /// <param name="ipAddress">IP address to check.</param>
         /// <returns>true if the <paramref name="ipAddress"/> is IPv6 IP; otherwise false.</returns>
-        public static bool IsIPv6IP(IPAddress ipAddress)
+        public static bool IsIPv6IP(string ipAddress)
         {
-            if (ipAddress == null)
+            if (string.IsNullOrWhiteSpace(ipAddress))
                 throw new ArgumentNullException("ipAddress");
 
-            if (ipAddress.ToString().Contains(":"))
-                // IP is a IPV6 IP.
-                return true;
-            else
-                // IP is a IPV4 IP.
-                return false;
+            IPAddress address;
+
+            if (IPAddress.TryParse(ipAddress, out address))
+                return address.AddressFamily == AddressFamily.InterNetworkV6;
+
+            return false;
         }
 
         /// <summary>
@@ -372,21 +514,21 @@ namespace TVA.Communication
             if (ipAddress == null)
                 throw new ArgumentNullException("ipAddress");
 
-            if (Transport.IsIPv6IP(ipAddress))
+            if (ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
             {
-                // IP is a IPV6 IP.
+                // IP is IPv6
                 return ipAddress.IsIPv6Multicast;
             }
             else
             {
-                // IP is a IPV4 IP.
+                // IP is IPv4
                 int firstOctet = int.Parse(ipAddress.ToString().Split('.')[0]);
+
+                // Check first octet to see if IP is a Class D multicast IP
                 if (firstOctet >= 224 && firstOctet <= 247)
-                    // IP is a Class D multicast IP.
                     return true;
-                else
-                    // IP is not a multicast IP.
-                    return false;
+
+                return false;
             }
         }
 
@@ -399,19 +541,17 @@ namespace TVA.Communication
         {
             int portNumber;
 
+            // Check to see if the specified port is a valid integer value
             if (int.TryParse(port, out portNumber))
             {
-                // The specified port is a valid integer value.
+                // Check to see if the port number is within the valid range
                 if (portNumber >= PortRangeLow && portNumber <= PortRangeHigh)
-                    // The port number is within the valid range.
                     return true;
-                else
-                    return false;
+
+                return false;
             }
-            else
-            {
-                throw new ArgumentException("Port number is not a valid number");
-            }
+
+            throw new ArgumentException("Port number is not a valid number");
         }
 
         /// <summary>
@@ -423,10 +563,11 @@ namespace TVA.Communication
         {
             try
             {
-                // We'll check if the target endpoint exist by sending empty data to it and then wait for data from it.
-                // If the endpoint doesn't exist then we'll receive a ConnectionReset socket exception.
+                // Check if the target endpoint exists by sending empty data to it and waiting for a response,
+                // if the endpoint doesn't exist then we'll receive a ConnectionReset socket exception
                 EndPoint targetEndPoint = (EndPoint)targetIPEndPoint;
-                using (Socket targetChecker = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp))
+
+                using (Socket targetChecker = new Socket(targetIPEndPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp))
                 {
                     targetChecker.ReceiveTimeout = 1;
                     targetChecker.SendTo(new byte[] { }, targetEndPoint);
@@ -436,16 +577,13 @@ namespace TVA.Communication
             }
             catch (SocketException ex)
             {
-                switch (ex.SocketErrorCode)
-                {
-                    case SocketError.ConnectionReset:
-                        // This means that the target endpoint is unreachable.
-                        return false;
-                }
+                // Connection reset means that the target endpoint is unreachable
+                if (ex.SocketErrorCode == SocketError.ConnectionReset)
+                    return false;
             }
             catch
             {
-                // We'll ignore any other exceptions we might encounter.
+                // We'll ignore any other exceptions we might encounter and assume destination is reachable
             }
 
             return true;

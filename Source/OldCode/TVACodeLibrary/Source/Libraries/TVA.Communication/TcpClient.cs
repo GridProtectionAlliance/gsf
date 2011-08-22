@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -254,10 +255,28 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
@@ -356,6 +375,11 @@ namespace TVA.Communication
         public const bool DefaultIntegratedSecurity = false;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="AllowDualStackSocket"/> property.
+        /// </summary>
+        public const bool DefaultAllowDualStackSocket = true;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="ClientBase.ConnectionString"/> property.
         /// </summary>
         public const string DefaultConnectionString = "Server=localhost:8888";
@@ -364,8 +388,10 @@ namespace TVA.Communication
         private bool m_payloadAware;
         private byte[] m_payloadMarker;
         private bool m_integratedSecurity;
-        private TransportProvider<Socket> m_tcpClient;
+        private IPStack m_ipStack;
+        private bool m_allowDualStackSocket;
         private int m_connectionAttempts;
+        private TransportProvider<Socket> m_tcpClient;
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectionHandle;
         private bool m_disposed;
@@ -392,6 +418,7 @@ namespace TVA.Communication
             m_payloadAware = DefaultPayloadAware;
             m_payloadMarker = Payload.DefaultMarker;
             m_integratedSecurity = DefaultIntegratedSecurity;
+            m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_tcpClient = new TransportProvider<Socket>();
         }
 
@@ -469,6 +496,24 @@ namespace TVA.Communication
         }
 
         /// <summary>
+        /// Gets or sets a boolean value that determines if dual-mode socket is allowed when endpoint address is IPv6.
+        /// </summary>
+        [Category("Settings"),
+        DefaultValue(DefaultAllowDualStackSocket),
+        Description("Determines if dual-mode socket is allowed when endpoint address is IPv6.")]
+        public bool AllowDualStackSocket
+        {
+            get
+            {
+                return m_allowDualStackSocket;
+            }
+            set
+            {
+                m_allowDualStackSocket = value;
+            }
+        }
+
+        /// <summary>
         /// Gets the <see cref="TransportProvider{Socket}"/> object for the <see cref="TcpClient"/>.
         /// </summary>
         [Browsable(false)]
@@ -509,6 +554,7 @@ namespace TVA.Communication
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
                 settings["PayloadAware", true].Update(m_payloadAware);
                 settings["IntegratedSecurity", true].Update(m_integratedSecurity);
+                settings["AllowDualStackSocket", true].Update(m_allowDualStackSocket);
                 config.Save();
             }
         }
@@ -526,8 +572,10 @@ namespace TVA.Communication
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
                 settings.Add("PayloadAware", m_payloadAware, "True if payload boundaries are to be preserved during transmission, otherwise False.");
                 settings.Add("IntegratedSecurity", m_integratedSecurity, "True if the current Windows account credentials are used for authentication, otherwise False.");
+                settings.Add("AllowDualStackSocket", m_allowDualStackSocket, "True if dual-mode socket is allowed when IP address is IPv6, otherwise False.");
                 PayloadAware = settings["PayloadAware"].ValueAs(m_payloadAware);
                 IntegratedSecurity = settings["IntegratedSecurity"].ValueAs(m_integratedSecurity);
+                AllowDualStackSocket = settings["AllowDualStackSocket"].ValueAs(m_allowDualStackSocket);
             }
         }
 
@@ -556,30 +604,15 @@ namespace TVA.Communication
                     m_connectionHandle = (ManualResetEvent)base.ConnectAsync();
 
                 OnConnectionAttempt();
+
+                // Create client socket to establish presence
                 if (m_tcpClient.Provider == null)
-                    // Create client socket to establish presence.
-                    m_tcpClient.Provider = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp);
+                    m_tcpClient.Provider = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
 
                 Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
-                try
-                {
-                    // Begin asynchronous connect operation and return wait handle for the asynchronous operation.
-                    m_tcpClient.Provider.BeginConnect(Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value)), ConnectAsyncCallback, m_tcpClient);
-                }
-                catch
-                {
-                    // On IPv6 enabled OSes like Windows 7 and Windows Server 2008 loopback entries are resolved by DNS resolver 
-                    // instead of the host file and this could result in resolution failure depending on group policy settings.
-                    if (string.Compare(endpoint.Groups["host"].Value, "localhost", true) == 0)
-                        if (Transport.IsIPv6IP(((IPEndPoint)m_tcpClient.Provider.LocalEndPoint).Address))
-                            // Use IPv6 loopback IP.
-                            m_tcpClient.Provider.BeginConnect(Transport.CreateEndPoint(IPAddress.IPv6Loopback.ToString(), int.Parse(endpoint.Groups["port"].Value)), ConnectAsyncCallback, m_tcpClient);
-                        else
-                            // Use IPv4 loopback IP.
-                            m_tcpClient.Provider.BeginConnect(Transport.CreateEndPoint(IPAddress.Loopback.ToString(), int.Parse(endpoint.Groups["port"].Value)), ConnectAsyncCallback, m_tcpClient);
-                    else
-                        throw;
-                }
+
+                // Begin asynchronous connect operation and return wait handle for the asynchronous operation
+                m_tcpClient.Provider.BeginConnect(Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack), ConnectAsyncCallback, m_tcpClient);
 
                 return m_connectionHandle;
             }
@@ -626,9 +659,8 @@ namespace TVA.Communication
         {
             m_connectData = connectionString.ParseKeyValuePairs();
 
-            // Inject 'interface' property if missing.
-            if (!m_connectData.ContainsKey("interface"))
-                m_connectData.Add("interface", string.Empty);
+            // Derive desired IP stack based on specified "interface" setting, adding setting if it's not defined
+            m_ipStack = Transport.GetInterfaceIPStack(m_connectData);
 
             // Check if 'server' property is missing.
             if (!m_connectData.ContainsKey("server"))
@@ -737,7 +769,7 @@ namespace TVA.Communication
                     Payload.ProcessTransmit(ref tcpClient.SendBuffer, ref tcpClient.SendBufferOffset, ref tcpClient.SendBufferLength, Encryption, SharedSecret, Compression);
 
                     // Transmit the prepared and processed handshake message.
-                    tcpClient.Provider.Send(tcpClient.SendBuffer);
+                    m_tcpClient.Provider.BeginSend(tcpClient.SendBuffer, 0, tcpClient.SendBuffer.Length, SocketFlags.None, SendPayloadAsyncCallback, m_tcpClient).AsyncWaitHandle.WaitOne();
 
                     // Wait for the server's reponse to the handshake message.
                     ReceiveHandshakeAsync(tcpClient);
