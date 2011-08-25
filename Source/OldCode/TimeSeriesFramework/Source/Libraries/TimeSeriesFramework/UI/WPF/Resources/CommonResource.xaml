@@ -195,10 +195,10 @@
     </Style>
     
     <Style TargetType="Button">
-        <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="Margin" Value="5" />
+        <Setter Property="Cursor" Value="Hand" />   
         <Setter Property="Width" Value="{StaticResource XSmallItemSize}" />
-        <Setter Property="FontSize" Value="{StaticResource TextSize}" />
+        <Setter Property="Height" Value="26"/>
+        
     </Style>
     
     <Style TargetType="Button" x:Key="HomeButtonStyle">
@@ -206,7 +206,7 @@
         <Setter Property="Padding" Value="1"/>
         <Setter Property="Margin" Value="2"/>
         <Setter Property="Width" Value="{StaticResource LargeItemSize}"/>
-        <Setter Property="Height" Value="Auto"/>
+        <Setter Property="Height" Value="30"/>
         <Setter Property="FontWeight" Value="Bold"/>
         <Setter Property="FontSize" Value="{StaticResource TextSize}"/>
     </Style>
@@ -276,7 +276,8 @@
     <conv:StringToBooleanConverter x:Key="StringToBooleanConverter"/>
     
     <ControlTemplate x:Key="HyperlinkStyleButtonTemplate" TargetType="Button">
-        <TextBlock Text="{TemplateBinding Content}" FontSize="{StaticResource TextSize}" TextDecorations="Underline" Cursor="Hand" HorizontalAlignment="Center" Width="Auto" Height="20"/>
+        <TextBlock Text="{TemplateBinding Content}" FontSize="{StaticResource TextSize}" TextDecorations="Underline" Cursor="Hand" 
+                   HorizontalAlignment="Center" Width="Auto" Height="Auto" Foreground="#FF3366FF"/>
     </ControlTemplate>
 
     <ControlTemplate x:Key="ImageButtonTemplate" TargetType="Button">

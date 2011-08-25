@@ -53,8 +53,12 @@ namespace TimeSeriesFramework.UI
         // Static Fields
 
         private static Guid s_currentNodeID;
-        private static string s_remoteStatusServerConnectionString;
-        private static string s_dataPublisherPort;
+        // TODO: Remove s_remoteStatusServerConnectionString and s_dataPublisherPort and corresponding references.
+        //private static string s_remoteStatusServerConnectionString;
+        //private static string s_dataPublisherPort;
+        private static string s_serviceConnectionString;
+        private static string s_dataPublisherConnectionString;
+        private static bool s_forceIPv4;
         private static string s_realTimeStatisticServiceUrl;
         private static string s_timeSeriesDataServiceUrl;
         private static WindowsServiceClient s_windowsServiceClient;
@@ -164,13 +168,13 @@ namespace TimeSeriesFramework.UI
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to database.</param>
         /// <returns>IP address and port on which backend windows service is running.</returns>
-        public static string RemoteStatusServerConnectionString(this AdoDataConnection database)
-        {
-            if (string.IsNullOrEmpty(s_remoteStatusServerConnectionString))
-                database.GetNodeSettings();
+        //public static string RemoteStatusServerConnectionString(this AdoDataConnection database)
+        //{
+        //    if (string.IsNullOrEmpty(s_remoteStatusServerConnectionString))
+        //        database.GetNodeSettings();
 
-            return s_remoteStatusServerConnectionString;
-        }
+        //    return s_remoteStatusServerConnectionString;
+        //}
 
         /// <summary>
         /// Retrieves web service url to query real time statistics values.
@@ -190,13 +194,13 @@ namespace TimeSeriesFramework.UI
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to database.</param>
         /// <returns>port number on which data is being published.</returns>
-        public static string DataPublisherPort(this AdoDataConnection database)
-        {
-            if (string.IsNullOrEmpty(s_dataPublisherPort))
-                database.GetNodeSettings();
+        //public static string DataPublisherPort(this AdoDataConnection database)
+        //{
+        //    if (string.IsNullOrEmpty(s_dataPublisherPort))
+        //        database.GetNodeSettings();
 
-            return s_dataPublisherPort;
-        }
+        //    return s_dataPublisherPort;
+        //}
 
         /// <summary>
         /// Retrieves web serivce url to query real time data.
@@ -211,6 +215,22 @@ namespace TimeSeriesFramework.UI
             return s_timeSeriesDataServiceUrl;
         }
 
+        public static string ServiceConnectionString(this AdoDataConnection database)
+        {
+            if (string.IsNullOrEmpty(s_serviceConnectionString))
+                database.GetNodeSettings();
+
+            return s_serviceConnectionString;
+        }
+
+        public static string DataPublisherConnectionString(this AdoDataConnection database)
+        {
+            if (string.IsNullOrEmpty(s_dataPublisherConnectionString))
+                database.GetNodeSettings();
+
+            return s_dataPublisherConnectionString;
+        }
+
         /// <summary>
         /// Method to parse Settings field value for current node defined in the database and extract various parameters to communicate with backend windows service.
         /// </summary>
@@ -220,19 +240,42 @@ namespace TimeSeriesFramework.UI
             Node node = Node.GetCurrentNode(database);
             if (node != null)
             {
-                Dictionary<string, string> settings = node.Settings.ToLower().ParseKeyValuePairs();
+                s_forceIPv4 = false;
 
-                if (settings.ContainsKey("remotestatusserverconnectionstring"))
-                    s_remoteStatusServerConnectionString = settings["remotestatusserverconnectionstring"];
+                Dictionary<string, string> settings = node.Settings.ToLower().ParseKeyValuePairs();
 
                 if (settings.ContainsKey("realtimestatisticserviceurl"))
                     s_realTimeStatisticServiceUrl = settings["realtimestatisticserviceurl"];
 
-                if (settings.ContainsKey("datapublisherport"))
-                    s_dataPublisherPort = settings["datapublisherport"];
-
                 if (settings.ContainsKey("timeseriesdataserviceurl"))
                     s_timeSeriesDataServiceUrl = settings["timeseriesdataserviceurl"];
+
+                if (settings.ContainsKey("interface"))
+                    s_forceIPv4 = true;
+
+                if (settings.ContainsKey("remotestatusserverconnectionstring"))
+                {
+                    //s_remoteStatusServerConnectionString = settings["remotestatusserverconnectionstring"];
+                    Dictionary<string, string> serviceSettings = settings["remotestatusserverconnectionstring"].ParseKeyValuePairs();
+
+                    if (serviceSettings.ContainsKey("interface"))
+                        s_forceIPv4 = true;
+
+                    if (serviceSettings.ContainsKey("server"))
+                    {
+                        string server = serviceSettings["server"];
+                        s_serviceConnectionString = "server=" + server;
+                        if (s_forceIPv4)
+                            s_serviceConnectionString += ";interface=0.0.0.0";
+
+                        if (settings.ContainsKey("datapublisherport"))
+                        {
+                            s_dataPublisherConnectionString = "server=" + server.Substring(0, server.LastIndexOf(":") + 1) + settings["datapublisherport"];
+                            if (s_forceIPv4)
+                                s_dataPublisherConnectionString += ";interface=0.0.0.0";
+                        }
+                    }
+                }
             }
         }
 
@@ -316,9 +359,11 @@ namespace TimeSeriesFramework.UI
             s_currentNodeID = nodeID;
 
             // When node selection changes, reset other static members related to node.
-            s_remoteStatusServerConnectionString = string.Empty;
+            //s_remoteStatusServerConnectionString = string.Empty;
+            s_serviceConnectionString = string.Empty;
+            s_dataPublisherConnectionString = string.Empty;
             s_realTimeStatisticServiceUrl = string.Empty;
-            s_dataPublisherPort = string.Empty;
+            //s_dataPublisherPort = string.Empty;
             s_timeSeriesDataServiceUrl = string.Empty;
             SetRetryServiceConnection(true);
             DisconnectWindowsServiceClient();
@@ -485,7 +530,7 @@ namespace TimeSeriesFramework.UI
                 AdoDataConnection database = new AdoDataConnection(DefaultSettingsCategory);
                 try
                 {
-                    string connectionString = database.RemoteStatusServerConnectionString();
+                    string connectionString = database.ServiceConnectionString();   //.RemoteStatusServerConnectionString();
 
                     if (!string.IsNullOrWhiteSpace(connectionString))
                     {
