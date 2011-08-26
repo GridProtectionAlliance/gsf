@@ -785,10 +785,14 @@ namespace TVA.Communication
         /// </summary>
         private void ReceiveHandshakeAsync(TransportProvider<Socket> worker)
         {
+            if (worker.Provider == null)
+                return;
+
             // Prepare buffer used for receiving data.
             worker.ReceiveBufferOffset = 0;
             worker.ReceiveBufferLength = -1;
             worker.ReceiveBuffer = new byte[ReceiveBufferSize];
+
             // Receive data asynchronously with a timeout.
             worker.WaitAsync(HandshakeTimeout,
                              ReceiveHandshakeAsyncCallback,
@@ -913,6 +917,9 @@ namespace TVA.Communication
         /// </summary>
         private void ReceivePayloadAwareAsync(TransportProvider<Socket> worker)
         {
+            if (worker.Provider == null)
+                return;
+
             if (ReceiveTimeout == -1)
             {
                 // Wait for data indefinitely.
@@ -1026,6 +1033,9 @@ namespace TVA.Communication
         /// </summary>
         private void ReceivePayloadUnawareAsync(TransportProvider<Socket> worker)
         {
+            if (worker.Provider == null)
+                return;
+
             if (ReceiveTimeout == -1)
             {
                 // Wait for data indefinitely.

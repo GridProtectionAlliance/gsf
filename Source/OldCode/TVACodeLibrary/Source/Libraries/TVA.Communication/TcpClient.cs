@@ -936,6 +936,9 @@ namespace TVA.Communication
         /// </summary>
         private void ReceivePayloadAwareAsync(TransportProvider<Socket> worker)
         {
+            if (worker.Provider == null)
+                return;
+
             if (ReceiveTimeout == -1)
             {
                 // Wait for data indefinitely.
@@ -1049,6 +1052,9 @@ namespace TVA.Communication
         /// </summary>
         private void ReceivePayloadUnawareAsync(TransportProvider<Socket> worker)
         {
+            if (worker.Provider == null)
+                return;
+
             if (ReceiveTimeout == -1)
             {
                 // Wait for data indefinitely.

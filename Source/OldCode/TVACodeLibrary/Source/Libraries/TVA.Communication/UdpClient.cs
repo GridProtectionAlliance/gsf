@@ -786,6 +786,9 @@ namespace TVA.Communication
         /// </summary>
         private void ReceiveHandshakeAsync(TransportProvider<Socket> worker)
         {
+            if (worker.Provider == null)
+                return;
+
             // Receive data asynchronously with a timeout.
             worker.WaitAsync(HandshakeTimeout,
                              ReceiveHandshakeAsyncCallback,
@@ -855,6 +858,9 @@ namespace TVA.Communication
         /// </summary>
         private void ReceivePayloadAsync(TransportProvider<Socket> worker)
         {
+            if (worker.Provider == null)
+                return;
+
             if (ReceiveTimeout == -1)
             {
                 // Wait for data indefinitely.

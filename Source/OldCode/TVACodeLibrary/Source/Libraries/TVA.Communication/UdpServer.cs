@@ -814,6 +814,9 @@ namespace TVA.Communication
         /// </summary>
         private void ReceivePayloadAnyAsync(TransportProvider<Socket> worker)
         {
+            if (worker.Provider == null)
+                return;
+
             worker.Provider.BeginReceiveFrom(worker.ReceiveBuffer,
                                              worker.ReceiveBufferOffset,
                                              worker.ReceiveBuffer.Length,
@@ -870,7 +873,11 @@ namespace TVA.Communication
         /// </summary>
         private void ReceivePayloadOneAsync(TransportProvider<Socket> worker)
         {
+            if (worker.Provider == null)
+                return;
+
             EndPoint client = worker.Provider.RemoteEndPoint;
+
             if (ReceiveTimeout == -1)
             {
                 // Wait for data indefinitely.
