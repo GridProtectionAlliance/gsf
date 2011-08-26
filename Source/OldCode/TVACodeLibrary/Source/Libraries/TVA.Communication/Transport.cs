@@ -363,21 +363,31 @@ namespace TVA.Communication
             }
             else
             {
-                // Host name or IP was provided, attempt lookup - note that exception can occur if DNS lookup fails
-                IPAddress[] addressList = Dns.GetHostEntry(hostNameOrAddress).AddressList;
-
-                if (addressList.Length > 0)
+                switch (hostNameOrAddress)
                 {
-                    // Traverse address list looking for first match on desired IP stack
-                    foreach (IPAddress address in addressList)
-                    {
-                        if ((stack == IPStack.IPv6 && address.AddressFamily == AddressFamily.InterNetworkV6) ||
-                            (stack == IPStack.IPv4 && address.AddressFamily == AddressFamily.InterNetwork))
-                            return new IPEndPoint(address, port);
-                    }
+                    // Handle IP "0" as a special case since DNS lookup is unavailable for this address
+                    case "::0":
+                    case "0.0.0.0":
+                        return new IPEndPoint(IPAddress.Parse(hostNameOrAddress), port);
+                    default:
+                        // Host name or IP was provided, attempt lookup - note that exception can occur if DNS lookup fails
+                        IPAddress[] addressList = Dns.GetHostEntry(hostNameOrAddress).AddressList;
 
-                    // If no available matching address was found for desired IP stack, default to first address in list
-                    return new IPEndPoint(addressList[0], port);
+                        if (addressList.Length > 0)
+                        {
+                            // Traverse address list looking for first match on desired IP stack
+                            foreach (IPAddress address in addressList)
+                            {
+                                if ((stack == IPStack.IPv6 && address.AddressFamily == AddressFamily.InterNetworkV6) ||
+                                    (stack == IPStack.IPv4 && address.AddressFamily == AddressFamily.InterNetwork))
+                                    return new IPEndPoint(address, port);
+                            }
+
+                            // If no available matching address was found for desired IP stack, default to first address in list
+                            return new IPEndPoint(addressList[0], port);
+                        }
+
+                        break;
                 }
 
                 throw new InvalidOperationException("No valid IP addresses could be found for host named " + hostNameOrAddress);
