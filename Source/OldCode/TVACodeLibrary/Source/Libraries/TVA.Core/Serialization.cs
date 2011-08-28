@@ -287,8 +287,6 @@ namespace TVA
     /// </summary>
     public static class Serialization
     {
-        #region [ Methods ]
-
         #region [ Obsolete ]
 
         /// <summary>
@@ -641,15 +639,19 @@ namespace TVA
         /// <param name="serializedObject"><see cref="Array"/> of <see cref="Byte"/>s contaning the serialized <see cref="Object"/> that is to be deserialized.</param>
         /// <param name="serializationFormat"><see cref="SerializationFormat"/> in which the <paramref name="serializedObject"/> was serialized.</param>
         /// <param name="deserializedObject">Deserialized <see cref="Object"/>.</param>
-        public static void TryDeserialize<T>(byte[] serializedObject, SerializationFormat serializationFormat, out T deserializedObject)
+        /// <returns><c>true</c>if deserialization succeeded; otherwise <c>false</c>.</returns>
+        public static bool TryDeserialize<T>(byte[] serializedObject, SerializationFormat serializationFormat, out T deserializedObject)
         {
             deserializedObject = default(T);
+
             try
             {
                 deserializedObject = Deserialize<T>(serializedObject, serializationFormat);
+                return true;
             }
             catch
             {
+                return false;
             }
         }
 
@@ -660,18 +662,20 @@ namespace TVA
         /// <param name="serializedObject"><see cref="Stream"/> contaning the serialized <see cref="Object"/> that is to be deserialized.</param>
         /// <param name="serializationFormat"><see cref="SerializationFormat"/> in which the <paramref name="serializedObject"/> was serialized.</param>
         /// <param name="deserializedObject">Deserialized <see cref="Object"/>.</param>
-        public static void TryDeserialize<T>(Stream serializedObject, SerializationFormat serializationFormat, out T deserializedObject)
+        /// <returns><c>true</c>if deserialization succeeded; otherwise <c>false</c>.</returns>
+        public static bool TryDeserialize<T>(Stream serializedObject, SerializationFormat serializationFormat, out T deserializedObject)
         {
             deserializedObject = default(T);
+
             try
             {
                 deserializedObject = Deserialize<T>(serializedObject, serializationFormat);
+                return true;
             }
             catch
             {
+                return false;
             }
         }
-
-        #endregion
     }
 }
