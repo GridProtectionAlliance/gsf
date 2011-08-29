@@ -793,7 +793,7 @@ namespace TimeSeriesFramework
         ///         <term>&gt; 0</term>
         ///         <description>
         ///         In this case a specific processing interval has been defined for processing data, as a result both the
-        ///         <see cref="ProcessByReceivedTimestamp"/> and <see cref="UsePrecisisonTimer"/> properties will be set to <c>true</c>. With
+        ///         <see cref="ProcessByReceivedTimestamp"/> and <see cref="UsePrecisionTimer"/> properties will be set to <c>true</c>. With
         ///         a specifically defined processing interval, data is expected to flow into the concentrator at a similar rate. The
         ///         <see cref="FramesPerSecond"/> property will still be used to sort data by time into appropriate frames, but the concentrator
         ///         will use the reception time of the measurements against the defined lag-time to make sure needed data has arrived before

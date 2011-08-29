@@ -60,12 +60,12 @@ namespace TimeSeriesFramework.Adapters
         public event EventHandler<EventArgs<Exception>> ProcessException;
 
         /// <summary>
-        /// Event is raised when <see cref="InputMeasurementKeys"/> are updated.
+        /// Event is raised when <see cref="IAdapter.InputMeasurementKeys"/> are updated.
         /// </summary>
         public event EventHandler InputMeasurementKeysUpdated;
 
         /// <summary>
-        /// Event is raised when <see cref="OutputMeasurements"/> are updated.
+        /// Event is raised when <see cref="IAdapter.OutputMeasurements"/> are updated.
         /// </summary>
         public event EventHandler OutputMeasurementsUpdated;
 
