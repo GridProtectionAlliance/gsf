@@ -544,7 +544,7 @@ namespace AdoAdapters
                                         }
                                         else if (valueType == typeof(string))
                                         {
-                                            MethodInfo parseMethod = valueType.GetMethod("Parse", new Type[] { typeof(string) });
+                                            MethodInfo parseMethod = propertyType.GetMethod("Parse", new Type[] { typeof(string) });
 
                                             if (parseMethod != null && parseMethod.IsStatic)
                                                 property.SetValue(measurement, parseMethod.Invoke(null, new object[] { value }), null);
