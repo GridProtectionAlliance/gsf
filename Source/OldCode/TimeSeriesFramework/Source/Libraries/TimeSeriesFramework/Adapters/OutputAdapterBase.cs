@@ -65,6 +65,7 @@ namespace TimeSeriesFramework.Adapters
         private MeasurementKey[] m_requestedInputMeasurementKeys;
         private System.Timers.Timer m_connectionTimer;
         private System.Timers.Timer m_monitorTimer;
+        private bool m_bypassProcessing;
         private bool m_disposed;
 
         #endregion
@@ -176,6 +177,29 @@ namespace TimeSeriesFramework.Adapters
         public abstract bool OutputIsForArchive
         {
             get;
+        }
+
+        /// <summary>
+        /// Gets or sets value that allows output adapter processing to be bypassed.
+        /// </summary>
+        /// <remarks>
+        /// For output adapters it is assumed that the desired behavior when a temporal constraint exists is to disable
+        /// processing since the data being processed by the output adapter has already been archived. Note that this
+        /// bypass behavior is only enagaged when <see cref="OutputIsForArchive"/> is <c>true</c>. Processing bypass
+        /// occurs by setting <see cref="BypassProcessing"/> to <c>true</c>. If you have an output adapter that you
+        /// want to process data even when a temporal constaint is defined, override the <see cref="BypassProcessing"/>
+        /// property and force the base value to always be <c>false</c>.
+        /// </remarks>
+        public virtual bool BypassProcessing
+        {
+            get
+            {
+                return m_bypassProcessing;
+            }
+            set
+            {
+                m_bypassProcessing = value;
+            }
         }
 
         /// <summary>
@@ -425,7 +449,7 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="measurements">Measurements to queue for processing.</param>
         public virtual void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
-            if (m_disposed)
+            if (m_disposed || BypassProcessing)
                 return;
 
             if (!ProcessMeasurementFilter || InputMeasurementKeys == null)
@@ -528,6 +552,71 @@ namespace TimeSeriesFramework.Adapters
         {
             if (m_measurementQueue != null)
                 m_measurementQueue.Flush();
+        }
+
+        /// <summary>
+        /// Defines a temporal processing constraint for the adapter.
+        /// </summary>
+        /// <param name="startTime">Defines a relative or exact start time for the temporal constraint.</param>
+        /// <param name="stopTime">Defines a relative or exact stop time for the temporal constraint.</param>
+        /// <param name="constraintParameters">Defines any temporal parameters related to the constraint.</param>
+        /// <remarks>
+        /// <para>
+        /// For output adapters it is assumed that the desired behavior when a temporal constraint exists is to disable
+        /// processing since the data being processed by the output adapter has already been archived. Note that this
+        /// bypass behavior is only enagaged when <see cref="OutputIsForArchive"/> is <c>true</c>. Processing bypass
+        /// occurs by setting <see cref="BypassProcessing"/> to <c>true</c>. If you have an output adapter that you
+        /// want to process data even when a temporal constaint is defined, override the <see cref="BypassProcessing"/>
+        /// property and force the base value to always be <c>false</c>.
+        /// </para>
+        /// <para>
+        /// This method defines a temporal processing contraint for an adapter, i.e., the start and stop time over which an
+        /// adapter will process data. Actual implementation of the constraint will be adapter specific. Implementations
+        /// should be able to dynamically handle multitple calls to this function with new constraints. Passing in <c>null</c>
+        /// for the <paramref name="startTime"/> and <paramref name="stopTime"/> should cancel the temporal constraint and
+        /// return the adapter to standard / real-time operation.
+        /// </para>
+        /// <para>
+        /// The <paramref name="startTime"/> and <paramref name="stopTime"/> parameters can be specified in one of the
+        /// following formats:
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term>Time Format</term>
+        ///         <description>Format Description</description>
+        ///     </listheader>
+        ///     <item>
+        ///         <term>12-30-2000 23:59:59.033</term>
+        ///         <description>Absolute date and time.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*</term>
+        ///         <description>Evaluates to <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-20s</term>
+        ///         <description>Evaluates to 20 seconds before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-10m</term>
+        ///         <description>Evaluates to 10 minutes before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-1h</term>
+        ///         <description>Evaluates to 1 hour before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-1d</term>
+        ///         <description>Evaluates to 1 day before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        /// </list>
+        /// </para>
+        /// </remarks>
+        public override void SetTemporalConstraint(string startTime, string stopTime, string constraintParameters)
+        {
+            base.SetTemporalConstraint(startTime, stopTime, constraintParameters);
+
+            // Bypass processing when output adapter is expected to be archving data and a temporal constraint has been defined
+            BypassProcessing = OutputIsForArchive && (StartTimeConstraint != DateTime.MinValue || StopTimeConstraint != DateTime.MaxValue);
         }
 
         /// <summary>
