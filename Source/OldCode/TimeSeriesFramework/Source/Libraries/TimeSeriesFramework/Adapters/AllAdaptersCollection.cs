@@ -24,6 +24,7 @@
 using System;
 using System.ComponentModel;
 using System.Data;
+using TVA;
 
 namespace TimeSeriesFramework.Adapters
 {
@@ -90,8 +91,44 @@ namespace TimeSeriesFramework.Adapters
                     }
                 }
             }
-            
+
             Initialized = true;
+        }
+
+        /// <summary>
+        /// Create newly defined adapters and remove adapters that are no longer present in the adapter collection configurations. 
+        /// </summary>
+        public void UpdateCollectionConfigurations()
+        {
+            lock (this)
+            {
+                foreach (IAdapterCollection adapterCollection in this)
+                {
+                    string dataMember = adapterCollection.DataMember;
+
+                    if (DataSource.Tables.Contains(dataMember))
+                    {
+                        // Remove adapters that are no longer present in the configuration
+                        for (int i = adapterCollection.Count - 1; i >= 0; i--)
+                        {
+                            IAdapter adapter = adapterCollection[i];
+                            DataRow[] adapterRows = DataSource.Tables[dataMember].Select(string.Format("ID = {0}", adapter.ID));
+
+                            if (adapterRows.Length == 0 && adapter.ID != 0)
+                                adapterCollection.Remove(adapter);
+                        }
+
+                        // Create newly defined adapters
+                        foreach (DataRow adapterRow in DataSource.Tables[dataMember].Rows)
+                        {
+                            IAdapter adapter;
+
+                            if (!adapterCollection.TryGetAdapterByID(uint.Parse(adapterRow["ID"].ToNonNullString("0")), out adapter) && adapterCollection.TryCreateAdapter(adapterRow, out adapter))
+                                adapterCollection.Add(adapter);
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>

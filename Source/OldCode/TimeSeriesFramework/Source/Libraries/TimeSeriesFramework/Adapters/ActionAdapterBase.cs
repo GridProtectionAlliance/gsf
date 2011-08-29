@@ -754,7 +754,19 @@ namespace TimeSeriesFramework.Adapters
                 MaximumPublicationTimeout = int.Parse(setting);
 
             if (settings.TryGetValue("downsamplingMethod", out setting))
-                DownsamplingMethod = (DownsamplingMethod)Enum.Parse(typeof(DownsamplingMethod), setting, true);
+            {
+                DownsamplingMethod method;
+
+                if (Enum.TryParse<DownsamplingMethod>(setting, true, out method))
+                {
+                    DownsamplingMethod = method;
+                }
+                else
+                {
+                    OnStatusMessage("WARNING: No downsampling method labeled \"{0}\" exists, \"LastReceived\" method was selected.", setting);
+                    DownsamplingMethod = DownsamplingMethod.LastReceived;
+                }
+            }
 
             if (settings.TryGetValue("inputSourceIDs", out setting))
                 InputSourceIDs = setting.Split(',');
@@ -766,6 +778,17 @@ namespace TimeSeriesFramework.Adapters
                 AutoStart = !setting.ParseBoolean();
             else
                 AutoStart = true;
+
+            string startTime, stopTime, parameters;
+
+            settings.TryGetValue("startTimeConstraint", out startTime);
+            settings.TryGetValue("stopTimeConstraint", out stopTime);
+            settings.TryGetValue("timeConstraintParameters", out parameters);
+
+            SetTemporalConstraint(startTime, stopTime, parameters);
+
+            if (settings.TryGetValue("processingInterval", out setting))
+                ProcessingInterval = int.Parse(setting);
         }
 
         /// <summary>
@@ -981,6 +1004,7 @@ namespace TimeSeriesFramework.Adapters
         /// </list>
         /// </para>
         /// </remarks>
+        [AdapterCommand("Defines a temporal processing constraint for the adapter.")]
         public virtual void SetTemporalConstraint(string startTime, string stopTime, string constraintParameters)
         {
             if (!string.IsNullOrWhiteSpace(startTime))

@@ -108,6 +108,7 @@ namespace TimeSeriesFramework.Adapters
         private long m_stopTime;
         private DateTime m_startTimeConstraint;
         private DateTime m_stopTimeConstraint;
+        private int m_processingInterval;
         private int m_hashCode;
         private bool m_initialized;
         private bool m_disposed;
@@ -125,6 +126,7 @@ namespace TimeSeriesFramework.Adapters
             m_settings = new Dictionary<string, string>();
             m_startTimeConstraint = DateTime.MinValue;
             m_stopTimeConstraint = DateTime.MaxValue;
+            m_processingInterval = -1;
             GenHashCode();
 
             // Create wait handle to use for adapter initialization
@@ -494,7 +496,30 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
-        /// Gets the total amount of time, in seconds, that the concentrator has been active.
+        /// Gets or sets the desired processing interval, in milliseconds, for the adapter.
+        /// </summary>
+        /// <remarks>
+        /// With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
+        /// basically a delay, or timer interval, overwhich to process data. A value of -1 means to use the default processing
+        /// interval while a value of 0 means to process data as fast as possible.
+        /// </remarks>
+        public virtual int ProcessingInterval
+        {
+            get
+            {
+                return m_processingInterval;
+            }
+            set
+            {
+                m_processingInterval = value;
+
+                if (m_processingInterval < -1)
+                    m_processingInterval = -1;
+            }
+        }
+
+        /// <summary>
+        /// Gets the total amount of time, in seconds, that the adapter has been active.
         /// </summary>
         public virtual Time RunTime
         {
@@ -577,6 +602,8 @@ namespace TimeSeriesFramework.Adapters
                 status.AppendFormat("     Start time constraint: {0}", StartTimeConstraint == DateTime.MinValue ? "Unspecified" : StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"));
                 status.AppendLine();
                 status.AppendFormat("      Stop time constraint: {0}", StopTimeConstraint == DateTime.MaxValue ? "Unspecified" : StopTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                status.AppendLine();
+                status.AppendFormat("       Processing interval: {0}", ProcessingInterval < 0 ? "Default" : (ProcessingInterval == 0 ? "As fast as possible" : ProcessingInterval + " milliseconds"));
                 status.AppendLine();
                 status.AppendFormat("   Item reporting interval: {0}", MeasurementReportingInterval);
                 status.AppendLine();
@@ -717,6 +744,17 @@ namespace TimeSeriesFramework.Adapters
                 AutoStart = !setting.ParseBoolean();
             else
                 AutoStart = true;
+
+            string startTime, stopTime, parameters;
+
+            settings.TryGetValue("startTimeConstraint", out startTime);
+            settings.TryGetValue("stopTimeConstraint", out stopTime);
+            settings.TryGetValue("timeConstraintParameters", out parameters);
+
+            SetTemporalConstraint(startTime, stopTime, parameters);
+
+            if (settings.TryGetValue("processingInterval", out setting))
+                ProcessingInterval = int.Parse(setting);
         }
 
         /// <summary>
@@ -858,6 +896,7 @@ namespace TimeSeriesFramework.Adapters
         /// </list>
         /// </para>
         /// </remarks>
+        [AdapterCommand("Defines a temporal processing constraint for the adapter.")]
         public virtual void SetTemporalConstraint(string startTime, string stopTime, string constraintParameters)
         {
             if (!string.IsNullOrWhiteSpace(startTime))

@@ -108,7 +108,7 @@ namespace TimeSeriesFramework
         /// Frame rate timer.
         /// </summary>
         /// <remarks>
-        /// One static instance of this internal class is created per encountered frame rate.
+        /// One static instance of this internal class is created per encountered frame rate / processing interval.
         /// </remarks>
         private class FrameRateTimer : IDisposable
         {
@@ -117,6 +117,7 @@ namespace TimeSeriesFramework
             // Fields
             private PrecisionTimer m_timer;
             private int m_framesPerSecond;
+            private int m_processingInterval;
             private int[] m_framePeriods;
             private int m_frameIndex;
             private int m_lastFramePeriod;
@@ -131,27 +132,46 @@ namespace TimeSeriesFramework
             /// Create a new <see cref="FrameRateTimer"/> class.
             /// </summary>
             /// <param name="framesPerSecond">Desired frame rate for <see cref="PrecisionTimer"/>.</param>
-            public FrameRateTimer(int framesPerSecond)
+            /// <param name="processingInterval">Desired processing interval, if applicable.</param>
+            /// <remarks>
+            /// When the <paramref name="processingInterval"/> is set to -1, the frame rate timer interval will be calculated as a distribution
+            /// of whole milliseonds over the specified number of <paramref name="framesPerSecond"/>. Otherwise the specified
+            /// <paramref name="processingInterval"/> will be used as the timer interval.
+            /// </remarks>
+            public FrameRateTimer(int framesPerSecond, int processingInterval)
             {
+                if (processingInterval == 0)
+                    throw new InvalidOperationException("A frame rate timer should not be created when using a processing interval of zero, i.e., processing data as fast as possible.");
+
+                m_framesPerSecond = framesPerSecond;
+                m_processingInterval = processingInterval;
+
                 // Create a new precision timer for this timer state
                 m_timer = new PrecisionTimer();
                 m_timer.AutoReset = true;
 
-                // Attach handler for timer period assignments
-                m_timer.Tick += SetTimerPeriod;
-
-                m_framesPerSecond = framesPerSecond;
-                m_framePeriods = new int[framesPerSecond];
-
-                // Calculate new wait time periods for new number of frames per second
-                for (int frameIndex = 0; frameIndex < framesPerSecond; frameIndex++)
+                if (processingInterval > 0)
                 {
-                    m_framePeriods[frameIndex] = CalcWaitTimeForFrameIndex(frameIndex);
+                    // Establish fixed timer period
+                    m_timer.Period = processingInterval;
                 }
+                else
+                {
+                    // Attach handler for timer period assignments
+                    m_timer.Tick += SetTimerPeriod;
 
-                // Establish initial timer period
-                m_lastFramePeriod = m_framePeriods[0];
-                m_timer.Period = m_lastFramePeriod;
+                    // Calculate distributed wait time periods over specified number of frames per second
+                    m_framePeriods = new int[framesPerSecond];
+
+                    for (int frameIndex = 0; frameIndex < framesPerSecond; frameIndex++)
+                    {
+                        m_framePeriods[frameIndex] = CalcWaitTimeForFrameIndex(frameIndex);
+                    }
+
+                    // Establish initial timer period
+                    m_lastFramePeriod = m_framePeriods[0];
+                    m_timer.Period = m_lastFramePeriod;
+                }
 
                 // Start timer
                 m_timer.Start();
@@ -170,17 +190,6 @@ namespace TimeSeriesFramework
             #region [ Properties ]
 
             /// <summary>
-            /// Gets <see cref="PrecisionTimer"/> instance for this <see cref="FrameRateTimer"/>.
-            /// </summary>
-            public PrecisionTimer Timer
-            {
-                get
-                {
-                    return m_timer;
-                }
-            }
-
-            /// <summary>
             /// Gets frames per second for this <see cref="FrameRateTimer"/>.
             /// </summary>
             public int FramesPerSecond
@@ -192,13 +201,13 @@ namespace TimeSeriesFramework
             }
 
             /// <summary>
-            /// Gets array of frame periods for this <see cref="FrameRateTimer"/>.
+            /// Gets the processing interval defined for the <see cref="FrameRateTimer"/>.
             /// </summary>
-            public int[] FramePeriods
+            public int ProcessingInterval
             {
                 get
                 {
-                    return m_framePeriods;
+                    return m_processingInterval;
                 }
             }
 
@@ -240,7 +249,9 @@ namespace TimeSeriesFramework
                         {
                             if (m_timer != null)
                             {
-                                m_timer.Tick -= SetTimerPeriod;
+                                if (m_processingInterval == -1)
+                                    m_timer.Tick -= SetTimerPeriod;
+
                                 m_timer.Dispose();
                             }
                             m_timer = null;
@@ -399,10 +410,11 @@ namespace TimeSeriesFramework
         private bool m_attachedToFrameRateTimer;            // Flag that tracks if instance is attached to a frame rate timer
         private System.Timers.Timer m_monitorTimer;         // Sample monitor - tracks total number of unpublished frames
         private int m_framesPerSecond;                      // Frames per second
-        private double m_ticksPerFrame;                     // Frame rate - we use a 64-bit scaled integer to avoid round-off errors in calculations
+        private double m_ticksPerFrame;                     // Ticks per frame
         private double m_lagTime;                           // Allowed past time deviation tolerance, in seconds
         private double m_leadTime;                          // Allowed future time deviation tolerance, in seconds
         private long m_timeResolution;                      // Maximum sorting resolution in ticks
+        private int m_processingInterval;                   // Defines a specific processing interval for data, if desired
         private DownsamplingMethod m_downsamplingMethod;    // Downsampling method to use if input is at a higher-resolution than output
         private double m_timeOffset;                        // Half the distance of the time resolution used for index calculation
         private int m_maximumPublicationTimeout;            // Maximum publication wait timeout
@@ -453,6 +465,7 @@ namespace TimeSeriesFramework
             m_allowSortsByArrival = true;
             m_allowPreemptivePublishing = true;
             m_performTimestampReasonabilityCheck = true;
+            m_processingInterval = -1;
             m_downsamplingMethod = DownsamplingMethod.LastReceived;
             m_latestMeasurements = new ImmediateMeasurements(this);
             m_maximumPublicationTimeout = Timeout.Infinite;
@@ -652,25 +665,31 @@ namespace TimeSeriesFramework
             }
             set
             {
+                if (!value && m_processingInterval > 0)
+                    throw new InvalidOperationException("A precision timer must be used when a specific processing interval has been defined.");
+
+                if (value && m_processingInterval == 0)
+                    throw new InvalidOperationException("A precision timer cannot be used when the processing interval is set to zero, i.e., process data as fast as possible.");
+
                 if (m_usePrecisionTimer != value)
                 {
+                    m_usePrecisionTimer = value;
+
                     if (m_usePrecisionTimer)
                     {
+                        // Subscribe to frame rate timer, creating it if it doesn't exist
+                        AttachToFrameRateTimer(m_framesPerSecond, m_processingInterval);
+                    }
+                    else
+                    {
                         // Unsubscribe from last frame rate timer, if any
-                        DetachFromFrameRateTimer(m_framesPerSecond);
+                        DetachFromFrameRateTimer(m_framesPerSecond, m_processingInterval);
 
                         // Make sure to release publication wait wandle if it's currently waiting...
                         if (m_publicationWaitHandle != null)
                             m_publicationWaitHandle.Set();
                     }
-                    else
-                    {
-                        // Subscribe to frame rate timer, creating it if it doesn't exist
-                        AttachToFrameRateTimer(m_framesPerSecond);
-                    }
                 }
-
-                m_usePrecisionTimer = value;
             }
         }
 
@@ -694,7 +713,7 @@ namespace TimeSeriesFramework
                 if (m_framesPerSecond != value)
                 {
                     // Unsubscribe from last frame rate timer, if any
-                    DetachFromFrameRateTimer(m_framesPerSecond);
+                    DetachFromFrameRateTimer(m_framesPerSecond, m_processingInterval);
 
                     m_framesPerSecond = value;
                     m_ticksPerFrame = Ticks.PerSecond / (double)m_framesPerSecond;
@@ -706,9 +725,136 @@ namespace TimeSeriesFramework
                     if (m_frameQueue != null)
                         m_frameQueue.FramesPerSecond = m_framesPerSecond;
 
-                    // Subscribe to frame rate timer, creating it if it doesn't exist
                     if (m_usePrecisionTimer)
-                        AttachToFrameRateTimer(m_framesPerSecond);
+                    {
+                        // Subscribe to frame rate timer, creating it if it doesn't exist
+                        AttachToFrameRateTimer(m_framesPerSecond, m_processingInterval);
+                    }
+                    else
+                    {
+                        // Make sure to release publication wait wandle if it's currently waiting...
+                        if (m_publicationWaitHandle != null)
+                            m_publicationWaitHandle.Set();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the desired processing interval, in milliseconds, for the adapter.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This property is normally only used when you need the concentrator to send data at faster than real-time speeds,
+        /// e.g., faster than the defined <see cref="FramesPerSecond"/>. A use case would be pushing historical data through
+        /// the concentrator where you want to sort and publish data as quickly as possible.
+        /// </para>
+        /// <para>
+        /// With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, e.g.,
+        /// a timer interval, overwhich to process data. A value of -1 means to use the default processing interval, i.e., use
+        /// the <see cref="FramesPerSecond"/>, while a value of 0 means to process data as fast as possible.
+        /// </para>
+        /// <para>
+        /// From a real-time perspective the <see cref="ConcentratorBase"/> defines its general processing interval based on
+        /// the defined <see cref="FramesPerSecond"/> property. The frames per second property, however, is more than a basic
+        /// processing interval since it is used to define the intervals in one second that will become the time sorting
+        /// destination "buckets" used by the concentrator irrespective of the data rate of the incoming data. As an example,
+        /// if the frames per second of the concentrator is set to 30 and the source data rate is 60fps, then data will be
+        /// downsampled to 30 frames of sorted incoming data but the assigned processing interval will be used to publish the
+        /// frames at the specified rate.
+        /// </para>
+        /// <para>
+        /// The implemented functionality of the process interval property will be to respond to values in the following way:
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term>Value</term>
+        ///         <description>Response</description>
+        ///     </listheader>
+        ///     <item>
+        ///         <term>&lt; 0</term>
+        ///         <description>
+        ///         In this case the default processing interval has been requested, as a result the <see cref="ProcessByReceivedTimestamp"/>
+        ///         will be set to <c>false</c> and the concentrator processing interval will be defined based on the currently defined
+        ///         <see cref="FramesPerSecond"/> property, e.g., if the frames per second is 30 the processing interval will be 33.33ms.
+        ///         </description>
+        ///     </item>
+        ///     <item>
+        ///         <term>0</term>
+        ///         <description>
+        ///         In this case the processing interval has been defined to process data as fast as possible, as a result the
+        ///         <see cref="ProcessByReceivedTimestamp"/> property will be set to <c>true</c> and <see cref="UsePrecisionTimer"/> property
+        ///         will be set to <c>false</c>. With a processing interval of zero data is expected to flow into the concentrator as quick as
+        ///         it can be provided. The <see cref="FramesPerSecond"/> property will still be used to sort data by time into appropriate
+        ///         frames, but the concentrator will use the reception time of the measurements against the defined lag-time to make sure
+        ///         needed data has arrived before publication and frames will be published at the same rate of data arrival.
+        ///         </description>
+        ///     </item>
+        ///     <item>
+        ///         <term>&gt; 0</term>
+        ///         <description>
+        ///         In this case a specific processing interval has been defined for processing data, as a result both the
+        ///         <see cref="ProcessByReceivedTimestamp"/> and <see cref="UsePrecisisonTimer"/> properties will be set to <c>true</c>. With
+        ///         a specifically defined processing interval, data is expected to flow into the concentrator at a similar rate. The
+        ///         <see cref="FramesPerSecond"/> property will still be used to sort data by time into appropriate frames, but the concentrator
+        ///         will use the reception time of the measurements against the defined lag-time to make sure needed data has arrived before
+        ///         publication and frames will be published on the specified interval. If multiple frames are ready for publication when the
+        ///         processing interval executes, then all the ready frames will be published sequentially as quickly as possible.
+        ///         </description>
+        ///     </item>
+        /// </list>
+        /// </para>
+        /// </remarks>
+        public virtual int ProcessingInterval
+        {
+            get
+            {
+                return m_processingInterval;
+            }
+            set
+            {
+                if (m_processingInterval != value)
+                {
+                    DetachFromFrameRateTimer(m_framesPerSecond, m_processingInterval);
+
+                    m_processingInterval = value;
+
+                    if (m_processingInterval < -1)
+                        m_processingInterval = -1;
+
+                    ProcessByReceivedTimestamp = (m_processingInterval > -1);
+
+                    if (m_processingInterval == 0)
+                    {
+                        m_usePrecisionTimer = false;
+
+                        // Make sure to release publication wait wandle if it's currently waiting...
+                        if (m_publicationWaitHandle != null)
+                            m_publicationWaitHandle.Set();
+                    }
+                    else if (m_processingInterval > 0)
+                    {
+                        m_usePrecisionTimer = true;
+
+                        // Subscribe to frame rate timer, creating it if it doesn't exist
+                        AttachToFrameRateTimer(m_framesPerSecond, m_processingInterval);
+                    }
+                    else
+                    {
+                        if (m_usePrecisionTimer)
+                        {
+                            // Subscribe to frame rate timer, creating it if it doesn't exist
+                            AttachToFrameRateTimer(m_framesPerSecond, m_processingInterval);
+                        }
+                        else
+                        {
+                            // Unsubscribe from last frame rate timer, if any
+                            DetachFromFrameRateTimer(m_framesPerSecond, m_processingInterval);
+
+                            // Make sure to release publication wait wandle if it's currently waiting...
+                            if (m_publicationWaitHandle != null)
+                                m_publicationWaitHandle.Set();
+                        }
+                    }
                 }
             }
         }
@@ -905,6 +1051,9 @@ namespace TimeSeriesFramework
             }
             set
             {
+                if (!value && m_processingInterval > -1)
+                    throw new InvalidOperationException("Processing by received timestamp cannot be disabled when a processing interval is defined.");
+
                 m_processByReceivedTimestamp = value;
 
                 if (m_processByReceivedTimestamp)
@@ -1425,14 +1574,17 @@ namespace TimeSeriesFramework
                 status.AppendLine();
                 status.AppendFormat(" Estimated mean frame rate: {0} frames/sec", (PublishedFrames / (RunTime - m_lagTime)).ToString("0.00"));
                 status.AppendLine();
+                status.AppendFormat("       Processing interval: {0}", ProcessingInterval < 0 ? ((Ticks)m_ticksPerFrame).ToMilliseconds().ToString("0.00") + " milliseconds" : (ProcessingInterval == 0 ? "As fast as possible" : ProcessingInterval + " milliseconds"));
+                status.AppendLine();
 
                 lock (s_frameRateTimers)
                 {
+                    Tuple<int, int> key = new Tuple<int, int>(m_framesPerSecond, m_processingInterval);
                     FrameRateTimer timer;
 
-                    if (s_frameRateTimers.TryGetValue(m_framesPerSecond, out timer))
+                    if (s_frameRateTimers.TryGetValue(key, out timer))
                     {
-                        status.AppendFormat("     Timer reference count: {0} concentrator{1} for the {2}fps timer", timer.ReferenceCount, timer.ReferenceCount > 1 ? "s" : "", m_framesPerSecond);
+                        status.AppendFormat("     Timer reference count: {0} concentrator{1} for the {2}fps @ {3:0.00}ms timer", timer.ReferenceCount, timer.ReferenceCount > 1 ? "s" : "", ProcessingInterval < 0 ? ((Ticks)m_ticksPerFrame).ToMilliseconds() : (double)ProcessingInterval);
                         status.AppendLine();
                     }
 
@@ -1486,7 +1638,7 @@ namespace TimeSeriesFramework
                 {
                     if (disposing)
                     {
-                        DetachFromFrameRateTimer(m_framesPerSecond);
+                        DetachFromFrameRateTimer(m_framesPerSecond, m_processingInterval);
 
                         m_publicationThread = null;
 
@@ -2112,31 +2264,38 @@ namespace TimeSeriesFramework
         }
 
         // Handle attach to frame rate timer
-        private void AttachToFrameRateTimer(int framesPerSecond)
+        private void AttachToFrameRateTimer(int framesPerSecond, int processingInterval)
         {
+            Tuple<int, int> key = new Tuple<int, int>(framesPerSecond, processingInterval);
+
             lock (s_frameRateTimers)
             {
-                FrameRateTimer timer;
-
-                // Get static frame rate timer for given frames per second creating it if needed
-                if (!s_frameRateTimers.TryGetValue(framesPerSecond, out timer))
+                if (!m_attachedToFrameRateTimer)
                 {
-                    // Create a new frame rate timer which includes a high-precision timer for frame processing
-                    timer = new FrameRateTimer(framesPerSecond);
+                    FrameRateTimer timer;
 
-                    // Add timer state for given rate to static collection
-                    s_frameRateTimers.Add(framesPerSecond, timer);
+                    // Get static frame rate timer for given frames per second creating it if needed
+                    if (!s_frameRateTimers.TryGetValue(key, out timer))
+                    {
+                        // Create a new frame rate timer which includes a high-precision timer for frame processing
+                        timer = new FrameRateTimer(framesPerSecond, processingInterval);
+
+                        // Add timer state for given rate to static collection
+                        s_frameRateTimers.Add(key, timer);
+                    }
+
+                    // Increment reference count and attach instance method "StartFramePublication" to static timer event list
+                    timer.AddReference(StartFramePublication);
+                    m_attachedToFrameRateTimer = true;
                 }
-
-                // Increment reference count and attach instance method "StartFramePublication" to static timer event list
-                timer.AddReference(StartFramePublication);
-                m_attachedToFrameRateTimer = true;
             }
         }
 
         // Handle detach from frame rate timer
-        private void DetachFromFrameRateTimer(int framesPerSecond)
+        private void DetachFromFrameRateTimer(int framesPerSecond, int processingInterval)
         {
+            Tuple<int, int> key = new Tuple<int, int>(framesPerSecond, processingInterval);
+
             lock (s_frameRateTimers)
             {
                 if (m_attachedToFrameRateTimer)
@@ -2144,7 +2303,7 @@ namespace TimeSeriesFramework
                     FrameRateTimer timer;
 
                     // Look up static frame rate timer for given frames per second
-                    if (s_frameRateTimers.TryGetValue(framesPerSecond, out timer))
+                    if (s_frameRateTimers.TryGetValue(key, out timer))
                     {
                         // Decrement reference count and detach instance method "StartFramePublication" from static timer event list
                         timer.RemoveReference(StartFramePublication);
@@ -2154,7 +2313,7 @@ namespace TimeSeriesFramework
                         if (timer.ReferenceCount == 0)
                         {
                             timer.Dispose();
-                            s_frameRateTimers.Remove(framesPerSecond);
+                            s_frameRateTimers.Remove(key);
                         }
                     }
                 }
@@ -2166,12 +2325,12 @@ namespace TimeSeriesFramework
         #region [ Static ]
 
         // Static Fields
-        private static Dictionary<int, FrameRateTimer> s_frameRateTimers;
+        private static Dictionary<Tuple<int, int>, FrameRateTimer> s_frameRateTimers;
 
         // Static Constructor
         static ConcentratorBase()
         {
-            s_frameRateTimers = new Dictionary<int, FrameRateTimer>();
+            s_frameRateTimers = new Dictionary<Tuple<int, int>, FrameRateTimer>();
         }
 
         #endregion

@@ -101,6 +101,7 @@ namespace TimeSeriesFramework.Adapters
         private long m_processedMeasurements;
         private DateTime m_startTimeConstraint;
         private DateTime m_stopTimeConstraint;
+        private int m_processingInterval;
         private System.Timers.Timer m_monitorTimer;
         private bool m_monitorTimerEnabled;
         private bool m_enabled;
@@ -117,6 +118,9 @@ namespace TimeSeriesFramework.Adapters
         {
             m_name = this.GetType().Name;
             m_settings = new Dictionary<string, string>();
+            m_startTimeConstraint = DateTime.MinValue;
+            m_stopTimeConstraint = DateTime.MaxValue;
+            m_processingInterval = -1;
             m_initializationTimeout = AdapterBase.DefaultInitializationTimeout;
             m_autoStart = true;
 
@@ -502,6 +506,38 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
+        /// Gets or sets the desired processing interval, in milliseconds, for the adapter collection and applies this interval to each adapter.
+        /// </summary>
+        /// <remarks>
+        /// With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
+        /// basically a delay, or timer interval, overwhich to process data. A value of -1 means to use the default processing
+        /// interval while a value of 0 means to process data as fast as possible.
+        /// </remarks>
+        public virtual int ProcessingInterval
+        {
+            get
+            {
+                return m_processingInterval;
+            }
+            set
+            {
+                m_processingInterval = value;
+
+                if (m_processingInterval < -1)
+                    m_processingInterval = -1;
+
+                // Apply this new processing interval for all adapters in the collection
+                lock (this)
+                {
+                    foreach (IAdapter item in this)
+                    {
+                        item.ProcessingInterval = m_processingInterval;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets the total number of measurements processed thus far by each <see cref="IAdapter"/> implementation
         /// in the <see cref="AdapterCollectionBase{T}"/>.
         /// </summary>
@@ -511,7 +547,7 @@ namespace TimeSeriesFramework.Adapters
             {
                 long processedMeasurements = 0;
 
-                // Calculate new total for all archive destined output adapters
+                // Calculate new total for all adapters
                 lock (this)
                 {
                     foreach (IAdapter item in this)
@@ -620,6 +656,8 @@ namespace TimeSeriesFramework.Adapters
                 status.AppendFormat("     Start time constraint: {0}", StartTimeConstraint == DateTime.MinValue ? "Unspecified" : StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"));
                 status.AppendLine();
                 status.AppendFormat("      Stop time constraint: {0}", StopTimeConstraint == DateTime.MaxValue ? "Unspecified" : StopTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                status.AppendLine();
+                status.AppendFormat("       Processing interval: {0}", ProcessingInterval < 0 ? "Default" : (ProcessingInterval == 0 ? "As fast as possible" : ProcessingInterval + " milliseconds"));
                 status.AppendLine();
                 if (MonitorTimerEnabled)
                 {
@@ -1160,6 +1198,7 @@ namespace TimeSeriesFramework.Adapters
         /// </list>
         /// </para>
         /// </remarks>
+        [AdapterCommand("Defines a temporal processing constraint for each adapter in the collection.")]
         public virtual void SetTemporalConstraint(string startTime, string stopTime, string constraintParameters)
         {
             if (!string.IsNullOrWhiteSpace(startTime))

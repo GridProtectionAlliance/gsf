@@ -95,6 +95,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Adapters\ConnectionStringParameterAttribute.cs" />
+    <Compile Include="Adapters\IaonSession.cs" />
     <Compile Include="Adapters\RoutingTables.cs" />
     <Compile Include="ConcentratorBase.cs" />
     <Compile Include="Frame.cs" />

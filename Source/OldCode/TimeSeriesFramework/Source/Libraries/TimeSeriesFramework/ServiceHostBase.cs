@@ -94,25 +94,16 @@ namespace TimeSeriesFramework
 
         // Fields
 
-        // Input, action and output adapters
-        private AllAdaptersCollection m_allAdapters;
-        private InputAdapterCollection m_inputAdapters;
-        private ActionAdapterCollection m_actionAdapters;
-        private OutputAdapterCollection m_outputAdapters;
-
         // System settings
-        private Guid m_nodeID;
+        private IaonSession m_iaonSession;
         private string m_nodeIDQueryString;
-        private DataSet m_configuration;
         private ConfigurationType m_configurationType;
         private string m_connectionString;
         private string m_dataProviderString;
         private string m_cachedConfigurationFile;
         private bool m_uniqueAdapterIDs;
         private bool m_allowRemoteRestart;
-        private bool m_useMeasurementRouting;
         private Dictionary<object, string> m_derivedNameCache;
-        private RoutingTables m_routingTables;
 
         // Threshold settings
         private int m_measurementWarningThreshold;
@@ -198,7 +189,7 @@ namespace TimeSeriesFramework
         {
             get
             {
-                return m_allAdapters;
+                return m_iaonSession.AllAdapters;
             }
         }
 
@@ -209,7 +200,7 @@ namespace TimeSeriesFramework
         {
             get
             {
-                return m_inputAdapters;
+                return m_iaonSession.InputAdapters;
             }
         }
 
@@ -220,7 +211,7 @@ namespace TimeSeriesFramework
         {
             get
             {
-                return m_actionAdapters;
+                return m_iaonSession.ActionAdapters;
             }
         }
 
@@ -231,7 +222,7 @@ namespace TimeSeriesFramework
         {
             get
             {
-                return m_outputAdapters;
+                return m_iaonSession.OutputAdapters;
             }
         }
 
@@ -242,7 +233,7 @@ namespace TimeSeriesFramework
         {
             get
             {
-                return m_nodeID;
+                return m_iaonSession.NodeID;
             }
         }
 
@@ -260,11 +251,11 @@ namespace TimeSeriesFramework
         /// <summary>
         /// Gets the currently loaded system configuration <see cref="DataSet"/>.
         /// </summary>
-        protected DataSet Configuration
+        protected DataSet DataSource
         {
             get
             {
-                return m_configuration;
+                return m_iaonSession.DataSource;
             }
         }
 
@@ -310,7 +301,7 @@ namespace TimeSeriesFramework
             systemSettings.Add("UniqueAdaptersIDs", "True", "Set to true if all runtime adapter ID's will be unique to allow for easier adapter specification");
             systemSettings.Add("ProcessPriority", "High", "Sets desired process priority: Normal, AboveNormal, High, RealTime");
             systemSettings.Add("AllowRemoteRestart", "True", "Controls ability to remotely restart the host service.");
-            systemSettings.Add("UseMeasurementRouting", "True", "Set to true to use optimized adapter measurement routing.");
+            systemSettings.Add("UseMeasurementRouting", IaonSession.DefaultUseMeasurementRouting, "Set to true to use optimized adapter measurement routing.");
 
             // Example connection settings
             CategorizedSettingsElementCollection exampleSettings = configFile.Settings["exampleConnectionSettings"];
@@ -350,15 +341,23 @@ namespace TimeSeriesFramework
                 m_serviceHelper.ErrorLogger.Log(ex);
             }
 
+            // Initialize Iaon session
+            m_iaonSession = new IaonSession();
+            m_iaonSession.StatusMessage += StatusMessageHandler;
+            m_iaonSession.ProcessException += ProcessExceptionHandler;
+            m_iaonSession.UnpublishedSamples += UnpublishedSamplesHandler;
+            m_iaonSession.UnprocessedMeasurements += UnprocessedMeasurementsHandler;
+            m_iaonSession.Disposed += DisposedHandler;
+            m_iaonSession.UseMeasurementRouting = systemSettings["UseMeasurementRouting"].ValueAsBoolean(IaonSession.DefaultUseMeasurementRouting);
+            m_iaonSession.NodeID = systemSettings["NodeID"].ValueAs<Guid>();
+
             // Initialize system settings
-            m_nodeID = systemSettings["NodeID"].ValueAs<Guid>();
             m_configurationType = systemSettings["ConfigurationType"].ValueAs<ConfigurationType>();
             m_connectionString = systemSettings["ConnectionString"].Value;
             m_dataProviderString = systemSettings["DataProviderString"].Value;
             m_cachedConfigurationFile = FilePath.AddPathSuffix(cachePath) + systemSettings["CachedConfigurationFile"].Value;
             m_uniqueAdapterIDs = systemSettings["UniqueAdaptersIDs"].ValueAsBoolean(true);
             m_allowRemoteRestart = systemSettings["AllowRemoteRestart"].ValueAsBoolean(true);
-            m_useMeasurementRouting = systemSettings["UseMeasurementRouting"].ValueAsBoolean(true);
             m_derivedNameCache = new Dictionary<object, string>();
 
             // Define guid with query string delimeters according to database needs
@@ -370,7 +369,7 @@ namespace TimeSeriesFramework
                 // Check if provider is for Access since it uses braces as Guid delimeters
                 if (setting.StartsWith("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase))
                 {
-                    m_nodeIDQueryString = "{" + m_nodeID + "}";
+                    m_nodeIDQueryString = "{" + m_iaonSession.NodeID + "}";
 
                     // Make sure path to Access database is fully qualified
                     if (settings.TryGetValue("Data Source", out setting))
@@ -382,7 +381,7 @@ namespace TimeSeriesFramework
             }
 
             if (string.IsNullOrWhiteSpace(m_nodeIDQueryString))
-                m_nodeIDQueryString = "'" + m_nodeID + "'";
+                m_nodeIDQueryString = "'" + m_iaonSession.NodeID + "'";
 
             try
             {
@@ -430,7 +429,7 @@ namespace TimeSeriesFramework
                 " Process Account: {10}\\{11}\r\n\r\n" +
                 "{12}\r\n",
                 stars,
-                m_nodeID,
+                m_iaonSession.NodeID,
                 DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"),
                 FilePath.TrimFileName(FilePath.RemovePathSuffix(FilePath.GetAbsolutePath("")), 61),
                 Environment.MachineName,
@@ -461,51 +460,10 @@ namespace TimeSeriesFramework
             m_serviceHelper.AddScheduledProcess(HealthMonitorProcessHandler, "HealthMonitor", "* * * * *");    // Every minute
             m_serviceHelper.AddScheduledProcess(StatusExportProcessHandler, "StatusExport", "*/30 * * * *");   // Every 30 minutes
 
-            // Create a new set of routing tables
-            m_routingTables = new RoutingTables();
-
-            // Create a collection to manage all input, action and output adapter collections as a unit
-            m_allAdapters = new AllAdaptersCollection();
-            m_allAdapters.StatusMessage += StatusMessageHandler;
-            m_allAdapters.ProcessException += ProcessExceptionHandler;
-            m_allAdapters.InputMeasurementKeysUpdated += AdapterMeasurementsUpdated;
-            m_allAdapters.OutputMeasurementsUpdated += AdapterMeasurementsUpdated;
-            m_allAdapters.Disposed += DisposedHandler;
-
-            // Create input adapters collection
-            m_inputAdapters = new InputAdapterCollection();
-            if (m_useMeasurementRouting)
-                m_inputAdapters.NewMeasurements += m_routingTables.RoutedMeasurementsHandler;
-            else
-                m_inputAdapters.NewMeasurements += m_routingTables.BroadcastMeasurementsHandler;
-            m_inputAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
-            m_serviceHelper.ServiceComponents.Add(m_inputAdapters);
-            m_routingTables.InputAdapters = m_inputAdapters;
-
-            // Create action adapters collection
-            m_actionAdapters = new ActionAdapterCollection();
-            if (m_useMeasurementRouting)
-                m_actionAdapters.NewMeasurements += m_routingTables.RoutedMeasurementsHandler;
-            else
-                m_actionAdapters.NewMeasurements += m_routingTables.BroadcastMeasurementsHandler;
-            m_actionAdapters.UnpublishedSamples += UnpublishedSamplesHandler;
-            m_actionAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
-            m_serviceHelper.ServiceComponents.Add(m_actionAdapters);
-            m_routingTables.ActionAdapters = m_actionAdapters;
-
-            // Create output adapters collection
-            m_outputAdapters = new OutputAdapterCollection();
-            m_outputAdapters.UnprocessedMeasurements += UnprocessedMeasurementsHandler;
-            m_outputAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
-            m_serviceHelper.ServiceComponents.Add(m_outputAdapters);
-            m_routingTables.OutputAdapters = m_outputAdapters;
-
-            // We group these adapters such that they are initialized in the following order: output, input, action. This
-            // is done so that the archival capabilities will be setup before we start receiving input and the input data
-            // will be flowing before any actions get established for the input.
-            m_allAdapters.Add(m_outputAdapters);
-            m_allAdapters.Add(m_inputAdapters);
-            m_allAdapters.Add(m_actionAdapters);
+            // Add key Iaon collections as service components
+            m_serviceHelper.ServiceComponents.Add(m_iaonSession.InputAdapters);
+            m_serviceHelper.ServiceComponents.Add(m_iaonSession.ActionAdapters);
+            m_serviceHelper.ServiceComponents.Add(m_iaonSession.OutputAdapters);
 
             // Define remote client requests (i.e., console commands)
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("List", "Displays status for specified adapter or collection", ListRequestHandler));
@@ -556,61 +514,20 @@ namespace TimeSeriesFramework
             }
             m_statusExporter = null;
 
-            // Dispose input adapters collection
-            if (m_inputAdapters != null)
+            // Dispose Iaon session
+            if (m_iaonSession != null)
             {
-                m_inputAdapters.Stop();
-                m_serviceHelper.ServiceComponents.Remove(m_inputAdapters);
-                if (m_useMeasurementRouting)
-                    m_inputAdapters.NewMeasurements -= m_routingTables.RoutedMeasurementsHandler;
-                else
-                    m_inputAdapters.NewMeasurements -= m_routingTables.BroadcastMeasurementsHandler;
-
-                m_inputAdapters.Dispose();
+                m_serviceHelper.ServiceComponents.Remove(m_iaonSession.InputAdapters);
+                m_serviceHelper.ServiceComponents.Remove(m_iaonSession.ActionAdapters);
+                m_serviceHelper.ServiceComponents.Remove(m_iaonSession.OutputAdapters);
+                m_iaonSession.StatusMessage -= StatusMessageHandler;
+                m_iaonSession.ProcessException -= ProcessExceptionHandler;
+                m_iaonSession.UnpublishedSamples -= UnpublishedSamplesHandler;
+                m_iaonSession.UnprocessedMeasurements -= UnprocessedMeasurementsHandler;
+                m_iaonSession.Disposed -= DisposedHandler;
+                m_iaonSession.Dispose();
             }
-            m_inputAdapters = null;
-
-            // Dispose action adapters collection
-            if (m_actionAdapters != null)
-            {
-                m_actionAdapters.Stop();
-                m_serviceHelper.ServiceComponents.Remove(m_actionAdapters);
-                if (m_useMeasurementRouting)
-                    m_actionAdapters.NewMeasurements -= m_routingTables.RoutedMeasurementsHandler;
-                else
-                    m_actionAdapters.NewMeasurements -= m_routingTables.BroadcastMeasurementsHandler;
-                m_actionAdapters.UnpublishedSamples -= UnpublishedSamplesHandler;
-                m_actionAdapters.Dispose();
-            }
-            m_actionAdapters = null;
-
-            // Dispose output adapters collection
-            if (m_outputAdapters != null)
-            {
-                m_outputAdapters.Stop();
-                m_serviceHelper.ServiceComponents.Remove(m_outputAdapters);
-                m_outputAdapters.UnprocessedMeasurements -= UnprocessedMeasurementsHandler;
-                m_outputAdapters.Dispose();
-            }
-            m_outputAdapters = null;
-
-            // Dispose all adapters collection
-            if (m_allAdapters != null)
-            {
-                m_allAdapters.StatusMessage -= StatusMessageHandler;
-                m_allAdapters.ProcessException -= ProcessExceptionHandler;
-                m_allAdapters.InputMeasurementKeysUpdated -= AdapterMeasurementsUpdated;
-                m_allAdapters.OutputMeasurementsUpdated -= AdapterMeasurementsUpdated;
-                m_allAdapters.Disposed -= DisposedHandler;
-                m_allAdapters.Dispose();
-            }
-            m_allAdapters = null;
-
-            // Dispose of routing tables
-            if (m_routingTables != null)
-                m_routingTables.Dispose();
-
-            m_routingTables = null;
+            m_iaonSession = null;
         }
 
         #endregion
@@ -623,14 +540,8 @@ namespace TimeSeriesFramework
             // Attempt to load system configuration
             if (LoadSystemConfiguration())
             {
-                // Initialize all adapters
-                m_allAdapters.Initialize();
-
-                // Start all adapters
-                m_allAdapters.Start();
-
-                // Spawn routing table calculation
-                RecalculateRoutingTables();
+                // Initialize and start all session adapters
+                m_iaonSession.Initialize();
 
                 DisplayStatusMessage("System initialization complete.", UpdateType.Information);
 
@@ -648,12 +559,12 @@ namespace TimeSeriesFramework
             DisplayStatusMessage("Loading system configuration...", UpdateType.Information);
 
             // Attempt to load (or reload) system configuration
-            m_configuration = GetConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString);
+            DataSet dataSource = GetConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString);
 
-            if (m_configuration != null)
+            if (dataSource != null)
             {
                 // Update data source on all adapters in all collections
-                m_allAdapters.DataSource = m_configuration;
+                m_iaonSession.DataSource = dataSource;
                 return true;
             }
 
@@ -855,40 +766,6 @@ namespace TimeSeriesFramework
             }
         }
 
-        // Create newly defined adapters and remove adapters that are no longer present in the adapter collection configurations
-        private void UpdateAdapterCollectionConfigurations()
-        {
-            lock (m_allAdapters)
-            {
-                foreach (IAdapterCollection adapterCollection in m_allAdapters)
-                {
-                    string dataMember = adapterCollection.DataMember;
-
-                    if (m_configuration.Tables.Contains(dataMember))
-                    {
-                        // Remove adapters that are no longer present in the configuration
-                        for (int i = adapterCollection.Count - 1; i >= 0; i--)
-                        {
-                            IAdapter adapter = adapterCollection[i];
-                            DataRow[] adapterRows = m_configuration.Tables[dataMember].Select(string.Format("ID = {0}", adapter.ID));
-
-                            if (adapterRows.Length == 0 && adapter.ID != 0)
-                                adapterCollection.Remove(adapter);
-                        }
-
-                        // Create newly defined adapters
-                        foreach (DataRow adapterRow in m_configuration.Tables[dataMember].Rows)
-                        {
-                            IAdapter adapter;
-
-                            if (!adapterCollection.TryGetAdapterByID(uint.Parse(adapterRow["ID"].ToNonNullString("0")), out adapter) && adapterCollection.TryCreateAdapter(adapterRow, out adapter))
-                                adapterCollection.Add(adapter);
-                        }
-                    }
-                }
-            }
-        }
-
         /// <summary>
         /// Caches the current system configuration.
         /// </summary>
@@ -928,15 +805,6 @@ namespace TimeSeriesFramework
                 DisplayStatusMessage("Failed to cache last known configuration due to exception: {0}", UpdateType.Alarm, ex.Message);
                 m_serviceHelper.ErrorLogger.Log(ex);
             }
-        }
-
-        /// <summary>
-        /// Recalculates routing tables as long as all adapters have been initialized.
-        /// </summary>
-        protected virtual void RecalculateRoutingTables()
-        {
-            if (m_useMeasurementRouting && m_routingTables != null && m_allAdapters != null && m_allAdapters.Initialized)
-                m_routingTables.CalculateRoutingTables();
         }
 
         #endregion
@@ -993,9 +861,11 @@ namespace TimeSeriesFramework
                     DisplayStatusMessage("[{0}] NOTICE: Please adjust measurement threshold settings and/or increase amount of available system memory.", UpdateType.Warning, outputAdpater.Name);
                 }
                 else
+                {
                     // It is only expected that output adapters will be mapped to this handler, but in case
                     // another adapter type uses this handler we will still display a message
                     DisplayStatusMessage("[{0}] CRITICAL: There are {1} unprocessed measurements in the adapter queue - but sender \"{2}\" is not an IOutputAdapter, so no evasive action can be exercised.", UpdateType.Warning, GetDerivedName(sender), unprocessedMeasurements, sender.GetType().Name);
+                }
             }
             else if (unprocessedMeasurements > m_measurementWarningThreshold)
             {
@@ -1031,17 +901,6 @@ namespace TimeSeriesFramework
 
             m_serviceHelper.ErrorLogger.Log(ex, false);
             DisplayStatusMessage("[{0}] {1}", UpdateType.Alarm, GetDerivedName(sender), ex.Message);
-        }
-
-        /// <summary>
-        /// Handler for updates to adapter input or output measurement definitions.
-        /// </summary>
-        /// <param name="sender">Sending object.</param>
-        /// <param name="e">Event arguments, if any.</param>
-        protected virtual void AdapterMeasurementsUpdated(object sender, EventArgs e)
-        {
-            // When adapter measurement keys are dynamically updated, routing tables need to be updated
-            RecalculateRoutingTables();
         }
 
         /// <summary>
@@ -1123,11 +982,11 @@ namespace TimeSeriesFramework
         protected virtual IAdapterCollection GetRequestedCollection(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.Exists("A"))
-                return m_actionAdapters;
+                return m_iaonSession.ActionAdapters;
             else if (requestInfo.Request.Arguments.Exists("O"))
-                return m_outputAdapters;
+                return m_iaonSession.OutputAdapters;
             else
-                return m_inputAdapters;
+                return m_iaonSession.InputAdapters;
         }
 
         /// <summary>
@@ -1167,7 +1026,7 @@ namespace TimeSeriesFramework
                         return adapter;
                     }
                     // Try looking for ID in any collection if all runtime ID's are unique
-                    else if (m_uniqueAdapterIDs && m_allAdapters.TryGetAnyAdapterByID(id, out adapter, out collection))
+                    else if (m_uniqueAdapterIDs && m_iaonSession.AllAdapters.TryGetAnyAdapterByID(id, out adapter, out collection))
                     {
                         return adapter;
                     }
@@ -1185,7 +1044,7 @@ namespace TimeSeriesFramework
                         return adapter;
                     }
                     // Try looking for adapter name in any collection
-                    else if (m_allAdapters.TryGetAnyAdapterByName(adapterID, out adapter, out collection))
+                    else if (m_iaonSession.AllAdapters.TryGetAnyAdapterByName(adapterID, out adapter, out collection))
                     {
                         return adapter;
                     }
@@ -1714,11 +1573,11 @@ namespace TimeSeriesFramework
                             uint id;
 
                             // Try initializing new adapter by ID searching in any collection if all runtime ID's are unique
-                            if (m_uniqueAdapterIDs && uint.TryParse(adapterID, out id) && m_allAdapters.TryInitializeAdapterByID(id))
+                            if (m_uniqueAdapterIDs && uint.TryParse(adapterID, out id) && m_iaonSession.AllAdapters.TryInitializeAdapterByID(id))
                             {
                                 IAdapter adapter;
 
-                                if (m_allAdapters.TryGetAnyAdapterByID(id, out adapter, out collection))
+                                if (m_iaonSession.AllAdapters.TryGetAnyAdapterByID(id, out adapter, out collection))
                                     SendResponse(requestInfo, true, "Adapter \"{0}\" ({1}) was successfully initialized...", adapter.Name, adapter.ID);
                                 else
                                     SendResponse(requestInfo, true, "Adapter ({1}) was successfully initialized...", id);
@@ -1756,7 +1615,7 @@ namespace TimeSeriesFramework
                         }
 
                         // Spawn routing table calculation updates
-                        RecalculateRoutingTables();
+                        m_iaonSession.RecalculateRoutingTables();
                     }
                     else
                         SendResponse(requestInfo, false, "Failed to load system configuration.");
@@ -1792,7 +1651,7 @@ namespace TimeSeriesFramework
             else
             {
                 // Spawn routing table calculation updates
-                RecalculateRoutingTables();
+                m_iaonSession.RecalculateRoutingTables();
                 SendResponse(requestInfo, true, "Spawned request to refresh routing tables.");
             }
         }
@@ -1828,7 +1687,7 @@ namespace TimeSeriesFramework
                     SendResponse(requestInfo, false, "System configuration failed to reload.");
                 else
                 {
-                    UpdateAdapterCollectionConfigurations();
+                    m_iaonSession.AllAdapters.UpdateCollectionConfigurations();
                     SendResponse(requestInfo, true, "System configuration was successfully reloaded.");
                 }
             }
