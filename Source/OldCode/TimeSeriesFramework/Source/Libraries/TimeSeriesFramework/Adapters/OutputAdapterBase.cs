@@ -203,6 +203,71 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
+        /// Gets or sets the desired processing interval, in milliseconds, for the output adapter.
+        /// </summary>
+        /// <remarks>
+        /// With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
+        /// basically a delay, or timer interval, overwhich to process data. A value of -1 means to use the default processing
+        /// interval while a value of 0 means to process data as fast as possible.
+        /// </remarks>
+        public override int ProcessingInterval
+        {
+            get
+            {
+                return base.ProcessingInterval;
+            }
+            set
+            {
+                if (base.ProcessingInterval != value)
+                {
+                    base.ProcessingInterval = value;
+                    bool enabled = false;
+                    bool requeueOnException = ProcessQueue<IMeasurement>.DefaultRequeueOnException;
+                    IMeasurement[] unprocessedMeasurements = null;
+
+                    if (m_measurementQueue != null)
+                    {
+                        enabled = m_measurementQueue.Enabled;
+                        requeueOnException = m_measurementQueue.RequeueOnException;
+
+                        lock (m_measurementQueue.SyncRoot)
+                        {
+                            if (m_measurementQueue.Count > 0)
+                            {
+                                m_measurementQueue.Stop();
+                                unprocessedMeasurements = m_measurementQueue.ToArray();
+                            }
+                        }
+
+                        m_measurementQueue.ProcessException -= m_measurementQueue_ProcessException;
+                        m_measurementQueue.Dispose();
+                    }
+
+                    if (value <= 0)
+                    {
+                        // The default processing interval is "as fast as possible"
+                        m_measurementQueue = ProcessQueue<IMeasurement>.CreateRealTimeQueue(ProcessMeasurements);
+                    }
+                    else
+                    {
+                        // Set the desired processing interval
+                        m_measurementQueue = ProcessQueue<IMeasurement>.CreateSynchronousQueue(ProcessMeasurements);
+                        m_measurementQueue.ProcessInterval = value;
+                    }
+
+                    m_measurementQueue.ProcessException += m_measurementQueue_ProcessException;
+                    m_measurementQueue.RequeueOnException = requeueOnException;
+
+                    // Requeue any existing measurements
+                    if (unprocessedMeasurements != null && unprocessedMeasurements.Length > 0)
+                        m_measurementQueue.AddRange(unprocessedMeasurements);
+
+                    m_measurementQueue.Enabled = enabled;
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets flag that determines if the data output stream connects asynchronously.
         /// </summary>
         /// <remarks>
