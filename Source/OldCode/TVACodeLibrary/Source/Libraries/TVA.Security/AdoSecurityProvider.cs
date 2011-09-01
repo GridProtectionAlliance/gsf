@@ -14,6 +14,8 @@
 //  07/18/2011 - Stephen C. Wills
 //       Modified a SELECT statement in RefreshData to explicitly alias columns to
 //       fix an error when using SQLite databases.
+//  09/01/2011 - Stephen C. Wills
+//       Modified references to views in the database whose names have changed.
 //
 //******************************************************************************************************
 
@@ -500,12 +502,12 @@ namespace TVA.Security
                     // Load implicitly assigned roles
                     foreach (string group in UserData.Groups)
                     {
-                        userRoleDataTable.Load(dbConnection.ExecuteReader("SELECT ApplicationRoleID, ApplicationRoleName, ApplicationRoleDescription FROM ApplicationRoleSecurityGroupDetail WHERE SecurityGroupName = @groupName", group));
+                        userRoleDataTable.Load(dbConnection.ExecuteReader("SELECT ApplicationRoleID, ApplicationRoleName, ApplicationRoleDescription FROM AppRoleSecurityGroupDetail WHERE SecurityGroupName = @groupName", group));
                     }
 
                     // Load explicitly assigned roles
-                    userRoleDataTable.Load(dbConnection.ExecuteReader("SELECT ApplicationRoleID, ApplicationRoleName, ApplicationRoleDescription FROM ApplicationRoleUserAccountDetail WHERE UserName = @name", UserData.Username));
-                    userRoleDataTable.Load(dbConnection.ExecuteReader("SELECT ApplicationRoleSecurityGroupDetail.ApplicationRoleID AS ApplicationRoleID, ApplicationRoleSecurityGroupDetail.ApplicationRoleName AS ApplicationRoleName, ApplicationRoleSecurityGroupDetail.ApplicationRoleDescription AS ApplicationRoleDescription FROM ApplicationRoleSecurityGroupDetail, SecurityGroupUserAccountDetail WHERE ApplicationRoleSecurityGroupDetail.SecurityGroupID = SecurityGroupUserAccountDetail.SecurityGroupID AND SecurityGroupUserAccountDetail.UserName = @name", UserData.Username));
+                    userRoleDataTable.Load(dbConnection.ExecuteReader("SELECT ApplicationRoleID, ApplicationRoleName, ApplicationRoleDescription FROM AppRoleUserAccountDetail WHERE UserName = @name", UserData.Username));
+                    userRoleDataTable.Load(dbConnection.ExecuteReader("SELECT AppRoleSecurityGroupDetail.ApplicationRoleID AS ApplicationRoleID, AppRoleSecurityGroupDetail.ApplicationRoleName AS ApplicationRoleName, AppRoleSecurityGroupDetail.ApplicationRoleDescription AS ApplicationRoleDescription FROM AppRoleSecurityGroupDetail, SecurityGroupUserAccountDetail WHERE AppRoleSecurityGroupDetail.SecurityGroupID = SecurityGroupUserAccountDetail.SecurityGroupID AND SecurityGroupUserAccountDetail.UserName = @name", UserData.Username));
 
                     foreach (DataRow role in userRoleDataTable.Rows)
                     {
