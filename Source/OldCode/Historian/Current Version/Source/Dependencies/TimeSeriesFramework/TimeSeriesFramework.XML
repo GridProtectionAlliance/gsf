@@ -9,6 +9,147 @@
             Marks a parameter as being a connection string parameter used to configure an <see cref="T:TimeSeriesFramework.Adapters.IAdapter"/>.
             </summary>
         </member>
+        <member name="T:TimeSeriesFramework.Adapters.IaonSession">
+            <summary>
+            Represents a new Input, Action, Output interface session.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Adapters.IaonSession.DefaultUseMeasurementRouting">
+            <summary>
+            Default value for <see cref="P:TimeSeriesFramework.Adapters.IaonSession.UseMeasurementRouting"/> property.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.#ctor">
+            <summary>
+            Creates a new <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.Finalize">
+            <summary>
+            Releases the unmanaged resources before the <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/> object is reclaimed by <see cref="T:System.GC"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.Dispose">
+            <summary>
+            Releases all the resources used by the <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/> object.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.Initialize">
+            <summary>
+            Initialize and start adapters.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.RecalculateRoutingTables">
+            <summary>
+            Recalculates routing tables as long as all adapters have been initialized.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.AdapterMeasurementsUpdated(System.Object,System.EventArgs)">
+            <summary>
+            Handler for updates to adapter input or output measurement definitions.
+            </summary>
+            <param name="sender">Sending object.</param>
+            <param name="e">Event arguments, if any.</param>
+        </member>
+        <member name="E:TimeSeriesFramework.Adapters.IaonSession.StatusMessage">
+            <summary>
+            Provides status messages to consumer.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is new status message.
+            </remarks>
+        </member>
+        <member name="E:TimeSeriesFramework.Adapters.IaonSession.ProcessException">
+            <summary>
+            Event is raised when there is an exception encountered while processing.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is the exception that was thrown.
+            </remarks>
+        </member>
+        <member name="E:TimeSeriesFramework.Adapters.IaonSession.InputMeasurementKeysUpdated">
+            <summary>
+            Event is raised when <see cref="P:TimeSeriesFramework.Adapters.IAdapter.InputMeasurementKeys"/> are updated.
+            </summary>
+        </member>
+        <member name="E:TimeSeriesFramework.Adapters.IaonSession.OutputMeasurementsUpdated">
+            <summary>
+            Event is raised when <see cref="P:TimeSeriesFramework.Adapters.IAdapter.OutputMeasurements"/> are updated.
+            </summary>
+        </member>
+        <member name="E:TimeSeriesFramework.Adapters.IaonSession.UnpublishedSamples">
+            <summary>
+            This event is raised every second allowing consumer to track current number of unpublished seconds of data in the queue.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is the total number of unpublished seconds of data.
+            </remarks>
+        </member>
+        <member name="E:TimeSeriesFramework.Adapters.IaonSession.UnprocessedMeasurements">
+            <summary>
+            Event is raised every second allowing host to track total number of unprocessed measurements.
+            </summary>
+            <remarks>
+            <para>
+            Each <see cref="T:TimeSeriesFramework.Adapters.IOutputAdapter"/> implementation reports its current queue size of unprocessed
+            measurements so that if queue size reaches an unhealthy threshold, host can take evasive action.
+            </para>
+            <para>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is total number of unprocessed measurements.
+            </para>
+            </remarks>
+        </member>
+        <member name="E:TimeSeriesFramework.Adapters.IaonSession.Disposed">
+            <summary>
+            Event is raised when this <see cref="T:TimeSeriesFramework.Adapters.AdapterCollectionBase`1"/> is disposed or an <see cref="T:TimeSeriesFramework.Adapters.IAdapter"/> in the collection is disposed.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.IaonSession.AllAdapters">
+            <summary>
+            Gets the all adapters collection for this <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.IaonSession.InputAdapters">
+            <summary>
+            Gets the input adapter collection for this <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.IaonSession.ActionAdapters">
+            <summary>
+            Gets the action adapter collection for this <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.IaonSession.OutputAdapters">
+            <summary>
+            Gets the output adapter collection for this <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.IaonSession.UseMeasurementRouting">
+            <summary>
+            Gets or sets flag that determines if measurement routing should be used.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.IaonSession.RoutingTables">
+            <summary>
+            Gets the routing tables for this <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.IaonSession.DataSource">
+            <summary>
+            Gets or sets the configuration <see cref="T:System.Data.DataSet"/> for this <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.IaonSession.NodeID">
+            <summary>
+            Gets or sets the <see cref="T:System.Guid"/> node ID  for this <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/>.
+            </summary>
+        </member>
         <member name="T:TimeSeriesFramework.Adapters.RoutingTables">
             <summary>
             Represents the routing tables for the Iaon adapters.
@@ -409,6 +550,72 @@
             Valid frame rates for a <see cref="T:TimeSeriesFramework.ConcentratorBase"/> are greater than 0 frames per second.
             </remarks>
         </member>
+        <member name="P:TimeSeriesFramework.ConcentratorBase.ProcessingInterval">
+            <summary>
+            Gets or sets the desired processing interval, in milliseconds, for the adapter.
+            </summary>
+            <remarks>
+            <para>
+            This property is normally only used when you need the concentrator to send data at faster than real-time speeds,
+            e.g., faster than the defined <see cref="P:TimeSeriesFramework.ConcentratorBase.FramesPerSecond"/>. A use case would be pushing historical data through
+            the concentrator where you want to sort and publish data as quickly as possible.
+            </para>
+            <para>
+            With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, e.g.,
+            a timer interval, overwhich to process data. A value of -1 means to use the default processing interval, i.e., use
+            the <see cref="P:TimeSeriesFramework.ConcentratorBase.FramesPerSecond"/>, while a value of 0 means to process data as fast as possible.
+            </para>
+            <para>
+            From a real-time perspective the <see cref="T:TimeSeriesFramework.ConcentratorBase"/> defines its general processing interval based on
+            the defined <see cref="P:TimeSeriesFramework.ConcentratorBase.FramesPerSecond"/> property. The frames per second property, however, is more than a basic
+            processing interval since it is used to define the intervals in one second that will become the time sorting
+            destination "buckets" used by the concentrator irrespective of the data rate of the incoming data. As an example,
+            if the frames per second of the concentrator is set to 30 and the source data rate is 60fps, then data will be
+            downsampled to 30 frames of sorted incoming data but the assigned processing interval will be used to publish the
+            frames at the specified rate.
+            </para>
+            <para>
+            The implemented functionality of the process interval property will be to respond to values in the following way:
+            <list type="table">
+                <listheader>
+                    <term>Value</term>
+                    <description>Response</description>
+                </listheader>
+                <item>
+                    <term>&lt; 0</term>
+                    <description>
+                    In this case the default processing interval has been requested, as a result the <see cref="P:TimeSeriesFramework.ConcentratorBase.ProcessByReceivedTimestamp"/>
+                    will be set to <c>false</c> and the concentrator processing interval will be defined based on the currently defined
+                    <see cref="P:TimeSeriesFramework.ConcentratorBase.FramesPerSecond"/> property, e.g., if the frames per second is 30 the processing interval will be 33.33ms.
+                    </description>
+                </item>
+                <item>
+                    <term>0</term>
+                    <description>
+                    In this case the processing interval has been defined to process data as fast as possible, as a result the
+                    <see cref="P:TimeSeriesFramework.ConcentratorBase.ProcessByReceivedTimestamp"/> property will be set to <c>true</c> and <see cref="P:TimeSeriesFramework.ConcentratorBase.UsePrecisionTimer"/> property
+                    will be set to <c>false</c>. With a processing interval of zero data is expected to flow into the concentrator as quick as
+                    it can be provided. The <see cref="P:TimeSeriesFramework.ConcentratorBase.FramesPerSecond"/> property will still be used to sort data by time into appropriate
+                    frames, but the concentrator will use the reception time of the measurements against the defined lag-time to make sure
+                    needed data has arrived before publication and frames will be published at the same rate of data arrival.
+                    </description>
+                </item>
+                <item>
+                    <term>&gt; 0</term>
+                    <description>
+                    In this case a specific processing interval has been defined for processing data, as a result both the
+                    <see cref="P:TimeSeriesFramework.ConcentratorBase.ProcessByReceivedTimestamp"/> and <see cref="P:TimeSeriesFramework.ConcentratorBase.UsePrecisionTimer"/> properties will be set to <c>true</c>. With
+                    a specifically defined processing interval, data is expected to flow into the concentrator at a similar rate. The
+                    <see cref="P:TimeSeriesFramework.ConcentratorBase.FramesPerSecond"/> property will still be used to sort data by time into appropriate frames, but the concentrator
+                    will use the reception time of the measurements against the defined lag-time to make sure needed data has arrived before
+                    publication and frames will be published on the specified interval. If multiple frames are ready for publication when the
+                    processing interval executes, then all the ready frames will be published sequentially as quickly as possible.
+                    </description>
+                </item>
+            </list>
+            </para>
+            </remarks>
+        </member>
         <member name="P:TimeSeriesFramework.ConcentratorBase.MaximumPublicationTimeout">
             <summary>
             Gets or sets the maximum frame publication timeout in milliseconds, set to <see cref="F:System.Threading.Timeout.Infinite"/>(-1) to wait indefinitely.
@@ -696,14 +903,20 @@
             Frame rate timer.
             </summary>
             <remarks>
-            One static instance of this internal class is created per encountered frame rate.
+            One static instance of this internal class is created per encountered frame rate / processing interval.
             </remarks>
         </member>
-        <member name="M:TimeSeriesFramework.ConcentratorBase.FrameRateTimer.#ctor(System.Int32)">
+        <member name="M:TimeSeriesFramework.ConcentratorBase.FrameRateTimer.#ctor(System.Int32,System.Int32)">
             <summary>
             Create a new <see cref="T:TimeSeriesFramework.ConcentratorBase.FrameRateTimer"/> class.
             </summary>
             <param name="framesPerSecond">Desired frame rate for <see cref="T:TVA.PrecisionTimer"/>.</param>
+            <param name="processingInterval">Desired processing interval, if applicable.</param>
+            <remarks>
+            When the <paramref name="processingInterval"/> is set to -1, the frame rate timer interval will be calculated as a distribution
+            of whole milliseonds over the specified number of <paramref name="framesPerSecond"/>. Otherwise the specified
+            <paramref name="processingInterval"/> will be used as the timer interval.
+            </remarks>
         </member>
         <member name="M:TimeSeriesFramework.ConcentratorBase.FrameRateTimer.Finalize">
             <summary>
@@ -733,19 +946,14 @@
             </summary>
             <param name="tickFunction">Tick function to remove from event list.</param>
         </member>
-        <member name="P:TimeSeriesFramework.ConcentratorBase.FrameRateTimer.Timer">
-            <summary>
-            Gets <see cref="T:TVA.PrecisionTimer"/> instance for this <see cref="T:TimeSeriesFramework.ConcentratorBase.FrameRateTimer"/>.
-            </summary>
-        </member>
         <member name="P:TimeSeriesFramework.ConcentratorBase.FrameRateTimer.FramesPerSecond">
             <summary>
             Gets frames per second for this <see cref="T:TimeSeriesFramework.ConcentratorBase.FrameRateTimer"/>.
             </summary>
         </member>
-        <member name="P:TimeSeriesFramework.ConcentratorBase.FrameRateTimer.FramePeriods">
+        <member name="P:TimeSeriesFramework.ConcentratorBase.FrameRateTimer.ProcessingInterval">
             <summary>
-            Gets array of frame periods for this <see cref="T:TimeSeriesFramework.ConcentratorBase.FrameRateTimer"/>.
+            Gets the processing interval defined for the <see cref="T:TimeSeriesFramework.ConcentratorBase.FrameRateTimer"/>.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.ConcentratorBase.FrameRateTimer.ReferenceCount">
@@ -2235,6 +2443,16 @@
             is processing data in real-time.
             </remarks>
         </member>
+        <member name="P:TimeSeriesFramework.Adapters.IAdapter.ProcessingInterval">
+            <summary>
+            Gets or sets the desired processing interval, in milliseconds, for the adapter.
+            </summary>
+            <remarks>
+            With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
+            basically a delay, or timer interval, overwhich to process data. A value of -1 means to use the default processing
+            interval while a value of 0 means to process data as fast as possible.
+            </remarks>
+        </member>
         <member name="M:TimeSeriesFramework.Adapters.IActionAdapter.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
             <summary>
             Queues measurements for processing.  Measurements are automatically filtered to the defined <see cref="P:TimeSeriesFramework.Adapters.IAdapter.InputMeasurementKeys"/>.
@@ -3143,6 +3361,16 @@
             is processing data in real-time.
             </remarks>
         </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.ProcessingInterval">
+            <summary>
+            Gets or sets the desired processing interval, in milliseconds, for the adapter collection and applies this interval to each adapter.
+            </summary>
+            <remarks>
+            With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
+            basically a delay, or timer interval, overwhich to process data. A value of -1 means to use the default processing
+            interval while a value of 0 means to process data as fast as possible.
+            </remarks>
+        </member>
         <member name="P:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.ProcessedMeasurements">
             <summary>
             Gets the total number of measurements processed thus far by each <see cref="T:TimeSeriesFramework.Adapters.IAdapter"/> implementation
@@ -3712,9 +3940,19 @@
             is processing data in real-time.
             </remarks>
         </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.ProcessingInterval">
+            <summary>
+            Gets or sets the desired processing interval, in milliseconds, for the adapter.
+            </summary>
+            <remarks>
+            With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
+            basically a delay, or timer interval, overwhich to process data. A value of -1 means to use the default processing
+            interval while a value of 0 means to process data as fast as possible.
+            </remarks>
+        </member>
         <member name="P:TimeSeriesFramework.Adapters.AdapterBase.RunTime">
             <summary>
-            Gets the total amount of time, in seconds, that the concentrator has been active.
+            Gets the total amount of time, in seconds, that the adapter has been active.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.AdapterBase.Settings">
@@ -3766,6 +4004,11 @@
         <member name="M:TimeSeriesFramework.Adapters.AllAdaptersCollection.Initialize">
             <summary>
             Initializes each <see cref="T:TimeSeriesFramework.Adapters.IAdapterCollection"/> implementation in this <see cref="T:TimeSeriesFramework.Adapters.AllAdaptersCollection"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AllAdaptersCollection.UpdateCollectionConfigurations">
+            <summary>
+            Create newly defined adapters and remove adapters that are no longer present in the adapter collection configurations. 
             </summary>
         </member>
         <member name="M:TimeSeriesFramework.Adapters.AllAdaptersCollection.TryGetAnyAdapterByID(System.UInt32,TimeSeriesFramework.Adapters.IAdapter@,TimeSeriesFramework.Adapters.IAdapterCollection@)">
@@ -4377,6 +4620,65 @@
             </para>
             </remarks>
         </member>
+        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.SetTemporalConstraint(System.String,System.String,System.String)">
+            <summary>
+            Defines a temporal processing constraint for the adapter.
+            </summary>
+            <param name="startTime">Defines a relative or exact start time for the temporal constraint.</param>
+            <param name="stopTime">Defines a relative or exact stop time for the temporal constraint.</param>
+            <param name="constraintParameters">Defines any temporal parameters related to the constraint.</param>
+            <remarks>
+            <para>
+            For output adapters it is assumed that the desired behavior when a temporal constraint exists is to disable
+            processing since the data being processed by the output adapter has already been archived. Note that this
+            bypass behavior is only enagaged when <see cref="P:TimeSeriesFramework.Adapters.OutputAdapterBase.OutputIsForArchive"/> is <c>true</c>. Processing bypass
+            occurs by setting <see cref="P:TimeSeriesFramework.Adapters.OutputAdapterBase.BypassProcessing"/> to <c>true</c>. If you have an output adapter that you
+            want to process data even when a temporal constaint is defined, override the <see cref="P:TimeSeriesFramework.Adapters.OutputAdapterBase.BypassProcessing"/>
+            property and force the base value to always be <c>false</c>.
+            </para>
+            <para>
+            This method defines a temporal processing contraint for an adapter, i.e., the start and stop time over which an
+            adapter will process data. Actual implementation of the constraint will be adapter specific. Implementations
+            should be able to dynamically handle multitple calls to this function with new constraints. Passing in <c>null</c>
+            for the <paramref name="startTime"/> and <paramref name="stopTime"/> should cancel the temporal constraint and
+            return the adapter to standard / real-time operation.
+            </para>
+            <para>
+            The <paramref name="startTime"/> and <paramref name="stopTime"/> parameters can be specified in one of the
+            following formats:
+            <list type="table">
+                <listheader>
+                    <term>Time Format</term>
+                    <description>Format Description</description>
+                </listheader>
+                <item>
+                    <term>12-30-2000 23:59:59.033</term>
+                    <description>Absolute date and time.</description>
+                </item>
+                <item>
+                    <term>*</term>
+                    <description>Evaluates to <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-20s</term>
+                    <description>Evaluates to 20 seconds before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-10m</term>
+                    <description>Evaluates to 10 minutes before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-1h</term>
+                    <description>Evaluates to 1 hour before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-1d</term>
+                    <description>Evaluates to 1 day before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+            </list>
+            </para>
+            </remarks>
+        </member>
         <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.OnUnprocessedMeasurements(System.Int32)">
             <summary>
             Raises the <see cref="E:TimeSeriesFramework.Adapters.OutputAdapterBase.UnprocessedMeasurements"/> event.
@@ -4432,6 +4734,29 @@
             This property allows the <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterCollection"/> to calculate statistics on how
             many measurements have been archived per minute. Historians would normally set this property
             to <c>true</c>; other custom exports would set this property to <c>false</c>.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.BypassProcessing">
+            <summary>
+            Gets or sets value that allows output adapter processing to be bypassed.
+            </summary>
+            <remarks>
+            For output adapters it is assumed that the desired behavior when a temporal constraint exists is to disable
+            processing since the data being processed by the output adapter has already been archived. Note that this
+            bypass behavior is only enagaged when <see cref="P:TimeSeriesFramework.Adapters.OutputAdapterBase.OutputIsForArchive"/> is <c>true</c>. Processing bypass
+            occurs by setting <see cref="P:TimeSeriesFramework.Adapters.OutputAdapterBase.BypassProcessing"/> to <c>true</c>. If you have an output adapter that you
+            want to process data even when a temporal constaint is defined, override the <see cref="P:TimeSeriesFramework.Adapters.OutputAdapterBase.BypassProcessing"/>
+            property and force the base value to always be <c>false</c>.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.ProcessingInterval">
+            <summary>
+            Gets or sets the desired processing interval, in milliseconds, for the output adapter.
+            </summary>
+            <remarks>
+            With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
+            basically a delay, or timer interval, overwhich to process data. A value of -1 means to use the default processing
+            interval while a value of 0 means to process data as fast as possible.
             </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.UseAsyncConnect">
@@ -5475,11 +5800,6 @@
             This method allows caching of the current system configuration so it can be used if primary configuration source is unavailable.
             </remarks>
         </member>
-        <member name="M:TimeSeriesFramework.ServiceHostBase.RecalculateRoutingTables">
-            <summary>
-            Recalculates routing tables as long as all adapters have been initialized.
-            </summary>
-        </member>
         <member name="M:TimeSeriesFramework.ServiceHostBase.UnpublishedSamplesHandler(System.Object,TVA.EventArgs{System.Int32})">
             <summary>
             Event handler for monitoring unpublished samples.
@@ -5518,13 +5838,6 @@
             </summary>
             <param name="sender"></param>
             <param name="e"></param>
-        </member>
-        <member name="M:TimeSeriesFramework.ServiceHostBase.AdapterMeasurementsUpdated(System.Object,System.EventArgs)">
-            <summary>
-            Handler for updates to adapter input or output measurement definitions.
-            </summary>
-            <param name="sender">Sending object.</param>
-            <param name="e">Event arguments, if any.</param>
         </member>
         <member name="M:TimeSeriesFramework.ServiceHostBase.DisposedHandler(System.Object,System.EventArgs)">
             <summary>
@@ -5786,7 +6099,7 @@
             Gets the current node ID formatted for use in a SQL query string based on <see cref="P:TimeSeriesFramework.ServiceHostBase.ConfigurationType"/>.
             </summary>
         </member>
-        <member name="P:TimeSeriesFramework.ServiceHostBase.Configuration">
+        <member name="P:TimeSeriesFramework.ServiceHostBase.DataSource">
             <summary>
             Gets the currently loaded system configuration <see cref="T:System.Data.DataSet"/>.
             </summary>
