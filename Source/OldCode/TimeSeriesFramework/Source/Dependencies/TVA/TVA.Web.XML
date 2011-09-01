@@ -67,6 +67,12 @@
             Releases the resources used by <see cref="T:TVA.Web.SecurityModule"/>.
             </summary>
         </member>
+        <member name="M:TVA.Web.SecurityModule.Redirect(System.Net.HttpStatusCode)">
+            <summary>
+            Redirects the client browser based on the specified <paramref name="httpStatusCode"/>
+            </summary>
+            <param name="httpStatusCode"><see cref="T:System.Net.HttpStatusCode"/> to be used for the redirect.</param>
+        </member>
         <member name="M:TVA.Web.SecurityModule.GetResourceName">
             <summary>
             Gets the name of resource being accessed.
@@ -78,6 +84,11 @@
             Determines if access to the requested resource is restricted by <see cref="T:TVA.Security.RestrictAccessAttribute"/>.
             </summary>
             <returns>true if access to the requested resource is restricted, otherwise false.</returns>
+        </member>
+        <member name="P:TVA.Web.SecurityModule.Application">
+            <summary>
+            Gets the current <see cref="T:System.Web.HttpApplication"/> instance.
+            </summary>
         </member>
         <member name="T:TVA.Web.SecurityModule.SessionEnabledHandler">
             <summary>
@@ -1447,14 +1458,6 @@
             Embedded WCF service contract used for securing external facing WCF services.
             </summary>
         </member>
-        <member name="M:TVA.Web.Embedded.ISecurityService.Authenticate(System.String,System.String)">
-            <summary>
-            Authenticates a user and caches the security context upon successful authentication for subsequent use.
-            </summary>
-            <param name="username">Username of the user.</param>
-            <param name="password">Password of the user.</param>
-            <returns>An <see cref="T:TVA.Security.UserData"/> object of the user.</returns>
-        </member>
         <member name="M:TVA.Web.Embedded.ISecurityService.GetUserData">
             <summary>
             Returns information about the current user. 
@@ -1466,6 +1469,14 @@
             Refreshes and returns information about the current user. 
             </summary>
             <returns>An <see cref="T:TVA.Security.UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
+        </member>
+        <member name="M:TVA.Web.Embedded.ISecurityService.Authenticate(System.String,System.String)">
+            <summary>
+            Authenticates a user and caches the security context upon successful authentication for subsequent use.
+            </summary>
+            <param name="username">Username of the user.</param>
+            <param name="password">Password of the user.</param>
+            <returns>An <see cref="T:TVA.Security.UserData"/> object of the user.</returns>
         </member>
         <member name="M:TVA.Web.Embedded.ISecurityService.ResetPassword(System.String)">
             <summary>
@@ -1736,14 +1747,6 @@
             </code>
             </example>
         </member>
-        <member name="M:TVA.Web.Embedded.SecurityService.Authenticate(System.String,System.String)">
-            <summary>
-            Authenticates a user and caches the security context upon successful authentication for subsequent use.
-            </summary>
-            <param name="username">Username of the user.</param>
-            <param name="password">Password of the user.</param>
-            <returns>An <see cref="T:TVA.Security.UserData"/> object of the user.</returns>
-        </member>
         <member name="M:TVA.Web.Embedded.SecurityService.GetUserData">
             <summary>
             Returns information about the current user. 
@@ -1755,6 +1758,14 @@
             Refreshes and returns information about the current user. 
             </summary>
             <returns>An <see cref="T:TVA.Security.UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
+        </member>
+        <member name="M:TVA.Web.Embedded.SecurityService.Authenticate(System.String,System.String)">
+            <summary>
+            Authenticates a user and caches the security context upon successful authentication for subsequent use.
+            </summary>
+            <param name="username">Username of the user.</param>
+            <param name="password">Password of the user.</param>
+            <returns>An <see cref="T:TVA.Security.UserData"/> object of the user.</returns>
         </member>
         <member name="M:TVA.Web.Embedded.SecurityService.ResetPassword(System.String)">
             <summary>

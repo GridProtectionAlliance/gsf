@@ -252,6 +252,12 @@
                     encrypted="false" />
                   <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
                     encrypted="false" />
+                  <add name="EnableOfflineCaching" value="True" description="True to enable caching of user information for authentication in offline state, otherwise False."
+                    encrypted="false" />
+                  <add name="CacheRetryDelayInterval" value="200" description="Wait interval, in milliseconds, before retrying load of user data cache."
+                    encrypted="false" />
+                  <add name="CacheMaximumRetryAttempts" value="10" description="Maximum retry attempts allowed for loading user data cache."
+                    encrypted="false" />
                 </securityProvider>
                 <activeDirectory>
                   <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
@@ -526,6 +532,21 @@
             Defines the provider ID for the <see cref="T:TVA.Security.LdapSecurityProvider"/>.
             </summary>
         </member>
+        <member name="F:TVA.Security.LdapSecurityProvider.DefaultEnableOfflineCaching">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Security.LdapSecurityProvider.EnableOfflineCaching"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.LdapSecurityProvider.DefaultCacheRetryDelayInterval">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Security.LdapSecurityProvider.CacheRetryDelayInterval"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.LdapSecurityProvider.DefaultCacheMaximumRetryAttempts">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Security.LdapSecurityProvider.CacheMaximumRetryAttempts"/> property.
+            </summary>
+        </member>
         <member name="M:TVA.Security.LdapSecurityProvider.#ctor(System.String)">
             <summary>
             Initializes a new instance of the <see cref="T:TVA.Security.LdapSecurityProvider"/> class.
@@ -556,6 +577,16 @@
             <param name="securityAnswer">Answer to the user's security question.</param>
             <returns>true if the password is reset, otherwise false.</returns>
             <exception cref="T:System.NotSupportedException">Always</exception>
+        </member>
+        <member name="M:TVA.Security.LdapSecurityProvider.SaveSettings">
+            <summary>
+            Saves <see cref="T:TVA.Security.LdapSecurityProvider"/> settings to the config file if the <see cref="P:TVA.Security.SecurityProviderBase.PersistSettings"/> property is set to true.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.LdapSecurityProvider.LoadSettings">
+            <summary>
+            Loads saved <see cref="T:TVA.Security.LdapSecurityProvider"/> settings from the config file if the <see cref="P:TVA.Security.SecurityProviderBase.PersistSettings"/> property is set to true.
+            </summary>
         </member>
         <member name="M:TVA.Security.LdapSecurityProvider.Authenticate(System.String)">
             <summary>
@@ -592,6 +623,21 @@
             </summary>
             <param name="role">The user role to be translated.</param>
             <returns>The user role that the specified user <paramref name="role"/> translates to.</returns>
+        </member>
+        <member name="P:TVA.Security.LdapSecurityProvider.EnableOfflineCaching">
+            <summary>
+            Gets or sets a boolean value that indicates whether user information is to be cached for offline authentication.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.LdapSecurityProvider.CacheRetryDelayInterval">
+            <summary>
+            Gets or sets the wait interval (in milliseconds) before retrying load of offline user data cache.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.LdapSecurityProvider.CacheMaximumRetryAttempts">
+            <summary>
+            Gets or sets the maximum retry attempts allowed for loading offline user data cache.
+            </summary>
         </member>
         <member name="P:TVA.Security.LdapSecurityProvider.WindowsPrincipal">
             <summary>
@@ -813,7 +859,7 @@
             <summary>
             Loads the <see cref="T:TVA.Security.UserDataCache"/> for the current local user.
             </summary>
-            <param name="providerID">Unique provider ID used to distinguish cached user data that may be different based on provider.</param>
+            <param name="providerID">Unique security provider ID used to distinguish cached user data that may be different based on provider.</param>
             <returns>Loaded instance of the <see cref="T:TVA.Security.UserDataCache"/>.</returns>
         </member>
         <member name="P:TVA.Security.UserDataCache.Item(System.String)">

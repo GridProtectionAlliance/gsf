@@ -8266,6 +8266,7 @@
             <param name="serializedObject"><see cref="T:System.Array"/> of <see cref="T:System.Byte"/>s contaning the serialized <see cref="T:System.Object"/> that is to be deserialized.</param>
             <param name="serializationFormat"><see cref="T:TVA.SerializationFormat"/> in which the <paramref name="serializedObject"/> was serialized.</param>
             <param name="deserializedObject">Deserialized <see cref="T:System.Object"/>.</param>
+            <returns><c>true</c>if deserialization succeeded; otherwise <c>false</c>.</returns>
         </member>
         <member name="M:TVA.Serialization.TryDeserialize``1(System.IO.Stream,TVA.SerializationFormat,``0@)">
             <summary>
@@ -8275,6 +8276,7 @@
             <param name="serializedObject"><see cref="T:System.IO.Stream"/> contaning the serialized <see cref="T:System.Object"/> that is to be deserialized.</param>
             <param name="serializationFormat"><see cref="T:TVA.SerializationFormat"/> in which the <paramref name="serializedObject"/> was serialized.</param>
             <param name="deserializedObject">Deserialized <see cref="T:System.Object"/>.</param>
+            <returns><c>true</c>if deserialization succeeded; otherwise <c>false</c>.</returns>
         </member>
         <member name="T:TVA.Parsing.MultiSourceFrameImageParserBase`3">
             <summary>
@@ -30520,6 +30522,21 @@
             <returns>Returns <paramref name="value" /> with all duplicate white space removed.</returns>
             <remarks>This function allows you to specify spacing character (e.g., you may want to use a non-breaking space: <c>Convert.ToChar(160)</c>).</remarks>
         </member>
+        <member name="M:TVA.StringExtensions.RemoveInvalidFileNameCharacters(System.String)">
+            <summary>
+            Removes all invalid file name characters (\ / : * ? " &lt; &gt; |) from a string.
+            </summary>
+            <param name="value">Input string.</param>
+            <returns>Returns <paramref name="value" /> with all invalid file name characters removed.</returns>
+        </member>
+        <member name="M:TVA.StringExtensions.ReplaceInvalidFileNameCharacters(System.String,System.Char)">
+            <summary>
+            Replaces all invalid file name characters (\ / : * ? " &lt; &gt; |) in a string with the specified <paramref name="replacementCharacter"/>.
+            </summary>
+            <param name="value">Input string.</param>
+            <param name="replacementCharacter">Character used to replace the invalid characters.</param>
+            <returns>>Returns <paramref name="value" /> with all invalid file name characters replaced.</returns>
+        </member>
         <member name="M:TVA.StringExtensions.CharCount(System.String,System.Char)">
             <summary>
             Counts the total number of the occurances of a character in the given string.
@@ -33629,7 +33646,7 @@
             you need to interact with another application using a <see cref="T:System.Threading.Mutex"/> that does not use this function.
             </para>
             </remarks>
-            <exception cref="T:System.ArgumentNullException">Parameter <paramref name="name"/> cannot be empty, null or white space.</exception>
+            <exception cref="T:System.ArgumentNullException">Argument <paramref name="name"/> cannot be empty, null or white space.</exception>
         </member>
         <member name="M:TVA.Threading.InterprocessLock.GetNamedSemaphore(System.String,System.Int32,System.Int32)">
             <summary>
@@ -33656,7 +33673,7 @@
             such as when you need to interact with another application using a <see cref="T:System.Threading.Semaphore"/> that does not use this function.
             </para>
             </remarks>
-            <exception cref="T:System.ArgumentNullException">Parameter <paramref name="name"/> cannot be empty, null or white space.</exception>
+            <exception cref="T:System.ArgumentNullException">Argument <paramref name="name"/> cannot be empty, null or white space.</exception>
         </member>
         <member name="T:TVA.ProcessProgress`1">
             <summary>

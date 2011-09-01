@@ -929,6 +929,11 @@
             <param name="asyncCallback">The <see cref="T:System.AsyncCallback"/> of the asynchronous operation being monitored.</param>
             <param name="asyncResult">The <see cref="T:System.IAsyncResult"/> of the asynchronous operation being monitored.</param>
         </member>
+        <member name="T:TVA.Communication.HandshakeMessage">
+            <summary>
+            Represents a handshake message to validate connecting client.
+            </summary>
+        </member>
         <member name="F:TVA.Communication.HandshakeMessage.MessageIdentifier">
             <summary>
             2-Byte identifier for <see cref="T:TVA.Communication.HandshakeMessage"/>.
@@ -947,11 +952,6 @@
             <remarks>Max size is 260.</remarks>
         </member>
         <member name="M:TVA.Communication.HandshakeMessage.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Communication.HandshakeMessage"/> class.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.HandshakeMessage.#ctor(System.Guid,System.String)">
             <summary>
             Initializes a new instance of the <see cref="T:TVA.Communication.HandshakeMessage"/> class.
             </summary>
@@ -1062,6 +1062,11 @@
         <member name="F:TVA.Communication.UdpServer.DefaultReceiveBufferSize">
             <summary>
             Specifies the default value for the <see cref="P:TVA.Communication.ServerBase.ReceiveBufferSize"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.UdpServer.DefaultAllowDualStackSocket">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Communication.UdpServer.AllowDualStackSocket"/> property.
             </summary>
         </member>
         <member name="F:TVA.Communication.UdpServer.DefaultConfigurationString">
@@ -1197,6 +1202,11 @@
             Processes the termination of client.
             </summary>
         </member>
+        <member name="P:TVA.Communication.UdpServer.AllowDualStackSocket">
+            <summary>
+            Gets or sets a boolean value that determines if dual-mode socket is allowed when endpoint address is IPv6.
+            </summary>
+        </member>
         <member name="P:TVA.Communication.UdpServer.Server">
             <summary>
             Gets the <see cref="T:System.Net.Sockets.Socket"/> object for the <see cref="T:TVA.Communication.UdpServer"/>.
@@ -1290,6 +1300,11 @@
         <member name="F:TVA.Communication.TcpServer.DefaultIntegratedSecurity">
             <summary>
             Specifies the default value for the <see cref="P:TVA.Communication.TcpServer.IntegratedSecurity"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.TcpServer.DefaultAllowDualStackSocket">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Communication.TcpServer.AllowDualStackSocket"/> property.
             </summary>
         </member>
         <member name="F:TVA.Communication.TcpServer.DefaultConfigurationString">
@@ -1442,6 +1457,11 @@
             Gets or sets a boolean value that indicates whether the client Windows account credentials are used for authentication.
             </summary>
         </member>
+        <member name="P:TVA.Communication.TcpServer.AllowDualStackSocket">
+            <summary>
+            Gets or sets a boolean value that determines if dual-mode socket is allowed when endpoint address is IPv6.
+            </summary>
+        </member>
         <member name="P:TVA.Communication.TcpServer.Server">
             <summary>
             Gets the <see cref="T:System.Net.Sockets.Socket"/> object for the <see cref="T:TVA.Communication.TcpServer"/>.
@@ -1498,6 +1518,15 @@
             <param name="cryptoKey">The key to be used for decrypting the data in the <paramref name="buffer"/>.</param>
             <param name="compressLevel">One of the <see cref="T:TVA.IO.Compression.CompressionStrength"/> values.</param>
         </member>
+        <member name="M:TVA.Communication.Payload.ProcessReceived(System.Net.Sockets.SocketAsyncEventArgs,TVA.Security.Cryptography.CipherStrength,System.String,TVA.IO.Compression.CompressionStrength)">
+            <summary>
+            Performs the necessary uncompression and decryption on the data contained in the <paramref name="socketArgs"/>.
+            </summary>
+            <param name="socketArgs">Socket's asynchronous event arguments.</param>
+            <param name="cryptoLevel">One of the <see cref="T:TVA.Security.Cryptography.CipherStrength"/> values.</param>
+            <param name="cryptoKey">The key to be used for decrypting the data in the <paramref name="socketArgs"/>.</param>
+            <param name="compressLevel">One of the <see cref="T:TVA.IO.Compression.CompressionStrength"/> values.</param>
+        </member>
         <member name="M:TVA.Communication.Payload.ProcessTransmit(System.Byte[]@,System.Int32@,System.Int32@,TVA.Security.Cryptography.CipherStrength,System.String,TVA.IO.Compression.CompressionStrength)">
             <summary>
             Performs the necessary compression and encryption on the data contained in the <paramref name="buffer"/>.
@@ -1507,6 +1536,15 @@
             <param name="length">The length of data in <paramref name="buffer"/> starting at the <paramref name="offset"/>.</param>
             <param name="cryptoLevel">One of the <see cref="T:TVA.Security.Cryptography.CipherStrength"/> values.</param>
             <param name="cryptoKey">The key to be used for encrypting the data in the <paramref name="buffer"/>.</param>
+            <param name="compressLevel">One of the <see cref="T:TVA.IO.Compression.CompressionStrength"/> values.</param>
+        </member>
+        <member name="M:TVA.Communication.Payload.ProcessTransmit(System.Net.Sockets.SocketAsyncEventArgs,TVA.Security.Cryptography.CipherStrength,System.String,TVA.IO.Compression.CompressionStrength)">
+            <summary>
+            Performs the necessary compression and encryption on the data contained in the <paramref name="socketArgs"/>.
+            </summary>
+            <param name="socketArgs">Socket's asynchronous event arguments.</param>
+            <param name="cryptoLevel">One of the <see cref="T:TVA.Security.Cryptography.CipherStrength"/> values.</param>
+            <param name="cryptoKey">The key to be used for encrypting the data in the <paramref name="socketArgs"/>.</param>
             <param name="compressLevel">One of the <see cref="T:TVA.IO.Compression.CompressionStrength"/> values.</param>
         </member>
         <member name="T:TVA.Communication.Radius.AttributeType">
@@ -3360,6 +3398,11 @@
             Specifies the default value for the <see cref="P:TVA.Communication.ClientBase.ReceiveBufferSize"/> property.
             </summary>
         </member>
+        <member name="F:TVA.Communication.UdpClient.DefaultAllowDualStackSocket">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Communication.UdpClient.AllowDualStackSocket"/> property.
+            </summary>
+        </member>
         <member name="F:TVA.Communication.UdpClient.DefaultConnectionString">
             <summary>
             Specifies the default value for the <see cref="P:TVA.Communication.ClientBase.ConnectionString"/> property.
@@ -3474,6 +3517,11 @@
             Processes the termination of client.
             </summary>
         </member>
+        <member name="P:TVA.Communication.UdpClient.AllowDualStackSocket">
+            <summary>
+            Gets or sets a boolean value that determines if dual-mode socket is allowed when endpoint address is IPv6.
+            </summary>
+        </member>
         <member name="P:TVA.Communication.UdpClient.Client">
             <summary>
             Gets the <see cref="T:TVA.Communication.TransportProvider`1"/> object for the <see cref="T:TVA.Communication.UdpClient"/>.
@@ -3484,9 +3532,38 @@
             Gets the server URI of the <see cref="T:TVA.Communication.UdpClient"/>.
             </summary>
         </member>
+        <member name="T:TVA.Communication.IPStack">
+            <summary>
+            IP stack enumeration.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.IPStack.IPv6">
+            <summary>
+            IPv6 stack.
+            </summary>
+            <remarks>
+            Requests to use IPv6 stack if possible.
+            </remarks>
+        </member>
+        <member name="F:TVA.Communication.IPStack.IPv4">
+            <summary>
+            IPv4 stack.
+            </summary>
+            <remarks>
+            Requests to use IPv4 stack if possible.
+            </remarks>
+        </member>
+        <member name="F:TVA.Communication.IPStack.Default">
+            <summary>
+            Default stack.
+            </summary>
+            <remarks>
+            Requests to use the default OS IP stack.
+            </remarks>
+        </member>
         <member name="T:TVA.Communication.Transport">
             <summary>
-            A helper class containing methods related to server-client communication.
+            Defines helper methods related to IP socket based communications.
             </summary>
         </member>
         <member name="F:TVA.Communication.Transport.PortRangeLow">
@@ -3513,24 +3590,46 @@
             </para>
             </remarks>
         </member>
-        <member name="M:TVA.Communication.Transport.CreateEndPoint(System.String,System.Int32)">
+        <member name="M:TVA.Communication.Transport.CreateEndPoint(System.String,System.Int32,TVA.Communication.IPStack)">
             <summary>
             Creates an <see cref="T:System.Net.IPEndPoint"/> for the specified host name and port number.
             </summary>
             <param name="hostNameOrAddress">The host name or IP address to resolve.</param>
             <param name="port">The port number to be associated with the address.</param>
+            <param name="stack">Desired IP stack to use.</param>
             <returns>An <see cref="T:System.Net.IPEndPoint"/> object.</returns>
         </member>
-        <member name="M:TVA.Communication.Transport.CreateSocket(System.String,System.Int32,System.Net.Sockets.ProtocolType)">
+        <member name="M:TVA.Communication.Transport.CreateSocket(System.String,System.Int32,System.Net.Sockets.ProtocolType,TVA.Communication.IPStack,System.Boolean)">
             <summary>
             Creates a <see cref="T:System.Net.Sockets.Socket"/> for the specified <paramref name="port"/> and <paramref name="protocol"/>.
             </summary>
             <param name="address">The local address where the <see cref="T:System.Net.Sockets.Socket"/> will be bound.</param>
             <param name="port">The port number at which the <see cref="T:System.Net.Sockets.Socket"/> will be bound.</param>
             <param name="protocol">One of the <see cref="T:System.Net.Sockets.ProtocolType"/> values.</param>
+            <param name="stack">Desired IP stack to use.</param>
+            <param name="allowDualStackSocket">Determines if dual-mode socket is allowed when endpoint address is IPv6.</param>
             <returns>An <see cref="T:System.Net.Sockets.Socket"/> object.</returns>
         </member>
-        <member name="M:TVA.Communication.Transport.IsIPv6IP(System.Net.IPAddress)">
+        <member name="M:TVA.Communication.Transport.GetDefaultIPStack">
+            <summary>
+            Gets the default IP stack for this system.
+            </summary>
+            <returns>
+            System's assumed default IP stack.
+            </returns>
+        </member>
+        <member name="M:TVA.Communication.Transport.GetInterfaceIPStack(System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+            Derives the desired <see cref="T:TVA.Communication.IPStack"/> from the "interface" setting in the connection string key/value pairs.
+            </summary>
+            <param name="connectionStringKVPairs">Connection string key/value pairs.</param>
+            <returns>Desired <see cref="T:TVA.Communication.IPStack"/> based on "interface" setting.</returns>
+            <remarks>
+            The "interface" setting will be added to the <paramref name="connectionStringKVPairs"/> if it
+            doesn't exist, in this case return value will be <see cref="F:TVA.Communication.IPStack.Default"/>.
+            </remarks>
+        </member>
+        <member name="M:TVA.Communication.Transport.IsIPv6IP(System.String)">
             <summary>
             Determines if the specified <paramref name="ipAddress"/> is an IPv6 IP.
             </summary>
@@ -3938,6 +4037,11 @@
             Specifies the default value for the <see cref="P:TVA.Communication.TcpClient.IntegratedSecurity"/> property.
             </summary>
         </member>
+        <member name="F:TVA.Communication.TcpClient.DefaultAllowDualStackSocket">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Communication.TcpClient.AllowDualStackSocket"/> property.
+            </summary>
+        </member>
         <member name="F:TVA.Communication.TcpClient.DefaultConnectionString">
             <summary>
             Specifies the default value for the <see cref="P:TVA.Communication.ClientBase.ConnectionString"/> property.
@@ -4077,6 +4181,11 @@
         <member name="P:TVA.Communication.TcpClient.IntegratedSecurity">
             <summary>
             Gets or sets a boolean value that indicates whether the current Windows account credentials are used for authentication.
+            </summary>
+        </member>
+        <member name="P:TVA.Communication.TcpClient.AllowDualStackSocket">
+            <summary>
+            Gets or sets a boolean value that determines if dual-mode socket is allowed when endpoint address is IPv6.
             </summary>
         </member>
         <member name="P:TVA.Communication.TcpClient.Client">
