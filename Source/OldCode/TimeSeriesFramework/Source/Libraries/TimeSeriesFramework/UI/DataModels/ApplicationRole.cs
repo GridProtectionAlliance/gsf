@@ -321,7 +321,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 Dictionary<Guid, string> currentUsers = new Dictionary<Guid, string>();
-                DataTable currentUsersTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM ApplicationRoleUserAccountDetail WHERE ApplicationRoleID = @applicationRoleID ORDER BY UserName", roleID);
+                DataTable currentUsersTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM AppRoleUserAccountDetail WHERE ApplicationRoleID = @applicationRoleID ORDER BY UserName", roleID);
 
                 foreach (DataRow row in currentUsersTable.Rows)
                     currentUsers[database.Guid(row, "UserAccountID")] = row.Field<string>("UserName");
@@ -377,7 +377,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 Dictionary<Guid, string> currentGroups = new Dictionary<Guid, string>();
-                DataTable currentGroupsTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM ApplicationRoleSecurityGroupDetail WHERE ApplicationRoleID = @applicationRoleID ORDER BY SecurityGroupName", roleID);
+                DataTable currentGroupsTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM AppRoleSecurityGroupDetail WHERE ApplicationRoleID = @applicationRoleID ORDER BY SecurityGroupName", roleID);
 
                 foreach (DataRow row in currentGroupsTable.Rows)
                     currentGroups[database.Guid(row, "SecurityGroupID")] = row.Field<string>("SecurityGroupName");
