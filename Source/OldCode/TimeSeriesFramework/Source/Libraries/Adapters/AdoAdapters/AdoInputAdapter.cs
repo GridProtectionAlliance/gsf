@@ -57,9 +57,6 @@ namespace AdoAdapters
         private IList<IMeasurement> m_dbMeasurements;
         private string m_cacheFileName;
         private int m_nextIndex;
-        private int m_frameWindowSize;
-        private int[] m_frameMilliseconds;
-        private int m_lastFrameIndex;
 
         #endregion
 
