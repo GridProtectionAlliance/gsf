@@ -127,6 +127,7 @@
     <Compile Include="DataModels\VendorDevice.cs" />
     <Compile Include="EntityPropertyAttribute.cs" />
     <Compile Include="IDataModel.cs" />
+    <Compile Include="IsolatedStorageManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WindowsServiceClient.cs" />
   </ItemGroup>
