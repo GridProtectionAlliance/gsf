@@ -215,6 +215,11 @@ namespace TimeSeriesFramework.UI
             return s_timeSeriesDataServiceUrl;
         }
 
+        /// <summary>
+        /// Retrieves connection string information to connect to backed windows service from UI.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to database.</param>
+        /// <returns>Connection string to connect to backend windows service.</returns>
         public static string ServiceConnectionString(this AdoDataConnection database)
         {
             if (string.IsNullOrEmpty(s_serviceConnectionString))
@@ -223,6 +228,11 @@ namespace TimeSeriesFramework.UI
             return s_serviceConnectionString;
         }
 
+        /// <summary>
+        /// Retrieves connection string to subscribe data from data published hosted by the backend windows service.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to database.</param>
+        /// <returns>Connection string to subscribe from data publisher.</returns>
         public static string DataPublisherConnectionString(this AdoDataConnection database)
         {
             if (string.IsNullOrEmpty(s_dataPublisherConnectionString))
