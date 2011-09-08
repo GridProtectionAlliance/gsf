@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.IO.IsolatedStorage;
 using System.Security.Principal;
 using System.Windows;
 using TimeSeriesFramework.UI;
@@ -116,6 +117,19 @@ namespace TsfManager
             }
 
             return errorMessage;
+        }
+
+        /// <summary>
+        /// Initializes or resets existing values in <see cref="IsolatedStorageFile"/> to default values.
+        /// </summary>
+        /// <param name="overWriteExisting">Boolean flag indicating if existing values should be reset to default value.</param>
+        public void InitializeIsolatedStorage(bool overWriteExisting)
+        {
+            IsolatedStorageFile isolatedStorageFile = IsolatedStorageFile.GetUserStoreForAssembly();
+
+            if (!isolatedStorageFile.FileExists("NumberOfMessages") || overWriteExisting)
+                IsolatedStorageManager.WriteToIsolatedStorage("NumberOfMessages", 75);
+
         }
 
         #endregion

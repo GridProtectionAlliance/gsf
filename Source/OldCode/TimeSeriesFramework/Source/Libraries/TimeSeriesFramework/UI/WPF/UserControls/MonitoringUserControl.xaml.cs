@@ -24,6 +24,7 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Media;
 using TVA;
@@ -40,6 +41,7 @@ namespace TimeSeriesFramework.UI.UserControls
 
         // Fields
         private WindowsServiceClient m_serviceClient;
+        private int m_numberOfMessages;
 
         // Delegates
         private delegate void DisplayHelper(UpdateType updateType, string message);
@@ -71,6 +73,10 @@ namespace TimeSeriesFramework.UI.UserControls
         {
             TextBoxServiceRequest.Focus();
             SetupServiceConnection();
+            if (!int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("NumberOfMessages").ToString(), out m_numberOfMessages))
+                m_numberOfMessages = 75;
+
+            TextBoxNumberOfMessages.Text = m_numberOfMessages.ToString();
         }
 
         /// <summary>
@@ -198,7 +204,7 @@ namespace TimeSeriesFramework.UI.UserControls
             }
 
             TextBlockServiceStatus.Inlines.Add(run);
-            if (TextBlockServiceStatus.Inlines.Count > 50)
+            if (TextBlockServiceStatus.Inlines.Count > m_numberOfMessages)
                 TextBlockServiceStatus.Inlines.Remove(TextBlockServiceStatus.Inlines.FirstInline);
 
             TextBlockServiceStatus.UpdateLayout();
@@ -232,6 +238,33 @@ namespace TimeSeriesFramework.UI.UserControls
             TextBoxServiceRequest.SelectAll();
         }
 
+        private void ButtonDisplaySettings_Click(object sender, RoutedEventArgs e)
+        {
+            PopupSettings.Placement = PlacementMode.Center;
+            PopupSettings.IsOpen = true;
+        }
+
+        private void ButtonRestore_Click(object sender, RoutedEventArgs e)
+        {
+            m_numberOfMessages = 75;
+            IsolatedStorageManager.WriteToIsolatedStorage("NumberOfMessages", m_numberOfMessages);
+            PopupSettings.IsOpen = false;
+        }
+
+        private void ButtonSave_Click(object sender, RoutedEventArgs e)
+        {
+            if (int.TryParse(TextBoxNumberOfMessages.Text, out m_numberOfMessages))
+            {
+                IsolatedStorageManager.WriteToIsolatedStorage("NumberOfMessages", m_numberOfMessages);
+                PopupSettings.IsOpen = false;
+            }
+            else
+            {
+                MessageBox.Show("Please provide integer value.", "ERROR: Invalid Value", MessageBoxButton.OK);
+            }
+        }
+
         #endregion
+
     }
 }

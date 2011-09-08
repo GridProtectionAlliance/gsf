@@ -72,12 +72,8 @@ namespace TimeSeriesFramework.UI
         {
             using (StreamReader reader = new StreamReader(new IsolatedStorageFileStream(key, FileMode.OpenOrCreate, s_userStoreForAssembly)))
             {
-                string result;
                 if (reader != null)
-                {
-                    result = reader.ReadToEnd();
-                    return result;
-                }
+                    return reader.ReadToEnd();
                 else
                     return null;
             }

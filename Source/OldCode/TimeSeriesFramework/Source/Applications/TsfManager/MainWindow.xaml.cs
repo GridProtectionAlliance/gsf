@@ -106,6 +106,8 @@ namespace TsfManager
             ComboboxNode.ItemsSource = Node.GetLookupList(null);
             if (ComboboxNode.Items.Count > 0)
                 ComboboxNode.SelectedIndex = 0;
+
+            ((App)Application.Current).InitializeIsolatedStorage(false);
         }
 
         /// <summary>
