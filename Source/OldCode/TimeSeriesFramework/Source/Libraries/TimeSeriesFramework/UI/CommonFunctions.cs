@@ -58,7 +58,6 @@ namespace TimeSeriesFramework.UI
         //private static string s_dataPublisherPort;
         private static string s_serviceConnectionString;
         private static string s_dataPublisherConnectionString;
-        private static bool s_forceIPv4;
         private static string s_realTimeStatisticServiceUrl;
         private static string s_timeSeriesDataServiceUrl;
         private static WindowsServiceClient s_windowsServiceClient;
@@ -250,8 +249,7 @@ namespace TimeSeriesFramework.UI
             Node node = Node.GetCurrentNode(database);
             if (node != null)
             {
-                s_forceIPv4 = false;
-
+                string interfaceValue = string.Empty;
                 Dictionary<string, string> settings = node.Settings.ToLower().ParseKeyValuePairs();
 
                 if (settings.ContainsKey("realtimestatisticserviceurl"))
@@ -261,7 +259,7 @@ namespace TimeSeriesFramework.UI
                     s_timeSeriesDataServiceUrl = settings["timeseriesdataserviceurl"];
 
                 if (settings.ContainsKey("interface"))
-                    s_forceIPv4 = true;
+                    interfaceValue = settings["interface"];
 
                 if (settings.ContainsKey("remotestatusserverconnectionstring"))
                 {
@@ -269,20 +267,20 @@ namespace TimeSeriesFramework.UI
                     Dictionary<string, string> serviceSettings = settings["remotestatusserverconnectionstring"].ParseKeyValuePairs();
 
                     if (serviceSettings.ContainsKey("interface"))
-                        s_forceIPv4 = true;
+                        interfaceValue = serviceSettings["interface"];
 
                     if (serviceSettings.ContainsKey("server"))
                     {
                         string server = serviceSettings["server"];
                         s_serviceConnectionString = "server=" + server;
-                        if (s_forceIPv4)
-                            s_serviceConnectionString += ";interface=0.0.0.0";
+                        if (!string.IsNullOrEmpty(interfaceValue))
+                            s_serviceConnectionString += ";interface=" + interfaceValue;
 
                         if (settings.ContainsKey("datapublisherport"))
                         {
                             s_dataPublisherConnectionString = "server=" + server.Substring(0, server.LastIndexOf(":") + 1) + settings["datapublisherport"];
-                            if (s_forceIPv4)
-                                s_dataPublisherConnectionString += ";interface=0.0.0.0";
+                            if (!string.IsNullOrEmpty(interfaceValue))
+                                s_dataPublisherConnectionString += ";interface=" + interfaceValue;
                         }
                     }
                 }
