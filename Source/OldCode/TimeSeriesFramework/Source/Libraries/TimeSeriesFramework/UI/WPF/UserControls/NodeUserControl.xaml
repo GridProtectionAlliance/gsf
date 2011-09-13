@@ -22,7 +22,7 @@
             <CollectionViewSource Source="{Binding Path=CompanyLookupList}" x:Key="CompanyLookupList"/>
         </StackPanel.Resources>
 
-        <Grid x:Name="GridDetailView" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="5" DataContext="{Binding Path=CurrentItem, Mode=TwoWay}">
+        <Grid x:Name="GridDetailView" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="5" DataContext="{tsfBinding:Column Path=CurrentItem}">
             <Grid.BindingGroup >
                 <BindingGroup Name="input"/>
             </Grid.BindingGroup>

@@ -197,8 +197,7 @@
     <Style TargetType="Button">
         <Setter Property="Cursor" Value="Hand" />   
         <Setter Property="Width" Value="{StaticResource XSmallItemSize}" />
-        <Setter Property="Height" Value="26"/>
-        
+        <Setter Property="Height" Value="26"/>        
     </Style>
     
     <Style TargetType="Button" x:Key="HomeButtonStyle">
@@ -279,7 +278,7 @@
         <TextBlock Text="{TemplateBinding Content}" FontSize="{StaticResource TextSize}" TextDecorations="Underline" Cursor="Hand" 
                    HorizontalAlignment="Center" Width="Auto" Height="Auto" Foreground="#FF3366FF"/>
     </ControlTemplate>
-
+    
     <ControlTemplate x:Key="ImageButtonTemplate" TargetType="Button">
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
             <Image Source="{TemplateBinding Content}" Width="16" Height="16" />

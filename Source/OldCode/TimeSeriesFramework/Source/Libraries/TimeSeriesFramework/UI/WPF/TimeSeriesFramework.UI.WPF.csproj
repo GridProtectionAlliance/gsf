@@ -168,6 +168,9 @@
     <Compile Include="UserControls\NodeUserControl.xaml.cs">
       <DependentUpon>NodeUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\PanAndZoomViewer.xaml.cs">
+      <DependentUpon>PanAndZoomViewer.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\ProtocolGroupUserControl.xaml.cs">
       <DependentUpon>ProtocolGroupUserControl.xaml</DependentUpon>
     </Compile>
@@ -266,6 +269,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="UserControls\NodeUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\PanAndZoomViewer.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
