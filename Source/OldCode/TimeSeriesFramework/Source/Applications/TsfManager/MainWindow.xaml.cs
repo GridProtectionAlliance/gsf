@@ -115,7 +115,7 @@ namespace TsfManager
         /// </summary>
         /// <param name="sender">Source of the event.</param>
         /// <param name="e">Event arguments.</param>
-        void MainWindow_Unloaded(object sender, RoutedEventArgs e)
+        private void MainWindow_Unloaded(object sender, RoutedEventArgs e)
         {
             CommonFunctions.SetRetryServiceConnection(false);
         }
@@ -170,6 +170,18 @@ namespace TsfManager
                     EllipseConnectionState.Fill = Application.Current.Resources["GreenRadialGradientBrush"] as RadialGradientBrush;
                     ToolTipService.SetToolTip(EllipseConnectionState, "Connected to the service");
                 });
+        }
+
+        private void ButtonBack_Click(object sender, RoutedEventArgs e)
+        {
+            if (FrameContent.CanGoBack)
+                FrameContent.GoBack();
+        }
+
+        private void ButtonForward_Click(object sender, RoutedEventArgs e)
+        {
+            if (FrameContent.CanGoForward)
+                FrameContent.GoForward();
         }
 
         #endregion
