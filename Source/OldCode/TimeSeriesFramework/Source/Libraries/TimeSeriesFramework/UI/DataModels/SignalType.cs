@@ -20,10 +20,11 @@
 //       Generated original version of source code.
 //  05/13/2011 - Mehulbhai P Thakkar
 //       Added regular expression validator for Acronym.
+//  09/15/2011 - Mehulbhai P Thakkar
+//       Hard coded signal types for PMU, Voltage Phasor and Current Phasor.
 //
 //******************************************************************************************************
 
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
@@ -281,7 +282,17 @@ namespace TimeSeriesFramework.UI.DataModels
         public static ObservableCollection<SignalType> GetPmuSignalTypes()
         {
             if (s_pmuSignalTypes == null || s_pmuSignalTypes.Count == 0)
-                s_pmuSignalTypes = Load(null, "PMU");
+            {
+                s_pmuSignalTypes = new ObservableCollection<SignalType>()
+                {
+                    new SignalType(){Abbreviation = "F", Acronym = "FREQ", EngineeringUnits = "Hz", Name = "Frequency", Suffix = "FQ"},
+                    new SignalType(){Abbreviation = "DF", Acronym = "DFDT", EngineeringUnits = "", Name = "Frequency Delta (dF/dt)", Suffix = "DF"},
+                    new SignalType(){Abbreviation = "S", Acronym = "FLAG", EngineeringUnits = "", Name = "Status Flags", Suffix = "SF"},
+                    new SignalType(){Abbreviation = "A", Acronym = "ALOG", EngineeringUnits = "", Name = "Analog Value", Suffix = "AV"},
+                    new SignalType(){Abbreviation = "D", Acronym = "DIGI", EngineeringUnits = "", Name = "Digital Value", Suffix = "DV"},
+                    new SignalType(){Abbreviation = "C", Acronym = "CALC", EngineeringUnits = "", Name = "Calculated Value", Suffix = "CV"}
+                };
+            }
 
             return s_pmuSignalTypes;
         }
@@ -293,7 +304,13 @@ namespace TimeSeriesFramework.UI.DataModels
         public static ObservableCollection<SignalType> GetVoltagePhasorSignalTypes()
         {
             if (s_voltagePhasorSignalTypes == null || s_voltagePhasorSignalTypes.Count == 0)
-                s_voltagePhasorSignalTypes = Load(null, "Phasor", "V");
+            {
+                s_voltagePhasorSignalTypes = new ObservableCollection<SignalType>()
+                {
+                    new SignalType(){Abbreviation = "V", Acronym = "VPHM", EngineeringUnits = "Volts", Name = "Voltage Magnitude", Suffix = "PM"},
+                    new SignalType(){Abbreviation = "VH", Acronym = "VPHA", EngineeringUnits = "Degrees", Name = "Voltage Phase Angle", Suffix = "PA"}
+                };
+            }
 
             return s_voltagePhasorSignalTypes;
         }
@@ -305,7 +322,13 @@ namespace TimeSeriesFramework.UI.DataModels
         public static ObservableCollection<SignalType> GetCurrentPhasorSignalTypes()
         {
             if (s_currentPhasorSignalTypes == null || s_currentPhasorSignalTypes.Count == 0)
-                s_currentPhasorSignalTypes = Load(null, "Phasor", "I");
+            {
+                s_currentPhasorSignalTypes = new ObservableCollection<SignalType>()
+                {
+                    new SignalType(){Abbreviation = "I", Acronym = "IPHM", EngineeringUnits = "Amps", Name = "Current Magnitude", Suffix = "PM"},
+                    new SignalType(){Abbreviation = "IH", Acronym = "IPHA", EngineeringUnits = "Degrees", Name = "Current Phase Angle", Suffix = "PA"}
+                };
+            }
 
             return s_currentPhasorSignalTypes;
         }
