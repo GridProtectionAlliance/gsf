@@ -101,7 +101,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 DataSet resultSet = new DataSet();
                 resultSet.Tables.Add(rootNodesTable);
 
-                DataTable iaonTreeTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM IaonTreeView WHERE NodeID = @nodeID", database.CurrentNodeID());
+                DataTable iaonTreeTable = database.Connection.RetrieveData(database.AdapterType, database.ParameterizedQueryString("SELECT * FROM IaonTreeView WHERE NodeID = {0}", "nodeID"), database.CurrentNodeID());
                 resultSet.EnforceConstraints = false;
                 resultSet.Tables.Add(iaonTreeTable.Copy());
                 resultSet.Tables[0].TableName = "RootNodesTable";
@@ -116,7 +116,7 @@ namespace TimeSeriesFramework.UI.DataModels
                                                                                                                         select new Adapter()
                                                                                                                         {
                                                                                                                             NodeID = database.Guid(obj, "NodeID"),
-                                                                                                                            ID = obj.Field<int>("ID"),
+                                                                                                                            ID = obj.ConvertField<int>("ID"),
                                                                                                                             AdapterName = obj.Field<string>("AdapterName"),
                                                                                                                             AssemblyName = obj.Field<string>("AssemblyName"),
                                                                                                                             TypeName = obj.Field<string>("TypeName"),

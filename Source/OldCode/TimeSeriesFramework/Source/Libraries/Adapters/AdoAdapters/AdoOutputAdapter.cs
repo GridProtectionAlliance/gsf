@@ -52,6 +52,7 @@ namespace AdoAdapters
         private string m_dataProviderString;
         private string m_timestampFormat;
         private bool m_isJetEngine;
+        private bool m_isOracle;
 
         private IDbConnection m_connection;
         private long m_measurementCount;
@@ -241,6 +242,7 @@ namespace AdoAdapters
             Type connectionType = assm.GetType(dataProviderSettings["ConnectionType"]);
             m_connection = (IDbConnection)Activator.CreateInstance(connectionType);
             m_connection.ConnectionString = m_dbConnectionString;
+            m_isOracle = m_connection.GetType().Name == "OracleConnection";
         }
 
         /// <summary>
@@ -278,6 +280,7 @@ namespace AdoAdapters
         {
             Type measurementType = typeof(IMeasurement);
             string commandString = "INSERT INTO {0}({1}) VALUES ({2})";
+            char paramChar = m_isOracle ? ':' : '@';
 
             foreach (IMeasurement measurement in measurements)
             {
@@ -298,10 +301,10 @@ namespace AdoAdapters
 
                     if (valueList.Length > 0)
                         valueList.Append(',');
-                    valueList.Append('@');
+                    valueList.Append(paramChar);
                     valueList.Append(fieldName);
 
-                    parameter.ParameterName = "@" + fieldName;
+                    parameter.ParameterName = paramChar + fieldName;
                     parameter.Direction = ParameterDirection.Input;
 
                     switch (propertyName.ToLower())

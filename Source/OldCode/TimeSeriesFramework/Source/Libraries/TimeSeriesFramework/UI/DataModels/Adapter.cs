@@ -362,9 +362,10 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 ObservableCollection<Adapter> adapterList = new ObservableCollection<Adapter>();
 
-                DataTable adapterTable = database.Connection.RetrieveData(database.AdapterType, "SELECT NodeID, ID, AdapterName, AssemblyName, TypeName, " +
-                    "ConnectionString, LoadOrder, Enabled, NodeName FROM " + viewName + " WHERE NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout,
-                    database.CurrentNodeID());
+                string query = database.ParameterizedQueryString("SELECT NodeID, ID, AdapterName, AssemblyName, TypeName, ConnectionString, LoadOrder, " +
+                    "Enabled, NodeName FROM " + viewName + " WHERE NodeID = {0} ORDER BY LoadOrder", "nodeID");
+
+                DataTable adapterTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
 
                 foreach (DataRow row in adapterTable.Rows)
                 {
@@ -420,8 +421,8 @@ namespace TimeSeriesFramework.UI.DataModels
                 else
                     tableName = "CustomOutputAdapter";
 
-                DataTable adapterTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM " + tableName + " WHERE Enabled = @enabled " +
-                    "ORDER BY LoadOrder", DefaultTimeout, true);
+                string query = database.ParameterizedQueryString("SELECT ID, Name FROM " + tableName + " WHERE Enabled = {0} ORDER BY LoadOrder", "enabled");
+                DataTable adapterTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Bool(true));
 
                 foreach (DataRow row in adapterTable.Rows)
                     adapterList[row.ConvertField<int>("ID")] = row.Field<string>("Name");
@@ -459,18 +460,20 @@ namespace TimeSeriesFramework.UI.DataModels
                     tableName = "CustomOutputAdapter";
 
                 if (adapter.ID == 0)
-                    database.Connection.ExecuteNonQuery("INSERT INTO " + tableName + " (NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, LoadOrder, " +
-                        "Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@nodeID, @adapterName, @assemblyName, @typeName, @connectionString, @loadOrder, " +
-                        "@enabled, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout,
+                    database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("INSERT INTO " + tableName + " (NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, LoadOrder, " +
+                        "Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10})",
+                        "nodeID", "adapterName", "assemblyName", "typeName", "connectionString", "loadOrder",
+                        "enabled", "updatedBy", "updatedOn", "createdBy", "createdOn"), DefaultTimeout,
                         (adapter.NodeID == null || adapter.NodeID == Guid.Empty) ? database.CurrentNodeID() : database.Guid(adapter.NodeID), adapter.AdapterName, adapter.AssemblyName,
-                        adapter.TypeName, adapter.ConnectionString.ToNotNull(), adapter.LoadOrder, adapter.Enabled, CommonFunctions.CurrentUser,
+                        adapter.TypeName, adapter.ConnectionString.ToNotNull(), adapter.LoadOrder, database.Bool(adapter.Enabled), CommonFunctions.CurrentUser,
                         database.UtcNow(), CommonFunctions.CurrentUser,
                         database.UtcNow());
                 else
-                    database.Connection.ExecuteNonQuery("UPDATE " + tableName + " SET NodeID = @nodeID, AdapterName = @adapterName, AssemblyName = @assemblyName, " +
-                        "TypeName = @typeName, ConnectionString = @connectionString, LoadOrder = @loadOrder, Enabled = @enabled, UpdatedBy = @updatedBy, " +
-                        "UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, adapter.NodeID, adapter.AdapterName, adapter.AssemblyName,
-                        adapter.TypeName, adapter.ConnectionString.ToNotNull(), adapter.LoadOrder, adapter.Enabled, CommonFunctions.CurrentUser,
+                    database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("UPDATE " + tableName + " SET NodeID = {0}, AdapterName = {1}, AssemblyName = {2}, " +
+                        "TypeName = {3}, ConnectionString = {4}, LoadOrder = {5}, Enabled = {6}, UpdatedBy = {7}, " +
+                        "UpdatedOn = {8} WHERE ID = {9}", "nodeID", "adapterName", "assemblyName", "typeName", "connectionString",
+                        "loadOrder", "enabled", "updatedBy", "updatedOn", "id"), DefaultTimeout, adapter.NodeID, adapter.AdapterName, adapter.AssemblyName,
+                        adapter.TypeName, adapter.ConnectionString.ToNotNull(), adapter.LoadOrder, database.Bool(adapter.Enabled), CommonFunctions.CurrentUser,
                         database.UtcNow(), adapter.ID);
 
                 return "Adapter information saved successfully";
@@ -509,7 +512,8 @@ namespace TimeSeriesFramework.UI.DataModels
                 else
                     tableName = "CustomOutputAdapter";
 
-                database.Connection.ExecuteNonQuery("DELETE FROM " + tableName + " WHERE ID = @adapterID", DefaultTimeout, adapterID);
+                string query = database.ParameterizedQueryString("DELETE FROM " + tableName + " WHERE ID = {0}", "adapterID");
+                database.Connection.ExecuteNonQuery(query, DefaultTimeout, adapterID);
 
                 return "Adapter deleted successfully";
             }

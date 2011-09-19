@@ -298,18 +298,28 @@ namespace TimeSeriesFramework.UI.DataModels
         public static string Save(AdoDataConnection database, VendorDevice vendorDevice)
         {
             bool createdConnection = false;
+            string query;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
 
                 if (vendorDevice.ID == 0)
-                    database.Connection.ExecuteNonQuery("INSERT INTO VendorDevice (VendorID, Name, Description, URL, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@vendorID, @name, @description, @url, @updatedBy, @updatedOn, @createdBy, @createdOn)",
-                        DefaultTimeout, vendorDevice.VendorID, vendorDevice.Name, vendorDevice.Description.ToNotNull(), vendorDevice.URL.ToNotNull(),
-                        CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                {
+                    query = database.ParameterizedQueryString("INSERT INTO VendorDevice (VendorID, Name, Description, URL, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) " +
+                        "Values ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})", "vendorID", "name", "description", "url", "updatedBy", "updatedOn", "createdBy", "createdOn");
+
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, vendorDevice.VendorID, vendorDevice.Name, vendorDevice.Description.ToNotNull(),
+                        vendorDevice.URL.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                }
                 else
-                    database.Connection.ExecuteNonQuery("UPDATE VendorDevice SET VendorID = @vendorID, Name = @name, Description = @description, URL = @url, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id",
-                        DefaultTimeout, vendorDevice.VendorID, vendorDevice.Name, vendorDevice.Description.ToNotNull(), vendorDevice.URL.ToNotNull(),
-                        CommonFunctions.CurrentUser, database.UtcNow(), vendorDevice.ID);
+                {
+                    query = database.ParameterizedQueryString("UPDATE VendorDevice SET VendorID = {0}, Name = {1}, Description = {2}, URL = {3}, UpdatedBy = {4}, " +
+                        "UpdatedOn = {5} WHERE ID = {6}", "vendorID", "name", "description", "url", "updatedBy", "updatedOn", "id");
+
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, vendorDevice.VendorID, vendorDevice.Name, vendorDevice.Description.ToNotNull(),
+                        vendorDevice.URL.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow(), vendorDevice.ID);
+                }
 
                 return "Vendor Device information saved successfully";
             }
@@ -339,7 +349,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
-                database.Connection.ExecuteNonQuery("DELETE FROM VendorDevice WHERE ID = @vendorDeviceID", DefaultTimeout, vendorDeviceID);
+                database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM VendorDevice WHERE ID = {0}", "vendorDeviceID"), DefaultTimeout, vendorDeviceID);
 
                 return "Vendor Device deleted successfully";
             }

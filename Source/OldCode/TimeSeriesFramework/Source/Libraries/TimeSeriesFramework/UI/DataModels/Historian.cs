@@ -372,9 +372,12 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 ObservableCollection<Historian> historianList = new ObservableCollection<Historian>();
-                DataTable historianTable = database.Connection.RetrieveData(database.AdapterType, "SELECT NodeID, ID, Acronym, Name, AssemblyName, TypeName, " +
-                    "ConnectionString, IsLocal, Description, LoadOrder, Enabled, MeasurementReportingInterval, NodeName FROM HistorianDetail " +
-                    "WHERE NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout, database.CurrentNodeID());
+
+                string query = database.ParameterizedQueryString("SELECT NodeID, ID, Acronym, Name, AssemblyName, TypeName, ConnectionString, IsLocal, " +
+                    "Description, LoadOrder, Enabled, MeasurementReportingInterval, NodeName FROM HistorianDetail WHERE NodeID = {0} ORDER BY LoadOrder",
+                    "nodeID");
+
+                DataTable historianTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
 
                 foreach (DataRow row in historianTable.Rows)
                 {
@@ -424,7 +427,8 @@ namespace TimeSeriesFramework.UI.DataModels
                 if (isOptional)
                     historianList.Add(0, "Select Historian");
 
-                DataTable historianTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM Historian WHERE Enabled = @enabled ORDER BY LoadOrder", DefaultTimeout, true);
+                string query = database.ParameterizedQueryString("SELECT ID, Acronym FROM Historian WHERE Enabled = {0} ORDER BY LoadOrder", "enabled");
+                DataTable historianTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Bool(true));
 
                 foreach (DataRow row in historianTable.Rows)
                 {
@@ -449,27 +453,38 @@ namespace TimeSeriesFramework.UI.DataModels
         public static string Save(AdoDataConnection database, Historian historian)
         {
             bool createdConnection = false;
+            string query;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
 
                 if (historian.ID == 0)
-                    database.Connection.ExecuteNonQuery("INSERT INTO Historian (NodeID, Acronym, Name, AssemblyName, TypeName, ConnectionString, IsLocal, MeasurementReportingInterval, " +
-                        "Description, LoadOrder, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@nodeID, @acronym, @name, @assemblyName, @typeName, @connectionString, " +
-                        "@isLocal, @measurementReportingInterval, @description, @loadOrder, @enabled, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout,
+                {
+                    query = database.ParameterizedQueryString("INSERT INTO Historian (NodeID, Acronym, Name, AssemblyName, TypeName, ConnectionString, IsLocal, " +
+                        "MeasurementReportingInterval, Description, LoadOrder, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES ({0}, {1}, {2}, {3}, {4}, " +
+                        "{5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14})", "nodeID", "acronym", "name", "assemblyName", "typeName", "connectionString", "isLocal",
+                        "measurementReportingInterval", "description", "loadOrder", "enabled", "updatedBy", "updatedOn", "createdBy", "createdOn");
+
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout,
                         (historian.NodeID == null || historian.NodeID == Guid.Empty) ? database.CurrentNodeID() : database.Guid(historian.NodeID),
                         historian.Acronym.Replace(" ", "").ToUpper(), historian.Name.ToNotNull(), historian.AssemblyName.ToNotNull(), historian.TypeName.ToNotNull(),
-                        historian.ConnectionString.ToNotNull(), historian.IsLocal, historian.MeasurementReportingInterval, historian.Description.ToNotNull(),
-                        historian.LoadOrder, historian.Enabled, CommonFunctions.CurrentUser, database.UtcNow(),
+                        historian.ConnectionString.ToNotNull(), database.Bool(historian.IsLocal), historian.MeasurementReportingInterval, historian.Description.ToNotNull(),
+                        historian.LoadOrder, database.Bool(historian.Enabled), CommonFunctions.CurrentUser, database.UtcNow(),
                         CommonFunctions.CurrentUser, database.UtcNow());
+                }
                 else
-                    database.Connection.ExecuteNonQuery("UPDATE Historian SET NodeID = @nodeID, Acronym = @acronym, Name = @name, AssemblyName = @assemblyName, TypeName = @typeName, " +
-                        "ConnectionString = @connectionString, IsLocal = @isLocal, MeasurementReportingInterval = @measurementReportingInterval, Description = @description, " +
-                        "LoadOrder = @loadOrder, Enabled = @enabled, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, database.Guid(historian.NodeID),
+                {
+                    query = database.ParameterizedQueryString("UPDATE Historian SET NodeID = {0}, Acronym = {1}, Name = {2}, AssemblyName = {3}, TypeName = {4}, " +
+                        "ConnectionString = {5}, IsLocal = {6}, MeasurementReportingInterval = {7}, Description = {8}, LoadOrder = {9}, Enabled = {10}, " +
+                        "UpdatedBy = {11}, UpdatedOn = {12} WHERE ID = {13}", "nodeID", "acronym", "name", "assemblyName", "typeName", "connectionString",
+                        "isLocal", "measurementReportingInterval", "description", "loadOrder", "enabled", "updatedBy", "updatedOn", "id");
+
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.Guid(historian.NodeID),
                         historian.Acronym.Replace(" ", "").ToUpper(), historian.Name.ToNotNull(), historian.AssemblyName.ToNotNull(), historian.TypeName.ToNotNull(),
-                        historian.ConnectionString.ToNotNull(), historian.IsLocal, historian.MeasurementReportingInterval, historian.Description.ToNotNull(),
-                        historian.LoadOrder, historian.Enabled, CommonFunctions.CurrentUser, database.UtcNow(), historian.ID);
+                        historian.ConnectionString.ToNotNull(), database.Bool(historian.IsLocal), historian.MeasurementReportingInterval, historian.Description.ToNotNull(),
+                        historian.LoadOrder, database.Bool(historian.Enabled), CommonFunctions.CurrentUser, database.UtcNow(), historian.ID);
+                }
 
                 return "Historian information saved successfully";
             }
@@ -500,7 +515,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 CommonFunctions.SetCurrentUserContext(database);
 
-                database.Connection.ExecuteNonQuery("DELETE FROM Historian WHERE ID = @historianID", DefaultTimeout, historianID);
+                database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Historian WHERE ID = {0}", "historianID"), DefaultTimeout, historianID);
 
                 return "Historian deleted successfully";
             }

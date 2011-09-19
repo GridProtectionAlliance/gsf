@@ -956,6 +956,7 @@ namespace TimeSeriesFramework.Transport
                     int parentID = Convert.ToInt32(connection.ExecuteScalar(string.Format("SELECT SourceID FROM Runtime WHERE ID = {0} AND SourceTable='Device';", ID)));
                     string sourcePrefix = Name + "!";
                     Dictionary<string, int> deviceIDs = new Dictionary<string, int>(StringComparer.InvariantCultureIgnoreCase);
+                    string query;
 
                     // Initialize active node ID
                     if (m_nodeID == Guid.Empty)
@@ -966,14 +967,25 @@ namespace TimeSeriesFramework.Transport
                         foreach (DataRow row in metadata.Tables["DeviceDetail"].Rows)
                         {
                             Guid uniqueID = row.Field<Guid>("UniqueID");
+                            query = adoDatabase.ParameterizedQueryString("SELECT COUNT(*) FROM Device WHERE UniqueID = {0}", "deviceGuid");
 
-                            if (Convert.ToInt32(connection.ExecuteScalar("SELECT COUNT(*) FROM Device WHERE UniqueID = @deviceGuid ;", uniqueID)) == 0)
-                                connection.ExecuteScalar("INSERT INTO Device(NodeID, ParentID, UniqueID, Acronym, Name, IsConcentrator, Enabled) VALUES ( @nodeID , @parentID , @uniqueID , @acronym , @name , 0, 1)", m_nodeID, parentID, uniqueID, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"));
+                            if (Convert.ToInt32(connection.ExecuteScalar(query, uniqueID)) == 0)
+                            {
+                                query = adoDatabase.ParameterizedQueryString("INSERT INTO Device(NodeID, ParentID, UniqueID, Acronym, " +
+                                    "Name, IsConcentrator, Enabled) VALUES ( {0}, {1}, {2}, {3}, {4}, 0, 1)",
+                                    "nodeID", "parentID", "uniqueID", "acronym", "name");
+
+                                connection.ExecuteScalar(query, m_nodeID, parentID, uniqueID, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"));
+                            }
                             else
-                                connection.ExecuteScalar("UPDATE Device SET Acronym = @acronym , Name = @name WHERE UniqueID = @uniqueID ", sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), uniqueID);
+                            {
+                                query = adoDatabase.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1} WHERE UniqueID = {2}", "acronym", "name", "uniqueID");
+                                connection.ExecuteScalar(query, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), uniqueID);
+                            }
 
                             // Capture new device ID for measurement association
-                            deviceIDs[row.Field<string>("Acronym")] = Convert.ToInt32(connection.ExecuteScalar("SELECT ID FROM Device WHERE UniqueID = @deviceGuid ;", uniqueID));
+                            query = adoDatabase.ParameterizedQueryString("SELECT ID FROM Device WHERE UniqueID = {0}", "deviceGuid");
+                            deviceIDs[row.Field<string>("Acronym")] = Convert.ToInt32(connection.ExecuteScalar(query, uniqueID));
                         }
                     }
 
@@ -988,7 +1000,7 @@ namespace TimeSeriesFramework.Transport
                             signalTypeAcronym = row.Field<string>("Acronym");
 
                             if (!string.IsNullOrWhiteSpace(signalTypeAcronym))
-                                signalTypeIDs[signalTypeAcronym] = row.Field<int>("ID");
+                                signalTypeIDs[signalTypeAcronym] = row.ConvertField<int>("ID");
                         }
 
                         foreach (DataRow row in metadata.Tables["MeasurementDetail"].Rows)
@@ -1001,14 +1013,20 @@ namespace TimeSeriesFramework.Transport
                                 string pointTag = sourcePrefix + row.Field<string>("PointTag") ?? string.Empty;
                                 Guid signalID = row.Field<Guid>("SignalID");
 
-                                if (Convert.ToInt32(connection.ExecuteScalar("SELECT COUNT(*) FROM Measurement WHERE SignalID = @signalID ;", signalID)) == 0)
+                                query = adoDatabase.ParameterizedQueryString("SELECT COUNT(*) FROM Measurement WHERE SignalID = {0}", "signalID");
+
+                                if (Convert.ToInt32(connection.ExecuteScalar(query, signalID)) == 0)
                                 {
-                                    connection.ExecuteScalar("INSERT INTO Measurement (DeviceID, PointTag, SignalTypeID, SignalReference, Description, Internal, Enabled ) VALUES ( @deviceID , @pointTag , @signalTypeID , @signalReference , @description , 0 , 1 )", 30, deviceIDs[deviceAcronym], pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty);
-                                    connection.ExecuteScalar("UPDATE Measurement SET SignalID = @signalID WHERE PointTag = @pointTag ", signalID, pointTag);
+                                    string insert = adoDatabase.ParameterizedQueryString("INSERT INTO Measurement (DeviceID, PointTag, SignalTypeID, SignalReference, Description, Internal, Enabled ) VALUES ( {0}, {1}, {2}, {3}, {4}, 0 , 1 )", "deviceID", "pointTag", "signalTypeID", "signalReference", "description");
+                                    string update = adoDatabase.ParameterizedQueryString("UPDATE Measurement SET SignalID = {0} WHERE PointTag = {1}", "signalID", "pointTag");
+
+                                    connection.ExecuteScalar(insert, 30, deviceIDs[deviceAcronym], pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty);
+                                    connection.ExecuteScalar(update, signalID, pointTag);
                                 }
                                 else
                                 {
-                                    connection.ExecuteScalar("UPDATE Measurement SET PointTag = @pointTag , SignalTypeID = @signalTypeID , SignalReference = @signalReference , Description = @description WHERE SignalID = @signalID ", pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, signalID);
+                                    query = adoDatabase.ParameterizedQueryString("UPDATE Measurement SET PointTag = {0}, SignalTypeID = {1}, SignalReference = {2}, Description = {3} WHERE SignalID = {4}", "pointTag", "signalTypeID", "signalReference", "description", "signalID");
+                                    connection.ExecuteScalar(query, pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, signalID);
                                 }
                             }
                         }

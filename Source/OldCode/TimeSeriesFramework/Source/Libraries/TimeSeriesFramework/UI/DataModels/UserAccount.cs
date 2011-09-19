@@ -412,35 +412,47 @@ namespace TimeSeriesFramework.UI.DataModels
         public static string Save(AdoDataConnection database, UserAccount userAccount)
         {
             bool createdConnection = false;
+            string query;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
 
                 string passwordColumn = "Password";
 
-                if (database.IsJetEngine())
+                if (database.IsJetEngine)
                     passwordColumn = "[Password]";
 
                 object changePasswordOn = userAccount.ChangePasswordOn;
                 if (userAccount.ChangePasswordOn == DateTime.MinValue)
                     changePasswordOn = (object)DBNull.Value;
-                else if (database.IsJetEngine())
+                else if (database.IsJetEngine)
                     changePasswordOn = userAccount.ChangePasswordOn.ToOADate();
 
                 if (userAccount.ID == null || userAccount.ID == Guid.Empty)
-                    database.Connection.ExecuteNonQuery("INSERT INTO UserAccount (Name, " + passwordColumn + ", FirstName, LastName, DefaultNodeID, Phone, Email, LockedOut, UseADAuthentication, " +
-                        "ChangePasswordOn, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@name, @password, @firstName, @lastName, @defaultNodeID, @phone, " +
-                        "@email, @lockedOut, @useADAuthentication, @changePasswordOn, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, userAccount.Name,
+                {
+                    query = database.ParameterizedQueryString("INSERT INTO UserAccount (Name, " + passwordColumn + ", FirstName, LastName, DefaultNodeID, Phone, Email, " +
+                        "LockedOut, UseADAuthentication, ChangePasswordOn, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, " +
+                        "{9}, {10}, {11}, {12}, {13})", "name", "password", "firstName", "lastName", "defaultNodeID", "phone", "email", "lockedOut", "useADAuthentication",
+                        "changePasswordOn", "updatedBy", "updatedOn", "createdBy", "createdOn");
+
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, userAccount.Name,
                         userAccount.Password.ToNotNull(), userAccount.FirstName.ToNotNull(), userAccount.LastName.ToNotNull(), database.CurrentNodeID(),
-                        userAccount.Phone.ToNotNull(), userAccount.Email.ToNotNull(), userAccount.LockedOut, userAccount.UseADAuthentication, changePasswordOn,
-                        CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                        userAccount.Phone.ToNotNull(), userAccount.Email.ToNotNull(), database.Bool(userAccount.LockedOut), database.Bool(userAccount.UseADAuthentication),
+                        changePasswordOn, CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                }
                 else
-                    database.Connection.ExecuteNonQuery("UPDATE UserAccount SET Name = @name, " + passwordColumn + " = @password, FirstName = @firstName, LastName = @lastName, " +
-                            "DefaultNodeID = @defaultNodeID, Phone = @phone, Email = @email, LockedOut = @lockedOut, UseADAuthentication = @useADAuthentication, " +
-                            "ChangePasswordOn = @changePasswordOn, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, userAccount.Name,
+                {
+                    query = database.ParameterizedQueryString("UPDATE UserAccount SET Name = {0}, " + passwordColumn + " = {1}, FirstName = {2}, LastName = {3}, " +
+                            "DefaultNodeID = {4}, Phone = {5}, Email = {6}, LockedOut = {7}, UseADAuthentication = {8}, ChangePasswordOn = {9}, UpdatedBy = {10}, " +
+                            "UpdatedOn = {11} WHERE ID = {12}", "name", "password", "firstName", "lastName", "defaultNodeID", "phone", "email", "lockedOut",
+                            "useADAuthentication", "changePasswordOn", "updatedBy", "updatedOn", "id");
+
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, userAccount.Name,
                             userAccount.Password.ToNotNull(), userAccount.FirstName.ToNotNull(), userAccount.LastName.ToNotNull(), database.Guid(userAccount.DefaultNodeID),
-                            userAccount.Phone.ToNotNull(), userAccount.Email.ToNotNull(), userAccount.LockedOut, userAccount.UseADAuthentication, changePasswordOn,
-                            CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(userAccount.ID));
+                            userAccount.Phone.ToNotNull(), userAccount.Email.ToNotNull(), database.Bool(userAccount.LockedOut), database.Bool(userAccount.UseADAuthentication), 
+                            changePasswordOn, CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(userAccount.ID));
+                }
 
                 return "User account information saved successfully";
             }
@@ -468,7 +480,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
-                database.Connection.ExecuteNonQuery("DELETE FROM UserAccount WHERE ID = @userAccountID", DefaultTimeout, database.Guid(userAccountID));
+                database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM UserAccount WHERE ID = {0}", "userAccountID"), DefaultTimeout, database.Guid(userAccountID));
 
                 return "User account deleted successfully";
             }

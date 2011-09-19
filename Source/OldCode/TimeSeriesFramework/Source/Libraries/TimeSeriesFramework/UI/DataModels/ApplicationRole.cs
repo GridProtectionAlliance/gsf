@@ -277,7 +277,8 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 ObservableCollection<ApplicationRole> applicationRoleList = new ObservableCollection<ApplicationRole>();
-                DataTable applicationRoleTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM ApplicationRole WHERE NodeID = @nodeID ORDER BY Name", database.CurrentNodeID());
+                string query = database.ParameterizedQueryString("SELECT * FROM ApplicationRole WHERE NodeID = {0} ORDER BY Name", "nodeID");
+                DataTable applicationRoleTable = database.Connection.RetrieveData(database.AdapterType, query, database.CurrentNodeID());
 
                 foreach (DataRow row in applicationRoleTable.Rows)
                 {
@@ -321,7 +322,8 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 Dictionary<Guid, string> currentUsers = new Dictionary<Guid, string>();
-                DataTable currentUsersTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM AppRoleUserAccountDetail WHERE ApplicationRoleID = @applicationRoleID ORDER BY UserName", roleID);
+                string query = database.ParameterizedQueryString("SELECT * FROM AppRoleUserAccountDetail WHERE ApplicationRoleID = {0} ORDER BY UserName", "applicationRoleID");
+                DataTable currentUsersTable = database.Connection.RetrieveData(database.AdapterType, query, database.Guid(roleID));
 
                 foreach (DataRow row in currentUsersTable.Rows)
                     currentUsers[database.Guid(row, "UserAccountID")] = row.Field<string>("UserName");
@@ -349,7 +351,8 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 Dictionary<Guid, string> possibleUsers = new Dictionary<Guid, string>();
-                DataTable possibleUsersTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM UserAccount WHERE ID NOT IN (SELECT UserAccountID FROM ApplicationRoleUserAccount WHERE ApplicationRoleID = @applicationRoleID) ORDER BY Name", roleID);
+                string query = database.ParameterizedQueryString("SELECT * FROM UserAccount WHERE ID NOT IN (SELECT UserAccountID FROM ApplicationRoleUserAccount WHERE ApplicationRoleID = {0}) ORDER BY Name", "applicationRoleID");
+                DataTable possibleUsersTable = database.Connection.RetrieveData(database.AdapterType, query, database.Guid(roleID));
 
                 foreach (DataRow row in possibleUsersTable.Rows)
                     possibleUsers[database.Guid(row, "ID")] = row.Field<string>("Name");
@@ -377,7 +380,8 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 Dictionary<Guid, string> currentGroups = new Dictionary<Guid, string>();
-                DataTable currentGroupsTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM AppRoleSecurityGroupDetail WHERE ApplicationRoleID = @applicationRoleID ORDER BY SecurityGroupName", roleID);
+                string query = database.ParameterizedQueryString("SELECT * FROM AppRoleSecurityGroupDetail WHERE ApplicationRoleID = {0} ORDER BY SecurityGroupName", "applicationRoleID");
+                DataTable currentGroupsTable = database.Connection.RetrieveData(database.AdapterType, query, database.Guid(roleID));
 
                 foreach (DataRow row in currentGroupsTable.Rows)
                     currentGroups[database.Guid(row, "SecurityGroupID")] = row.Field<string>("SecurityGroupName");
@@ -405,7 +409,8 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 Dictionary<Guid, string> possibleGroups = new Dictionary<Guid, string>();
-                DataTable possibleGroupsTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM SecurityGroup WHERE ID NOT IN (SELECT SecurityGroupID FROM ApplicationRoleSecurityGroup WHERE ApplicationRoleID = @applicationRoleID) ORDER BY Name", roleID);
+                string query = database.ParameterizedQueryString("SELECT * FROM SecurityGroup WHERE ID NOT IN (SELECT SecurityGroupID FROM ApplicationRoleSecurityGroup WHERE ApplicationRoleID = {0}) ORDER BY Name", "applicationRoleID");
+                DataTable possibleGroupsTable = database.Connection.RetrieveData(database.AdapterType, query, database.Guid(roleID));
 
                 foreach (DataRow row in possibleGroupsTable.Rows)
                     possibleGroups[database.Guid(row, "ID")] = row.Field<string>("Name");
@@ -434,7 +439,8 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
                 foreach (Guid id in usersToBeAdded)
                 {
-                    database.Connection.ExecuteNonQuery("INSERT INTO ApplicationRoleUserAccount (ApplicationRoleID, UserAccountID) VALUES (@roleID, @userID)", DefaultTimeout,
+                    string query = database.ParameterizedQueryString("INSERT INTO ApplicationRoleUserAccount (ApplicationRoleID, UserAccountID) VALUES {0}, {1})", "roleID", "userID");
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout,
                         database.Guid(roleID), database.Guid(id));
                 }
 
@@ -462,7 +468,8 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
                 foreach (Guid id in usersToBeDeleted)
                 {
-                    database.Connection.ExecuteNonQuery("DELETE FROM ApplicationRoleUserAccount WHERE ApplicationRoleID = @roleID AND UserAccountID = @userID", DefaultTimeout,
+                    string query = database.ParameterizedQueryString("DELETE FROM ApplicationRoleUserAccount WHERE ApplicationRoleID = {0} AND UserAccountID = {1}", "roleID", "userID");
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout,
                         database.Guid(roleID), database.Guid(id));
                 }
 
@@ -490,7 +497,8 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
                 foreach (Guid id in groupsToBeAdded)
                 {
-                    database.Connection.ExecuteNonQuery("INSERT INTO ApplicationRoleSecurityGroup (ApplicationRoleID, SecurityGroupID) Values (@roleID, @groupID)", DefaultTimeout,
+                    string query = database.ParameterizedQueryString("INSERT INTO ApplicationRoleSecurityGroup (ApplicationRoleID, SecurityGroupID) Values ({0}, {1})", "roleID", "groupID");
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout,
                         database.Guid(roleID), database.Guid(id));
                 }
 
@@ -518,7 +526,8 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
                 foreach (Guid id in groupsToBeDeleted)
                 {
-                    database.Connection.ExecuteNonQuery("DELETE FROM ApplicationRoleSecurityGroup WHERE ApplicationRoleID = @roleID AND SecurityGroupID = @groupID", DefaultTimeout,
+                    string query = database.ParameterizedQueryString("DELETE FROM ApplicationRoleSecurityGroup WHERE ApplicationRoleID = {0} AND SecurityGroupID = {1}", "roleID", "groupID");
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout,
                         database.Guid(roleID), database.Guid(id));
                 }
 
@@ -573,17 +582,22 @@ namespace TimeSeriesFramework.UI.DataModels
         public static string Save(AdoDataConnection database, ApplicationRole applicationRole)
         {
             bool createdConnection = false;
+            string query;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
 
                 if (applicationRole.ID == null || applicationRole.ID == Guid.Empty)
-                    database.Connection.ExecuteNonQuery("INSERT INTO ApplicationRole (Name, Description, NodeID, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@name, @description, @nodeID, @updatedBy, @updatedOn, @createdBy, @createdOn)",
-                        DefaultTimeout, applicationRole.Name, applicationRole.Description.ToNotNull(), database.CurrentNodeID(), CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                {
+                    query = database.ParameterizedQueryString("INSERT INTO ApplicationRole (Name, Description, NodeID, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values ({0}, {1}, {2}, {3}, {4}, {5}, {6})", "name", "description", "nodeID", "updatedBy", "updatedBy", "createdBy", "createdOn");
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, applicationRole.Name, applicationRole.Description.ToNotNull(), database.CurrentNodeID(), CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                }
                 else
-                    database.Connection.ExecuteNonQuery("UPDATE ApplicationRole SET Name = @name, Description = @description, NodeID = @nodeID, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout,
-                        applicationRole.Name, applicationRole.Description.ToNotNull(), applicationRole.NodeID, CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(applicationRole.ID));
+                {
+                    query = database.ParameterizedQueryString("UPDATE ApplicationRole SET Name = {0}, Description = {1}, NodeID = {2}, UpdatedBy = {3}, UpdatedOn = {4} WHERE ID = {5}", "name", "description", "nodeID", "updatedBy", "updatedOn", "id");
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, applicationRole.Name, applicationRole.Description.ToNotNull(), applicationRole.NodeID, CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(applicationRole.ID));
+                }
 
                 return "Application role information saved successfully";
             }
@@ -611,7 +625,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
-                database.Connection.ExecuteNonQuery("DELETE FROM ApplicationRole WHERE ID = @applicationRoleID", DefaultTimeout, database.Guid(applicationRoleID));
+                database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM ApplicationRole WHERE ID = {0}", "applicationRoleID"), DefaultTimeout, database.Guid(applicationRoleID));
 
                 return "Application role deleted successfully";
             }

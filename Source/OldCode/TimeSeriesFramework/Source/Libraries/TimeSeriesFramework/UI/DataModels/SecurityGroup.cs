@@ -276,7 +276,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 Dictionary<Guid, string> currentUsers = new Dictionary<Guid, string>();
-                DataTable currentUsersTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM SecurityGroupUserAccountDetail WHERE SecurityGroupID = @groupID ORDER BY UserName", groupID);
+                DataTable currentUsersTable = database.Connection.RetrieveData(database.AdapterType, database.ParameterizedQueryString("SELECT * FROM SecurityGroupUserAccountDetail WHERE SecurityGroupID = {0} ORDER BY UserName", "groupID"), groupID);
 
                 foreach (DataRow row in currentUsersTable.Rows)
                     currentUsers[database.Guid(row, "UserAccountID")] = row.Field<string>("UserName");
@@ -303,7 +303,8 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
                 Dictionary<Guid, string> possibleGroupUsers = new Dictionary<Guid, string>();
-                DataTable possibleUsersTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM UserAccount WHERE ID NOT IN (SELECT UserAccountID FROM SecurityGroupUserAccount WHERE SecurityGroupID = @groupID) ORDER BY Name", DefaultTimeout, groupID);
+                string query = database.ParameterizedQueryString("SELECT ID, Name FROM UserAccount WHERE ID NOT IN (SELECT UserAccountID FROM SecurityGroupUserAccount WHERE SecurityGroupID = {0}) ORDER BY Name", "groupID");
+                DataTable possibleUsersTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, groupID);
 
                 foreach (DataRow row in possibleUsersTable.Rows)
                     possibleGroupUsers[database.Guid(row, "ID")] = row.Field<string>("Name");
@@ -327,13 +328,15 @@ namespace TimeSeriesFramework.UI.DataModels
         public static string AddUsers(AdoDataConnection database, Guid groupID, List<Guid> usersToBeAdded)
         {
             bool createdConnection = false;
+            string query;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
                 foreach (Guid id in usersToBeAdded)
                 {
-                    database.Connection.ExecuteNonQuery("INSERT INTO SecurityGroupUserAccount (SecurityGroupID, UserAccountID) VALUES (@groupID, @userID)", DefaultTimeout,
-                        database.Guid(groupID), database.Guid(id));
+                    query = database.ParameterizedQueryString("INSERT INTO SecurityGroupUserAccount (SecurityGroupID, UserAccountID) VALUES ({0}, {1})", "groupID", "userID");
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.Guid(groupID), database.Guid(id));
                 }
 
                 return "User accounts added to group successfully";
@@ -355,13 +358,15 @@ namespace TimeSeriesFramework.UI.DataModels
         public static string RemoveUsers(AdoDataConnection database, Guid groupID, List<Guid> usersToBeDeleted)
         {
             bool createdConnection = false;
+            string query;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
                 foreach (Guid id in usersToBeDeleted)
                 {
-                    database.Connection.ExecuteNonQuery("DELETE FROM SecurityGroupUserAccount WHERE SecurityGroupID = @groupID AND UserAccountID = @userID", DefaultTimeout,
-                        database.Guid(groupID), database.Guid(id));
+                    query = database.ParameterizedQueryString("DELETE FROM SecurityGroupUserAccount WHERE SecurityGroupID = {0} AND UserAccountID = {1}", "groupID", "userID");
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.Guid(groupID), database.Guid(id));
                 }
 
                 return "User accounts deleted from group successfully";
@@ -415,18 +420,28 @@ namespace TimeSeriesFramework.UI.DataModels
         public static string Save(AdoDataConnection database, SecurityGroup securityGroup)
         {
             bool createdConnection = false;
+            string query;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
 
                 if (securityGroup.ID == Guid.Empty)
-                    database.Connection.ExecuteNonQuery("INSERT INTO SecurityGroup (Name, Description, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@name, @description, " +
-                        "@updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, securityGroup.Name, securityGroup.Description.ToNotNull(),
+                {
+                    query = database.ParameterizedQueryString("INSERT INTO SecurityGroup (Name, Description, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES ({0}, {1}, " +
+                        "{2}, {3}, {4}, {5})", "name", "description", "updatedBy", "updatedOn", "createdBy", "createdOn");
+
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, securityGroup.Name, securityGroup.Description.ToNotNull(),
                         CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                }
                 else
-                    database.Connection.ExecuteNonQuery("UPDATE SecurityGroup SET Name = @name, Description = @description, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout,
-                             securityGroup.Name, securityGroup.Description.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(securityGroup.ID));
+                {
+                    query = database.ParameterizedQueryString("UPDATE SecurityGroup SET Name = {0}, Description = {1}, UpdatedBy = {2}, UpdatedOn = {3} " +
+                        "WHERE ID = {4}", "name", "description", "updatedBy", "updatedOn", "id");
+
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, securityGroup.Name, securityGroup.Description.ToNotNull(),
+                        CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(securityGroup.ID));
+                }
 
                 return "Security group information saved successfully";
             }
@@ -454,7 +469,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
-                database.Connection.ExecuteNonQuery("DELETE FROM SecurityGroup WHERE ID = @securityGroupID", DefaultTimeout, database.Guid(securityGroupID));
+                database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM SecurityGroup WHERE ID = {0}", "securityGroupID"), DefaultTimeout, database.Guid(securityGroupID));
 
                 return "Security group deleted successfully";
             }

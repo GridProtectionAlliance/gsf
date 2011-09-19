@@ -559,31 +559,38 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 ObservableCollection<Measurement> measurementList = new ObservableCollection<Measurement>();
                 DataTable measurementTable;
+                string query;
 
                 if (filterByInternalFlag)
                 {
                     if (deviceID > 0)
                     {
-                        measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail WHERE " +
-                           "DeviceID = @deviceID AND Internal = @internal AND Subscribed = @subscribed ORDER BY PointID", DefaultTimeout, deviceID, false, false);
+                        query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE DeviceID = {0} AND Internal = {1} AND " +
+                            "Subscribed = {2} ORDER BY PointID", "deviceID", "internal", "subscribed");
+
+                        measurementTable = database.Connection.RetrieveData(database.AdapterType, query,
+                            DefaultTimeout, deviceID, database.Bool(false), database.Bool(false));
                     }
                     else
                     {
-                        measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail WHERE " +
-                            "NodeID = @nodeID AND Internal = @internal AND Subscribed = @subscribed ORDER BY PointTag", DefaultTimeout, database.CurrentNodeID(), false, false);
+                        query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE NodeID = {0} AND Internal = {1} AND " +
+                            "Subscribed = {2} ORDER BY PointTag", "nodeID", "internal", "subscribed");
+
+                        measurementTable = database.Connection.RetrieveData(database.AdapterType, query,
+                            DefaultTimeout, database.CurrentNodeID(), database.Bool(false), database.Bool(false));
                     }
                 }
                 else
                 {
                     if (deviceID > 0)
                     {
-                        measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail WHERE " +
-                           "DeviceID = @deviceID ORDER BY PointID", DefaultTimeout, deviceID);
+                        query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE DeviceID = {0} ORDER BY PointID", "deviceID");
+                        measurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, deviceID);
                     }
                     else
                     {
-                        measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail WHERE " +
-                            "NodeID = @nodeID ORDER BY PointTag", DefaultTimeout, database.CurrentNodeID());
+                        query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE NodeID = {0} ORDER BY PointTag", "nodeID");
+                        measurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
                     }
                 }
 
@@ -600,8 +607,8 @@ namespace TimeSeriesFramework.UI.DataModels
                         SignalTypeID = row.ConvertField<int>("SignalTypeID"),
                         PhasorSourceIndex = row.ConvertNullableField<int>("PhasorSourceIndex"),
                         SignalReference = row.Field<string>("SignalReference"),
-                        Adder = row.Field<double>("Adder"),
-                        Multiplier = row.Field<double>("Multiplier"),
+                        Adder = row.ConvertField<double>("Adder"),
+                        Multiplier = row.ConvertField<double>("Multiplier"),
                         Internal = Convert.ToBoolean(row.Field<object>("Internal")),
                         Subscribed = Convert.ToBoolean(row.Field<object>("Subscribed")),
                         Description = row.Field<string>("Description"),
@@ -646,8 +653,11 @@ namespace TimeSeriesFramework.UI.DataModels
                     return Load(database);
 
                 ObservableCollection<Measurement> possibleMeasurements = new ObservableCollection<Measurement>();
-                DataTable possibleMeasurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail WHERE SignalID NOT IN " +
-                    "(SELECT SignalID FROM MeasurementGroupMeasurement WHERE MeasurementGroupID = @measurementGroupID) ORDER BY PointTag", DefaultTimeout, measurementGroupId);
+
+                string query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE SignalID NOT IN " +
+                    "(SELECT SignalID FROM MeasurementGroupMeasurement WHERE MeasurementGroupID = {0}) ORDER BY PointTag", "measurementGroupID");
+
+                DataTable possibleMeasurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, measurementGroupId);
 
                 foreach (DataRow row in possibleMeasurementTable.Rows)
                 {
@@ -662,8 +672,8 @@ namespace TimeSeriesFramework.UI.DataModels
                         SignalTypeID = row.ConvertField<int>("SignalTypeID"),
                         PhasorSourceIndex = row.ConvertNullableField<int>("PhasorSourceIndex"),
                         SignalReference = row.Field<string>("SignalReference"),
-                        Adder = row.Field<double>("Adder"),
-                        Multiplier = row.Field<double>("Multiplier"),
+                        Adder = row.ConvertField<double>("Adder"),
+                        Multiplier = row.ConvertField<double>("Multiplier"),
                         Description = row.Field<string>("Description"),
                         Internal = Convert.ToBoolean(row.Field<object>("Internal")),
                         Subscribed = Convert.ToBoolean(row.Field<object>("Subscribed")),
@@ -707,8 +717,11 @@ namespace TimeSeriesFramework.UI.DataModels
                     return Load(database);
 
                 ObservableCollection<Measurement> possibleMeasurements = new ObservableCollection<Measurement>();
-                DataTable possibleMeasurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail WHERE SignalID NOT IN " +
-                    "(SELECT SignalID FROM SubscriberMeasurement WHERE SubscriberID = @subscriberID) ORDER BY PointTag", DefaultTimeout, database.Guid(subscriberId));
+
+                string query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE SignalID NOT IN " +
+                    "(SELECT SignalID FROM SubscriberMeasurement WHERE SubscriberID = {0}) ORDER BY PointTag", "subscriberID");
+
+                DataTable possibleMeasurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Guid(subscriberId));
 
                 foreach (DataRow row in possibleMeasurementTable.Rows)
                 {
@@ -723,8 +736,8 @@ namespace TimeSeriesFramework.UI.DataModels
                         SignalTypeID = row.ConvertField<int>("SignalTypeID"),
                         PhasorSourceIndex = row.ConvertNullableField<int>("PhasorSourceIndex"),
                         SignalReference = row.Field<string>("SignalReference"),
-                        Adder = row.Field<double>("Adder"),
-                        Multiplier = row.Field<double>("Multiplier"),
+                        Adder = row.ConvertField<double>("Adder"),
+                        Multiplier = row.ConvertField<double>("Multiplier"),
                         Internal = Convert.ToBoolean(row.Field<object>("Internal")),
                         Subscribed = Convert.ToBoolean(row.Field<object>("Subscribed")),
                         Description = row.Field<string>("Description"),
@@ -771,12 +784,22 @@ namespace TimeSeriesFramework.UI.DataModels
                     measurementList.Add(Guid.Empty, "Select Measurement");
 
                 DataTable measurementTable;
+                string query;
 
-                if (subscribedOnly) // If subscribedOnly is set then return only those measurements which are not internal and subscribed flag is set to true.
-                    measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT SignalID, PointTag FROM MeasurementDetail WHERE NodeID = @nodeID AND Internal = @internal AND Subscribed = @subscribed ORDER BY PointID",
-                        DefaultTimeout, database.CurrentNodeID(), false, true);
+                if (subscribedOnly)
+                {
+                    // If subscribedOnly is set then return only those measurements which are not internal and subscribed flag is set to true.
+                    query = database.ParameterizedQueryString("SELECT SignalID, PointTag FROM MeasurementDetail WHERE " +
+                        "NodeID = {0} AND Internal = {1} AND Subscribed = {2} ORDER BY PointID", "nodeID", "internal", "subscribed");
+
+                    measurementTable = database.Connection.RetrieveData(database.AdapterType, query,
+                        DefaultTimeout, database.CurrentNodeID(), database.Bool(false), database.Bool(true));
+                }
                 else
-                    measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT SignalID, PointTag FROM MeasurementDetail WHERE NodeID = @nodeID ORDER BY PointID", DefaultTimeout, database.CurrentNodeID());
+                {
+                    query = database.ParameterizedQueryString("SELECT SignalID, PointTag FROM MeasurementDetail WHERE NodeID = {0} ORDER BY PointID", "nodeID");
+                    measurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+                }
 
                 foreach (DataRow row in measurementTable.Rows)
                     measurementList[database.Guid(row, "SignalID")] = row.Field<string>("PointTag");
@@ -805,9 +828,12 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 ObservableCollection<Measurement> measurementList = new ObservableCollection<Measurement>();
                 DataTable measurementTable;
+                string query;
 
-                measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail WHERE " +
-                    "NodeID = @nodeID AND Internal = @internal AND Subscribed = @subscribed ORDER BY PointTag", DefaultTimeout, database.CurrentNodeID(), false, true);
+                query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE NodeID = {0} AND " +
+                    "Internal = {1} AND Subscribed = {2} ORDER BY PointTag", "nodeID", "internal", "subscribed");
+
+                measurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID(), database.Bool(false), database.Bool(true));
 
                 foreach (DataRow row in measurementTable.Rows)
                 {
@@ -822,8 +848,8 @@ namespace TimeSeriesFramework.UI.DataModels
                         SignalTypeID = row.ConvertField<int>("SignalTypeID"),
                         PhasorSourceIndex = row.ConvertNullableField<int>("PhasorSourceIndex"),
                         SignalReference = row.Field<string>("SignalReference"),
-                        Adder = row.Field<double>("Adder"),
-                        Multiplier = row.Field<double>("Multiplier"),
+                        Adder = row.ConvertField<double>("Adder"),
+                        Multiplier = row.ConvertField<double>("Multiplier"),
                         Internal = Convert.ToBoolean(row.Field<object>("Internal")),
                         Subscribed = Convert.ToBoolean(row.Field<object>("Subscribed")),
                         Description = row.Field<string>("Description"),
@@ -860,27 +886,38 @@ namespace TimeSeriesFramework.UI.DataModels
         public static string Save(AdoDataConnection database, Measurement measurement)
         {
             bool createdConnection = false;
+            string query;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
 
                 if (measurement.PointID == 0)
-                    database.Connection.ExecuteNonQuery("INSERT INTO Measurement (HistorianID, DeviceID, PointTag, AlternateTag, SignalTypeID, PhasorSourceIndex, " +
-                        "SignalReference, Adder, Multiplier, Subscribed, Internal, Description, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@historianID, @deviceID, " +
-                        "@pointTag, @alternateTag, @signalTypeID, @phasorSourceIndex, @signalReference, @adder, @multiplier, @subscribed, @internal, @description, @enabled, @updatedBy, " +
-                        "@updatedOn, @createdBy, @createdOn)", DefaultTimeout, measurement.HistorianID.ToNotNull(), measurement.DeviceID.ToNotNull(), measurement.PointTag,
+                {
+                    query = database.ParameterizedQueryString("INSERT INTO Measurement (HistorianID, DeviceID, PointTag, AlternateTag, SignalTypeID, PhasorSourceIndex, " +
+                        "SignalReference, Adder, Multiplier, Subscribed, Internal, Description, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES ({0}, {1}, {2}, " +
+                        "{3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16})", "historianID", "deviceID", "pointTag", "alternateTag", "signalTypeID",
+                        "phasorSourceIndex", "signalReference", "adder", "multiplier", "subscribed", "internal", "description", "enabled", "updatedBy", "updatedOn",
+                        "createdBy", "createdOn");
+
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, measurement.HistorianID.ToNotNull(), measurement.DeviceID.ToNotNull(), measurement.PointTag,
                         measurement.AlternateTag.ToNotNull(), measurement.SignalTypeID, measurement.PhasorSourceIndex.ToNotNull(), measurement.SignalReference,
-                        measurement.Adder, measurement.Multiplier, measurement.Subscribed, measurement.Internal, measurement.Description.ToNotNull(), measurement.Enabled, CommonFunctions.CurrentUser,
-                        database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                        measurement.Adder, measurement.Multiplier, database.Bool(measurement.Subscribed), database.Bool(measurement.Internal), measurement.Description.ToNotNull(),
+                        database.Bool(measurement.Enabled), CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                }
                 else
-                    database.Connection.ExecuteNonQuery("Update Measurement Set HistorianID = @historianID, DeviceID = @deviceID, PointTag = @pointTag, " +
-                        "AlternateTag = @alternateTag, SignalTypeID = @signalTypeID, PhasorSourceIndex = @phasorSourceIndex, SignalReference = @signalReference, " +
-                        "Adder = @adder, Multiplier = @multiplier, Description = @description, Subscribed = @subscribed, Internal = @internal, Enabled = @enabled, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn " +
-                        "Where PointID = @pointID", DefaultTimeout, measurement.HistorianID.ToNotNull(), measurement.DeviceID.ToNotNull(), measurement.PointTag,
+                {
+                    query = database.ParameterizedQueryString("Update Measurement Set HistorianID = {0}, DeviceID = {1}, PointTag = {2}, AlternateTag = {3}, " +
+                        "SignalTypeID = {4}, PhasorSourceIndex = {5}, SignalReference = {6}, Adder = {7}, Multiplier = {8}, Description = {9}, Subscribed = {10}, " +
+                        "Internal = {11}, Enabled = {12}, UpdatedBy = {13}, UpdatedOn = {14} Where PointID = {15}", "historianID", "deviceID", "pointTag",
+                        "alternateTag", "signalTypeID", "phasorSourceINdex", "signalReference", "adder", "multiplier", "description", "subscribed", "internal",
+                        "enabled", "updatedBy", "updatedOn", "pointID");
+
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, measurement.HistorianID.ToNotNull(), measurement.DeviceID.ToNotNull(), measurement.PointTag,
                         measurement.AlternateTag.ToNotNull(), measurement.SignalTypeID, measurement.PhasorSourceIndex.ToNotNull(), measurement.SignalReference,
-                        measurement.Adder, measurement.Multiplier, measurement.Description.ToNotNull(), measurement.Subscribed, measurement.Internal, measurement.Enabled, CommonFunctions.CurrentUser, database.UtcNow(),
-                        measurement.PointID);
+                        measurement.Adder, measurement.Multiplier, measurement.Description.ToNotNull(), database.Bool(measurement.Subscribed), database.Bool(measurement.Internal),
+                        database.Bool(measurement.Enabled), CommonFunctions.CurrentUser, database.UtcNow(), measurement.PointID);
+                }
 
                 return "Measurement information saved successfully";
             }
@@ -908,7 +945,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
-                database.Connection.ExecuteNonQuery("DELETE FROM Measurement WHERE PointID = @pointID", DefaultTimeout, pointID);
+                database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Measurement WHERE PointID = {0}", "pointID"), DefaultTimeout, pointID);
 
                 return "Measurement deleted successfully";
             }
@@ -949,8 +986,8 @@ namespace TimeSeriesFramework.UI.DataModels
                     SignalTypeID = row.ConvertField<int>("SignalTypeID"),
                     PhasorSourceIndex = row.ConvertNullableField<int>("PhasorSourceIndex"),
                     SignalReference = row.Field<string>("SignalReference"),
-                    Adder = row.Field<double>("Adder"),
-                    Multiplier = row.Field<double>("Multiplier"),
+                    Adder = row.ConvertField<double>("Adder"),
+                    Multiplier = row.ConvertField<double>("Multiplier"),
                     Description = row.Field<string>("Description"),
                     Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
                     m_historianAcronym = row.Field<string>("HistorianAcronym"),

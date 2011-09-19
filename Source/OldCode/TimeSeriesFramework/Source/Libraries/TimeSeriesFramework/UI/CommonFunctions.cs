@@ -82,6 +82,7 @@ namespace TimeSeriesFramework.UI
         /// This method must be called before any delete operation on the database in order to log who deleted this record.
         /// For SQL server it sets user name into CONTEXT_INFO().
         /// For MySQL server it sets user name into session variable @context.
+		/// For Oracle server it sets user name into context package.
         /// MS Access is not supported for change logging.
         /// For any other database in the future, such as Oracle, this logic must be extended to support change log in the database.
         /// </remarks>
@@ -119,6 +120,11 @@ namespace TimeSeriesFramework.UI
                             command.CommandText = "SET @context = '" + CurrentUser + "';";
                             command.ExecuteNonQuery();
                             break;
+                        case "oracleconnection":
+                            command = database.Connection.CreateCommand();
+                            command.CommandText = "BEGIN context.set_current_user('" + CurrentUser + "'); END;";
+                            command.ExecuteNonQuery();
+                            break;
                         default:
                             break;
                     }
@@ -129,37 +135,6 @@ namespace TimeSeriesFramework.UI
                 if (createdConnection && database != null)
                     database.Dispose();
             }
-        }
-
-        /// <summary>
-        /// Method to check if source database is Microsoft Access.
-        /// </summary>
-        /// <param name="database"><see cref="AdoDataConnection"/> to database.</param>
-        /// <returns>Boolean, indicating if source database is Microsoft Access.</returns>
-        public static bool IsJetEngine(this AdoDataConnection database)
-        {
-            // TODO: Make this a cached property of AdoDataConnection as an optimization...
-            return database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB");
-        }
-
-        /// <summary>
-        /// Method to check if source database is MySQL.
-        /// </summary>
-        /// <param name="database"><see cref="AdoDataConnection"/> to database.</param>
-        /// <returns>Boolean, indicating if source database is MySQL.</returns>
-        public static bool IsMySQL(this AdoDataConnection database)
-        {
-            return database.AdapterType.Name == "MySqlDataAdapter";
-        }
-
-        /// <summary>
-        /// Method to check if source database is SQLite.
-        /// </summary>
-        /// <param name="database"><see cref="AdoDataConnection"/> to database.</param>
-        /// <returns>Boolean, indicating if source database is MySQL.</returns>
-        public static bool IsSqlite(this AdoDataConnection database)
-        {
-            return database.AdapterType.Name == "SQLiteDataAdapter";
         }
 
         /// <summary>
@@ -300,62 +275,6 @@ namespace TimeSeriesFramework.UI
             return database.Guid(s_currentNodeID);
         }
 
-        /// <summary>
-        /// Returns proper <see cref="System.Guid"/> implementation for connected <see cref="AdoDataConnection"/> database type.
-        /// </summary>
-        /// <param name="database">Connected <see cref="AdoDataConnection"/>.</param>
-        /// <param name="guid"><see cref="System.Guid"/> to format per database type.</param>
-        /// <returns>Proper <see cref="System.Guid"/> implementation for connected <see cref="AdoDataConnection"/> database type.</returns>
-        public static object Guid(this AdoDataConnection database, Guid guid)
-        {
-            if (database.IsJetEngine())
-                return "{" + guid.ToString() + "}";
-
-            if (database.IsSqlite())
-                return guid.ToString();
-
-            //return "P" + guid.ToString();
-
-            return guid;
-        }
-
-        /// <summary>
-        /// Retrieves <see cref="System.Guid"/> based on database type.
-        /// </summary>
-        /// <param name="database">Connected <see cref="AdoDataConnection"/>.</param>
-        /// <param name="row"><see cref="DataRow"/> from which value needs to be retrieved.</param>
-        /// <param name="fieldName">Name of the field which contains <see cref="System.Guid"/>.</param>
-        /// <returns><see cref="System.Guid"/>.</returns>
-        public static Guid Guid(this AdoDataConnection database, DataRow row, string fieldName)
-        {
-            if (database.IsJetEngine() || database.IsMySQL() || database.IsSqlite())
-                return System.Guid.Parse(row.Field<object>(fieldName).ToString());
-
-            return row.Field<Guid>(fieldName);
-        }
-
-        /// <summary>
-        /// Returns current UTC time in implementation that is proper for connected <see cref="AdoDataConnection"/> database type.
-        /// </summary>
-        /// <param name="database">Connected <see cref="AdoDataConnection"/>.</param>
-        /// <param name="usePrecisionTime">Set to <c>true</c> to use precision time.</param>
-        /// <returns>Current UTC time in implementation that is proper for connected <see cref="AdoDataConnection"/> database type.</returns>
-        public static object UtcNow(this AdoDataConnection database, bool usePrecisionTime = false)
-        {
-            if (usePrecisionTime)
-            {
-                if (database.IsJetEngine())
-                    return PrecisionTimer.UtcNow.ToOADate();
-
-                return PrecisionTimer.UtcNow;
-            }
-
-            if (database.IsJetEngine())
-                return DateTime.UtcNow.ToOADate();
-
-            return DateTime.UtcNow;
-        }
-
         #endregion
 
         /// <summary>
@@ -491,7 +410,8 @@ namespace TimeSeriesFramework.UI
             try
             {
                 database = new AdoDataConnection(DefaultSettingsCategory);
-                object id = database.Connection.ExecuteScalar("SELECT ID FROM Runtime WHERE SourceTable = @sourceTable AND SourceID = @sourceID", sourceTable, sourceID);
+                string query = database.ParameterizedQueryString("SELECT ID FROM Runtime WHERE SourceTable = {0} AND SourceID = {1}", "sourceTable", "sourceID");
+                object id = database.Connection.ExecuteScalar(query, sourceTable, sourceID);
                 if (id != null)
                     runtimeID = id.ToString();
 
@@ -675,7 +595,8 @@ namespace TimeSeriesFramework.UI
             {
                 createdConnection = DataModelBase.CreateConnection(ref connection);
 
-                DataTable results = connection.Connection.RetrieveData(connection.AdapterType, "SELECT MIN(PointID) AS MinPointID, MAX(PointID) AS MaxPointID FROM MeasurementDetail WHERE NodeID = @nodeID", connection.Guid(nodeID));
+                string query = connection.ParameterizedQueryString("SELECT MIN(PointID) AS MinPointID, MAX(PointID) AS MaxPointID FROM MeasurementDetail WHERE NodeID = {0}", "nodeID");
+                DataTable results = connection.Connection.RetrieveData(connection.AdapterType, query, connection.Guid(nodeID));
 
                 foreach (DataRow row in results.Rows)
                 {
@@ -702,9 +623,11 @@ namespace TimeSeriesFramework.UI
             bool createdConnection = false;
             try
             {
-                createdConnection = DataModelBase.CreateConnection(ref connection);
+                string query;
 
-                connection.Connection.ExecuteNonQuery("INSERT INTO ErrorLog (Source, Message, Detail) VALUES (@source, @message, @detail", DataModelBase.DefaultTimeout, source, ex.Message, ex.ToString());
+                createdConnection = DataModelBase.CreateConnection(ref connection);
+                query = connection.ParameterizedQueryString("INSERT INTO ErrorLog (Source, Message, Detail) VALUES ({0}, {1}, {2})", "source", "message", "detail");
+                connection.Connection.ExecuteNonQuery(query, DataModelBase.DefaultTimeout, source, ex.Message, ex.ToString());
             }
             catch
             {

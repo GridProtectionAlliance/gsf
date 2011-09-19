@@ -315,21 +315,31 @@ namespace TimeSeriesFramework.UI.DataModels
         public static string Save(AdoDataConnection database, Company company)
         {
             bool createdConnection = false;
+            string query;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
 
                 if (company.ID == 0)
-                    database.Connection.ExecuteNonQuery("INSERT INTO Company (Acronym, MapAcronym, Name, URL, LoadOrder, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) " +
-                        "VALUES (@acronym, @mapAcronym, @name, @url, @loadOrder, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout,
-                        company.Acronym.Replace(" ", "").ToUpper(), company.MapAcronym.Replace(" ", "").ToUpper(), company.Name, company.URL.ToNotNull(),
-                        company.LoadOrder, CommonFunctions.CurrentUser, database.UtcNow(),
-                        CommonFunctions.CurrentUser, database.UtcNow());
+                {
+                    query = database.ParameterizedQueryString("INSERT INTO Company (Acronym, MapAcronym, Name, URL, LoadOrder, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) " +
+                        "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})", "acronym", "mapAcronym", "name", "url", "loadOrder", "updatedBy", "updatedOn", "createdBy",
+                        "createdOn");
+
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, company.Acronym.Replace(" ", "").ToUpper(), company.MapAcronym.Replace(" ", "").ToUpper(),
+                        company.Name, company.URL.ToNotNull(), company.LoadOrder, CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser,
+                        database.UtcNow());
+                }
                 else
-                    database.Connection.ExecuteNonQuery("UPDATE Company SET Acronym = @acronym, MapAcronym = @mapAcronym, Name = @name, URL = @url, LoadOrder = @loadOrder, " +
-                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, company.Acronym.Replace(" ", "").ToUpper(),
+                {
+                    query = database.ParameterizedQueryString("UPDATE Company SET Acronym = {0}, MapAcronym = {1}, Name = {2}, URL = {3}, LoadOrder = {4}, " +
+                        "UpdatedBy = {5}, UpdatedOn = {6} WHERE ID = {7}", "acronym", "mapAcronym", "name", "url", "loadOrder", "updatedBy", "updatedOn", "id");
+
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, company.Acronym.Replace(" ", "").ToUpper(),
                         company.MapAcronym.Replace(" ", "").ToUpper(), company.Name, company.URL.ToNotNull(), company.LoadOrder, CommonFunctions.CurrentUser,
                         database.UtcNow(), company.ID);
+                }
 
                 return "Company information saved successfully";
             }
@@ -357,7 +367,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
-                database.Connection.ExecuteNonQuery("DELETE FROM Company WHERE ID = @companyID", DefaultTimeout, companyID);
+                database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Company WHERE ID = {0}", "companyID"), DefaultTimeout, companyID);
 
                 return "Company deleted successfully";
             }

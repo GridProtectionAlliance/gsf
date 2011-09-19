@@ -491,10 +491,13 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
                 DataTable nodeTable;
+                string query;
 
-                nodeTable = database.Connection.RetrieveData(database.AdapterType, "Select ID, Name, CompanyID, " +
-                        "Longitude, Latitude, Description, ImagePath, Settings, MenuData, MenuType, Master, LoadOrder, Enabled, " +
-                        "CompanyName From NodeDetail WHERE ID = @id ORDER BY LoadOrder", DefaultTimeout, database.CurrentNodeID());
+                query = database.ParameterizedQueryString("Select ID, Name, CompanyID, Longitude, Latitude, Description, " +
+                    "ImagePath, Settings, MenuData, MenuType, Master, LoadOrder, Enabled, CompanyName " +
+                    "From NodeDetail WHERE ID = {0} ORDER BY LoadOrder", "id");
+
+                nodeTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
 
                 if (nodeTable.Rows.Count == 0)
                     return null;
@@ -547,7 +550,8 @@ namespace TimeSeriesFramework.UI.DataModels
                 if (isOptional)
                     nodeList.Add(Guid.Empty, "Select Node");
 
-                DataTable nodeTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM Node WHERE Enabled = @enabled ORDER BY LoadOrder", DefaultTimeout, true);
+                string query = database.ParameterizedQueryString("SELECT ID, Name FROM Node WHERE Enabled = {0} ORDER BY LoadOrder", "enabled");
+                DataTable nodeTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Bool(true));
 
                 foreach (DataRow row in nodeTable.Rows)
                 {
@@ -572,25 +576,34 @@ namespace TimeSeriesFramework.UI.DataModels
         public static string Save(AdoDataConnection database, Node node)
         {
             bool createdConnection = false;
+            string query;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
 
                 if (node.ID == null || node.ID == Guid.Empty)
-                    database.Connection.ExecuteNonQuery("INSERT INTO Node (Name, CompanyID, Longitude, Latitude, Description, ImagePath, Settings, MenuType, MenuData, Master, LoadOrder, " +
-                        "Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@name, @companyID, " +
-                        "@longitude, @latitude, @description, @imagePath, @settings, @menuType, @menuData, @master, @loadOrder, @enabled, " +
-                        "@updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, node.Name, node.CompanyID.ToNotNull(), node.Longitude.ToNotNull(),
-                        node.Latitude.ToNotNull(), node.Description.ToNotNull(), node.ImagePath.ToNotNull(), node.Settings.ToNotNull(), node.MenuType, node.MenuData, node.Master, node.LoadOrder, node.Enabled,
-                        CommonFunctions.CurrentUser,
-                        database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                {
+                    query = database.ParameterizedQueryString("INSERT INTO Node (Name, CompanyID, Longitude, Latitude, Description, ImagePath, Settings, MenuType, MenuData, " +
+                        "Master, LoadOrder, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, " +
+                        "{13}, {14}, {15})", "name", "companyID", "longitude", "latitude", "description", "imagePath", "settings", "menuType", "menuData", "master", 
+                        "loadOrder", "enabled", "updatedBy", "updatedOn", "createdBy", "createdOn");
+
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, node.Name, node.CompanyID.ToNotNull(), node.Longitude.ToNotNull(), node.Latitude.ToNotNull(),
+                        node.Description.ToNotNull(), node.ImagePath.ToNotNull(), node.Settings.ToNotNull(), node.MenuType, node.MenuData, database.Bool(node.Master), node.LoadOrder,
+                        database.Bool(node.Enabled), CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                }
                 else
-                    database.Connection.ExecuteNonQuery("UPDATE Node SET Name = @name, CompanyID = @companyID, Longitude = @longitude, Latitude = @latitude, " +
-                        "Description = @description, ImagePath = @imagePath, Settings = @Settings, MenuType = @MenuType, MenuData = @MenuData, Master = @master, LoadOrder = @loadOrder, Enabled = @enabled, " +
-                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, node.Name, node.CompanyID.ToNotNull(), node.Longitude.ToNotNull(),
-                        node.Latitude.ToNotNull(), node.Description.ToNotNull(), node.ImagePath.ToNotNull(), node.Settings.ToNotNull(), node.MenuType, node.MenuData, node.Master, node.LoadOrder, node.Enabled,
-                        CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(node.ID));
+                {
+                    query = database.ParameterizedQueryString("UPDATE Node SET Name = {0}, CompanyID = {1}, Longitude = {2}, Latitude = {3}, " +
+                        "Description = {4}, ImagePath = {5}, Settings = {6}, MenuType = {7}, MenuData = {8}, Master = {9}, LoadOrder = {10}, Enabled = {11}, " +
+                        "UpdatedBy = {12}, UpdatedOn = {13} WHERE ID = {14}", "name", "companyID", "longitude", "latitude", "description", "imagePath",
+                        "Settings", "MenuType", "MenuData", "master", "loadOrder", "enabled", "updatedBy", "updatedOn", "id");
+
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, node.Name, node.CompanyID.ToNotNull(), node.Longitude.ToNotNull(), node.Latitude.ToNotNull(),
+                        node.Description.ToNotNull(), node.ImagePath.ToNotNull(), node.Settings.ToNotNull(), node.MenuType, node.MenuData, database.Bool(node.Master), node.LoadOrder,
+                        database.Bool(node.Enabled), CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(node.ID));
+                }
 
                 return "Node information saved successfully";
             }
@@ -618,7 +631,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
-                database.Connection.ExecuteNonQuery("DELETE FROM Node WHERE ID = @nodeID", DefaultTimeout, database.Guid(nodeID));
+                database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Node WHERE ID = {0}", "nodeID"), DefaultTimeout, database.Guid(nodeID));
 
                 return "Node deleted successfully";
             }

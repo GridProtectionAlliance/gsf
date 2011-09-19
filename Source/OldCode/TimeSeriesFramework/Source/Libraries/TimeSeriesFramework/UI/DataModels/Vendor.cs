@@ -312,20 +312,30 @@ namespace TimeSeriesFramework.UI.DataModels
         public static string Save(AdoDataConnection database, Vendor vendor)
         {
             bool createdConnection = false;
+            string query;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
 
                 if (vendor.ID == 0)
-                    database.Connection.ExecuteNonQuery("INSERT INTO Vendor (Acronym, Name, PhoneNumber, ContactEmail, URL, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) " +
-                        "VALUES (@acronym, @name, @phoneNumber, @contactEmail, @url, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, vendor.Acronym.Replace(" ", "").ToUpper(),
+                {
+                    query = database.ParameterizedQueryString("INSERT INTO Vendor (Acronym, Name, PhoneNumber, ContactEmail, URL, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) " +
+                        "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})", "acronym", "name", "phoneNumber", "contactEmail", "url", "updatedBy", "updatedOn", "createdBy",
+                        "createdOn");
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, vendor.Acronym.Replace(" ", "").ToUpper(),
                         vendor.Name, vendor.PhoneNumber.ToNotNull(), vendor.ContactEmail.ToNotNull(), vendor.URL.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow(),
                         CommonFunctions.CurrentUser, database.UtcNow());
+                }
                 else
-                    database.Connection.ExecuteNonQuery("UPDATE Vendor SET Acronym = @acronym, Name = @name, PhoneNumber = @phoneNumber, ContactEmail = @contactEmail, " +
-                        "URL = @url, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, vendor.Acronym.Replace(" ", "").ToUpper(), vendor.Name,
+                {
+                    query = database.ParameterizedQueryString("UPDATE Vendor SET Acronym = {0}, Name = {1}, PhoneNumber = {2}, ContactEmail = {3}, " +
+                        "URL = {4}, UpdatedBy = {5}, UpdatedOn = {6} WHERE ID = {7}", "acronym", "name", "phoneNumber", "contactEmail", "url", "updatedBy",
+                        "updatedOn", "id");
+
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, vendor.Acronym.Replace(" ", "").ToUpper(), vendor.Name,
                         vendor.PhoneNumber.ToNotNull(), vendor.ContactEmail.ToNotNull(), vendor.URL.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow(), vendor.ID);
+                }
 
                 return "Vendor information saved successfully";
             }
@@ -357,7 +367,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
-                database.Connection.ExecuteNonQuery("DELETE FROM Vendor WHER ID = @vendorID", DefaultTimeout, vendorID);
+                database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Vendor WHERE ID = {0}", "vendorID"), DefaultTimeout, vendorID);
 
                 return "Vendor deleted successfully";
             }
