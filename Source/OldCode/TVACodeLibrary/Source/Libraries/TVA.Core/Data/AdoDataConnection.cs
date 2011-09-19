@@ -11,6 +11,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  04/07/2011 - J. Ritchie Carroll
 //       Generated original version of source code.
+//  09/19/2011 - Stephen C. Wills
+//       Added database awareness and Oracle database compatibility.
 //
 //*******************************************************************************************************
 
@@ -252,11 +254,43 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Reflection;
 using TVA.Configuration;
 
 namespace TVA.Data
 {
+    /// <summary>
+    /// Specifies the database type underlying an <see cref="AdoDataConnection"/>.
+    /// </summary>
+    public enum DatabaseType
+    {
+        /// <summary>
+        /// Underlying database type is Microsoft Access.
+        /// </summary>
+        Access,
+
+        /// <summary>
+        /// Underlying database type is MySQL.
+        /// </summary>
+        MySQL,
+
+        /// <summary>
+        /// Underlying database type is Oracle.
+        /// </summary>
+        Oracle,
+
+        /// <summary>
+        /// Underlying database type is SQLite.
+        /// </summary>
+        SQLite,
+
+        /// <summary>
+        /// Underlying database type is unknown or not needed.
+        /// </summary>
+        Other
+    }
+
     /// <summary>
     /// Creates a new <see cref="IDbConnection"/> to a configured ADO.NET data source.
     /// </summary>
@@ -315,6 +349,7 @@ namespace TVA.Data
                     assembly = Assembly.Load(new AssemblyName(assemblyName));
                     s_connectionType = assembly.GetType(connectionTypeName);
                     s_adapterType = assembly.GetType(adapterTypeName);
+                    s_databaseType = GetDatabaseType();
                 }
                 catch (Exception ex)
                 {
@@ -369,9 +404,144 @@ namespace TVA.Data
             }
         }
 
+        /// <summary>
+        /// Gets the type of the database underlying the <see cref="AdoDataConnection"/>.
+        /// </summary>
+        public DatabaseType DatabaseType
+        {
+            get
+            {
+                return s_databaseType;
+            }
+        }
+
+        /// <summary>
+        /// Gets a value to indicate whether source database is Microsoft Access.
+        /// </summary>
+        public bool IsJetEngine
+        {
+            get
+            {
+                return s_databaseType == DatabaseType.Access;
+            }
+        }
+
+        /// <summary>
+        /// Gets a value to indicate whether source database is MySQL.
+        /// </summary>
+        public bool IsMySQL
+        {
+            get
+            {
+                return s_databaseType == DatabaseType.MySQL;
+            }
+        }
+
+        /// <summary>
+        /// Gets a value to indicate whether source database is Oracle.
+        /// </summary>
+        public bool IsOracle
+        {
+            get
+            {
+                return s_databaseType == DatabaseType.Oracle;
+            }
+        }
+
+        /// <summary>
+        /// Gets a value to indicate whether source database is SQLite.
+        /// </summary>
+        public bool IsSqlite
+        {
+            get
+            {
+                return s_databaseType == DatabaseType.SQLite;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Returns proper <see cref="System.Boolean"/> implementation for connected <see cref="AdoDataConnection"/> database type.
+        /// </summary>
+        /// <param name="value"><see cref="System.Boolean"/> to format per database type.</param>
+        /// <returns>Proper <see cref="System.Boolean"/> implementation for connected <see cref="AdoDataConnection"/> database type.</returns>
+        public object Bool(bool value)
+        {
+            if (IsOracle)
+                return value ? 1 : 0;
+
+            return value;
+        }
+
+        /// <summary>
+        /// Returns proper <see cref="System.Guid"/> implementation for connected <see cref="AdoDataConnection"/> database type.
+        /// </summary>
+        /// <param name="guid"><see cref="System.Guid"/> to format per database type.</param>
+        /// <returns>Proper <see cref="System.Guid"/> implementation for connected <see cref="AdoDataConnection"/> database type.</returns>
+        public object Guid(Guid guid)
+        {
+            if (IsJetEngine)
+                return "{" + guid.ToString() + "}";
+
+            if (IsOracle || IsSqlite)
+                return guid.ToString();
+
+            //return "P" + guid.ToString();
+
+            return guid;
+        }
+
+        /// <summary>
+        /// Retrieves <see cref="System.Guid"/> based on database type.
+        /// </summary>
+        /// <param name="row"><see cref="DataRow"/> from which value needs to be retrieved.</param>
+        /// <param name="fieldName">Name of the field which contains <see cref="System.Guid"/>.</param>
+        /// <returns><see cref="System.Guid"/>.</returns>
+        public Guid Guid(DataRow row, string fieldName)
+        {
+            if (IsJetEngine || IsMySQL || IsOracle || IsSqlite)
+                return System.Guid.Parse(row.Field<object>(fieldName).ToString());
+
+            return row.Field<Guid>(fieldName);
+        }
+
+        /// <summary>
+        /// Returns current UTC time in implementation that is proper for connected <see cref="AdoDataConnection"/> database type.
+        /// </summary>
+        /// <param name="usePrecisionTime">Set to <c>true</c> to use precision time.</param>
+        /// <returns>Current UTC time in implementation that is proper for connected <see cref="AdoDataConnection"/> database type.</returns>
+        public object UtcNow(bool usePrecisionTime = false)
+        {
+            if (usePrecisionTime)
+            {
+                if (IsJetEngine)
+                    return PrecisionTimer.UtcNow.ToOADate();
+
+                return PrecisionTimer.UtcNow;
+            }
+
+            if (IsJetEngine)
+                return DateTime.UtcNow.ToOADate();
+
+            return DateTime.UtcNow;
+        }
+
+        /// <summary>
+        /// Creates a parameterized query string for the underlying database type 
+        /// based on the given format string and the parameter names.
+        /// </summary>
+        /// <param name="format">A composite format string.</param>
+        /// <param name="parameterNames">A string array that contains zero or more parameter names to format.</param>
+        /// <returns>A parameterized query string based on the given format and parameter names.</returns>
+        public string ParameterizedQueryString(string format, params string[] parameterNames)
+        {
+            char paramChar = IsOracle ? ':' : '@';
+            object[] parameters = parameterNames.Select(name => paramChar + name).ToArray();
+            return string.Format(format, parameters);
+        }
 
         /// <summary>
         /// Releases all the resources used by the <see cref="AdoDataConnection"/> object.
@@ -406,6 +576,36 @@ namespace TVA.Data
             }
         }
 
+        private DatabaseType GetDatabaseType()
+        {
+            DatabaseType type = DatabaseType.Other;
+
+            if (s_adapterType != null)
+            {
+                switch (s_adapterType.Name)
+                {
+                    case "MySqlDataAdapter":
+                        type = DatabaseType.MySQL;
+                        break;
+
+                    case "OracleDataAdapter":
+                        type = DatabaseType.Oracle;
+                        break;
+
+                    case "SQLiteDataAdapter":
+                        type = DatabaseType.SQLite;
+                        break;
+
+                    default:
+                        if (m_connection != null && m_connection.ConnectionString.Contains("Microsoft.Jet.OLEDB"))
+                            type = DatabaseType.Access;
+                        break;
+                }
+            }
+
+            return type;
+        }
+
         #endregion
 
         #region [ Static ]
@@ -413,6 +613,7 @@ namespace TVA.Data
         // Static Fields
         private static Type s_connectionType;
         private static Type s_adapterType;
+        private static DatabaseType s_databaseType;
         private static string s_connectionString;
 
         // Static Methods

@@ -47,6 +47,9 @@
 //       implement the IConvertible interface.
 //  08/12/2011 - Pinal C. Patel
 //       Modified AddParameterWithValue() to correctly implement backwards compatible.
+//  09/19/2011 - Stephen C. Wills
+//       Modified AddParametersWithValues() to parse parameters prefixed
+//       with a colon for Oracle database compatibility.
 //
 //*******************************************************************************************************
 
@@ -1641,8 +1644,8 @@ namespace TVA.Data
             }
             else
             {
-                // Pick up all parameters that start with @ but skip key words such as @@IDENTITY
-                string[] tokens = sql.Split(' ', '(', ')', ',', '=').Where(token => token.StartsWith("@") && !token.StartsWith("@@")).ToArray();
+                // Pick up all parameters that start with @ or : but skip key words such as @@IDENTITY
+                string[] tokens = sql.Split(' ', '(', ')', ',', '=').Where(token => token.StartsWith(":") || token.StartsWith("@") && !token.StartsWith("@@")).ToArray();
                 int i = 0;
 
                 if (tokens.Length != values.Length)
