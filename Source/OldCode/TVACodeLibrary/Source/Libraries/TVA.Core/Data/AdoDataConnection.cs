@@ -271,6 +271,11 @@ namespace TVA.Data
         Access,
 
         /// <summary>
+        /// Underlying database type is SQL Server.
+        /// </summary>
+        SQLServer,
+
+        /// <summary>
         /// Underlying database type is MySQL.
         /// </summary>
         MySQL,
@@ -423,6 +428,14 @@ namespace TVA.Data
             get
             {
                 return s_databaseType == DatabaseType.Access;
+            }
+        }
+
+        public bool IsSQLServer
+        {
+            get
+            {
+                return s_databaseType == DatabaseType.SQLServer;
             }
         }
 
@@ -584,6 +597,10 @@ namespace TVA.Data
             {
                 switch (s_adapterType.Name)
                 {
+                    case "SqlDataAdapter":
+                        type = DatabaseType.SQLServer;
+                        break;
+
                     case "MySqlDataAdapter":
                         type = DatabaseType.MySQL;
                         break;
