@@ -78,5 +78,72 @@ namespace TimeSeriesFramework.UI
                     return null;
             }
         }
+
+        /// <summary>
+        /// Initializes or resets existing values in <see cref="IsolatedStorageFile"/> to default values.
+        /// </summary>
+        /// <param name="overWriteExisting">Boolean flag indicating if existing values should be reset to default value.</param>
+        public static void InitializeIsolatedStorage(bool overWriteExisting)
+        {
+            if (!s_userStoreForAssembly.FileExists("NumberOfMessages") || overWriteExisting)
+                WriteToIsolatedStorage("NumberOfMessages", 75);
+
+            if (!s_userStoreForAssembly.FileExists("ForceIPv4") || overWriteExisting)
+                WriteToIsolatedStorage("ForceIPv4", "true");
+
+            if (!s_userStoreForAssembly.FileExists("InputMonitoringPoints") || overWriteExisting)
+                WriteToIsolatedStorage("InputMonitoringPoints", string.Empty);
+
+            if (!s_userStoreForAssembly.FileExists("NumberOfDataPointsToPlot") || overWriteExisting)
+                WriteToIsolatedStorage("NumberOfDataPointsToPlot", 150);
+
+            if (!s_userStoreForAssembly.FileExists("DataResolution") || overWriteExisting)
+                WriteToIsolatedStorage("DataResolution", 30);
+
+            if (!s_userStoreForAssembly.FileExists("LagTime") || overWriteExisting)
+                WriteToIsolatedStorage("LagTime", 3);
+
+            if (!s_userStoreForAssembly.FileExists("LeadTime") || overWriteExisting)
+                WriteToIsolatedStorage("LeadTime", 1);
+
+            if (!s_userStoreForAssembly.FileExists("UseLocalClockAsRealtime") || overWriteExisting)
+                WriteToIsolatedStorage("UseLocalClockAsRealtime", "false");
+
+            if (!s_userStoreForAssembly.FileExists("IgnoreBadTimestamps") || overWriteExisting)
+                WriteToIsolatedStorage("IgnoreBadTimestamps", "false");
+
+            if (!s_userStoreForAssembly.FileExists("ChartRefreshInterval") || overWriteExisting)
+                WriteToIsolatedStorage("ChartRefreshInterval", 250);
+
+            if (!s_userStoreForAssembly.FileExists("StatisticsDataRefreshInterval") || overWriteExisting)
+                WriteToIsolatedStorage("StatisticsDataRefreshInterval", 10);
+
+            if (!s_userStoreForAssembly.FileExists("MeasurementsDataRefreshInterval") || overWriteExisting)
+                WriteToIsolatedStorage("MeasurementsDataRefreshInterval", 10);
+
+            if (!s_userStoreForAssembly.FileExists("DisplayXAxis") || overWriteExisting)
+                WriteToIsolatedStorage("DisplayXAxis", "false");
+
+            if (!s_userStoreForAssembly.FileExists("DisplayFrequencyYAxis") || overWriteExisting)
+                WriteToIsolatedStorage("DisplayFrequencyYAxis", "true");
+
+            if (!s_userStoreForAssembly.FileExists("DisplayPhaseAngleYAxis") || overWriteExisting)
+                WriteToIsolatedStorage("DisplayPhaseAngleYAxis", "false");
+
+            if (!s_userStoreForAssembly.FileExists("DisplayVoltageYAxis") || overWriteExisting)
+                WriteToIsolatedStorage("DisplayVoltageYAxis", "false");
+
+            if (!s_userStoreForAssembly.FileExists("DisplayCurrentYAxis") || overWriteExisting)
+                WriteToIsolatedStorage("DisplayCurrentYAxis", "false");
+
+            if (!s_userStoreForAssembly.FileExists("FrequencyRangeMin") || overWriteExisting)
+                WriteToIsolatedStorage("FrequencyRangeMin", 59.95);
+
+            if (!s_userStoreForAssembly.FileExists("FrequencyRangeMax") || overWriteExisting)
+                WriteToIsolatedStorage("FrequencyRangeMax", 60.05);
+
+            if (!s_userStoreForAssembly.FileExists("DisplayLegend") || overWriteExisting)
+                WriteToIsolatedStorage("DisplayLegend", "true");
+        }
     }
 }

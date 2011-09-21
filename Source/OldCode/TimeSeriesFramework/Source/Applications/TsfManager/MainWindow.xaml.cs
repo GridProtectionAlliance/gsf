@@ -107,7 +107,7 @@ namespace TsfManager
             if (ComboboxNode.Items.Count > 0)
                 ComboboxNode.SelectedIndex = 0;
 
-            ((App)Application.Current).InitializeIsolatedStorage(false);
+            IsolatedStorageManager.InitializeIsolatedStorage(false);
         }
 
         /// <summary>

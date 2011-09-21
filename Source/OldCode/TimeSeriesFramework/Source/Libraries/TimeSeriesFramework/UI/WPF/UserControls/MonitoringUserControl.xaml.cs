@@ -246,8 +246,11 @@ namespace TimeSeriesFramework.UI.UserControls
 
         private void ButtonRestore_Click(object sender, RoutedEventArgs e)
         {
-            m_numberOfMessages = 75;
-            IsolatedStorageManager.WriteToIsolatedStorage("NumberOfMessages", m_numberOfMessages);
+            IsolatedStorageManager.InitializeIsolatedStorage(true);
+            if (int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("NumberOfMessages").ToString(), out m_numberOfMessages))
+            {
+                TextBoxNumberOfMessages.Text = m_numberOfMessages.ToString();
+            }
             PopupSettings.IsOpen = false;
         }
 
