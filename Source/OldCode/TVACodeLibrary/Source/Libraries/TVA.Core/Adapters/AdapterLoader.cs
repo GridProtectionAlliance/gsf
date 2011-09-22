@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -41,6 +42,8 @@
 //       Implemented IPersistSettings interface.
 //       Changed the unit for AllowableProcessMemoryUsage and AllowableAdapterMemoryUsage properties 
 //       from bytes to megabytes.
+//  09/21/2011 - J. Ritchie Carroll
+//       Added Mono implementation exception regions.
 //
 //*******************************************************************************************************
 
@@ -260,6 +263,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -453,7 +475,7 @@ namespace TVA.Adapters
                     // Attempt XML deserialization.
                     XDocument xml = XDocument.Parse(File.ReadAllText(adapterFile));
                     XElement type = xml.Root.Element("TypeName");
-                    if (type != null)
+                    if ((object)type != null)
                     {
                         // Type element required for looking up the adapter's type.
                         XmlSerializer serializer = new XmlSerializer(Type.GetType(type.Value));
@@ -589,10 +611,12 @@ namespace TVA.Adapters
         private FileSystemWatcher m_adapterWatcher;
         private ProcessQueue<object> m_operationQueue;
         private Dictionary<Type, bool> m_enabledStates;
-        private Thread m_adapterMonitoringThread;
         private bool m_enabled;
         private bool m_disposed;
         private bool m_initialized;
+#if !MONO
+        private Thread m_adapterMonitoringThread;
+#endif
 
         #endregion
 
@@ -651,7 +675,7 @@ namespace TVA.Adapters
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_adapterDirectory = value;
@@ -726,8 +750,13 @@ namespace TVA.Adapters
         /// Gets or sets a boolean value that indicates whether resource utilization of <see cref="Adapters"/> executing in <see cref="IsolateAdapters">isolation</see> is to be monitored.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// Use <see cref="AllowableProcessMemoryUsage"/>, <see cref="AllowableProcessProcessorUsage"/>, <see cref="AllowableAdapterMemoryUsage"/> and 
         /// <see cref="AllowableAdapterProcessorUsage"/> properties to configure how adapter resource utilization is to be monitored.
+        /// </para>
+        /// <para>
+        /// This option is ignored under Mono deployments.
+        /// </para>
         /// </remarks>
         public bool MonitorAdapters
         {
@@ -1031,7 +1060,7 @@ namespace TVA.Adapters
                 m_adapterDirectory = FilePath.GetAbsolutePath(m_adapterDirectory);
                 if (m_adapterFileFormat == AdapterFileFormat.Assembly)
                 {
-                    if (adapterTypes == null)
+                    if ((object)adapterTypes == null)
                         adapterTypes = typeof(T).LoadImplementations(Path.Combine(m_adapterDirectory, m_adapterFileExtension));
 
                     foreach (Type type in adapterTypes)
@@ -1058,6 +1087,7 @@ namespace TVA.Adapters
                 SaveCurrentState();
 
                 // Start adapter monitoring.
+#if !MONO
                 if (m_monitorAdapters && m_isolateAdapters)
                 {
                     // Following must be true in order for us to monitor adapter resources:
@@ -1066,6 +1096,7 @@ namespace TVA.Adapters
                     m_adapterMonitoringThread = new Thread(MonitorAdapterResources);
                     m_adapterMonitoringThread.Start();
                 }
+#endif
 
                 m_enabled = true;       // Mark as enabled.
                 m_initialized = true;   // Initialize only once.
@@ -1194,7 +1225,7 @@ namespace TVA.Adapters
             T adapter = default(T);
             try
             {
-                if (adapterType.GetConstructor(Type.EmptyTypes) != null)
+                if ((object)adapterType.GetConstructor(Type.EmptyTypes) != null)
                 {
                     // Instantiate adapter instance.
                     if (m_isolateAdapters && (adapterType.IsMarshalByRef || adapterType.IsSerializable))
@@ -1226,8 +1257,14 @@ namespace TVA.Adapters
         /// <summary>
         /// Monitors the resource utilization of <see cref="Adapters"/>.
         /// </summary>
+        /// <remarks>
+        /// <see cref="AppDomain"/> monitoring is not enabled under Mono deployments.
+        /// </remarks>
         protected virtual void MonitorAdapterResources()
         {
+#if MONO
+            return;
+#else
             // Enable individual application domain resource tracking if it is enabled.
             if (!AppDomain.MonitoringIsEnabled)
                 AppDomain.MonitoringIsEnabled = true;
@@ -1271,6 +1308,7 @@ namespace TVA.Adapters
                     offendingAdapters.Clear();
                 }
             }
+#endif
         }
 
         /// <summary>
@@ -1320,13 +1358,13 @@ namespace TVA.Adapters
                         // This will be done only when the object is disposed by calling Dispose().
                         SaveSettings();
 
-                        if (m_enabledStates != null)
+                        if ((object)m_enabledStates != null)
                             m_enabledStates.Clear();
 
-                        if (m_operationQueue != null)
+                        if ((object)m_operationQueue != null)
                             m_operationQueue.Dispose();
 
-                        if (m_adapterWatcher != null)
+                        if ((object)m_adapterWatcher != null)
                         {
                             m_adapterWatcher.Created -= AdapterWatcher_Events;
                             m_adapterWatcher.Changed -= AdapterWatcher_Events;
@@ -1334,7 +1372,7 @@ namespace TVA.Adapters
                             m_adapterWatcher.Dispose();
                         }
 
-                        if (m_adapters != null)
+                        if ((object)m_adapters != null)
                         {
                             lock (m_adapters)
                             {
@@ -1362,7 +1400,7 @@ namespace TVA.Adapters
         protected virtual void OnAdapterCreated(T adapter)
         {
             // Raise the event.
-            if (AdapterCreated != null)
+            if ((object)AdapterCreated != null)
                 AdapterCreated(this, new EventArgs<T>(adapter));
         }
 
@@ -1373,11 +1411,11 @@ namespace TVA.Adapters
         protected virtual void OnAdapterLoaded(T adapter)
         {
             // Initialize the adapter.
-            if (adapter != null)
+            if ((object)adapter != null)
                 adapter.Initialize();
 
             // Raise the event.
-            if (AdapterLoaded != null)
+            if ((object)AdapterLoaded != null)
                 AdapterLoaded(this, new EventArgs<T>(adapter));
         }
 
@@ -1390,21 +1428,25 @@ namespace TVA.Adapters
             // Dispose the adapter.
             try
             {
-                if (adapter != null)
+                if ((object)adapter != null)
                     adapter.Dispose();
             }
-            catch { }
+            catch
+            {
+            }
 
             // Unload the adapter domain.
             try
             {
-                if (adapter != null && !adapter.Domain.IsDefaultAppDomain())
+                if ((object)adapter != null && !adapter.Domain.IsDefaultAppDomain())
                     AppDomain.Unload(adapter.Domain);
             }
-            catch { }
+            catch
+            {
+            }
 
             // Raise the event.
-            if (AdapterUnloaded != null)
+            if ((object)AdapterUnloaded != null)
                 AdapterUnloaded(this, new EventArgs<T>(adapter));
         }
 
@@ -1415,7 +1457,7 @@ namespace TVA.Adapters
         protected virtual void OnAdapterResourceUsageExceeded(T adapter)
         {
             // Raise the event.
-            if (AdapterResourceUsageExceeded != null)
+            if ((object)AdapterResourceUsageExceeded != null)
                 AdapterResourceUsageExceeded(this, new EventArgs<T>(adapter));
         }
 
@@ -1428,7 +1470,7 @@ namespace TVA.Adapters
         protected virtual void OnAdapterLoadException(T adapter, Exception exception)
         {
             // Remove the adapter if it exists.
-            if (adapter != null)
+            if ((object)adapter != null)
             {
                 lock (m_adapters)
                 {
@@ -1438,7 +1480,7 @@ namespace TVA.Adapters
             }
 
             // Raise the event.
-            if (AdapterLoadException != null)
+            if ((object)AdapterLoadException != null)
                 AdapterLoadException(this, new EventArgs<Exception>(exception));
         }
 
@@ -1450,13 +1492,13 @@ namespace TVA.Adapters
         protected virtual void OnOperationExecutionException(T adapter, Exception exception)
         {
             // Raise the event.
-            if (OperationExecutionException != null)
+            if ((object)OperationExecutionException != null)
                 OperationExecutionException(this, new EventArgs<T, Exception>(adapter, exception));
         }
 
         private static string GetAdapterFilePath(T adapter)
         {
-            if (adapter != null)
+            if ((object)adapter != null)
                 return adapter.HostFile;
             else
                 return null;
@@ -1464,7 +1506,7 @@ namespace TVA.Adapters
 
         private static bool SetAdapterFilePath(T adapter, string adapterFile)
         {
-            if (adapter != null)
+            if ((object)adapter != null)
             {
                 adapter.HostFile = adapterFile;
                 return true;

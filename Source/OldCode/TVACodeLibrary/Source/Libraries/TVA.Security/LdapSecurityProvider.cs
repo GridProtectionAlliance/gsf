@@ -700,8 +700,14 @@ namespace TVA.Security
         /// <param name="oldPassword">User's current password.</param>
         /// <param name="newPassword">User's new password.</param>
         /// <returns>true if the password is changed, otherwise false.</returns>
+        /// <remarks>
+        /// This method always returns <c>false</c> under Mono deployments.
+        /// </remarks>
         public override bool ChangePassword(string oldPassword, string newPassword)
         {
+#if MONO
+            return false;
+#else
             // Check prerequisites
             if (!UserData.IsDefined || UserData.IsDisabled || UserData.IsLockedOut)
                 return false;
@@ -753,6 +759,7 @@ namespace TVA.Security
 
                 RefreshData();
             }
+#endif
         }
 
         /// <summary>

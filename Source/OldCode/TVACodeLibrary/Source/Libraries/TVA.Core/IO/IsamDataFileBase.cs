@@ -766,7 +766,7 @@ namespace TVA.IO
         {
             get
             {
-                return (m_fileData != null);
+                return ((object)m_fileData != null);
             }
         }
 
@@ -843,7 +843,7 @@ namespace TVA.IO
             {
                 int recordCount = 0;
 
-                if (m_fileRecords != null)
+                if ((object)m_fileRecords != null)
                 {
                     lock (m_fileRecords)
                     {
@@ -1044,7 +1044,7 @@ namespace TVA.IO
                 m_fileData = new FileStream(m_fileName, FileMode.OpenOrCreate, m_fileAccessMode, FileShare.ReadWrite);
 
                 // Load records into memory if specified to do so.
-                if (m_loadOnOpen) 
+                if (m_loadOnOpen)
                     Load();
 
                 // Watch the file for any modifications made to the file on disk.
@@ -1075,10 +1075,11 @@ namespace TVA.IO
                 m_fileWatcher.EnableRaisingEvents = false;
 
                 // Save records back to the file if specified.
-                if (m_saveOnClose) Save();
+                if (m_saveOnClose)
+                    Save();
 
                 // Close the file stream used for file I/O.
-                if (m_fileData != null)
+                if ((object)m_fileData != null)
                 {
                     lock (m_fileData)
                     {
@@ -1088,7 +1089,7 @@ namespace TVA.IO
                 m_fileData = null;
 
                 // Clear the records loaded in memory.
-                if (m_fileRecords != null)
+                if ((object)m_fileRecords != null)
                 {
                     lock (m_fileRecords)
                     {
@@ -1117,7 +1118,7 @@ namespace TVA.IO
                 {
                     OnDataLoading();
 
-                    if (m_fileRecords == null)
+                    if ((object)m_fileRecords == null)
                         m_fileRecords = new List<T>();
 
                     List<T> records = new List<T>(ReadFromDisk());
@@ -1162,7 +1163,7 @@ namespace TVA.IO
                     OnDataSaving();
 
                     // Saves (persists) records to the file, if present in memory.
-                    if (m_fileRecords != null)
+                    if ((object)m_fileRecords != null)
                     {
                         lock (m_fileRecords)
                         {
@@ -1196,7 +1197,7 @@ namespace TVA.IO
         {
             if (IsOpen)
             {
-                if (m_fileRecords == null)
+                if ((object)m_fileRecords == null)
                 {
                     WriteToDisk(records);
                 }
@@ -1224,9 +1225,9 @@ namespace TVA.IO
         {
             if (IsOpen)
             {
-                if (record != null)
+                if ((object)record != null)
                 {
-                    int lastRecordIndex = m_fileRecords == null ? RecordsOnDisk : RecordsInMemory;
+                    int lastRecordIndex = (object)m_fileRecords == null ? RecordsOnDisk : RecordsInMemory;
                     if (recordIndex > lastRecordIndex + 1)
                     {
                         // Write missing intermediate records.
@@ -1236,7 +1237,7 @@ namespace TVA.IO
                         }
                     }
 
-                    if (m_fileRecords == null)
+                    if ((object)m_fileRecords == null)
                     {
                         // Write directly to the file.
                         WriteToDisk(recordIndex, record);
@@ -1282,7 +1283,7 @@ namespace TVA.IO
         {
             if (IsOpen)
             {
-                if (m_fileRecords == null)
+                if ((object)m_fileRecords == null)
                 {
                     // Reads persisted records if no records are in memory.
                     return ReadFromDisk();
@@ -1316,12 +1317,12 @@ namespace TVA.IO
                 if (recordIndex > 0)
                 {
                     // ID of the requested record is valid.
-                    if (m_fileRecords == null && recordIndex <= RecordsOnDisk)
+                    if ((object)m_fileRecords == null && recordIndex <= RecordsOnDisk)
                     {
                         // Reads the requested record exists in the file.
                         record = ReadFromDisk(recordIndex);
                     }
-                    else if ((m_fileRecords != null) && recordIndex <= RecordsInMemory)
+                    else if (((object)m_fileRecords != null) && recordIndex <= RecordsInMemory)
                     {
                         // Uses the requested record from memory.
                         lock (m_fileRecords)
@@ -1344,7 +1345,7 @@ namespace TVA.IO
         /// </summary>
         protected virtual void OnFileModified()
         {
-            if (FileModified != null)
+            if ((object)FileModified != null)
                 FileModified(this, EventArgs.Empty);
         }
 
@@ -1353,7 +1354,7 @@ namespace TVA.IO
         /// </summary>
         protected virtual void OnDataLoading()
         {
-            if (DataLoading != null)
+            if ((object)DataLoading != null)
                 DataLoading(this, EventArgs.Empty);
         }
 
@@ -1362,7 +1363,7 @@ namespace TVA.IO
         /// </summary>
         protected virtual void OnDataLoaded()
         {
-            if (DataLoaded != null)
+            if ((object)DataLoaded != null)
                 DataLoaded(this, EventArgs.Empty);
         }
 
@@ -1371,7 +1372,7 @@ namespace TVA.IO
         /// </summary>
         protected virtual void OnDataSaving()
         {
-            if (DataSaving != null)
+            if ((object)DataSaving != null)
                 DataSaving(this, EventArgs.Empty);
         }
 
@@ -1380,7 +1381,7 @@ namespace TVA.IO
         /// </summary>
         protected virtual void OnDataSaved()
         {
-            if (DataSaved != null)
+            if ((object)DataSaved != null)
                 DataSaved(this, EventArgs.Empty);
         }
 
@@ -1401,19 +1402,19 @@ namespace TVA.IO
                         Close();
                         SaveSettings();
 
-                        if (m_loadWaitHandle != null)
+                        if ((object)m_loadWaitHandle != null)
                             m_loadWaitHandle.Close();
 
-                        if (m_saveWaitHandle != null)
+                        if ((object)m_saveWaitHandle != null)
                             m_saveWaitHandle.Close();
 
-                        if (m_autoSaveTimer != null)
+                        if ((object)m_autoSaveTimer != null)
                         {
                             m_autoSaveTimer.Elapsed -= m_autoSaveTimer_Elapsed;
                             m_autoSaveTimer.Dispose();
                         }
 
-                        if (m_fileWatcher != null)
+                        if ((object)m_fileWatcher != null)
                         {
                             m_fileWatcher.Changed -= m_fileWatcher_Changed;
                             m_fileWatcher.Dispose();
@@ -1509,7 +1510,7 @@ namespace TVA.IO
             try
             {
                 // Automatically save records to disk if loaded in memory.
-                if (m_autoSaveTimer.Enabled && (m_fileRecords != null) && IsOpen)
+                if (m_autoSaveTimer.Enabled && ((object)m_fileRecords != null) && IsOpen)
                     Save();
             }
             catch
@@ -1524,7 +1525,7 @@ namespace TVA.IO
                 OnFileModified();
 
                 // Reload records if they have been loaded in memory and reloading is enabled.
-                if (m_fileWatcher.EnableRaisingEvents && (m_fileRecords != null) && m_reloadOnModify)
+                if (m_fileWatcher.EnableRaisingEvents && ((object)m_fileRecords != null) && m_reloadOnModify)
                     Load();
             }
             catch

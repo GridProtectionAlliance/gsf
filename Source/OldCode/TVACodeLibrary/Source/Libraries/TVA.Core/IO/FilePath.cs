@@ -358,6 +358,7 @@ namespace TVA.IO
 
         #region [ Methods ]
 
+#if !MONO
         /// <summary>
         /// Connects to a network share with the specified user's credentials.
         /// </summary>
@@ -401,6 +402,7 @@ namespace TVA.IO
             if (result != 0)
                 throw new InvalidOperationException("Failed to disconnect from network share \"" + sharename + "\" - " + WindowsApi.GetErrorMessage(result));
         }
+#endif
 
         /// <summary>
         /// Determines whether the specified file name matches any of the given file specs (wildcards are defined as '*' or '?' characters).
@@ -806,7 +808,8 @@ namespace TVA.IO
             else
                 fileName = fileName.Trim();
 
-            if (length < 12) length = 12;
+            if (length < 12)
+                length = 12;
 
             if (fileName.Length > length)
             {
@@ -899,7 +902,7 @@ namespace TVA.IO
                     // Keeps trying to open the file.
                 }
 
-                if (targetFile != null)
+                if ((object)targetFile != null)
                 {
                     try
                     {
@@ -958,7 +961,7 @@ namespace TVA.IO
                     // Keeps trying to open the file.
                 }
 
-                if (targetFile != null)
+                if ((object)targetFile != null)
                 {
                     try
                     {

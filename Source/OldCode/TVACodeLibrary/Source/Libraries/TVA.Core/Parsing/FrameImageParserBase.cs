@@ -362,7 +362,7 @@ namespace TVA.Parsing
                 {
                     if (disposing)
                     {
-                        if (m_outputTypes != null)
+                        if ((object)m_outputTypes != null)
                         {
                             foreach (KeyValuePair<TTypeIdentifier, TypeInfo> item in m_outputTypes)
                             {
@@ -381,7 +381,7 @@ namespace TVA.Parsing
                 }
             }
         }
-        
+
         /// <summary>
         /// Start the data parser.
         /// </summary>
@@ -413,10 +413,10 @@ namespace TVA.Parsing
                 // Since user can call this overload with any list of types, we double check the type criteria.
                 // If output type is a class, see if current type derives from it, else if output type is an
                 // interface, see if current type implements it.
-                if (typeCtor != null && !asmType.IsAbstract && 
-                (   
+                if ((object)typeCtor != null && !asmType.IsAbstract &&
+                (
                    (typeof(TOutputType).IsClass && asmType.IsSubclassOf(typeof(TOutputType))) ||
-                   (typeof(TOutputType).IsInterface && asmType.GetInterface(typeof(TOutputType).Name) != null))
+                   (typeof(TOutputType).IsInterface && (object)asmType.GetInterface(typeof(TOutputType).Name) != null))
                 )
                 {
                     // The type meets the following criteria:
@@ -467,7 +467,7 @@ namespace TVA.Parsing
             commonHeader = ParseCommonHeader(buffer, offset, length);
 
             // See if there was enough buffer to parse common header, if not exit and wait for more data
-            if (commonHeader == null)
+            if ((object)commonHeader == null)
                 return 0;
 
             // Lookup TypeID to see if it is a known type
@@ -496,7 +496,7 @@ namespace TVA.Parsing
                     if (syncBytesPosition > -1)
                         return syncBytesPosition - offset;
                 }
-                
+
                 // Without synchronization bytes we have no choice but to move onto the next buffer of data :(
                 parsedLength = length;
                 OnDataDiscarded(buffer.BlockCopy(offset, length));
@@ -504,7 +504,7 @@ namespace TVA.Parsing
 
             return parsedLength;
         }
-        
+
         /// <summary>
         /// Parses a common header instance that implements <see cref="ICommonHeader{TTypeIdentifier}"/> for the output type represented
         /// in the binary image.
@@ -534,7 +534,7 @@ namespace TVA.Parsing
         /// <param name="obj">The object that was deserialized from binary image.</param>
         protected virtual void OnDataParsed(TOutputType obj)
         {
-            if (DataParsed != null)
+            if ((object)DataParsed != null)
                 DataParsed(this, new EventArgs<TOutputType>(obj));
         }
 
@@ -544,7 +544,7 @@ namespace TVA.Parsing
         /// <param name="id">The ID of the output type that was not found.</param>
         protected virtual void OnOutputTypeNotFound(TTypeIdentifier id)
         {
-            if (OutputTypeNotFound != null)
+            if ((object)OutputTypeNotFound != null)
                 OutputTypeNotFound(this, new EventArgs<TTypeIdentifier>(id));
         }
 
@@ -555,7 +555,7 @@ namespace TVA.Parsing
         /// <param name="id">The ID of the output type that was defined more than once.</param>
         protected virtual void OnDuplicateTypeHandlerEncountered(Type duplicateType, TTypeIdentifier id)
         {
-            if (DuplicateTypeHandlerEncountered != null)
+            if ((object)DuplicateTypeHandlerEncountered != null)
                 DuplicateTypeHandlerEncountered(this, new EventArgs<Type, TTypeIdentifier>(duplicateType, id));
         }
 

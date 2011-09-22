@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -19,6 +20,8 @@
 //  01/07/2011 - Pinal C. Patel
 //       Updated to sync endpoint security setting with that of the hosting environment so that the 
 //       service can be used in both intranet and internet setting.
+//  09/22/2011 - J. Ritchie Carroll
+//       Added Mono implementation exception regions.
 //
 //*******************************************************************************************************
 
@@ -238,6 +241,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.Net;
 using System.Reflection;
@@ -279,13 +301,17 @@ namespace TVA.Web.Embedded
             WebHttpBinding restBinding = new WebHttpBinding();
             WebHttpBehavior restBehavior = new WebHttpBehavior();
             ServiceEndpoint restEndpoint = host.AddServiceEndpoint(typeof(ISecurityService), restBinding, "rest");
+
             if (enableSecurity)
             {
                 // Enable security on the binding.
                 restBinding.Security.Mode = WebHttpSecurityMode.TransportCredentialOnly;
                 restBinding.Security.Transport.ClientCredentialType = HttpClientCredentialType.Windows;
             }
+
+#if !MONO
             restBehavior.HelpEnabled = true;
+#endif
             restEndpoint.Behaviors.Add(restBehavior);
 
             // Add SOAP endpoint.

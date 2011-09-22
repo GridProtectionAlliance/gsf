@@ -340,7 +340,7 @@ namespace TVA.Net.Ftp
         {
             get
             {
-                return (m_dataStream != null);
+                return ((object)m_dataStream != null);
             }
         }
 
@@ -391,12 +391,12 @@ namespace TVA.Net.Ftp
                         m_root = null;
                         m_current = null;
 
-                        if (m_ctrlChannel != null)
+                        if ((object)m_ctrlChannel != null)
                             m_ctrlChannel.Close();
 
                         m_ctrlChannel = null;
 
-                        if (m_dataStream != null)
+                        if ((object)m_dataStream != null)
                             m_dataStream.Dispose();
 
                         m_dataStream = null;
@@ -423,7 +423,7 @@ namespace TVA.Net.Ftp
             // to null when DataStream call EndDataTransfer
             FtpDataStream tempDataStream = m_dataStream;
 
-            if (!(tempDataStream == null))
+            if ((object)tempDataStream != null)
             {
                 tempDataStream.Abort();
 
@@ -457,7 +457,7 @@ namespace TVA.Net.Ftp
         {
             lock (this)
             {
-                if (m_dataStream != null)
+                if ((object)m_dataStream != null)
                     throw new FtpDataTransferException();
 
                 m_dataStream = stream;
@@ -468,7 +468,7 @@ namespace TVA.Net.Ftp
         {
             lock (this)
             {
-                if (m_dataStream == null)
+                if ((object)m_dataStream == null)
                     throw new InvalidOperationException();
 
                 m_dataStream = null;

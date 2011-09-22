@@ -17,6 +17,8 @@
 //       Edited code comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/22/2011 - J. Ritchie Carroll
+//       Added Mono implementation exception regions.
 //
 //*******************************************************************************************************
 
@@ -329,6 +331,9 @@ namespace TVA.IO
         /// <summary>
         /// Determines whether or not to attempt network connection to share specified in <see cref="ExportDestination.DestinationFile"/>.
         /// </summary>
+        /// <remarks>
+        /// This option is ignored under Mono deployments.
+        /// </remarks>
         public bool ConnectToShare
         {
             get
@@ -344,6 +349,9 @@ namespace TVA.IO
         /// <summary>
         /// Domain used to authenticate network connection if <see cref="ExportDestination.ConnectToShare"/> is true.
         /// </summary>
+        /// <remarks>
+        /// This option is ignored under Mono deployments.
+        /// </remarks>
         public string Domain
         {
             get
@@ -359,6 +367,9 @@ namespace TVA.IO
         /// <summary>
         /// User name used to authenticate network connection if <see cref="ExportDestination.ConnectToShare"/> is true.
         /// </summary>
+        /// <remarks>
+        /// This option is ignored under Mono deployments.
+        /// </remarks>
         public string UserName
         {
             get
@@ -374,6 +385,9 @@ namespace TVA.IO
         /// <summary>
         /// Password used to authenticate network connection if <see cref="ExportDestination.ConnectToShare"/> is true.
         /// </summary>
+        /// <remarks>
+        /// This option is ignored under Mono deployments.
+        /// </remarks>
         public string Password
         {
             get

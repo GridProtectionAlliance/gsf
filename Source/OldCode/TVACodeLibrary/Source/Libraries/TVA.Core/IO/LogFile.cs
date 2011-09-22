@@ -401,7 +401,7 @@ namespace TVA.IO
         public LogFile(IContainer container)
             : this()
         {
-            if (container != null)
+            if ((object)container != null)
                 container.Add(this);
         }
 
@@ -527,7 +527,7 @@ namespace TVA.IO
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     m_textEncoding = Encoding.Default;
                 else
                     m_textEncoding = value;
@@ -562,7 +562,7 @@ namespace TVA.IO
         {
             get
             {
-                return (m_fileStream != null);
+                return ((object)m_fileStream != null);
             }
         }
 
@@ -598,7 +598,7 @@ namespace TVA.IO
                 status.Append(m_fileFullOperation);
                 status.AppendLine();
 
-                if (m_logEntryQueue != null)
+                if ((object)m_logEntryQueue != null)
                     status.Append(m_logEntryQueue.Status);
 
                 return status.ToString();
@@ -777,7 +777,7 @@ namespace TVA.IO
                     // Stops processing the queued log entries.
                     m_logEntryQueue.Stop();
 
-                if (m_fileStream != null)
+                if ((object)m_fileStream != null)
                 {
                     // Closes the log file.
                     m_fileStream.Close();
@@ -878,7 +878,7 @@ namespace TVA.IO
         /// </summary>
         protected virtual void OnFileFull()
         {
-            if (FileFull != null)
+            if ((object)FileFull != null)
                 FileFull(this, EventArgs.Empty);
         }
 
@@ -888,7 +888,7 @@ namespace TVA.IO
         /// <param name="ex"><see cref="Exception"/> to send to <see cref="LogException"/> event.</param>
         protected virtual void OnLogException(Exception ex)
         {
-            if (LogException != null)
+            if ((object)LogException != null)
                 LogException(this, new EventArgs<Exception>(ex));
         }
 
@@ -910,13 +910,13 @@ namespace TVA.IO
 
                         this.FileFull -= LogFile_FileFull;
 
-                        if (m_operationWaitHandle != null)
+                        if ((object)m_operationWaitHandle != null)
                             m_operationWaitHandle.Close();
 
-                        if (m_fileStream != null)
+                        if ((object)m_fileStream != null)
                             m_fileStream.Dispose();
 
-                        if (m_logEntryQueue != null)
+                        if ((object)m_logEntryQueue != null)
                         {
                             m_logEntryQueue.ProcessException -= ProcessExceptionHandler;
                             m_logEntryQueue.Dispose();
@@ -1012,8 +1012,8 @@ namespace TVA.IO
                     try
                     {
                         Close(false);
-                        File.Move(m_fileName, FilePath.GetDirectoryName(m_fileName) + 
-                                              FilePath.GetFileNameWithoutExtension(m_fileName) + "_" + 
+                        File.Move(m_fileName, FilePath.GetDirectoryName(m_fileName) +
+                                              FilePath.GetFileNameWithoutExtension(m_fileName) + "_" +
                                               File.GetCreationTime(m_fileName).ToString("yyyy-MM-dd hh!mm!ss") + "_to_" +
                                               File.GetLastWriteTime(m_fileName).ToString("yyyy-MM-dd hh!mm!ss") + FilePath.GetExtension(m_fileName));
                     }

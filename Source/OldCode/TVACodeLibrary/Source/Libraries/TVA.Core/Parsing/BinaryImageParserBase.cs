@@ -275,7 +275,7 @@ namespace TVA.Parsing
         public event EventHandler<EventArgs<Exception>> ParsingException;
 
         // Fields
-        
+
         /// <summary>
         /// Tracks if data stream has been initialized.
         /// </summary>
@@ -304,7 +304,7 @@ namespace TVA.Parsing
         /// Creates a new instance of the <see cref="BinaryImageParserBase"/> class.
         /// </summary>
         protected BinaryImageParserBase()
-	    {
+        {
             m_protocolSyncBytes = DefaultProtocolSyncBytes;
             m_name = this.GetType().Name;
         }
@@ -648,7 +648,7 @@ namespace TVA.Parsing
             try
             {
                 // Prepend any left over buffer data from last parse call
-                if (UnparsedBuffer != null)
+                if ((object)UnparsedBuffer != null)
                 {
                     // Combine remaining buffer from last call and current buffer together as a single image
                     buffer = UnparsedBuffer.Combine(0, UnparsedBuffer.Length, buffer, offset, count);
@@ -681,7 +681,7 @@ namespace TVA.Parsing
                             {
                                 // Found the next sync byte(s), pass through malformed frame
                                 parsedFrameLength = syncBytesPosition - offset;
-                                
+
                                 // We'll still let consumer know there was an issue
                                 OnDataDiscarded(buffer.BlockCopy(offset, parsedFrameLength));
                                 OnParsingException(ex);
@@ -760,7 +760,7 @@ namespace TVA.Parsing
         /// <param name="buffer">Source buffer that contains output that failed to parse.</param>
         protected virtual void OnDataDiscarded(byte[] buffer)
         {
-            if (DataDiscarded != null)
+            if ((object)DataDiscarded != null)
                 DataDiscarded(this, new EventArgs<byte[]>(buffer));
         }
 
@@ -770,7 +770,7 @@ namespace TVA.Parsing
         /// <param name="ex">The <see cref="Exception"/> that was encountered during parsing.</param>
         protected virtual void OnParsingException(Exception ex)
         {
-            if (ParsingException != null)
+            if ((object)ParsingException != null)
                 ParsingException(this, new EventArgs<Exception>(ex));
         }
 

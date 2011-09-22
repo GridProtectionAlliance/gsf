@@ -288,7 +288,7 @@ namespace TVA.Net.Ftp
         {
             get
             {
-                return (m_tcpClient == null);
+                return ((object)m_tcpClient == null);
             }
         }
 
@@ -483,7 +483,7 @@ namespace TVA.Net.Ftp
         {
             if (m_userAbort)
                 throw new FtpUserAbortException();
-            
+
             m_stream.Write(buffer, offset, count);
         }
 

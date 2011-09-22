@@ -316,7 +316,9 @@ namespace TVA
         {
             get
             {
-                if (s_endianOrder == null) s_endianOrder = new BigEndianOrder();
+                if ((object)s_endianOrder == null)
+                    s_endianOrder = new BigEndianOrder();
+
                 return s_endianOrder;
             }
         }
@@ -352,7 +354,9 @@ namespace TVA
         {
             get
             {
-                if (s_endianOrder == null) s_endianOrder = new LittleEndianOrder();
+                if ((object)s_endianOrder == null)
+                    s_endianOrder = new LittleEndianOrder();
+
                 return s_endianOrder;
             }
         }
@@ -388,7 +392,9 @@ namespace TVA
         {
             get
             {
-                if (s_endianOrder == null) s_endianOrder = new NativeEndianOrder();
+                if ((object)s_endianOrder == null)
+                    s_endianOrder = new NativeEndianOrder();
+
                 return s_endianOrder;
             }
         }

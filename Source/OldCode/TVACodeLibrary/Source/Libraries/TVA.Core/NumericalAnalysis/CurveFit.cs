@@ -267,10 +267,10 @@ namespace TVA.NumericalAnalysis
         /// <returns>An array of <see cref="Double"/> values.</returns>
         public static double[] Compute(int polynomialOrder, IList<double> xValues, IList<double> yValues)
         {
-            if (xValues == null)
+            if ((object)xValues == null)
                 throw new ArgumentNullException("xValues");
 
-            if (yValues == null)
+            if ((object)yValues == null)
                 throw new ArgumentNullException("yValues");
 
             if (xValues.Count != yValues.Count)
@@ -333,7 +333,8 @@ namespace TVA.NumericalAnalysis
                 divB = b[0, 0];
                 for (j = l; j <= lb; j++)
                 {
-                    if (divB == 0) divB = 1;
+                    if (divB == 0)
+                        divB = 1;
                     b[l, j] = b[l, j] / divB;
                 }
 

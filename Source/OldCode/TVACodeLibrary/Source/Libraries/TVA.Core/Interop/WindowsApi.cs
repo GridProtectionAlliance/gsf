@@ -21,6 +21,8 @@
 //       Added WindowsAPI methods used to define automation of service failure actions.
 //  02/20/2011 - J. Ritchie Carroll
 //       Added WindowsAPI methods used to help with UAC (User Account Control).
+//  09/21/2011 - J. Ritchie Carroll
+//       Excluded class from Mono deployments due to P/Invoke requirements.
 //
 //*******************************************************************************************************
 
@@ -282,6 +284,7 @@ using System.Runtime.InteropServices;
 
 namespace TVA.Interop
 {
+#if !MONO
     /// <summary>
     /// Defines common Windows API constants, enumerations, structures and functions.
     /// </summary>
@@ -1153,4 +1156,5 @@ namespace TVA.Interop
             return GetErrorMessage(Marshal.GetLastWin32Error());
         }
     }
+#endif
 }

@@ -356,7 +356,8 @@ namespace TVA.Units
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Current"/>.</exception>
         public int CompareTo(object value)
         {
-            if (value == null) return 1;
+            if ((object)value == null)
+                return 1;
 
             if (!(value is double) && !(value is Current))
                 throw new ArgumentException("Argument must be a Double or a Current");
@@ -923,7 +924,7 @@ namespace TVA.Units
         public static readonly Current MinValue = (Current)double.MinValue;
 
         // Static Methods
-        
+
         /// <summary>
         /// Creates a new <see cref="Current"/> value from the specified <paramref name="value"/> in abamperes.
         /// </summary>
@@ -944,6 +945,6 @@ namespace TVA.Units
             return new Current(value * StatamperesFactor);
         }
 
-        #endregion        
+        #endregion
     }
 }

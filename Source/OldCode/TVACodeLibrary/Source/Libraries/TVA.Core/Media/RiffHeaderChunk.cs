@@ -345,7 +345,7 @@ namespace TVA.Media
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 if (value.Length != 4)

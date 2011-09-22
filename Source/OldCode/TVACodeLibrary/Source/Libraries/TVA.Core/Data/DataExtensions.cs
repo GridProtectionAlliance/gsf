@@ -50,6 +50,8 @@
 //  09/19/2011 - Stephen C. Wills
 //       Modified AddParametersWithValues() to parse parameters prefixed
 //       with a colon for Oracle database compatibility.
+//  09/21/2011 - J. Ritchie Carroll
+//       Added Mono implementation exception regions.
 //
 //*******************************************************************************************************
 
@@ -1383,7 +1385,7 @@ namespace TVA.Data
         {
             object value = row.Field<object>(field);
 
-            if (value == null)
+            if ((object)value == null)
                 return null;
             else
                 return (T)Convert.ChangeType(value, typeof(T));
@@ -1458,9 +1460,14 @@ namespace TVA.Data
         /// </summary>
         /// <param name="command">The <see cref="OleDbCommand"/> whose parameters are to be populated.</param>
         /// <param name="parameters">The parameter values to populate the <see cref="OleDbCommand"/> parameters with.</param>
+        /// <remarks>
+        /// Automatic parameter derivation is currently not support for OleDB connections under Mono deployments.
+        /// </remarks>
         public static void PopulateParameters(this OleDbCommand command, object[] parameters)
         {
+#if !MONO
             command.PopulateParameters(OleDbCommandBuilder.DeriveParameters, parameters);
+#endif
         }
 
         /// <summary>
@@ -1479,9 +1486,14 @@ namespace TVA.Data
         /// </summary>
         /// <param name="command">The <see cref="OdbcCommand"/> whose parameters are to be populated.</param>
         /// <param name="parameters">The parameter values to populate the <see cref="OdbcCommand"/> parameters with.</param>
+        /// <remarks>
+        /// Automatic parameter derivation is currently not support for ODBC connections under Mono deployments.
+        /// </remarks>
         public static void PopulateParameters(this OdbcCommand command, object[] parameters)
         {
+#if !MONO
             command.PopulateParameters(OdbcCommandBuilder.DeriveParameters, parameters);
+#endif
         }
 
         /// <summary>
@@ -1519,7 +1531,7 @@ namespace TVA.Data
         public static void PopulateParameters<TDbCommand>(this TDbCommand command, Action<TDbCommand> deriveParameters, object[] values) where TDbCommand : IDbCommand
         {
             // tmshults 12/10/2004
-            if (values != null)
+            if ((object)values != null)
             {
                 string commandText = command.CommandText;
 

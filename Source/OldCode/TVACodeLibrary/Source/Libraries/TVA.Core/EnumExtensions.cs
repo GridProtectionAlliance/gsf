@@ -375,7 +375,7 @@ namespace TVA
         // Internal extension to lookup description from DescriptionAttribute
         private static string GetDescription(this FieldInfo value)
         {
-            if (value != null)
+            if ((object)value != null)
             {
                 DescriptionAttribute descriptionAttribute;
 

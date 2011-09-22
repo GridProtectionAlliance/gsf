@@ -377,8 +377,11 @@ namespace TVA
         /// <exception cref="ArgumentException">value is not an Int32 or Int24.</exception>
         public int CompareTo(object value)
         {
-            if (value == null) return 1;
-            if (!(value is int) && !(value is Int24)) throw new ArgumentException("Argument must be an Int32 or an Int24");
+            if ((object)value == null)
+                return 1;
+
+            if (!(value is int) && !(value is Int24))
+                throw new ArgumentException("Argument must be an Int32 or an Int24");
 
             int num = (int)value;
             return (m_value < num ? -1 : (m_value > num ? 1 : 0));
@@ -424,7 +427,8 @@ namespace TVA
         /// </returns>
         public override bool Equals(object obj)
         {
-            if (obj is int || obj is Int24) return Equals((int)obj);
+            if (obj is int || obj is Int24)
+                return Equals((int)obj);
             return false;
         }
 
@@ -1669,7 +1673,7 @@ namespace TVA
         /// <exception cref="ArgumentException"><paramref name="value"/> length from <paramref name="startIndex"/> is too small to represent an <see cref="Int24"/>.</exception>
         public static Int24 GetValue(byte[] value, int startIndex)
         {
-            if (value == null)
+            if ((object)value == null)
                 throw new ArgumentNullException("value");
 
             if (startIndex >= value.Length)

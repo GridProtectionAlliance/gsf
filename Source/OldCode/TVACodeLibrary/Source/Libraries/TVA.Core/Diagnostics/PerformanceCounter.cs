@@ -627,7 +627,7 @@ namespace TVA.Diagnostics
                     if (disposing)
                     {
                         // This will be done only when the object is disposed by calling Dispose().
-                        if (m_counter != null)
+                        if ((object)m_counter != null)
                             m_counter.Dispose();
 
                         m_counter = null;
@@ -647,7 +647,7 @@ namespace TVA.Diagnostics
         /// </summary>
         public void Sample()
         {
-            if (m_counter != null)
+            if ((object)m_counter != null)
             {
                 float currentSample = m_counter.NextValue();
 

@@ -16,6 +16,8 @@
 //       themselves lower than full access to existing mutexes and semaphores.
 //  08/12/2011 - J. Ritchie Carroll
 //       Modified creation methods such that locking natives are created in a synchronized fashion.
+//  09/21/2011 - J. Ritchie Carroll
+//       Added Mono implementation exception regions.
 //
 //*******************************************************************************************************
 
@@ -325,6 +327,26 @@ namespace TVA.Threading
                 unauthorized = true;
             }
 
+            // Mono Mutex implementations do not include ability to change access rules
+#if MONO
+            // If mutex does not exist we create it
+            if (doesNotExist || unauthorized)
+            {
+                try
+                {
+                    bool mutexWasCreated;
+
+                    namedMutex = new Mutex(false, mutexName, out mutexWasCreated);
+
+                    if (!mutexWasCreated)
+                        throw new InvalidOperationException("Failed to create mutex.");
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    throw new InvalidOperationException("Failed to create mutex: " + ex.Message);
+                }
+            }
+#else
             // If mutex does not exist we create it
             if (doesNotExist)
             {
@@ -369,6 +391,7 @@ namespace TVA.Threading
                 namedMutex.SetAccessControl(security);
                 namedMutex = Mutex.OpenExisting(mutexName);
             }
+#endif
 
             return namedMutex;
         }
@@ -428,6 +451,26 @@ namespace TVA.Threading
                 unauthorized = true;
             }
 
+            // Mono Semaphore implementations do not include ability to change access rules
+#if MONO
+            // If semaphore does not exist we create it
+            if (doesNotExist || unauthorized)
+            {
+                try
+                {
+                    bool semaphoreWasCreated;
+
+                    namedSemaphore = new Semaphore(initialCount, maximumCount, semaphoreName, out semaphoreWasCreated);
+
+                    if (!semaphoreWasCreated)
+                        throw new InvalidOperationException("Failed to create semaphore.");
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    throw new InvalidOperationException("Failed to create semaphore: " + ex.Message);
+                }
+            }
+#else
             // If semaphore does not exist we create it
             if (doesNotExist)
             {
@@ -471,6 +514,7 @@ namespace TVA.Threading
                 namedSemaphore.SetAccessControl(security);
                 namedSemaphore = Semaphore.OpenExisting(semaphoreName);
             }
+#endif
 
             return namedSemaphore;
         }

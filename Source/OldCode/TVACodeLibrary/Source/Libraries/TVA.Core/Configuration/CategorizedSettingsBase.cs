@@ -400,7 +400,7 @@ namespace TVA.Configuration
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new NullReferenceException("value cannot be null");
 
                 m_configFile = value;

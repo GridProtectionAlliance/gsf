@@ -314,7 +314,7 @@ namespace TVA.Units
     /// </remarks>
     [Serializable()]
     public struct Time : IComparable, IFormattable, IConvertible, IComparable<Time>, IComparable<TimeSpan>, IComparable<Double>, IEquatable<Time>, IEquatable<TimeSpan>, IEquatable<Double>
-    {       
+    {
         #region [ Members ]
 
         // Constants
@@ -511,7 +511,8 @@ namespace TVA.Units
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Time"/>.</exception>
         public int CompareTo(object value)
         {
-            if (value == null) return 1;
+            if ((object)value == null)
+                return 1;
 
             if (!(value is double) && !(value is Time) && !(value is DateTime) && !(value is TimeSpan))
                 throw new ArgumentException("Argument must be a Double or a Time");
@@ -1238,6 +1239,6 @@ namespace TVA.Units
             return total;
         }
 
-        #endregion        
+        #endregion
     }
 }

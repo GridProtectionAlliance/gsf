@@ -492,7 +492,7 @@ namespace TVA
             }
             finally
             {
-                if (stream != null)
+                if ((object)stream != null)
                     stream.Dispose();
             }
         }
@@ -508,10 +508,10 @@ namespace TVA
         /// <exception cref="NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
         public static void Serialize<T>(T serializableObject, SerializationFormat serializationFormat, ref Stream serializedOutput)
         {
-            if (serializedOutput == null)
+            if ((object)serializedOutput == null)
                 throw new ArgumentNullException("serializedOutput");
 
-            if (serializableObject == null)
+            if ((object)serializableObject == null)
                 throw new ArgumentNullException("serializableObject");
 
             // Serialize object to the provided stream.
@@ -563,7 +563,7 @@ namespace TVA
         /// <exception cref="NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
         public static T Deserialize<T>(byte[] serializedObject, SerializationFormat serializationFormat)
         {
-            if (serializedObject == null)
+            if ((object)serializedObject == null)
                 throw new ArgumentNullException("serializedObject");
 
             Stream stream = null;
@@ -575,7 +575,7 @@ namespace TVA
             }
             finally
             {
-                if (stream != null)
+                if ((object)stream != null)
                     stream.Dispose();
             }
         }
@@ -591,7 +591,7 @@ namespace TVA
         /// <exception cref="NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
         public static T Deserialize<T>(Stream serializedObject, SerializationFormat serializationFormat)
         {
-            if (serializedObject == null)
+            if ((object)serializedObject == null)
                 throw new ArgumentNullException("serializedObject");
 
             // Deserialize the serialized object.

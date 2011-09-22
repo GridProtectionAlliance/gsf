@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -12,6 +13,8 @@
 //       Generated original version of source code.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/21/2011 - J. Ritchie Carroll
+//       Excluded class from Mono deployments due to P/Invoke requirements.
 //
 //*******************************************************************************************************
 
@@ -231,12 +234,32 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.ComponentModel;
 using TVA.Interop;
 
 namespace TVA.Configuration
 {
+#if !MONO
     /// <summary>
     /// Represents the base class for application settings that are synchronized to an INI file.
     /// </summary>
@@ -396,7 +419,7 @@ namespace TVA.Configuration
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new NullReferenceException("value cannot be null");
 
                 m_iniFile = value;
@@ -522,4 +545,5 @@ namespace TVA.Configuration
 
         #endregion
     }
+#endif
 }

@@ -340,7 +340,7 @@ namespace TVA.Net.Ftp
             {
                 m_name = info.Name;
 
-                if (parent == null)
+                if ((object)parent == null)
                     m_fullPath = m_name + "/";
                 else
                     m_fullPath = parent.FullPath + m_name + "/";
@@ -479,7 +479,7 @@ namespace TVA.Net.Ftp
                     return null;
 
                 // If we don't have a reference to parent directory, we try to derive it...
-                if (m_parent == null)
+                if ((object)m_parent == null)
                 {
                     CheckSessionCurrentDirectory();
 
@@ -607,7 +607,7 @@ namespace TVA.Net.Ftp
 
             FileInfo fi = new FileInfo(localFile);
 
-            if (remoteFile == null)
+            if ((object)remoteFile == null)
                 remoteFile = fi.Name;
 
             FtpFileTransferer transfer = new FtpFileTransferer(this, localFile, remoteFile, fi.Length, TransferDirection.Upload);
@@ -666,7 +666,7 @@ namespace TVA.Net.Ftp
 
             FileInfo fi = new FileInfo(localFile);
 
-            if (remoteFile == null)
+            if ((object)remoteFile == null)
                 remoteFile = fi.Name;
 
             FtpFileTransferer transfer = new FtpFileTransferer(this, localFile, remoteFile, fi.Length, TransferDirection.Upload);
@@ -805,7 +805,7 @@ namespace TVA.Net.Ftp
             foreach (string line in lineQueue)
             {
                 // We allow users to inspect FTP lineQueue if desired...
-                if (DirectoryListLineScan != null)
+                if ((object)DirectoryListLineScan != null)
                     DirectoryListLineScan(line);
 
                 try
@@ -822,7 +822,7 @@ namespace TVA.Net.Ftp
                 }
                 catch (FtpExceptionBase ex)
                 {
-                    if (DirectoryScanException != null)
+                    if ((object)DirectoryScanException != null)
                         DirectoryScanException(ex);
                 }
             }
@@ -832,10 +832,10 @@ namespace TVA.Net.Ftp
         {
             CheckSessionCurrentDirectory();
 
-            if (m_subDirectories != null && m_files != null)
+            if ((object)m_subDirectories != null && (object)m_files != null)
                 return;
 
-            if (m_subDirectories == null)
+            if ((object)m_subDirectories == null)
             {
                 if (m_caseInsensitive)
                     m_subDirectories = new Dictionary<string, FtpDirectory>(StringComparer.CurrentCultureIgnoreCase); // New Hashtable(CaseInsensitiveComparer.Default)
@@ -843,7 +843,7 @@ namespace TVA.Net.Ftp
                     m_subDirectories = new Dictionary<string, FtpDirectory>(StringComparer.CurrentCulture); // New Hashtable
             }
 
-            if (m_files == null)
+            if ((object)m_files == null)
             {
                 if (m_caseInsensitive)
                     m_files = new Dictionary<string, FtpFile>(StringComparer.CurrentCultureIgnoreCase); // New Hashtable(CaseInsensitiveHashCodeProvider.Default, CaseInsensitiveComparer.Default)
@@ -858,7 +858,7 @@ namespace TVA.Net.Ftp
         {
             Match m = MatchingListLine(line, ref info.TimeStamp.Style);
 
-            if (m == null)
+            if ((object)m == null)
                 return false;
 
             info.Name = m.Groups["name"].Value;
@@ -937,7 +937,7 @@ namespace TVA.Net.Ftp
         {
             FtpDirectory other = obj as FtpDirectory;
 
-            if (other != null)
+            if ((object)other != null)
                 return (CompareTo(other) == 0);
 
             return false;
@@ -978,7 +978,7 @@ namespace TVA.Net.Ftp
             else
             {
                 IFtpFile file = obj as IFtpFile;
-                if (file == null)
+                if ((object)file == null)
                     return 1;
                 else
                     return ((IComparable<IFtpFile>)this).CompareTo(file);

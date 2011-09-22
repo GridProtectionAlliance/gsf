@@ -300,7 +300,7 @@ namespace TVA.Parsing
         {
             m_bufferQueue = CreateBufferQueue();
             m_bufferQueue.ProcessException += ProcessExceptionHandler;
-            
+
             if (ProtocolUsesSyncBytes)
                 m_sourceInitialized = new Dictionary<TSourceIdentifier, bool>();
 
@@ -322,7 +322,7 @@ namespace TVA.Parsing
         {
             get
             {
-                if (m_bufferQueue != null)
+                if ((object)m_bufferQueue != null)
                     return m_bufferQueue.Count;
                 else
                     return 0;
@@ -372,20 +372,20 @@ namespace TVA.Parsing
                 {
                     if (disposing)
                     {
-                        if (m_bufferQueue != null)
+                        if ((object)m_bufferQueue != null)
                         {
                             m_bufferQueue.ProcessException -= ProcessExceptionHandler;
                             m_bufferQueue.Dispose();
                         }
                         m_bufferQueue = null;
 
-                        if (m_sourceInitialized != null)
+                        if ((object)m_sourceInitialized != null)
                         {
                             m_sourceInitialized.Clear();
                         }
                         m_sourceInitialized = null;
 
-                        if (m_unparsedBuffers != null)
+                        if ((object)m_unparsedBuffers != null)
                         {
                             m_unparsedBuffers.Clear();
                         }
@@ -411,7 +411,7 @@ namespace TVA.Parsing
         {
             base.Start();
 
-            if (m_sourceInitialized != null)
+            if ((object)m_sourceInitialized != null)
                 m_sourceInitialized.Clear();
 
             m_unparsedBuffers.Clear();
@@ -566,7 +566,7 @@ namespace TVA.Parsing
                 buffer = item.Item;
 
                 // Check to see if this data source has been initialized
-                if (m_sourceInitialized != null && !m_sourceInitialized.TryGetValue(m_sourceID, out StreamInitialized))
+                if ((object)m_sourceInitialized != null && !m_sourceInitialized.TryGetValue(m_sourceID, out StreamInitialized))
                     m_sourceInitialized.Add(m_sourceID, true);
 
                 // Restore any unparsed buffers for this data source, if any
@@ -600,8 +600,8 @@ namespace TVA.Parsing
         /// <param name="sourceID">Data source ID.</param>
         /// <param name="parsedData">List of parsed events.</param>
         protected virtual void OnDataParsed(TSourceIdentifier sourceID, List<TOutputType> parsedData)
-        {            
-            if (DataParsed != null)
+        {
+            if ((object)DataParsed != null)
                 DataParsed(this, new EventArgs<TSourceIdentifier, IList<TOutputType>>(sourceID, parsedData));
         }
 
@@ -614,7 +614,7 @@ namespace TVA.Parsing
         // If an error occurs during parsing from a data source, we reset its initialization state
         private void ResetDataSourceInitialization(object sender, EventArgs<byte[]> data)
         {
-            if (m_sourceInitialized != null)
+            if ((object)m_sourceInitialized != null)
                 m_sourceInitialized[m_sourceID] = false;
         }
 

@@ -446,7 +446,8 @@ namespace TVA.Units
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Energy"/>.</exception>
         public int CompareTo(object value)
         {
-            if (value == null) return 1;
+            if ((object)value == null)
+                return 1;
 
             if (!(value is double) && !(value is Energy))
                 throw new ArgumentException("Argument must be a Double or an Energy");
@@ -1094,6 +1095,6 @@ namespace TVA.Units
             return new Energy(value * TonsOfCoalFactor);
         }
 
-        #endregion        
+        #endregion
     }
 }

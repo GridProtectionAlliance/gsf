@@ -406,7 +406,7 @@ namespace TVA.Scheduling
         public ScheduleManager(IContainer container)
             : this()
         {
-            if (container != null)
+            if ((object)container != null)
                 container.Add(this);
         }
 
@@ -463,8 +463,8 @@ namespace TVA.Scheduling
         /// Thread-safety Warning: Due to the asynchronous nature of <see cref="ScheduleManager"/>, a lock must be 
         /// obtained on <see cref="Schedules"/> before accessing it.
         /// </remarks>
-        [Category("Settings"), 
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Content), 
+        [Category("Settings"),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Content),
         Description("Gets a list of all Schedule monitored by the ScheduleManager object.")]
         public List<Schedule> Schedules
         {
@@ -482,7 +482,7 @@ namespace TVA.Scheduling
         {
             get
             {
-                if (m_timer != null)
+                if ((object)m_timer != null)
                     return m_timer.Enabled;
 
                 return false;
@@ -665,7 +665,7 @@ namespace TVA.Scheduling
                     // Add the schedule if it doesn't exist or update it otherwise with data from the config file.
                     Schedule existingSchedule = FindSchedule(setting.Name);
 
-                    if (existingSchedule == null)
+                    if ((object)existingSchedule == null)
                     {
                         // Schedule doesn't exist, so we'll add it.
                         lock (m_schedules)
@@ -689,7 +689,7 @@ namespace TVA.Scheduling
         /// </summary>
         public void Start()
         {
-            if (!IsRunning && m_startTimerThread == null)
+            if (!IsRunning && (object)m_startTimerThread == null)
             {
                 // Initialize if uninitialized.
                 Initialize();
@@ -714,7 +714,7 @@ namespace TVA.Scheduling
         /// </summary>
         public void Stop()
         {
-            if (m_timer != null)
+            if ((object)m_timer != null)
             {
                 m_timer.Elapsed -= m_timer_Elapsed;
                 m_timer.Dispose();
@@ -788,7 +788,8 @@ namespace TVA.Scheduling
         public bool AddSchedule(string scheduleName, string scheduleRule, string scheduleDescription, bool updateExisting)
         {
             Schedule existingSchedule = FindSchedule(scheduleName);
-            if (existingSchedule == null)
+
+            if ((object)existingSchedule == null)
             {
                 // Schedule doesn't exist, so we'll add it.
                 lock (m_schedules)
@@ -825,7 +826,7 @@ namespace TVA.Scheduling
         public bool RemoveSchedule(string scheduleName)
         {
             Schedule scheduleToRemove = FindSchedule(scheduleName);
-            if (scheduleToRemove != null)
+            if ((object)scheduleToRemove != null)
             {
                 // Schedule exists, so remove it.
                 lock (m_schedules)
@@ -869,7 +870,7 @@ namespace TVA.Scheduling
         /// </summary>
         protected virtual void OnStarting()
         {
-            if (Starting != null)
+            if ((object)Starting != null)
                 Starting(this, EventArgs.Empty);
         }
 
@@ -877,8 +878,8 @@ namespace TVA.Scheduling
         /// Raises the <see cref="Started"/> event.
         /// </summary>
         protected virtual void OnStarted()
-        {           
-            if (Started != null)
+        {
+            if ((object)Started != null)
                 Started(this, EventArgs.Empty);
         }
 
@@ -888,7 +889,7 @@ namespace TVA.Scheduling
         /// <param name="schedule"><see cref="Schedule"/> to send to <see cref="ScheduleDue"/> event.</param>
         protected virtual void OnScheduleDue(Schedule schedule)
         {
-            if (ScheduleDue != null)
+            if ((object)ScheduleDue != null)
             {
                 EventArgs<Schedule> args = new EventArgs<Schedule>(schedule);
                 foreach (EventHandler<EventArgs<Schedule>> handler in ScheduleDue.GetInvocationList())
@@ -905,7 +906,7 @@ namespace TVA.Scheduling
         /// <param name="e">Event data.</param>
         protected virtual void OnScheduleDueCheck(EventArgs<Schedule> e)
         {
-            if (ScheduleDueCheck != null)
+            if ((object)ScheduleDueCheck != null)
                 ScheduleDueCheck(this, e);
         }
 
@@ -937,7 +938,7 @@ namespace TVA.Scheduling
 
         private void StartTimer()
         {
-            while (!IsRunning && m_timer != null)
+            while (!IsRunning && (object)m_timer != null)
             {
                 OnStarting();
 
@@ -946,7 +947,7 @@ namespace TVA.Scheduling
                     // We'll start the timer that will check the schedules at top of the minute.
                     m_timer.Start();
                     OnStarted();
-                    
+
                     CheckAllSchedules();
                     break;
                 }

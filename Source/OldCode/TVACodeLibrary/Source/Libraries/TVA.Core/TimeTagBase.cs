@@ -450,7 +450,7 @@ namespace TVA
         {
             TimeTagBase other = obj as TimeTagBase;
 
-            if (other != null)
+            if ((object)other != null)
                 return CompareTo(other);
 
             if (obj is DateTime)

@@ -259,7 +259,9 @@ namespace TVA
         {
             get
             {
-                if (s_atlanticTimeZone == null) s_atlanticTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Atlantic Standard Time");
+                if ((object)s_atlanticTimeZone == null)
+                    s_atlanticTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Atlantic Standard Time");
+
                 return s_atlanticTimeZone;
             }
         }
@@ -271,7 +273,9 @@ namespace TVA
         {
             get
             {
-                if (s_easternTimeZone == null) s_easternTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+                if ((object)s_easternTimeZone == null)
+                    s_easternTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+
                 return s_easternTimeZone;
             }
         }
@@ -283,7 +287,9 @@ namespace TVA
         {
             get
             {
-                if (s_centralTimeZone == null) s_centralTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time");
+                if ((object)s_centralTimeZone == null)
+                    s_centralTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time");
+
                 return s_centralTimeZone;
             }
         }
@@ -295,7 +301,9 @@ namespace TVA
         {
             get
             {
-                if (s_mountainTimeZone == null) s_mountainTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Mountain Standard Time");
+                if ((object)s_mountainTimeZone == null)
+                    s_mountainTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Mountain Standard Time");
+
                 return s_mountainTimeZone;
             }
         }
@@ -307,7 +315,9 @@ namespace TVA
         {
             get
             {
-                if (s_pacificTimeZone == null) s_pacificTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
+                if ((object)s_pacificTimeZone == null)
+                    s_pacificTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
+
                 return s_pacificTimeZone;
             }
         }
@@ -319,7 +329,9 @@ namespace TVA
         {
             get
             {
-                if (s_alaskanTimeZone == null) s_alaskanTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Alaskan Standard Time");
+                if ((object)s_alaskanTimeZone == null)
+                    s_alaskanTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Alaskan Standard Time");
+
                 return s_alaskanTimeZone;
             }
         }
@@ -331,7 +343,9 @@ namespace TVA
         {
             get
             {
-                if (s_hawaiianTimeZone == null) s_hawaiianTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Hawaiian Standard Time");
+                if ((object)s_hawaiianTimeZone == null)
+                    s_hawaiianTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Hawaiian Standard Time");
+
                 return s_hawaiianTimeZone;
             }
         }
@@ -347,7 +361,9 @@ namespace TVA
         {
             get
             {
-                if (s_westPacificTimeZone == null) s_westPacificTimeZone = TimeZoneInfo.FindSystemTimeZoneById("West Pacific Standard Time");
+                if ((object)s_westPacificTimeZone == null)
+                    s_westPacificTimeZone = TimeZoneInfo.FindSystemTimeZoneById("West Pacific Standard Time");
+
                 return s_westPacificTimeZone;
             }
         }
@@ -360,7 +376,9 @@ namespace TVA
         {
             get
             {
-                if (s_samoaTimeZone == null) s_samoaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Samoa Standard Time");
+                if ((object)s_samoaTimeZone == null)
+                    s_samoaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Samoa Standard Time");
+
                 return s_samoaTimeZone;
             }
         }

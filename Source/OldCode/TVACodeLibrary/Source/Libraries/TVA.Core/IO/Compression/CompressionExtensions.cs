@@ -273,7 +273,7 @@ namespace TVA.IO.Compression
         /// Needed version of this library to uncompress stream (1.0.0 stored as byte 100).
         /// </summary>
         public const byte CompressionVersion = 100;
-        
+
         /// <summary>
         /// Compress a byte array using standard compression method.
         /// </summary>
@@ -281,7 +281,7 @@ namespace TVA.IO.Compression
         /// <returns>A compressed version of the source <see cref="Byte"/> array.</returns>
         public static byte[] Compress(this byte[] source)
         {
-	        return source.Compress(CompressionStrength.Standard);
+            return source.Compress(CompressionStrength.Standard);
         }
 
         /// <summary>
@@ -305,7 +305,7 @@ namespace TVA.IO.Compression
         /// <returns>A compressed version of the source <see cref="Byte"/> array.</returns>
         public static byte[] Compress(this byte[] source, int startIndex, int length, CompressionStrength strength)
         {
-	        return source.Compress(startIndex, length, strength, 0);
+            return source.Compress(startIndex, length, strength, 0);
         }
 
         // When user requests multi-pass compression, we allow multiple compression passes on a buffer because
@@ -338,7 +338,7 @@ namespace TVA.IO.Compression
 
                 // Preprend compression depth and extract only used part of compressed buffer
                 byte[] outBuffer = new byte[++destinationLength];
-                
+
                 // First two bits are reserved for compression strength - this leaves 6 bits for a maximum of 64 compressions
                 outBuffer[0] = (byte)((compressionDepth << 2) | (int)strength);
 
@@ -373,9 +373,9 @@ namespace TVA.IO.Compression
         /// <returns>Returns a <see cref="MemoryStream"/> of the compressed <see cref="Stream"/>.</returns>
         public static MemoryStream Compress(this Stream source, CompressionStrength strength)
         {
-	        MemoryStream destination = new MemoryStream();
-	        source.Compress(destination, strength, null);
-	        return destination;
+            MemoryStream destination = new MemoryStream();
+            source.Compress(destination, strength, null);
+            return destination;
         }
 
         /// <summary>
@@ -389,60 +389,60 @@ namespace TVA.IO.Compression
         {
             ProcessProgressHandler<long> progress = null;
             byte[] inBuffer = new byte[BufferSize];
-	        byte[] outBuffer;
-	        byte[] lengthBuffer;
-	        int read;
-	        long total = 0, length = -1;
+            byte[] outBuffer;
+            byte[] lengthBuffer;
+            int read;
+            long total = 0, length = -1;
 
-	        // Send initial progress event
-	        if (progressHandler != null)
-	        {
-		        try
-		        {
-			        if (source.CanSeek)
-				        length = source.Length;
-		        }
-		        catch
-		        {
-			        length = -1;
-		        }
+            // Send initial progress event
+            if ((object)progressHandler != null)
+            {
+                try
+                {
+                    if (source.CanSeek)
+                        length = source.Length;
+                }
+                catch
+                {
+                    length = -1;
+                }
 
                 // Create a new progress handler to track compression progress
                 progress = new ProcessProgressHandler<long>(progressHandler, "Compress", length);
                 progress.Complete = 0;
             }
 
-	        // Read initial buffer
-	        read = source.Read(inBuffer, 0, BufferSize);
+            // Read initial buffer
+            read = source.Read(inBuffer, 0, BufferSize);
 
-	        // Write compression version into stream
-	        byte[] version = new byte[1];
-	        version[0] = CompressionVersion;
-	        destination.Write(version, 0, 1);
+            // Write compression version into stream
+            byte[] version = new byte[1];
+            version[0] = CompressionVersion;
+            destination.Write(version, 0, 1);
 
-	        while (read > 0)
-	        {
-		        // Compress buffer - note that we are only going to compress used part of buffer,
-		        // we don't want any left over garbage to end up in compressed stream...
-			    outBuffer = inBuffer.Compress(0, read, strength);
+            while (read > 0)
+            {
+                // Compress buffer - note that we are only going to compress used part of buffer,
+                // we don't want any left over garbage to end up in compressed stream...
+                outBuffer = inBuffer.Compress(0, read, strength);
 
-		        // The output stream is hopefully smaller than the input stream, so we prepend the final size of
-		        // each compressed buffer into the destination output stream so that we can safely uncompress
-		        // the stream in a "chunked" fashion later...
-		        lengthBuffer = BitConverter.GetBytes(outBuffer.Length);
-		        destination.Write(lengthBuffer, 0, lengthBuffer.Length);
-		        destination.Write(outBuffer, 0, outBuffer.Length);
+                // The output stream is hopefully smaller than the input stream, so we prepend the final size of
+                // each compressed buffer into the destination output stream so that we can safely uncompress
+                // the stream in a "chunked" fashion later...
+                lengthBuffer = BitConverter.GetBytes(outBuffer.Length);
+                destination.Write(lengthBuffer, 0, lengthBuffer.Length);
+                destination.Write(outBuffer, 0, outBuffer.Length);
 
-		        // Update compression progress
-		        if (progressHandler != null)
-		        {
-			        total += read;
-			        progress.Complete = total;
-		        }
+                // Update compression progress
+                if ((object)progressHandler != null)
+                {
+                    total += read;
+                    progress.Complete = total;
+                }
 
-		        // Read next buffer
-		        read = source.Read(inBuffer, 0, BufferSize);
-	        }
+                // Read next buffer
+                read = source.Read(inBuffer, 0, BufferSize);
+            }
         }
 
         /// <summary>
@@ -505,9 +505,9 @@ namespace TVA.IO.Compression
         /// <returns>A <see cref="MemoryStream"/> representing the decompressed source.</returns>
         public static MemoryStream Decompress(this Stream source)
         {
-	        MemoryStream destination = new MemoryStream();
-	        source.Decompress(destination, null);
-	        return destination;
+            MemoryStream destination = new MemoryStream();
+            source.Decompress(destination, null);
+            return destination;
         }
 
         /// <summary>
@@ -520,70 +520,70 @@ namespace TVA.IO.Compression
         {
             ProcessProgressHandler<long> progress = null;
             byte[] inBuffer;
-	        byte[] outBuffer;
-	        byte[] lengthBuffer = BitConverter.GetBytes((int)0);
-	        int read, size;
-	        long total = 0, length = -1;
+            byte[] outBuffer;
+            byte[] lengthBuffer = BitConverter.GetBytes((int)0);
+            int read, size;
+            long total = 0, length = -1;
 
-	        // Send initial progress event
-	        if (progressHandler != null)
-	        {
-		        try
-		        {
-			        if (source.CanSeek)
-				        length = source.Length;
-		        }
-		        catch
-		        {
-			        length = -1;
-		        }
+            // Send initial progress event
+            if ((object)progressHandler != null)
+            {
+                try
+                {
+                    if (source.CanSeek)
+                        length = source.Length;
+                }
+                catch
+                {
+                    length = -1;
+                }
 
                 // Create a new progress handler to track compression progress
                 progress = new ProcessProgressHandler<long>(progressHandler, "Uncompress", length);
                 progress.Complete = 0;
             }
 
-	        // Read compression version from stream
-	        byte[] versionBuffer = new byte[1];
+            // Read compression version from stream
+            byte[] versionBuffer = new byte[1];
 
-	        if (source.Read(versionBuffer, 0, 1) > 0)
-	        {
-		        if (versionBuffer[0] != CompressionVersion)
-			        throw new InvalidOperationException("Invalid compression version encountered in compressed stream - decompression aborted");
+            if (source.Read(versionBuffer, 0, 1) > 0)
+            {
+                if (versionBuffer[0] != CompressionVersion)
+                    throw new InvalidOperationException("Invalid compression version encountered in compressed stream - decompression aborted");
 
-		        // Read initial buffer
-		        read = source.Read(lengthBuffer, 0, lengthBuffer.Length);
+                // Read initial buffer
+                read = source.Read(lengthBuffer, 0, lengthBuffer.Length);
 
-		        while (read > 0)
-		        {
-			        // Convert the byte array containing the buffer size into an integer
-			        size = BitConverter.ToInt32(lengthBuffer, 0);
+                while (read > 0)
+                {
+                    // Convert the byte array containing the buffer size into an integer
+                    size = BitConverter.ToInt32(lengthBuffer, 0);
 
-			        if (size > 0)
-			        {
-				        // Create and read the next buffer
-				        inBuffer = new byte[size];
-				        read = source.Read(inBuffer, 0, size);
+                    if (size > 0)
+                    {
+                        // Create and read the next buffer
+                        inBuffer = new byte[size];
+                        read = source.Read(inBuffer, 0, size);
 
-				        if (read > 0)
-				        {
-					        // Uncompress buffer
-					        outBuffer = inBuffer.Decompress();
-					        destination.Write(outBuffer, 0, outBuffer.Length);
-				        }
+                        if (read > 0)
+                        {
+                            // Uncompress buffer
+                            outBuffer = inBuffer.Decompress();
+                            destination.Write(outBuffer, 0, outBuffer.Length);
+                        }
 
-				        // Update decompression progress
-				        if (progressHandler != null)
-				        {
-					        total += (read + lengthBuffer.Length);
-					        progress.Complete = total;
-				        }
-			        }
+                        // Update decompression progress
+                        if ((object)progressHandler != null)
+                        {
+                            total += (read + lengthBuffer.Length);
+                            progress.Complete = total;
+                        }
+                    }
 
-			        // Read the size of the next buffer from the stream
-			        read = source.Read(lengthBuffer, 0, lengthBuffer.Length);
-		        }
-	        }
+                    // Read the size of the next buffer from the stream
+                    read = source.Read(lengthBuffer, 0, lengthBuffer.Length);
+                }
+            }
         }
     }
 }

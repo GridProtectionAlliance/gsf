@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -18,6 +19,8 @@
 //       Entered code comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/22/2011 - J. Ritchie Carroll
+//       Added Mono implementation exception regions.
 //
 //*******************************************************************************************************
 
@@ -237,6 +240,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
@@ -246,6 +268,10 @@ namespace TVA.Console
     /// <summary>
     /// Defines a set of consumable events that can be raised by a console application.
     /// </summary>
+    /// <remarks>
+    /// Note that no events will be raised by this class when running under Mono deployments, the class
+    /// remains available in the Mono build as a stub to allow existing code to still compile and run.
+    /// </remarks>
     /// <example>
     /// This example shows how to subscribe to console application events:
     /// <code>
@@ -287,13 +313,14 @@ namespace TVA.Console
             SystemShutdown = 6
         }
 
+        private delegate bool ConsoleWindowEventHandler(ConsoleEventType controlType);
         private static ConsoleWindowEventHandler s_handler;
 
-        private delegate bool ConsoleWindowEventHandler(ConsoleEventType controlType);
-
+#if !MONO
         [DllImport("kernel32.dll", EntryPoint = "SetConsoleCtrlHandler")]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool SetConsoleWindowEventRaising(ConsoleWindowEventHandler handler, [MarshalAs(UnmanagedType.Bool)] bool enable);
+#endif
 
         /// <summary>
         /// Occurs when CTRL+C signal is received from keyboard input.
@@ -339,22 +366,33 @@ namespace TVA.Console
         /// Enables the raising of console application <see cref="Events"/>. Prior to calling this method, handlers 
         /// must be defined for the <see cref="Events"/> raised by a console application.
         /// </summary>
+        /// <remarks>
+        /// This method is currently ignored under Mono deployments.
+        /// </remarks>
         public static void EnableRaisingEvents()
         {
+            s_handler = HandleConsoleWindowEvents;
+#if !MONO
+
             // Member variable is used here so that the delegate is not garbage collected by the time it is called
             // by WIN API when any of the control events take place.
             // http://forums.microsoft.com/MSDN/ShowPost.aspx?PostID=996045&SiteID=1
-            s_handler = HandleConsoleWindowEvents;
             SetConsoleWindowEventRaising(s_handler, true);
+#endif
         }
 
         /// <summary>
         /// Enables the raising of console application <see cref="Events"/>. 
         /// </summary>
+        /// <remarks>
+        /// This method is currently ignored under Mono deployments.
+        /// </remarks>
         public static void DisableRaisingEvents()
         {
             s_handler = HandleConsoleWindowEvents;
+#if !MONO
             SetConsoleWindowEventRaising(s_handler, false);
+#endif
         }
 
         /// <summary>
@@ -371,7 +409,7 @@ namespace TVA.Console
                 case ConsoleEventType.CancelKeyPress:
                     CancelEventArgs ctrlCKeyPressEventData = new CancelEventArgs();
 
-                    if (CancelKeyPress != null)
+                    if ((object)CancelKeyPress != null)
                         CancelKeyPress(null, ctrlCKeyPressEventData);
 
                     if (ctrlCKeyPressEventData.Cancel)
@@ -381,7 +419,7 @@ namespace TVA.Console
                 case ConsoleEventType.BreakKeyPress:
                     CancelEventArgs ctrlBreakKeyPressEventData = new CancelEventArgs();
 
-                    if (BreakKeyPress != null)
+                    if ((object)BreakKeyPress != null)
                         BreakKeyPress(null, ctrlBreakKeyPressEventData);
 
                     if (ctrlBreakKeyPressEventData.Cancel)
@@ -391,7 +429,7 @@ namespace TVA.Console
                 case ConsoleEventType.ConsoleClosing:
                     CancelEventArgs consoleClosingEventData = new CancelEventArgs();
 
-                    if (ConsoleClosing != null)
+                    if ((object)ConsoleClosing != null)
                         ConsoleClosing(null, consoleClosingEventData);
 
                     if (consoleClosingEventData.Cancel)
@@ -399,12 +437,12 @@ namespace TVA.Console
 
                     break;
                 case ConsoleEventType.UserLoggingOff:
-                    if (UserLoggingOff != null)
+                    if ((object)UserLoggingOff != null)
                         UserLoggingOff(null, EventArgs.Empty);
 
                     break;
                 case ConsoleEventType.SystemShutdown:
-                    if (SystemShutdown != null)
+                    if ((object)SystemShutdown != null)
                         SystemShutdown(null, EventArgs.Empty);
 
                     break;

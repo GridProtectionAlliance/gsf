@@ -343,7 +343,7 @@ namespace TVA.Xml
         {
             XmlAttribute attr = node.Attributes[name];
 
-            if (attr == null)
+            if ((object)attr == null)
             {
                 return null;
             }
@@ -362,13 +362,13 @@ namespace TVA.Xml
         {
             XmlAttribute attr = node.Attributes[name];
 
-            if (attr == null)
+            if ((object)attr == null)
             {
                 // Add the attribute.
                 attr = node.OwnerDocument.CreateAttribute(name);
                 node.Attributes.Append(attr);
             }
-            if (attr != null)
+            if ((object)attr != null)
             {
                 // Set the attribute value.
                 attr.Value = value;

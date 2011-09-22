@@ -361,7 +361,7 @@ namespace TVA.Diagnostics
         /// <param name="addDefaultCounters">Set to <c>true</c> to add default counters; otherwise <c>false</c>.</param>
         public PerformanceMonitor(string processName, double samplingInterval, bool addDefaultCounters = true)
         {
-            if (processName == null)
+            if ((object)processName == null)
                 throw new ArgumentNullException("processName");
 
             m_processName = processName;
@@ -764,7 +764,7 @@ namespace TVA.Diagnostics
                     if (disposing)
                     {
                         // This will be done only when the object is disposed by calling Dispose().
-                        if (m_samplingTimer != null)
+                        if ((object)m_samplingTimer != null)
                         {
                             m_samplingTimer.Elapsed -= m_samplingTimer_Elapsed;
                             m_samplingTimer.Dispose();
@@ -836,7 +836,7 @@ namespace TVA.Diagnostics
         public void AddCounter(string categoryName, string counterName, string instanceName, string aliasName, string valueUnit, float valueDivisor)
         {
             try
-            {                
+            {
                 AddCounter(new PerformanceCounter(categoryName, counterName, instanceName, aliasName, valueUnit, valueDivisor));
             }
             catch

@@ -318,7 +318,7 @@ namespace TVA.Data
         public AdoDataConnection(string settingsCategory)
         {
             // Only need to establish data types and load settings once since they are being loaded from config file
-            if (s_connectionType == null || string.IsNullOrEmpty(s_connectionString))
+            if ((object)s_connectionType == null || string.IsNullOrEmpty(s_connectionString))
             {
                 try
                 {
@@ -431,6 +431,9 @@ namespace TVA.Data
             }
         }
 
+        /// <summary>
+        /// Gets a value to indicate whether source database is Microsoft SQL Server.
+        /// </summary>
         public bool IsSQLServer
         {
             get
@@ -577,7 +580,7 @@ namespace TVA.Data
                 {
                     if (disposing)
                     {
-                        if (m_connection != null)
+                        if ((object)m_connection != null)
                             m_connection.Dispose();
                         m_connection = null;
                     }
@@ -593,7 +596,7 @@ namespace TVA.Data
         {
             DatabaseType type = DatabaseType.Other;
 
-            if (s_adapterType != null)
+            if ((object)s_adapterType != null)
             {
                 switch (s_adapterType.Name)
                 {
@@ -614,7 +617,7 @@ namespace TVA.Data
                         break;
 
                     default:
-                        if (m_connection != null && m_connection.ConnectionString.Contains("Microsoft.Jet.OLEDB"))
+                        if ((object)m_connection != null && m_connection.ConnectionString.Contains("Microsoft.Jet.OLEDB"))
                             type = DatabaseType.Access;
                         break;
                 }

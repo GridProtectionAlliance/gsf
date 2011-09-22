@@ -22,6 +22,8 @@
 //       Added new header and license agreement.
 //  01/27/2011 - J. Ritchie Carroll
 //       Modified internal operation to minimize risk of file dead lock and/or memory overload.
+//  09/22/2011 - J. Ritchie Carroll
+//       Added Mono implementation exception regions.
 //
 //*******************************************************************************************************
 
@@ -454,7 +456,7 @@ namespace TVA.IO
                     {
                         if (disposing)
                         {
-                            if (WaitHandle != null)
+                            if ((object)WaitHandle != null)
                                 WaitHandle.Dispose();
 
                             WaitHandle = null;
@@ -557,7 +559,7 @@ namespace TVA.IO
         public MultipleDestinationExporter(IContainer container)
             : this()
         {
-            if (container != null)
+            if ((object)container != null)
                 container.Add(this);
         }
 
@@ -692,7 +694,7 @@ namespace TVA.IO
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                 {
                     m_textEncoding = Encoding.Default;
                 }
@@ -744,7 +746,7 @@ namespace TVA.IO
             {
                 lock (this)
                 {
-                    if (m_exportDestinations != null)
+                    if ((object)m_exportDestinations != null)
                         return new ReadOnlyCollection<ExportDestination>(m_exportDestinations);
                 }
 
@@ -1051,6 +1053,9 @@ namespace TVA.IO
                 // Connect to network shares if necessary
                 if (destinations[x].ConnectToShare)
                 {
+#if MONO
+                    OnStatusMessage("Network share authentication is not available on Mono deployments. Requested authentication not attempted for: {0}\\{1} to {2}...", destinations[x].Domain, destinations[x].UserName, destinations[x].Share);
+#else
                     // Attempt connection to external network share
                     try
                     {
@@ -1065,6 +1070,7 @@ namespace TVA.IO
                         // Something unexpected happened during attempt to connect to network share - so we'll report it...
                         OnProcessException(new IOException(string.Format("Network share authentication to {0} failed due to exception: {1}", destinations[x].Share, ex.Message), ex));
                     }
+#endif
                 }
             }
 
@@ -1081,11 +1087,12 @@ namespace TVA.IO
 
             lock (this)
             {
-                if (m_exportDestinations != null)
+                if ((object)m_exportDestinations != null)
                 {
                     // We'll be nice and disconnect network shares when this class is disposed...
                     for (int x = 0; x < m_exportDestinations.Count; x++)
                     {
+#if !MONO
                         if (m_exportDestinations[x].ConnectToShare)
                         {
                             try
@@ -1098,6 +1105,7 @@ namespace TVA.IO
                                 OnProcessException(new IOException(string.Format("Network share disconnect from {0} failed due to exception: {1}", m_exportDestinations[x].Share, ex.Message), ex));
                             }
                         }
+#endif
                     }
                 }
             }
@@ -1108,7 +1116,7 @@ namespace TVA.IO
         /// </summary>
         protected virtual void OnInitialized()
         {
-            if (Initialized != null)
+            if ((object)Initialized != null)
                 Initialized(this, EventArgs.Empty);
         }
 
@@ -1119,7 +1127,7 @@ namespace TVA.IO
         /// <param name="args"><see cref="string.Format(string,object[])"/> parameters used for status message.</param>
         protected virtual void OnStatusMessage(string status, params object[] args)
         {
-            if (StatusMessage != null)
+            if ((object)StatusMessage != null)
                 StatusMessage(this, new EventArgs<string>(string.Format(status, args)));
         }
 
@@ -1129,7 +1137,7 @@ namespace TVA.IO
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
         protected virtual void OnProcessException(Exception ex)
         {
-            if (ProcessException != null)
+            if ((object)ProcessException != null)
                 ProcessException(this, new EventArgs<Exception>(ex));
         }
 
@@ -1186,7 +1194,7 @@ namespace TVA.IO
                 // Dereference file bytes to be exported
                 byte[] fileData = state as byte[];
 
-                if (m_enabled && fileData != null)
+                if (m_enabled && (object)fileData != null)
                 {
                     string filename = null;
                     ExportState[] exportStates = null;
@@ -1244,7 +1252,7 @@ namespace TVA.IO
                     finally
                     {
                         // Dispose the export state wait handles
-                        if (exportStates != null)
+                        if ((object)exportStates != null)
                         {
                             foreach (ExportState exportState in exportStates)
                             {
@@ -1277,7 +1285,7 @@ namespace TVA.IO
             {
                 exportState = state as ExportState;
 
-                if (exportState != null)
+                if ((object)exportState != null)
                 {
                     // File copy may fail if destination is locked, so we setup to retry this operation
                     // waiting the specified period between attempts
@@ -1295,7 +1303,7 @@ namespace TVA.IO
                         catch (Exception ex)
                         {
                             // Stack exception history to provide a full inner exception failure log for each export attempt
-                            if (exportException == null)
+                            if ((object)exportException == null)
                                 exportException = ex;
                             else
                                 exportException = new IOException(string.Format("Attempt {0} exception: {1}", attempt + 1, ex.Message), exportException);
@@ -1323,7 +1331,7 @@ namespace TVA.IO
                 string destinationFileName = null;
                 bool timeout = false;
 
-                if (exportState != null)
+                if ((object)exportState != null)
                 {
                     destinationFileName = exportState.DestinationFileName;
                     timeout = exportState.Timeout;
@@ -1334,7 +1342,7 @@ namespace TVA.IO
             finally
             {
                 // Release waiting thread
-                if (exportState != null && exportState.WaitHandle != null)
+                if ((object)exportState != null && exportState.WaitHandle != null)
                     exportState.WaitHandle.Set();
 
                 // Track total number of failed export attempts

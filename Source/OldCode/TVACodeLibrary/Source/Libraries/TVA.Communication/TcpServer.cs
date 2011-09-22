@@ -27,6 +27,8 @@
 //       Added null reference check to DisconnectOne() for safety.
 //  02/11/2011 - Pinal C. Patel
 //       Added IntegratedSecurity property to enable integrated windows authentication.
+//  09/21/2011 - J. Ritchie Carroll
+//       Added Mono implementation exception regions.
 //
 //*******************************************************************************************************
 
@@ -268,11 +270,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Net.Security;
 using System.Net.Sockets;
-using System.Security.Principal;
 using System.Threading;
 using TVA.Configuration;
+using System.Net.Security;
+using System.Security.Principal;
 
 namespace TVA.Communication
 {
@@ -474,6 +476,9 @@ namespace TVA.Communication
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the client Windows account credentials are used for authentication.
         /// </summary>
+        /// <remarks>   
+        /// This option is ignored under Mono deployments.
+        /// </remarks>
         [Category("Security"),
         DefaultValue(DefaultIntegratedSecurity),
         Description("Indicates whether the client Windows account credentials are used for authentication.")]
@@ -704,6 +709,7 @@ namespace TVA.Communication
                 tcpClient.Secretkey = SharedSecret;
                 tcpClient.Provider = m_tcpServer.EndAccept(asyncResult);
 
+#if !MONO
                 // Authenticate the connected client Windows credentials.
                 if (m_integratedSecurity)
                 {
@@ -727,6 +733,7 @@ namespace TVA.Communication
                             authenticationStream.Dispose();
                     }
                 }
+#endif
 
                 if (MaxClientConnections != -1 && ClientIDs.Length >= MaxClientConnections)
                 {

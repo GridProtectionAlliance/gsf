@@ -312,7 +312,7 @@ namespace TVA.Threading
                     s_queuedThreads.RemoveFirst();
                 }
 
-                if (item != null)
+                if ((object)item != null)
                 {
                     // Capture current thread (this is owned by .NET ThreadPool)
                     item.Thread = Thread.CurrentThread;
@@ -406,7 +406,8 @@ namespace TVA.Threading
         /// <param name="stateInfo">An object that contains application-specific information, such as state, which can be used by the thread being aborted.</param>
         public static void Cancel(ManagedThread item, bool allowAbort, object stateInfo)
         {
-            if (item == null) throw new ArgumentNullException("item");
+            if ((object)item == null)
+                throw new ArgumentNullException("item");
 
             LinkedListNode<ManagedThread> node;
 
@@ -419,12 +420,12 @@ namespace TVA.Threading
                 node = s_queuedThreads.Find(item);
 
                 // Handle abort or dequeue
-                if (node == null)
+                if ((object)node == null)
                 {
                     if (allowAbort)
                     {
                         // Started items may be aborted, even if running in thread pool
-                        if (stateInfo == null)
+                        if ((object)stateInfo == null)
                             item.Thread.Abort();
                         else
                             item.Thread.Abort(stateInfo);

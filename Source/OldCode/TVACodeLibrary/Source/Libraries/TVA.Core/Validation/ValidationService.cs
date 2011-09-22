@@ -323,7 +323,7 @@ namespace TVA.Validation
             if (string.IsNullOrEmpty(source))
                 throw new ArgumentNullException("source");
 
-            if (validator == null)
+            if ((object)validator == null)
                 throw new ArgumentNullException("validator");
 
             m_validations.Add(string.Format("{0}+{1}", source, validator.GetType().Name), validator);

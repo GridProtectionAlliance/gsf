@@ -303,7 +303,7 @@ namespace TVA.IO.Checksums
         /// </param>
         public void Update(byte[] buffer)
         {
-            if (buffer == null)
+            if ((object)buffer == null)
                 throw new ArgumentNullException("buffer");
 
             Update(buffer, 0, buffer.Length);
@@ -323,7 +323,7 @@ namespace TVA.IO.Checksums
         /// </param>
         public void Update(byte[] buffer, int offset, int count)
         {
-            if (buffer == null)
+            if ((object)buffer == null)
                 throw new ArgumentNullException("buffer");
 
             if (offset < 0)

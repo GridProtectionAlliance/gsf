@@ -398,7 +398,7 @@ namespace TVA.Media
         /// </summary>
         public void Dispose()
         {
-            if (m_waveStream != null)
+            if ((object)m_waveStream != null)
             {
                 m_waveStream.Dispose();
                 m_waveStream = null;
@@ -440,7 +440,7 @@ namespace TVA.Media
             WaveFormatChunk waveFormat = null;
             WaveDataReader waveData = null;
 
-            while (waveData == null)
+            while ((object)waveData == null)
             {
                 riffChunk = RiffChunk.ReadNext(waveStream);
 

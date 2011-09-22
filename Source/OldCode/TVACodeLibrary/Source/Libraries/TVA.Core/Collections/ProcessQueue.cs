@@ -356,7 +356,8 @@ namespace TVA.Collections
             public bool WaitUntil(int timeout)
             {
                 bool threadComplete = m_thread.Join(timeout);
-                if (!threadComplete) m_thread.Abort();
+                if (!threadComplete)
+                    m_thread.Abort();
                 return threadComplete;
             }
 
@@ -628,7 +629,7 @@ namespace TVA.Collections
             }
             set
             {
-                if (value != null)
+                if ((object)value != null)
                 {
                     m_processItemFunction = value;
                     m_processItemsFunction = null;
@@ -652,7 +653,7 @@ namespace TVA.Collections
             }
             set
             {
-                if (value != null)
+                if ((object)value != null)
                 {
                     m_processItemsFunction = value;
                     m_processItemFunction = null;
@@ -736,7 +737,7 @@ namespace TVA.Collections
         {
             get
             {
-                if (m_processItemFunction == null)
+                if ((object)m_processItemFunction == null)
                 {
                     return QueueProcessingStyle.ManyAtOnce;
                 }
@@ -912,7 +913,7 @@ namespace TVA.Collections
             {
                 if (m_processingIsRealTime)
                 {
-                    return (m_realTimeProcessThread != null);
+                    return ((object)m_realTimeProcessThread != null);
                 }
                 else
                 {
@@ -1245,13 +1246,13 @@ namespace TVA.Collections
 
                     if (disposing)
                     {
-                        if (m_processTimer != null)
+                        if ((object)m_processTimer != null)
                         {
                             m_processTimer.Elapsed -= ProcessTimerThreadProc;
                             m_processTimer.Dispose();
                         }
                         m_processTimer = null;
-                        if (m_processQueue != null)
+                        if ((object)m_processQueue != null)
                         {
                             Clear();
                         }
@@ -1323,7 +1324,7 @@ namespace TVA.Collections
             else
             {
                 // Stops intervaled processing, if active.
-                if (m_processTimer != null)
+                if ((object)m_processTimer != null)
                     m_processTimer.Enabled = false;
             }
 
@@ -1376,7 +1377,7 @@ namespace TVA.Collections
                     {
                         while (m_processQueue.Count > 0)
                         {
-                            if (m_processItemsFunction == null)
+                            if ((object)m_processItemsFunction == null)
                             {
                                 // Processes one item at a time.
                                 ProcessNextItem();
@@ -1408,7 +1409,7 @@ namespace TVA.Collections
         /// <param name="item">A generic type T to be passed to ItemProcessed.</param>
         protected virtual void OnItemProcessed(T item)
         {
-            if (ItemProcessed != null)
+            if ((object)ItemProcessed != null)
                 ItemProcessed(this, new EventArgs<T>(item));
         }
 
@@ -1422,7 +1423,7 @@ namespace TVA.Collections
         /// <param name="items">An array of generic type T to be passed to ItemsProcessed.</param>
         protected virtual void OnItemsProcessed(T[] items)
         {
-            if (ItemsProcessed != null)
+            if ((object)ItemsProcessed != null)
                 ItemsProcessed(this, new EventArgs<T[]>(items));
         }
 
@@ -1436,7 +1437,7 @@ namespace TVA.Collections
         /// <param name="item">A generic type T to be passed to ItemProcessed.</param>
         protected virtual void OnItemTimedOut(T item)
         {
-            if (ItemTimedOut != null)
+            if ((object)ItemTimedOut != null)
                 ItemTimedOut(this, new EventArgs<T>(item));
         }
 
@@ -1450,7 +1451,7 @@ namespace TVA.Collections
         /// <param name="items">An array of generic type T to be passed to ItemsProcessed.</param>
         protected virtual void OnItemsTimedOut(T[] items)
         {
-            if (ItemsTimedOut != null)
+            if ((object)ItemsTimedOut != null)
                 ItemsTimedOut(this, new EventArgs<T[]>(items));
         }
 
@@ -1464,7 +1465,7 @@ namespace TVA.Collections
         /// <param name="ex"><see cref="Exception"/> to be passed to ProcessException.</param>
         protected virtual void OnProcessException(Exception ex)
         {
-            if (ProcessException != null)
+            if ((object)ProcessException != null)
                 ProcessException(this, new EventArgs<Exception>(ex));
         }
 
@@ -1503,7 +1504,7 @@ namespace TVA.Collections
         /// <returns>A <see cref="Boolean"/> value indicating whether it can process the item or not.</returns>
         protected virtual bool CanProcessItem(T item)
         {
-            if (m_canProcessItemFunction == null)
+            if ((object)m_canProcessItemFunction == null)
             {
                 // If user provided no implementation for this function or function failed, we assume item can be processed.
                 return true;
@@ -1545,7 +1546,7 @@ namespace TVA.Collections
         /// <returns>A <see cref="Boolean"/> value indicating whether the process queue can process the items.</returns>
         protected virtual bool CanProcessItems(T[] items)
         {
-            if (m_canProcessItemFunction == null)
+            if ((object)m_canProcessItemFunction == null)
             {
                 // If user provided no implementation for this function or function failed, we assume item can be processed.
                 return true;
@@ -1602,7 +1603,7 @@ namespace TVA.Collections
             }
         }
 
-      
+
         /// <summary>
         /// Handles standard processing of a single item. 
         /// </summary>
@@ -1634,7 +1635,7 @@ namespace TVA.Collections
             }
         }
 
-        
+
         /// <summary>
         /// Handles standard processing of multiple items.
         /// </summary>
@@ -1666,7 +1667,7 @@ namespace TVA.Collections
             }
         }
 
-        
+
         /// <summary>
         /// Creates a real-time thread for processing items. 
         /// </summary>
@@ -1675,7 +1676,7 @@ namespace TVA.Collections
             // Creates a real-time processing loop that will process items as quickly as possible.
             while (m_enabled)
             {
-                if (m_processItemsFunction == null)
+                if ((object)m_processItemsFunction == null)
                 {
                     // Processes one item at a time.
                     ProcessNextItem();
@@ -1691,7 +1692,7 @@ namespace TVA.Collections
             }
         }
 
-        
+
         /// <summary>
         /// Processes queued items on an interval.
         /// </summary>
@@ -1700,7 +1701,7 @@ namespace TVA.Collections
         private void ProcessTimerThreadProc(object sender, System.Timers.ElapsedEventArgs e)
         {
             // The system timer creates an intervaled processing loop that distributes item processing across multiple threads if needed
-            if (m_processItemsFunction == null)
+            if ((object)m_processItemsFunction == null)
             {
                 // Processes one item at a time.
                 ProcessNextItem();
@@ -1719,7 +1720,7 @@ namespace TVA.Collections
             }
         }
 
-      
+
         /// <summary>
         /// Processes next item in queue, one at a time (i.e., ProcessingStyle = OneAtATime). 
         /// </summary>
@@ -1811,7 +1812,7 @@ namespace TVA.Collections
             }
         }
 
-        
+
         /// <summary>
         /// Processes next items in an array of items as a group (i.e., ProcessingStyle = ManyAtOnce).
         /// </summary>
@@ -1928,10 +1929,10 @@ namespace TVA.Collections
             {
                 List<T> processQueue = m_processQueue as List<T>;
 
-                if (processQueue == null)
+                if ((object)processQueue == null)
                 {
                     // We manually implement this feature if process queue is not a List(Of T).
-                    if (collection == null)
+                    if ((object)collection == null)
                         throw new ArgumentNullException("collection", "collection is null");
 
                     foreach (T item in collection)
@@ -2018,7 +2019,7 @@ namespace TVA.Collections
             {
                 List<T> processQueue = m_processQueue as List<T>;
 
-                if (processQueue == null)
+                if ((object)processQueue == null)
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
                     int foundIndex = -1;
@@ -2031,7 +2032,8 @@ namespace TVA.Collections
                     if (startIndex < 0 || count < 0 || stopIndex > m_processQueue.Count - 1)
                         throw new ArgumentOutOfRangeException("index", "index and/or count is outside the range of valid indexes for the queue");
 
-                    if (comparer == null) comparer = Comparer<T>.Default;
+                    if ((object)comparer == null)
+                        comparer = Comparer<T>.Default;
 
                     if (count > 0)
                     {
@@ -2110,10 +2112,10 @@ namespace TVA.Collections
             {
                 List<T> processQueue = m_processQueue as List<T>;
 
-                if (processQueue == null)
+                if ((object)processQueue == null)
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
-                    if (converter == null)
+                    if ((object)converter == null)
                         throw new ArgumentNullException("converter", "converter is null");
 
                     List<TOutput> result = new List<TOutput>();
@@ -2145,10 +2147,10 @@ namespace TVA.Collections
             {
                 List<T> processQueue = m_processQueue as List<T>;
 
-                if (processQueue == null)
+                if ((object)processQueue == null)
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
-                    if (match == null)
+                    if ((object)match == null)
                         throw new ArgumentNullException("match", "match is null");
 
                     bool found = false;
@@ -2184,10 +2186,10 @@ namespace TVA.Collections
             {
                 List<T> processQueue = m_processQueue as List<T>;
 
-                if (processQueue == null)
+                if ((object)processQueue == null)
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
-                    if (match == null)
+                    if ((object)match == null)
                         throw new ArgumentNullException("match", "match is null");
 
                     T foundItem = default(T);
@@ -2217,10 +2219,10 @@ namespace TVA.Collections
             {
                 List<T> processQueue = m_processQueue as List<T>;
 
-                if (processQueue == null)
+                if ((object)processQueue == null)
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
-                    if (match == null)
+                    if ((object)match == null)
                         throw new ArgumentNullException("match", "match is null");
 
                     List<T> foundItems = new List<T>();
@@ -2284,13 +2286,13 @@ namespace TVA.Collections
             {
                 List<T> processQueue = m_processQueue as List<T>;
 
-                if (processQueue == null)
+                if ((object)processQueue == null)
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
                     if (startIndex < 0 || count < 0 || startIndex + count > m_processQueue.Count)
                         throw new ArgumentOutOfRangeException("startIndex", "startIndex and/or count is outside the range of valid indexes for the queue");
 
-                    if (match == null)
+                    if ((object)match == null)
                         throw new ArgumentNullException("match", "match is null");
 
                     int foundindex = -1;
@@ -2324,10 +2326,10 @@ namespace TVA.Collections
             {
                 List<T> processQueue = m_processQueue as List<T>;
 
-                if (processQueue == null)
+                if ((object)processQueue == null)
                 {
                     // We manually implement this feature if process queue is not a List(Of T)
-                    if (match == null)
+                    if ((object)match == null)
                         throw (new ArgumentNullException("match", "match is null"));
 
                     T foundItem = default(T);
@@ -2388,13 +2390,13 @@ namespace TVA.Collections
             {
                 List<T> processQueue = m_processQueue as List<T>;
 
-                if (processQueue == null)
+                if ((object)processQueue == null)
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
                     if (startIndex < 0 || count < 0 || startIndex + count > m_processQueue.Count)
                         throw new ArgumentOutOfRangeException("startIndex", "startIndex and/or count is outside the range of valid indexes for the queue");
 
-                    if (match == null)
+                    if ((object)match == null)
                         throw new ArgumentNullException("match", "match is null");
 
                     int foundindex = -1;
@@ -2427,10 +2429,10 @@ namespace TVA.Collections
             {
                 List<T> processQueue = m_processQueue as List<T>;
 
-                if (processQueue == null)
+                if ((object)processQueue == null)
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
-                    if (action == null)
+                    if ((object)action == null)
                         throw new ArgumentNullException("action", "action is null");
 
                     foreach (T item in m_processQueue)
@@ -2458,7 +2460,7 @@ namespace TVA.Collections
             {
                 List<T> processQueue = m_processQueue as List<T>;
 
-                if (processQueue == null)
+                if ((object)processQueue == null)
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
                     if (index + count > m_processQueue.Count)
@@ -2512,7 +2514,7 @@ namespace TVA.Collections
             {
                 List<T> processQueue = m_processQueue as List<T>;
 
-                if (processQueue == null)
+                if ((object)processQueue == null)
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
                     if (index < 0 || count < 0 || index + count > m_processQueue.Count)
@@ -2552,13 +2554,13 @@ namespace TVA.Collections
             {
                 List<T> processQueue = m_processQueue as List<T>;
 
-                if (processQueue == null)
+                if ((object)processQueue == null)
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
                     if (index < 0 || index > m_processQueue.Count - 1)
                         throw new ArgumentOutOfRangeException("index", "index is outside the range of valid indexes for the queue");
 
-                    if (collection == null)
+                    if ((object)collection == null)
                         throw new ArgumentNullException("collection", "collection is null");
 
                     foreach (T item in collection)
@@ -2614,7 +2616,7 @@ namespace TVA.Collections
             {
                 List<T> processQueue = m_processQueue as List<T>;
 
-                if (processQueue == null)
+                if ((object)processQueue == null)
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
                     if (index < 0 || count < 0 || index + count > m_processQueue.Count)
@@ -2652,10 +2654,10 @@ namespace TVA.Collections
             {
                 List<T> processQueue = m_processQueue as List<T>;
 
-                if (processQueue == null)
+                if ((object)processQueue == null)
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
-                    if (match == null)
+                    if ((object)match == null)
                         throw new ArgumentNullException("match", "match is null");
 
                     int removedItems = 0;
@@ -2691,7 +2693,7 @@ namespace TVA.Collections
             {
                 List<T> processQueue = m_processQueue as List<T>;
 
-                if (processQueue == null)
+                if ((object)processQueue == null)
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
                     if (index < 0 || count < 0 || index + count > m_processQueue.Count)
@@ -2727,7 +2729,7 @@ namespace TVA.Collections
             {
                 List<T> processQueue = m_processQueue as List<T>;
 
-                if (processQueue == null)
+                if ((object)processQueue == null)
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
                     if (index + count > m_processQueue.Count)
@@ -2797,10 +2799,10 @@ namespace TVA.Collections
             {
                 List<T> processQueue = m_processQueue as List<T>;
 
-                if (processQueue == null)
+                if ((object)processQueue == null)
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
-                    if (comparer == null)
+                    if ((object)comparer == null)
                         comparer = Comparer<T>.Default;
 
                     // This sort implementation is a little harsh, but the normal process queue uses List(Of T) and the
@@ -2831,10 +2833,10 @@ namespace TVA.Collections
             {
                 List<T> processQueue = m_processQueue as List<T>;
 
-                if (processQueue == null)
+                if ((object)processQueue == null)
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
-                    if (comparison == null)
+                    if ((object)comparison == null)
                         throw new ArgumentNullException("comparison", "comparison is null");
 
                     // This sort implementation is a little harsh, but the normal process queue uses List(Of T) and the
@@ -2863,7 +2865,7 @@ namespace TVA.Collections
             {
                 List<T> processQueue = m_processQueue as List<T>;
 
-                if (processQueue == null)
+                if ((object)processQueue == null)
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
                     T[] items = new T[m_processQueue.Count];
@@ -2895,10 +2897,10 @@ namespace TVA.Collections
             {
                 List<T> processQueue = m_processQueue as List<T>;
 
-                if (processQueue == null)
+                if ((object)processQueue == null)
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
-                    if (match == null)
+                    if ((object)match == null)
                         throw (new ArgumentNullException("match", "match is null"));
 
                     bool allTrue = true;

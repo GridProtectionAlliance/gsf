@@ -16,6 +16,8 @@
 //  02/16/2011 - J. Ritchie Carroll
 //       Added ForceLoginDisplay dependency property to allow application control over pass through
 //       authentication via WPF XAML.
+//  09/22/2011 - J. Ritchie Carroll
+//       Excluded class from Mono deployments since much of WPF is not currently available.
 //
 //*******************************************************************************************************
 
@@ -263,6 +265,7 @@ using TVA.Security;
 
 namespace TVA.Windows
 {
+#if !MONO
     #region [ Enumerations ]
 
     /// <summary>
@@ -345,14 +348,14 @@ namespace TVA.Windows
     /// <seealso cref="ISecurityProvider"/>
     public class SecureWindow : Window
     {
-        #region [ Members ]
+    #region [ Members ]
 
         // Fields
         private bool m_shutdownRequested;
 
-        #endregion
+    #endregion
 
-        #region [ Constructors ]
+    #region [ Constructors ]
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecureWindow"/> class.
@@ -362,9 +365,9 @@ namespace TVA.Windows
             this.Initialized += SecureWindow_Initialized;
         }
 
-        #endregion
+    #endregion
 
-        #region [ Properties ]
+    #region [ Properties ]
 
         /// <summary>
         /// Gets or sets flags to force login display.
@@ -411,9 +414,9 @@ namespace TVA.Windows
             }
         }
 
-        #endregion
+    #endregion
 
-        #region [ Methods ]
+    #region [ Methods ]
 
         /// <summary>
         /// Gets the name of resource being accessed.
@@ -509,9 +512,9 @@ namespace TVA.Windows
             }
         }
 
-        #endregion
+    #endregion
 
-        #region [ Static ]
+    #region [ Static ]
 
         // Static Fields
 
@@ -533,6 +536,7 @@ namespace TVA.Windows
         /// <returns>identifier for the <see cref="IncludedRoles"/> dependency property.</returns>
         public static readonly DependencyProperty IncludedRolesProperty = DependencyProperty.Register("IncludedRoles", typeof(string), typeof(SecureWindow), new PropertyMetadata("*"));
 
-        #endregion
+    #endregion
     }
+#endif
 }

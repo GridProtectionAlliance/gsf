@@ -283,7 +283,8 @@ namespace TVA.Threading
         /// <paramref name="name"/> that identifies a source object needing concurrency locking.
         /// </summary>
         /// <param name="name">Identifiying name of source object needing concurrency locking (e.g., a path and file name).</param>
-        public InterprocessReaderWriterLock(string name) : this(name, DefaultMaximumConcurrentLocks)
+        public InterprocessReaderWriterLock(string name)
+            : this(name, DefaultMaximumConcurrentLocks)
         {
         }
 
@@ -352,11 +353,11 @@ namespace TVA.Threading
                 {
                     if (disposing)
                     {
-                        if (m_concurrencyLock != null)
+                        if ((object)m_concurrencyLock != null)
                             m_concurrencyLock.Close();
                         m_concurrencyLock = null;
 
-                        if (m_semaphoreLock != null)
+                        if ((object)m_semaphoreLock != null)
                             m_semaphoreLock.Close();
                         m_semaphoreLock = null;
                     }
@@ -499,7 +500,7 @@ namespace TVA.Threading
                     {
                         // Sleep to allow any remaining reads to complete
                         Thread.Sleep(1);
-                        
+
                         // Continue to adjust remaining time to accomodate user specified millisecond timeout
                         if (millisecondsTimeout > 0)
                             adjustedTimeout = millisecondsTimeout - (int)Ticks.ToMilliseconds(DateTime.UtcNow.Ticks - startTime);

@@ -36,6 +36,8 @@
 //       Added IntegratedSecurity property to enable integrated windows authentication.
 //  02/13/2011 - Pinal C. Patel
 //       Modified ConnectAsync() to handle loopback address resolution failure on IPv6 enabled OSes.
+//  09/21/2011 - J. Ritchie Carroll
+//       Added Mono implementation exception regions.
 //
 //*******************************************************************************************************
 
@@ -277,11 +279,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Net.Security;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Threading;
 using TVA.Configuration;
+using System.Net.Security;
 
 namespace TVA.Communication
 {
@@ -480,6 +482,9 @@ namespace TVA.Communication
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the current Windows account credentials are used for authentication.
         /// </summary>
+        /// <remarks>   
+        /// This option is ignored under Mono deployments.
+        /// </remarks>
         [Category("Security"),
         DefaultValue(DefaultIntegratedSecurity),
         Description("Indicates whether the current Windows account credentials are used for authentication.")]
@@ -733,6 +738,7 @@ namespace TVA.Communication
                 tcpClient.ID = this.ClientID;
                 tcpClient.Secretkey = SharedSecret;
 
+#if !MONO
                 // Send current Windows credentials for authentication.
                 if (m_integratedSecurity)
                 {
@@ -753,6 +759,7 @@ namespace TVA.Communication
                             authenticationStream.Dispose();
                     }
                 }
+#endif
 
                 // We can proceed further with receiving data from the client.
                 if (Handshake)

@@ -321,7 +321,7 @@ namespace TVA.Collections
         {
             T mergedDictionary = new T();
             List<IDictionary<TKey, TValue>> allDictionaries = new List<IDictionary<TKey, TValue>>();
-            
+
             allDictionaries.Add(source);
             allDictionaries.AddRange(others);
 
@@ -376,7 +376,7 @@ namespace TVA.Collections
         {
             T majority = default(T);
 
-            if (source != null && source.Count() > 1)
+            if ((object)source != null && source.Count() > 1)
             {
                 Dictionary<T, int> itemCounts = new Dictionary<T, int>();
                 int count;
@@ -416,7 +416,7 @@ namespace TVA.Collections
         {
             T minority = default(T);
 
-            if (source != null && source.Count() > 1)
+            if ((object)source != null && source.Count() > 1)
             {
                 Dictionary<T, int> itemCounts = new Dictionary<T, int>();
                 int count;
@@ -654,7 +654,7 @@ namespace TVA.Collections
         /// <returns>Returns a <see cref="String"/> that is result of combining all elements in the list delimited by <paramref name="delimiter"/>.</returns>
         private static string ToDelimitedString<TSource, TDelimiter>(IEnumerable<TSource> source, TDelimiter delimiter)
         {
-            if (Common.IsReference(delimiter) && delimiter == null)
+            if (Common.IsReference(delimiter) && (object)delimiter == null)
                 throw new ArgumentNullException("delimiter", "delimiter cannot be null");
 
             StringBuilder delimetedString = new StringBuilder();
@@ -690,8 +690,9 @@ namespace TVA.Collections
         /// <param name="convertFromString">Delegate that takes one parameter and converts from string to type TSource.</param>
         public static void LoadDelimitedString<TSource>(this IList<TSource> destination, string delimitedString, char delimeter, Func<string, TSource> convertFromString)
         {
-            if (delimitedString == null)
+            if ((object)delimitedString == null)
                 throw new ArgumentNullException("delimitedString", "delimitedString cannot be null");
+
             if (destination.IsReadOnly)
                 throw new ArgumentException("Cannot add items to a read only list");
 
@@ -710,10 +711,12 @@ namespace TVA.Collections
         /// <param name="convertFromString">Delegate that takes a <see cref="String"/> and converts to type TSource.</param>
         public static void LoadDelimitedString<TSource>(this IList<TSource> destination, string delimitedString, string[] delimiters, Func<string, TSource> convertFromString)
         {
-            if (delimiters == null)
+            if ((object)delimiters == null)
                 throw new ArgumentNullException("delimiters", "delimiters cannot be null");
-            if (delimitedString == null)
+
+            if ((object)delimitedString == null)
                 throw new ArgumentNullException("delimitedString", "delimitedString cannot be null");
+
             if (destination.IsReadOnly)
                 throw new ArgumentException("Cannot add items to a read only list");
 
@@ -841,18 +844,18 @@ namespace TVA.Collections
         /// <remarks>This is a default comparer to make arrays comparable.</remarks>
         public static int CompareTo(this Array array1, Array array2, IComparer comparer)
         {
-            if (comparer == null)
+            if ((object)comparer == null)
                 throw new ArgumentNullException("comparer");
 
-            if (array1 == null && array2 == null)
+            if ((object)array1 == null && (object)array2 == null)
             {
                 return 0;
             }
-            else if (array1 == null)
+            else if ((object)array1 == null)
             {
                 return -1;
             }
-            else if (array2 == null)
+            else if ((object)array2 == null)
             {
                 return 1;
             }

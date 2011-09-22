@@ -359,13 +359,13 @@ namespace TVA.IO
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("FileName", "FileName cannot be null");
 
                 m_fileName = FilePath.GetAbsolutePath(value);
 
                 // Initialize reader/writer lock for given file name
-                if (m_fileLock != null)
+                if ((object)m_fileLock != null)
                     m_fileLock.Dispose();
 
                 m_fileLock = new InterprocessReaderWriterLock(m_fileName, m_maximumConcurrentLocks);
@@ -390,7 +390,7 @@ namespace TVA.IO
                 try
                 {
                     // Make a copy of the file data for external use
-                    if (m_fileData != null)
+                    if ((object)m_fileData != null)
                         return m_fileData.Copy(0, m_fileData.Length);
                 }
                 finally
@@ -402,13 +402,13 @@ namespace TVA.IO
             }
             set
             {
-                if (m_fileName == null)
+                if ((object)m_fileName == null)
                     throw new ArgumentNullException("FileName", "FileName property must be defined before setting FileData");
 
                 bool dataChanged = false;
 
                 // If value is null, assume user means zero-length file
-                if (value == null)
+                if ((object)value == null)
                     value = new byte[0];
 
                 m_dataLock.EnterWriteLock();
@@ -456,13 +456,13 @@ namespace TVA.IO
         {
             get
             {
-                return m_fileWatcher != null;
+                return (object)m_fileWatcher != null;
             }
             set
             {
-                if (value && m_fileWatcher == null)
+                if (value && (object)m_fileWatcher == null)
                 {
-                    if (m_fileName == null)
+                    if ((object)m_fileName == null)
                         throw new ArgumentNullException("FileName", "FileName property must be defined before enabling ReloadOnChange");
 
                     // Setup file watcher to monitor for external updates
@@ -472,7 +472,7 @@ namespace TVA.IO
                     m_fileWatcher.EnableRaisingEvents = true;
                     m_fileWatcher.Changed += m_fileWatcher_Changed;
                 }
-                else if (!value && m_fileWatcher != null)
+                else if (!value && (object)m_fileWatcher != null)
                 {
                     // Disable file watcher
                     m_fileWatcher.Changed -= m_fileWatcher_Changed;
@@ -548,36 +548,36 @@ namespace TVA.IO
                 {
                     if (disposing)
                     {
-                        if (m_fileWatcher != null)
+                        if ((object)m_fileWatcher != null)
                         {
                             m_fileWatcher.Changed -= m_fileWatcher_Changed;
                             m_fileWatcher.Dispose();
                         }
                         m_fileWatcher = null;
 
-                        if (m_retryTimer != null)
+                        if ((object)m_retryTimer != null)
                         {
                             m_retryTimer.Elapsed -= m_retryTimer_Elapsed;
                             m_retryTimer.Dispose();
                         }
                         m_retryTimer = null;
 
-                        if (m_loadIsReady != null)
+                        if ((object)m_loadIsReady != null)
                             m_loadIsReady.Dispose();
 
                         m_loadIsReady = null;
 
-                        if (m_saveIsReady != null)
+                        if ((object)m_saveIsReady != null)
                             m_saveIsReady.Dispose();
 
                         m_saveIsReady = null;
 
-                        if (m_dataLock != null)
+                        if ((object)m_dataLock != null)
                             m_dataLock.Dispose();
 
                         m_dataLock = null;
 
-                        if (m_fileLock != null)
+                        if ((object)m_fileLock != null)
                             m_fileLock.Dispose();
 
                         m_fileLock = null;
@@ -596,10 +596,10 @@ namespace TVA.IO
         /// </summary>
         public virtual void Save()
         {
-            if (m_fileName == null)
+            if ((object)m_fileName == null)
                 throw new ArgumentNullException("FileName", "FileName is null, cannot initiate save");
 
-            if (m_fileData == null)
+            if ((object)m_fileData == null)
                 throw new ArgumentNullException("FileData", "FileData is null, cannot initiate save");
 
             m_saveIsReady.Reset();
@@ -611,7 +611,7 @@ namespace TVA.IO
         /// </summary>
         public virtual void Load()
         {
-            if (m_fileName == null)
+            if ((object)m_fileName == null)
                 throw new ArgumentNullException("FileName", "FileName is null, cannot initiate load");
 
             m_loadIsReady.Reset();
@@ -704,7 +704,7 @@ namespace TVA.IO
                                 try
                                 {
                                     // Disable file watch notification before update
-                                    if (m_fileWatcher != null)
+                                    if ((object)m_fileWatcher != null)
                                         m_fileWatcher.EnableRaisingEvents = false;
 
                                     SaveFileData(fileStream, m_fileData);
@@ -715,7 +715,7 @@ namespace TVA.IO
                                     m_dataLock.ExitReadLock();
 
                                     // Reenable file watch notification
-                                    if (m_fileWatcher != null)
+                                    if ((object)m_fileWatcher != null)
                                         m_fileWatcher.EnableRaisingEvents = true;
                                 }
                             }
@@ -728,7 +728,7 @@ namespace TVA.IO
                         {
                             m_fileLock.ExitWriteLock();
 
-                            if (fileStream != null)
+                            if ((object)fileStream != null)
                                 fileStream.Close();
                         }
                     }
@@ -791,7 +791,7 @@ namespace TVA.IO
                             {
                                 m_fileLock.ExitReadLock();
 
-                                if (fileStream != null)
+                                if ((object)fileStream != null)
                                     fileStream.Close();
                             }
                         }
@@ -888,7 +888,7 @@ namespace TVA.IO
                         m_retryTimer.Start();
                 }
 
-                if (callBackEvent != null)
+                if ((object)callBackEvent != null)
                     ThreadPool.QueueUserWorkItem(callBackEvent);
             }
         }

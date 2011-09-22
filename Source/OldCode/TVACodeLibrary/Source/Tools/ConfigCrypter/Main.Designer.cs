@@ -283,8 +283,8 @@ namespace ConfigCrypter
             // 
             // GroupBoxConfiguration
             // 
-            this.GroupBoxConfiguration.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this.GroupBoxConfiguration.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.GroupBoxConfiguration.Controls.Add(this.LinkLabelCopy);
             this.GroupBoxConfiguration.Controls.Add(this.TextBoxOutput);
@@ -306,7 +306,6 @@ namespace ConfigCrypter
             this.LinkLabelCopy.Name = "LinkLabelCopy";
             this.LinkLabelCopy.Size = new System.Drawing.Size(93, 13);
             this.LinkLabelCopy.TabIndex = 5;
-            this.LinkLabelCopy.TabStop = true;
             this.LinkLabelCopy.Text = "Copy to Clipboard";
             this.LinkLabelCopy.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelCopy_LinkClicked);
             // 
@@ -347,7 +346,7 @@ namespace ConfigCrypter
             // 
             // GroupBoxSettings
             // 
-            this.GroupBoxSettings.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.GroupBoxSettings.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.GroupBoxSettings.Controls.Add(this.LinkLabelExportIV);
             this.GroupBoxSettings.Controls.Add(this.LinkLabelImportIV);
@@ -370,7 +369,6 @@ namespace ConfigCrypter
             this.LinkLabelExportIV.Name = "LinkLabelExportIV";
             this.LinkLabelExportIV.Size = new System.Drawing.Size(39, 13);
             this.LinkLabelExportIV.TabIndex = 1002;
-            this.LinkLabelExportIV.TabStop = true;
             this.LinkLabelExportIV.Text = "Export";
             this.toolTipProvider.SetToolTip(this.LinkLabelExportIV, "Exports the Key IV (Initialization Vector) to the clipboard.");
             this.LinkLabelExportIV.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelExportIV_LinkClicked);
@@ -383,7 +381,6 @@ namespace ConfigCrypter
             this.LinkLabelImportIV.Name = "LinkLabelImportIV";
             this.LinkLabelImportIV.Size = new System.Drawing.Size(39, 13);
             this.LinkLabelImportIV.TabIndex = 1001;
-            this.LinkLabelImportIV.TabStop = true;
             this.LinkLabelImportIV.Text = "Import";
             this.toolTipProvider.SetToolTip(this.LinkLabelImportIV, "Imports the Key IV (Initialization Vector) from the clipboard.");
             this.LinkLabelImportIV.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelImportIV_LinkClicked);

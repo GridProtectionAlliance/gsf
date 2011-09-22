@@ -430,7 +430,8 @@ namespace TVA.Units
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Temperature"/>.</exception>
         public int CompareTo(object value)
         {
-            if (value == null) return 1;
+            if ((object)value == null)
+                return 1;
 
             if (!(value is double) && !(value is Temperature))
                 throw new ArgumentException("Argument must be a Double or a Temperature");
@@ -997,7 +998,7 @@ namespace TVA.Units
         public static readonly Temperature MinValue = (Temperature)double.MinValue;
 
         // Static Methods
-        
+
         /// <summary>
         /// Creates a new <see cref="Temperature"/> value from the specified <paramref name="value"/> in Celsius.
         /// </summary>
@@ -1007,7 +1008,7 @@ namespace TVA.Units
         {
             return FromTemperature(value, CelsiusFactor, CelsiusOffset, CelsiusStep);
         }
-        
+
         /// <summary>
         /// Creates a new <see cref="Temperature"/> value from the specified <paramref name="value"/> in Fahrenheit.
         /// </summary>
@@ -1074,6 +1075,6 @@ namespace TVA.Units
             return new Temperature((value + step) * factor + offset);
         }
 
-        #endregion        
+        #endregion
     }
 }

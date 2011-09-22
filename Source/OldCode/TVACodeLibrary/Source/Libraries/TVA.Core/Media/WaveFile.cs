@@ -903,7 +903,7 @@ namespace TVA.Media
         {
             get
             {
-                if (m_listInfo != null)
+                if ((object)m_listInfo != null)
                     return m_listInfo.InfoStrings;
 
                 return new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
@@ -1244,13 +1244,13 @@ namespace TVA.Media
                         waveHeader = new RiffHeaderChunk(riffChunk, source, "WAVE");
                         break;
                     case WaveFormatChunk.RiffTypeID:
-                        if (waveHeader == null)
+                        if ((object)waveHeader == null)
                             throw new InvalidDataException("WAVE format section encountered before RIFF header, wave file corrupted");
 
                         waveFormat = new WaveFormatChunk(riffChunk, source);
                         break;
                     case WaveDataChunk.RiffTypeID:
-                        if (waveFormat == null)
+                        if ((object)waveFormat == null)
                             throw new InvalidDataException("WAVE data section encountered before format section, wave file corrupted");
 
                         if (loadData)

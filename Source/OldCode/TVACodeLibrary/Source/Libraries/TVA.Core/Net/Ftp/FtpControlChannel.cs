@@ -407,7 +407,7 @@ namespace TVA.Net.Ftp
                     {
                         m_lastResponse = null;
 
-                        if (m_connection != null)
+                        if ((object)m_connection != null)
                             m_connection.Close();
                         m_connection = null;
                     }
@@ -587,7 +587,7 @@ namespace TVA.Net.Ftp
                 StreamReader lineReader = new StreamReader(dataStream, System.Text.Encoding.Default);
                 string line = lineReader.ReadLine();
 
-                while (line != null)
+                while ((object)line != null)
                 {
                     lineQueue.Enqueue(line);
                     line = lineReader.ReadLine();

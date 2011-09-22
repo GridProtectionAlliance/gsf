@@ -389,7 +389,8 @@ namespace TVA.Units
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Charge"/>.</exception>
         public int CompareTo(object value)
         {
-            if (value == null) return 1;
+            if ((object)value == null)
+                return 1;
 
             if (!(value is double) && !(value is Charge))
                 throw new ArgumentException("Argument must be a Double or a Charge");
@@ -966,7 +967,7 @@ namespace TVA.Units
         {
             return new Charge(value * AmpereHoursFactor);
         }
-        
+
         /// <summary>
         /// Creates a new <see cref="Charge"/> value from the specified <paramref name="value"/> in abcoulombs.
         /// </summary>
@@ -1007,6 +1008,6 @@ namespace TVA.Units
             return new Charge(value * FaradayFactor);
         }
 
-        #endregion        
+        #endregion
     }
 }

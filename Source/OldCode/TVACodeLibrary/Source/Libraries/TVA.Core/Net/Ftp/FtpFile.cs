@@ -472,7 +472,7 @@ namespace TVA.Net.Ftp
         {
             FtpFile other = obj as FtpFile;
 
-            if (other != null)
+            if ((object)other != null)
                 return (CompareTo(other) == 0);
 
             return false;
@@ -486,7 +486,7 @@ namespace TVA.Net.Ftp
         {
             return m_name.GetHashCode();
         }
-        
+
         int IComparable<FtpFile>.CompareTo(FtpFile other)
         {
             // Files are sorted by name
@@ -513,7 +513,7 @@ namespace TVA.Net.Ftp
             else
             {
                 IFtpFile file = obj as IFtpFile;
-                if (file == null)
+                if ((object)file == null)
                     return 1;
                 else
                     return CompareTo(file);

@@ -308,7 +308,7 @@ namespace TVA
 
         /// <summary>High byte bit-mask used when a 24-bit integer is stored within a 32-bit integer. This field is constant.</summary>
         public const uint BitMask = 0xff000000;
-        
+
         // Fields
         private uint m_value; // We internally store the UInt24 value in a 4-byte unsigned integer for convenience
 
@@ -375,8 +375,11 @@ namespace TVA
         /// <exception cref="ArgumentException">value is not an UInt32 or UInt24.</exception>
         public int CompareTo(object value)
         {
-            if (value == null) return 1;
-            if (!(value is uint) && !(value is UInt24)) throw new ArgumentException("Argument must be an UInt32 or an UInt24");
+            if ((object)value == null)
+                return 1;
+
+            if (!(value is uint) && !(value is UInt24))
+                throw new ArgumentException("Argument must be an UInt32 or an UInt24");
 
             uint num = (uint)value;
             return (m_value < num ? -1 : (m_value > num ? 1 : 0));
@@ -422,7 +425,8 @@ namespace TVA
         /// </returns>
         public override bool Equals(object obj)
         {
-            if (obj is uint || obj is UInt24) return Equals((uint)obj);
+            if (obj is uint || obj is UInt24)
+                return Equals((uint)obj);
             return false;
         }
 
@@ -1635,7 +1639,7 @@ namespace TVA
         #endregion
 
         #region [ Static ]
-        
+
         /// <summary>
         /// Represents the largest possible value of an Int24. This field is constant.
         /// </summary>
@@ -1687,7 +1691,7 @@ namespace TVA
         /// <exception cref="ArgumentException"><paramref name="value"/> length from <paramref name="startIndex"/> is too small to represent an <see cref="UInt24"/>.</exception>
         public static UInt24 GetValue(byte[] value, int startIndex)
         {
-            if (value == null)
+            if ((object)value == null)
                 throw new ArgumentNullException("value");
 
             if (startIndex >= value.Length)

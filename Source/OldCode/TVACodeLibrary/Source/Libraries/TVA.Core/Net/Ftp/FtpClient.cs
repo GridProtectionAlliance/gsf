@@ -289,7 +289,7 @@ namespace TVA.Net.Ftp
         /// <see cref="EventArgs{T1,T2,T3}.Argument3"/> is file transfer direction.
         /// </remarks>
         public event EventHandler<EventArgs<string, string, TransferDirection>> BeginFileTransfer;
-        
+
         /// <summary>
         /// Raised when file transfer completes.
         /// </summary>
@@ -299,7 +299,7 @@ namespace TVA.Net.Ftp
         /// <see cref="EventArgs{T1,T2,T3}.Argument3"/> is file transfer direction.
         /// </remarks>
         public event EventHandler<EventArgs<string, string, TransferDirection>> EndFileTransfer;
-        
+
         /// <summary>
         /// Raised as file transfer is progressing.
         /// </summary>
@@ -308,7 +308,7 @@ namespace TVA.Net.Ftp
         /// <see cref="EventArgs{T1,T2}.Argument2"/> is file transfer direction.
         /// </remarks>
         public event EventHandler<EventArgs<ProcessProgress<long>, TransferDirection>> FileTransferProgress;
-        
+
         /// <summary>
         /// Raised when ansynchronous file transfer process has completed (success or failure).
         /// </summary>
@@ -316,7 +316,7 @@ namespace TVA.Net.Ftp
         /// <see cref="EventArgs{T}.Argument"/> is result of asynchronous FTP transfer process.
         /// </remarks>
         public event EventHandler<EventArgs<FtpAsyncResult>> FileTransferNotification;
-        
+
         /// <summary>
         /// Raised when FTP response has been received.
         /// </summary>
@@ -370,7 +370,7 @@ namespace TVA.Net.Ftp
         public FtpClient(IContainer container)
             : this()
         {
-            if (container != null)
+            if ((object)container != null)
                 container.Add(this);
         }
 
@@ -559,7 +559,7 @@ namespace TVA.Net.Ftp
                 {
                     if (disposing)
                     {
-                        if (m_currentState != null)
+                        if ((object)m_currentState != null)
                             m_currentState.Dispose();
 
                         m_currentState = null;
@@ -601,37 +601,37 @@ namespace TVA.Net.Ftp
 
         internal void OnResponseReceived(string response)
         {
-            if (ResponseReceived != null)
+            if ((object)ResponseReceived != null)
                 ResponseReceived(this, new EventArgs<string>(response));
         }
 
         internal void OnCommandSent(string command)
         {
-            if (CommandSent != null)
+            if ((object)CommandSent != null)
                 CommandSent(this, new EventArgs<string>(command));
         }
 
         internal void OnBeginFileTransfer(string localFileName, string remoteFileName, TransferDirection transferDirection)
         {
-            if (BeginFileTransfer != null)
-                BeginFileTransfer(this, new EventArgs<string,string,TransferDirection>(localFileName, remoteFileName, transferDirection));
+            if ((object)BeginFileTransfer != null)
+                BeginFileTransfer(this, new EventArgs<string, string, TransferDirection>(localFileName, remoteFileName, transferDirection));
         }
 
         internal void OnEndFileTransfer(string localFileName, string remoteFileName, TransferDirection transferDirection)
         {
-            if (EndFileTransfer != null)
-                EndFileTransfer(this, new EventArgs<string,string,TransferDirection>(localFileName, remoteFileName, transferDirection));
+            if ((object)EndFileTransfer != null)
+                EndFileTransfer(this, new EventArgs<string, string, TransferDirection>(localFileName, remoteFileName, transferDirection));
         }
 
         internal void OnFileTransferProgress(ProcessProgress<long> fileTransferProgress, TransferDirection transferDirection)
         {
-            if (FileTransferProgress != null)
-                FileTransferProgress(this, new EventArgs<ProcessProgress<long>,TransferDirection>(fileTransferProgress, transferDirection));
+            if ((object)FileTransferProgress != null)
+                FileTransferProgress(this, new EventArgs<ProcessProgress<long>, TransferDirection>(fileTransferProgress, transferDirection));
         }
 
         internal void OnFileTransferNotification(FtpAsyncResult transferResult)
         {
-            if (FileTransferNotification != null)
+            if ((object)FileTransferNotification != null)
                 FileTransferNotification(this, new EventArgs<FtpAsyncResult>(transferResult));
         }
 

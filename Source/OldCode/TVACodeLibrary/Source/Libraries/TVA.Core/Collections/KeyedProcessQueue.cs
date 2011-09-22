@@ -340,7 +340,7 @@ namespace TVA.Collections
             // Assigns translator functions for base class.
             base.ProcessItemFunction = ProcessKeyedItem;
 
-            if (m_canProcessItemFunction != null)
+            if ((object)m_canProcessItemFunction != null)
                 base.CanProcessItemFunction = CanProcessKeyedItem;
         }
 
@@ -360,7 +360,7 @@ namespace TVA.Collections
             m_canProcessItemFunction = canProcessItemFunction;
 
             // Assigns translator functions for base class.
-            if (m_canProcessItemFunction != null)
+            if ((object)m_canProcessItemFunction != null)
                 base.CanProcessItemFunction = CanProcessKeyedItem;
         }
 
@@ -384,7 +384,7 @@ namespace TVA.Collections
             }
             set
             {
-                if (value != null)
+                if ((object)value != null)
                 {
                     m_processItemFunction = value;
 
@@ -410,7 +410,7 @@ namespace TVA.Collections
             }
             set
             {
-                if (value != null)
+                if ((object)value != null)
                 {
                     m_processItemFunction = null;
                     base.ProcessItemsFunction = value;
@@ -432,7 +432,7 @@ namespace TVA.Collections
                 m_canProcessItemFunction = value;
 
                 // Assigns translator function for base class.
-                if (m_canProcessItemFunction == null)
+                if ((object)m_canProcessItemFunction == null)
                     base.CanProcessItemFunction = null;
                 else
                     base.CanProcessItemFunction = CanProcessKeyedItem;

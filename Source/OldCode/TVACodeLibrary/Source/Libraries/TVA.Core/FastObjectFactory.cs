@@ -317,7 +317,7 @@ namespace TVA
             // Get parameterless constructor for this type
             ConstructorInfo typeCtor = objType.GetConstructor(Type.EmptyTypes);
 
-            if (typeCtor == null)
+            if ((object)typeCtor == null)
                 throw new InvalidOperationException("Specified type parameter does not support parameterless public constructor");
 
             // Since user can call this function with any type, we verify that it is related to the return type. If return type
@@ -325,7 +325,7 @@ namespace TVA
             if (!objType.IsAbstract &&
             (
                (typeof(T).IsClass && objType.IsSubclassOf(typeof(T))) ||
-               (typeof(T).IsInterface && objType.GetInterface(typeof(T).Name) != null))
+               (typeof(T).IsInterface && (object)objType.GetInterface(typeof(T).Name) != null))
             )
             {
                 lock (s_createObjectFunctions)

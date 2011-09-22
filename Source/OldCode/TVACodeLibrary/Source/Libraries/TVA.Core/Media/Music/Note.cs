@@ -273,7 +273,7 @@ using System.ComponentModel;
 using System.Reflection;
 
 namespace TVA.Media.Music
-{   
+{
     /// <summary>
     /// Defines fundamental musical note frequencies and methods to create them.
     /// </summary>
@@ -1160,14 +1160,14 @@ namespace TVA.Media.Music
             m_valueTime = tempo.CalculateNoteValueTime(m_value);
             return m_valueTime;
         }
-        
+
         /// <summary>
         /// Returns a string representation for the note.
         /// </summary>
         /// <returns>A <see cref="String"/> value representation for the note.</returns>
         public override string ToString()
         {
-            if (m_ID == null && m_frequency > 0.0D)
+            if ((object)m_ID == null && m_frequency > 0.0D)
             {
                 // Attempt to look up note ID
                 foreach (FieldInfo field in typeof(Note).GetFields())
@@ -1181,7 +1181,7 @@ namespace TVA.Media.Music
 
                 // If no note ID was found for given frequency, just assign the
                 // frequency as the note ID
-                if (m_ID == null)
+                if ((object)m_ID == null)
                     m_ID = m_frequency.ToString();
             }
 
@@ -1202,7 +1202,8 @@ namespace TVA.Media.Music
         public override bool Equals(object obj)
         {
             Note other = obj as Note;
-            if (other != null) return Equals(other);
+            if ((object)other != null)
+                return Equals(other);
             throw new ArgumentException("Object is not an Note", "obj");
         }
 
@@ -1225,7 +1226,8 @@ namespace TVA.Media.Music
         public int CompareTo(object obj)
         {
             Note other = obj as Note;
-            if (other != null) return CompareTo(other);
+            if ((object)other != null)
+                return CompareTo(other);
             throw new ArgumentException("Note can only be compared with other Notes");
         }
 
@@ -1336,7 +1338,7 @@ namespace TVA.Media.Music
 
             if (result < 0)
                 return 0;
-            
+
             if (result > s_lastNamedValueIndex)
                 return s_lastNamedValueIndex;
 
@@ -1476,7 +1478,7 @@ namespace TVA.Media.Music
 
         private static string ValidID(string noteID)
         {
-            if (noteID == null)
+            if ((object)noteID == null)
                 throw new ArgumentNullException("noteID");
 
             if (noteID.Length < 2)

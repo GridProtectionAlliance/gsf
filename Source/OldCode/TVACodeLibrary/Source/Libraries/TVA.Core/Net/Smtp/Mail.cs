@@ -451,9 +451,11 @@ namespace TVA.Net.Smtp
                 if (string.IsNullOrEmpty(value))
                     throw new ArgumentNullException("value");
 
+#if !MONO
                 // Dispose existing client.
-                if (m_smtpClient != null)
+                if ((object)m_smtpClient != null)
                     m_smtpClient.Dispose();
+#endif
 
                 // Instantiate new client.
                 m_smtpClient = new SmtpClient(value);
@@ -493,7 +495,7 @@ namespace TVA.Net.Smtp
         /// <summary>
         /// Gets the <see cref="SmtpClient"/> object used for sending the <see cref="Mail"/> message.
         /// </summary>
-        public SmtpClient Client 
+        public SmtpClient Client
         {
             get
             {
@@ -503,7 +505,7 @@ namespace TVA.Net.Smtp
 
         #endregion
 
-        #region [ Methods ]       
+        #region [ Methods ]
 
         /// <summary>
         /// Releases all the resources used by the <see cref="Mail"/> object.
@@ -512,6 +514,34 @@ namespace TVA.Net.Smtp
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="Mail"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+#if !MONO
+                        if ((object)m_smtpClient != null)
+                            m_smtpClient.Dispose();
+#endif
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
+                }
+            }
         }
 
         /// <summary>
@@ -576,33 +606,7 @@ namespace TVA.Net.Smtp
             finally
             {
                 // Clean-up.
-                emailMessage.Dispose();             
-            }
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="Mail"/> object and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.
-
-                    if (disposing)
-                    {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        if (m_smtpClient != null)
-                            m_smtpClient.Dispose();
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;  // Prevent duplicate dispose.
-                }
+                emailMessage.Dispose();
             }
         }
 

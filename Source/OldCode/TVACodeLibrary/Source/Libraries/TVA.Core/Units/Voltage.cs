@@ -356,7 +356,8 @@ namespace TVA.Units
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Voltage"/>.</exception>
         public int CompareTo(object value)
         {
-            if (value == null) return 1;
+            if ((object)value == null)
+                return 1;
 
             if (!(value is double) && !(value is Voltage))
                 throw new ArgumentException("Argument must be a Double or a Voltage");
@@ -923,7 +924,7 @@ namespace TVA.Units
         public static readonly Voltage MinValue = (Voltage)double.MinValue;
 
         // Static Methods
-        
+
         /// <summary>
         /// Creates a new <see cref="Voltage"/> value from the specified <paramref name="value"/> in abvolts.
         /// </summary>
@@ -944,6 +945,6 @@ namespace TVA.Units
             return new Voltage(value * StatvoltsFactor);
         }
 
-        #endregion        
+        #endregion
     }
 }

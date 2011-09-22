@@ -74,6 +74,8 @@
 //  04/05/2011 - J. Ritchie Carroll
 //       Updated class to attempt reintialization after system resume in case user no longer has
 //       access to domain.
+//  09/21/2011 - J. Ritchie Carroll
+//       Added Mono implementation exception regions.
 //
 //*******************************************************************************************************
 
@@ -381,6 +383,9 @@ namespace TVA.Identity
     /// </configuration>
     /// ]]>
     /// </code>
+    /// <para>
+    /// Some methods in this class may not behave as expected when running on under Mono deployments.
+    /// </para>
     /// </example>
     public class UserInfo : ISupportLifecycle, IPersistSettings
     {
@@ -649,7 +654,7 @@ namespace TVA.Identity
                         // User could not be found - this could simply mean that ActiveDirectory is unavailable (e.g., laptop disconnected from the domain).
                         // In this case, if user logged in with cached credentials they are at least authenticated so we can assume that the user exists...
                         WindowsPrincipal windowsPrincipal = Thread.CurrentPrincipal as WindowsPrincipal;
-                        exists = windowsPrincipal != null && !string.IsNullOrEmpty(LoginID) && string.Compare(windowsPrincipal.Identity.Name, LoginID, true) == 0 && windowsPrincipal.Identity.IsAuthenticated;
+                        exists = (object)windowsPrincipal != null && !string.IsNullOrEmpty(LoginID) && string.Compare(windowsPrincipal.Identity.Name, LoginID, true) == 0 && windowsPrincipal.Identity.IsAuthenticated;
                     }
                 }
 
@@ -668,7 +673,7 @@ namespace TVA.Identity
                     }
                     else
                     {
-                        exists = (m_userEntry != null);
+                        exists = ((object)m_userEntry != null);
                     }
                 }
 
@@ -899,7 +904,7 @@ namespace TVA.Identity
                             using (DirectorySearcher searcher = CreateDirectorySearcher())
                             {
                                 SearchResult searchResult = searcher.FindOne();
-                                if (searchResult != null && searchResult.Properties.Contains("maxPwdAge"))
+                                if ((object)searchResult != null && searchResult.Properties.Contains("maxPwdAge"))
                                     maxAgePropertyValue = searchResult.Properties["maxPwdAge"][0].ToString();
                             }
                         }
@@ -928,7 +933,12 @@ namespace TVA.Identity
         /// Gets the groups asscociated with the user.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// Groups names are prefixed with their associated domain or computer name.
+        /// </para>
+        /// <para>
+        /// This method always returns an empty string array (i.e., a string array with no elements) under Mono deployments.
+        /// </para>
         /// </remarks>
         public string[] Groups
         {
@@ -936,6 +946,7 @@ namespace TVA.Identity
             {
                 List<string> groups = new List<string>();
 
+#if !MONO
                 if (m_enabled)
                 {
                     if (m_isWinNT)
@@ -960,6 +971,7 @@ namespace TVA.Identity
                         }
                     }
                 }
+#endif
 
                 return groups.ToArray();
             }
@@ -1229,7 +1241,7 @@ namespace TVA.Identity
                         // This will be done only when the object is disposed by calling Dispose().
                         SaveSettings();
 
-                        if (m_userEntry != null)
+                        if ((object)m_userEntry != null)
                             m_userEntry.Dispose();
 
                         m_userEntry = null;
@@ -1275,39 +1287,30 @@ namespace TVA.Identity
 
         private void Initialize(object state)
         {
-            bool lookupDomainAccount = false;
             m_enabled = false;
 
-            // See if this computer is part of a domain
-            if (UserInfo.MachineIsJoinedToDomain)
+            // Attempt do derive the domain if one is not specified
+            if (string.IsNullOrEmpty(m_domain))
             {
-                // Try do derive the domain if one is not specified
-                if (string.IsNullOrEmpty(m_domain))
+                if (!string.IsNullOrEmpty(m_privilegedDomain))
                 {
-                    if (!string.IsNullOrEmpty(m_privilegedDomain))
-                    {
-                        // Use domain specified for privileged account
-                        m_domain = m_privilegedDomain;
-                    }
-                    else
-                    {
-                        // Attempt to use the default logon domain of the host machine. Note that this key will not exist on machines
-                        // that do not connect to a domain and the Environment.UserDomainName property will return the machine name.
-                        m_domain = Registry.GetValue(LogonDomainRegistryKey, LogonDomainRegistryValue, Environment.UserDomainName).ToString();
-                    }
+                    // Use domain specified for privileged account
+                    m_domain = m_privilegedDomain;
                 }
-
-                // Use active directory domain account for user information lookup as long as domain is not the current machine
-                lookupDomainAccount = (string.Compare(Environment.MachineName, m_domain, true) != 0);
-            }
-            else
-            {
-                // Set the domain as the local machine if one is not specified
-                if (string.IsNullOrEmpty(m_domain))
-                    m_domain = Environment.MachineName;
+                else
+                {
+                    // Attempt to use the default logon domain of the host machine. Note that this key will not exist on machines
+                    // that do not connect to a domain and the Environment.UserDomainName property will return the machine name.
+                    m_domain = Registry.GetValue(LogonDomainRegistryKey, LogonDomainRegistryValue, Environment.UserDomainName).ToString();
+                }
             }
 
-            if (lookupDomainAccount)
+            // Set the domain as the local machine if one is not specified
+            if (string.IsNullOrEmpty(m_domain))
+                m_domain = Environment.MachineName;
+
+            // Use active directory domain account for user information lookup as long as domain is not the current machine
+            if (string.Compare(Environment.MachineName, m_domain, true) != 0)
             {
                 // Initialize the directory entry object used to retrieve active directory information
                 WindowsImpersonationContext currentContext = null;
@@ -1325,7 +1328,7 @@ namespace TVA.Identity
                     {
                         searcher.Filter = "(SAMAccountName=" + m_username + ")";
                         SearchResult result = searcher.FindOne();
-                        if (result != null)
+                        if ((object)result != null)
                             m_userEntry = result.GetDirectoryEntry();
                     }
 
@@ -1340,9 +1343,9 @@ namespace TVA.Identity
                 }
                 catch (Exception ex)
                 {
-                    if (m_userEntry != null)
+                    if ((object)m_userEntry != null)
                         m_userEntry.Dispose();
-                    
+
                     m_userEntry = null;
                     m_domainAvailable = false;
 
@@ -1371,7 +1374,7 @@ namespace TVA.Identity
                 }
                 catch (Exception ex)
                 {
-                    if (m_userEntry != null)
+                    if ((object)m_userEntry != null)
                         m_userEntry.Dispose();
 
                     m_userEntry = null;
@@ -1497,8 +1500,12 @@ namespace TVA.Identity
         /// Impersonates the defined privileged domain account.
         /// </summary>
         /// <returns>An <see cref="WindowsImpersonationContext"/> if privileged domain account has been defined, otherwise null.</returns>
+        /// <remarks>
+        /// This method always returns <c>null</c> under Mono deployments.
+        /// </remarks>
         public WindowsImpersonationContext ImpersonatePrivilegedAccount()
         {
+#if !MONO
             if (!string.IsNullOrEmpty(m_privilegedDomain) &&
                 !string.IsNullOrEmpty(m_privilegedUserName) &&
                 !string.IsNullOrEmpty(m_privilegedPassword))
@@ -1506,11 +1513,10 @@ namespace TVA.Identity
                 // Privileged domain account is specified
                 return UserInfo.ImpersonateUser(m_privilegedDomain, m_privilegedUserName, m_privilegedPassword);
             }
-            else
-            {
-                // Privileged domain account is not specified
-                return null;
-            }
+#endif
+
+            // Privileged domain account is not specified
+            return null;
         }
 
         /// <summary>
@@ -1531,7 +1537,7 @@ namespace TVA.Identity
                 if (!m_enabled)
                     return string.Empty;
 
-                if (m_userEntry != null)
+                if ((object)m_userEntry != null)
                 {
                     // Impersonate to the privileged account if specified
                     currentContext = ImpersonatePrivilegedAccount();
@@ -1623,7 +1629,7 @@ namespace TVA.Identity
         {
             get
             {
-                if (s_currentUserInfo == null)
+                if ((object)s_currentUserInfo == null)
                     s_currentUserInfo = new UserInfo(CurrentUserID);
 
                 return s_currentUserInfo;
@@ -1654,7 +1660,8 @@ namespace TVA.Identity
             get
             {
                 string userID = RemoteUserID;
-                if (userID == null)
+
+                if ((object)userID == null)
                     return null;
                 else
                     return new UserInfo(RemoteUserID);
@@ -1670,6 +1677,9 @@ namespace TVA.Identity
         /// <param name="username">Username of user to authenticate.</param>
         /// <param name="password">Password of user to authenticate.</param>
         /// <returns>true if the user credentials are authenticated successfully; otherwise false.</returns>
+        /// <remarks>
+        /// This method always returns <c>null</c> under Mono deployments.
+        /// </remarks>
         /// <example>
         /// This example shows how to validate a user's credentials:
         /// <code>
@@ -1685,7 +1695,7 @@ namespace TVA.Identity
         ///         string password = "password";
         ///        
         ///         // Authenticate user credentials.
-        ///         if (UserInfo.AuthenticateUser(domain, username, password) != null)
+        ///         if ((object)UserInfo.AuthenticateUser(domain, username, password) != null)
         ///             Console.WriteLine("Successfully authenticated user \"{0}\\{1}\".", domain, username);
         ///         else
         ///             Console.WriteLine("Failed to authenticate user \"{0}\\{1}\".", domain, username);
@@ -1709,6 +1719,9 @@ namespace TVA.Identity
         /// <param name="password">Password of user to authenticate.</param>
         /// <param name="errorMessage">Error message returned, if authentication fails.</param>
         /// <returns>true if the user credentials are authenticated successfully; otherwise false.</returns>
+        /// <remarks>
+        /// This method always returns <c>null</c> under Mono deployments.
+        /// </remarks>
         /// <example>
         /// This example shows how to validate a user's credentials and retrieve an error message if validation fails: 
         /// <code>
@@ -1725,7 +1738,7 @@ namespace TVA.Identity
         ///         string errorMessage;
         ///
         ///         // Authenticate user credentials.
-        ///         if (UserInfo.AuthenticateUser(domain, username, password, out errorMessage) != null)
+        ///         if ((object)UserInfo.AuthenticateUser(domain, username, password, out errorMessage) != null)
         ///             Console.WriteLine("Successfully authenticated user \"{0}\\{1}\".", domain, username);
         ///         else
         ///             Console.WriteLine("Failed to authenticate user \"{0}\\{1}\" due to exception: {2}", domain, username, errorMessage);
@@ -1737,12 +1750,14 @@ namespace TVA.Identity
         /// </example>
         public static IPrincipal AuthenticateUser(string domain, string username, string password, out string errorMessage)
         {
+            errorMessage = null;
+#if MONO
+            return null;
+#else
             IntPtr tokenHandle = IntPtr.Zero;
 
             try
             {
-                errorMessage = null;
-
                 // Call Win32 LogonUser method.
                 if (WindowsApi.LogonUser(username, domain, password, WindowsApi.LOGON32_LOGON_NETWORK, WindowsApi.LOGON32_PROVIDER_DEFAULT, out tokenHandle))
                 {
@@ -1762,6 +1777,41 @@ namespace TVA.Identity
                 if (tokenHandle != IntPtr.Zero)
                     WindowsApi.CloseHandle(tokenHandle);
             }
+#endif
+
+            #region [ Alternate User Authentication Method ]
+
+            // This requires reference to System.DirectoryServices.AccountManagement.
+            // Note that these account management methods are not enabled under Mono...
+
+            //// Attempt do derive the domain if one is not specified
+            //if (string.IsNullOrEmpty(domain))
+            //{
+            //    // Attempt to use the default logon domain of the host machine. Note that this key will not exist on machines
+            //    // that do not connect to a domain and the Environment.UserDomainName property will return the machine name.
+            //    domain = Registry.GetValue(LogonDomainRegistryKey, LogonDomainRegistryValue, Environment.UserDomainName).ToString();
+            //}
+
+            //// Set the domain as the local machine if one is not specified
+            //if (string.IsNullOrEmpty(domain))
+            //    domain = Environment.MachineName;
+
+            //using (PrincipalContext context = new PrincipalContext(ContextType.Domain, domain))
+            //{
+            //    if (context.ValidateCredentials(username, password, ContextOptions.Negotiate))
+            //    {
+            //        using (UserPrincipal principal = new UserPrincipal(context, username, password, true))
+            //        {
+            //            return new WindowsPrincipal(new WindowsIdentity(principal.UserPrincipalName));
+            //        }
+            //    }
+
+            //    errorMessage = string.Format("Failed to authenticate {0}\\{1}", domain, username);
+            //}
+
+            //return null;
+
+            #endregion
         }
 
         /// <summary>
@@ -1771,7 +1821,14 @@ namespace TVA.Identity
         /// <param name="username">Username of user to impersonate.</param>
         /// <param name="password">Password of user to impersonate.</param>
         /// <returns>A <see cref="WindowsImpersonationContext"/> object of the impersonated user.</returns>
-        /// <remarks>After impersonating a user the code executes under the impersonated user's identity.</remarks>
+        /// <remarks>
+        /// <para>
+        /// After impersonating a user the code executes under the impersonated user's identity.
+        /// </para>
+        /// <para>
+        /// This method always returns <c>null</c> under Mono deployments.
+        /// </para>
+        /// </remarks>
         /// <example>
         /// This example shows how to impersonate a user:
         /// <code>
@@ -1793,7 +1850,8 @@ namespace TVA.Identity
         /// </example>
         public static WindowsImpersonationContext ImpersonateUser(string domain, string username, string password)
         {
-            WindowsImpersonationContext impersonatedUser;
+            WindowsImpersonationContext impersonatedUser = null;
+#if !MONO
             IntPtr userTokenHandle = IntPtr.Zero;
             IntPtr duplicateTokenHandle = IntPtr.Zero;
 
@@ -1819,6 +1877,7 @@ namespace TVA.Identity
                     WindowsApi.CloseHandle(duplicateTokenHandle);
             }
 
+#endif
             return impersonatedUser;
         }
 
@@ -1852,7 +1911,7 @@ namespace TVA.Identity
         /// </example>
         public static void EndImpersonation(WindowsImpersonationContext impersonatedUser)
         {
-            if (impersonatedUser != null)
+            if ((object)impersonatedUser != null)
             {
                 impersonatedUser.Undo();
                 impersonatedUser.Dispose();
@@ -1864,15 +1923,22 @@ namespace TVA.Identity
         /// <summary>
         /// Gets a boolean value that indicates whether the current machine is joined to a domain.
         /// </summary>
+        /// <remarks>
+        /// This method always returns <c>false</c> under Mono deployments.
+        /// </remarks>
         public static bool MachineIsJoinedToDomain
         {
             get
             {
+#if MONO
+                return false;
+#else
                 using (ManagementObject wmi = new ManagementObject(string.Format("Win32_ComputerSystem.Name='{0}'", Environment.MachineName)))
                 {
                     wmi.Get();
                     return (bool)wmi["PartOfDomain"];
                 }
+#endif
             }
         }
 

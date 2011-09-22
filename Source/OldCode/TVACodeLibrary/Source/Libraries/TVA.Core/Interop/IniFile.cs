@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -23,6 +24,8 @@
 //       Edited Comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/21/2011 - J. Ritchie Carroll
+//       Excluded class from Mono deployments due to P/Invoke requirements.
 //
 //*******************************************************************************************************
 
@@ -242,19 +245,44 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
+// TODO: Convert code to a pure C# implementation so that it's compatible with Mono
+// This is currently excluded from Mono builds since it uses P/Invoke calls to the native Win32 INI parsers,
+// however, there are serveral open source C# INI parsers that might be able to used instead, such as the
+// following: http://code.google.com/p/ini-parser/ or http://www.codeproject.com/KB/recipes/INI_Files.aspx.
+// Make sure to also unexclude TVA.Configuration.IniSettingsBase.cs once converted.
 namespace TVA.Interop
 {
+#if !MONO
     /// <summary>
     /// Represents a Windows INI style configuration file.
     /// </summary>
     public class IniFile
     {
-        #region [ Members ]
+    #region [ Members ]
 
         // Constants
         private const int BufferSize = 32768;
@@ -264,7 +292,7 @@ namespace TVA.Interop
 
         #endregion
 
-        #region [ Constructors ]
+    #region [ Constructors ]
 
         /// <summary>
         /// Creates a new <see cref="IniFile"/>.
@@ -286,7 +314,7 @@ namespace TVA.Interop
 
         #endregion
 
-        #region [ Properties ]
+    #region [ Properties ]
 
         /// <summary>
         /// File name of the INI file.
@@ -318,7 +346,7 @@ namespace TVA.Interop
                 const int BufferSize = 4096;
                 StringBuilder buffer = new StringBuilder(BufferSize);
 
-                if (defaultValue == null)
+                if ((object)defaultValue == null)
                     defaultValue = "";
 
                 GetPrivateProfileString(section, entry, defaultValue, buffer, BufferSize, m_fileName);
@@ -349,7 +377,7 @@ namespace TVA.Interop
 
         #endregion
 
-        #region [ Methods ]
+    #region [ Methods ]
 
         /// <summary>
         /// Gets the value of the specified key.
@@ -458,7 +486,7 @@ namespace TVA.Interop
 
         #endregion
 
-        #region [ Static ]
+    #region [ Static ]
 
         // Static Methods
         [DllImport("kernel32", EntryPoint = "GetPrivateProfileString", BestFitMapping = false)]
@@ -489,4 +517,5 @@ namespace TVA.Interop
 
         #endregion
     }
+#endif
 }

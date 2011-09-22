@@ -285,7 +285,6 @@ namespace UDPRebroadcaster
             // 
             // m_serviceHost
             // 
-            this.m_serviceHost.ExitCode = 0;
             this.m_serviceHost.ServiceName = "Service1";
             // 
             // m_notifyIcon

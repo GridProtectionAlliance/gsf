@@ -250,7 +250,7 @@ namespace TVA.Windows.Forms
 {
     /// <summary>Extensions applied to all System.Windows.Forms.Form objects.</summary>
     public static class FormExtensions
-	{
+    {
         private class WindowSetting
         {
             #region [ Members ]
@@ -411,7 +411,7 @@ namespace TVA.Windows.Forms
         {
             CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[settingsCategory];
 
-            if (settings[windowsForm.Name] != null)
+            if ((object)settings[windowsForm.Name] != null)
             {
                 // Restore last saved window size
                 WindowSetting sizeSetting = new WindowSetting(settings[windowsForm.Name].Value);
@@ -439,7 +439,7 @@ namespace TVA.Windows.Forms
         {
             CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[settingsCategory];
 
-            if (settings[windowsForm.Name] != null)
+            if ((object)settings[windowsForm.Name] != null)
             {
                 // Restore last saved window location
                 WindowSetting locationSetting = new WindowSetting(settings[windowsForm.Name].Value);

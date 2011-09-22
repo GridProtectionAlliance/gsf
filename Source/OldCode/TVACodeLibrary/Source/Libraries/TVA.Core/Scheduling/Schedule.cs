@@ -324,7 +324,7 @@ namespace TVA.Scheduling
         /// </summary>
         public Schedule()
             : this("Schedule" + (++s_instances))
-        { 
+        {
         }
 
         /// <summary>
@@ -587,8 +587,8 @@ namespace TVA.Scheduling
         {
             Schedule other = obj as Schedule;
 
-            return other != null && 
-                   this.Name == other.Name && 
+            return (object)other != null &&
+                   this.Name == other.Name &&
                    this.Rule == other.Rule;
         }
 
@@ -600,7 +600,7 @@ namespace TVA.Scheduling
         {
             return m_name;
         }
-       
+
         #endregion
 
         #region [ Static ]
@@ -609,6 +609,6 @@ namespace TVA.Scheduling
         private static int s_instances;
 
         #endregion
-        
+
     }
 }

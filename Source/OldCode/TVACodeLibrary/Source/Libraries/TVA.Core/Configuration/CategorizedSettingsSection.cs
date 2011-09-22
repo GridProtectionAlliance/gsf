@@ -292,7 +292,7 @@ namespace TVA.Configuration
         /// <summary>
         /// Gets or sets the <see cref="ConfigurationFile"/> to which this <see cref="CategorizedSettingsSection"/> belongs.
         /// </summary>
-        public ConfigurationFile File 
+        public ConfigurationFile File
         {
             get
             {
@@ -330,7 +330,7 @@ namespace TVA.Configuration
 
                 base.Properties.Add(configProperty);
                 CategorizedSettingsElementCollection settingsCategory = null;
-                if (base[configProperty] != null)
+                if ((object)base[configProperty] != null)
                 {
                     settingsCategory = (CategorizedSettingsElementCollection)base[configProperty];
                     settingsCategory.Name = name;

@@ -413,7 +413,7 @@ namespace TVA
         /// </returns>
         public static DateTime LocalTimeTo(this DateTime timestamp, string destinationTimeZoneStandardName)
         {
-            if (destinationTimeZoneStandardName == null)
+            if ((object)destinationTimeZoneStandardName == null)
                 throw new ArgumentNullException("destinationTimeZoneStandardName");
 
             return TimeZoneInfo.ConvertTime(timestamp, TimeZoneInfo.Local, TimeZoneInfo.FindSystemTimeZoneById(destinationTimeZoneStandardName));
@@ -427,7 +427,7 @@ namespace TVA
         /// </returns>
         public static DateTime LocalTimeTo(this DateTime timestamp, TimeZoneInfo destinationTimeZone)
         {
-            if (destinationTimeZone == null)
+            if ((object)destinationTimeZone == null)
                 throw new ArgumentNullException("destinationTimeZone");
 
             return TimeZoneInfo.ConvertTime(timestamp, TimeZoneInfo.Local, destinationTimeZone);
@@ -482,7 +482,7 @@ namespace TVA
         /// <returns>The timestamp in the specified time zone.</returns>
         public static DateTime UniversalTimeTo(this DateTime universalTimestamp, string destinationTimeZoneStandardName)
         {
-            if (destinationTimeZoneStandardName == null)
+            if ((object)destinationTimeZoneStandardName == null)
                 throw new ArgumentNullException("destinationTimeZoneStandardName");
 
             return TimeZoneInfo.ConvertTime(universalTimestamp, TimeZoneInfo.Utc, TimeZoneInfo.FindSystemTimeZoneById(destinationTimeZoneStandardName));
@@ -497,7 +497,7 @@ namespace TVA
         /// <returns>The timestamp in the specified time zone.</returns>
         public static DateTime UniversalTimeTo(this DateTime universalTimestamp, TimeZoneInfo destinationTimeZone)
         {
-            if (destinationTimeZone == null)
+            if ((object)destinationTimeZone == null)
                 throw new ArgumentNullException("destinationTimeZone");
 
             return TimeZoneInfo.ConvertTime(universalTimestamp, TimeZoneInfo.Utc, destinationTimeZone);
@@ -513,10 +513,10 @@ namespace TVA
         /// </returns>
         public static DateTime TimeZoneToTimeZone(this DateTime timestamp, string sourceTimeZoneStandardName, string destinationTimeZoneStandardName)
         {
-            if (sourceTimeZoneStandardName == null)
+            if ((object)sourceTimeZoneStandardName == null)
                 throw new ArgumentNullException("sourceTimeZoneStandardName");
 
-            if (destinationTimeZoneStandardName == null)
+            if ((object)destinationTimeZoneStandardName == null)
                 throw new ArgumentNullException("destinationTimeZoneStandardName");
 
             return TimeZoneInfo.ConvertTime(timestamp, TimeZoneInfo.FindSystemTimeZoneById(sourceTimeZoneStandardName), TimeZoneInfo.FindSystemTimeZoneById(destinationTimeZoneStandardName));
@@ -532,10 +532,10 @@ namespace TVA
         /// </returns>
         public static DateTime TimeZoneToTimeZone(this DateTime timestamp, TimeZoneInfo sourceTimeZone, TimeZoneInfo destinationTimeZone)
         {
-            if (sourceTimeZone == null)
+            if ((object)sourceTimeZone == null)
                 throw new ArgumentNullException("sourceTimeZone");
 
-            if (destinationTimeZone == null)
+            if ((object)destinationTimeZone == null)
                 throw new ArgumentNullException("destinationTimeZone");
 
             return TimeZoneInfo.ConvertTime(timestamp, sourceTimeZone, destinationTimeZone);

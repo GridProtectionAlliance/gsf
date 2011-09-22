@@ -269,7 +269,7 @@ namespace TVA
     public static class CharExtensions
     {
         // so that this only happens one time
-        private static char[] wordSeperators = { '\"', '/', '\\', '<', '>', '=', '{', '}', '(', ')', '[', ']', '@', '*'};
+        private static char[] wordSeperators = { '\"', '/', '\\', '<', '>', '=', '{', '}', '(', ')', '[', ']', '@', '*' };
         private static char[] numericValues = { '-', '+', ',', '.' };
 
         /// <summary>
@@ -329,7 +329,7 @@ namespace TVA
         /// <returns>Boolean value indicating a that the character is in the array.</returns>
         public static bool IsAny(this char value, IEnumerable<char> testChars)
         {
-            if (testChars == null)
+            if ((object)testChars == null)
                 throw new ArgumentNullException("testChars");
 
             foreach (char c in testChars)

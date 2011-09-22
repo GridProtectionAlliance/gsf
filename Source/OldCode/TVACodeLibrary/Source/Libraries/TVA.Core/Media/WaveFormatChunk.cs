@@ -400,10 +400,10 @@ namespace TVA.Media
                 {
                     EndianOrder.LittleEndian.CopyBytes(m_extraParametersSize, binaryImage, startIndex + 16);
 
-                    if (m_extraParametersSize > 0 && m_extraParameters != null)
+                    if (m_extraParametersSize > 0 && (object)m_extraParameters != null)
                         Buffer.BlockCopy(m_extraParameters, 0, binaryImage, startIndex + 18, m_extraParametersSize);
                 }
-                
+
                 return binaryImage;
             }
         }
@@ -583,7 +583,7 @@ namespace TVA.Media
             {
                 m_extraParameters = value;
 
-                if (m_extraParameters == null)
+                if ((object)m_extraParameters == null)
                     m_extraParametersSize = 0;
                 else
                     m_extraParametersSize = (short)m_extraParameters.Length;
@@ -635,12 +635,12 @@ namespace TVA.Media
         {
             WaveFormatChunk waveFormatChunk = new WaveFormatChunk(m_sampleRate, m_bitsPerSample, m_channels, m_audioFormat);
 
-            if (m_extraParameters != null)
+            if ((object)m_extraParameters != null)
             {
                 byte[] extraParameters = new byte[m_extraParameters.Length];
                 Buffer.BlockCopy(m_extraParameters, 0, extraParameters, 0, m_extraParameters.Length);
                 waveFormatChunk.ExtraParameters = extraParameters;
-            }            
+            }
 
             return waveFormatChunk;
         }

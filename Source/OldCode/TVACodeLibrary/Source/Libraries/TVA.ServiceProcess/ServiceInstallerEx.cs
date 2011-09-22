@@ -11,6 +11,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  02/04/2011 - J. Ritchie Carroll
 //       Initial version of source integrated into TVA Code Library.
+//  09/21/2011 - J. Ritchie Carroll
+//       Excluded class from Mono deployments due to P/Invoke requirements.
 //
 //*******************************************************************************************************
 
@@ -276,6 +278,7 @@ using TVA.Interop;
 
 namespace TVA.ServiceProcess
 {
+#if !MONO
     #region [ Enumerations ]
 
     /// <summary>
@@ -311,7 +314,7 @@ namespace TVA.ServiceProcess
     /// </summary>
     public class ServiceInstallerEx : ServiceInstaller
     {
-        #region [ Members ]
+    #region [ Members ]
 
         // Constants
         private const int SC_MANAGER_ALL_ACCESS = 0xF003F;
@@ -331,7 +334,7 @@ namespace TVA.ServiceProcess
 
         #endregion
 
-        #region [ Constructors ]
+    #region [ Constructors ]
 
         /// <summary>
         /// Creates a new <see cref="ServiceInstallerEx"/>.
@@ -351,7 +354,7 @@ namespace TVA.ServiceProcess
 
         #endregion
 
-        #region [ Properties ]
+    #region [ Properties ]
 
         /// <summary>
         /// Sets the time after which to reset the failure count to zero if there are no failures, in seconds.
@@ -440,7 +443,7 @@ namespace TVA.ServiceProcess
 
         #endregion
 
-        #region [ Methods ]
+    #region [ Methods ]
 
         /// <summary>
         /// Defines a new recover action to be performed upon service failure.
@@ -695,4 +698,5 @@ namespace TVA.ServiceProcess
 
         #endregion
     }
+#endif
 }

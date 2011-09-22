@@ -424,23 +424,23 @@ namespace TVA
                 return default(T);
 
             // Initialize return type if not specified.
-            if (type == null)
+            if ((object)type == null)
                 type = typeof(T);
 
             // Initialize culture info if not specified.
-            if (culture == null)
+            if ((object)culture == null)
                 culture = CultureInfo.InvariantCulture;
 
             try
             {
-                if (type == typeof(bool))
+                if (type.IsAssignableFrom(typeof(bool)))
                 {
                     // Handle booleans as a special case to allow numeric entries as well as true/false
                     return (T)((object)value.ParseBoolean());
                 }
                 else
                 {
-                    if (type == typeof(IConvertible))
+                    if (type.IsAssignableFrom(typeof(IConvertible)))
                     {
                         // This is faster for native types than using type converter...
                         return (T)Convert.ChangeType(value, type, culture);
@@ -508,7 +508,7 @@ namespace TVA
         public static string JoinKeyValuePairs(this Dictionary<string, string> pairs, char parameterDelimeter = ';', char keyValueDelimeter = '=', char startValueDelimeter = '{', char endValueDelimeter = '}')
         {
             // <pex>
-            if (pairs == null)
+            if ((object)pairs == null)
                 throw new ArgumentNullException("pairs");
             // </pex>
 
@@ -664,7 +664,7 @@ namespace TVA
             {
                 // Parse out parameter's key/value elements
                 elements = parameter.Split(keyValueDelimeter);
-                
+
                 if (elements.Length == 2)
                 {
                     // Get key expression
@@ -1298,7 +1298,7 @@ namespace TVA
         /// <returns>The centered string value.</returns>
         public static string CenterText(this string value, int maxLength, char paddingCharacter)
         {
-            if (value == null)
+            if ((object)value == null)
                 value = "";
 
             // If the text to be centered contains multiple lines, centers all the lines individually.

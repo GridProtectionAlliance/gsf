@@ -434,7 +434,7 @@ namespace TVA.Configuration
         {
             string keyName = GetKeyName(name);
 
-            if (Registry.GetValue(keyName, setting, null) == null)
+            if ((object)Registry.GetValue(keyName, setting, null) == null)
                 Registry.SetValue(keyName, setting, value, RegistryValueKind.String);
         }
 

@@ -428,10 +428,10 @@ namespace TVA
         /// <returns>One of the <see cref="ApplicationType"/> values.</returns>
         public static ApplicationType GetApplicationType()
         {
-            if (s_applicationType != null)
+            if ((object)s_applicationType != null)
                 return s_applicationType.Value;
 
-            if (HostingEnvironment.ApplicationVirtualPath != null)
+            if ((object)HostingEnvironment.ApplicationVirtualPath != null)
             {
                 s_applicationType = ApplicationType.Web;
             }
@@ -482,7 +482,7 @@ namespace TVA
         /// <returns><paramref name="value"/> as a string; if <paramref name="value"/> is null, empty string ("") will be returned. </returns>
         public static string ToNonNullString<T>(this T value) where T : class
         {
-            return (value == null || value == DBNull.Value ? "" : value.ToString());
+            return ((object)value == null || value == DBNull.Value ? "" : value.ToString());
         }
 
         /// <summary>
@@ -495,10 +495,10 @@ namespace TVA
         /// <exception cref="ArgumentNullException"><paramref name="nonNullValue"/> cannot be null.</exception>
         public static string ToNonNullString<T>(this T value, string nonNullValue) where T : class
         {
-            if (nonNullValue == null)
+            if ((object)nonNullValue == null)
                 throw new ArgumentNullException("nonNullValue");
 
-            return (value == null || value == DBNull.Value ? nonNullValue : value.ToString());
+            return ((object)value == null || value == DBNull.Value ? nonNullValue : value.ToString());
         }
 
         // We handle strings as a special version of the ToNullNullString extension to handle documentation a little differently
@@ -510,7 +510,7 @@ namespace TVA
         /// <returns><see cref="String"/> value; if <paramref name="value"/> is null, empty string ("") will be returned.</returns>
         public static string ToNonNullString(this string value)
         {
-            return (value == null ? "" : value);
+            return ((object)value == null ? "" : value);
         }
 
         /// <summary>
@@ -526,7 +526,7 @@ namespace TVA
             if (string.IsNullOrEmpty(nonNullNorEmptyValue))
                 throw new ArgumentException("Must not be null or an empty string", "nonNullNorEmptyValue");
 
-            if (value == null || value == DBNull.Value)
+            if ((object)value == null || value == DBNull.Value)
                 return nonNullNorEmptyValue;
 
             string valueAsString = value.ToString();
@@ -547,7 +547,7 @@ namespace TVA
             if (string.IsNullOrWhiteSpace(nonNullNorWhiteSpaceValue))
                 throw new ArgumentException("Must not be null, an empty string or white space", "nonNullNorWhiteSpaceValue");
 
-            if (value == null || value == DBNull.Value)
+            if ((object)value == null || value == DBNull.Value)
                 return nonNullNorWhiteSpaceValue;
 
             string valueAsString = value.ToString();
@@ -594,7 +594,7 @@ namespace TVA
         public static string TypeConvertToString(object value, CultureInfo culture)
         {
             // Don't proceed further if value is null.
-            if (value == null)
+            if ((object)value == null)
                 return string.Empty;
 
             // If value is already a string, no need to attempt conversion
@@ -602,7 +602,7 @@ namespace TVA
                 return value as string;
 
             // Initialize culture info if not specified.
-            if (culture == null)
+            if ((object)culture == null)
                 culture = CultureInfo.InvariantCulture;
 
             try
@@ -637,7 +637,7 @@ namespace TVA
         public static bool IsDefaultValue(object item)
         {
             // Only reference types can be null, therefore null is its default value
-            if (item == null)
+            if ((object)item == null)
                 return true;
 
             Type itemType = item.GetType();
@@ -647,7 +647,7 @@ namespace TVA
                 // Handle common types
                 IConvertible convertible = item as IConvertible;
 
-                if (convertible != null)
+                if ((object)convertible != null)
                 {
                     switch (convertible.GetTypeCode())
                     {
@@ -686,7 +686,7 @@ namespace TVA
                 return ((ValueType)item).Equals(Activator.CreateInstance(itemType));
             }
 
-            return (item == null);
+            return ((object)item == null);
         }
 
         /// <summary>Determines if given item is a reference type.</summary>
@@ -696,7 +696,7 @@ namespace TVA
         {
             return !(item is ValueType);
         }
-        
+
         /// <summary>Determines if given item is a reference type but not a string.</summary>
         /// <param name="item">Object to evaluate.</param>
         /// <returns>Result of evaluation as a <see cref="bool"/>.</returns>
@@ -712,7 +712,7 @@ namespace TVA
         {
             IConvertible convertible = item as IConvertible;
 
-            if (convertible != null)
+            if ((object)convertible != null)
             {
                 switch (convertible.GetTypeCode())
                 {

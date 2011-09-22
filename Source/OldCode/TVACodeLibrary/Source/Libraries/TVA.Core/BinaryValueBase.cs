@@ -299,7 +299,7 @@ namespace TVA
         /// </exception>
         protected BinaryValueBase(TypeCode typeCode, byte[] buffer, int startIndex, int length)
         {
-            if (buffer == null)
+            if ((object)buffer == null)
                 throw new ArgumentNullException("buffer");
 
             if (startIndex < 0)

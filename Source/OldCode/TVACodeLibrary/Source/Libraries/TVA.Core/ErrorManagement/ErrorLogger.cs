@@ -378,7 +378,7 @@ namespace TVA.ErrorManagement
         /// Specifies the default value for the <see cref="LogToScreenshot"/> property.
         /// </summary>
         public const bool DefaultLogToScreenshot = false;
-       
+
         /// <summary>
         /// Specifies the default value for the <see cref="LogUserInfo"/> property.
         /// </summary>
@@ -475,7 +475,7 @@ namespace TVA.ErrorManagement
         /// </summary>
         public ErrorLogger()
             : base()
-        {            
+        {
             m_logToUI = DefaultLogToUI;
             m_logToFile = DefaultLogToFile;
             m_logToEmail = DefaultLogToEmail;
@@ -514,7 +514,7 @@ namespace TVA.ErrorManagement
         public ErrorLogger(IContainer container)
             : this()
         {
-            if (container != null)
+            if ((object)container != null)
                 container.Add(this);
         }
 
@@ -853,7 +853,7 @@ namespace TVA.ErrorManagement
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_errorTextMethod = value;
@@ -879,7 +879,7 @@ namespace TVA.ErrorManagement
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_scopeTextMethod = value;
@@ -905,7 +905,7 @@ namespace TVA.ErrorManagement
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_actionTextMethod = value;
@@ -927,7 +927,7 @@ namespace TVA.ErrorManagement
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_moreInfoTextMethod = value;
@@ -1055,7 +1055,7 @@ namespace TVA.ErrorManagement
                 status.Append(m_exitOnUnhandledException ? "Enabled" : "Disabled");
                 status.AppendLine();
                 status.Append("    Last Encountered Error: ");
-                status.Append(m_lastException != null ? m_lastException.GetType().FullName : "[None]");
+                status.Append((object)m_lastException != null ? m_lastException.GetType().FullName : "[None]");
                 status.AppendLine();
 
                 return status.ToString();
@@ -1229,7 +1229,7 @@ namespace TVA.ErrorManagement
                 return;
 
             // Save the encountered exception.
-            m_lastException = exception;   
+            m_lastException = exception;
 
             // Iterate through all of the registered logger methods and invoke them for processing the exception.
             foreach (Action<Exception> logger in m_loggers)
@@ -1555,7 +1555,7 @@ namespace TVA.ErrorManagement
         /// <param name="exception"><see cref="Exception"/> to send to <see cref="LoggingException"/> event.</param>
         protected virtual void OnLoggingException(Exception exception)
         {
-            if (LoggingException != null)
+            if ((object)LoggingException != null)
                 LoggingException(this, new EventArgs<Exception>(exception));
         }
 
@@ -1577,7 +1577,7 @@ namespace TVA.ErrorManagement
                         // This will be done only when the object is disposed by calling Dispose().
                         SaveSettings();
 
-                        if (m_errorLog != null)
+                        if ((object)m_errorLog != null)
                             m_errorLog.Dispose();
                     }
                 }
@@ -1790,7 +1790,7 @@ namespace TVA.ErrorManagement
         public static string GetExceptionInfo(Exception ex, bool includeUserInfo)
         {
             StringBuilder info = new StringBuilder();
-            if (ex.InnerException != null)
+            if ((object)ex.InnerException != null)
             {
                 // Sometimes the original exception is wrapped in a more relevant outer exception
                 // the detail exception is the "inner" exception
@@ -1834,7 +1834,7 @@ namespace TVA.ErrorManagement
             switch (Common.GetApplicationType())
             {
                 case ApplicationType.WindowsCui:
-                case ApplicationType.WindowsGui:                    
+                case ApplicationType.WindowsGui:
                     info.AppendFormat("Machine Name:          {0}", Environment.MachineName);
                     info.AppendLine();
                     info.AppendFormat("Machine IP:            {0}", Dns.GetHostEntry(Environment.MachineName).AddressList[0].ToString());
@@ -1855,7 +1855,7 @@ namespace TVA.ErrorManagement
                     }
                     break;
                 case ApplicationType.Web:
-                    
+
                     info.AppendFormat("Server Name:           {0}", Environment.MachineName);
                     info.AppendLine();
                     info.AppendFormat("Server IP:             {0}", Dns.GetHostEntry(Environment.MachineName).AddressList[0].ToString());
@@ -1946,7 +1946,7 @@ namespace TVA.ErrorManagement
             info.AppendLine();
             info.AppendFormat("Exception Message:     {0}", ex.Message);
             info.AppendLine();
-            if (ex.TargetSite != null)
+            if ((object)ex.TargetSite != null)
             {
                 info.AppendFormat("Exception Target Site: {0}", ex.TargetSite.Name);
                 info.AppendLine();

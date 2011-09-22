@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -28,6 +29,8 @@
 //       Renamed StatusUpdate event to StatusMessage.
 //  05/11/2011 - Pinal C. Patel
 //       Modified OnStatusUpdate() method to allow for parameterized arguments.
+//  09/21/2011 - J. Ritchie Carroll
+//       Added Mono implementation exception regions.
 //
 //*******************************************************************************************************
 
@@ -247,6 +250,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.ComponentModel;
 using System.Configuration;
@@ -340,7 +362,7 @@ namespace TVA.Adapters
         /// </remarks>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public virtual string TypeName
-        { 
+        {
             get
             {
                 Type type = this.GetType();
@@ -359,8 +381,8 @@ namespace TVA.Adapters
         /// This can be used to update the <see cref="Adapter"/> when changes are made to the file where it is housed.
         /// </remarks>
         [XmlIgnore(), Browsable(false), EditorBrowsable(EditorBrowsableState.Never), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public virtual string HostFile 
-        { 
+        public virtual string HostFile
+        {
             get
             {
                 return m_hostFile;
@@ -426,15 +448,24 @@ namespace TVA.Adapters
         /// <summary>
         /// Gets the memory utilzation of the <see cref="Adapter"/> in bytes if executing in a seperate <see cref="AppDomain"/>, otherwise <see cref="Double.NaN"/>.
         /// </summary>
-        /// <remarks><see cref="MemoryUsage"/> gets updated only after a full blocking collection by <see cref="GC"/> (eg. <see cref="GC.Collect()"/>).</remarks>
-        public double MemoryUsage 
+        /// <remarks>
+        /// <para>
+        /// <see cref="MemoryUsage"/> gets updated only after a full blocking collection by <see cref="GC"/> (eg. <see cref="GC.Collect()"/>).
+        /// </para>
+        /// <para>
+        /// This method always returns <c><see cref="Double.NaN"/></c> under Mono deployments.
+        /// </para>
+        /// </remarks>
+        public double MemoryUsage
         {
             get
             {
+#if !MONO
                 if (!Domain.IsDefaultAppDomain() && AppDomain.MonitoringIsEnabled)
                     // Both app domain isolation and app domain resource monitoring is enabled.
                     return Domain.MonitoringSurvivedMemorySize;
                 else
+#endif
                     return double.NaN;
             }
         }
@@ -442,15 +473,19 @@ namespace TVA.Adapters
         /// <summary>
         /// Gets the % processor utilization of the <see cref="Adapter"/> if executing in a seperate <see cref="AppDomain"/> otherwise <see cref="Double.NaN"/>.
         /// </summary>
-        public double ProcessorUsage 
+        /// <remarks>
+        /// This method always returns <c><see cref="Double.NaN"/></c> under Mono deployments.
+        /// </remarks>
+        public double ProcessorUsage
         {
             get
             {
-
+#if !MONO
                 if (!Domain.IsDefaultAppDomain() && AppDomain.MonitoringIsEnabled)
                     // Both app domain isolation and app domain resource monitoring is enabled.
                     return Domain.MonitoringTotalProcessorTime.TotalSeconds / Ticks.ToSeconds(DateTime.Now.Ticks - m_created.Ticks) / Environment.ProcessorCount * 100;
                 else
+#endif
                     return double.NaN;
             }
         }
@@ -497,7 +532,7 @@ namespace TVA.Adapters
         /// <summary>
         /// Gets the <see cref="AppDomain"/> in which the <see cref="Adapter"/> is executing.
         /// </summary>
-        public virtual AppDomain Domain 
+        public virtual AppDomain Domain
         {
             get
             {
@@ -591,7 +626,7 @@ namespace TVA.Adapters
         /// <param name="args">Arguments to be used when formatting the <paramref name="updateMessage"/>.</param>
         protected virtual void OnStatusUpdate(UpdateType updateType, string updateMessage, params object[] args)
         {
-            if (StatusUpdate != null)
+            if ((object)StatusUpdate != null)
                 StatusUpdate(this, new EventArgs<UpdateType, string>(updateType, string.Format(updateMessage, args)));
         }
 
@@ -602,10 +637,8 @@ namespace TVA.Adapters
         /// <param name="encounteredException">Encountered <see cref="Exception"/> to send to <see cref="ExecutionException"/> event.</param>
         protected virtual void OnExecutionException(string activityDescription, Exception encounteredException)
         {
-            if (ExecutionException != null)
-            {
-                ExecutionException(this, new EventArgs<string,Exception>(activityDescription, encounteredException));
-            }
+            if ((object)ExecutionException != null)
+                ExecutionException(this, new EventArgs<string, Exception>(activityDescription, encounteredException));
         }
 
         /// <summary>
@@ -613,7 +646,7 @@ namespace TVA.Adapters
         /// </summary>
         protected virtual void OnDisposed()
         {
-            if (Disposed != null)
+            if ((object)Disposed != null)
                 Disposed(this, EventArgs.Empty);
         }
 

@@ -13,6 +13,8 @@
 //       Generated original version of source code.
 //  02/16/2011 - J. Ritchie Carroll
 //       Added automatic password expiration handling and modified screen to accomodate default buttons.
+//  09/22/2011 - J. Ritchie Carroll
+//       Excluded class from Mono deployments since much of WPF is not currently available.
 //
 //******************************************************************************************************
 
@@ -261,6 +263,7 @@ using TVA.Security;
 
 namespace TVA.Windows
 {
+#if !MONO
     #region [ Enumerations ]
 
     /// <summary>
@@ -289,7 +292,7 @@ namespace TVA.Windows
     /// </summary>
     public partial class SecurityPortal : Window
     {
-        #region [ Members ]
+    #region [ Members ]
 
         // Fields
         private DisplayType m_displayType;
@@ -297,7 +300,7 @@ namespace TVA.Windows
 
         #endregion
 
-        #region [ Constructors ]
+    #region [ Constructors ]
 
         /// <summary>
         /// Initializes a new WPF window.
@@ -362,7 +365,7 @@ namespace TVA.Windows
 
         #endregion
 
-        #region [ Properties ]
+    #region [ Properties ]
 
         /// <summary>
         /// Gets or sets flag that indicates if there was a failure during provider initialization.
@@ -398,7 +401,7 @@ namespace TVA.Windows
 
         #endregion
 
-        #region [ Methods ]
+    #region [ Methods ]
 
         /// <summary>
         /// Displays requested screen section based on received request.
@@ -420,7 +423,7 @@ namespace TVA.Windows
             ButtonChange.IsDefault = false;
 
             if (m_displayType == DisplayType.Login)
-            {                
+            {
                 TextBoxPassword.Password = "";
                 ButtonLogin.IsDefault = true;
                 TextBlockApplicationLogin.Visibility = Visibility.Visible;
@@ -498,7 +501,7 @@ namespace TVA.Windows
             DisplayErrorMessage(null);
         }
 
-        #region [ Event Handlers ]
+    #region [ Event Handlers ]
 
         /// <summary>
         /// Handles window closed.
@@ -557,7 +560,7 @@ namespace TVA.Windows
                 {
                     // Display login failure message
                     DisplayErrorMessage("The username or password is invalid. Please try again.");
-                
+
                     if (string.IsNullOrWhiteSpace(TextBoxUserName.Text))
                         TextBoxUserName.Focus();
                     else
@@ -567,7 +570,7 @@ namespace TVA.Windows
             catch (Exception ex)
             {
                 DisplayErrorMessage("Login failed: " + ex.Message);
-            
+
                 if (string.IsNullOrWhiteSpace(TextBoxUserName.Text))
                     TextBoxUserName.Focus();
                 else
@@ -744,4 +747,5 @@ namespace TVA.Windows
 
         #endregion
     }
+#endif
 }

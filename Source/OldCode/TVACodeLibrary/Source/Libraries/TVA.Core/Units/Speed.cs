@@ -399,7 +399,8 @@ namespace TVA.Units
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Speed"/>.</exception>
         public int CompareTo(object value)
         {
-            if (value == null) return 1;
+            if ((object)value == null)
+                return 1;
 
             if (!(value is double) && !(value is Speed))
                 throw new ArgumentException("Argument must be a Double or a Speed");
@@ -966,7 +967,7 @@ namespace TVA.Units
         public static readonly Speed MinValue = (Speed)double.MinValue;
 
         // Static Methods
-        
+
         /// <summary>
         /// Creates a new <see cref="Speed"/> value from the specified <paramref name="value"/> in miles per hour.
         /// </summary>
@@ -1027,6 +1028,6 @@ namespace TVA.Units
             return new Speed(value * MachFactor);
         }
 
-        #endregion        
+        #endregion
     }
 }

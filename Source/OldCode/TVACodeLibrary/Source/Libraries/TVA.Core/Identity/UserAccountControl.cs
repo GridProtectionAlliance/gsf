@@ -11,6 +11,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  02/18/2011 - J. Ritchie Carroll
 //       Generated original version of source code.
+//  09/21/2011 - J. Ritchie Carroll
+//       Excluded class from Mono deployments due to P/Invoke requirements.
 //
 //******************************************************************************************************
 
@@ -269,6 +271,7 @@ using TVA.Interop;
 
 namespace TVA.Identity
 {
+#if !MONO
     /// <summary>
     /// Provides facilities for enabling and disabling User Account Control (UAC), determining elevation and virtualization status, and launching a process under elevated credentials.
     /// </summary>
@@ -436,7 +439,7 @@ namespace TVA.Identity
                 // Check the HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System\EnableLUA registry value.
                 RegistryKey key = Registry.LocalMachine.OpenSubKey(UacRegistryKey, false);
 
-                if (key != null)
+                if ((object)key != null)
                 {
                     object value = key.GetValue(UacRegistryValue);
 
@@ -574,4 +577,5 @@ namespace TVA.Identity
             // This shutdown flag corresponds to: "Operating System: Reconfiguration (Planned)".
         }
     }
+#endif
 }

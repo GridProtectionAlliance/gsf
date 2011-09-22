@@ -282,7 +282,7 @@ namespace TVA.Configuration
         /// <summary>
         /// Gets or sets the <see cref="CategorizedSettingsSection"/> to which this <see cref="CategorizedSettingsElementCollection"/> belongs.
         /// </summary>
-        public CategorizedSettingsSection Section 
+        public CategorizedSettingsSection Section
         {
             get
             {
@@ -313,7 +313,7 @@ namespace TVA.Configuration
             }
             set
             {
-                if (base.BaseGet(index) != null)
+                if ((object)base.BaseGet(index) != null)
                     base.BaseRemoveAt(index);
 
                 base.BaseAdd(index, value);
@@ -343,14 +343,14 @@ namespace TVA.Configuration
         {
             get
             {
-                if (ensureExistance && base.BaseGet(name) == null)
+                if (ensureExistance && (object)base.BaseGet(name) == null)
                 {
                     // Add setting since it's not there.
                     Add(name, string.Empty);
                 }
 
                 CategorizedSettingsElement setting = (CategorizedSettingsElement)base.BaseGet(name);
-                if (setting != null)
+                if ((object)setting != null)
                 {
                     // Set the crypto key for the setting.
                     setting.SetCryptoKey(m_cryptoKey);
@@ -392,7 +392,7 @@ namespace TVA.Configuration
         {
             Add(name, value, CategorizedSettingsElement.DefaultDescription, CategorizedSettingsElement.DefaultEncrypted, CategorizedSettingsElement.DefaultScope);
         }
-         
+
         /// <summary>
         /// Adds a new <see cref="CategorizedSettingsElement"/> object if one does not exist.
         /// </summary>
@@ -426,7 +426,7 @@ namespace TVA.Configuration
         /// <param name="scope">One of the <see cref="SettingScope"/> values.</param>
         public void Add(string name, object value, string description, bool encryptValue, SettingScope scope)
         {
-            if (base.BaseGet(name) == null)
+            if ((object)base.BaseGet(name) == null)
             {
                 // Add the element only if it does not exist.
                 CategorizedSettingsElement setting = new CategorizedSettingsElement(this, name);
@@ -435,14 +435,14 @@ namespace TVA.Configuration
                 Add(setting);
             }
         }
-           
+
         /// <summary>
         /// Adds a new <see cref="CategorizedSettingsElement"/> object if one does not exist.
         /// </summary>
         /// <param name="setting">The <see cref="CategorizedSettingsElement"/> object to add.</param>
         public void Add(CategorizedSettingsElement setting)
         {
-            if (base.BaseGet(setting.Name) == null)
+            if ((object)base.BaseGet(setting.Name) == null)
             {
                 // Add the element only if it does not exist.
                 setting.Category = this;

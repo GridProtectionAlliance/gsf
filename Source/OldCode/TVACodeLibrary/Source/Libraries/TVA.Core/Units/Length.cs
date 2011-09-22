@@ -429,7 +429,8 @@ namespace TVA.Units
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Length"/>.</exception>
         public int CompareTo(object value)
         {
-            if (value == null) return 1;
+            if ((object)value == null)
+                return 1;
 
             if (!(value is double) && !(value is Length))
                 throw new ArgumentException("Argument must be a Double or a Length");
@@ -996,7 +997,7 @@ namespace TVA.Units
         public static readonly Length MinValue = (Length)double.MinValue;
 
         // Static Methods
-        
+
         /// <summary>
         /// Creates a new <see cref="Length"/> value from the specified <paramref name="value"/> in feet.
         /// </summary>
@@ -1077,6 +1078,6 @@ namespace TVA.Units
             return new Length(value * NauticalMilesFactor);
         }
 
-        #endregion        
+        #endregion
     }
 }

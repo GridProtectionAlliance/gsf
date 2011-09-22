@@ -976,7 +976,7 @@ namespace TVA.Security.Cryptography
             int read;
 
             // Sends initial progress event.
-            if (progressHandler != null)
+            if ((object)progressHandler != null)
             {
                 try
                 {
@@ -1009,7 +1009,7 @@ namespace TVA.Security.Cryptography
                 destination.Write(outBuffer, 0, outBuffer.Length);
 
                 // Updates encryption progress.
-                if (progressHandler != null)
+                if ((object)progressHandler != null)
                 {
                     total += read;
                     progress.Complete = total;
@@ -1180,7 +1180,7 @@ namespace TVA.Security.Cryptography
             int size, read;
 
             // Sends initial progress event.
-            if (progressHandler != null)
+            if ((object)progressHandler != null)
             {
                 try
                 {
@@ -1223,7 +1223,7 @@ namespace TVA.Security.Cryptography
                         destination.Write(outBuffer, 0, outBuffer.Length);
 
                         // Updates decryption progress.
-                        if (progressHandler != null)
+                        if ((object)progressHandler != null)
                         {
                             total += (read + lengthBuffer.Length);
                             progress.Complete = total;

@@ -373,7 +373,7 @@ namespace TVA.Console
             {
                 // Found just a parameter in last pass...
                 // The last parameter is still waiting, with no value, set it to nothing.
-                if (parameter != null)
+                if ((object)parameter != null)
                 {
                     if (!m_arguments.ContainsKey(parameter))
                         m_arguments.Add(parameter, null);
@@ -444,7 +444,7 @@ namespace TVA.Console
             }
 
             // In case a parameter is still waiting
-            if (parameter != null && !m_arguments.ContainsKey(parameter))
+            if ((object)parameter != null && !m_arguments.ContainsKey(parameter))
                 m_arguments.Add(parameter, null);
         }
 

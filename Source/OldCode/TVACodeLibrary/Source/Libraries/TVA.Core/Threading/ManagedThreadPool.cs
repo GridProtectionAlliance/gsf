@@ -261,7 +261,8 @@ namespace TVA.Threading
         /// </remarks>
         public static ManagedThread QueueUserWorkItem(ThreadStart callback)
         {
-            if (callback == null) throw (new ArgumentNullException("callback"));
+            if ((object)callback == null)
+                throw (new ArgumentNullException("callback"));
 
             ManagedThread item = new ManagedThread(ThreadType.QueuedThread, callback, null, null);
 
@@ -300,7 +301,8 @@ namespace TVA.Threading
         /// </remarks>
         public static ManagedThread QueueUserWorkItem(ParameterizedThreadStart callback, object state)
         {
-            if (callback == null) throw (new ArgumentNullException("callback"));
+            if ((object)callback == null)
+                throw (new ArgumentNullException("callback"));
 
             ManagedThread item = new ManagedThread(ThreadType.QueuedThread, callback, state, null);
 
@@ -341,7 +343,8 @@ namespace TVA.Threading
         /// </remarks>
         public static ManagedThread QueueUserWorkItem(ContextCallback callback, object state, ExecutionContext ctx)
         {
-            if (callback == null) throw (new ArgumentNullException("callback"));
+            if ((object)callback == null)
+                throw (new ArgumentNullException("callback"));
 
             ManagedThread item = new ManagedThread(ThreadType.QueuedThread, callback, state, ctx);
 
@@ -358,7 +361,8 @@ namespace TVA.Threading
             ManagedThread item = ManagedThreads.Pop();
 
             // Execute callback...
-            if (item != null) item.HandleItem();
+            if ((object)item != null)
+                item.HandleItem();
         }
     }
 }

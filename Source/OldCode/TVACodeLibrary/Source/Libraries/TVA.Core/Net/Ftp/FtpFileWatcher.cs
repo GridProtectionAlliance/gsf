@@ -360,7 +360,7 @@ namespace TVA.Net.Ftp
         public FtpFileWatcher(IContainer container)
             : this()
         {
-            if (container != null)
+            if ((object)container != null)
                 container.Add(this);
         }
 
@@ -528,7 +528,7 @@ namespace TVA.Net.Ftp
                     {
                         Close();
 
-                        if (m_session != null)
+                        if ((object)m_session != null)
                         {
                             m_session.CommandSent -= OnCommandSent;
                             m_session.ResponseReceived -= OnResponseReceived;
@@ -536,14 +536,14 @@ namespace TVA.Net.Ftp
                         }
                         m_session = null;
 
-                        if (m_watchTimer != null)
+                        if ((object)m_watchTimer != null)
                         {
                             m_watchTimer.Elapsed -= WatchTimer_Elapsed;
                             m_watchTimer.Dispose();
                         }
                         m_watchTimer = null;
 
-                        if (m_restartTimer != null)
+                        if ((object)m_restartTimer != null)
                         {
                             m_restartTimer.Elapsed -= RestartTimer_Elapsed;
                             m_restartTimer.Dispose();
@@ -650,7 +650,7 @@ namespace TVA.Net.Ftp
         /// <param name="status">A <see cref="String"/> status message.</param>
         protected void OnStatus(string status)
         {
-            if (Status != null)
+            if ((object)Status != null)
                 Status(this, new EventArgs<string>("[" + DateTime.Now + "] " + status));
         }
 
@@ -660,7 +660,7 @@ namespace TVA.Net.Ftp
         /// <param name="file">A <see cref="FtpFile"/> file.</param>
         protected void OnFileAdded(FtpFile file)
         {
-            if (FileAdded != null)
+            if ((object)FileAdded != null)
                 FileAdded(this, new EventArgs<FtpFile>(file));
         }
 
@@ -670,7 +670,7 @@ namespace TVA.Net.Ftp
         /// <param name="file">A <see cref="FtpFile"/> file.</param>
         protected void OnFileDeleted(FtpFile file)
         {
-            if (FileDeleted != null)
+            if ((object)FileDeleted != null)
                 FileDeleted(this, new EventArgs<FtpFile>(file));
         }
 
@@ -680,7 +680,7 @@ namespace TVA.Net.Ftp
         /// <param name="command">A <see cref="String"/> command.</param>
         protected void OnCommandSent(string command)
         {
-            if (CommandSent != null)
+            if ((object)CommandSent != null)
                 CommandSent(this, new EventArgs<string>(command));
         }
 
@@ -695,7 +695,7 @@ namespace TVA.Net.Ftp
         /// <param name="response">A <see cref="String"/> response.</param>
         protected void OnResponseReceived(string response)
         {
-            if (ResponseReceived != null)
+            if ((object)ResponseReceived != null)
                 ResponseReceived(this, new EventArgs<string>(response));
         }
 
@@ -734,7 +734,7 @@ namespace TVA.Net.Ftp
                 OnStatus("FTP file watcher is no longer connected to server \"" + m_session.Server + "\" - restarting connect cycle." + "\r\n" + "\t" + "Exception: " + ex.Message);
             }
 
-            if (m_session != null)
+            if ((object)m_session != null)
             {
                 if (m_session.IsConnected)
                 {
@@ -787,7 +787,7 @@ namespace TVA.Net.Ftp
                     // Check for removed files
                     for (x = 0; x < m_currentFiles.Count; x++)
                     {
-                        if (m_session.CurrentDirectory.FindFile(m_currentFiles[x].Name) == null)
+                        if ((object)m_session.CurrentDirectory.FindFile(m_currentFiles[x].Name) == null)
                         {
                             removedFiles.Add(x);
                             OnFileDeleted(m_currentFiles[x]);

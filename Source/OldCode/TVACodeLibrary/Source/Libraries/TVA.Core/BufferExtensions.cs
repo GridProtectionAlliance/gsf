@@ -267,7 +267,7 @@ namespace TVA
         /// </exception>
         public static byte[] BlockCopy(this byte[] source, int startIndex, int length)
         {
-            if (source == null)
+            if ((object)source == null)
                 throw new ArgumentNullException("source");
 
             if (startIndex < 0)
@@ -294,10 +294,10 @@ namespace TVA
         /// <returns>Combined buffers.</returns>
         public static byte[] Combine(this byte[] source, byte[] other)
         {
-            if (source == null)
+            if ((object)source == null)
                 throw new ArgumentNullException("source");
 
-            if (other == null)
+            if ((object)other == null)
                 throw new ArgumentNullException("other");
 
             return source.Combine(0, source.Length, other, 0, other.Length);
@@ -321,10 +321,10 @@ namespace TVA
         /// </exception>
         public static byte[] Combine(this byte[] source, int sourceOffset, int sourceCount, byte[] other, int otherOffset, int otherCount)
         {
-            if (source == null)
+            if ((object)source == null)
                 throw new ArgumentNullException("source");
 
-            if (other == null)
+            if ((object)other == null)
                 throw new ArgumentNullException("other");
 
             if (sourceOffset < 0)
@@ -357,10 +357,10 @@ namespace TVA
 
             // Combine buffers together as a single image
             byte[] combinedBuffer = new byte[sourceCount + otherCount];
-            
+
             Buffer.BlockCopy(source, sourceOffset, combinedBuffer, 0, sourceCount);
             Buffer.BlockCopy(other, otherOffset, combinedBuffer, sourceCount, otherCount);
-            
+
             return combinedBuffer;
         }
 
@@ -410,7 +410,7 @@ namespace TVA
         /// <returns>Combined buffers.</returns>
         public static byte[] Combine(this byte[][] buffers)
         {
-            if (buffers == null)
+            if ((object)buffers == null)
                 throw new ArgumentNullException("buffers");
 
             MemoryStream combinedBuffer = new MemoryStream();
@@ -418,7 +418,7 @@ namespace TVA
             // Combine all currently queued buffers
             for (int x = 0; x < buffers.Length; x++)
             {
-                if (buffers[x] == null)
+                if ((object)buffers[x] == null)
                     throw new ArgumentNullException("buffers[" + x + "]");
 
                 combinedBuffer.Write(buffers[x], 0, buffers[x].Length);
@@ -436,10 +436,10 @@ namespace TVA
         /// <returns>The zero-based index of the first occurance of the sequence of <paramref name="bytesToFind"/> in the <paramref name="buffer"/>, if found; otherwise, -1.</returns>
         public static int IndexOfSequence(this byte[] buffer, byte[] bytesToFind)
         {
-            if (buffer == null)
+            if ((object)buffer == null)
                 throw new ArgumentNullException("buffer");
 
-            if (bytesToFind == null)
+            if ((object)bytesToFind == null)
                 throw new ArgumentNullException("bytesToFind");
 
             return buffer.IndexOfSequence(bytesToFind, 0, buffer.Length);
@@ -454,10 +454,10 @@ namespace TVA
         /// <returns>The zero-based index of the first occurance of the sequence of <paramref name="bytesToFind"/> in the <paramref name="buffer"/>, if found; otherwise, -1.</returns>
         public static int IndexOfSequence(this byte[] buffer, byte[] bytesToFind, int startIndex)
         {
-            if (buffer == null)
+            if ((object)buffer == null)
                 throw new ArgumentNullException("buffer");
 
-            if (bytesToFind == null)
+            if ((object)bytesToFind == null)
                 throw new ArgumentNullException("bytesToFind");
 
             return buffer.IndexOfSequence(bytesToFind, startIndex, buffer.Length - startIndex);
@@ -480,10 +480,10 @@ namespace TVA
         /// </exception>
         public static int IndexOfSequence(this byte[] buffer, byte[] bytesToFind, int startIndex, int length)
         {
-            if (buffer == null)
+            if ((object)buffer == null)
                 throw new ArgumentNullException("buffer");
 
-            if (bytesToFind == null || bytesToFind.Length == 0)
+            if ((object)bytesToFind == null || bytesToFind.Length == 0)
                 throw new ArgumentNullException("bytesToFind");
 
             if (startIndex < 0)
@@ -570,17 +570,17 @@ namespace TVA
         /// </returns>
         public static int CompareTo(this byte[] source, byte[] other)
         {
-            if (source == null && other == null)
+            if ((object)source == null && (object)other == null)
             {
                 // Both buffers are assumed equal if both are nothing.
                 return 0;
             }
-            else if (source == null)
+            else if ((object)source == null)
             {
                 // Buffer 2 has data, and buffer 1 is nothing. Buffer 2 is assumed larger.
                 return 1;
             }
-            else if (other == null)
+            else if ((object)other == null)
             {
                 // Buffer 1 has data, and buffer 2 is nothing. Buffer 1 is assumed larger.
                 return -1;
@@ -653,17 +653,17 @@ namespace TVA
         /// </exception>
         public static int CompareTo(this byte[] source, int sourceOffset, byte[] other, int otherOffset, int count)
         {
-            if (source == null && other == null)
+            if ((object)source == null && (object)other == null)
             {
                 // Both buffers are assumed equal if both are nothing.
                 return 0;
             }
-            else if (source == null)
+            else if ((object)source == null)
             {
                 // Buffer 2 has data, and buffer 1 is nothing. Buffer 2 is assumed larger.
                 return 1;
             }
-            else if (other == null)
+            else if ((object)other == null)
             {
                 // Buffer 1 has data, and buffer 2 is nothing. Buffer 1 is assumed larger.
                 return -1;
@@ -672,7 +672,7 @@ namespace TVA
             {
                 if (sourceOffset < 0)
                     throw new ArgumentOutOfRangeException("sourceOffset", "cannot be negative");
-                
+
                 if (otherOffset < 0)
                     throw new ArgumentOutOfRangeException("otherOffset", "cannot be negative");
 

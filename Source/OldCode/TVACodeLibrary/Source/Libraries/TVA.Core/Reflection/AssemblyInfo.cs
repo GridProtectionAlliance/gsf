@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -24,8 +25,10 @@
 //       Modified EntryAssembly to perform a reflection only load of the currently executing process 
 //       to deal with entry assembly not being available in non-default application domains.
 //       Changed GetCustomAttribute() to return CustomAttributeData instead of Object to deal with
-//       possible reflection only load being performed in EntryAssenbly.
+//       possible reflection only load being performed in EntryAssembly.
 //       Removed Debuggable property since it was not very useful and added complexity when extracting.
+//  09/21/2011 - J. Ritchie Carroll
+//       Added Mono implementation exception regions.
 //
 //*******************************************************************************************************
 
@@ -245,6 +248,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -301,7 +323,7 @@ namespace TVA.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyTitleAttribute));
-                if (attribute == null)
+                if ((object)attribute == null)
                     return string.Empty;
                 else
                     return (string)attribute.ConstructorArguments[0].Value;
@@ -316,7 +338,7 @@ namespace TVA.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyDescriptionAttribute));
-                if (attribute == null)
+                if ((object)attribute == null)
                     return string.Empty;
                 else
                     return (string)attribute.ConstructorArguments[0].Value;
@@ -331,7 +353,7 @@ namespace TVA.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyCompanyAttribute));
-                if (attribute == null)
+                if ((object)attribute == null)
                     return string.Empty;
                 else
                     return (string)attribute.ConstructorArguments[0].Value;
@@ -346,7 +368,7 @@ namespace TVA.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyProductAttribute));
-                if (attribute == null)
+                if ((object)attribute == null)
                     return string.Empty;
                 else
                     return (string)attribute.ConstructorArguments[0].Value;
@@ -361,7 +383,7 @@ namespace TVA.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyCopyrightAttribute));
-                if (attribute == null)
+                if ((object)attribute == null)
                     return string.Empty;
                 else
                     return (string)attribute.ConstructorArguments[0].Value;
@@ -376,7 +398,7 @@ namespace TVA.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyTrademarkAttribute));
-                if (attribute == null)
+                if ((object)attribute == null)
                     return string.Empty;
                 else
                     return (string)attribute.ConstructorArguments[0].Value;
@@ -391,7 +413,7 @@ namespace TVA.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyConfigurationAttribute));
-                if (attribute == null)
+                if ((object)attribute == null)
                     return string.Empty;
                 else
                     return (string)attribute.ConstructorArguments[0].Value;
@@ -406,7 +428,7 @@ namespace TVA.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyDelaySignAttribute));
-                if (attribute == null)
+                if ((object)attribute == null)
                     return false;
                 else
                     return (bool)attribute.ConstructorArguments[0].Value;
@@ -421,7 +443,7 @@ namespace TVA.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute));
-                if (attribute == null)
+                if ((object)attribute == null)
                     return string.Empty;
                 else
                     return (string)attribute.ConstructorArguments[0].Value;
@@ -436,7 +458,7 @@ namespace TVA.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyKeyFileAttribute));
-                if (attribute == null)
+                if ((object)attribute == null)
                     return string.Empty;
                 else
                     return (string)attribute.ConstructorArguments[0].Value;
@@ -451,7 +473,7 @@ namespace TVA.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(NeutralResourcesLanguageAttribute));
-                if (attribute == null)
+                if ((object)attribute == null)
                     return string.Empty;
                 else
                     return (string)attribute.ConstructorArguments[0].Value;
@@ -467,7 +489,7 @@ namespace TVA.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(SatelliteContractVersionAttribute));
-                if (attribute == null)
+                if ((object)attribute == null)
                     return string.Empty;
                 else
                     return (string)attribute.ConstructorArguments[0].Value;
@@ -483,7 +505,7 @@ namespace TVA.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(ComCompatibleVersionAttribute));
-                if (attribute == null)
+                if ((object)attribute == null)
                     return string.Empty;
                 else
                     return attribute.ConstructorArguments[0].Value.ToString() + "." +
@@ -501,7 +523,7 @@ namespace TVA.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(ComVisibleAttribute));
-                if (attribute == null)
+                if ((object)attribute == null)
                     return false;
                 else
                     return (bool)attribute.ConstructorArguments[0].Value;
@@ -516,7 +538,7 @@ namespace TVA.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(GuidAttribute));
-                if (attribute == null)
+                if ((object)attribute == null)
                     return string.Empty;
                 else
                     return (string)attribute.ConstructorArguments[0].Value;
@@ -531,7 +553,7 @@ namespace TVA.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(TypeLibVersionAttribute));
-                if (attribute == null)
+                if ((object)attribute == null)
                     return string.Empty;
                 else
                     return attribute.ConstructorArguments[0].Value.ToString() + "." +
@@ -547,7 +569,7 @@ namespace TVA.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(CLSCompliantAttribute));
-                if (attribute == null)
+                if ((object)attribute == null)
                     return false;
                 else
                     return (bool)attribute.ConstructorArguments[0].Value;
@@ -699,10 +721,17 @@ namespace TVA.Reflection
         /// <summary>Gets the specified assembly attribute if it is exposed by the assembly.</summary>
         /// <param name="attributeType">Type of the attribute to get.</param>
         /// <returns>The requested assembly attribute if it exists; otherwise null.</returns>
+        /// <remarks>
+        /// This method always returns <c>null</c> under Mono deployments.
+        /// </remarks>
         public CustomAttributeData GetCustomAttribute(Type attributeType)
         {
+#if MONO
+            return null;
+#else
             //Returns the requested assembly attribute.
             return m_assemblyInstance.GetCustomAttributesData().FirstOrDefault(assemblyAttribute => assemblyAttribute.Constructor.DeclaringType == attributeType);
+#endif
         }
 
         /// <summary>Gets the specified embedded resource from the assembly.</summary>
@@ -732,7 +761,7 @@ namespace TVA.Reflection
         {
             get
             {
-                if (s_callingAssembly == null)
+                if ((object)s_callingAssembly == null)
                 {
                     // We have to find the calling assembly of the caller.
                     StackTrace trace = new StackTrace();
@@ -759,10 +788,10 @@ namespace TVA.Reflection
         {
             get
             {
-                if (s_entryAssembly == null)
+                if ((object)s_entryAssembly == null)
                 {
                     Assembly entryAssembly = Assembly.GetEntryAssembly();
-                    if (entryAssembly == null)
+                    if ((object)entryAssembly == null)
                         entryAssembly = Assembly.ReflectionOnlyLoadFrom(Process.GetCurrentProcess().MainModule.FileName);
 
                     s_entryAssembly = new AssemblyInfo(entryAssembly);
@@ -777,7 +806,7 @@ namespace TVA.Reflection
         {
             get
             {
-                if (s_executingAssembly == null)
+                if ((object)s_executingAssembly == null)
                     // Caller's assembly will be the executing assembly for the caller.
                     s_executingAssembly = new AssemblyInfo(Assembly.GetCallingAssembly());
 
@@ -809,10 +838,12 @@ namespace TVA.Reflection
             Assembly resourceAssembly;
             string shortName = e.Name.Split(',')[0];
 
-            if (s_assemblyCache == null) s_assemblyCache = new Dictionary<string, Assembly>();
+            if ((object)s_assemblyCache == null)
+                s_assemblyCache = new Dictionary<string, Assembly>();
+
             resourceAssembly = s_assemblyCache[shortName];
 
-            if (resourceAssembly == null)
+            if ((object)resourceAssembly == null)
             {
                 // Loops through all of the resources in the executing assembly.
                 foreach (string name in Assembly.GetEntryAssembly().GetManifestResourceNames())

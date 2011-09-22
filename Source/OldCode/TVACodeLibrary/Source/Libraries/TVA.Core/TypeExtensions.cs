@@ -23,6 +23,8 @@
 //       Updated GetRootType() method to include MarshalByRefObject in the root type exclusion list.
 //  01/14/2011 - J. Ritchie Carroll
 //       Added is numeric type extension.
+//  09/22/2011 - J. Ritchie Carroll
+//       Added Mono implementation exception regions.
 //
 //*******************************************************************************************************
 
@@ -304,7 +306,11 @@ namespace TVA
         public static Type GetRootType(this Type type)
         {
             // Recurse through types until you reach a base type of "System.Object" or "System.MarshalByRef".
-            if (type.BaseType == null || type.BaseType == typeof(object) || type.BaseType == typeof(MarshalByRefObject))
+#if MONO
+            if ((object)type.BaseType == null || string.Compare(type.BaseType.FullName, "System.Object") == 0 || string.Compare(type.BaseType.FullName, "System.MarshalByRefObject") == 0)
+#else
+            if ((object)type.BaseType == null || type.BaseType == typeof(object) || type.BaseType == typeof(MarshalByRefObject))
+#endif
                 return type;
             else
                 return GetRootType(type.BaseType);
@@ -402,7 +408,7 @@ namespace TVA
                                 types.Add(asmType);
                             }
 
-                            if (type.IsInterface && asmType.GetInterface(type.Name) != null)
+                            if (type.IsInterface && (object)asmType.GetInterface(type.Name) != null)
                             {
                                 // The type being tested is an interface and current type implements it.
                                 types.Add(asmType);

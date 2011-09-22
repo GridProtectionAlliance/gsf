@@ -564,7 +564,7 @@ namespace TVA.Media.Music
         /// </summary>
         /// <param name="sampleRate">Desired sample rate</param>
         /// <param name="bitsPerSample">Desired bits-per-sample</param>
-            /// <param name="channels">Desired data channels</param>
+        /// <param name="channels">Desired data channels</param>
         public Song(SampleRate sampleRate, BitsPerSample bitsPerSample, DataChannels channels)
             : base(sampleRate, bitsPerSample, channels)
         {
@@ -814,7 +814,10 @@ namespace TVA.Media.Music
         /// <param name="restLength">Duration of wait specified as a note value.</param>
         public void AddRest(double restLength)
         {
-            AddNotes(new Note { Value = restLength });
+            AddNotes(new Note
+            {
+                Value = restLength
+            });
         }
 
         /// <summary>
@@ -823,7 +826,10 @@ namespace TVA.Media.Music
         /// <param name="restLength">Duration of wait specified as a note value.</param>
         public void AddRest(NoteValue restLength)
         {
-            AddNotes(new Note { NamedValue = restLength });
+            AddNotes(new Note
+            {
+                NamedValue = restLength
+            });
         }
 
         /// <summary>
@@ -832,7 +838,10 @@ namespace TVA.Media.Music
         /// <param name="restLength">Duration of wait specified as a note value.</param>
         public void AddRest(NoteValueBritish restLength)
         {
-            AddNotes(new Note { NamedValueBritish = restLength });
+            AddNotes(new Note
+            {
+                NamedValueBritish = restLength
+            });
         }
 
         /// <summary>
@@ -842,7 +851,10 @@ namespace TVA.Media.Music
         /// <param name="dots">Total dotted note length extensions to apply.</param>
         public void AddRest(NoteValue restLength, int dots)
         {
-            AddNotes(new Note { NamedValue = restLength, Dots = dots });
+            AddNotes(new Note
+            {
+                NamedValue = restLength, Dots = dots
+            });
         }
 
         /// <summary>
@@ -852,7 +864,10 @@ namespace TVA.Media.Music
         /// <param name="dots">Total dotted note length extensions to apply.</param>
         public void AddRest(NoteValueBritish restLength, int dots)
         {
-            AddNotes(new Note { NamedValueBritish = restLength, Dots = dots });
+            AddNotes(new Note
+            {
+                NamedValueBritish = restLength, Dots = dots
+            });
         }
 
         /// <summary>
@@ -904,10 +919,10 @@ namespace TVA.Media.Music
                         if (sampleIndex < note.EndTimeIndex)
                         {
                             // Get timbre function
-                            timbre = (note.Timbre == null ? m_timbre : timbre = note.Timbre);
+                            timbre = ((object)note.Timbre == null ? m_timbre : timbre = note.Timbre);
 
                             // Get damping function
-                            damping = (note.Damping == null ?  m_damping : note.Damping);
+                            damping = ((object)note.Damping == null ? m_damping : note.Damping);
 
                             // Get note dynamic
                             dynamic = (note.Dynamic == -1.0D ? m_dynamic : note.Dynamic);

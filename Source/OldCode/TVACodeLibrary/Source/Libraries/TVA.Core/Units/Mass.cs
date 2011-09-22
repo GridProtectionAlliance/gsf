@@ -407,7 +407,8 @@ namespace TVA.Units
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Mass"/>.</exception>
         public int CompareTo(object value)
         {
-            if (value == null) return 1;
+            if ((object)value == null)
+                return 1;
 
             if (!(value is double) && !(value is Mass))
                 throw new ArgumentException("Argument must be a Double or a Mass");
@@ -1035,6 +1036,6 @@ namespace TVA.Units
             return new Mass(value * LongTonsFactor);
         }
 
-        #endregion        
+        #endregion
     }
 }

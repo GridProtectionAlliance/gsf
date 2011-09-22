@@ -423,12 +423,12 @@ namespace TVA.Configuration
                     return;
 
                 // Ensure only Eval() can replace Eval().
-                if (Regex.IsMatch(currentValue, EvalRegex, RegexOptions.IgnoreCase) && 
+                if (Regex.IsMatch(currentValue, EvalRegex, RegexOptions.IgnoreCase) &&
                     !Regex.IsMatch(value, EvalRegex, RegexOptions.IgnoreCase))
                     return;
 
                 value = EncryptValue(value);
-                if (Scope == SettingScope.Application || Category[Name] == null)
+                if (Scope == SettingScope.Application || (object)Category[Name] == null)
                     // Setting is application wide or is being added for the first time.
                     base["value"] = value;
                 else
@@ -953,7 +953,7 @@ namespace TVA.Configuration
             {
                 // Try replacing Eval() with the actual value.
                 setting = config.Settings[match.Groups["Container"].Value][match.Groups["Target"].Value];
-                if (setting != null)
+                if ((object)setting != null)
                 {
                     // Replacement is the value of another setting.
                     value = value.Replace(match.Value, setting.Value);
@@ -962,7 +962,7 @@ namespace TVA.Configuration
                 {
                     // Replacement could be the value of .NET type's static member.
                     Type target = Type.GetType(match.Groups["Container"].Value);
-                    if (target != null)
+                    if ((object)target != null)
                     {
                         // Specified .NET type is found.
                         MemberInfo[] members = target.GetMember(match.Groups["Target"].Value, BindingFlags.Public | BindingFlags.Static);

@@ -357,7 +357,7 @@ namespace TVA.Configuration
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new NullReferenceException("value cannot be null");
 
                 m_configFile = value;
@@ -380,7 +380,7 @@ namespace TVA.Configuration
         {
             KeyValueConfigurationCollection settings = m_configFile.Configuration.AppSettings.Settings;
 
-            if (settings[setting] == null)
+            if ((object)settings[setting] == null)
                 settings.Add(setting, value);
         }
 

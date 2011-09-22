@@ -328,7 +328,7 @@ namespace TVA.Configuration
         /// Gets or sets the <see cref="CultureInfo"/> to use for the conversion of setting values to and from <see cref="string"/>.
         /// </summary>
         [Browsable(false), SerializeSetting(false)]
-        public CultureInfo Culture 
+        public CultureInfo Culture
         {
             get
             {
@@ -336,7 +336,7 @@ namespace TVA.Configuration
             }
             set
             {
-                if (value != null)
+                if ((object)value != null)
                     m_culture = value;
                 else
                     m_culture = CultureInfo.InvariantCulture;
@@ -537,7 +537,7 @@ namespace TVA.Configuration
         {
             string setting = GetSettingName(name);
 
-            if (value == null)
+            if ((object)value == null)
                 CreateSetting(name, setting, EncryptValue(name, setting, ""));
             else
                 CreateSetting(name, setting, EncryptValue(name, setting, Common.TypeConvertToString(value, m_culture)));
@@ -552,7 +552,7 @@ namespace TVA.Configuration
         {
             string setting = GetSettingName(name);
 
-            if (value == null)
+            if ((object)value == null)
                 StoreSetting(name, setting, EncryptValue(name, setting, ""));
             else
                 StoreSetting(name, setting, EncryptValue(name, setting, Common.TypeConvertToString(value, m_culture)));
@@ -711,7 +711,7 @@ namespace TVA.Configuration
         {
             // Load configuration file settings into fields
             ExecuteActionForFields(field => field.SetValue(this, GetValue(field.Name, field.FieldType)));
-            
+
             // Load configuration file settings into properties
             ExecuteActionForProperties(property => property.SetValue(this, GetValue(property.Name, property.PropertyType), null), BindingFlags.SetProperty);
         }
@@ -723,7 +723,7 @@ namespace TVA.Configuration
         {
             // Saves setting fields into configuration file values
             ExecuteActionForFields(field => SetValue(field.Name, field.GetValue(this)));
-            
+
             // Saves setting properties into configuration file values
             ExecuteActionForProperties(property => SetValue(property.Name, property.GetValue(this, null)), BindingFlags.GetProperty);
 
@@ -750,7 +750,11 @@ namespace TVA.Configuration
         protected void ExecuteActionForProperties(Action<PropertyInfo> propertyAction, BindingFlags isGetOrSet)
         {
             // Make sure only non-indexer properties are used for settings
-            ExecuteActionForMembers(property => { if (property.GetIndexParameters().Length == 0) propertyAction(property); }, this.GetType().GetProperties(m_memberAccessBindingFlags | isGetOrSet));
+            ExecuteActionForMembers(property =>
+            {
+                if (property.GetIndexParameters().Length == 0)
+                    propertyAction(property);
+            }, this.GetType().GetProperties(m_memberAccessBindingFlags | isGetOrSet));
         }
 
         // Execute specified action over specified memembers
@@ -793,7 +797,7 @@ namespace TVA.Configuration
             // See if field exists with specified name
             FieldInfo field = this.GetType().GetField(name, m_memberAccessBindingFlags);
 
-            if (field != null)
+            if ((object)field != null)
             {
                 // See if attribute exists on field
                 if (field.TryGetAttribute(out attribute))
@@ -809,7 +813,7 @@ namespace TVA.Configuration
             // See if property exists with specified name
             PropertyInfo property = this.GetType().GetProperty(name, m_memberAccessBindingFlags);
 
-            if (property != null)
+            if ((object)property != null)
             {
                 // See if attribute exists on property
                 if (property.TryGetAttribute(out attribute))

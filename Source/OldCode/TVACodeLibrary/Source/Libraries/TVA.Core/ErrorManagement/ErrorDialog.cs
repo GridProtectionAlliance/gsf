@@ -342,7 +342,7 @@ namespace TVA.ErrorManagement
             }
             finally
             {
-                if (g != null)
+                if ((object)g != null)
                 {
                     g.Dispose();
                 }

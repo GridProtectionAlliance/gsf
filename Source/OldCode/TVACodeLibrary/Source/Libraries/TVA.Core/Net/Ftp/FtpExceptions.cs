@@ -285,7 +285,7 @@ namespace TVA.Net.Ftp
         {
             get
             {
-                if (!(m_ftpResponse == null))
+                if ((object)m_ftpResponse != null)
                     return m_ftpResponse.Message;
                 else
                     return "";

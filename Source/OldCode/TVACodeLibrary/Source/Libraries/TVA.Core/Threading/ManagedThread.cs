@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -16,6 +17,8 @@
 //       Edited Comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/22/2011 - J. Ritchie Carroll
+//       Added Mono implementation exception regions.
 //
 //*******************************************************************************************************
 
@@ -235,6 +238,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.Threading;
 using TVA.Units;
@@ -325,6 +347,7 @@ namespace TVA.Threading
             m_thread = new Thread(HandleItem);
         }
 
+#if !MONO
         /// <summary>
         /// Initializes a new instance of the ManagedThread class, specifying a delegate that allows an object to be passed to the thread when the thread is started
         /// and allowing the user to specify an alternate execution context for the thread.
@@ -336,6 +359,7 @@ namespace TVA.Threading
         {
             m_thread = new Thread(HandleItem);
         }
+#endif
 
         internal ManagedThread(ThreadType type, ThreadStart callback, object state, ExecutionContext ctx)
         {
@@ -649,13 +673,13 @@ namespace TVA.Threading
             try
             {
                 // Invoke the user's call back function
-                if (m_ctx == null)
+                if ((object)m_ctx == null)
                 {
-                    if (m_tsCallback != null)
+                    if ((object)m_tsCallback != null)
                     {
                         m_tsCallback.Invoke();
                     }
-                    else if (m_ptsCallback != null)
+                    else if ((object)m_ptsCallback != null)
                     {
                         m_ptsCallback.Invoke(m_state);
                     }
@@ -664,12 +688,14 @@ namespace TVA.Threading
                         m_ctxCallback.Invoke(m_state);
                     }
                 }
+#if !MONO
                 else
                 {
                     // If user specified an alternate execution context, we invoke
                     // their delegate under that context
                     ExecutionContext.Run(m_ctx, m_ctxCallback, m_state);
                 }
+#endif
             }
             finally
             {
@@ -685,5 +711,5 @@ namespace TVA.Threading
         }
 
         #endregion
-   }
+    }
 }

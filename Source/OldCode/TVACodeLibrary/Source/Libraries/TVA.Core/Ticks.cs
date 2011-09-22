@@ -913,7 +913,8 @@ namespace TVA
         /// <exception cref="ArgumentException">value is not an <see cref="Int64"/> or <see cref="Ticks"/>.</exception>
         public int CompareTo(object value)
         {
-            if (value == null) return 1;
+            if ((object)value == null)
+                return 1;
 
             if (!(value is long) && !(value is Ticks) && !(value is DateTime) && !(value is TimeSpan))
                 throw new ArgumentException("Argument must be an Int64 or a Ticks");
@@ -1712,6 +1713,6 @@ namespace TVA
             return parseResponse;
         }
 
-        #endregion        
+        #endregion
     }
 }

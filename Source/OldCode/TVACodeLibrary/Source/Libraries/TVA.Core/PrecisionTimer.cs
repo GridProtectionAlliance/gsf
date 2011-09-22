@@ -20,6 +20,8 @@
 //  11/02/2009 - J. Ritchie Carroll
 //       Added SetMinimumTimerResolution and ClearMinimumTimerResolution to control
 //       system level minimum timer resolutions.
+//  09/22/2011 - J. Ritchie Carroll
+//       Added Mono implementation exception regions.
 //
 //*******************************************************************************************************
 
@@ -348,7 +350,22 @@ namespace TVA
     /// <summary>
     /// Represents a high-resolution timer and timestamp class.
     /// </summary>
-    /// <remarks>Implementation based on Windows multimedia timer.</remarks>
+    /// <remarks>
+    /// <para>
+    /// For standard deployments, implementation is based on the Windows multimedia timer. For mono
+    /// deployments, implementation uses a basic timer for compatibility - this should have ~10ms
+    /// of resolution when used on standard Linux systems.
+    /// </para>
+    /// <para>
+    /// Future mono deployments may want to consider an implementation that uses OS specific timers:
+    ///     For Windows use of non-Mono style implementation below should be sufficient.
+    ///     For Linux see http://www.ittc.ku.edu/utime/ as an example.
+    /// Implememtation might depend on a platform specific P/Invokable wrapper DLL that exposed the
+    /// same methods on Windows and Linux for consumption from .NET but used the specific precision
+    /// timer implementations mentioned above. See the following for Mono interop details:
+    /// http://www.mono-project.com/Interop_with_Native_Libraries
+    /// </para>
+    /// </remarks>
     public class PrecisionTimer : IDisposable
     {
         #region [ Members ]
@@ -438,8 +455,10 @@ namespace TVA
             Periodic // Timer event occurs periodically.
         }
 
+#if !MONO
         // Represents the method that is called by Windows when a timer event occurs.
         private delegate void TimerProc(int id, int msg, int user, int param1, int param2);
+#endif
 
         /// <summary>
         /// Occurs when the <see cref="PrecisionTimer"/> has started.
@@ -457,11 +476,16 @@ namespace TVA
         public event EventHandler Tick;
 
         // Fields
+#if MONO
+        private Timer m_timer;              // Basic timer implementation for Mono deployments
+#else
         private int m_timerID;              // Timer identifier.
+        private TimerProc m_timeProc;       // Called by Windows when a timer periodic event occurs.
+#endif
+
         private TimerMode m_mode;           // Timer mode.
         private int m_period;               // Period between timer events in milliseconds.
         private int m_resolution;           // Timer resolution in milliseconds.
-        private TimerProc m_timeProc;       // Called by Windows when a timer periodic event occurs.
         private bool m_running;             // Indicates whether or not the timer is running.
         private bool m_disposed;            // Indicates whether or not the timer has been disposed.
         private EventArgs m_eventArgs;      // Private user event args to pass into Ticks call
@@ -477,10 +501,17 @@ namespace TVA
         {
             // Initialize timer with default values.
             m_mode = TimerMode.Periodic;
+            m_running = false;
+#if MONO
+            m_timer = new Timer();
+            m_timer.Elapsed += m_timer_Elapsed;
+            m_period = 10;
+            m_resolution = 10;
+#else
+            m_timeProc = TimerEventCallback;
             m_period = Capabilities.PeriodMinimum;
             m_resolution = 1;
-            m_running = false;
-            m_timeProc = TimerEventCallback;
+#endif
         }
 
         /// <summary>
@@ -535,10 +566,15 @@ namespace TVA
         /// If the timer has already been disposed.
         /// </exception>
         /// <remarks>
+        /// <para>
         /// The resolution is in milliseconds. The resolution increases  with smaller values;
-        /// a resolution of 0 indicates periodic events  should occur with the greatest possible
+        /// a resolution of 0 indicates periodic events should occur with the greatest possible
         /// accuracy. To reduce system  overhead, however, you should use the maximum value
         /// appropriate for your application.
+        /// </para>
+        /// <para>
+        /// This property is currently ignored under Mono deployments.
+        /// </para>
         /// </remarks>
         public int Resolution
         {
@@ -690,12 +726,30 @@ namespace TVA
             if (m_disposed)
                 throw new ObjectDisposedException("PrecisionTimer");
 
-            if (m_running) return;
+            if (m_running)
+                return;
 
             // Cache user event args to pass into Ticks paramter
             m_eventArgs = userArgs;
 
             // Create and start timer.
+#if MONO
+            try
+            {
+                m_timer.Interval = m_period;
+                m_timer.AutoReset = (m_mode == TimerMode.Periodic);
+                m_timer.Start();
+
+                m_running = true;
+
+                if ((object)Started != null)
+                    Started(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                throw new TimerStartException("Unable to start precision timer: " + ex.Message);
+            }
+#else
             m_timerID = timeSetEvent(m_period, m_resolution, m_timeProc, IntPtr.Zero, m_mode);
 
             // If the timer was created successfully.
@@ -703,13 +757,14 @@ namespace TVA
             {
                 m_running = true;
 
-                if (Started != null)
+                if ((object)Started != null)
                     Started(this, EventArgs.Empty);
             }
             else
             {
-                throw new TimerStartException("Unable to start multimedia Timer");
+                throw new TimerStartException("Unable to start precision timer");
             }
+#endif
         }
 
         /// <summary>
@@ -723,26 +778,39 @@ namespace TVA
             if (m_disposed)
                 throw new ObjectDisposedException("PrecisionTimer");
 
-            if (!m_running) return;
+            if (!m_running)
+                return;
 
             // Stop and destroy timer.
+#if MONO
+            m_timer.Stop();
+#else
             timeKillEvent(m_timerID);
             m_timerID = 0;
+#endif
             m_running = false;
 
-            if (Stopped != null)
+            if ((object)Stopped != null)
                 Stopped(this, EventArgs.Empty);
         }
 
+#if MONO
+        private void m_timer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            if ((object)Tick != null)
+                Tick(this, m_eventArgs);
+        }
+#else
         // Callback method called by the Win32 multimedia timer when a timer event occurs.
         private void TimerEventCallback(int id, int msg, int user, int param1, int param2)
         {
-            if (Tick != null)
+            if ((object)Tick != null)
                 Tick(this, m_eventArgs);
 
             if (m_mode == TimerMode.OneShot)
                 Stop();
         }
+#endif
 
         #endregion
 
@@ -756,8 +824,13 @@ namespace TVA
         // Static Constructor
         static PrecisionTimer()
         {
+#if MONO
+            s_capabilities.PeriodMinimum = 1;
+            s_capabilities.PeriodMaximum = int.MaxValue;
+#else
             // Get multimedia timer capabilities
             timeGetDevCaps(ref s_capabilities, Marshal.SizeOf(s_capabilities));
+#endif
         }
 
         // Static Properties
@@ -782,7 +855,7 @@ namespace TVA
             get
             {
                 // Setup a new precise time class at first call
-                if (s_preciseTime == null)
+                if ((object)s_preciseTime == null)
                     InitializePreciseTime();
 
                 return s_preciseTime.UtcNow;
@@ -832,6 +905,7 @@ namespace TVA
         /// Minimum timer resolution, in milliseconds, for the application. A lower value specifies a higher (more accurate) resolution.
         /// </param>
         /// <remarks>
+        /// <para>
         /// Call this function immediately before using the <see cref="PrecisionTimer"/> and call <see cref="ClearMinimumTimerResolution"/>
         /// immediately after you are finished using the PrecisionTimer. You must match each call to <see cref="SetMinimumTimerResolution"/>
         /// with a call to ClearMinimumTimerResolution specifying the same minimum resolution <paramref name="period"/> in both calls.
@@ -840,11 +914,17 @@ namespace TVA
         /// Setting a higher resolution can improve the accuracy of time-out intervals in wait functions. However, it can also reduce overall system
         /// performance, because the thread scheduler switches tasks more often. High resolutions can also prevent the CPU power management system from
         /// entering power-saving modes. See timeBeginPeriod Windows API for more information.
+        /// </para>
+        /// <para>
+        /// This method is currently ignored under Mono deployments.
+        /// </para>
         /// </remarks>
         public static void SetMinimumTimerResolution(int period)
         {
+#if !MONO
             if (timeBeginPeriod(period) != 0)
                 throw new InvalidOperationException("Specified period resolution is out of range and is not supported.");
+#endif
         }
 
         /// <summary>
@@ -854,15 +934,22 @@ namespace TVA
         /// Minimum timer resolution specified in the previous call to the <see cref="SetMinimumTimerResolution"/> function.
         /// </param>
         /// <remarks>
+        /// <para>
         /// Call this function immediately after you are finished using the <see cref="PrecisionTimer"/>. You must match each call to
         /// <see cref="SetMinimumTimerResolution"/> with a call to <see cref="ClearMinimumTimerResolution"/>, specifying the same minimum
         /// resolution <paramref name="period"/> in both calls. An application can make multiple SetMinimumTimerResolution calls as long
         /// as each call is matched with a call to ClearMinimumTimerResolution.
+        /// </para>
+        /// <para>
+        /// This method is currently ignored under Mono deployments.
+        /// </para>
         /// </remarks>
         public static void ClearMinimumTimerResolution(int period)
         {
+#if !MONO
             if (timeEndPeriod(period) != 0)
                 throw new InvalidOperationException("Specified period resolution is out of range and is not supported.");
+#endif
         }
 
         // Initializes the the precise timing mechanism
@@ -887,6 +974,7 @@ namespace TVA
             DateTime now = s_preciseTime.UtcNow;
         }
 
+#if !MONO
         // Gets timer capabilities.
         [DllImport("winmm.dll")]
         private static extern int timeGetDevCaps(ref TimerCapabilities caps, int sizeOfTimerCaps);
@@ -906,7 +994,7 @@ namespace TVA
         // Clears a previously set minimum timer resolution.
         [DllImport("winmm.dll")]
         private static extern int timeEndPeriod(int period);
-
+#endif
         #endregion
     }
 }

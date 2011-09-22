@@ -652,6 +652,7 @@ namespace TVA.ServiceModel
             {
                 // Initialize service host.
                 string serviceUri = string.Format("http://localhost:{0}", GetUnusedPort());
+
                 if (m_singleton)
                     m_serviceHost = new ServiceHost(this, new Uri(serviceUri));
                 else
@@ -661,11 +662,13 @@ namespace TVA.ServiceModel
                 if (m_publishMetadata)
                 {
                     ServiceMetadataBehavior serviceBehavior = m_serviceHost.Description.Behaviors.Find<ServiceMetadataBehavior>();
+
                     if (serviceBehavior == null)
                     {
                         serviceBehavior = new ServiceMetadataBehavior();
                         m_serviceHost.Description.Behaviors.Add(serviceBehavior);
                     }
+
                     serviceBehavior.HttpGetEnabled = true;
                 }
 
@@ -673,11 +676,13 @@ namespace TVA.ServiceModel
                 if (!string.IsNullOrEmpty(m_securityPolicy))
                 {
                     ServiceAuthorizationBehavior serviceBehavior = m_serviceHost.Description.Behaviors.Find<ServiceAuthorizationBehavior>();
+
                     if (serviceBehavior == null)
                     {
                         serviceBehavior = new ServiceAuthorizationBehavior();
                         m_serviceHost.Description.Behaviors.Add(serviceBehavior);
                     }
+
                     serviceBehavior.PrincipalPermissionMode = PrincipalPermissionMode.Custom;
                     List<IAuthorizationPolicy> policies = new List<IAuthorizationPolicy>();
                     policies.Add((IAuthorizationPolicy)Activator.CreateInstance(System.Type.GetType(m_securityPolicy)));
@@ -690,6 +695,7 @@ namespace TVA.ServiceModel
                 Binding serviceBinding;
                 ServiceEndpoint serviceEndpoint;
                 serviceAddresses = m_endpoints.Split(';');
+
                 for (int i = 0; i < serviceAddresses.Length; i++)
                 {
                     serviceAddress = serviceAddresses[i].Trim();
@@ -697,12 +703,16 @@ namespace TVA.ServiceModel
                     if (serviceBinding != null)
                     {
                         serviceEndpoint = m_serviceHost.AddServiceEndpoint(System.Type.GetType(m_contract), serviceBinding, serviceAddress);
-                        if (serviceBinding.GetType() == typeof(WebHttpBinding))
+
+                        if (serviceBinding is WebHttpBinding)
                         {
                             // Special handling for REST endpoint.
                             WebHttpBehavior restBehavior = new WebHttpBehavior();
+
+#if !MONO
                             if (m_publishMetadata)
                                 restBehavior.HelpEnabled = true;
+#endif
 
                             serviceEndpoint.Behaviors.Add(restBehavior);
                         }
@@ -832,6 +842,9 @@ namespace TVA.ServiceModel
         ///         <description>An <paramref name="address"/> of <b>net.msmq://localhost:2929</b> will create an <see cref="NetMsmqBinding"/> and leave the <paramref name="address"/> unchanged.</description>
         ///     </item>
         /// </list>
+        /// <para>
+        /// The <paramref name="enableSecurity"/> parameter value is ignored Mono deployments since security bindings are not implemented.
+        /// </para>
         /// </remarks>
         public static Binding CreateServiceBinding(ref string address, bool enableSecurity)
         {
@@ -847,6 +860,8 @@ namespace TVA.ServiceModel
                     address = address.Replace("http.soap11", "http");
                     // Create binding.
                     BasicHttpBinding soap11Binding = new BasicHttpBinding();
+
+#if !MONO
                     if (enableSecurity)
                     {
                         // Enable security.
@@ -859,6 +874,7 @@ namespace TVA.ServiceModel
                         soap11Binding.Security.Mode = BasicHttpSecurityMode.None;
                         soap11Binding.Security.Transport.ClientCredentialType = HttpClientCredentialType.None;
                     }
+#endif
 
                     return soap11Binding;
                 case "http.soap12":
@@ -866,6 +882,8 @@ namespace TVA.ServiceModel
                     address = address.Replace("http.soap12", "http");
                     // Create binding.
                     WSHttpBinding soap12Binding = new WSHttpBinding();
+
+#if !MONO
                     if (enableSecurity)
                     {
                         // Enable security.
@@ -878,6 +896,7 @@ namespace TVA.ServiceModel
                         soap12Binding.Security.Mode = SecurityMode.None;
                         soap12Binding.Security.Transport.ClientCredentialType = HttpClientCredentialType.None;
                     }
+#endif
 
                     return soap12Binding;
                 case "http.duplex":
@@ -885,6 +904,8 @@ namespace TVA.ServiceModel
                     address = address.Replace("http.duplex", "http");
                     // Create binding.
                     WSDualHttpBinding duplexBinding = new WSDualHttpBinding();
+
+#if !MONO
                     if (enableSecurity)
                     {
                         // Enable security.
@@ -895,6 +916,7 @@ namespace TVA.ServiceModel
                         // Disable security.
                         duplexBinding.Security.Mode = WSDualHttpSecurityMode.None;
                     }
+#endif
 
                     return duplexBinding;
                 case "http.rest":
@@ -902,6 +924,8 @@ namespace TVA.ServiceModel
                     address = address.Replace("http.rest", "http");
                     // Create binding.
                     WebHttpBinding restBinding = new WebHttpBinding();
+
+#if !MONO
                     if (enableSecurity)
                     {
                         // Enable security.
@@ -914,11 +938,14 @@ namespace TVA.ServiceModel
                         restBinding.Security.Mode = WebHttpSecurityMode.None;
                         restBinding.Security.Transport.ClientCredentialType = HttpClientCredentialType.None;
                     }
+#endif
 
                     return restBinding;
                 case "net.tcp":
                     // Create binding.
                     NetTcpBinding tcpBinding = new NetTcpBinding();
+
+#if !MONO
                     if (enableSecurity)
                     {
                         // Enable security.
@@ -931,11 +958,14 @@ namespace TVA.ServiceModel
                         tcpBinding.Security.Mode = SecurityMode.None;
                         tcpBinding.Security.Transport.ClientCredentialType = TcpClientCredentialType.None;
                     }
+#endif
 
                     return tcpBinding;
                 case "net.p2p":
                     // Create binding.
                     NetPeerTcpBinding p2pBinding = new NetPeerTcpBinding();
+
+#if !MONO
                     if (enableSecurity)
                     {
                         // Enable security.
@@ -946,11 +976,14 @@ namespace TVA.ServiceModel
                         // Disable security.
                         p2pBinding.Security.Mode = SecurityMode.None;
                     }
+#endif
 
                     return p2pBinding;
                 case "net.pipe":
                     // Create binding.
                     NetNamedPipeBinding pipeBinding = new NetNamedPipeBinding();
+
+#if !MONO
                     if (enableSecurity)
                     {
                         // Enable security.
@@ -961,11 +994,14 @@ namespace TVA.ServiceModel
                         // Disable security.
                         pipeBinding.Security.Mode = NetNamedPipeSecurityMode.None;
                     }
+#endif
 
                     return pipeBinding;
                 case "net.msmq":
                     // Create binding.
                     NetMsmqBinding msmqBinding = new NetMsmqBinding();
+
+#if !MONO
                     if (enableSecurity)
                     {
                         // Enable security.
@@ -976,6 +1012,7 @@ namespace TVA.ServiceModel
                         // Disable security.
                         msmqBinding.Security.Mode = NetMsmqSecurityMode.None;
                     }
+#endif
 
                     return msmqBinding;
                 default:

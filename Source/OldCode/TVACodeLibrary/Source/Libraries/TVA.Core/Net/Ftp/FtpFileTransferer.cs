@@ -435,10 +435,10 @@ namespace TVA.Net.Ftp
             }
             finally
             {
-                if (remoteStream != null)
+                if ((object)remoteStream != null)
                     remoteStream.Close();
 
-                if (localStream != null)
+                if ((object)localStream != null)
                     localStream.Close();
             }
         }

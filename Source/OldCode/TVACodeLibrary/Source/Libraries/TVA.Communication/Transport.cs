@@ -28,6 +28,8 @@
 //  08/18/2011 - J. Ritchie Carroll
 //       Multiple additions and updates to accomodate easier IPv6 or IPv4 selection as well as
 //       dual-mode socket support.
+//  09/21/2011 - J. Ritchie Carroll
+//       Added Mono implementation exception regions.
 //
 //*******************************************************************************************************
 
@@ -350,8 +352,10 @@ namespace TVA.Communication
             // Make sure system can support specified stack
             if (stack == IPStack.IPv6 && !Socket.OSSupportsIPv6)
                 throw new NotSupportedException(string.Format("IPv6 stack is not available for socket creation on {0}:{1}", hostNameOrAddress.ToNonNullNorWhiteSpace("localhost"), port));
+#if !MONO
             else if (stack == IPStack.IPv4 && !Socket.OSSupportsIPv4)
                 throw new NotSupportedException(string.Format("IPv4 stack is not available for socket creation on {0}:{1}", hostNameOrAddress.ToNonNullNorWhiteSpace("localhost"), port));
+#endif
 
             if (string.IsNullOrWhiteSpace(hostNameOrAddress))
             {
@@ -468,7 +472,6 @@ namespace TVA.Communication
             }
             catch
             {
-                // These calls are known to fail on Mono
             }
 
             // If default stack cannot be determined, assume IPv4

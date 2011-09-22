@@ -70,6 +70,8 @@
 //       Moved UpdateType enumeration to TVA namespace in TVA.Core.dll for broader usage.
 //  04/14/2011 - Pinal C. Patel
 //       Updated to use new serialization methods in TVA.Serialization class.
+//  09/22/2011 - J. Ritchie Carroll
+//       Added Mono implementation exception regions.
 //
 //*******************************************************************************************************
 
@@ -2416,10 +2418,17 @@ namespace TVA.ServiceProcess
                             responseMessage.Append(' ');
                             responseMessage.Append(process.ProcessName.PadRight(25));
                             responseMessage.Append(' ');
+#if MONO
+                            responseMessage.Append("Undetermined".PadRight(15));
+                            responseMessage.Append(' ');
+                            responseMessage.Append("N/A".PadRight(10));
+                            responseMessage.Append(' ');
+#else
                             responseMessage.Append(process.PriorityClass.ToString().PadRight(15));
                             responseMessage.Append(' ');
                             responseMessage.Append((process.Responding ? "Yes" : "No").PadRight(10));
                             responseMessage.Append(' ');
+#endif
                             responseMessage.Append(process.StartTime.ToString("MM/dd/yy hh:mm:ss tt").PadRight(20));
                         }
                         catch

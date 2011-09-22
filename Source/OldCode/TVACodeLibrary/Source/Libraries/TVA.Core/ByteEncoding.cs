@@ -304,7 +304,8 @@ namespace TVA
                 {
                     // Removes spacing characters, if needed.
                     hexData = hexData.Trim();
-                    if (spacingCharacter != NoSpacing) hexData = hexData.Replace(spacingCharacter.ToString(), "");
+                    if (spacingCharacter != NoSpacing)
+                        hexData = hexData.Replace(spacingCharacter.ToString(), "");
 
                     // Processes the string only if it has data in hex format (Example: 48 65 6C 6C 21).
                     if (Regex.Matches(hexData, "[^a-fA-F0-9]").Count == 0)
@@ -373,7 +374,8 @@ namespace TVA
                 {
                     // Removes spacing characters, if needed.
                     decData = decData.Trim();
-                    if (spacingCharacter != NoSpacing) decData = decData.Replace(spacingCharacter.ToString(), "");
+                    if (spacingCharacter != NoSpacing)
+                        decData = decData.Replace(spacingCharacter.ToString(), "");
 
                     // Processes the string only if it has data in decimal format (Example: 072 101 108 108 033).
                     if (Regex.Matches(decData, "[^0-9]").Count == 0)
@@ -471,7 +473,8 @@ namespace TVA
                 {
                     // Removes spacing characters, if needed.
                     binaryData = binaryData.Trim();
-                    if (spacingCharacter != NoSpacing) binaryData = binaryData.Replace(spacingCharacter.ToString(), "");
+                    if (spacingCharacter != NoSpacing)
+                        binaryData = binaryData.Replace(spacingCharacter.ToString(), "");
 
                     // Processes the string only if it has data in binary format (Example: 01010110 1010101).
                     if (Regex.Matches(binaryData, "[^0-1]").Count == 0)
@@ -490,25 +493,41 @@ namespace TVA
 
                             if (m_reverse)
                             {
-                                if (binaryData[x + 7] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit00);
-                                if (binaryData[x + 6] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit01);
-                                if (binaryData[x + 5] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit02);
-                                if (binaryData[x + 4] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit03);
-                                if (binaryData[x + 3] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit04);
-                                if (binaryData[x + 2] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit05);
-                                if (binaryData[x + 1] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit06);
-                                if (binaryData[x + 0] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit07);
+                                if (binaryData[x + 7] == '1')
+                                    bytes[index] = bytes[index].SetBits(Bits.Bit00);
+                                if (binaryData[x + 6] == '1')
+                                    bytes[index] = bytes[index].SetBits(Bits.Bit01);
+                                if (binaryData[x + 5] == '1')
+                                    bytes[index] = bytes[index].SetBits(Bits.Bit02);
+                                if (binaryData[x + 4] == '1')
+                                    bytes[index] = bytes[index].SetBits(Bits.Bit03);
+                                if (binaryData[x + 3] == '1')
+                                    bytes[index] = bytes[index].SetBits(Bits.Bit04);
+                                if (binaryData[x + 2] == '1')
+                                    bytes[index] = bytes[index].SetBits(Bits.Bit05);
+                                if (binaryData[x + 1] == '1')
+                                    bytes[index] = bytes[index].SetBits(Bits.Bit06);
+                                if (binaryData[x + 0] == '1')
+                                    bytes[index] = bytes[index].SetBits(Bits.Bit07);
                             }
                             else
                             {
-                                if (binaryData[x + 0] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit00);
-                                if (binaryData[x + 1] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit01);
-                                if (binaryData[x + 2] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit02);
-                                if (binaryData[x + 3] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit03);
-                                if (binaryData[x + 4] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit04);
-                                if (binaryData[x + 5] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit05);
-                                if (binaryData[x + 6] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit06);
-                                if (binaryData[x + 7] == '1') bytes[index] = bytes[index].SetBits(Bits.Bit07);
+                                if (binaryData[x + 0] == '1')
+                                    bytes[index] = bytes[index].SetBits(Bits.Bit00);
+                                if (binaryData[x + 1] == '1')
+                                    bytes[index] = bytes[index].SetBits(Bits.Bit01);
+                                if (binaryData[x + 2] == '1')
+                                    bytes[index] = bytes[index].SetBits(Bits.Bit02);
+                                if (binaryData[x + 3] == '1')
+                                    bytes[index] = bytes[index].SetBits(Bits.Bit03);
+                                if (binaryData[x + 4] == '1')
+                                    bytes[index] = bytes[index].SetBits(Bits.Bit04);
+                                if (binaryData[x + 5] == '1')
+                                    bytes[index] = bytes[index].SetBits(Bits.Bit05);
+                                if (binaryData[x + 6] == '1')
+                                    bytes[index] = bytes[index].SetBits(Bits.Bit06);
+                                if (binaryData[x + 7] == '1')
+                                    bytes[index] = bytes[index].SetBits(Bits.Bit07);
                             }
 
                             index++;
@@ -535,10 +554,11 @@ namespace TVA
             /// <returns>String of encoded bytes.</returns>
             public override string GetString(byte[] bytes, int offset, int length, char spacingCharacter)
             {
-                if (bytes == null) throw new ArgumentNullException("bytes", "Input buffer cannot be null");
+                if ((object)bytes == null)
+                    throw new ArgumentNullException("bytes", "Input buffer cannot be null");
 
                 // Initializes byte image array on first call for speed in future calls.
-                if (m_byteImages == null)
+                if ((object)m_byteImages == null)
                 {
                     StringBuilder byteImage;
 
@@ -550,25 +570,73 @@ namespace TVA
 
                         if (m_reverse)
                         {
-                            if (imageByte.CheckBits(Bits.Bit07)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBits(Bits.Bit06)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBits(Bits.Bit05)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBits(Bits.Bit04)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBits(Bits.Bit03)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBits(Bits.Bit02)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBits(Bits.Bit01)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBits(Bits.Bit00)) byteImage.Append('1'); else byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit07))
+                                byteImage.Append('1');
+                            else
+                                byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit06))
+                                byteImage.Append('1');
+                            else
+                                byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit05))
+                                byteImage.Append('1');
+                            else
+                                byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit04))
+                                byteImage.Append('1');
+                            else
+                                byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit03))
+                                byteImage.Append('1');
+                            else
+                                byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit02))
+                                byteImage.Append('1');
+                            else
+                                byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit01))
+                                byteImage.Append('1');
+                            else
+                                byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit00))
+                                byteImage.Append('1');
+                            else
+                                byteImage.Append('0');
                         }
                         else
                         {
-                            if (imageByte.CheckBits(Bits.Bit00)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBits(Bits.Bit01)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBits(Bits.Bit02)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBits(Bits.Bit03)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBits(Bits.Bit04)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBits(Bits.Bit05)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBits(Bits.Bit06)) byteImage.Append('1'); else byteImage.Append('0');
-                            if (imageByte.CheckBits(Bits.Bit07)) byteImage.Append('1'); else byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit00))
+                                byteImage.Append('1');
+                            else
+                                byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit01))
+                                byteImage.Append('1');
+                            else
+                                byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit02))
+                                byteImage.Append('1');
+                            else
+                                byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit03))
+                                byteImage.Append('1');
+                            else
+                                byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit04))
+                                byteImage.Append('1');
+                            else
+                                byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit05))
+                                byteImage.Append('1');
+                            else
+                                byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit06))
+                                byteImage.Append('1');
+                            else
+                                byteImage.Append('0');
+                            if (imageByte.CheckBits(Bits.Bit07))
+                                byteImage.Append('1');
+                            else
+                                byteImage.Append('0');
                         }
 
                         m_byteImages[imageByte] = byteImage.ToString();
@@ -579,7 +647,8 @@ namespace TVA
 
                 for (int x = 0; x < length; x++)
                 {
-                    if (spacingCharacter != NoSpacing && x > 0) binaryImage.Append(spacingCharacter);
+                    if (spacingCharacter != NoSpacing && x > 0)
+                        binaryImage.Append(spacingCharacter);
                     binaryImage.Append(m_byteImages[bytes[offset + x]]);
                 }
 
@@ -610,7 +679,8 @@ namespace TVA
             {
                 // Removes spacing characters, if needed.
                 binaryData = binaryData.Trim();
-                if (spacingCharacter != NoSpacing) binaryData = binaryData.Replace(spacingCharacter.ToString(), "");
+                if (spacingCharacter != NoSpacing)
+                    binaryData = binaryData.Replace(spacingCharacter.ToString(), "");
                 return Convert.FromBase64String(binaryData);
             }
 
@@ -622,7 +692,8 @@ namespace TVA
             /// <returns>String of encoded bytes.</returns>
             public override string GetString(byte[] bytes, int offset, int length, char spacingCharacter)
             {
-                if (bytes == null) throw new ArgumentNullException("bytes", "Input buffer cannot be null");
+                if ((object)bytes == null)
+                    throw new ArgumentNullException("bytes", "Input buffer cannot be null");
 
                 string base64String = Convert.ToBase64String(bytes, offset, length);
 
@@ -636,7 +707,8 @@ namespace TVA
 
                     for (int x = 0; x <= base64String.Length - 1; x++)
                     {
-                        if (x > 0) base64Image.Append(spacingCharacter);
+                        if (x > 0)
+                            base64Image.Append(spacingCharacter);
                         base64Image.Append(base64String[x]);
                     }
 
@@ -668,7 +740,8 @@ namespace TVA
             {
                 // Removes spacing characters, if needed.
                 binaryData = binaryData.Trim();
-                if (spacingCharacter != NoSpacing) binaryData = binaryData.Replace(spacingCharacter.ToString(), "");
+                if (spacingCharacter != NoSpacing)
+                    binaryData = binaryData.Replace(spacingCharacter.ToString(), "");
                 return Encoding.ASCII.GetBytes(binaryData);
             }
 
@@ -680,7 +753,8 @@ namespace TVA
             /// <returns>String of encoded bytes.</returns>
             public override string GetString(byte[] bytes, int offset, int length, char spacingCharacter)
             {
-                if (bytes == null) throw new ArgumentNullException("bytes", "Input buffer cannot be null");
+                if ((object)bytes == null)
+                    throw new ArgumentNullException("bytes", "Input buffer cannot be null");
 
                 string asciiString = Encoding.ASCII.GetString(bytes, offset, length);
 
@@ -694,7 +768,8 @@ namespace TVA
 
                     for (int x = 0; x <= asciiString.Length - 1; x++)
                     {
-                        if (x > 0) asciiImage.Append(spacingCharacter);
+                        if (x > 0)
+                            asciiImage.Append(spacingCharacter);
                         asciiImage.Append(asciiString[x]);
                     }
 
@@ -728,7 +803,9 @@ namespace TVA
         /// <returns>String of encoded bytes.</returns>
         public virtual string GetString(byte[] bytes, char spacingCharacter)
         {
-            if (bytes == null) throw new ArgumentNullException("bytes", "Input buffer cannot be null");
+            if ((object)bytes == null)
+                throw new ArgumentNullException("bytes", "Input buffer cannot be null");
+
             return GetString(bytes, 0, bytes.Length, spacingCharacter);
         }
 
@@ -739,7 +816,9 @@ namespace TVA
         /// <returns>String of encoded bytes.</returns>
         public virtual string GetString(byte[] bytes, int offset, int length)
         {
-            if (bytes == null) throw new ArgumentNullException("bytes", "Input buffer cannot be null");
+            if ((object)bytes == null)
+                throw new ArgumentNullException("bytes", "Input buffer cannot be null");
+
             return GetString(bytes, offset, length, NoSpacing);
         }
 
@@ -756,7 +835,8 @@ namespace TVA
         /// <returns>Decoded bytes.</returns>
         public virtual byte[] GetBytes(string value)
         {
-            if (string.IsNullOrEmpty(value)) throw new ArgumentNullException("value", "Input string cannot be null");
+            if (string.IsNullOrEmpty(value))
+                throw new ArgumentNullException("value", "Input string cannot be null");
             return GetBytes(value, NoSpacing);
         }
 
@@ -783,7 +863,9 @@ namespace TVA
         {
             get
             {
-                if (s_hexadecimalEncoding == null) s_hexadecimalEncoding = new HexadecimalEncoding();
+                if ((object)s_hexadecimalEncoding == null)
+                    s_hexadecimalEncoding = new HexadecimalEncoding();
+
                 return s_hexadecimalEncoding;
             }
         }
@@ -793,7 +875,9 @@ namespace TVA
         {
             get
             {
-                if (s_decimalEncoding == null) s_decimalEncoding = new DecimalEncoding();
+                if ((object)s_decimalEncoding == null)
+                    s_decimalEncoding = new DecimalEncoding();
+
                 return s_decimalEncoding;
             }
         }
@@ -809,7 +893,9 @@ namespace TVA
         {
             get
             {
-                if (s_bigEndianBinaryEncoding == null) s_bigEndianBinaryEncoding = new BinaryEncoding(Endianness.BigEndian);
+                if ((object)s_bigEndianBinaryEncoding == null)
+                    s_bigEndianBinaryEncoding = new BinaryEncoding(Endianness.BigEndian);
+
                 return s_bigEndianBinaryEncoding;
             }
         }
@@ -825,7 +911,9 @@ namespace TVA
         {
             get
             {
-                if (s_littleEndianBinaryEncoding == null) s_littleEndianBinaryEncoding = new BinaryEncoding(Endianness.LittleEndian);
+                if ((object)s_littleEndianBinaryEncoding == null)
+                    s_littleEndianBinaryEncoding = new BinaryEncoding(Endianness.LittleEndian);
+
                 return s_littleEndianBinaryEncoding;
             }
         }
@@ -835,7 +923,9 @@ namespace TVA
         {
             get
             {
-                if (s_base64Encoding == null) s_base64Encoding = new Base64Encoding();
+                if ((object)s_base64Encoding == null)
+                    s_base64Encoding = new Base64Encoding();
+
                 return s_base64Encoding;
             }
         }
@@ -845,7 +935,9 @@ namespace TVA
         {
             get
             {
-                if (s_asciiEncoding == null) s_asciiEncoding = new ASCIIEncoding();
+                if ((object)s_asciiEncoding == null)
+                    s_asciiEncoding = new ASCIIEncoding();
+
                 return s_asciiEncoding;
             }
         }
@@ -859,13 +951,15 @@ namespace TVA
         /// <returns>Decoded string</returns>
         internal static string BytesToString(byte[] bytes, int offset, int length, char spacingCharacter, string format)
         {
-            if (bytes == null) throw new ArgumentNullException("bytes", "Input buffer cannot be null");
+            if ((object)bytes == null)
+                throw new ArgumentNullException("bytes", "Input buffer cannot be null");
 
             StringBuilder byteString = new StringBuilder();
 
             for (int x = 0; x <= length - 1; x++)
             {
-                if (spacingCharacter != NoSpacing && x > 0) byteString.Append(spacingCharacter);
+                if (spacingCharacter != NoSpacing && x > 0)
+                    byteString.Append(spacingCharacter);
                 byteString.Append(bytes[x + offset].ToString(format));
             }
 

@@ -408,7 +408,8 @@ namespace TVA.Units
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Power"/>.</exception>
         public int CompareTo(object value)
         {
-            if (value == null) return 1;
+            if ((object)value == null)
+                return 1;
 
             if (!(value is double) && !(value is Power))
                 throw new ArgumentException("Argument must be a Double or a Power");
@@ -975,7 +976,7 @@ namespace TVA.Units
         public static readonly Power MinValue = (Power)double.MinValue;
 
         // Static Methods
-        
+
         /// <summary>
         /// Creates a new <see cref="Power"/> value from the specified <paramref name="value"/> in mechanical horsepower (Imperial).
         /// </summary>
@@ -1036,6 +1037,6 @@ namespace TVA.Units
             return new Power(value * LitersAtmospherePerSecondFactor);
         }
 
-        #endregion        
+        #endregion
     }
 }

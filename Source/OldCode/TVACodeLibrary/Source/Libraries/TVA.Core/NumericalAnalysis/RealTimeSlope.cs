@@ -363,7 +363,7 @@ namespace TVA.NumericalAnalysis
             m_regressionInterval = regressionInterval;
             m_pointCount = m_regressionInterval * (int)(1 / estimatedRefreshInterval);
 
-            if (m_xValues == null)
+            if ((object)m_xValues == null)
             {
                 m_xValues = new List<double>();
             }
@@ -374,7 +374,7 @@ namespace TVA.NumericalAnalysis
                     m_xValues.Clear();
                 }
             }
-            if (m_yValues == null)
+            if ((object)m_yValues == null)
             {
                 m_yValues = new List<double>();
             }
@@ -409,7 +409,7 @@ namespace TVA.NumericalAnalysis
             }
             catch (Exception ex)
             {
-                if (Status != null)
+                if ((object)Status != null)
                     Status(this, new EventArgs<string>("CurveFit failed: " + ex.Message));
             }
             finally
@@ -424,7 +424,7 @@ namespace TVA.NumericalAnalysis
             m_lastSlope = m_slope;
 
             // Notifies consumer of new calculated slope.
-            if (Recalculated != null)
+            if ((object)Recalculated != null)
                 Recalculated(this, EventArgs.Empty);
         }
 

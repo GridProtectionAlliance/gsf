@@ -389,7 +389,8 @@ namespace TVA.Units
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Angle"/>.</exception>
         public int CompareTo(object value)
         {
-            if (value == null) return 1;
+            if ((object)value == null)
+                return 1;
 
             if (!(value is double) && !(value is Angle))
                 throw new ArgumentException("Argument must be a Double or an Angle");
@@ -956,7 +957,7 @@ namespace TVA.Units
         public static readonly Angle MinValue = (Angle)double.MinValue;
 
         // Static Methods
-        
+
         /// <summary>
         /// Creates a new <see cref="Angle"/> value from the specified <paramref name="value"/> in degrees.
         /// </summary>
@@ -1007,6 +1008,6 @@ namespace TVA.Units
             return new Angle(value * AngularMilFactor);
         }
 
-        #endregion        
+        #endregion
     }
 }

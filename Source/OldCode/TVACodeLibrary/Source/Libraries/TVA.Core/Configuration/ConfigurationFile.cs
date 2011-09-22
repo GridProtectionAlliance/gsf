@@ -448,7 +448,7 @@ namespace TVA.Configuration
             public void Write(string category, string name, string value)
             {
                 XmlNode node = GetSetting(category, name);
-                if (node != null)
+                if ((object)node != null)
                 {
                     // Setting exists so update it.
                     node.SetAttributeValue("value", value);
@@ -467,7 +467,7 @@ namespace TVA.Configuration
             public string Read(string category, string name, string defaultValue)
             {
                 XmlNode node = GetSetting(category, name);
-                if (node != null)
+                if ((object)node != null)
                     // Setting exists so return its value.
                     return node.Attributes["value"].Value;
                 else
@@ -526,7 +526,7 @@ namespace TVA.Configuration
             }
             set
             {
-                if (value != null)
+                if ((object)value != null)
                     m_culture = value;
                 else
                     m_culture = CultureInfo.InvariantCulture;
@@ -614,7 +614,7 @@ namespace TVA.Configuration
         /// </summary>
         public void RestoreDefaultUserSettings()
         {
-            if (m_userConfiguration != null)
+            if ((object)m_userConfiguration != null)
             {
                 string fileName = m_userConfiguration.FileName;
 
@@ -639,7 +639,7 @@ namespace TVA.Configuration
             ApplicationType appType = Common.GetApplicationType();
             System.Configuration.Configuration configuration = null;
 
-            if (configFilePath != null)
+            if ((object)configFilePath != null)
             {
                 if (string.IsNullOrEmpty(configFilePath) || string.Compare(FilePath.GetExtension(configFilePath), ".config", true) == 0)
                 {
