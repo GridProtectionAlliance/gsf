@@ -27,6 +27,8 @@ using System.Data;
 using System.IO.Ports;
 using System.Threading;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Media;
 using TimeSeriesFramework.UI.DataModels;
 using TVA;
@@ -82,7 +84,7 @@ namespace TimeSeriesFramework.UI
         /// This method must be called before any delete operation on the database in order to log who deleted this record.
         /// For SQL server it sets user name into CONTEXT_INFO().
         /// For MySQL server it sets user name into session variable @context.
-		/// For Oracle server it sets user name into context package.
+        /// For Oracle server it sets user name into context package.
         /// MS Access is not supported for change logging.
         /// For any other database in the future, such as Oracle, this logic must be extended to support change log in the database.
         /// </remarks>
@@ -637,6 +639,38 @@ namespace TimeSeriesFramework.UI
             {
                 if (createdConnection && connection != null)
                     connection.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Loads provided user control into the frame control inside main window.
+        /// </summary>
+        /// <param name="userControl">User control to be loaded.</param>
+        /// <param name="title">Title of the user control to be loaded.</param>
+        public static void LoadUserControl(object userControl, string title)
+        {
+            UIElement frame = null;
+            UIElement groupBox = null;
+            TimeSeriesFramework.UI.CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(System.Windows.Controls.Frame), ref frame);
+            TimeSeriesFramework.UI.CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(GroupBox), ref groupBox);
+
+            if (frame != null)
+            {
+                ((System.Windows.Controls.Frame)frame).Navigate(userControl);
+
+                if (groupBox != null)
+                {
+                    Run run = new Run();
+                    run.FontWeight = FontWeights.Bold;
+                    run.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                    run.Text = title;
+
+                    TextBlock txt = new TextBlock();
+                    txt.Padding = new Thickness(5.0);
+                    txt.Inlines.Add(run);
+
+                    ((GroupBox)groupBox).Header = txt;
+                }
             }
         }
 

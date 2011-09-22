@@ -26,11 +26,8 @@
 using System;
 using System.Reflection;
 using System.Threading;
-using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using TVA.IO;
 
 namespace TimeSeriesFramework.UI.Commands
@@ -155,35 +152,13 @@ namespace TimeSeriesFramework.UI.Commands
         /// </param>
         public void Execute(object parameter)
         {
-            UIElement frame = null;
-            UIElement groupBox = null;
-            CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(System.Windows.Controls.Frame), ref frame);
-            CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(GroupBox), ref groupBox);
+            Assembly assembly = Assembly.LoadFrom(FilePath.GetAbsolutePath(m_userControlAssembly));
+            UserControl userControl = Activator.CreateInstance(assembly.GetType(m_userControlPath)) as UserControl;
 
-            if (frame != null)
-            {
-                Assembly assembly = Assembly.LoadFrom(FilePath.GetAbsolutePath(m_userControlAssembly));
-                UserControl userControl = Activator.CreateInstance(assembly.GetType(m_userControlPath)) as UserControl;
-
-                if (userControl != null)
-                {
-                    ((System.Windows.Controls.Frame)frame).Navigate(userControl);
-
-                    Run run = new Run();
-                    run.FontWeight = FontWeights.Bold;
-                    run.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
-                    run.Text = m_description;
-
-                    TextBlock txt = new TextBlock();
-                    txt.Padding = new Thickness(5.0);
-                    txt.Inlines.Add(run);
-
-                    if (groupBox != null)
-                        ((GroupBox)groupBox).Header = txt;
-                }
-                else
-                    throw new InvalidOperationException("Failed to create user control " + m_userControlPath);
-            }
+            if (userControl != null)
+                CommonFunctions.LoadUserControl(userControl, m_description);
+            else
+                throw new InvalidOperationException("Failed to create user control " + m_userControlPath);
         }
 
         /// <summary>
