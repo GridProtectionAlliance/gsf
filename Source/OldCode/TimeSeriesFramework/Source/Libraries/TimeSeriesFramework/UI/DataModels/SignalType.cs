@@ -285,12 +285,12 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 s_pmuSignalTypes = new ObservableCollection<SignalType>()
                 {
-                    new SignalType(){Abbreviation = "F", Acronym = "FREQ", EngineeringUnits = "Hz", Name = "Frequency", Suffix = "FQ"},
-                    new SignalType(){Abbreviation = "DF", Acronym = "DFDT", EngineeringUnits = "", Name = "Frequency Delta (dF/dt)", Suffix = "DF"},
-                    new SignalType(){Abbreviation = "S", Acronym = "FLAG", EngineeringUnits = "", Name = "Status Flags", Suffix = "SF"},
-                    new SignalType(){Abbreviation = "A", Acronym = "ALOG", EngineeringUnits = "", Name = "Analog Value", Suffix = "AV"},
-                    new SignalType(){Abbreviation = "D", Acronym = "DIGI", EngineeringUnits = "", Name = "Digital Value", Suffix = "DV"},
-                    new SignalType(){Abbreviation = "C", Acronym = "CALC", EngineeringUnits = "", Name = "Calculated Value", Suffix = "CV"}
+                    new SignalType(){ID = 5, Abbreviation = "F", Acronym = "FREQ", EngineeringUnits = "Hz", Name = "Frequency", Suffix = "FQ"},
+                    new SignalType(){ID = 6, Abbreviation = "DF", Acronym = "DFDT", EngineeringUnits = "", Name = "Frequency Delta (dF/dt)", Suffix = "DF"},
+                    new SignalType(){ID = 8, Abbreviation = "S", Acronym = "FLAG", EngineeringUnits = "", Name = "Status Flags", Suffix = "SF"},
+                    new SignalType(){ID = 7, Abbreviation = "A", Acronym = "ALOG", EngineeringUnits = "", Name = "Analog Value", Suffix = "AV"},
+                    new SignalType(){ID = 9, Abbreviation = "D", Acronym = "DIGI", EngineeringUnits = "", Name = "Digital Value", Suffix = "DV"},
+                    new SignalType(){ID = 10, Abbreviation = "C", Acronym = "CALC", EngineeringUnits = "", Name = "Calculated Value", Suffix = "CV"}
                 };
             }
 
@@ -307,8 +307,8 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 s_voltagePhasorSignalTypes = new ObservableCollection<SignalType>()
                 {
-                    new SignalType(){Abbreviation = "V", Acronym = "VPHM", EngineeringUnits = "Volts", Name = "Voltage Magnitude", Suffix = "PM"},
-                    new SignalType(){Abbreviation = "VH", Acronym = "VPHA", EngineeringUnits = "Degrees", Name = "Voltage Phase Angle", Suffix = "PA"}
+                    new SignalType(){ID = 3, Abbreviation = "V", Acronym = "VPHM", EngineeringUnits = "Volts", Name = "Voltage Magnitude", Suffix = "PM"},
+                    new SignalType(){ID = 4, Abbreviation = "VH", Acronym = "VPHA", EngineeringUnits = "Degrees", Name = "Voltage Phase Angle", Suffix = "PA"}
                 };
             }
 
@@ -325,8 +325,8 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 s_currentPhasorSignalTypes = new ObservableCollection<SignalType>()
                 {
-                    new SignalType(){Abbreviation = "I", Acronym = "IPHM", EngineeringUnits = "Amps", Name = "Current Magnitude", Suffix = "PM"},
-                    new SignalType(){Abbreviation = "IH", Acronym = "IPHA", EngineeringUnits = "Degrees", Name = "Current Phase Angle", Suffix = "PA"}
+                    new SignalType(){ID = 1, Abbreviation = "I", Acronym = "IPHM", EngineeringUnits = "Amps", Name = "Current Magnitude", Suffix = "PM"},
+                    new SignalType(){ID = 2, Abbreviation = "IH", Acronym = "IPHA", EngineeringUnits = "Degrees", Name = "Current Phase Angle", Suffix = "PA"}
                 };
             }
 
