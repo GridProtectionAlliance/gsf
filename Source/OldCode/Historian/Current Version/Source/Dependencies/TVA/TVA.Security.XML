@@ -616,6 +616,9 @@
             <param name="oldPassword">User's current password.</param>
             <param name="newPassword">User's new password.</param>
             <returns>true if the password is changed, otherwise false.</returns>
+            <remarks>
+            This method always returns <c>false</c> under Mono deployments.
+            </remarks>
         </member>
         <member name="M:TVA.Security.LdapSecurityProvider.TranslateRole(System.String)">
             <summary>

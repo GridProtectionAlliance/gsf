@@ -1797,17 +1797,17 @@
             Releases all the resources used by the <see cref="T:TVA.Net.Smtp.Mail"/> object.
             </summary>
         </member>
-        <member name="M:TVA.Net.Smtp.Mail.Send">
-            <summary>
-            Send the <see cref="T:TVA.Net.Smtp.Mail"/> message with <see cref="P:TVA.Net.Smtp.Mail.Attachments"/> to the <see cref="P:TVA.Net.Smtp.Mail.ToRecipients"/>, 
-            <see cref="P:TVA.Net.Smtp.Mail.CcRecipients"/> and <see cref="P:TVA.Net.Smtp.Mail.BccRecipients"/> using the specified <see cref="P:TVA.Net.Smtp.Mail.SmtpServer"/>.
-            </summary>
-        </member>
         <member name="M:TVA.Net.Smtp.Mail.Dispose(System.Boolean)">
             <summary>
             Releases the unmanaged resources used by the <see cref="T:TVA.Net.Smtp.Mail"/> object and optionally releases the managed resources.
             </summary>
             <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TVA.Net.Smtp.Mail.Send">
+            <summary>
+            Send the <see cref="T:TVA.Net.Smtp.Mail"/> message with <see cref="P:TVA.Net.Smtp.Mail.Attachments"/> to the <see cref="P:TVA.Net.Smtp.Mail.ToRecipients"/>, 
+            <see cref="P:TVA.Net.Smtp.Mail.CcRecipients"/> and <see cref="P:TVA.Net.Smtp.Mail.BccRecipients"/> using the specified <see cref="P:TVA.Net.Smtp.Mail.SmtpServer"/>.
+            </summary>
         </member>
         <member name="M:TVA.Net.Smtp.Mail.Send(System.String,System.String,System.String,System.String,System.Boolean,System.String)">
             <summary>
@@ -2280,21 +2280,33 @@
             <summary>
             Determines whether or not to attempt network connection to share specified in <see cref="P:TVA.IO.ExportDestination.DestinationFile"/>.
             </summary>
+            <remarks>
+            This option is ignored under Mono deployments.
+            </remarks>
         </member>
         <member name="P:TVA.IO.ExportDestination.Domain">
             <summary>
             Domain used to authenticate network connection if <see cref="P:TVA.IO.ExportDestination.ConnectToShare"/> is true.
             </summary>
+            <remarks>
+            This option is ignored under Mono deployments.
+            </remarks>
         </member>
         <member name="P:TVA.IO.ExportDestination.UserName">
             <summary>
             User name used to authenticate network connection if <see cref="P:TVA.IO.ExportDestination.ConnectToShare"/> is true.
             </summary>
+            <remarks>
+            This option is ignored under Mono deployments.
+            </remarks>
         </member>
         <member name="P:TVA.IO.ExportDestination.Password">
             <summary>
             Password used to authenticate network connection if <see cref="P:TVA.IO.ExportDestination.ConnectToShare"/> is true.
             </summary>
+            <remarks>
+            This option is ignored under Mono deployments.
+            </remarks>
         </member>
         <member name="P:TVA.IO.ExportDestination.Share">
             <summary>
@@ -3691,7 +3703,22 @@
             <summary>
             Represents a high-resolution timer and timestamp class.
             </summary>
-            <remarks>Implementation based on Windows multimedia timer.</remarks>
+            <remarks>
+            <para>
+            For standard deployments, implementation is based on the Windows multimedia timer. For mono
+            deployments, implementation uses a basic timer for compatibility - this should have ~10ms
+            of resolution when used on standard Linux systems.
+            </para>
+            <para>
+            Future mono deployments may want to consider an implementation that uses OS specific timers:
+                For Windows use of non-Mono style implementation below should be sufficient.
+                For Linux see http://www.ittc.ku.edu/utime/ as an example.
+            Implememtation might depend on a platform specific P/Invokable wrapper DLL that exposed the
+            same methods on Windows and Linux for consumption from .NET but used the specific precision
+            timer implementations mentioned above. See the following for Mono interop details:
+            http://www.mono-project.com/Interop_with_Native_Libraries
+            </para>
+            </remarks>
         </member>
         <member name="M:TVA.PrecisionTimer.#ctor">
             <summary>
@@ -3753,6 +3780,7 @@
             Minimum timer resolution, in milliseconds, for the application. A lower value specifies a higher (more accurate) resolution.
             </param>
             <remarks>
+            <para>
             Call this function immediately before using the <see cref="T:TVA.PrecisionTimer"/> and call <see cref="M:TVA.PrecisionTimer.ClearMinimumTimerResolution(System.Int32)"/>
             immediately after you are finished using the PrecisionTimer. You must match each call to <see cref="M:TVA.PrecisionTimer.SetMinimumTimerResolution(System.Int32)"/>
             with a call to ClearMinimumTimerResolution specifying the same minimum resolution <paramref name="period"/> in both calls.
@@ -3761,6 +3789,10 @@
             Setting a higher resolution can improve the accuracy of time-out intervals in wait functions. However, it can also reduce overall system
             performance, because the thread scheduler switches tasks more often. High resolutions can also prevent the CPU power management system from
             entering power-saving modes. See timeBeginPeriod Windows API for more information.
+            </para>
+            <para>
+            This method is currently ignored under Mono deployments.
+            </para>
             </remarks>
         </member>
         <member name="M:TVA.PrecisionTimer.ClearMinimumTimerResolution(System.Int32)">
@@ -3771,10 +3803,15 @@
             Minimum timer resolution specified in the previous call to the <see cref="M:TVA.PrecisionTimer.SetMinimumTimerResolution(System.Int32)"/> function.
             </param>
             <remarks>
+            <para>
             Call this function immediately after you are finished using the <see cref="T:TVA.PrecisionTimer"/>. You must match each call to
             <see cref="M:TVA.PrecisionTimer.SetMinimumTimerResolution(System.Int32)"/> with a call to <see cref="M:TVA.PrecisionTimer.ClearMinimumTimerResolution(System.Int32)"/>, specifying the same minimum
             resolution <paramref name="period"/> in both calls. An application can make multiple SetMinimumTimerResolution calls as long
             as each call is matched with a call to ClearMinimumTimerResolution.
+            </para>
+            <para>
+            This method is currently ignored under Mono deployments.
+            </para>
             </remarks>
         </member>
         <member name="E:TVA.PrecisionTimer.Started">
@@ -3808,10 +3845,15 @@
             If the timer has already been disposed.
             </exception>
             <remarks>
+            <para>
             The resolution is in milliseconds. The resolution increases  with smaller values;
-            a resolution of 0 indicates periodic events  should occur with the greatest possible
+            a resolution of 0 indicates periodic events should occur with the greatest possible
             accuracy. To reduce system  overhead, however, you should use the maximum value
             appropriate for your application.
+            </para>
+            <para>
+            This property is currently ignored under Mono deployments.
+            </para>
             </remarks>
         </member>
         <member name="P:TVA.PrecisionTimer.AutoReset">
@@ -7814,6 +7856,9 @@
             <summary>
             Monitors the resource utilization of <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/>.
             </summary>
+            <remarks>
+            <see cref="T:System.AppDomain"/> monitoring is not enabled under Mono deployments.
+            </remarks>
         </member>
         <member name="M:TVA.Adapters.AdapterLoader`1.GetMemoryUsage(System.Diagnostics.Process)">
             <summary>
@@ -7963,8 +8008,13 @@
             Gets or sets a boolean value that indicates whether resource utilization of <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/> executing in <see cref="P:TVA.Adapters.AdapterLoader`1.IsolateAdapters">isolation</see> is to be monitored.
             </summary>
             <remarks>
+            <para>
             Use <see cref="P:TVA.Adapters.AdapterLoader`1.AllowableProcessMemoryUsage"/>, <see cref="P:TVA.Adapters.AdapterLoader`1.AllowableProcessProcessorUsage"/>, <see cref="P:TVA.Adapters.AdapterLoader`1.AllowableAdapterMemoryUsage"/> and 
             <see cref="P:TVA.Adapters.AdapterLoader`1.AllowableAdapterProcessorUsage"/> properties to configure how adapter resource utilization is to be monitored.
+            </para>
+            <para>
+            This option is ignored under Mono deployments.
+            </para>
             </remarks>
         </member>
         <member name="P:TVA.Adapters.AdapterLoader`1.AllowableProcessMemoryUsage">
@@ -19092,12 +19142,22 @@
             <summary>
             Gets the memory utilzation of the <see cref="T:TVA.Adapters.Adapter"/> in bytes if executing in a seperate <see cref="T:System.AppDomain"/>, otherwise <see cref="F:System.Double.NaN"/>.
             </summary>
-            <remarks><see cref="P:TVA.Adapters.Adapter.MemoryUsage"/> gets updated only after a full blocking collection by <see cref="T:System.GC"/> (eg. <see cref="M:System.GC.Collect"/>).</remarks>
+            <remarks>
+            <para>
+            <see cref="P:TVA.Adapters.Adapter.MemoryUsage"/> gets updated only after a full blocking collection by <see cref="T:System.GC"/> (eg. <see cref="M:System.GC.Collect"/>).
+            </para>
+            <para>
+            This method always returns <c><see cref="F:System.Double.NaN"/></c> under Mono deployments.
+            </para>
+            </remarks>
         </member>
         <member name="P:TVA.Adapters.Adapter.ProcessorUsage">
             <summary>
             Gets the % processor utilization of the <see cref="T:TVA.Adapters.Adapter"/> if executing in a seperate <see cref="T:System.AppDomain"/> otherwise <see cref="F:System.Double.NaN"/>.
             </summary>
+            <remarks>
+            This method always returns <c><see cref="F:System.Double.NaN"/></c> under Mono deployments.
+            </remarks>
         </member>
         <member name="P:TVA.Adapters.Adapter.Name">
             <summary>
@@ -22509,6 +22569,9 @@
              </configuration>
              ]]>
              </code>
+             <para>
+             Some methods in this class may not behave as expected when running on under Mono deployments.
+             </para>
              </example>
         </member>
         <member name="F:TVA.Identity.UserInfo.DefaultPersistSettings">
@@ -22633,6 +22696,9 @@
             Impersonates the defined privileged domain account.
             </summary>
             <returns>An <see cref="T:System.Security.Principal.WindowsImpersonationContext"/> if privileged domain account has been defined, otherwise null.</returns>
+            <remarks>
+            This method always returns <c>null</c> under Mono deployments.
+            </remarks>
         </member>
         <member name="M:TVA.Identity.UserInfo.GetUserProperty(System.String)">
             <summary>
@@ -22649,6 +22715,9 @@
              <param name="username">Username of user to authenticate.</param>
              <param name="password">Password of user to authenticate.</param>
              <returns>true if the user credentials are authenticated successfully; otherwise false.</returns>
+             <remarks>
+             This method always returns <c>null</c> under Mono deployments.
+             </remarks>
              <example>
              This example shows how to validate a user's credentials:
              <code>
@@ -22664,7 +22733,7 @@
                      string password = "password";
                     
                      // Authenticate user credentials.
-                     if (UserInfo.AuthenticateUser(domain, username, password) != null)
+                     if ((object)UserInfo.AuthenticateUser(domain, username, password) != null)
                          Console.WriteLine("Successfully authenticated user \"{0}\\{1}\".", domain, username);
                      else
                          Console.WriteLine("Failed to authenticate user \"{0}\\{1}\".", domain, username);
@@ -22684,6 +22753,9 @@
              <param name="password">Password of user to authenticate.</param>
              <param name="errorMessage">Error message returned, if authentication fails.</param>
              <returns>true if the user credentials are authenticated successfully; otherwise false.</returns>
+             <remarks>
+             This method always returns <c>null</c> under Mono deployments.
+             </remarks>
              <example>
              This example shows how to validate a user's credentials and retrieve an error message if validation fails: 
              <code>
@@ -22700,7 +22772,7 @@
                      string errorMessage;
             
                      // Authenticate user credentials.
-                     if (UserInfo.AuthenticateUser(domain, username, password, out errorMessage) != null)
+                     if ((object)UserInfo.AuthenticateUser(domain, username, password, out errorMessage) != null)
                          Console.WriteLine("Successfully authenticated user \"{0}\\{1}\".", domain, username);
                      else
                          Console.WriteLine("Failed to authenticate user \"{0}\\{1}\" due to exception: {2}", domain, username, errorMessage);
@@ -22719,7 +22791,14 @@
              <param name="username">Username of user to impersonate.</param>
              <param name="password">Password of user to impersonate.</param>
              <returns>A <see cref="T:System.Security.Principal.WindowsImpersonationContext"/> object of the impersonated user.</returns>
-             <remarks>After impersonating a user the code executes under the impersonated user's identity.</remarks>
+             <remarks>
+             <para>
+             After impersonating a user the code executes under the impersonated user's identity.
+             </para>
+             <para>
+             This method always returns <c>null</c> under Mono deployments.
+             </para>
+             </remarks>
              <example>
              This example shows how to impersonate a user:
              <code>
@@ -22881,7 +22960,12 @@
             Gets the groups asscociated with the user.
             </summary>
             <remarks>
+            <para>
             Groups names are prefixed with their associated domain or computer name.
+            </para>
+            <para>
+            This method always returns an empty string array (i.e., a string array with no elements) under Mono deployments.
+            </para>
             </remarks>
         </member>
         <member name="P:TVA.Identity.UserInfo.FirstName">
@@ -23016,6 +23100,9 @@
             <summary>
             Gets a boolean value that indicates whether the current machine is joined to a domain.
             </summary>
+            <remarks>
+            This method always returns <c>false</c> under Mono deployments.
+            </remarks>
         </member>
         <member name="T:TVA.ErrorManagement.ErrorDialog">
             <summary>
@@ -24504,6 +24591,9 @@
             </summary>
             <param name="command">The <see cref="T:System.Data.OleDb.OleDbCommand"/> whose parameters are to be populated.</param>
             <param name="parameters">The parameter values to populate the <see cref="T:System.Data.OleDb.OleDbCommand"/> parameters with.</param>
+            <remarks>
+            Automatic parameter derivation is currently not support for OleDB connections under Mono deployments.
+            </remarks>
         </member>
         <member name="M:TVA.Data.DataExtensions.PopulateParameters(System.Data.Odbc.OdbcCommand,System.Object,System.Object[])">
             <summary>
@@ -24519,6 +24609,9 @@
             </summary>
             <param name="command">The <see cref="T:System.Data.Odbc.OdbcCommand"/> whose parameters are to be populated.</param>
             <param name="parameters">The parameter values to populate the <see cref="T:System.Data.Odbc.OdbcCommand"/> parameters with.</param>
+            <remarks>
+            Automatic parameter derivation is currently not support for ODBC connections under Mono deployments.
+            </remarks>
         </member>
         <member name="M:TVA.Data.DataExtensions.PopulateParameters(System.Data.SqlClient.SqlCommand,System.Object,System.Object[])">
             <summary>
@@ -27014,6 +27107,11 @@
             Gets a value to indicate whether source database is Microsoft Access.
             </summary>
         </member>
+        <member name="P:TVA.Data.AdoDataConnection.IsSQLServer">
+            <summary>
+            Gets a value to indicate whether source database is Microsoft SQL Server.
+            </summary>
+        </member>
         <member name="P:TVA.Data.AdoDataConnection.IsMySQL">
             <summary>
             Gets a value to indicate whether source database is MySQL.
@@ -28225,6 +28323,10 @@
              <summary>
              Defines a set of consumable events that can be raised by a console application.
              </summary>
+             <remarks>
+             Note that no events will be raised by this class when running under Mono deployments, the class
+             remains available in the Mono build as a stub to allow existing code to still compile and run.
+             </remarks>
              <example>
              This example shows how to subscribe to console application events:
              <code>
@@ -28261,11 +28363,17 @@
             Enables the raising of console application <see cref="T:TVA.Console.Events"/>. Prior to calling this method, handlers 
             must be defined for the <see cref="T:TVA.Console.Events"/> raised by a console application.
             </summary>
+            <remarks>
+            This method is currently ignored under Mono deployments.
+            </remarks>
         </member>
         <member name="M:TVA.Console.Events.DisableRaisingEvents">
             <summary>
             Enables the raising of console application <see cref="T:TVA.Console.Events"/>. 
             </summary>
+            <remarks>
+            This method is currently ignored under Mono deployments.
+            </remarks>
         </member>
         <member name="M:TVA.Console.Events.HandleConsoleWindowEvents(TVA.Console.Events.ConsoleEventType)">
             <summary>
@@ -29543,6 +29651,9 @@
             <summary>Gets the specified assembly attribute if it is exposed by the assembly.</summary>
             <param name="attributeType">Type of the attribute to get.</param>
             <returns>The requested assembly attribute if it exists; otherwise null.</returns>
+            <remarks>
+            This method always returns <c>null</c> under Mono deployments.
+            </remarks>
         </member>
         <member name="M:TVA.Reflection.AssemblyInfo.GetEmbeddedResource(System.String)">
             <summary>Gets the specified embedded resource from the assembly.</summary>

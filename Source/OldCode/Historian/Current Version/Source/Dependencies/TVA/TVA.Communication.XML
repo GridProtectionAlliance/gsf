@@ -1456,6 +1456,9 @@
             <summary>
             Gets or sets a boolean value that indicates whether the client Windows account credentials are used for authentication.
             </summary>
+            <remarks>   
+            This option is ignored under Mono deployments.
+            </remarks>
         </member>
         <member name="P:TVA.Communication.TcpServer.AllowDualStackSocket">
             <summary>
@@ -3033,6 +3036,9 @@
             <summary>
             Gets or sets the needed number of bytes in the internal input buffer before a <see cref="M:TVA.Communication.ClientBase.OnReceiveDataComplete(System.Byte[],System.Int32)"/> event occurs.
             </summary>
+            <remarks>
+            This option is ignored under Mono deployments.
+            </remarks>
         </member>
         <member name="T:TVA.Communication.NamespaceDoc">
             <summary>
@@ -4182,6 +4188,9 @@
             <summary>
             Gets or sets a boolean value that indicates whether the current Windows account credentials are used for authentication.
             </summary>
+            <remarks>   
+            This option is ignored under Mono deployments.
+            </remarks>
         </member>
         <member name="P:TVA.Communication.TcpClient.AllowDualStackSocket">
             <summary>
