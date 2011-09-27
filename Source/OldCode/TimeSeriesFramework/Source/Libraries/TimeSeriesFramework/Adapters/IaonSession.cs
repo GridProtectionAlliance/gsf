@@ -104,6 +104,7 @@ namespace TimeSeriesFramework.Adapters
         private bool m_useMeasurementRouting;
         private RoutingTables m_routingTables;
         private Guid m_nodeID;
+        private bool m_eventsAttached;
         private bool m_disposed;
 
         #endregion
@@ -122,37 +123,38 @@ namespace TimeSeriesFramework.Adapters
 
             // Create a collection to manage all input, action and output adapter collections as a unit
             m_allAdapters = new AllAdaptersCollection();
-            m_allAdapters.StatusMessage += StatusMessage;
-            m_allAdapters.ProcessException += ProcessException;
-            m_allAdapters.InputMeasurementKeysUpdated += InputMeasurementKeysUpdated;
+
+            // Internally we make sure to recalculate routing tables any time measurements have been updated
             m_allAdapters.InputMeasurementKeysUpdated += AdapterMeasurementsUpdated;
-            m_allAdapters.OutputMeasurementsUpdated += OutputMeasurementsUpdated;
             m_allAdapters.OutputMeasurementsUpdated += AdapterMeasurementsUpdated;
-            m_allAdapters.Disposed += Disposed;
 
             // Create input adapters collection
             m_inputAdapters = new InputAdapterCollection();
+
             if (m_useMeasurementRouting)
                 m_inputAdapters.NewMeasurements += m_routingTables.RoutedMeasurementsHandler;
             else
                 m_inputAdapters.NewMeasurements += m_routingTables.BroadcastMeasurementsHandler;
+
             m_inputAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
-            m_routingTables.InputAdapters = m_inputAdapters;
 
             // Create action adapters collection
             m_actionAdapters = new ActionAdapterCollection();
+
             if (m_useMeasurementRouting)
                 m_actionAdapters.NewMeasurements += m_routingTables.RoutedMeasurementsHandler;
             else
                 m_actionAdapters.NewMeasurements += m_routingTables.BroadcastMeasurementsHandler;
-            m_actionAdapters.UnpublishedSamples += UnpublishedSamples;
+
             m_actionAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
-            m_routingTables.ActionAdapters = m_actionAdapters;
 
             // Create output adapters collection
             m_outputAdapters = new OutputAdapterCollection();
-            m_outputAdapters.UnprocessedMeasurements += UnprocessedMeasurements;
             m_outputAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
+
+            // Associate adapter collections with routing tables
+            m_routingTables.InputAdapters = m_inputAdapters;
+            m_routingTables.ActionAdapters = m_actionAdapters;
             m_routingTables.OutputAdapters = m_outputAdapters;
 
             // We group these adapters such that they are initialized in the following order: output, input, action. This
@@ -401,6 +403,26 @@ namespace TimeSeriesFramework.Adapters
         /// </summary>
         public void Initialize()
         {
+            // We attach to external events late, post construction, so that the handlers will already have
+            // been assigned before adding secondary bubbled event subscriptions
+            if (!m_eventsAttached)
+            {
+                m_eventsAttached = true;
+
+                // Attach to common adapter events
+                m_allAdapters.StatusMessage += StatusMessage;
+                m_allAdapters.ProcessException += ProcessException;
+                m_allAdapters.InputMeasurementKeysUpdated += InputMeasurementKeysUpdated;
+                m_allAdapters.OutputMeasurementsUpdated += OutputMeasurementsUpdated;
+                m_allAdapters.Disposed += Disposed;
+
+                // Attach to action adapter specific events
+                m_actionAdapters.UnpublishedSamples += UnpublishedSamples;
+
+                // Attach to output adapter specific events
+                m_outputAdapters.UnprocessedMeasurements += UnprocessedMeasurements;
+            }
+
             // Initialize all adapters
             m_allAdapters.Initialize();
 
