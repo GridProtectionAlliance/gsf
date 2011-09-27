@@ -283,6 +283,9 @@
                     <description>An <paramref name="address"/> of <b>net.msmq://localhost:2929</b> will create an <see cref="T:System.ServiceModel.NetMsmqBinding"/> and leave the <paramref name="address"/> unchanged.</description>
                 </item>
             </list>
+            <para>
+            The <paramref name="enableSecurity"/> parameter value is ignored Mono deployments since security bindings are not implemented.
+            </para>
             </remarks>
         </member>
         <member name="E:TVA.ServiceModel.SelfHostingService.ServiceHostCreated">
