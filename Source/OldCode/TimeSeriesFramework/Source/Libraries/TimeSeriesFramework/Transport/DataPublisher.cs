@@ -1129,9 +1129,16 @@ namespace TimeSeriesFramework.Transport
 
                         // Send success response
                         if (subscription.InputMeasurementKeys != null)
+                        {
                             message = string.Format("Client subscribed as {0}compact {1}synchronized with {2} signals.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un", subscription.InputMeasurementKeys.Length);
+                        }
                         else
-                            message = string.Format("Client subscribed as {0}compact {1}synchronized, but no signals were specified. Make sure \"inputMeasurementKeys\" setting is properly defined.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un");
+                        {
+                            if (subscription.TemporalConstraintIsDefined())
+                                message = string.Format("Client subscribed as {0}compact {1}synchronized with a temporal constraint.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un");
+                            else
+                                message = string.Format("Client subscribed as {0}compact {1}synchronized, but no signals were specified. Make sure \"inputMeasurementKeys\" setting is properly defined.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un");
+                        }
 
                         SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.Subscribe, message);
                         OnStatusMessage(message);

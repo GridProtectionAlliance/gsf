@@ -321,4 +321,22 @@ namespace TimeSeriesFramework.Adapters
         /// </remarks>
         void SetTemporalConstraint(string startTime, string stopTime, string constraintParameters);
     }
+
+    /// <summary>
+    /// Defines static extension functions for <see cref="IAdapter"/> implementations.
+    /// </summary>
+    public static class IAdapterExtensions
+    {
+        /// <summary>
+        /// Returns <c>true</c> if <see cref="IAdapter"/> has a temporal constraint defined, i.e., either
+        /// <see cref="IAdapter.StartTimeConstraint"/> or <see cref="IAdapter.StopTimeConstraint"/> is not
+        /// set to its default value.
+        /// </summary>
+        /// <param name="adapter"><see cref="IAdapter"/> instance to test.</param>
+        /// <returns><c>true</c> if <see cref="IAdapter"/> has a temporal constraint defined.</returns>
+        public static bool TemporalConstraintIsDefined(this IAdapter adapter)
+        {
+            return (adapter.StartTimeConstraint != DateTime.MinValue || adapter.StopTimeConstraint != DateTime.MaxValue);
+        }
+    }
 }

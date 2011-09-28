@@ -557,9 +557,9 @@ namespace TimeSeriesFramework.Transport
             connectionString.AppendFormat("timeResolution={0}; ", (long)timeResolution);
             connectionString.AppendFormat("allowPreemptivePublishing={0}; ", allowPreemptivePublishing);
             connectionString.AppendFormat("downsamplingMethod={0}; ", downsamplingMethod.ToString());
-            connectionString.AppendFormat("startTime={0}; ", startTime.ToNonNullString());
-            connectionString.AppendFormat("stopTime={0}; ", stopTime.ToNonNullString());
-            connectionString.AppendFormat("constraintParameters={0}; ", constraintParameters.ToNonNullString());
+            connectionString.AppendFormat("startTimeConstraint={0}; ", startTime.ToNonNullString());
+            connectionString.AppendFormat("stopTimeConstraint={0}; ", stopTime.ToNonNullString());
+            connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
             connectionString.AppendFormat("processingInterval={0}", processingInterval);
 
             return Subscribe(true, compactFormat, connectionString.ToString());
@@ -638,9 +638,9 @@ namespace TimeSeriesFramework.Transport
             connectionString.AppendFormat("lagTime={0}; ", lagTime);
             connectionString.AppendFormat("leadTime={0}; ", leadTime);
             connectionString.AppendFormat("useLocalClockAsRealTime={0}; ", useLocalClockAsRealTime);
-            connectionString.AppendFormat("startTime={0}; ", startTime.ToNonNullString());
-            connectionString.AppendFormat("stopTime={0}; ", stopTime.ToNonNullString());
-            connectionString.AppendFormat("constraintParameters={0}; ", constraintParameters.ToNonNullString());
+            connectionString.AppendFormat("startTimeConstraint={0}; ", startTime.ToNonNullString());
+            connectionString.AppendFormat("stopTimeConstraint={0}; ", stopTime.ToNonNullString());
+            connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
             connectionString.AppendFormat("processingInterval={0}", processingInterval);
 
             return Subscribe(false, compactFormat, connectionString.ToString());
