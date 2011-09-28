@@ -16,6 +16,8 @@
 //       fix an error when using SQLite databases.
 //  09/01/2011 - Stephen C. Wills
 //       Modified references to views in the database whose names have changed.
+//  09/28/2011 - Stephen C. Wills
+//       Modified database queries to work with Oracle database.
 //
 //******************************************************************************************************
 
@@ -410,18 +412,21 @@ namespace TVA.Security
                 //   Table1: Information about the user.
                 //   Table2: Groups the user is a member of.
                 //   Table3: Roles that are assigned to the user either implicitly (NT groups) or explicitly (database) or through a group.
+                AdoDataConnection database = new AdoDataConnection(SettingsCategory);
                 DataTable userDataTable = new DataTable();
                 DataTable userGroupDataTable = new DataTable();
                 DataTable userRoleDataTable = new DataTable();
                 DataRow userDataRow = null;
                 string groupName, roleName;
+                string query;
 
-                using (IDbConnection dbConnection = (new AdoDataConnection(SettingsCategory)).Connection)
+                using (IDbConnection dbConnection = database.Connection)
                 {
                     if (dbConnection == null)
                         return false;
 
-                    userDataTable.Load(dbConnection.ExecuteReader("SELECT ID, Name, Password, FirstName, LastName, Phone, Email, LockedOut, UseADAuthentication, ChangePasswordOn, CreatedOn FROM UserAccount WHERE Name = @name", UserData.Username));
+                    query = database.ParameterizedQueryString("SELECT ID, Name, Password, FirstName, LastName, Phone, Email, LockedOut, UseADAuthentication, ChangePasswordOn, CreatedOn FROM UserAccount WHERE Name = {0}", "name");
+                    userDataTable.Load(dbConnection.ExecuteReader(query, UserData.Username));
 
                     if (userDataTable.Rows.Count <= 0)
                     {
@@ -484,7 +489,8 @@ namespace TVA.Security
                         UserData.IsLockedOut = Convert.ToBoolean(userDataRow["LockedOut"]);
 
                     // Load explicitly assigned groups
-                    userGroupDataTable.Load(dbConnection.ExecuteReader("SELECT SecurityGroupID, SecurityGroupName, SecurityGroupDescription FROM SecurityGroupUserAccountDetail WHERE UserName = @name", UserData.Username));
+                    query = database.ParameterizedQueryString("SELECT SecurityGroupID, SecurityGroupName, SecurityGroupDescription FROM SecurityGroupUserAccountDetail WHERE UserName = {0}", "name");
+                    userGroupDataTable.Load(dbConnection.ExecuteReader(query, UserData.Username));
 
                     foreach (DataRow group in userGroupDataTable.Rows)
                     {
@@ -500,14 +506,17 @@ namespace TVA.Security
                     UserData.Roles.Clear();
 
                     // Load implicitly assigned roles
+                    query = database.ParameterizedQueryString("SELECT ApplicationRoleID, ApplicationRoleName, ApplicationRoleDescription FROM AppRoleSecurityGroupDetail WHERE SecurityGroupName = {0}", "groupName");
                     foreach (string group in UserData.Groups)
                     {
-                        userRoleDataTable.Load(dbConnection.ExecuteReader("SELECT ApplicationRoleID, ApplicationRoleName, ApplicationRoleDescription FROM AppRoleSecurityGroupDetail WHERE SecurityGroupName = @groupName", group));
+                        userRoleDataTable.Load(dbConnection.ExecuteReader(query, group));
                     }
 
                     // Load explicitly assigned roles
-                    userRoleDataTable.Load(dbConnection.ExecuteReader("SELECT ApplicationRoleID, ApplicationRoleName, ApplicationRoleDescription FROM AppRoleUserAccountDetail WHERE UserName = @name", UserData.Username));
-                    userRoleDataTable.Load(dbConnection.ExecuteReader("SELECT AppRoleSecurityGroupDetail.ApplicationRoleID AS ApplicationRoleID, AppRoleSecurityGroupDetail.ApplicationRoleName AS ApplicationRoleName, AppRoleSecurityGroupDetail.ApplicationRoleDescription AS ApplicationRoleDescription FROM AppRoleSecurityGroupDetail, SecurityGroupUserAccountDetail WHERE AppRoleSecurityGroupDetail.SecurityGroupID = SecurityGroupUserAccountDetail.SecurityGroupID AND SecurityGroupUserAccountDetail.UserName = @name", UserData.Username));
+                    query = database.ParameterizedQueryString("SELECT ApplicationRoleID, ApplicationRoleName, ApplicationRoleDescription FROM AppRoleUserAccountDetail WHERE UserName = {0}", "name");
+                    userRoleDataTable.Load(dbConnection.ExecuteReader(query, UserData.Username));
+                    query = database.ParameterizedQueryString("SELECT AppRoleSecurityGroupDetail.ApplicationRoleID AS ApplicationRoleID, AppRoleSecurityGroupDetail.ApplicationRoleName AS ApplicationRoleName, AppRoleSecurityGroupDetail.ApplicationRoleDescription AS ApplicationRoleDescription FROM AppRoleSecurityGroupDetail, SecurityGroupUserAccountDetail WHERE AppRoleSecurityGroupDetail.SecurityGroupID = SecurityGroupUserAccountDetail.SecurityGroupID AND SecurityGroupUserAccountDetail.UserName = {0}", "name");
+                    userRoleDataTable.Load(dbConnection.ExecuteReader(query, UserData.Username));
 
                     foreach (DataRow role in userRoleDataTable.Rows)
                     {
@@ -603,26 +612,29 @@ namespace TVA.Security
                     if (dbConnection == null)
                         return false;
 
+                    bool oracle = dbConnection.GetType().Name == "OracleConnection";
                     IDbCommand command = dbConnection.CreateCommand();
                     command.CommandType = CommandType.Text;
 
                     if (command.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB"))
                         command.CommandText = "UPDATE UserAccount SET [Password] = @newPassword WHERE Name = @name AND [Password] = @oldPassword";
+                    else if (oracle)
+                        command.CommandText = "UPDATE UserAccount SET Password = :newPassword WHERE Name = :name AND Password = :oldPassword";
                     else
                         command.CommandText = "UPDATE UserAccount SET Password = @newPassword WHERE Name = @name AND Password = @oldPassword";
 
                     IDbDataParameter param = command.CreateParameter();
-                    param.ParameterName = "@newPassword";
+                    param.ParameterName = oracle ? ":newPassword" : "@newPassword";
                     param.Value = SecurityProviderUtility.EncryptPassword(newPassword);
                     command.Parameters.Add(param);
 
                     param = command.CreateParameter();
-                    param.ParameterName = "@name";
+                    param.ParameterName = oracle ? ":name" : "@name";
                     param.Value = UserData.Username;
                     command.Parameters.Add(param);
 
                     param = command.CreateParameter();
-                    param.ParameterName = "@oldPassword";
+                    param.ParameterName = oracle ? ":oldPassword" : "@oldPassword";
                     param.Value = UserData.Password;
                     command.Parameters.Add(param);
 
@@ -658,24 +670,46 @@ namespace TVA.Security
                 if (!UserData.IsDefined)
                     return false;
 
-                using (IDbConnection dbConnection = (new AdoDataConnection(SettingsCategory)).Connection)
+                AdoDataConnection database = new AdoDataConnection(SettingsCategory);
+                using (IDbConnection dbConnection = database.Connection)
                 {
                     IDbCommand command = dbConnection.CreateCommand();
                     command.CommandType = CommandType.Text;
                     IDbDataParameter param;
-                    command.CommandText = "INSERT INTO AccessLog (UserName, AccessGranted, Comment) VALUES (@userName, @accessGranted, @comment)";
-                    param = command.CreateParameter();
-                    param.ParameterName = "@userName";
-                    param.Value = UserData.Username;
-                    command.Parameters.Add(param);
-                    param = command.CreateParameter();
-                    param.ParameterName = "@accessGranted";
-                    param.Value = loginSuccess;
-                    command.Parameters.Add(param);
-                    param = command.CreateParameter();
-                    param.ParameterName = "@comment";
-                    param.Value = "";
-                    command.Parameters.Add(param);
+
+                    if (database.IsOracle)
+                    {
+                        command.CommandText = "INSERT INTO AccessLog (UserName, AccessGranted, \"Comment\") VALUES (:userName, :accessGranted, :comm)";
+                        param = command.CreateParameter();
+                        param.ParameterName = ":userName";
+                        param.Value = UserData.Username;
+                        command.Parameters.Add(param);
+                        param = command.CreateParameter();
+                        param.ParameterName = ":accessGranted";
+                        param.Value = loginSuccess ? 1 : 0;
+                        command.Parameters.Add(param);
+                        param = command.CreateParameter();
+                        param.ParameterName = ":comm";
+                        param.Value = "";
+                        command.Parameters.Add(param);
+                    }
+                    else
+                    {
+                        command.CommandText = "INSERT INTO AccessLog (UserName, AccessGranted, Comment) VALUES (@userName, @accessGranted, @comment)";
+                        param = command.CreateParameter();
+                        param.ParameterName = "@userName";
+                        param.Value = UserData.Username;
+                        command.Parameters.Add(param);
+                        param = command.CreateParameter();
+                        param.ParameterName = "@accessGranted";
+                        param.Value = loginSuccess;
+                        command.Parameters.Add(param);
+                        param = command.CreateParameter();
+                        param.ParameterName = "@comment";
+                        param.Value = "";
+                        command.Parameters.Add(param);
+                    }
+
                     command.ExecuteNonQuery();
                 }
                 return true;
@@ -696,18 +730,20 @@ namespace TVA.Security
             {
                 try
                 {
-                    using (IDbConnection dbConnection = (new AdoDataConnection(SettingsCategory)).Connection)
+                    AdoDataConnection database = new AdoDataConnection(SettingsCategory);
+
+                    using (IDbConnection dbConnection = database.Connection)
                     {
                         IDbCommand command = dbConnection.CreateCommand();
                         command.CommandType = CommandType.Text;
                         IDbDataParameter param;
-                        command.CommandText = "INSERT INTO ErrorLog (Source, Message) VALUES (@source, @message)";
+                        command.CommandText = database.ParameterizedQueryString("INSERT INTO ErrorLog (Source, Message) VALUES ({0}, {1})", "source", "message");
                         param = command.CreateParameter();
-                        param.ParameterName = "@source";
+                        param.ParameterName = database.IsOracle ? ":source" : "@source";
                         param.Value = source;
                         command.Parameters.Add(param);
                         param = command.CreateParameter();
-                        param.ParameterName = "@message";
+                        param.ParameterName = database.IsOracle ? ":message" : "@message";
                         param.Value = message;
                         command.Parameters.Add(param);
                         command.ExecuteNonQuery();
