@@ -490,8 +490,58 @@ namespace TimeSeriesFramework.Transport
         /// <param name="timeResolution">Gets or sets the maximum time resolution, in ticks, to use when sorting measurements by timestamps into their proper destination frame.</param>
         /// <param name="allowPreemptivePublishing">Gets or sets flag that allows system to preemptively publish frames assuming all expected measurements have arrived.</param>
         /// <param name="downsamplingMethod">Gets the total number of downsampled measurements processed by the concentrator.</param>
+        /// <param name="startTime">Defines a relative or exact start time for the temporal constraint to use for historical playback.</param>
+        /// <param name="stopTime">Defines a relative or exact stop time for the temporal constraint to use for historical playback.</param>
+        /// <param name="constraintParameters">Defines any temporal parameters related to the constraint to use for historical playback.</param>
+        /// <param name="processingInterval">Defines the desired processing interval milliseconds, i.e., historical play back speed, to use when temporal constraints are defined.</param>
         /// <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
-        public virtual bool SynchronizedSubscribe(bool compactFormat, int framesPerSecond, double lagTime, double leadTime, string filterExpression, string dataChannel = null, bool useLocalClockAsRealTime = false, bool ignoreBadTimestamps = false, bool allowSortsByArrival = true, long timeResolution = Ticks.PerMillisecond, bool allowPreemptivePublishing = true, DownsamplingMethod downsamplingMethod = DownsamplingMethod.LastReceived)
+        /// <remarks>
+        /// <para>
+        /// When the <paramref name="startTime"/> or <paramref name="stopTime"/> temporal processing contraints are defined (i.e., not <c>null</c>), this
+        /// specifies the start and stop time over which the subscriber session will process data. Passing in <c>null</c> for the <paramref name="startTime"/>
+        /// and <paramref name="stopTime"/> specifies the the subscriber session will process data in standard, i.e., real-time, operation.
+        /// </para>
+        /// <para>
+        /// With the exception of the values of -1 and 0, the <paramref name="processingInterval"/> value specifies the desired historical playback data
+        /// processing interval in milliseconds. This is basically a delay, or timer interval, overwhich to process data. Setting this value to -1 means
+        /// to use the default processing interval while setting the value to 0 means to process data as fast as possible.
+        /// </para>
+        /// <para>
+        /// The <paramref name="startTime"/> and <paramref name="stopTime"/> parameters can be specified in one of the
+        /// following formats:
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term>Time Format</term>
+        ///         <description>Format Description</description>
+        ///     </listheader>
+        ///     <item>
+        ///         <term>12-30-2000 23:59:59.033</term>
+        ///         <description>Absolute date and time.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*</term>
+        ///         <description>Evaluates to <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-20s</term>
+        ///         <description>Evaluates to 20 seconds before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-10m</term>
+        ///         <description>Evaluates to 10 minutes before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-1h</term>
+        ///         <description>Evaluates to 1 hour before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-1d</term>
+        ///         <description>Evaluates to 1 day before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        /// </list>
+        /// </para>
+        /// </remarks>
+        public virtual bool SynchronizedSubscribe(bool compactFormat, int framesPerSecond, double lagTime, double leadTime, string filterExpression, string dataChannel = null, bool useLocalClockAsRealTime = false, bool ignoreBadTimestamps = false, bool allowSortsByArrival = true, long timeResolution = Ticks.PerMillisecond, bool allowPreemptivePublishing = true, DownsamplingMethod downsamplingMethod = DownsamplingMethod.LastReceived, string startTime = null, string stopTime = null, string constraintParameters = null, int processingInterval = -1)
         {
             StringBuilder connectionString = new StringBuilder();
 
@@ -506,7 +556,11 @@ namespace TimeSeriesFramework.Transport
             connectionString.AppendFormat("allowSortsByArrival={0}; ", allowSortsByArrival);
             connectionString.AppendFormat("timeResolution={0}; ", (long)timeResolution);
             connectionString.AppendFormat("allowPreemptivePublishing={0}; ", allowPreemptivePublishing);
-            connectionString.AppendFormat("downsamplingMethod={0}", downsamplingMethod.ToString());
+            connectionString.AppendFormat("downsamplingMethod={0}; ", downsamplingMethod.ToString());
+            connectionString.AppendFormat("startTime={0}; ", startTime.ToNonNullString());
+            connectionString.AppendFormat("stopTime={0}; ", stopTime.ToNonNullString());
+            connectionString.AppendFormat("constraintParameters={0}; ", constraintParameters.ToNonNullString());
+            connectionString.AppendFormat("processingInterval={0}", processingInterval);
 
             return Subscribe(true, compactFormat, connectionString.ToString());
         }
@@ -522,8 +576,58 @@ namespace TimeSeriesFramework.Transport
         /// <param name="lagTime">When <paramref name="throttled"/> is <c>true</c>, defines the data transmission speed in seconds (can be subsecond).</param>
         /// <param name="leadTime">When <paramref name="throttled"/> is <c>true</c>, defines the allowed time deviation tolerance to real-time in seconds (can be subsecond).</param>
         /// <param name="useLocalClockAsRealTime">When <paramref name="throttled"/> is <c>true</c>, defines boolean value that determines whether or not to use the local clock time as real-time. Set to <c>false</c> to use latest received measurement timestamp as real-time.</param>
+        /// <param name="startTime">Defines a relative or exact start time for the temporal constraint to use for historical playback.</param>
+        /// <param name="stopTime">Defines a relative or exact stop time for the temporal constraint to use for historical playback.</param>
+        /// <param name="constraintParameters">Defines any temporal parameters related to the constraint to use for historical playback.</param>
+        /// <param name="processingInterval">Defines the desired processing interval milliseconds, i.e., historical play back speed, to use when temporal constraints are defined.</param>
         /// <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
-        public virtual bool UnsynchronizedSubscribe(bool compactFormat, bool throttled, string filterExpression, string dataChannel = null, bool includeTime = true, double lagTime = 10.0D, double leadTime = 5.0D, bool useLocalClockAsRealTime = false)
+        /// <remarks>
+        /// <para>
+        /// When the <paramref name="startTime"/> or <paramref name="stopTime"/> temporal processing contraints are defined (i.e., not <c>null</c>), this
+        /// specifies the start and stop time over which the subscriber session will process data. Passing in <c>null</c> for the <paramref name="startTime"/>
+        /// and <paramref name="stopTime"/> specifies the the subscriber session will process data in standard, i.e., real-time, operation.
+        /// </para>
+        /// <para>
+        /// With the exception of the values of -1 and 0, the <paramref name="processingInterval"/> value specifies the desired historical playback data
+        /// processing interval in milliseconds. This is basically a delay, or timer interval, overwhich to process data. Setting this value to -1 means
+        /// to use the default processing interval while setting the value to 0 means to process data as fast as possible.
+        /// </para>
+        /// <para>
+        /// The <paramref name="startTime"/> and <paramref name="stopTime"/> parameters can be specified in one of the
+        /// following formats:
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term>Time Format</term>
+        ///         <description>Format Description</description>
+        ///     </listheader>
+        ///     <item>
+        ///         <term>12-30-2000 23:59:59.033</term>
+        ///         <description>Absolute date and time.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*</term>
+        ///         <description>Evaluates to <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-20s</term>
+        ///         <description>Evaluates to 20 seconds before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-10m</term>
+        ///         <description>Evaluates to 10 minutes before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-1h</term>
+        ///         <description>Evaluates to 1 hour before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-1d</term>
+        ///         <description>Evaluates to 1 day before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        /// </list>
+        /// </para>
+        /// </remarks>
+        public virtual bool UnsynchronizedSubscribe(bool compactFormat, bool throttled, string filterExpression, string dataChannel = null, bool includeTime = true, double lagTime = 10.0D, double leadTime = 5.0D, bool useLocalClockAsRealTime = false, string startTime = null, string stopTime = null, string constraintParameters = null, int processingInterval = -1)
         {
             StringBuilder connectionString = new StringBuilder();
 
@@ -533,7 +637,11 @@ namespace TimeSeriesFramework.Transport
             connectionString.AppendFormat("includeTime={0}; ", includeTime);
             connectionString.AppendFormat("lagTime={0}; ", lagTime);
             connectionString.AppendFormat("leadTime={0}; ", leadTime);
-            connectionString.AppendFormat("useLocalClockAsRealTime={0}", useLocalClockAsRealTime);
+            connectionString.AppendFormat("useLocalClockAsRealTime={0}; ", useLocalClockAsRealTime);
+            connectionString.AppendFormat("startTime={0}; ", startTime.ToNonNullString());
+            connectionString.AppendFormat("stopTime={0}; ", stopTime.ToNonNullString());
+            connectionString.AppendFormat("constraintParameters={0}; ", constraintParameters.ToNonNullString());
+            connectionString.AppendFormat("processingInterval={0}", processingInterval);
 
             return Subscribe(false, compactFormat, connectionString.ToString());
         }
