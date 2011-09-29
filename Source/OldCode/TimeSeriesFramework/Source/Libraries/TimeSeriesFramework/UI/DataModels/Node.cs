@@ -124,6 +124,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets the current <see cref="Node"/>'s Longitude.
         /// </summary>
         // Because of database design, no validation attributes are supplied
+        [RegularExpression(@"^[-]?([0-9]{1,3})?([.][0-9]{1,6})?$", ErrorMessage = "Invalid value. Please provide value in decimal(9,6) format.")]
         public decimal? Longitude
         {
             get
@@ -141,6 +142,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets the current <see cref="Node"/>'s Latitude.
         /// </summary>
         // Because of database design, no validation attributes are supplied
+        [RegularExpression(@"^[-]?([0-9]{1,3})?([.][0-9]{1,6})?$", ErrorMessage = "Invalid value. Please provide value in decimal(9,6) format.")]
         public decimal? Latitude
         {
             get
@@ -586,7 +588,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     query = database.ParameterizedQueryString("INSERT INTO Node (Name, CompanyID, Longitude, Latitude, Description, ImagePath, Settings, MenuType, MenuData, " +
                         "Master, LoadOrder, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, " +
-                        "{13}, {14}, {15})", "name", "companyID", "longitude", "latitude", "description", "imagePath", "settings", "menuType", "menuData", "master", 
+                        "{13}, {14}, {15})", "name", "companyID", "longitude", "latitude", "description", "imagePath", "settings", "menuType", "menuData", "master",
                         "loadOrder", "enabled", "updatedBy", "updatedOn", "createdBy", "createdOn");
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, node.Name, node.CompanyID.ToNotNull(), node.Longitude.ToNotNull(), node.Latitude.ToNotNull(),
