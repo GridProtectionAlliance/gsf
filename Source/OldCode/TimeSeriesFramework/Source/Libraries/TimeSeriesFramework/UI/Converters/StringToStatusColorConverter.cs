@@ -64,6 +64,8 @@ namespace TimeSeriesFramework.UI.Converters
                     return Application.Current.Resources["YellowRadialGradientBrush"] as RadialGradientBrush;
                 case "gray":
                     return Application.Current.Resources["GrayRadialGradientBrush"] as RadialGradientBrush;
+                case "transparent":
+                    return new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
                 default:
                     return new SolidColorBrush(Color.FromArgb(255, 200, 200, 200));
             }
