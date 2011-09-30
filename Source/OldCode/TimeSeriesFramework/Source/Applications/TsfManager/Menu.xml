@@ -17,14 +17,14 @@
   </MenuDataItem>
   <MenuDataItem Icon="" MenuText="Manage" Description="" Roles="*" UserControlAssembly="" UserControlPath="">
     <SubMenuItems>
-      <MenuDataItem Icon="" MenuText="Nodes" Description="Manage Nodes" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.NodeUserControl" />
+      <MenuDataItem Icon="" MenuText="Nodes" Description="Manage Nodes" Roles="Administrator" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.NodeUserControl" />
       <MenuDataItem Icon="" MenuText="Measurements" Description="Manage Measurements" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.MeasurementUserControl"/>
       <MenuDataItem Icon="" MenuText="Historians" Description="Manage Historians" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.HistorianUserControl" />
       <MenuDataItem Icon="" MenuText="Companies" Description="Manage Companies" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.CompanyUserControl" />
       <MenuDataItem Icon="" MenuText="Vendors" Description="Manage Vendors" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.VendorUserControl" />
       <MenuDataItem Icon="" MenuText="Vendor Devices" Description="Manage Vendor Devices" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.VendorDeviceUserControl" />
       <MenuDataItem Icon="" MenuText="" Description="" Roles="*" UserControlAssembly="" UserControlPath="" />
-      <MenuDataItem Icon="" MenuText="Security" Description="Manage Application Security" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.SecurityUserControl" />
+      <MenuDataItem Icon="" MenuText="Security" Description="Manage Application Security" Roles="Administrator" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.SecurityUserControl" />
     </SubMenuItems>
   </MenuDataItem>
 </MenuDataItems>

@@ -31,6 +31,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Reflection;
+using System.Threading;
 using System.Windows;
 using System.Windows.Input;
 using TimeSeriesFramework.UI.Commands;
@@ -450,7 +451,7 @@ namespace TimeSeriesFramework.UI
                 if (CurrentItem == null)
                     return false;
                 else
-                    return CurrentItem.IsValid;
+                    return (CurrentItem.IsValid && Thread.CurrentPrincipal.IsInRole("Administrator, Editor"));
             }
         }
 
@@ -465,7 +466,7 @@ namespace TimeSeriesFramework.UI
                 if (CurrentItem == null)
                     return false;
                 else
-                    return !IsNewRecord;
+                    return (!IsNewRecord && Thread.CurrentPrincipal.IsInRole("Administrator, Editor"));
             }
         }
 
