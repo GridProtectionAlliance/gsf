@@ -113,7 +113,7 @@
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>
-        </Setter>
+        </Setter>        
     </Style>
 
     <Style TargetType="Grid">

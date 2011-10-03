@@ -7,9 +7,9 @@
              d:DesignHeight="30" d:DesignWidth="800">
     
     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-        <Button x:Name="ButtonDelete" Command="{Binding DeleteCommand}" Content="Delete" />
-        <Button x:Name="ButtonClear" Command="{Binding ClearCommand}" Content="Clear" />
-        <Button x:Name="ButtonSave" Command="{Binding SaveCommand}" IsEnabled="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Path=SaveEnabled}" Content="Save" />
+        <Button x:Name="ButtonDelete" Command="{Binding DeleteCommand}" Content="Delete" Margin="2" />
+        <Button x:Name="ButtonClear" Command="{Binding ClearCommand}" Content="Clear" Margin="2"/>
+        <Button x:Name="ButtonSave" Command="{Binding SaveCommand}" IsEnabled="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Path=SaveEnabled}" Content="Save" Margin="2"/>
     </StackPanel>
     
 </UserControl>
