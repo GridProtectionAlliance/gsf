@@ -439,7 +439,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
                 foreach (Guid id in usersToBeAdded)
                 {
-                    string query = database.ParameterizedQueryString("INSERT INTO ApplicationRoleUserAccount (ApplicationRoleID, UserAccountID) VALUES {0}, {1})", "roleID", "userID");
+                    string query = database.ParameterizedQueryString("INSERT INTO ApplicationRoleUserAccount (ApplicationRoleID, UserAccountID) VALUES ({0}, {1})", "roleID", "userID");
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout,
                         database.Guid(roleID), database.Guid(id));
                 }

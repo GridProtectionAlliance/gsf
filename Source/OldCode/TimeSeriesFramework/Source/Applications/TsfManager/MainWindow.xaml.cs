@@ -33,14 +33,13 @@ using TimeSeriesFramework.UI;
 using TimeSeriesFramework.UI.DataModels;
 using TVA.IO;
 using TVA.Reflection;
-using TVA.Windows;
 
 namespace TsfManager
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : SecureWindow
+    public partial class MainWindow : ResizableWindow
     {
         #region [ Members ]
 
