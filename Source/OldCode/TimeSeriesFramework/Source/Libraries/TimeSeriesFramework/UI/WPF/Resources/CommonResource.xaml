@@ -205,7 +205,7 @@
         <Setter Property="Padding" Value="1"/>
         <Setter Property="Margin" Value="2"/>
         <Setter Property="Width" Value="{StaticResource LargeItemSize}"/>
-        <Setter Property="Height" Value="30"/>
+        <Setter Property="Height" Value="40"/>
         <Setter Property="FontWeight" Value="Bold"/>
         <Setter Property="FontSize" Value="{StaticResource TextSize}"/>
     </Style>
