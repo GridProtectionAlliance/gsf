@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Windows;
 using TimeSeriesFramework.UI.DataModels;
 
 namespace TimeSeriesFramework.UI.ViewModels
@@ -32,8 +33,15 @@ namespace TimeSeriesFramework.UI.ViewModels
         #region [ Members ]
 
         // Fields
-
         private Dictionary<int, string> m_companyLookupList;
+
+        // Events
+        private delegate void OnNodeChanged(object sender, RoutedEventArgs e);
+
+        /// <summary>
+        /// Raises an event when node information is saved.
+        /// </summary>
+        public event OnNodeChanged NodeCollectionChanged;
 
         #endregion
 
@@ -93,6 +101,16 @@ namespace TimeSeriesFramework.UI.ViewModels
         public override string GetCurrentItemName()
         {
             return CurrentItem.Name;
+        }
+
+        /// <summary>
+        /// Saves CurrentItem information into the database.
+        /// </summary>
+        public override void Save()
+        {
+            base.Save();
+            if (NodeCollectionChanged != null)
+                NodeCollectionChanged(this, null);
         }
 
         #endregion

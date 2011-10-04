@@ -75,7 +75,7 @@
 
             <GroupBox x:Name="GroupBoxMain" Margin="2,-5,2,2">
                 <Border Padding="2" BorderThickness="1" Background="{StaticResource MenuBackgroundBrush}" CornerRadius="5">
-                    <Frame x:Name="FrameContent" NavigationUIVisibility="Hidden" HorizontalAlignment="Center"/>
+                    <Frame x:Name="FrameContent" NavigationUIVisibility="Hidden" HorizontalAlignment="Center" Width="850"/>
                 </Border>
             </GroupBox>
 
