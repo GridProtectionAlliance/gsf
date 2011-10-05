@@ -53,7 +53,7 @@ namespace TimeSeriesFramework.UI.UserControls
         {
             InitializeComponent();
             this.Unloaded += new RoutedEventHandler(MeasurementUserControl_Unloaded);
-            this.DataContext = new Measurements(deviceID, 18);
+            this.DataContext = new Measurements(deviceID, 19);
         }
 
         #endregion

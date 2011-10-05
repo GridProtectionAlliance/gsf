@@ -50,7 +50,7 @@
                     </Style>
                 </StackPanel.Resources>
                 
-                <TreeView x:Name="TreeViewIaon" ItemTemplate="{StaticResource RootNodeTemplate}" Height="610" ItemContainerStyle="{StaticResource ExpandedItemStyle}" 
+                <TreeView x:Name="TreeViewIaon" ItemTemplate="{StaticResource RootNodeTemplate}" Height="635" ItemContainerStyle="{StaticResource ExpandedItemStyle}" 
                           ItemsSource="{tsfBinding:Column Path=ItemsSource}" Background="Transparent" BorderThickness="0" HorizontalAlignment="Left">
                     
                 </TreeView>

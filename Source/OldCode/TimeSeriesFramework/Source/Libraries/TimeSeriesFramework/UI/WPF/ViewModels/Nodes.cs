@@ -36,12 +36,17 @@ namespace TimeSeriesFramework.UI.ViewModels
         private Dictionary<int, string> m_companyLookupList;
 
         // Events
+        /// <summary>
+        /// Method signature for a function that handles NodeCollectionChanged event.
+        /// </summary>
+        /// <param name="sender">Source of an event.</param>
+        /// <param name="e">Event arguments.</param>
         public delegate void OnNodeChanged(object sender, RoutedEventArgs e);
 
         /// <summary>
         /// Raises an event when node information is saved.
         /// </summary>
-        public event OnNodeChanged NodeCollectionChanged;
+        public event OnNodeChanged NodeChanged;
 
         #endregion
 
@@ -109,8 +114,8 @@ namespace TimeSeriesFramework.UI.ViewModels
         public override void Save()
         {
             base.Save();
-            if (NodeCollectionChanged != null)
-                NodeCollectionChanged(this, null);
+            if (NodeChanged != null)
+                NodeChanged(this, null);
         }
 
         #endregion

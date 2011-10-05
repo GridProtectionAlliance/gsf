@@ -42,7 +42,7 @@ namespace TimeSeriesFramework.UI.UserControls
         {
             InitializeComponent();
             this.Unloaded += new RoutedEventHandler(VendorDeviceUserControl_Unloaded);
-            this.DataContext = new VendorDevices(25);
+            this.DataContext = new VendorDevices(26);
         }
 
         /// <summary>

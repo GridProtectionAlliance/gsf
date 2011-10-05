@@ -184,9 +184,6 @@
     <Compile Include="UserControls\VendorUserControl.xaml.cs">
       <DependentUpon>VendorUserControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="VersionConfigToNamespaceAssemblyObjectBinder.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="ViewModelBase.cs" />
     <Compile Include="ViewModels\AdapterConnectionStringParameter.cs" />
     <Compile Include="ViewModels\ApplicationRoles.cs" />
