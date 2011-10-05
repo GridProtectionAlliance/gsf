@@ -4217,6 +4217,20 @@
             Derived classes should extend status with implementation specific information.
             </remarks>
         </member>
+        <member name="T:TimeSeriesFramework.Adapters.IAdapterExtensions">
+            <summary>
+            Defines static extension functions for <see cref="T:TimeSeriesFramework.Adapters.IAdapter"/> implementations.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IAdapterExtensions.TemporalConstraintIsDefined(TimeSeriesFramework.Adapters.IAdapter)">
+            <summary>
+            Returns <c>true</c> if <see cref="T:TimeSeriesFramework.Adapters.IAdapter"/> has a temporal constraint defined, i.e., either
+            <see cref="P:TimeSeriesFramework.Adapters.IAdapter.StartTimeConstraint"/> or <see cref="P:TimeSeriesFramework.Adapters.IAdapter.StopTimeConstraint"/> is not
+            set to its default value.
+            </summary>
+            <param name="adapter"><see cref="T:TimeSeriesFramework.Adapters.IAdapter"/> instance to test.</param>
+            <returns><c>true</c> if <see cref="T:TimeSeriesFramework.Adapters.IAdapter"/> has a temporal constraint defined.</returns>
+        </member>
         <member name="T:TimeSeriesFramework.Adapters.IInputAdapter">
             <summary>
             Represents the abstract interface for any incoming adapter.
@@ -5355,7 +5369,7 @@
             <param name="authenticationID">Authentication ID that publisher will use to validate subscriber identity.</param>
             <returns><c>true</c> if authentication transmission was successful; otherwise <c>false</c>.</returns>
         </member>
-        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.SynchronizedSubscribe(System.Boolean,System.Int32,System.Double,System.Double,System.String,System.String,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Boolean,TimeSeriesFramework.DownsamplingMethod)">
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.SynchronizedSubscribe(System.Boolean,System.Int32,System.Double,System.Double,System.String,System.String,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Boolean,TimeSeriesFramework.DownsamplingMethod,System.String,System.String,System.String,System.Int32)">
             <summary>
             Subscribes (or re-subscribes) to a data publisher for a synchronized set of data points.
             </summary>
@@ -5371,9 +5385,59 @@
             <param name="timeResolution">Gets or sets the maximum time resolution, in ticks, to use when sorting measurements by timestamps into their proper destination frame.</param>
             <param name="allowPreemptivePublishing">Gets or sets flag that allows system to preemptively publish frames assuming all expected measurements have arrived.</param>
             <param name="downsamplingMethod">Gets the total number of downsampled measurements processed by the concentrator.</param>
+            <param name="startTime">Defines a relative or exact start time for the temporal constraint to use for historical playback.</param>
+            <param name="stopTime">Defines a relative or exact stop time for the temporal constraint to use for historical playback.</param>
+            <param name="constraintParameters">Defines any temporal parameters related to the constraint to use for historical playback.</param>
+            <param name="processingInterval">Defines the desired processing interval milliseconds, i.e., historical play back speed, to use when temporal constraints are defined.</param>
             <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
+            <remarks>
+            <para>
+            When the <paramref name="startTime"/> or <paramref name="stopTime"/> temporal processing contraints are defined (i.e., not <c>null</c>), this
+            specifies the start and stop time over which the subscriber session will process data. Passing in <c>null</c> for the <paramref name="startTime"/>
+            and <paramref name="stopTime"/> specifies the the subscriber session will process data in standard, i.e., real-time, operation.
+            </para>
+            <para>
+            With the exception of the values of -1 and 0, the <paramref name="processingInterval"/> value specifies the desired historical playback data
+            processing interval in milliseconds. This is basically a delay, or timer interval, overwhich to process data. Setting this value to -1 means
+            to use the default processing interval while setting the value to 0 means to process data as fast as possible.
+            </para>
+            <para>
+            The <paramref name="startTime"/> and <paramref name="stopTime"/> parameters can be specified in one of the
+            following formats:
+            <list type="table">
+                <listheader>
+                    <term>Time Format</term>
+                    <description>Format Description</description>
+                </listheader>
+                <item>
+                    <term>12-30-2000 23:59:59.033</term>
+                    <description>Absolute date and time.</description>
+                </item>
+                <item>
+                    <term>*</term>
+                    <description>Evaluates to <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-20s</term>
+                    <description>Evaluates to 20 seconds before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-10m</term>
+                    <description>Evaluates to 10 minutes before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-1h</term>
+                    <description>Evaluates to 1 hour before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-1d</term>
+                    <description>Evaluates to 1 day before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+            </list>
+            </para>
+            </remarks>
         </member>
-        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.UnsynchronizedSubscribe(System.Boolean,System.Boolean,System.String,System.String,System.Boolean,System.Double,System.Double,System.Boolean)">
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.UnsynchronizedSubscribe(System.Boolean,System.Boolean,System.String,System.String,System.Boolean,System.Double,System.Double,System.Boolean,System.String,System.String,System.String,System.Int32)">
             <summary>
             Subscribes (or re-subscribes) to a data publisher for an unsynchronized set of data points.
             </summary>
@@ -5385,7 +5449,57 @@
             <param name="lagTime">When <paramref name="throttled"/> is <c>true</c>, defines the data transmission speed in seconds (can be subsecond).</param>
             <param name="leadTime">When <paramref name="throttled"/> is <c>true</c>, defines the allowed time deviation tolerance to real-time in seconds (can be subsecond).</param>
             <param name="useLocalClockAsRealTime">When <paramref name="throttled"/> is <c>true</c>, defines boolean value that determines whether or not to use the local clock time as real-time. Set to <c>false</c> to use latest received measurement timestamp as real-time.</param>
+            <param name="startTime">Defines a relative or exact start time for the temporal constraint to use for historical playback.</param>
+            <param name="stopTime">Defines a relative or exact stop time for the temporal constraint to use for historical playback.</param>
+            <param name="constraintParameters">Defines any temporal parameters related to the constraint to use for historical playback.</param>
+            <param name="processingInterval">Defines the desired processing interval milliseconds, i.e., historical play back speed, to use when temporal constraints are defined.</param>
             <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
+            <remarks>
+            <para>
+            When the <paramref name="startTime"/> or <paramref name="stopTime"/> temporal processing contraints are defined (i.e., not <c>null</c>), this
+            specifies the start and stop time over which the subscriber session will process data. Passing in <c>null</c> for the <paramref name="startTime"/>
+            and <paramref name="stopTime"/> specifies the the subscriber session will process data in standard, i.e., real-time, operation.
+            </para>
+            <para>
+            With the exception of the values of -1 and 0, the <paramref name="processingInterval"/> value specifies the desired historical playback data
+            processing interval in milliseconds. This is basically a delay, or timer interval, overwhich to process data. Setting this value to -1 means
+            to use the default processing interval while setting the value to 0 means to process data as fast as possible.
+            </para>
+            <para>
+            The <paramref name="startTime"/> and <paramref name="stopTime"/> parameters can be specified in one of the
+            following formats:
+            <list type="table">
+                <listheader>
+                    <term>Time Format</term>
+                    <description>Format Description</description>
+                </listheader>
+                <item>
+                    <term>12-30-2000 23:59:59.033</term>
+                    <description>Absolute date and time.</description>
+                </item>
+                <item>
+                    <term>*</term>
+                    <description>Evaluates to <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-20s</term>
+                    <description>Evaluates to 20 seconds before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-10m</term>
+                    <description>Evaluates to 10 minutes before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-1h</term>
+                    <description>Evaluates to 1 hour before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-1d</term>
+                    <description>Evaluates to 1 day before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+            </list>
+            </para>
+            </remarks>
         </member>
         <member name="M:TimeSeriesFramework.Transport.DataSubscriber.Subscribe(System.Boolean,System.Boolean,System.String)">
             <summary>
