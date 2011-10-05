@@ -31,6 +31,15 @@ namespace TimeSeriesFramework.UI.UserControls
     /// </summary>
     public partial class SecurityUserControl : UserControl
     {
+        #region [ Members ]
+
+        // Fields
+        private UserAccounts m_userAccounts;
+        private SecurityGroups m_securityGroups;
+        private ApplicationRoles m_applicationRoles;
+
+        #endregion
+
         #region [ Constructor ]
 
         /// <summary>
@@ -39,9 +48,38 @@ namespace TimeSeriesFramework.UI.UserControls
         public SecurityUserControl()
         {
             InitializeComponent();
-            GroupBoxManageUsers.DataContext = new UserAccounts(1, false);
-            GroupBoxManageGroups.DataContext = new SecurityGroups(1, false);
-            GroupBoxManageRoles.DataContext = new ApplicationRoles(1, true);
+            m_userAccounts = new UserAccounts(1, false);
+            m_securityGroups = new SecurityGroups(1, false);
+            m_applicationRoles = new ApplicationRoles(1, true);
+            RefreshBindings();
+            m_userAccounts.Saved += new System.EventHandler(m_userAccounts_Changed);
+            m_userAccounts.Deleted += new System.EventHandler(m_userAccounts_Changed);
+            m_securityGroups.Saved += new System.EventHandler(m_securityGroups_Changed);
+            m_securityGroups.Deleted += new System.EventHandler(m_securityGroups_Changed);
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        private void m_securityGroups_Changed(object sender, System.EventArgs e)
+        {
+            m_applicationRoles = new ApplicationRoles(1, true);
+            RefreshBindings();
+        }
+
+        private void m_userAccounts_Changed(object sender, System.EventArgs e)
+        {
+            m_securityGroups = new SecurityGroups(1, false);
+            m_applicationRoles = new ApplicationRoles(1, true);
+            RefreshBindings();
+        }
+
+        private void RefreshBindings()
+        {
+            GroupBoxManageUsers.DataContext = m_userAccounts;
+            GroupBoxManageGroups.DataContext = m_securityGroups;
+            GroupBoxManageRoles.DataContext = m_applicationRoles;
         }
 
         #endregion
