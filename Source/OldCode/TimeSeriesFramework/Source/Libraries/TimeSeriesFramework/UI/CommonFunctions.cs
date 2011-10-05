@@ -139,11 +139,11 @@ namespace TimeSeriesFramework.UI
             }
         }
 
-        /// <summary>
-        /// Retrieves connection string to connect to backend windows service.
-        /// </summary>
-        /// <param name="database"><see cref="AdoDataConnection"/> to database.</param>
-        /// <returns>IP address and port on which backend windows service is running.</returns>
+        ///// <summary>
+        ///// Retrieves connection string to connect to backend windows service.
+        ///// </summary>
+        ///// <param name="database"><see cref="AdoDataConnection"/> to database.</param>
+        ///// <returns>IP address and port on which backend windows service is running.</returns>
         //public static string RemoteStatusServerConnectionString(this AdoDataConnection database)
         //{
         //    if (string.IsNullOrEmpty(s_remoteStatusServerConnectionString))
@@ -165,11 +165,11 @@ namespace TimeSeriesFramework.UI
             return s_realTimeStatisticServiceUrl;
         }
 
-        /// <summary>
-        /// Retrieves a port number on which back end service is publishing data.
-        /// </summary>
-        /// <param name="database"><see cref="AdoDataConnection"/> to database.</param>
-        /// <returns>port number on which data is being published.</returns>
+        ///// <summary>
+        ///// Retrieves a port number on which back end service is publishing data.
+        ///// </summary>
+        ///// <param name="database"><see cref="AdoDataConnection"/> to database.</param>
+        ///// <returns>port number on which data is being published.</returns>
         //public static string DataPublisherPort(this AdoDataConnection database)
         //{
         //    if (string.IsNullOrEmpty(s_dataPublisherPort))

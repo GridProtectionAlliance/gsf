@@ -546,7 +546,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Loads <see cref="Measurement"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="deviceID">ID of the <see cref="Device"/> to filter data.</param>
+        /// <param name="deviceID">ID of the Device to filter data.</param>
         /// <param name="filterByInternalFlag">boolean flag to indicate if only non internal data requested.</param>
         /// <returns>Collection of <see cref="Measurement"/>.</returns>
         public static ObservableCollection<Measurement> Load(AdoDataConnection database, int deviceID = 0, bool filterByInternalFlag = false)
@@ -637,10 +637,10 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Loads information about <see cref="Measurement"/> assigned to <see cref="MeasurementGroup"/> as <see cref="ObservableCollection{T}"/> style list.
+        /// Loads information about <see cref="Measurement"/> assigned to MeasurementGroup as <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="measurementGroupId">ID of the <see cref="MeasurementGroup"/> to filter data.</param>
+        /// <param name="measurementGroupId">ID of the MeasurementGroup to filter data.</param>
         /// <returns>Collection of <see cref="Measurement"/>.</returns>
         public static ObservableCollection<Measurement> GetMeasurementsByGroup(AdoDataConnection database, int measurementGroupId)
         {
@@ -701,10 +701,10 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Loads information about <see cref="Measurement"/> assigned to <see cref="Subscriber"/> as <see cref="ObservableCollection{T}"/> style list.
+        /// Loads information about <see cref="Measurement"/> assigned to Subscriber as <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="subscriberId">ID of the <see cref="Subscriber"/> to filter data.</param>
+        /// <param name="subscriberId">ID of the Subscriber to filter data.</param>
         /// <returns>Collection of <see cref="Measurement"/>.</returns>
         public static ObservableCollection<Measurement> GetMeasurementsBySubscriber(AdoDataConnection database, Guid subscriberId)
         {

@@ -43,7 +43,7 @@ namespace TimeSeriesFramework.UI.Converters
         /// <param name="targetType">The type of the binding target property.</param>
         /// <param name="parameter">The converter parameter to use in the conversion.</param>
         /// <param name="culture">The culture to use in the conversion.</param>
-        /// <returns><see cref="System.Media.Brush"/> object.</returns>
+        /// <returns>Brush object.</returns>
         public object Convert(object value, System.Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             string input = string.Empty;

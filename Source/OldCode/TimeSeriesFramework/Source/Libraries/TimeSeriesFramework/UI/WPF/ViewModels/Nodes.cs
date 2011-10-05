@@ -36,7 +36,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         private Dictionary<int, string> m_companyLookupList;
 
         // Events
-        private delegate void OnNodeChanged(object sender, RoutedEventArgs e);
+        public delegate void OnNodeChanged(object sender, RoutedEventArgs e);
 
         /// <summary>
         /// Raises an event when node information is saved.

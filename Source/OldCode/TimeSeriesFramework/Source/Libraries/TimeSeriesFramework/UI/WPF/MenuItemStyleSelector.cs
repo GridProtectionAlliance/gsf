@@ -31,7 +31,13 @@ namespace TimeSeriesFramework.UI
     /// </summary>
     public class MenuItemStyleSelector : StyleSelector
     {
-        public override System.Windows.Style SelectStyle(object item, System.Windows.DependencyObject container)
+        /// <summary>
+        /// Overrides SelectStyle function and returns proper style element base on menutext.
+        /// </summary>
+        /// <param name="item"><see cref="MenuDataItem"/> for which style is to be determined.</param>
+        /// <param name="container"><see cref="FrameworkElement"/> containing <see cref="MenuDataItem"/>.</param>
+        /// <returns><see cref="Style"/> based on MenuText.</returns>
+        public override Style SelectStyle(object item, System.Windows.DependencyObject container)
         {
             if (string.IsNullOrEmpty((item as MenuDataItem).MenuText))
                 return ((container as FrameworkElement).FindResource("MenuSeparatorStyle") as Style);

@@ -91,6 +91,11 @@ namespace TimeSeriesFramework.UI
             }
         }
 
+        /// <summary>
+        /// Handles SizeChanged event of the window.
+        /// </summary>
+        /// <param name="sender">Source of the event.</param>
+        /// <param name="e">Event arguments.</param>
         protected virtual void ResizableWindow_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             if (RootScale == null)
