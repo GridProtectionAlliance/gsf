@@ -198,7 +198,7 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set
             {
-                m_email = Email;
+                m_email = value;
                 OnPropertyChanged("Email");
             }
         }
@@ -450,7 +450,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, userAccount.Name,
                             userAccount.Password.ToNotNull(), userAccount.FirstName.ToNotNull(), userAccount.LastName.ToNotNull(), database.Guid(userAccount.DefaultNodeID),
-                            userAccount.Phone.ToNotNull(), userAccount.Email.ToNotNull(), database.Bool(userAccount.LockedOut), database.Bool(userAccount.UseADAuthentication), 
+                            userAccount.Phone.ToNotNull(), userAccount.Email.ToNotNull(), database.Bool(userAccount.LockedOut), database.Bool(userAccount.UseADAuthentication),
                             changePasswordOn, CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(userAccount.ID));
                 }
 

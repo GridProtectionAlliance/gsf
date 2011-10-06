@@ -21,6 +21,11 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Web.Security;
+using System.Windows;
 using System.Windows.Controls;
 using TimeSeriesFramework.UI.ViewModels;
 
@@ -37,6 +42,8 @@ namespace TimeSeriesFramework.UI.UserControls
         private UserAccounts m_userAccounts;
         private SecurityGroups m_securityGroups;
         private ApplicationRoles m_applicationRoles;
+        private string m_strongPasswordRegex = "^.*(?=.{8,})(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).*$";
+        StringBuilder m_invalidPasswordMessage;
 
         #endregion
 
@@ -52,10 +59,53 @@ namespace TimeSeriesFramework.UI.UserControls
             m_securityGroups = new SecurityGroups(1, false);
             m_applicationRoles = new ApplicationRoles(1, true);
             RefreshBindings();
+            m_userAccounts.BeforeSave += new System.ComponentModel.CancelEventHandler(m_userAccounts_BeforeSave);
             m_userAccounts.Saved += new System.EventHandler(m_userAccounts_Changed);
             m_userAccounts.Deleted += new System.EventHandler(m_userAccounts_Changed);
             m_securityGroups.Saved += new System.EventHandler(m_securityGroups_Changed);
             m_securityGroups.Deleted += new System.EventHandler(m_securityGroups_Changed);
+
+            m_invalidPasswordMessage = new StringBuilder();
+            m_invalidPasswordMessage.Append("Password does not meet the following criteria:");
+            m_invalidPasswordMessage.AppendLine();
+            m_invalidPasswordMessage.Append("- Password must be at least 8 characters");
+            m_invalidPasswordMessage.AppendLine();
+            m_invalidPasswordMessage.Append("- Password must contain at least 1 digit");
+            m_invalidPasswordMessage.AppendLine();
+            m_invalidPasswordMessage.Append("- Password must contain at least 1 upper case letter");
+            m_invalidPasswordMessage.AppendLine();
+            m_invalidPasswordMessage.Append("- Password must contain at least 1 lower case letter");
+        }
+
+        void m_userAccounts_BeforeSave(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (m_userAccounts.IsNewRecord)
+            {
+                if (string.IsNullOrEmpty(TextBoxPassword.Password) || !Regex.IsMatch(TextBoxPassword.Password, m_strongPasswordRegex))
+                {
+                    MessageBox.Show("Please provide valid password value." + Environment.NewLine + m_invalidPasswordMessage, "Invalid Password", MessageBoxButton.OK);
+                    e.Cancel = true;
+                }
+                else
+                {
+                    m_userAccounts.CurrentItem.Password = FormsAuthentication.HashPasswordForStoringInConfigFile(@"O3990\P78f9E66b:a35_V©6M13©6~2&[" + TextBoxPassword.Password, "SHA1");
+                }
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(TextBoxPassword.Password))
+                {
+                    if (Regex.IsMatch(TextBoxPassword.Password, m_strongPasswordRegex))
+                    {
+                        m_userAccounts.CurrentItem.Password = FormsAuthentication.HashPasswordForStoringInConfigFile(@"O3990\P78f9E66b:a35_V©6M13©6~2&[" + TextBoxPassword.Password, "SHA1");
+                    }
+                    else
+                    {
+                        MessageBox.Show("Please provide valid password value or leave it blank to retain old password." + Environment.NewLine + m_invalidPasswordMessage, "Invalid Password", MessageBoxButton.OK);
+                        e.Cancel = true;
+                    }
+                }
+            }
         }
 
         #endregion
@@ -70,6 +120,7 @@ namespace TimeSeriesFramework.UI.UserControls
 
         private void m_userAccounts_Changed(object sender, System.EventArgs e)
         {
+            TextBoxPassword.Password = string.Empty;
             m_securityGroups = new SecurityGroups(1, false);
             m_applicationRoles = new ApplicationRoles(1, true);
             RefreshBindings();

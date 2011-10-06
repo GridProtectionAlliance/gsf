@@ -656,21 +656,19 @@ namespace TimeSeriesFramework.UI
 
             if (frame != null)
             {
-                ((System.Windows.Controls.Frame)frame).Navigate(userControl);
+                Run run = new Run();
+                run.FontWeight = FontWeights.Bold;
+                run.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                run.Text = title;
+
+                TextBlock txt = new TextBlock();
+                txt.Padding = new Thickness(5.0);
+                txt.Inlines.Add(run);
+
+                ((System.Windows.Controls.Frame)frame).Navigate(userControl, txt);
 
                 if (groupBox != null)
-                {
-                    Run run = new Run();
-                    run.FontWeight = FontWeights.Bold;
-                    run.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
-                    run.Text = title;
-
-                    TextBlock txt = new TextBlock();
-                    txt.Padding = new Thickness(5.0);
-                    txt.Inlines.Add(run);
-
                     ((GroupBox)groupBox).Header = txt;
-                }
             }
         }
 
