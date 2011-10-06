@@ -932,9 +932,9 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Deletes specified <see cref="Measurement"/> record from database.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="pointID">ID of the record to be deleted.</param>
+        /// <param name="signalID">ID of the record to be deleted.</param>
         /// <returns>String, for display use, indicating success.</returns>
-        public static string Delete(AdoDataConnection database, int pointID)
+        public static string Delete(AdoDataConnection database, Guid signalID)
         {
             bool createdConnection = false;
 
@@ -945,7 +945,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
-                database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Measurement WHERE PointID = {0}", "pointID"), DefaultTimeout, pointID);
+                database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Measurement WHERE SignalID = {0}", "signalID"), DefaultTimeout, database.Guid(signalID));
 
                 return "Measurement deleted successfully";
             }
