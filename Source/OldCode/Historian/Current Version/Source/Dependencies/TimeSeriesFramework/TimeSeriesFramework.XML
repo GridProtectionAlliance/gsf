@@ -40,29 +40,153 @@
             </summary>
             <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.IaonSession.Initialize">
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.Initialize(System.Boolean)">
             <summary>
             Initialize and start adapters.
             </summary>
+            <param name="autoStart">Sets flag that determines if adapters should be automatically started.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.TemporalProcessingSupportExists(System.String)">
+            <summary>
+            Gets flag that determines if temporal processing is supported in this <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/>.
+            </summary>
+            <param name="collection">Name of collection over which to check support (e.g., "InputAdapters"); or <c>null</c> for all collections.</param>
+            <returns>Flag that determines if temporal processing is supported in this <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.GetDerivedName(System.Object)">
+            <summary>
+            Gets derived name of specified object.
+            </summary>
+            <param name="sender">Sending object from which to derive name.</param>
+            <returns>Derived name of specified object.</returns>
         </member>
         <member name="M:TimeSeriesFramework.Adapters.IaonSession.RecalculateRoutingTables">
             <summary>
             Recalculates routing tables as long as all adapters have been initialized.
             </summary>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.IaonSession.AdapterMeasurementsUpdated(System.Object,System.EventArgs)">
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OnStatusMessage(System.String,TVA.UpdateType)">
             <summary>
-            Handler for updates to adapter input or output measurement definitions.
+            Raises the <see cref="E:TimeSeriesFramework.Adapters.IaonSession.StatusMessage"/> event.
+            </summary>
+            <param name="status">New status message.</param>
+            <param name="type"><see cref="T:TVA.UpdateType"/> of status message.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OnStatusMessage(System.String,TVA.UpdateType,System.Object[])">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Adapters.IaonSession.StatusMessage"/> event with a formatted status message.
+            </summary>
+            <param name="formattedStatus">Formatted status message.</param>
+            <param name="type"><see cref="T:TVA.UpdateType"/> of status message.</param>
+            <param name="args">Arguments for <paramref name="formattedStatus"/>.</param>
+            <remarks>
+            This overload combines string.Format and SendStatusMessage for convienence.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OnProcessException(System.Exception)">
+            <summary>
+            Raises <see cref="E:TimeSeriesFramework.Adapters.IaonSession.ProcessException"/> event.
+            </summary>
+            <param name="ex">Processing <see cref="T:System.Exception"/>.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OnInputMeasurementKeysUpdated">
+            <summary>
+            Raises <see cref="E:TimeSeriesFramework.Adapters.IaonSession.InputMeasurementKeysUpdated"/> event.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OnOutputMeasurementsUpdated">
+            <summary>
+            Raises <see cref="E:TimeSeriesFramework.Adapters.IaonSession.OutputMeasurementsUpdated"/> event.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OnUnpublishedSamples(System.Int32)">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Adapters.IaonSession.UnpublishedSamples"/> event.
+            </summary>
+            <param name="seconds">Total number of unpublished seconds of data.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OnUnprocessedMeasurements(System.Int32)">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Adapters.IaonSession.UnprocessedMeasurements"/> event.
+            </summary>
+            <param name="unprocessedMeasurements">Total measurements in the queue that have not been processed.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OnDisposed">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Adapters.IaonSession.Disposed"/> event.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.StatusMessageHandler(System.Object,TVA.EventArgs{System.String})">
+            <summary>
+            Event handler for reporting status messages.
+            </summary>
+            <param name="sender">Event source of the status message.</param>
+            <param name="e">Event arguments containing the status message to report.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.ProcessExceptionHandler(System.Object,TVA.EventArgs{System.Exception})">
+            <summary>
+            Event handler for processing reported exceptions.
+            </summary>
+            <param name="sender">Event source of the exception.</param>
+            <param name="e">Event arguments containing the exception to report.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.InputMeasurementKeysUpdatedHandler(System.Object,System.EventArgs)">
+            <summary>
+            Event handler for updates to adapter input measurement key definitions.
             </summary>
             <param name="sender">Sending object.</param>
             <param name="e">Event arguments, if any.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OutputMeasurementsUpdatedHandler(System.Object,System.EventArgs)">
+            <summary>
+            Event handler for updates to adapter output measurement definitions.
+            </summary>
+            <param name="sender">Sending object.</param>
+            <param name="e">Event arguments, if any.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.DisposedHandler(System.Object,System.EventArgs)">
+            <summary>
+            Event handler for disposed events from all adapters.
+            </summary>
+            <param name="sender">Sending object.</param>
+            <param name="e">Event arguments, if any.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.UnpublishedSamplesHandler(System.Object,TVA.EventArgs{System.Int32})">
+            <summary>
+            Event handler for monitoring unpublished samples.
+            </summary>
+            <param name="sender">Event source reference to adapter, typically an action adapter, that is reporting the number of unpublished data samples.</param>
+            <param name="e">Event arguments containing number of samples, in seconds of data, of unpublished data in the source adapter.</param>
+            <remarks>
+            Time-series framework uses this handler to monitor the number of unpublished samples, in seconds of data, in action adapters.<br/>
+            This method is typically called once per second.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.UnprocessedMeasurementsHandler(System.Object,TVA.EventArgs{System.Int32})">
+            <summary>
+            Event handler for monitoring unprocessed measurements.
+            </summary>
+            <param name="sender">Event source reference to adapter, typically an output adapter, that is reporting the number of unprocessed measurements.</param>
+            <param name="e">Event arguments containing number of queued (i.e., unprocessed) measurements in the source adapter.</param>
+            <remarks>
+            Time-series framework uses this handler to monitor the number of unprocessed measurements in output adapters.<br/>
+            This method is typically called once per second.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.ExtractTemporalConfiguration(System.Data.DataSet)">
+            <summary>
+            Extracts a configuration that supports temporal processing from an existing real-time configuration.
+            </summary>
+            <param name="realtimeConfiguration">Real-time <see cref="T:System.Data.DataSet"/> configuration.</param>
+            <returns>A new <see cref="T:System.Data.DataSet"/> configuration for adapters that support temporal processing.</returns>
         </member>
         <member name="E:TimeSeriesFramework.Adapters.IaonSession.StatusMessage">
             <summary>
             Provides status messages to consumer.
             </summary>
             <remarks>
-            <see cref="F:TVA.EventArgs`1.Argument"/> is new status message.
+            <see cref="F:TVA.EventArgs`2.Argument1"/> is the new status message.<br/>
+            <see cref="F:TVA.EventArgs`2.Argument2"/> is the message <see cref="T:TVA.UpdateType"/>.
             </remarks>
         </member>
         <member name="E:TimeSeriesFramework.Adapters.IaonSession.ProcessException">
@@ -148,6 +272,16 @@
         <member name="P:TimeSeriesFramework.Adapters.IaonSession.NodeID">
             <summary>
             Gets or sets the <see cref="T:System.Guid"/> node ID  for this <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.IaonSession.Name">
+            <summary>
+            Gets name assigned to this <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/>, if any.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.IaonSession.Status">
+            <summary>
+            Gets the combined status of the adapters in this <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/>.
             </summary>
         </member>
         <member name="T:TimeSeriesFramework.Adapters.RoutingTables">
@@ -2425,6 +2559,11 @@
             Gets the total number of measurements processed thus far by the <see cref="T:TimeSeriesFramework.Adapters.IAdapter"/>.
             </summary>
         </member>
+        <member name="P:TimeSeriesFramework.Adapters.IAdapter.SupportsTemporalProcessing">
+            <summary>
+            Gets the flag indicating if this adapter supports temporal processing.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Adapters.IAdapter.StartTimeConstraint">
             <summary>
             Gets the start time temporal procesing constraint defined by call to <see cref="M:TimeSeriesFramework.Adapters.IAdapter.SetTemporalConstraint(System.String,System.String,System.String)"/>.
@@ -2856,6 +2995,11 @@
         <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.RequestedOutputMeasurementKeys">
             <summary>
             Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.SupportsTemporalProcessing">
+            <summary>
+            Gets the flag indicating if this adapter supports temporal processing.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.StartTimeConstraint">
@@ -3342,6 +3486,14 @@
             <summary>
             Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
             </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.SupportsTemporalProcessing">
+            <summary>
+            Gets the flag indicating if this adapter collection supports temporal processing.
+            </summary>
+            <remarks>
+            For collections this defaults to <c>true</c>.
+            </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.StartTimeConstraint">
             <summary>
@@ -3920,6 +4072,11 @@
         <member name="P:TimeSeriesFramework.Adapters.AdapterBase.StopTime">
             <summary>
             Gets the UTC time this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/> was stopped.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.SupportsTemporalProcessing">
+            <summary>
+            Gets the flag indicating if this adapter supports temporal processing.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.AdapterBase.StartTimeConstraint">
@@ -4634,65 +4791,6 @@
             </para>
             </remarks>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.SetTemporalConstraint(System.String,System.String,System.String)">
-            <summary>
-            Defines a temporal processing constraint for the adapter.
-            </summary>
-            <param name="startTime">Defines a relative or exact start time for the temporal constraint.</param>
-            <param name="stopTime">Defines a relative or exact stop time for the temporal constraint.</param>
-            <param name="constraintParameters">Defines any temporal parameters related to the constraint.</param>
-            <remarks>
-            <para>
-            For output adapters it is assumed that the desired behavior when a temporal constraint exists is to disable
-            processing since the data being processed by the output adapter has already been archived. Note that this
-            bypass behavior is only enagaged when <see cref="P:TimeSeriesFramework.Adapters.OutputAdapterBase.OutputIsForArchive"/> is <c>true</c>. Processing bypass
-            occurs by setting <see cref="P:TimeSeriesFramework.Adapters.OutputAdapterBase.BypassProcessing"/> to <c>true</c>. If you have an output adapter that you
-            want to process data even when a temporal constaint is defined, override the <see cref="P:TimeSeriesFramework.Adapters.OutputAdapterBase.BypassProcessing"/>
-            property and force the base value to always be <c>false</c>.
-            </para>
-            <para>
-            This method defines a temporal processing contraint for an adapter, i.e., the start and stop time over which an
-            adapter will process data. Actual implementation of the constraint will be adapter specific. Implementations
-            should be able to dynamically handle multitple calls to this function with new constraints. Passing in <c>null</c>
-            for the <paramref name="startTime"/> and <paramref name="stopTime"/> should cancel the temporal constraint and
-            return the adapter to standard / real-time operation.
-            </para>
-            <para>
-            The <paramref name="startTime"/> and <paramref name="stopTime"/> parameters can be specified in one of the
-            following formats:
-            <list type="table">
-                <listheader>
-                    <term>Time Format</term>
-                    <description>Format Description</description>
-                </listheader>
-                <item>
-                    <term>12-30-2000 23:59:59.033</term>
-                    <description>Absolute date and time.</description>
-                </item>
-                <item>
-                    <term>*</term>
-                    <description>Evaluates to <see cref="P:System.DateTime.UtcNow"/>.</description>
-                </item>
-                <item>
-                    <term>*-20s</term>
-                    <description>Evaluates to 20 seconds before <see cref="P:System.DateTime.UtcNow"/>.</description>
-                </item>
-                <item>
-                    <term>*-10m</term>
-                    <description>Evaluates to 10 minutes before <see cref="P:System.DateTime.UtcNow"/>.</description>
-                </item>
-                <item>
-                    <term>*-1h</term>
-                    <description>Evaluates to 1 hour before <see cref="P:System.DateTime.UtcNow"/>.</description>
-                </item>
-                <item>
-                    <term>*-1d</term>
-                    <description>Evaluates to 1 day before <see cref="P:System.DateTime.UtcNow"/>.</description>
-                </item>
-            </list>
-            </para>
-            </remarks>
-        </member>
         <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.OnUnprocessedMeasurements(System.Int32)">
             <summary>
             Raises the <see cref="E:TimeSeriesFramework.Adapters.OutputAdapterBase.UnprocessedMeasurements"/> event.
@@ -4741,26 +4839,24 @@
         </member>
         <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.OutputIsForArchive">
             <summary>
-            Returns a flag that determines if measurements sent to this <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterBase"/> are
-            destined for archival.
+            Gets the flag that determines if measurements sent to this <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterBase"/> are destined for archival.
             </summary>
             <remarks>
-            This property allows the <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterCollection"/> to calculate statistics on how
-            many measurements have been archived per minute. Historians would normally set this property
-            to <c>true</c>; other custom exports would set this property to <c>false</c>.
+            This property allows the <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterCollection"/> to calculate statistics on how many measurements have
+            been archived per minute. Historians would normally set this property to <c>true</c>; other custom exports would set
+            this property to <c>false</c>.
             </remarks>
         </member>
-        <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.BypassProcessing">
+        <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.SupportsTemporalProcessing">
             <summary>
-            Gets or sets value that allows output adapter processing to be bypassed.
+            Gets the flag indicating if this <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterBase"/> implementation supports temporal processing.
             </summary>
             <remarks>
-            For output adapters it is assumed that the desired behavior when a temporal constraint exists is to disable
-            processing since the data being processed by the output adapter has already been archived. Note that this
-            bypass behavior is only enagaged when <see cref="P:TimeSeriesFramework.Adapters.OutputAdapterBase.OutputIsForArchive"/> is <c>true</c>. Processing bypass
-            occurs by setting <see cref="P:TimeSeriesFramework.Adapters.OutputAdapterBase.BypassProcessing"/> to <c>true</c>. If you have an output adapter that you
-            want to process data even when a temporal constaint is defined, override the <see cref="P:TimeSeriesFramework.Adapters.OutputAdapterBase.BypassProcessing"/>
-            property and force the base value to always be <c>false</c>.
+            For output adapters that archive data it is assumed that the desired behavior will be to not support temporal processing
+            since the data being processed has already been archived (i.e., no need to attempt to rearchive old data). As a result
+            the default behavior for an output adapter is to not support temporal processing when <see cref="P:TimeSeriesFramework.Adapters.OutputAdapterBase.OutputIsForArchive"/>
+            is <c>true</c>. If you have an output adapter that you want to support temporal data processing independent of the
+            <see cref="P:TimeSeriesFramework.Adapters.OutputAdapterBase.OutputIsForArchive"/> value, then override this property and force the base value to the desired state.
             </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.ProcessingInterval">
@@ -5631,6 +5727,16 @@
             Gets total data packet bytes received during this session.
             </summary>
         </member>
+        <member name="P:TimeSeriesFramework.Transport.DataSubscriber.SupportsTemporalProcessing">
+            <summary>
+            Gets the flag indicating if this adapter supports temporal processing.
+            </summary>
+            <remarks>
+            Although the data subscriber provisions support for temporal processing by receiving historical data from a remote source,
+            the adapter opens sockets and does not need to be engaged within an actual temporal <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/>, therefore
+            this method returns <c>false</c> to make sure the adapter doesn't get instantiated within a temporal session.
+            </remarks>
+        </member>
         <member name="P:TimeSeriesFramework.Transport.DataSubscriber.Status">
             <summary>
             Gets the status of this <see cref="T:TimeSeriesFramework.Transport.DataSubscriber"/>.
@@ -5914,72 +6020,46 @@
             This method allows caching of the current system configuration so it can be used if primary configuration source is unavailable.
             </remarks>
         </member>
-        <member name="M:TimeSeriesFramework.ServiceHostBase.UnpublishedSamplesHandler(System.Object,TVA.EventArgs{System.Int32})">
-            <summary>
-            Event handler for monitoring unpublished samples.
-            </summary>
-            <param name="sender">Event source reference to adapter, typically an action adapter, that is reporting the number of unpublished data samples.</param>
-            <param name="e">Event arguments containing number of samples, in seconds of data, of unpublished data in the source adapter.</param>
-            <remarks>
-            Time-series framework uses this handler to monitor the number of unpublished samples, in seconds of data, in action adapters.<br/>
-            This method is typically called once per second.
-            </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.ServiceHostBase.UnprocessedMeasurementsHandler(System.Object,TVA.EventArgs{System.Int32})">
-            <summary>
-            Event handler for monitoring unprocessed measurements.
-            </summary>
-            <param name="sender">Event source reference to adapter, typically an output adapter, that is reporting the number of unprocessed measurements.</param>
-            <param name="e">Event arguments containing number of queued (i.e., unprocessed) measurements in the source adapter.</param>
-            <remarks>
-            Time-series framework uses this handler to monitor the number of unprocessed measurements in output adapters.<br/>
-            This method is typically called once per second.
-            </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.ServiceHostBase.StatusMessageHandler(System.Object,TVA.EventArgs{System.String})">
+        <member name="M:TimeSeriesFramework.ServiceHostBase.m_iaonSession_StatusMessage(System.Object,TVA.EventArgs{System.String,TVA.UpdateType})">
             <summary>
             Event handler for reporting status messages.
             </summary>
             <param name="sender">Event source of the status message.</param>
-            <param name="e">Event arguments containing the status message to report.</param>
+            <param name="e">Event arguments containing the status message and its type to report.</param>
             <remarks>
-            Time-series framework uses this handler to report adapter status messages (e.g., to a log file or console window).
+            The time-series framework <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/> uses this event to report adapter status messages (e.g., to a log file or console window).
             </remarks>
         </member>
-        <member name="M:TimeSeriesFramework.ServiceHostBase.ProcessExceptionHandler(System.Object,TVA.EventArgs{System.Exception})">
+        <member name="M:TimeSeriesFramework.ServiceHostBase.m_iaonSession_ProcessException(System.Object,TVA.EventArgs{System.Exception})">
             <summary>
             Event handler for processing reported exceptions.
             </summary>
-            <param name="sender"></param>
-            <param name="e"></param>
+            <param name="sender">Event source of the exception.</param>
+            <param name="e">Event arguments containing the exception to report.</param>
+            <remarks>
+            The time-series framework <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/> uses this event to report exceptions.
+            </remarks>
         </member>
-        <member name="M:TimeSeriesFramework.ServiceHostBase.DisposedHandler(System.Object,System.EventArgs)">
+        <member name="M:TimeSeriesFramework.ServiceHostBase.LogExceptionHandler(System.Object,TVA.EventArgs{System.Exception})">
             <summary>
-            Handler for disposed events from all adapters.
+            Event handler for processing exceptions encountered while writing entries to a log file.
             </summary>
-            <param name="sender">Sending object.</param>
-            <param name="e">Event arguments, if any.</param>
+            <param name="sender">Event source of the exception.</param>
+            <param name="e">Event arguments containing the exception to report.</param>
         </member>
         <member name="M:TimeSeriesFramework.ServiceHostBase.HealthMonitorProcessHandler(System.String,System.Object[])">
             <summary>
-            Handler for scheduled health monitor display.
+            Event handler for scheduled health monitor display.
             </summary>
             <param name="name">Scheduled event name.</param>
             <param name="parameters">Scheduled event parameters.</param>
         </member>
         <member name="M:TimeSeriesFramework.ServiceHostBase.StatusExportProcessHandler(System.String,System.Object[])">
             <summary>
-            Handler for scheduled adapter status export.
+            Event handler for scheduled adapter status export.
             </summary>
             <param name="name">Scheduled event name.</param>
             <param name="parameters">Scheduled event parameters.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.ServiceHostBase.GetDerivedName(System.Object)">
-            <summary>
-            Gets derived name of specified object.
-            </summary>
-            <param name="sender">Sending object from which to derive name.</param>
-            <returns>Derived name of specified object.</returns>
         </member>
         <member name="M:TimeSeriesFramework.ServiceHostBase.GetRequestedCollection(TVA.ServiceProcess.ClientRequestInfo)">
             <summary>
@@ -6043,6 +6123,12 @@
         <member name="M:TimeSeriesFramework.ServiceHostBase.InitializeRequestHandler(TVA.ServiceProcess.ClientRequestInfo)">
             <summary>
             Performs initialization or reinitialization of specified adapter or collection.
+            </summary>
+            <param name="requestInfo"><see cref="T:TVA.ServiceProcess.ClientRequestInfo"/> instance containing the client request.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.ServiceHostBase.TemporalSupportRequestHandler(TVA.ServiceProcess.ClientRequestInfo)">
+            <summary>
+            Determines support for temporal processing from existing adapters.
             </summary>
             <param name="requestInfo"><see cref="T:TVA.ServiceProcess.ClientRequestInfo"/> instance containing the client request.</param>
         </member>
@@ -6470,6 +6556,18 @@
             Represents a common set of interfaces for a client adapter subscription to the <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/>.
             </summary>
         </member>
+        <member name="M:TimeSeriesFramework.Transport.IClientSubscription.OnStatusMessage(System.String)">
+            <summary>
+            Explictly raises the <see cref="E:TimeSeriesFramework.Adapters.IAdapter.StatusMessage"/> event.
+            </summary>
+            <param name="status">New status message.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.IClientSubscription.OnProcessException(System.Exception)">
+            <summary>
+            Explictly raises the <see cref="E:TimeSeriesFramework.Adapters.IAdapter.ProcessException"/> event.
+            </summary>
+            <param name="ex">Processing <see cref="T:System.Exception"/>.</param>
+        </member>
         <member name="P:TimeSeriesFramework.Transport.IClientSubscription.ClientID">
             <summary>
             Gets the <see cref="T:System.Guid"/> client TCP connection identifier of this <see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/>.
@@ -6489,6 +6587,30 @@
             <summary>
             Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/>.
             </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.IClientSubscription.HostName">
+            <summary>
+            Gets or sets host name used to identify connection source of client subscription.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.Transport.IClientSubscriptionExtensions">
+            <summary>
+            Defines static extension functions for <see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/> implementations.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.IClientSubscriptionExtensions.CreateTemporalSession(TimeSeriesFramework.Transport.IClientSubscription)">
+            <summary>
+            Returns a new temporal <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/> for a <see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/>.
+            </summary>
+            <param name="clientSubscription"><see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/> instance to create temporal <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/> for.</param>
+            <returns>New temporal <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/> for a <see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.IClientSubscriptionExtensions.DisposeTemporalSession(TimeSeriesFramework.Transport.IClientSubscription,TimeSeriesFramework.Adapters.IaonSession@)">
+            <summary>
+            Disposes a temporal <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/> created using <see cref="M:TimeSeriesFramework.Transport.IClientSubscriptionExtensions.CreateTemporalSession(TimeSeriesFramework.Transport.IClientSubscription)"/>.
+            </summary>
+            <param name="adapter"><see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/> source instance.</param>
+            <param name="session"><see cref="T:TimeSeriesFramework.Adapters.IaonSession"/> instance to dispose.</param>
         </member>
         <member name="T:TimeSeriesFramework.Transport.SignalIndexCache">
             <summary>
@@ -6562,16 +6684,21 @@
             <param name="clientID"><see cref="T:System.Guid"/> based client connection ID.</param>
             <param name="subscriberID"><see cref="T:System.Guid"/> based subscriber ID.</param>
         </member>
-        <member name="M:TimeSeriesFramework.Transport.SynchronizedClientSubscription.Start">
-            <summary>
-            Starts the <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/> or restarts it if it is already running.
-            </summary>
-        </member>
         <member name="M:TimeSeriesFramework.Transport.SynchronizedClientSubscription.Dispose(System.Boolean)">
             <summary>
             Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/> object and optionally releases the managed resources.
             </summary>
             <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.SynchronizedClientSubscription.Initialize">
+            <summary>
+            Initializes <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.SynchronizedClientSubscription.Start">
+            <summary>
+            Starts the <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/> or restarts it if it is already running.
+            </summary>
         </member>
         <member name="M:TimeSeriesFramework.Transport.SynchronizedClientSubscription.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
             <summary>
@@ -6611,6 +6738,11 @@
             Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/>.
             </summary>
         </member>
+        <member name="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.HostName">
+            <summary>
+            Gets or sets host name used to identify connection source of client subscription.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.InputMeasurementKeys">
             <summary>
             Gets or sets primary keys of input measurements the <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/> expects, if any.
@@ -6620,9 +6752,51 @@
             with filtering in <see cref="M:TimeSeriesFramework.Transport.SynchronizedClientSubscription.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})"/>.
             </remarks>
         </member>
+        <member name="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.SupportsTemporalProcessing">
+            <summary>
+            Gets the flag indicating if this adapter supports temporal processing.
+            </summary>
+            <remarks>
+            Although this adapter provisions support for temporal processing by proxying historical data to a remote sink, the adapter
+            does not need to be automatically engaged within an actual temporal <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/>, therefore this method returns
+            <c>false</c> to make sure the adapter doesn't get automatically instantiated within a temporal session.
+            </remarks>
+        </member>
         <member name="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.Status">
             <summary>
             Gets a formatted message describing the status of this <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.Transport.TemporalClientSubscriptionProxy">
+            <summary>
+            Represents an action adapter that exists within a temporal <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/> to proxy data back to its parent <see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/> instance.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.TemporalClientSubscriptionProxy.#ctor(TimeSeriesFramework.Transport.IClientSubscription)">
+            <summary>
+            Creates a new <see cref="T:TimeSeriesFramework.Transport.TemporalClientSubscriptionProxy"/>.
+            </summary>
+            <param name="parent">Parent <see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/> instance.</param>
+            <remarks>
+            This class constructor is marked as internal since it should not be dynamically created as part of a <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/>.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.TemporalClientSubscriptionProxy.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
+            <summary>
+            Proxies measurements to parent adapter for processing.
+            </summary>
+            <param name="measurements">Collection of measurements to queue for processing.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.TemporalClientSubscriptionProxy.GetShortStatus(System.Int32)">
+            <summary>
+            Gets a short one-line status of this <see cref="T:TimeSeriesFramework.Transport.TemporalClientSubscriptionProxy"/>.
+            </summary>
+            <param name="maxLength">Maximum number of available characters for display.</param>
+            <returns>A short one-line summary of the current status for this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.</returns>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.TemporalClientSubscriptionProxy.SupportsTemporalProcessing">
+            <summary>
+            Gets the flag indicating if this adapter supports temporal processing.
             </summary>
         </member>
         <member name="T:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription">
@@ -6691,6 +6865,11 @@
             Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="T:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription"/>.
             </summary>
         </member>
+        <member name="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.HostName">
+            <summary>
+            Gets or sets host name used to identify connection source of client subscription.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.InputMeasurementKeys">
             <summary>
             Gets or sets primary keys of input measurements the <see cref="T:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription"/> expects, if any.
@@ -6698,6 +6877,16 @@
             <remarks>
             We override method so assignment can be synchronized such that dynamic updates won't interfere
             with filtering in <see cref="M:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})"/>.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.SupportsTemporalProcessing">
+            <summary>
+            Gets the flag indicating if this adapter supports temporal processing.
+            </summary>
+            <remarks>
+            Although this adapter provisions support for temporal processing by proxying historical data to a remote sink, the adapter
+            does not need to be automatically engaged within an actual temporal <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/>, therefore this method returns
+            <c>false</c> to make sure the adapter doesn't get automatically instantiated within a temporal session.
             </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.Status">
