@@ -30,10 +30,10 @@
             </Grid.BindingGroup>
 
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="2*" />
             </Grid.ColumnDefinitions>
             
             <Grid.RowDefinitions>
@@ -46,51 +46,53 @@
             </Grid.RowDefinitions>
 
             <!--First Row-->
-            <TextBlock Grid.Row="0" Grid.Column="0" Text="Historian"/>
-            <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding Source={StaticResource HistorianLookupList}}" DisplayMemberPath="Value" SelectedItem="{tsfBinding:Column Path=HistorianID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource HistorianLookupList}}"/>
+            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right">
+                <TextBlock Text="Point Tag" Style="{StaticResource RequiredLabel}"/>
+                <TextBlock Style="{StaticResource RequiredMarker}"/>
+            </StackPanel>
+            <TextBox Grid.Row="0" Grid.Column="1" Text="{tsfBinding:Column Path=PointTag}" CharacterCasing="Upper"/>
             <TextBlock Grid.Row="0" Grid.Column="2" Text="Device ID"/>
             <TextBox Grid.Row="0" Grid.Column="3" Text="{tsfBinding:Column Path=DeviceID}" />
             
             <!--Second Row-->
-            <TextBlock Grid.Row="1" Grid.Column="0" Text="Signal Type"/>
-            <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Source={StaticResource SignalTypeLookupList}}" DisplayMemberPath="Value" SelectedItem="{tsfBinding:Column Path=SignalTypeID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource SignalTypeLookupList}}"/>
-            <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
-                <TextBlock Text="Point Tag" Style="{StaticResource RequiredLabel}"/>
+            <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right">
+                <TextBlock Text="Signal Reference" Style="{StaticResource RequiredLabel}"/>
                 <TextBlock Style="{StaticResource RequiredMarker}"/>
             </StackPanel>
-            <TextBox Grid.Row="1" Grid.Column="3" Text="{tsfBinding:Column Path=PointTag}" CharacterCasing="Upper"/>
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{tsfBinding:Column Path=SignalReference}" CharacterCasing="Upper"/>            
+            <TextBlock Grid.Row="1" Grid.Column="2" Text="Measurement Type"/>
+            <ComboBox Grid.Row="1" Grid.Column="3" ItemsSource="{Binding Source={StaticResource SignalTypeLookupList}}" DisplayMemberPath="Value" SelectedItem="{tsfBinding:Column Path=SignalTypeID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource SignalTypeLookupList}}"/>
             
             <!--Third Row-->
             <TextBlock Grid.Row="2" Grid.Column="0" Text="Alternate Tag"/>
             <TextBox Grid.Row="2" Grid.Column="1" Text="{tsfBinding:Column Path=AlternateTag}"/>
-            <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
-                <TextBlock Text="Signal Reference" Style="{StaticResource RequiredLabel}"/>
-                <TextBlock Style="{StaticResource RequiredMarker}"/>
-            </StackPanel>
-            <TextBox Grid.Row="2" Grid.Column="3" Text="{tsfBinding:Column Path=SignalReference}" CharacterCasing="Upper"/>
-            
+            <TextBlock Grid.Row="2" Grid.Column="2" Text="Historian"/>
+            <ComboBox Grid.Row="2" Grid.Column="3" ItemsSource="{Binding Source={StaticResource HistorianLookupList}}" DisplayMemberPath="Value" SelectedItem="{tsfBinding:Column Path=HistorianID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource HistorianLookupList}}"/>
+
             <!--Fourth Row-->
-            <TextBlock Grid.Row="3" Grid.Column="2" Text="Description"/>
-            <TextBox Grid.Row="3" Grid.Column="3" Text="{tsfBinding:Column Path=Description}"/>
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="Description"/>
+            <TextBox Grid.Row="3" Grid.Column="1" Text="{tsfBinding:Column Path=Description}"/>
+            <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="3">
+                <CheckBox Content="Internal" IsChecked="{tsfBinding:Column Path=Internal}"/>
+                <CheckBox Content="Subscribed" IsChecked="{tsfBinding:Column Path=Subscribed}"/>
+            </StackPanel>
             
             <!--Fifth Row-->
             <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="0" HorizontalAlignment="Right">
                 <TextBlock Text="Adder" Style="{StaticResource RequiredLabel}"/>
                 <TextBlock Style="{StaticResource RequiredMarker}"/>
             </StackPanel>
-            <TextBox Grid.Row="4" Grid.Column="1" Text="{tsfBinding:Column Path=Adder}"/>
-            <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="2" HorizontalAlignment="Right">
+            <TextBox Grid.Row="4" Grid.Column="1" Text="{tsfBinding:Column Path=Adder}" Width="{StaticResource SmallItemSize}"/>
+            <CheckBox Content="Enabled" Grid.Row="4" Grid.Column="3" IsChecked="{tsfBinding:Column Path=Enabled}"/>
+            
+            <!--Sixth Row-->
+            <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="0" HorizontalAlignment="Right">
                 <TextBlock Text="Multiplier" Style="{StaticResource RequiredLabel}"/>
                 <TextBlock Style="{StaticResource RequiredMarker}"/>
             </StackPanel>
-            <TextBox Grid.Row="4" Grid.Column="3" Text="{tsfBinding:Column Path=Multiplier}"/>
-            
-            <!--Sixth Row-->
-            <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="1">
-                <CheckBox Content="Internal" IsChecked="{tsfBinding:Column Path=Internal}"/>
-                <CheckBox Content="Subscribed" IsChecked="{tsfBinding:Column Path=Subscribed}"/>
-            </StackPanel>
-            <CheckBox Content="Enabled" Grid.Row="5" Grid.Column="3" IsChecked="{tsfBinding:Column Path=Enabled}"/>
+            <TextBox Grid.Row="5" Grid.Column="1" Text="{tsfBinding:Column Path=Multiplier}" Width="{StaticResource SmallItemSize}"/>
+            <TextBlock Grid.Row="5" Grid.Column="2" Text="Measurement GUID"/>
+            <TextBlock Grid.Row="5" Grid.Column="3" Text="{tsfBinding:Column Path=SignalID}" Width="{StaticResource XLargeItemSize}" TextAlignment="Left"/>
         </Grid>
 
         <uc:DetailViewFooterUserControl DeleteCommand="{Binding DeleteCommand}" ClearCommand="{Binding ClearCommand}" SaveCommand="{Binding SaveCommand}"
@@ -98,10 +100,9 @@
 
         <sdk:DataGrid ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" PreviewKeyDown="DataGrid_PreviewKeyDown">
             <sdk:DataGrid.Columns>
-                <sdk:DataGridTextColumn Header="Signal ID" Width="3*" Binding="{tsfBinding:Column Path=SignalID}" ToolTipService.ToolTip="{tsfBinding:Column Path=PointTag}" IsReadOnly="True"/>
-                <sdk:DataGridTextColumn Header="Point ID" Width="*" Binding="{tsfBinding:Column Path=PointID}" CellStyle="{StaticResource CenterAlignCellStyle}" IsReadOnly="True"/>
-                <sdk:DataGridTextColumn Header="Historian" Width="*" Binding="{Binding Path=HistorianAcronym}" CellStyle="{StaticResource CenterAlignCellStyle}" IsReadOnly="True"/>
-                <sdk:DataGridTextColumn Header="Signal Reference" Width="2*" Binding="{tsfBinding:Column Path=SignalReference}"/>
+                <sdk:DataGridTextColumn Header="ID" Width="*" Binding="{Binding Path=ID}" ToolTipService.ToolTip="{Binding Path=PointTag}" CellStyle="{StaticResource CenterAlignCellStyle}" IsReadOnly="True"/>
+                <!--<sdk:DataGridTextColumn Header="Point Tag" Width="2*" Binding="{tsfBinding:Column Path=PointTag}" CellStyle="{StaticResource CenterAlignCellStyle}" />-->                
+                <sdk:DataGridTextColumn Header="Description" Width="4*" Binding="{tsfBinding:Column Path=Description}"/>                                
                 <sdk:DataGridCheckBoxColumn Header="Internal" Width="*" Binding="{tsfBinding:Column Path=Internal}" CellStyle="{StaticResource CenterAlignCellStyle}"/>
                 <sdk:DataGridCheckBoxColumn Header="Subscribed" Width="*" Binding="{tsfBinding:Column Path=Subscribed}" CellStyle="{StaticResource CenterAlignCellStyle}"/>
                 <sdk:DataGridCheckBoxColumn Header="Enabled" Width="*" Binding="{tsfBinding:Column Path=Enabled}" CellStyle="{StaticResource CenterAlignCellStyle}"/>
