@@ -25,9 +25,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
+using TimeSeriesFramework.UI.Commands;
 using TimeSeriesFramework.UI.DataModels;
+using TVA;
 
 namespace TimeSeriesFramework.UI.ViewModels
 {
@@ -41,6 +44,9 @@ namespace TimeSeriesFramework.UI.ViewModels
         private Dictionary<int, string> m_historianLookupList;
         private Dictionary<int, string> m_signalTypeLookupList;
         private int m_deviceID;
+        private ObservableCollection<DataModels.Measurement> m_measurements;
+        private RelayCommand m_searchCommand;
+        private RelayCommand m_showAllCommand;
 
         #endregion
 
@@ -99,6 +105,34 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets <see cref="ICommand"/> to search within measurements.
+        /// </summary>
+        public ICommand SearchCommand
+        {
+            get
+            {
+                if (m_searchCommand == null)
+                    m_searchCommand = new RelayCommand(Search, (param) => true);
+
+                return m_searchCommand;
+            }
+        }
+
+        /// <summary>
+        /// Gets <see cref="ICommand"/> to show all measurements.
+        /// </summary>
+        public ICommand ShowAllCommand
+        {
+            get
+            {
+                if (m_showAllCommand == null)
+                    m_showAllCommand = new RelayCommand(ShowAll);
+
+                return m_showAllCommand;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -142,7 +176,8 @@ namespace TimeSeriesFramework.UI.ViewModels
             Mouse.OverrideCursor = Cursors.Wait;
             try
             {
-                ItemsSource = TimeSeriesFramework.UI.DataModels.Measurement.Load(null, m_deviceID);
+                m_measurements = TimeSeriesFramework.UI.DataModels.Measurement.Load(null, m_deviceID);
+                ItemsSource = m_measurements;
             }
             catch (Exception ex)
             {
@@ -152,6 +187,37 @@ namespace TimeSeriesFramework.UI.ViewModels
             {
                 Mouse.OverrideCursor = null;
             }
+        }
+
+        /// <summary>
+        /// Hanldes <see cref="SearchCommand"/>.
+        /// </summary>
+        /// <param name="paramter">string value to search for in measurement collection.</param>
+        public void Search(object paramter)
+        {
+            if (paramter != null && !string.IsNullOrEmpty(paramter.ToString()))
+            {
+                string searchText = paramter.ToString().ToLower();
+                ItemsSource = new ObservableCollection<DataModels.Measurement>
+                    (m_measurements.Where(m => m.PointTag.ToLower().Contains(searchText) ||
+                                            m.SignalReference.ToLower().Contains(searchText) ||
+                                            m.Description.ToNonNullString().ToLower().Contains(searchText) ||
+                                            m.DeviceAcronym.ToNonNullString().ToLower().Contains(searchText) ||
+                                            m.PhasorLabel.ToNonNullString().ToLower().Contains(searchText) ||
+                                            m.SignalName.ToNonNullString().ToLower().Contains(searchText) ||
+                                            m.SignalAcronym.ToNonNullString().ToLower().Contains(searchText) ||
+                                            m.CompanyName.ToNonNullString().ToLower().Contains(searchText) ||
+                                            m.CompanyAcronym.ToNonNullString().ToLower().Contains(searchText)
+                                            ));
+            }
+        }
+
+        /// <summary>
+        /// Handles <see cref="ShowAllCommand"/>.
+        /// </summary>
+        public void ShowAll()
+        {
+            ItemsSource = m_measurements;
         }
 
         #endregion

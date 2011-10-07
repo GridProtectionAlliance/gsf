@@ -754,7 +754,8 @@ namespace TimeSeriesFramework.UI
                 foreach (object item in e.OldItems)
                 {
                     CurrentItem = (TDataModel)item;
-                    s_deleteRecord.Invoke(this, new object[] { (AdoDataConnection)null, GetCurrentItemKey() });
+                    Delete();
+                    //s_deleteRecord.Invoke(this, new object[] { (AdoDataConnection)null, GetCurrentItemKey() });
                 }
             }
         }

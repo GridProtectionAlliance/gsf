@@ -96,8 +96,14 @@
         </Grid>
 
         <uc:DetailViewFooterUserControl DeleteCommand="{Binding DeleteCommand}" ClearCommand="{Binding ClearCommand}" SaveCommand="{Binding SaveCommand}"
-                SaveEnabled="{tsfBinding:DataOperation Path=(Validation.HasError)}" />
-
+                    SaveEnabled="{tsfBinding:DataOperation Path=(Validation.HasError)}" HorizontalAlignment="Right"/>
+                          
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <TextBox x:Name="TextBoxSearch" Width="150"/>
+            <Button Content="Search" Command="{Binding Path=SearchCommand}" CommandParameter="{Binding ElementName=TextBoxSearch, Path=Text}" ToolTip="Search measurements" Margin="2"/>
+            <Button Content="Show All" Command="{Binding Path=ShowAllCommand}" ToolTip="Show all measurements" Margin="2"/>
+        </StackPanel>
+        
         <sdk:DataGrid ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" PreviewKeyDown="DataGrid_PreviewKeyDown">
             <sdk:DataGrid.Columns>
                 <sdk:DataGridTextColumn Header="ID" Width="*" Binding="{Binding Path=ID}" ToolTipService.ToolTip="{Binding Path=PointTag}" CellStyle="{StaticResource CenterAlignCellStyle}" IsReadOnly="True"/>

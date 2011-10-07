@@ -197,7 +197,8 @@
     <Style TargetType="Button">
         <Setter Property="Cursor" Value="Hand" />   
         <Setter Property="Width" Value="{StaticResource XSmallItemSize}" />
-        <Setter Property="Height" Value="26"/>        
+        <Setter Property="Height" Value="28"/>        
+        <Setter Property="Margin" Value="2"/>
     </Style>
     
     <Style TargetType="Button" x:Key="HomeButtonStyle">
