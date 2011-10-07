@@ -1584,7 +1584,7 @@ namespace TimeSeriesFramework
 
                     if (s_frameRateTimers.TryGetValue(key, out timer))
                     {
-                        status.AppendFormat("     Timer reference count: {0} concentrator{1} for the {2}fps @ {3:0.00}ms timer", timer.ReferenceCount, timer.ReferenceCount > 1 ? "s" : "", ProcessingInterval < 0 ? ((Ticks)m_ticksPerFrame).ToMilliseconds() : (double)ProcessingInterval);
+                        status.AppendFormat("     Timer reference count: {0} concentrator{1} for the {2}fps @ {3:0.00}ms timer", timer.ReferenceCount, timer.ReferenceCount > 1 ? "s" : "", m_framesPerSecond, ProcessingInterval < 0 ? ((Ticks)m_ticksPerFrame).ToMilliseconds() : (double)ProcessingInterval);
                         status.AppendLine();
                     }
 

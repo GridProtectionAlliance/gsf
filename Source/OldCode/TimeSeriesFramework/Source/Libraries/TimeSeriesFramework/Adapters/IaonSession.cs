@@ -685,6 +685,7 @@ namespace TimeSeriesFramework.Adapters
         public void ProcessExceptionHandler(object sender, EventArgs<Exception> e)
         {
             OnStatusMessage("[{0}] {1}", UpdateType.Alarm, GetDerivedName(sender), e.Argument.Message);
+            OnProcessException(e.Argument);
         }
 
         /// <summary>
@@ -743,7 +744,7 @@ namespace TimeSeriesFramework.Adapters
             int threshold = m_defaultSampleSizeWarningThreshold;
             ConcentratorBase concentrator = sender as ConcentratorBase;
 
-            // Most action adapters will be based on a conkcentrator, if so we monitor the unpublished sample queue size compared to the defined
+            // Most action adapters will be based on a concentrator, if so we monitor the unpublished sample queue size compared to the defined
             // lag time - if the queue size is over twice the lag size, the action adapter could be falling behind
             if (concentrator != null)
                 threshold = (int)(2 * Math.Ceiling(concentrator.LagTime));
@@ -823,9 +824,16 @@ namespace TimeSeriesFramework.Adapters
                         // For Iaon adapter tables, we only copy in adapters that support temporal processing
                         temporalConfiguration.Tables.Add(table.Clone());
 
-                        foreach (DataRow row in realtimeConfiguration.Tables[tableName].Select(string.Format("ID IN ({0})", temporalSupport.Select(string.Format("Source = '{0}'", tableName)).Select(row => row["ID"].ToString()).ToDelimitedString(','))))
+                        // Check for adapters with temporal support in this adapter collection
+                        DataRow[] temporalAdapters = temporalSupport.Select(string.Format("Source = '{0}'", tableName));
+
+                        // If any adapters support temporal processing, add them to the temporal configuration
+                        if (temporalAdapters.Length > 0)
                         {
-                            temporalConfiguration.Tables[tableName].Rows.Add(row);
+                            foreach (DataRow row in realtimeConfiguration.Tables[tableName].Select(string.Format("ID IN ({0})", temporalAdapters.Select(row => row["ID"].ToString()).ToDelimitedString(','))))
+                            {
+                                temporalConfiguration.Tables[tableName].Rows.Add(row);
+                            }
                         }
 
                         break;

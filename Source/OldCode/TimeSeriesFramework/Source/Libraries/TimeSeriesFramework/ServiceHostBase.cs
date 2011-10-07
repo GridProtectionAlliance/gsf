@@ -363,6 +363,7 @@ namespace TimeSeriesFramework
             if (string.IsNullOrWhiteSpace(m_nodeIDQueryString))
                 m_nodeIDQueryString = "'" + m_iaonSession.NodeID + "'";
 
+#if !MONO
             try
             {
                 // Attempt to assign desired process priority. Note that process will require SeIncreaseBasePriorityPrivilege or 
@@ -373,6 +374,7 @@ namespace TimeSeriesFramework
             {
                 m_serviceHelper.ErrorLogger.Log(ex, false);
             }
+#endif
         }
 
         /// <summary>
@@ -473,9 +475,9 @@ namespace TimeSeriesFramework
             {
                 m_healthExporter.Enabled = false;
                 m_serviceHelper.ServiceComponents.Remove(m_healthExporter);
+                m_healthExporter.Dispose();
                 m_healthExporter.StatusMessage -= m_iaonSession.StatusMessageHandler;
                 m_healthExporter.ProcessException -= m_iaonSession.ProcessExceptionHandler;
-                m_healthExporter.Dispose();
             }
             m_healthExporter = null;
 
@@ -484,9 +486,9 @@ namespace TimeSeriesFramework
             {
                 m_statusExporter.Enabled = false;
                 m_serviceHelper.ServiceComponents.Remove(m_statusExporter);
+                m_statusExporter.Dispose();
                 m_statusExporter.StatusMessage -= m_iaonSession.StatusMessageHandler;
                 m_statusExporter.ProcessException -= m_iaonSession.ProcessExceptionHandler;
-                m_statusExporter.Dispose();
             }
             m_statusExporter = null;
 
@@ -496,9 +498,9 @@ namespace TimeSeriesFramework
                 m_serviceHelper.ServiceComponents.Remove(m_iaonSession.InputAdapters);
                 m_serviceHelper.ServiceComponents.Remove(m_iaonSession.ActionAdapters);
                 m_serviceHelper.ServiceComponents.Remove(m_iaonSession.OutputAdapters);
+                m_iaonSession.Dispose();
                 m_iaonSession.StatusMessage -= m_iaonSession_StatusMessage;
                 m_iaonSession.ProcessException -= m_iaonSession_ProcessException;
-                m_iaonSession.Dispose();
             }
             m_iaonSession = null;
 
@@ -507,10 +509,16 @@ namespace TimeSeriesFramework
             m_serviceHelper.ServiceStopping -= ServiceStoppingHandler;
 
             if (m_serviceHelper.StatusLog != null)
+            {
+                m_serviceHelper.StatusLog.Flush();
                 m_serviceHelper.StatusLog.LogException -= LogExceptionHandler;
+            }
 
             if (m_serviceHelper.ErrorLogger != null && m_serviceHelper.ErrorLogger.ErrorLog != null)
+            {
+                m_serviceHelper.ErrorLogger.ErrorLog.Flush();
                 m_serviceHelper.ErrorLogger.ErrorLog.LogException -= LogExceptionHandler;
+            }
         }
 
         #endregion
@@ -1547,7 +1555,7 @@ namespace TimeSeriesFramework
                 helpMessage.Append("Checks support for output adapters");
                 helpMessage.AppendLine();
                 helpMessage.Append("       -System".PadRight(20));
-                helpMessage.Append("Checks support for all adapters");
+                helpMessage.Append("Checks support for any adapter");
                 helpMessage.AppendLine();
 
                 DisplayResponseMessage(requestInfo, helpMessage.ToString());
