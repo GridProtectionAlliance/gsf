@@ -213,6 +213,17 @@ namespace AdoAdapters
             }
         }
 
+        /// <summary>
+        /// Gets the flag indicating if this adapter supports temporal processing.
+        /// </summary>
+        public override bool SupportsTemporalProcessing
+        {
+            get
+            {
+                return true;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -257,6 +268,23 @@ namespace AdoAdapters
                 m_framesPerSecond = int.Parse(setting);
             else
                 m_framesPerSecond = 30;
+
+            // Override frames per second based on temporal processing interval if it's not set to default
+            if (ProcessingInterval > -1)
+            {
+                if (ProcessingInterval == 0)
+                {
+                    m_framesPerSecond = (int)Ticks.PerSecond;
+                }
+                else
+                {
+                    // Minimum processing rate for this class is one frame per second
+                    if (ProcessingInterval >= 1000)
+                        m_framesPerSecond = 1;
+                    else
+                        m_framesPerSecond = (int)Ticks.PerMillisecond / ProcessingInterval;
+                }
+            }
 
             // Determine whether to perform timestamp simulation; default is true.
             if (settings.TryGetValue("simulateTimestamps", out setting))

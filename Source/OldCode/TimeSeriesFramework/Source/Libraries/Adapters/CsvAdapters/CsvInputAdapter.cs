@@ -38,7 +38,6 @@ namespace CsvAdapters
     [Description("CSV: archives measurements to a CSV file.")]
     public class CsvInputAdapter : InputAdapterBase
     {
-
         #region [ Members ]
 
         // Fields
@@ -180,6 +179,17 @@ namespace CsvAdapters
             }
         }
 
+        /// <summary>
+        /// Gets the flag indicating if this adapter supports temporal processing.
+        /// </summary>
+        public override bool SupportsTemporalProcessing
+        {
+            get
+            {
+                return true;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -207,6 +217,15 @@ namespace CsvAdapters
 
             if (settings.TryGetValue("simulateTimestamp", out setting))
                 m_simulateTimestamp = setting.ParseBoolean();
+
+            // Override input interval based on temporal processing interval if it's not set to default
+            if (ProcessingInterval > -1)
+            {
+                if (ProcessingInterval == 0)
+                    m_inputInterval = 1;
+                else
+                    m_inputInterval = ProcessingInterval;
+            }
 
             m_timer.Interval = m_inputInterval;
             m_timer.AutoReset = true;

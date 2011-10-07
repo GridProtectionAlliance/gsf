@@ -45,7 +45,6 @@ namespace DataQualityMonitoring
     [Description("Flatline Test: notifies when measurements are received whose values do not change")]
     public class FlatlineTest : ActionAdapterBase
     {
-
         #region [ Members ]
 
         // Fields
@@ -172,6 +171,17 @@ namespace DataQualityMonitoring
             set
             {
                 m_smtpServer = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the flag indicating if this adapter supports temporal processing.
+        /// </summary>
+        public override bool SupportsTemporalProcessing
+        {
+            get
+            {
+                return false;
             }
         }
 

@@ -93,8 +93,6 @@ namespace TimeSeriesFramework
         #region [ Members ]
 
         // Fields
-
-        // System settings
         private IaonSession m_iaonSession;
         private string m_nodeIDQueryString;
         private ConfigurationType m_configurationType;
@@ -103,14 +101,6 @@ namespace TimeSeriesFramework
         private string m_cachedConfigurationFile;
         private bool m_uniqueAdapterIDs;
         private bool m_allowRemoteRestart;
-        private Dictionary<object, string> m_derivedNameCache;
-
-        // Threshold settings
-        private int m_measurementWarningThreshold;
-        private int m_measurementDumpingThreshold;
-        private int m_defaultSampleSizeWarningThreshold;
-
-        // Health and status exporters
         private MultipleDestinationExporter m_healthExporter;
         private MultipleDestinationExporter m_statusExporter;
 
@@ -126,12 +116,16 @@ namespace TimeSeriesFramework
         {
             InitializeComponent();
 
-            // Register event handlers.
+            // Register service level event handlers
             m_serviceHelper.ServiceStarting += ServiceStartingHandler;
             m_serviceHelper.ServiceStarted += ServiceStartedHandler;
             m_serviceHelper.ServiceStopping += ServiceStoppingHandler;
-            m_serviceHelper.StatusLog.LogException += ProcessExceptionHandler;
-            m_serviceHelper.ErrorLogger.ErrorLog.LogException += ProcessExceptionHandler;
+
+            if (m_serviceHelper.StatusLog != null)
+                m_serviceHelper.StatusLog.LogException += LogExceptionHandler;
+
+            if (m_serviceHelper.ErrorLogger != null && m_serviceHelper.ErrorLogger.ErrorLog != null)
+                m_serviceHelper.ErrorLogger.ErrorLog.LogException += LogExceptionHandler;
         }
 
         /// <summary>
@@ -286,13 +280,17 @@ namespace TimeSeriesFramework
         /// </remarks>
         protected virtual void ServiceStartingHandler(object sender, EventArgs<string[]> e)
         {
+            // Initialize Iaon session
+            m_iaonSession = new IaonSession();
+            m_iaonSession.StatusMessage += m_iaonSession_StatusMessage;
+            m_iaonSession.ProcessException += m_iaonSession_ProcessException;
+
             // Make sure default service settings exist
             ConfigurationFile configFile = ConfigurationFile.Current;
             string cachePath = string.Format("{0}\\ConfigurationCache\\", FilePath.GetAbsolutePath(""));
 
             // System settings
             CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
-            systemSettings.Add("NodeID", Guid.NewGuid().ToString(), "Unique Node ID");
             systemSettings.Add("ConfigurationType", "Database", "Specifies type of configuration: Database, WebService or XmlFile");
             systemSettings.Add("ConnectionString", "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=IaonHost.mdb", "Configuration database connection string");
             systemSettings.Add("DataProviderString", "AssemblyName={System.Data, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089};ConnectionType=System.Data.OleDb.OleDbConnection;AdapterType=System.Data.OleDb.OleDbDataAdapter", "Configuration database ADO.NET data provider assembly type creation string");
@@ -301,7 +299,6 @@ namespace TimeSeriesFramework
             systemSettings.Add("UniqueAdaptersIDs", "True", "Set to true if all runtime adapter ID's will be unique to allow for easier adapter specification");
             systemSettings.Add("ProcessPriority", "High", "Sets desired process priority: Normal, AboveNormal, High, RealTime");
             systemSettings.Add("AllowRemoteRestart", "True", "Controls ability to remotely restart the host service.");
-            systemSettings.Add("UseMeasurementRouting", IaonSession.DefaultUseMeasurementRouting, "Set to true to use optimized adapter measurement routing.");
 
             // Example connection settings
             CategorizedSettingsElementCollection exampleSettings = configFile.Settings["exampleConnectionSettings"];
@@ -320,12 +317,6 @@ namespace TimeSeriesFramework
             exampleSettings.Add("WebService.ConnectionString", "https://naspi.tva.com/openPDC/LoadConfigurationData.aspx", "Example web service connection string");
             exampleSettings.Add("XmlFile.ConnectionString", "SystemConfiguration.xml", "Example XML configuration file connection string");
 
-            // Threshold settings
-            CategorizedSettingsElementCollection thresholdSettings = configFile.Settings["thresholdSettings"];
-            thresholdSettings.Add("MeasurementWarningThreshold", "100000", "Number of unarchived measurements allowed in any output adapter queue before displaying a warning message");
-            thresholdSettings.Add("MeasurementDumpingThreshold", "500000", "Number of unarchived measurements allowed in any output adapter queue before taking evasive action and dumping data");
-            thresholdSettings.Add("DefaultSampleSizeWarningThreshold", "10", "Default number of unpublished samples (in seconds) allowed in any action adapter queue before displaying a warning message");
-
             // Retrieve configuration cache directory as defined in the config file
             cachePath = systemSettings["ConfigurationCachePath"].Value;
 
@@ -341,16 +332,6 @@ namespace TimeSeriesFramework
                 m_serviceHelper.ErrorLogger.Log(ex);
             }
 
-            // Initialize Iaon session
-            m_iaonSession = new IaonSession();
-            m_iaonSession.StatusMessage += StatusMessageHandler;
-            m_iaonSession.ProcessException += ProcessExceptionHandler;
-            m_iaonSession.UnpublishedSamples += UnpublishedSamplesHandler;
-            m_iaonSession.UnprocessedMeasurements += UnprocessedMeasurementsHandler;
-            m_iaonSession.Disposed += DisposedHandler;
-            m_iaonSession.UseMeasurementRouting = systemSettings["UseMeasurementRouting"].ValueAsBoolean(IaonSession.DefaultUseMeasurementRouting);
-            m_iaonSession.NodeID = systemSettings["NodeID"].ValueAs<Guid>();
-
             // Initialize system settings
             m_configurationType = systemSettings["ConfigurationType"].ValueAs<ConfigurationType>();
             m_connectionString = systemSettings["ConnectionString"].Value;
@@ -358,7 +339,6 @@ namespace TimeSeriesFramework
             m_cachedConfigurationFile = FilePath.AddPathSuffix(cachePath) + systemSettings["CachedConfigurationFile"].Value;
             m_uniqueAdapterIDs = systemSettings["UniqueAdaptersIDs"].ValueAsBoolean(true);
             m_allowRemoteRestart = systemSettings["AllowRemoteRestart"].ValueAsBoolean(true);
-            m_derivedNameCache = new Dictionary<object, string>();
 
             // Define guid with query string delimeters according to database needs
             Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
@@ -393,11 +373,6 @@ namespace TimeSeriesFramework
             {
                 m_serviceHelper.ErrorLogger.Log(ex, false);
             }
-
-            // Initialize threshold settings
-            m_measurementWarningThreshold = thresholdSettings["MeasurementWarningThreshold"].ValueAsInt32();
-            m_measurementDumpingThreshold = thresholdSettings["MeasurementDumpingThreshold"].ValueAsInt32();
-            m_defaultSampleSizeWarningThreshold = thresholdSettings["DefaultSampleSizeWarningThreshold"].ValueAsInt32();
         }
 
         /// <summary>
@@ -445,15 +420,15 @@ namespace TimeSeriesFramework
             // Create health exporter
             m_healthExporter = new MultipleDestinationExporter("HealthExporter", Timeout.Infinite);
             m_healthExporter.Initialize(new ExportDestination[] { new ExportDestination(FilePath.GetAbsolutePath("Health.txt"), false, "", "", "") });
-            m_healthExporter.StatusMessage += StatusMessageHandler;
-            m_healthExporter.ProcessException += ProcessExceptionHandler;
+            m_healthExporter.StatusMessage += m_iaonSession.StatusMessageHandler;
+            m_healthExporter.ProcessException += m_iaonSession.ProcessExceptionHandler;
             m_serviceHelper.ServiceComponents.Add(m_healthExporter);
 
             // Create status exporter
             m_statusExporter = new MultipleDestinationExporter("StatusExporter", Timeout.Infinite);
             m_statusExporter.Initialize(new ExportDestination[] { new ExportDestination(FilePath.GetAbsolutePath("Status.txt"), false, "", "", "") });
-            m_statusExporter.StatusMessage += StatusMessageHandler;
-            m_statusExporter.ProcessException += ProcessExceptionHandler;
+            m_statusExporter.StatusMessage += m_iaonSession.StatusMessageHandler;
+            m_statusExporter.ProcessException += m_iaonSession.ProcessExceptionHandler;
             m_serviceHelper.ServiceComponents.Add(m_statusExporter);
 
             // Define scheduled service processes
@@ -477,6 +452,7 @@ namespace TimeSeriesFramework
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("Authenticate", "Authenticates network shares for health and status exports", AuthenticateRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("Restart", "Attempts to restart the host service", RestartServiceHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("RefreshRoutes", "Spawns request to recalculate routing tables", RefreshRoutesRequestHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("TemporalSupport", "Detemines if any adapters support temporal processing", TemporalSupportRequestHandler));
 
             // Start system initialization on an independent thread so that service responds in a timely fashion...
             ThreadPool.QueueUserWorkItem(InitializeSystem);
@@ -497,8 +473,8 @@ namespace TimeSeriesFramework
             {
                 m_healthExporter.Enabled = false;
                 m_serviceHelper.ServiceComponents.Remove(m_healthExporter);
-                m_healthExporter.StatusMessage -= StatusMessageHandler;
-                m_healthExporter.ProcessException -= ProcessExceptionHandler;
+                m_healthExporter.StatusMessage -= m_iaonSession.StatusMessageHandler;
+                m_healthExporter.ProcessException -= m_iaonSession.ProcessExceptionHandler;
                 m_healthExporter.Dispose();
             }
             m_healthExporter = null;
@@ -508,8 +484,8 @@ namespace TimeSeriesFramework
             {
                 m_statusExporter.Enabled = false;
                 m_serviceHelper.ServiceComponents.Remove(m_statusExporter);
-                m_statusExporter.StatusMessage -= StatusMessageHandler;
-                m_statusExporter.ProcessException -= ProcessExceptionHandler;
+                m_statusExporter.StatusMessage -= m_iaonSession.StatusMessageHandler;
+                m_statusExporter.ProcessException -= m_iaonSession.ProcessExceptionHandler;
                 m_statusExporter.Dispose();
             }
             m_statusExporter = null;
@@ -520,14 +496,21 @@ namespace TimeSeriesFramework
                 m_serviceHelper.ServiceComponents.Remove(m_iaonSession.InputAdapters);
                 m_serviceHelper.ServiceComponents.Remove(m_iaonSession.ActionAdapters);
                 m_serviceHelper.ServiceComponents.Remove(m_iaonSession.OutputAdapters);
-                m_iaonSession.StatusMessage -= StatusMessageHandler;
-                m_iaonSession.ProcessException -= ProcessExceptionHandler;
-                m_iaonSession.UnpublishedSamples -= UnpublishedSamplesHandler;
-                m_iaonSession.UnprocessedMeasurements -= UnprocessedMeasurementsHandler;
-                m_iaonSession.Disposed -= DisposedHandler;
+                m_iaonSession.StatusMessage -= m_iaonSession_StatusMessage;
+                m_iaonSession.ProcessException -= m_iaonSession_ProcessException;
                 m_iaonSession.Dispose();
             }
             m_iaonSession = null;
+
+            m_serviceHelper.ServiceStarting -= ServiceStartingHandler;
+            m_serviceHelper.ServiceStarted -= ServiceStartedHandler;
+            m_serviceHelper.ServiceStopping -= ServiceStoppingHandler;
+
+            if (m_serviceHelper.StatusLog != null)
+                m_serviceHelper.StatusLog.LogException -= LogExceptionHandler;
+
+            if (m_serviceHelper.ErrorLogger != null && m_serviceHelper.ErrorLogger.ErrorLog != null)
+                m_serviceHelper.ErrorLogger.ErrorLog.LogException -= LogExceptionHandler;
         }
 
         #endregion
@@ -750,7 +733,7 @@ namespace TimeSeriesFramework
                         method = type.GetMethod(methodName, BindingFlags.IgnoreCase | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.InvokeMethod);
 
                         // Execute data operation via loaded assembly method
-                        ((DataOperationFunction)Delegate.CreateDelegate(typeof(DataOperationFunction), method))(connection, adapterType, m_nodeIDQueryString, new Action<object, EventArgs<string>>(StatusMessageHandler), new Action<object, EventArgs<Exception>>(ProcessExceptionHandler));
+                        ((DataOperationFunction)Delegate.CreateDelegate(typeof(DataOperationFunction), method))(connection, adapterType, m_nodeIDQueryString, new Action<object, EventArgs<string>>(m_iaonSession.StatusMessageHandler), new Action<object, EventArgs<Exception>>(m_iaonSession.ProcessExceptionHandler));
                     }
                     catch (Exception ex)
                     {
@@ -812,109 +795,43 @@ namespace TimeSeriesFramework
         #region [ Primary Adapter Event Handlers ]
 
         /// <summary>
-        /// Event handler for monitoring unpublished samples.
-        /// </summary>
-        /// <param name="sender">Event source reference to adapter, typically an action adapter, that is reporting the number of unpublished data samples.</param>
-        /// <param name="e">Event arguments containing number of samples, in seconds of data, of unpublished data in the source adapter.</param>
-        /// <remarks>
-        /// Time-series framework uses this handler to monitor the number of unpublished samples, in seconds of data, in action adapters.<br/>
-        /// This method is typically called once per second.
-        /// </remarks>
-        protected virtual void UnpublishedSamplesHandler(object sender, EventArgs<int> e)
-        {
-            int secondsOfData = e.Argument;
-            int threshold = m_defaultSampleSizeWarningThreshold;
-            ConcentratorBase concentrator = sender as ConcentratorBase;
-
-            // Most action adapters will be based on a concentrator, if so we monitor the unpublished sample queue size compared to the defined
-            // lag time - if the queue size is over twice the lag size, the action adapter could be falling behind
-            if (concentrator != null)
-                threshold = (int)(2 * Math.Ceiling(concentrator.LagTime));
-
-            if (secondsOfData > threshold)
-                DisplayStatusMessage("[{0}] There are {1} seconds of unpublished data in the action adapter concentration queue.", UpdateType.Warning, GetDerivedName(sender), secondsOfData);
-        }
-
-        /// <summary>
-        /// Event handler for monitoring unprocessed measurements.
-        /// </summary>
-        /// <param name="sender">Event source reference to adapter, typically an output adapter, that is reporting the number of unprocessed measurements.</param>
-        /// <param name="e">Event arguments containing number of queued (i.e., unprocessed) measurements in the source adapter.</param>
-        /// <remarks>
-        /// Time-series framework uses this handler to monitor the number of unprocessed measurements in output adapters.<br/>
-        /// This method is typically called once per second.
-        /// </remarks>
-        protected virtual void UnprocessedMeasurementsHandler(object sender, EventArgs<int> e)
-        {
-            int unprocessedMeasurements = e.Argument;
-
-            if (unprocessedMeasurements > m_measurementDumpingThreshold)
-            {
-                IOutputAdapter outputAdpater = sender as IOutputAdapter;
-
-                if (outputAdpater != null)
-                {
-                    // If an output adapter queue size exceeds the defined measurement dumping threshold,
-                    // then the queue will be truncated before system runs out of memory
-                    outputAdpater.RemoveMeasurements(m_measurementDumpingThreshold);
-                    DisplayStatusMessage("[{0}] System exercised evasive action to convserve memory and dumped {1} unprocessed measurements from the output queue :(", UpdateType.Alarm, outputAdpater.Name, m_measurementDumpingThreshold);
-                    DisplayStatusMessage("[{0}] NOTICE: Please adjust measurement threshold settings and/or increase amount of available system memory.", UpdateType.Warning, outputAdpater.Name);
-                }
-                else
-                {
-                    // It is only expected that output adapters will be mapped to this handler, but in case
-                    // another adapter type uses this handler we will still display a message
-                    DisplayStatusMessage("[{0}] CRITICAL: There are {1} unprocessed measurements in the adapter queue - but sender \"{2}\" is not an IOutputAdapter, so no evasive action can be exercised.", UpdateType.Warning, GetDerivedName(sender), unprocessedMeasurements, sender.GetType().Name);
-                }
-            }
-            else if (unprocessedMeasurements > m_measurementWarningThreshold)
-            {
-                if (unprocessedMeasurements >= m_measurementDumpingThreshold - m_measurementWarningThreshold)
-                    DisplayStatusMessage("[{0}] CRITICAL: There are {1} unprocessed measurements in the output queue.", UpdateType.Warning, GetDerivedName(sender), unprocessedMeasurements);
-                else
-                    DisplayStatusMessage("[{0}] There are {1} unprocessed measurements in the output queue.", UpdateType.Warning, GetDerivedName(sender), unprocessedMeasurements);
-            }
-        }
-
-        /// <summary>
         /// Event handler for reporting status messages.
         /// </summary>
         /// <param name="sender">Event source of the status message.</param>
-        /// <param name="e">Event arguments containing the status message to report.</param>
+        /// <param name="e">Event arguments containing the status message and its type to report.</param>
         /// <remarks>
-        /// Time-series framework uses this handler to report adapter status messages (e.g., to a log file or console window).
+        /// The time-series framework <see cref="IaonSession"/> uses this event to report adapter status messages (e.g., to a log file or console window).
         /// </remarks>
-        protected virtual void StatusMessageHandler(object sender, EventArgs<string> e)
+        private void m_iaonSession_StatusMessage(object sender, EventArgs<string, UpdateType> e)
         {
-            DisplayStatusMessage("[{0}] {1}", UpdateType.Information, GetDerivedName(sender), e.Argument);
+            DisplayStatusMessage(e.Argument1, e.Argument2);
         }
 
-        // Handle process exceptions from all adapters
         /// <summary>
         /// Event handler for processing reported exceptions.
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        protected virtual void ProcessExceptionHandler(object sender, EventArgs<Exception> e)
+        /// <param name="sender">Event source of the exception.</param>
+        /// <param name="e">Event arguments containing the exception to report.</param>
+        /// <remarks>
+        /// The time-series framework <see cref="IaonSession"/> uses this event to report exceptions.
+        /// </remarks>
+        private void m_iaonSession_ProcessException(object sender, EventArgs<Exception> e)
         {
-            Exception ex = e.Argument;
-
-            m_serviceHelper.ErrorLogger.Log(ex, false);
-            DisplayStatusMessage("[{0}] {1}", UpdateType.Alarm, GetDerivedName(sender), ex.Message);
+            m_serviceHelper.ErrorLogger.Log(e.Argument, false);
         }
 
         /// <summary>
-        /// Handler for disposed events from all adapters.
+        /// Event handler for processing exceptions encountered while writing entries to a log file.
         /// </summary>
-        /// <param name="sender">Sending object.</param>
-        /// <param name="e">Event arguments, if any.</param>
-        protected virtual void DisposedHandler(object sender, EventArgs e)
+        /// <param name="sender">Event source of the exception.</param>
+        /// <param name="e">Event arguments containing the exception to report.</param>
+        protected virtual void LogExceptionHandler(object sender, EventArgs<Exception> e)
         {
-            DisplayStatusMessage("[{0}] Disposed.", UpdateType.Information, GetDerivedName(sender));
+            DisplayStatusMessage("Log file exception: " + e.Argument.Message, UpdateType.Alarm);
         }
 
         /// <summary>
-        /// Handler for scheduled health monitor display.
+        /// Event handler for scheduled health monitor display.
         /// </summary>
         /// <param name="name">Scheduled event name.</param>
         /// <param name="parameters">Scheduled event parameters.</param>
@@ -934,7 +851,7 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>
-        /// Handler for scheduled adapter status export.
+        /// Event handler for scheduled adapter status export.
         /// </summary>
         /// <param name="name">Scheduled event name.</param>
         /// <param name="parameters">Scheduled event parameters.</param>
@@ -942,32 +859,6 @@ namespace TimeSeriesFramework
         {
             // Every thirty minutes we export a human readable service status to a text file for external display
             m_statusExporter.ExportData(m_serviceHelper.Status);
-        }
-
-        /// <summary>
-        /// Gets derived name of specified object.
-        /// </summary>
-        /// <param name="sender">Sending object from which to derive name.</param>
-        /// <returns>Derived name of specified object.</returns>
-        protected virtual string GetDerivedName(object sender)
-        {
-            string name;
-
-            if (!m_derivedNameCache.TryGetValue(sender, out name))
-            {
-                IProvideStatus statusProvider = sender as IProvideStatus;
-
-                if (statusProvider != null)
-                    name = statusProvider.Name.NotEmpty(sender.GetType().Name);
-                else if (sender != null && sender is string)
-                    name = (string)sender;
-                else
-                    name = sender.GetType().Name;
-
-                m_derivedNameCache.Add(sender, name);
-            }
-
-            return name;
         }
 
         #endregion
@@ -1619,6 +1510,60 @@ namespace TimeSeriesFramework
                     }
                     else
                         SendResponse(requestInfo, false, "Failed to load system configuration.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Determines support for temporal processing from existing adapters.
+        /// </summary>
+        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
+        protected virtual void TemporalSupportRequestHandler(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Checks support for temporal processing.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       TemporalSupport [Options]");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -I".PadRight(20));
+                helpMessage.Append("Checks support for input adapters (default)");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -A".PadRight(20));
+                helpMessage.Append("Checks support for action adapters");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -O".PadRight(20));
+                helpMessage.Append("Checks support for output adapters");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -System".PadRight(20));
+                helpMessage.Append("Checks support for all adapters");
+                helpMessage.AppendLine();
+
+                DisplayResponseMessage(requestInfo, helpMessage.ToString());
+            }
+            else
+            {
+                if (requestInfo.Request.Arguments.Exists("System"))
+                {
+                    bool supported = m_iaonSession.TemporalProcessingSupportExists();
+                    SendResponseWithAttachment(requestInfo, true, supported, "Temporal processing support {0}", supported ? "exists" : "does not exist");
+                }
+                else
+                {
+                    string collectionName = GetRequestedCollection(requestInfo).DataMember;
+                    bool supported = m_iaonSession.TemporalProcessingSupportExists(collectionName);
+                    SendResponseWithAttachment(requestInfo, true, supported, "Temporal processing support {0} for {1}", supported ? "exists" : "does not exist", collectionName);
                 }
             }
         }

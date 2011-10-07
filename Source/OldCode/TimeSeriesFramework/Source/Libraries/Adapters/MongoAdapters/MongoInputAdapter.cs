@@ -23,13 +23,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Timers;
 using MongoDB;
 using TimeSeriesFramework;
 using TimeSeriesFramework.Adapters;
-using TVA;
-using System.ComponentModel;
 
 namespace MongoAdapters
 {
@@ -39,23 +38,21 @@ namespace MongoAdapters
     [Description("MongoDB: reads measurements from a MongoDB database")]
     public class MongoInputAdapter : InputAdapterBase
     {
-
         #region [ Members ]
 
         // Fields
-
+        private Mongo m_mongo;
+        private IMongoDatabase m_measurementDatabase;
+        private IMongoCollection<MeasurementWrapper> m_measurementCollection;
+        private Timer m_timer;
+        private long m_lastTimestamp;
         private string m_databaseName;
         private string m_collectionName;
         private string m_server;
         private int m_port;
         private int m_framesPerSecond;
         private bool m_simulateRealTime;
-
-        private Timer m_timer;
-        private Mongo m_mongo;
-        private IMongoDatabase m_measurementDatabase;
-        private IMongoCollection<MeasurementWrapper> m_measurementCollection;
-        private long m_lastTimestamp;
+        private bool m_disposed;
 
         #endregion
 
@@ -215,12 +212,57 @@ namespace MongoAdapters
         /// </summary>
         protected override bool UseAsyncConnect
         {
-            get { return false; }
+            get
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Gets the flag indicating if this adapter supports temporal processing.
+        /// </summary>
+        public override bool SupportsTemporalProcessing
+        {
+            get
+            {
+                return true;
+            }
         }
 
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="MongoInputAdapter"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        if (m_mongo != null)
+                            m_mongo.Dispose();
+
+                        m_mongo = null;
+
+                        if (m_timer != null)
+                            m_timer.Dispose();
+
+                        m_timer = null;
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
+                }
+            }
+        }
 
         /// <summary>
         /// Initializes the <see cref="MongoInputAdapter"/> using settings from the connection string.
@@ -233,7 +275,6 @@ namespace MongoAdapters
             string setting;
 
             // Optional settings
-
             if (settings.TryGetValue("databaseName", out setting))
                 m_databaseName = setting;
 
@@ -251,6 +292,23 @@ namespace MongoAdapters
 
             if (settings.TryGetValue("simulateRealTime", out setting))
                 m_simulateRealTime = Convert.ToBoolean(setting);
+
+            // Override frames per second based on temporal processing interval if it's not set to default
+            if (ProcessingInterval > -1)
+            {
+                if (ProcessingInterval == 0)
+                {
+                    m_framesPerSecond = 1000;
+                }
+                else
+                {
+                    // Minimum processing rate for this class is one frame per second
+                    if (ProcessingInterval >= 1000)
+                        m_framesPerSecond = 1;
+                    else
+                        m_framesPerSecond = 1000 / ProcessingInterval;
+                }
+            }
         }
 
         /// <summary>
@@ -260,6 +318,9 @@ namespace MongoAdapters
         {
             string connectionString = string.Format("server={0}:{1}", m_server, m_port);
 
+            if (m_mongo != null)
+                m_mongo.Dispose();
+
             // Connect to the MongoDB daemon.
             m_mongo = new Mongo(connectionString);
             m_mongo.Connect();
@@ -268,8 +329,11 @@ namespace MongoAdapters
             m_measurementDatabase = m_mongo.GetDatabase(m_databaseName);
             m_measurementCollection = m_measurementDatabase.GetCollection<MeasurementWrapper>(m_collectionName);
 
+            if (m_timer != null)
+                m_timer.Dispose();
+
             // Begin the timer to publish the measurements.
-            m_timer = new Timer(1000.0 / m_framesPerSecond);
+            m_timer = new Timer(1000.0D / m_framesPerSecond);
             m_timer.Elapsed += Timer_Elapsed;
             m_timer.AutoReset = true;
             m_timer.Start();
@@ -304,14 +368,20 @@ namespace MongoAdapters
                 MeasurementWrapper foundWrapper;
 
                 // Find the first measurements whose timestamp is larger than the last-used timestamp.
-                foundWrapper = m_measurementCollection.FindOne(new { Timestamp = Op.GreaterThan(m_lastTimestamp) });
+                foundWrapper = m_measurementCollection.FindOne(new
+                {
+                    Timestamp = Op.GreaterThan(m_lastTimestamp)
+                });
 
                 // If no measurement was found, find the first measurement.
                 if (foundWrapper == null)
                     foundWrapper = m_measurementCollection.FindOne(new Document());
 
-                // Find all measurements with the timestamp of hte measurement that was found.
-                wrappers = m_measurementCollection.Find(new { Timestamp = foundWrapper.Timestamp });
+                // Find all measurements with the timestamp of the measurement that was found.
+                wrappers = m_measurementCollection.Find(new
+                {
+                    Timestamp = foundWrapper.Timestamp
+                });
                 measurements = wrappers.Documents.Select(wrapper => wrapper.GetMeasurement()).ToList();
 
                 // Simulate real-time.

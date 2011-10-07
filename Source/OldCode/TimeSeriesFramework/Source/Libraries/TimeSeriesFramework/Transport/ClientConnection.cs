@@ -51,6 +51,7 @@ namespace TimeSeriesFramework.Transport
         private Guid m_clientID;
         private Guid m_subscriberID;
         private string m_connectionID;
+        private string m_hostName;
         private string m_subscriberAcronym;
         private string m_subscriberName;
         private string m_sharedSecret;
@@ -111,7 +112,10 @@ namespace TimeSeriesFramework.Transport
                         IPHostEntry ipHost = Dns.GetHostEntry(remoteEndPoint.Address);
 
                         if (!string.IsNullOrWhiteSpace(ipHost.HostName))
-                            m_connectionID = ipHost.HostName + " (" + m_connectionID + ")";
+                        {
+                            m_hostName = ipHost.HostName;
+                            m_connectionID = m_hostName + " (" + m_connectionID + ")";
+                        }
                     }
                     catch
                     {
@@ -127,6 +131,14 @@ namespace TimeSeriesFramework.Transport
 
             if (string.IsNullOrWhiteSpace(m_connectionID))
                 m_connectionID = "unavailable";
+
+            if (string.IsNullOrWhiteSpace(m_hostName))
+            {
+                if (m_ipAddress != null)
+                    m_hostName = m_ipAddress.ToString();
+                else
+                    m_hostName = m_connectionID;
+            }
 
             if (m_ipAddress == null)
                 m_ipAddress = System.Net.IPAddress.None;
@@ -360,6 +372,7 @@ namespace TimeSeriesFramework.Transport
             set
             {
                 m_subscription = value;
+                m_subscription.HostName = m_hostName;
             }
         }
 

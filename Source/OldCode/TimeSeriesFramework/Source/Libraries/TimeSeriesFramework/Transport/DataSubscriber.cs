@@ -160,6 +160,22 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
+        /// Gets the flag indicating if this adapter supports temporal processing.
+        /// </summary>
+        /// <remarks>
+        /// Although the data subscriber provisions support for temporal processing by receiving historical data from a remote source,
+        /// the adapter opens sockets and does not need to be engaged within an actual temporal <see cref="IaonSession"/>, therefore
+        /// this method returns <c>false</c> to make sure the adapter doesn't get instantiated within a temporal session.
+        /// </remarks>
+        public override bool SupportsTemporalProcessing
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Gets the status of this <see cref="DataSubscriber"/>.
         /// </summary>
         /// <remarks>

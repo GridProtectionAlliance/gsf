@@ -138,6 +138,17 @@ namespace TestingAdapters
         }
 
         /// <summary>
+        /// Gets the flag indicating if this adapter supports temporal processing.
+        /// </summary>
+        public override bool SupportsTemporalProcessing
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the name of this <see cref="RandomValueInputAdapter"/>.
         /// </summary>
         public override string Name

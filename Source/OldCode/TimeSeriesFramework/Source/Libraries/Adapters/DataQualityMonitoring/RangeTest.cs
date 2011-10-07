@@ -38,7 +38,6 @@ namespace DataQualityMonitoring
     [Description("Range Test: notifies when the values of received measurements are outside of a given range")]
     public class RangeTest : ActionAdapterBase
     {
-
         #region [ Members ]
 
         // Constants
@@ -210,6 +209,17 @@ namespace DataQualityMonitoring
             set
             {
                 m_warnInterval = Ticks.FromSeconds(value);
+            }
+        }
+
+        /// <summary>
+        /// Gets the flag indicating if this adapter supports temporal processing.
+        /// </summary>
+        public override bool SupportsTemporalProcessing
+        {
+            get
+            {
+                return false;
             }
         }
 
@@ -533,7 +543,6 @@ namespace DataQualityMonitoring
                 s_exceptionProcessor.OnProcessException(e.Argument);
         }
 
-        #endregion
-        
+        #endregion        
     }
 }

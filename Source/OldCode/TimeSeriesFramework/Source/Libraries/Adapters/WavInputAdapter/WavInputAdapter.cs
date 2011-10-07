@@ -119,6 +119,17 @@ namespace WavInputAdapter
             }
         }
 
+        /// <summary>
+        /// Gets the flag indicating if this adapter supports temporal processing.
+        /// </summary>
+        public override bool SupportsTemporalProcessing
+        {
+            get
+            {
+                return true;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]

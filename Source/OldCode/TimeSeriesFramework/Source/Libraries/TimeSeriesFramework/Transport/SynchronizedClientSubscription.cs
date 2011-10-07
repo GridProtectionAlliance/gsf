@@ -44,8 +44,10 @@ namespace TimeSeriesFramework.Transport
         private DataPublisher m_parent;
         private Guid m_clientID;
         private Guid m_subscriberID;
+        private string m_hostName;
         private volatile bool m_useCompactMeasurementFormat;
         private volatile bool m_startTimeSent;
+        private IaonSession m_iaonSession;
         private bool m_disposed;
 
         #endregion
@@ -66,7 +68,10 @@ namespace TimeSeriesFramework.Transport
             m_parent = parent;
             m_clientID = clientID;
             m_subscriberID = subscriberID;
-            m_signalIndexCache = new SignalIndexCache() { SubscriberID = subscriberID };
+            m_signalIndexCache = new SignalIndexCache()
+            {
+                SubscriberID = subscriberID
+            };
         }
 
         #endregion
@@ -122,6 +127,21 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
+        /// Gets or sets host name used to identify connection source of client subscription.
+        /// </summary>
+        public string HostName
+        {
+            get
+            {
+                return m_hostName;
+            }
+            set
+            {
+                m_hostName = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets primary keys of input measurements the <see cref="SynchronizedClientSubscription"/> expects, if any.
         /// </summary>
         /// <remarks>
@@ -141,6 +161,22 @@ namespace TimeSeriesFramework.Transport
                     base.InputMeasurementKeys = value;
                     m_parent.UpdateSignalIndexCache(m_clientID, m_signalIndexCache, value);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Gets the flag indicating if this adapter supports temporal processing.
+        /// </summary>
+        /// <remarks>
+        /// Although this adapter provisions support for temporal processing by proxying historical data to a remote sink, the adapter
+        /// does not need to be automatically engaged within an actual temporal <see cref="IaonSession"/>, therefore this method returns
+        /// <c>false</c> to make sure the adapter doesn't get automatically instantiated within a temporal session.
+        /// </remarks>
+        public override bool SupportsTemporalProcessing
+        {
+            get
+            {
+                return false;
             }
         }
 
@@ -170,17 +206,6 @@ namespace TimeSeriesFramework.Transport
         #region [ Methods ]
 
         /// <summary>
-        /// Starts the <see cref="SynchronizedClientSubscription"/> or restarts it if it is already running.
-        /// </summary>
-        public override void Start()
-        {
-            if (!Enabled)
-                m_startTimeSent = false;
-
-            base.Start();
-        }
-
-        /// <summary>
         /// Releases the unmanaged resources used by the <see cref="SynchronizedClientSubscription"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
@@ -194,6 +219,9 @@ namespace TimeSeriesFramework.Transport
                     {
                         // Remove reference to parent
                         m_parent = null;
+
+                        // Dispose Iaon session
+                        this.DisposeTemporalSession(ref m_iaonSession);
                     }
                 }
                 finally
@@ -202,6 +230,29 @@ namespace TimeSeriesFramework.Transport
                     base.Dispose(disposing);    // Call base class Dispose().
                 }
             }
+        }
+
+        /// <summary>
+        /// Initializes <see cref="SynchronizedClientSubscription"/>.
+        /// </summary>
+        public override void Initialize()
+        {
+            base.Initialize();
+
+            // Handle temporal session intialization
+            if (this.TemporalConstraintIsDefined())
+                m_iaonSession = this.CreateTemporalSession();
+        }
+
+        /// <summary>
+        /// Starts the <see cref="SynchronizedClientSubscription"/> or restarts it if it is already running.
+        /// </summary>
+        public override void Start()
+        {
+            if (!Enabled)
+                m_startTimeSent = false;
+
+            base.Start();
         }
 
         /// <summary>
@@ -318,6 +369,18 @@ namespace TimeSeriesFramework.Transport
             // Publish data packet to client
             if (m_parent != null)
                 m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, data.ToArray());
+        }
+
+        // Explicitly implement status message event bubbler to satisfy IClientSubscription interface
+        void IClientSubscription.OnStatusMessage(string status)
+        {
+            OnStatusMessage(status);
+        }
+
+        // Explicitly implement process exception event bubbler to satisfy IClientSubscription interface
+        void IClientSubscription.OnProcessException(Exception ex)
+        {
+            OnProcessException(ex);
         }
 
         #endregion

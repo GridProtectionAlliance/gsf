@@ -199,6 +199,14 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
+        /// Gets the flag indicating if this adapter supports temporal processing.
+        /// </summary>
+        bool SupportsTemporalProcessing
+        {
+            get;
+        }
+
+        /// <summary>
         /// Gets the start time temporal procesing constraint defined by call to <see cref="SetTemporalConstraint"/>.
         /// </summary>
         /// <remarks>

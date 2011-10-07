@@ -476,6 +476,20 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
+        /// Gets the flag indicating if this adapter collection supports temporal processing.
+        /// </summary>
+        /// <remarks>
+        /// For collections this defaults to <c>true</c>.
+        /// </remarks>
+        public virtual bool SupportsTemporalProcessing
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        /// <summary>
         /// Gets the start time temporal procesing constraint defined by call to <see cref="SetTemporalConstraint"/>.
         /// </summary>
         /// <remarks>
@@ -653,12 +667,17 @@ namespace TimeSeriesFramework.Adapters
                 status.AppendLine();
                 status.AppendFormat(" Current operational state: {0}", (Enabled ? "Enabled" : "Disabled"));
                 status.AppendLine();
-                status.AppendFormat("     Start time constraint: {0}", StartTimeConstraint == DateTime.MinValue ? "Unspecified" : StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                status.AppendFormat("       Temporal processing: {0}", SupportsTemporalProcessing ? "Supported" : "Unsupported");
                 status.AppendLine();
-                status.AppendFormat("      Stop time constraint: {0}", StopTimeConstraint == DateTime.MaxValue ? "Unspecified" : StopTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"));
-                status.AppendLine();
-                status.AppendFormat("       Processing interval: {0}", ProcessingInterval < 0 ? "Default" : (ProcessingInterval == 0 ? "As fast as possible" : ProcessingInterval + " milliseconds"));
-                status.AppendLine();
+                if (SupportsTemporalProcessing)
+                {
+                    status.AppendFormat("     Start time constraint: {0}", StartTimeConstraint == DateTime.MinValue ? "Unspecified" : StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                    status.AppendLine();
+                    status.AppendFormat("      Stop time constraint: {0}", StopTimeConstraint == DateTime.MaxValue ? "Unspecified" : StopTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                    status.AppendLine();
+                    status.AppendFormat("       Processing interval: {0}", ProcessingInterval < 0 ? "Default" : (ProcessingInterval == 0 ? "As fast as possible" : ProcessingInterval + " milliseconds"));
+                    status.AppendLine();
+                }
                 if (MonitorTimerEnabled)
                 {
                     status.AppendFormat("    Processed measurements: {0}", m_processedMeasurements.ToString("N0"));

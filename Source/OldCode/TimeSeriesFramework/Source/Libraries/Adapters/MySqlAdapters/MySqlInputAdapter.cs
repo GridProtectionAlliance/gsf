@@ -152,6 +152,17 @@ namespace MySqlAdapters
             }
         }
 
+        /// <summary>
+        /// Gets the flag indicating if this adapter supports temporal processing.
+        /// </summary>
+        public override bool SupportsTemporalProcessing
+        {
+            get
+            {
+                return true;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -197,6 +208,15 @@ namespace MySqlAdapters
             m_connection = CreateConnection();
             m_connection.ConnectionString = m_mySqlConnectionString;
             m_connection.StateChange += m_connection_StateChange;
+
+            // Override input interval based on temporal processing interval if it's not set to default
+            if (ProcessingInterval > -1)
+            {
+                if (ProcessingInterval == 0)
+                    m_inputInterval = 1;
+                else
+                    m_inputInterval = ProcessingInterval;
+            }
 
             // Set up the timer to trigger inputs
             m_timer.Interval = m_inputInterval;

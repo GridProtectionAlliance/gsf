@@ -144,6 +144,17 @@ namespace DataQualityMonitoring
             }
         }
 
+        /// <summary>
+        /// Gets the flag indicating if this adapter supports temporal processing.
+        /// </summary>
+        public override bool SupportsTemporalProcessing
+        {
+            get
+            {
+                return false;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
