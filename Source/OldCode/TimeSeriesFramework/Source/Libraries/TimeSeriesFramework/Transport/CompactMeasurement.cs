@@ -363,12 +363,12 @@ namespace TimeSeriesFramework.Transport
             index += 2;
 
             // Restore signal identification
-            Tuple<Guid, MeasurementKey> tuple;
+            Tuple<Guid, string, uint> tuple;
 
             if (m_signalIndexCache.Reference.TryGetValue(id, out tuple))
             {
                 ID = tuple.Item1;
-                Key = tuple.Item2;
+                Key = new MeasurementKey(tuple.Item1, tuple.Item3, tuple.Item2);
             }
             else
                 throw new InvalidOperationException("Failed to find associated signal identification for runtime ID " + id);

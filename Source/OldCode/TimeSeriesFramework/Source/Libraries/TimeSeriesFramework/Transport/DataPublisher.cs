@@ -535,8 +535,8 @@ namespace TimeSeriesFramework.Transport
         /// <param name="inputMeasurementKeys">Subscribed measurement keys.</param>
         public void UpdateSignalIndexCache(Guid clientID, SignalIndexCache signalIndexCache, MeasurementKey[] inputMeasurementKeys)
         {
-            ConcurrentDictionary<ushort, Tuple<Guid, MeasurementKey>> reference = new ConcurrentDictionary<ushort, Tuple<Guid, MeasurementKey>>();
-            List<MeasurementKey> unauthorizedKeys = new List<MeasurementKey>();
+            ConcurrentDictionary<ushort, Tuple<Guid, string, uint>> reference = new ConcurrentDictionary<ushort, Tuple<Guid, string, uint>>();
+            List<Guid> unauthorizedKeys = new List<Guid>();
             ushort index = 0;
             Guid signalID;
 
@@ -551,14 +551,14 @@ namespace TimeSeriesFramework.Transport
                     {
                         // Validate that subscriber has rights to this signal
                         if (SubscriberHasRights(signalIndexCache.SubscriberID, key, out signalID))
-                            reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(signalID, key));
+                            reference.TryAdd(index++, new Tuple<Guid, string, uint>(signalID, key.Source, key.ID));
                         else
-                            unauthorizedKeys.Add(key);
+                            unauthorizedKeys.Add(key.SignalID);
                     }
                     else
                     {
                         // When client authorization is not required, all points are assumed to be allowed
-                        reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(LookupSignalID(key), key));
+                        reference.TryAdd(index++, new Tuple<Guid, string, uint>(LookupSignalID(key), key.Source, key.ID));
                     }
                 }
             }

@@ -48,8 +48,12 @@ namespace TimeSeriesFramework.Transport
 
         // Fields
         private Guid m_subscriberID;
-        private ConcurrentDictionary<ushort, Tuple<Guid, MeasurementKey>> m_reference;
-        private MeasurementKey[] m_unauthorizedKeys;
+
+        // Since measurement keys are statically cached as a global system optimization and the keys
+        // can be different between two parties exchanging data, the raw measurement key elements are
+        // cached and exchanged instead of actual measurement key values
+        private ConcurrentDictionary<ushort, Tuple<Guid, string, uint>> m_reference;
+        private Guid[] m_unauthorizedKeys;
 
         [NonSerialized] // SignalID reverse lookup runtime cache
         private ConcurrentDictionary<Guid, ushort> m_signalIDCache;
@@ -66,7 +70,7 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         public SignalIndexCache()
         {
-            m_reference = new ConcurrentDictionary<ushort, Tuple<Guid, MeasurementKey>>();
+            m_reference = new ConcurrentDictionary<ushort, Tuple<Guid, string, uint>>();
         }
 
         /// <summary>
@@ -82,9 +86,9 @@ namespace TimeSeriesFramework.Transport
             if (dataSource != null && dataSource.Tables != null && dataSource.Tables.Contains("ActiveMeasurements"))
             {
                 DataTable activeMeasurements = dataSource.Tables["ActiveMeasurements"];
-                m_reference = new ConcurrentDictionary<ushort, Tuple<Guid, MeasurementKey>>();
+                m_reference = new ConcurrentDictionary<ushort, Tuple<Guid, string, uint>>();
 
-                foreach (KeyValuePair<ushort, Tuple<Guid, MeasurementKey>> signalIndex in remoteCache.Reference)
+                foreach (KeyValuePair<ushort, Tuple<Guid, string, uint>> signalIndex in remoteCache.Reference)
                 {
                     Guid signalID = signalIndex.Value.Item1;
                     DataRow[] filteredRows = activeMeasurements.Select("SignalID = '" + signalID.ToString() + "'");
@@ -92,11 +96,11 @@ namespace TimeSeriesFramework.Transport
                     if (filteredRows.Length > 0)
                     {
                         DataRow row = filteredRows[0];
-                        m_reference.TryAdd(signalIndex.Key, new Tuple<Guid, MeasurementKey>(signalID, MeasurementKey.Parse(row["ID"].ToNonNullString("_:0"), signalID)));
+                        MeasurementKey key = MeasurementKey.Parse(row["ID"].ToNonNullString("_:0"), signalID);
+                        m_reference.TryAdd(signalIndex.Key, new Tuple<Guid, string, uint>(signalID, key.Source, key.ID));
                     }
                 }
 
-                // TODO: These need to be changed to Guids since local and remote measurement keys may not match...
                 m_unauthorizedKeys = remoteCache.UnauthorizedKeys;
             }
             else
@@ -129,7 +133,7 @@ namespace TimeSeriesFramework.Transport
         /// <summary>
         /// Gets or sets integer signal index cross reference dictionary.
         /// </summary>
-        public ConcurrentDictionary<ushort, Tuple<Guid, MeasurementKey>> Reference
+        public ConcurrentDictionary<ushort, Tuple<Guid, string, uint>> Reference
         {
             get
             {
@@ -144,18 +148,18 @@ namespace TimeSeriesFramework.Transport
         /// <summary>
         /// Gets reference to array of requested input measurement keys that were authorized.
         /// </summary>
-        public MeasurementKey[] AuthorizedKeys
+        public Guid[] AuthorizedKeys
         {
             get
             {
-                return m_reference.Select(kvp => kvp.Value.Item2).ToArray();
+                return m_reference.Select(kvp => kvp.Value.Item1).ToArray();
             }
         }
 
         /// <summary>
         /// Gets or sets reference to array of requested input measurement keys that were unauthorized.
         /// </summary>
-        public MeasurementKey[] UnauthorizedKeys
+        public Guid[] UnauthorizedKeys
         {
             get
             {
