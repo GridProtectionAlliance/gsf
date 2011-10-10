@@ -117,6 +117,18 @@ namespace TimeSeriesFramework.UI
 
         #region [ Properties ]
 
+        public bool CurrentItemPropertyChanged
+        {
+            get
+            {
+                return m_propertyChanged;
+            }
+            set
+            {
+                m_propertyChanged = value;
+            }
+        }
+
         /// <summary>
         /// Gets or sets if user changes should be saved automatically.
         /// </summary>
