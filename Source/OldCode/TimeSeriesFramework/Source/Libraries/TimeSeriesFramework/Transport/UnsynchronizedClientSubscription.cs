@@ -199,6 +199,10 @@ namespace TimeSeriesFramework.Transport
                 }
 
                 status.Append(base.Status);
+
+                if (m_iaonSession != null)
+                    status.Append(m_iaonSession.Status);
+
                 return status.ToString();
             }
         }
