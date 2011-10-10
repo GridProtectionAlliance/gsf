@@ -249,13 +249,16 @@ namespace TimeSeriesFramework.UI
                     if (serviceSettings.ContainsKey("server"))
                     {
                         string server = serviceSettings["server"];
+                        
                         s_serviceConnectionString = "server=" + server;
+                        
                         if (!string.IsNullOrEmpty(interfaceValue))
                             s_serviceConnectionString += ";interface=" + interfaceValue;
 
-                        if (settings.ContainsKey("datapublisherport"))
+                        if (serviceSettings.ContainsKey("datapublisherport"))
                         {
-                            s_dataPublisherConnectionString = "server=" + server.Substring(0, server.LastIndexOf(":") + 1) + settings["datapublisherport"];
+                            s_dataPublisherConnectionString = "server=" + server.Substring(0, server.LastIndexOf(":") + 1) + serviceSettings["datapublisherport"];
+                            
                             if (!string.IsNullOrEmpty(interfaceValue))
                                 s_dataPublisherConnectionString += ";interface=" + interfaceValue;
                         }
