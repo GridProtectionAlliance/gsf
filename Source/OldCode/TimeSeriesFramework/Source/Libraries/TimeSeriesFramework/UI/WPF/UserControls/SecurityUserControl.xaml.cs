@@ -59,6 +59,7 @@ namespace TimeSeriesFramework.UI.UserControls
             m_securityGroups = new SecurityGroups(1, false);
             m_applicationRoles = new ApplicationRoles(1, true);
             RefreshBindings();
+            this.Unloaded += new RoutedEventHandler(SecurityUserControl_Unloaded);
             m_userAccounts.BeforeSave += new System.ComponentModel.CancelEventHandler(m_userAccounts_BeforeSave);
             m_userAccounts.Saved += new System.EventHandler(m_userAccounts_Changed);
             m_userAccounts.Deleted += new System.EventHandler(m_userAccounts_Changed);
@@ -77,7 +78,11 @@ namespace TimeSeriesFramework.UI.UserControls
             m_invalidPasswordMessage.Append("- Password must contain at least 1 lower case letter");
         }
 
-        void m_userAccounts_BeforeSave(object sender, System.ComponentModel.CancelEventArgs e)
+        #endregion
+
+        #region [ Methods ]
+
+        private void m_userAccounts_BeforeSave(object sender, System.ComponentModel.CancelEventArgs e)
         {
             if (m_userAccounts.IsNewRecord)
             {
@@ -108,9 +113,17 @@ namespace TimeSeriesFramework.UI.UserControls
             }
         }
 
-        #endregion
-
-        #region [ Methods ]
+        private void SecurityUserControl_Unloaded(object sender, RoutedEventArgs e)
+        {
+            m_userAccounts.BeforeSave -= m_userAccounts_BeforeSave;
+            m_userAccounts.Saved -= m_userAccounts_Changed;
+            m_userAccounts.Deleted -= m_userAccounts_Changed;
+            m_securityGroups.Saved -= m_securityGroups_Changed;
+            m_securityGroups.Deleted -= m_securityGroups_Changed;
+            m_userAccounts = null;
+            m_securityGroups = null;
+            m_applicationRoles = null;
+        }
 
         private void m_securityGroups_Changed(object sender, System.EventArgs e)
         {

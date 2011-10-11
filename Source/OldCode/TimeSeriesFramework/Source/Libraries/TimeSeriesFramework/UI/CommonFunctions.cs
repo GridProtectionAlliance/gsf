@@ -72,6 +72,13 @@ namespace TimeSeriesFramework.UI
         /// </summary>
         public static readonly string CurrentUser = Thread.CurrentPrincipal.Identity.Name;
 
+        // Events
+
+        /// <summary>
+        /// Used to notify main window that connection to service has changed.
+        /// </summary>
+        public static event EventHandler ServiceConntectionRefreshed = delegate { };
+
         // Static Methods
 
         #region [AdoDataConnection Extension Methods]
@@ -196,9 +203,9 @@ namespace TimeSeriesFramework.UI
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to database.</param>
         /// <returns>Connection string to connect to backend windows service.</returns>
-        public static string ServiceConnectionString(this AdoDataConnection database)
+        public static string ServiceConnectionString(this AdoDataConnection database, bool overwrite = false)
         {
-            if (string.IsNullOrEmpty(s_serviceConnectionString))
+            if (string.IsNullOrEmpty(s_serviceConnectionString) || overwrite)
                 database.GetNodeSettings();
 
             return s_serviceConnectionString;
@@ -249,16 +256,16 @@ namespace TimeSeriesFramework.UI
                     if (serviceSettings.ContainsKey("server"))
                     {
                         string server = serviceSettings["server"];
-                        
+
                         s_serviceConnectionString = "server=" + server;
-                        
+
                         if (!string.IsNullOrEmpty(interfaceValue))
                             s_serviceConnectionString += ";interface=" + interfaceValue;
 
                         if (serviceSettings.ContainsKey("datapublisherport"))
                         {
                             s_dataPublisherConnectionString = "server=" + server.Substring(0, server.LastIndexOf(":") + 1) + serviceSettings["datapublisherport"];
-                            
+
                             if (!string.IsNullOrEmpty(interfaceValue))
                                 s_dataPublisherConnectionString += ";interface=" + interfaceValue;
                         }
@@ -460,30 +467,38 @@ namespace TimeSeriesFramework.UI
         /// <summary>
         /// Connects to backend windows service.
         /// </summary>
-        public static void ConnectWindowsServiceClient()
+        public static void ConnectWindowsServiceClient(bool overwrite = false)
         {
-            if (s_windowsServiceClient == null || s_windowsServiceClient.Helper.RemotingClient.CurrentState != TVA.Communication.ClientState.Connected)
+            if (overwrite)
             {
-                if (s_windowsServiceClient != null)
-                    DisconnectWindowsServiceClient();
-
-                AdoDataConnection database = new AdoDataConnection(DefaultSettingsCategory);
-                try
+                DisconnectWindowsServiceClient();
+                ServiceConntectionRefreshed(null, EventArgs.Empty);
+            }
+            else
+            {
+                if (s_windowsServiceClient == null || s_windowsServiceClient.Helper.RemotingClient.CurrentState != TVA.Communication.ClientState.Connected)
                 {
-                    string connectionString = database.ServiceConnectionString();   //.RemoteStatusServerConnectionString();
+                    if (s_windowsServiceClient != null)
+                        DisconnectWindowsServiceClient();
 
-                    if (!string.IsNullOrWhiteSpace(connectionString))
+                    AdoDataConnection database = new AdoDataConnection(DefaultSettingsCategory);
+                    try
                     {
-                        s_windowsServiceClient = new WindowsServiceClient(connectionString);
-                        s_windowsServiceClient.Helper.RemotingClient.MaxConnectionAttempts = -1;
+                        string connectionString = database.ServiceConnectionString(true);   //.RemoteStatusServerConnectionString();
 
-                        System.Threading.ThreadPool.QueueUserWorkItem(ConnectAsync, null);
+                        if (!string.IsNullOrWhiteSpace(connectionString))
+                        {
+                            s_windowsServiceClient = new WindowsServiceClient(connectionString);
+                            s_windowsServiceClient.Helper.RemotingClient.MaxConnectionAttempts = -1;
+
+                            System.Threading.ThreadPool.QueueUserWorkItem(ConnectAsync, null);
+                        }
                     }
-                }
-                finally
-                {
-                    if (database != null)
-                        database.Dispose();
+                    finally
+                    {
+                        if (database != null)
+                            database.Dispose();
+                    }
                 }
             }
         }

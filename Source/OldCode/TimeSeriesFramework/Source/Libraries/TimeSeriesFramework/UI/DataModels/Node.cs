@@ -65,6 +65,7 @@ namespace TimeSeriesFramework.UI.DataModels
         private string m_createdBy;
         private DateTime m_updatedOn;
         private string m_updatedBy;
+        private bool m_settingsUpdated;
 
         #endregion
 
@@ -202,8 +203,19 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set
             {
+                if (m_settings != value)
+                    m_settingsUpdated = true;
+
                 m_settings = value;
                 OnPropertyChanged("Settings");
+            }
+        }
+
+        public bool SettingsUpdated
+        {
+            get
+            {
+                return m_settingsUpdated;
             }
         }
 

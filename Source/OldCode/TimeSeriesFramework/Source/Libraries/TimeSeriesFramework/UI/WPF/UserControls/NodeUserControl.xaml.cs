@@ -33,16 +33,6 @@ namespace TimeSeriesFramework.UI.UserControls
     /// </summary>
     public partial class NodeUserControl : UserControl
     {
-        #region [ Members ]
-
-        // Fields
-        private Nodes m_dataContext;
-
-        // Events
-        //public static RoutedEvent NodeCollectionChangedEvent;
-
-        #endregion
-
         #region [ Constructor ]
 
         /// <summary>
@@ -52,24 +42,8 @@ namespace TimeSeriesFramework.UI.UserControls
         {
             InitializeComponent();
             this.Unloaded += new RoutedEventHandler(NodeUserControl_Unloaded);
-            m_dataContext = new Nodes(16);
-            //m_dataContext.NodeChanged += new Nodes.OnNodeChanged(m_dataContext_NodeCollectionChanged);
-            this.DataContext = m_dataContext;
-
-            // Register routed event so main window can listen to this event.
-            //NodeCollectionChangedEvent = EventManager.RegisterRoutedEvent("NodeCollectionChanged", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(NodeUserControl));
+            this.DataContext = new Nodes(16);
         }
-
-        //public event RoutedEventHandler NodeCollectionChanged
-        //{
-        //    add { base.AddHandler(NodeCollectionChangedEvent, value); }
-        //    remove { base.RemoveHandler(NodeCollectionChangedEvent, value); }
-        //}
-
-        //private void m_dataContext_NodeCollectionChanged(object sender, RoutedEventArgs e)
-        //{
-
-        //}
 
         #endregion
 

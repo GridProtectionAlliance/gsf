@@ -78,6 +78,13 @@ namespace TsfManager
                 Title += " Current User: " + CommonFunctions.CurrentUser;
 
             CommonFunctions.SetRetryServiceConnection(true);
+
+            CommonFunctions.ServiceConntectionRefreshed += new EventHandler(CommonFunctions_ServiceConntectionRefreshed);
+        }
+
+        void CommonFunctions_ServiceConntectionRefreshed(object sender, EventArgs e)
+        {
+            ConnectToService();
         }
 
         #endregion
@@ -129,11 +136,19 @@ namespace TsfManager
         {
             ((App)Application.Current).NodeID = ((KeyValuePair<Guid, string>)ComboboxNode.SelectedItem).Key;
             m_menuDataItems[0].Command.Execute(null);
+            ConnectToService();
+        }
 
+        private void ConnectToService()
+        {
             if (m_windowsServiceClient != null)
             {
-                m_windowsServiceClient.Helper.RemotingClient.ConnectionEstablished -= RemotingClient_ConnectionEstablished;
-                m_windowsServiceClient.Helper.RemotingClient.ConnectionTerminated -= RemotingClient_ConnectionTerminated;
+                try
+                {
+                    m_windowsServiceClient.Helper.RemotingClient.ConnectionEstablished -= RemotingClient_ConnectionEstablished;
+                    m_windowsServiceClient.Helper.RemotingClient.ConnectionTerminated -= RemotingClient_ConnectionTerminated;
+                }
+                catch { }
             }
 
             m_windowsServiceClient = CommonFunctions.GetWindowsServiceClient();

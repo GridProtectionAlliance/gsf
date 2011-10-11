@@ -23,7 +23,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Windows;
 using TimeSeriesFramework.UI.DataModels;
 
 namespace TimeSeriesFramework.UI.ViewModels
@@ -34,19 +33,6 @@ namespace TimeSeriesFramework.UI.ViewModels
 
         // Fields
         private Dictionary<int, string> m_companyLookupList;
-
-        // Events
-        /// <summary>
-        /// Method signature for a function that handles NodeCollectionChanged event.
-        /// </summary>
-        /// <param name="sender">Source of an event.</param>
-        /// <param name="e">Event arguments.</param>
-        public delegate void OnNodeChanged(object sender, RoutedEventArgs e);
-
-        /// <summary>
-        /// Raises an event when node information is saved.
-        /// </summary>
-        public event OnNodeChanged NodeChanged;
 
         #endregion
 
@@ -113,9 +99,14 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// </summary>
         public override void Save()
         {
+            bool reconnect = false;
+            if (CurrentItem.SettingsUpdated)
+                reconnect = true;
+
             base.Save();
-            if (NodeChanged != null)
-                NodeChanged(this, null);
+
+            if (reconnect)
+                CommonFunctions.ConnectWindowsServiceClient(true);
         }
 
         #endregion
