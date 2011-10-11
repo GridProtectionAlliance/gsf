@@ -117,6 +117,9 @@ namespace TimeSeriesFramework.UI
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets or sets flag that determines if current item property has changed.
+        /// </summary>
         public bool CurrentItemPropertyChanged
         {
             get

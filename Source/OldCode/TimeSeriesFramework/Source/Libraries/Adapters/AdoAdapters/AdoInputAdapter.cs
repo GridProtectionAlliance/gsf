@@ -508,7 +508,7 @@ namespace AdoAdapters
                                                 lookupCache[id] = key;
 
                                                 // Assign a runtime index optimization for distinct measurements
-                                                signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(id, key));
+                                                signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, string, uint>(id, key.Source, key.ID));
                                             }
                                         }
 
@@ -541,7 +541,7 @@ namespace AdoAdapters
                                                 lookupCache[measurement.ID] = key;
 
                                                 // Assign a runtime index optimization for distinct measurements
-                                                signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, MeasurementKey>(measurement.ID, key));
+                                                signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, string, uint>(measurement.ID, key.Source, key.ID));
                                             }
                                         }
 
