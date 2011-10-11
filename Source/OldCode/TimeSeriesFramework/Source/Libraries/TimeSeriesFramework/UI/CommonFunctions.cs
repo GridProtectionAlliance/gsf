@@ -262,6 +262,13 @@ namespace TimeSeriesFramework.UI
                             if (!string.IsNullOrEmpty(interfaceValue))
                                 s_dataPublisherConnectionString += ";interface=" + interfaceValue;
                         }
+                        else if (settings.ContainsKey("datapublisherport"))
+                        {
+                            s_dataPublisherConnectionString = "server=" + server.Substring(0, server.LastIndexOf(":") + 1) + settings["datapublisherport"];
+
+                            if (!string.IsNullOrEmpty(interfaceValue))
+                                s_dataPublisherConnectionString += ";interface=" + interfaceValue;
+                        }
                     }
                 }
             }
