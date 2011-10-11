@@ -65,30 +65,6 @@ namespace TimeSeriesFramework.UI.UserControls
         #region [ Methods ]
 
         /// <summary>
-        /// Handles click event of the buttons on the screen.
-        /// </summary>
-        /// <param name="sender">Source of the event.</param>
-        /// <param name="e">Event arguments.</param>
-        private void CommonClickHandler(object sender, RoutedEventArgs e)
-        {
-            MenuDataItem item = new MenuDataItem();
-            FrameworkElement source = e.Source as FrameworkElement;
-
-            switch (source.Name)
-            {
-                case "ButtonSecurity": GetMenuDataItem(m_menuDataItems, "Security", ref item);
-                    break;
-                default: break;
-            }
-
-            if (item.MenuText != null)
-            {
-                item.Command.Execute(null);
-            }
-
-        }
-
-        /// <summary>
         /// Recursively finds menu item to navigate to when a button is clicked on the UI.
         /// </summary>
         /// <param name="items">Collection of menu items.</param>
@@ -110,6 +86,29 @@ namespace TimeSeriesFramework.UI.UserControls
                         GetMenuDataItem(items[i].SubMenuItems, stringToMatch, ref item);
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Handles click event of the buttons on the screen.
+        /// </summary>
+        /// <param name="sender">Source of the event.</param>
+        /// <param name="e">Event arguments.</param>
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            MenuDataItem item = new MenuDataItem();
+            FrameworkElement source = e.Source as FrameworkElement;
+
+            switch (source.Name)
+            {
+                case "ButtonSecurity": GetMenuDataItem(m_menuDataItems, "Security", ref item);
+                    break;
+                default: break;
+            }
+
+            if (item.MenuText != null)
+            {
+                item.Command.Execute(null);
             }
         }
 

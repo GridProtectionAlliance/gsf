@@ -84,6 +84,7 @@ namespace TimeSeriesFramework.UI.UserControls
 
         private void m_userAccounts_BeforeSave(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            m_userAccounts.CurrentItem.UseADAuthentication = (bool)RadioButtonWindows.IsChecked;
             if (m_userAccounts.IsNewRecord)
             {
                 if (string.IsNullOrEmpty(TextBoxPassword.Password) || !Regex.IsMatch(TextBoxPassword.Password, m_strongPasswordRegex))

@@ -124,8 +124,8 @@
                     
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Authentication" />
                     <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">
-                        <RadioButton Content="Windows" IsChecked="{tsfBinding:Column Path=UseADAuthentication}" GroupName="Authentication" Margin="0,0,2,0" />
-                        <RadioButton Content="Database" IsChecked="{tsfBinding:Column Path=UseADAuthentication, Converter={StaticResource NotConverter}}" GroupName="Authentication" />
+                        <RadioButton x:Name="RadioButtonWindows" Content="Windows" IsChecked="{Binding Path=UseADAuthentication}" GroupName="Authentication" Margin="0,0,2,0" />
+                        <RadioButton x:Name="RadioButtonDatabase" Content="Database" IsChecked="{Binding Path=UseADAuthentication, Converter={StaticResource NotConverter}}" GroupName="Authentication" />
                     </StackPanel>                    
                     <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="0">
                         <TextBlock Text="Username" Style="{StaticResource RequiredLabel}"/>
@@ -136,24 +136,24 @@
                         <TextBlock Text="Password" Style="{StaticResource RequiredLabel}"/>
                         <TextBlock Style="{StaticResource RequiredMarker}" />
                     </StackPanel>
-                    <PasswordBox x:Name="TextBoxPassword" Grid.Row="2" Grid.Column="1" IsEnabled="{tsfBinding:Column Path=UseADAuthentication, Converter={StaticResource NotConverter}}" />
+                    <PasswordBox x:Name="TextBoxPassword" Grid.Row="2" Grid.Column="1" IsEnabled="{Binding ElementName=RadioButtonDatabase, Path=IsChecked}" />
                     <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="2">
                         <TextBlock Text="First Name" Style="{StaticResource RequiredLabel}"/>
                         <TextBlock Style="{StaticResource RequiredMarker}" />
                     </StackPanel>
-                    <TextBox Grid.Row="0" Grid.Column="3" Text="{tsfBinding:Column Path=FirstName}" IsEnabled="{tsfBinding:Column Path=UseADAuthentication, Converter={StaticResource NotConverter}}" MaxLength="50"/>
+                    <TextBox Grid.Row="0" Grid.Column="3" Text="{tsfBinding:Column Path=FirstName}" IsEnabled="{Binding ElementName=RadioButtonDatabase, Path=IsChecked}" MaxLength="50"/>
                     <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="2">
                         <TextBlock Text="Last Name" Style="{StaticResource RequiredLabel}"/>
                         <TextBlock Style="{StaticResource RequiredMarker}" />
                     </StackPanel>
-                    <TextBox Grid.Row="1" Grid.Column="3" Text="{tsfBinding:Column Path=LastName}" IsEnabled="{tsfBinding:Column Path=UseADAuthentication, Converter={StaticResource NotConverter}}" MaxLength="50" />
+                    <TextBox Grid.Row="1" Grid.Column="3" Text="{tsfBinding:Column Path=LastName}" IsEnabled="{Binding ElementName=RadioButtonDatabase, Path=IsChecked}" MaxLength="50" />
                     <TextBlock Grid.Row="2" Grid.Column="2" Text="Password Expiry" />
-                    <DatePicker Grid.Row="2" Grid.Column="3" SelectedDate="{tsfBinding:Column Path=ChangePasswordOn}" IsEnabled="{tsfBinding:Column Path=UseADAuthentication, Converter={StaticResource NotConverter}}"/>
+                    <DatePicker Grid.Row="2" Grid.Column="3" SelectedDate="{tsfBinding:Column Path=ChangePasswordOn}" IsEnabled="{Binding ElementName=RadioButtonDatabase, Path=IsChecked}"/>
 
                     <TextBlock Grid.Row="0" Grid.Column="4" Text="Phone"/>
-                    <TextBox Grid.Row="0" Grid.Column="5" Text="{tsfBinding:Column Path=Phone}" IsEnabled="{tsfBinding:Column Path=UseADAuthentication, Converter={StaticResource NotConverter}}" MaxLength="50"/>
+                    <TextBox Grid.Row="0" Grid.Column="5" Text="{tsfBinding:Column Path=Phone}" IsEnabled="{Binding ElementName=RadioButtonDatabase, Path=IsChecked}" MaxLength="50"/>
                     <TextBlock Grid.Row="1" Grid.Column="4" Text="Email"/>
-                    <TextBox Grid.Row="1" Grid.Column="5" Text="{tsfBinding:Column Path=Email}" IsEnabled="{tsfBinding:Column Path=UseADAuthentication, Converter={StaticResource NotConverter}}" MaxLength="256" />
+                    <TextBox Grid.Row="1" Grid.Column="5" Text="{tsfBinding:Column Path=Email}" IsEnabled="{Binding ElementName=RadioButtonDatabase, Path=IsChecked}" MaxLength="256" />
                     <CheckBox Content="Locked Out" Grid.Row="2" Grid.Column="5" IsChecked="{tsfBinding:Column Path=LockedOut}" />                                        
                 </Grid>
                 

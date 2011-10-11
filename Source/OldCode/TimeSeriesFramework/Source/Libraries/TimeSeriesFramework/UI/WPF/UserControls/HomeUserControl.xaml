@@ -30,8 +30,8 @@
         <StackPanel Orientation="Vertical" Grid.Column="0">
             <TextBlock Text="Quick Links" HorizontalAlignment="Left" FontSize="{StaticResource XLargeTextSize}"/>
             <Border>
-                <StackPanel Orientation="Vertical" ButtonBase.Click="CommonClickHandler">                    
-                    <Button x:Name="ButtonSecurity" Content="Manage Security" Style="{StaticResource HomeButtonStyle}"/>
+                <StackPanel Orientation="Vertical">                    
+                    <Button x:Name="ButtonSecurity" Content="Manage Security" Style="{StaticResource HomeButtonStyle}" Click="Button_Click"/>
                 </StackPanel>
             </Border>
         </StackPanel>
