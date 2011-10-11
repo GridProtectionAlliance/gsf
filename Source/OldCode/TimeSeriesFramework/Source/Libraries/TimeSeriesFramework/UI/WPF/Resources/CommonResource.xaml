@@ -152,7 +152,7 @@
     
     <Style TargetType="{x:Type ComboBox}">
         <Setter Property="Width" Value="{StaticResource LargerItemSize}"/>
-        <Setter Property="Height" Value="25"/>
+        <Setter Property="Height" Value="32"/>
         <Setter Property="Margin" Value="5"/>
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="HorizontalAlignment" Value="Left"/>
