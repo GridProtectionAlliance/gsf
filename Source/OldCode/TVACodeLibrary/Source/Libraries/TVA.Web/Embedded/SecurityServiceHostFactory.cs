@@ -262,28 +262,21 @@
 
 using System;
 using System.Net;
-using System.Reflection;
 using System.ServiceModel;
 using System.ServiceModel.Activation;
 using System.ServiceModel.Description;
+using TVA.ServiceModel;
 
 namespace TVA.Web.Embedded
 {
     internal class SecurityServiceHostFactory : ServiceHostFactory
     {
-        #region [ Members ]
-
-        // Constants
-        private string HostedAspNetEnvironment = "System.ServiceModel.Activation.HostedAspNetEnvironment, System.ServiceModel.Activation, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35";
-
-        #endregion
-
         #region [ Methods ]
 
         protected override ServiceHost CreateServiceHost(Type serviceType, Uri[] baseAddresses)
         {
             // Check security requirement.
-            bool enableSecurity = (GetAuthenticationSchemes(baseAddresses[0]) & AuthenticationSchemes.Anonymous) != AuthenticationSchemes.Anonymous;
+            bool integratedSecurity = (SelfHostingService.GetAuthenticationSchemes(baseAddresses[0]) & AuthenticationSchemes.Anonymous) != AuthenticationSchemes.Anonymous;
 
             // Initialize host and binding.
             ServiceHost host = new ServiceHost(serviceType, baseAddresses);
@@ -302,7 +295,7 @@ namespace TVA.Web.Embedded
             WebHttpBehavior restBehavior = new WebHttpBehavior();
             ServiceEndpoint restEndpoint = host.AddServiceEndpoint(typeof(ISecurityService), restBinding, "rest");
 
-            if (enableSecurity)
+            if (integratedSecurity)
             {
                 // Enable security on the binding.
                 restBinding.Security.Mode = WebHttpSecurityMode.TransportCredentialOnly;
@@ -316,7 +309,7 @@ namespace TVA.Web.Embedded
 
             // Add SOAP endpoint.
             BasicHttpBinding soapBinding = new BasicHttpBinding();
-            if (enableSecurity)
+            if (integratedSecurity)
             {
                 // Enable security on the binding.
                 soapBinding.Security.Mode = BasicHttpSecurityMode.TransportCredentialOnly;
@@ -326,17 +319,6 @@ namespace TVA.Web.Embedded
             host.AddServiceEndpoint(typeof(IMetadataExchange), soapBinding, "soap/mex");
 
             return host;
-        }
-
-        /// <summary>
-        /// Gets the security setting of the hosting environment (For example: IIS web site or virtual directory).
-        /// </summary>
-        private AuthenticationSchemes GetAuthenticationSchemes(Uri baseAddress)
-        {
-            Type type = Type.GetType(HostedAspNetEnvironment);
-            object instance = Activator.CreateInstance(type, true);
-
-            return (AuthenticationSchemes)instance.GetType().InvokeMember("GetAuthenticationSchemes", BindingFlags.InvokeMethod, null, instance, new object[] { baseAddress });
         }
 
         #endregion

@@ -25,6 +25,8 @@
 //       Added is numeric type extension.
 //  09/22/2011 - J. Ritchie Carroll
 //       Added Mono implementation exception regions.
+//  10/11/2011 - Pinal C. Patel
+//       Updated LoadImplementations() method to add support for attributes.
 //
 //*******************************************************************************************************
 
@@ -411,6 +413,12 @@ namespace TVA
                             if (type.IsInterface && (object)asmType.GetInterface(type.Name) != null)
                             {
                                 // The type being tested is an interface and current type implements it.
+                                types.Add(asmType);
+                            }
+
+                            if (type.GetRootType() == typeof(Attribute) && asmType.GetCustomAttributes(type, true).Length > 0)
+                            {
+                                // The type being tested is an attribute and current type has the attribute.
                                 types.Add(asmType);
                             }
                         }

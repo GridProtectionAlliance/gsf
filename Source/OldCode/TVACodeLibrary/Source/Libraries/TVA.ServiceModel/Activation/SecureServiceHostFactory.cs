@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  SecureDataServiceHostFactory.cs - Gbtc
+//  SecureServiceHostFactory.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2011
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,7 +8,7 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  06/09/2011 - Pinal C. Patel
+//  10/06/2011 - Pinal C. Patel
 //       Generated original version of source code.
 //
 //*******************************************************************************************************
@@ -231,43 +231,71 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data.Services;
 using System.IdentityModel.Policy;
+using System.Net;
 using System.ServiceModel;
+using System.ServiceModel.Activation;
 using System.ServiceModel.Description;
 
 namespace TVA.ServiceModel.Activation
 {
     /// <summary>
-    /// A service host factory for WCF Data Services that enables role-based security using <see cref="SecurityPolicy"/>.
+    /// A service host factory for WCF Services that enables role-based security using <see cref="SecurityPolicy"/>.
     /// </summary>
     /// <see cref="SecurityPolicy"/>
-    public class SecureDataServiceHostFactory : DataServiceHostFactory
+    public class SecureServiceHostFactory : ServiceHostFactory
     {
         #region [ Methods ]
 
         /// <summary>
-        /// Creates a new <see cref="DataServiceHost"/> from the URI.
+        /// Creates a new <see cref="ServiceHost"/> from the URI.
         /// </summary>
         /// <param name="serviceType">Specifies the type of WCF service to host.</param>
         /// <param name="baseAddresses">An array of base addresses for the service.</param>
-        /// <returns>New <see cref="DataServiceHost"/>.</returns>
+        /// <returns>New <see cref="ServiceHost"/>.</returns>
         protected override ServiceHost CreateServiceHost(Type serviceType, Uri[] baseAddresses)
         {
+            // Check security requirement.
+            bool integratedSecurity = (SelfHostingService.GetAuthenticationSchemes(baseAddresses[0]) & AuthenticationSchemes.Anonymous) != AuthenticationSchemes.Anonymous;
+
             // Create data service host.
             ServiceHost host = base.CreateServiceHost(serviceType, baseAddresses);
 
-            // Enable security on the data service.
-            ServiceAuthorizationBehavior serviceBehavior = host.Description.Behaviors.Find<ServiceAuthorizationBehavior>();
-            if (serviceBehavior == null)
+            // Enable metadata publishing.
+            ServiceMetadataBehavior metadataBehavior = host.Description.Behaviors.Find<ServiceMetadataBehavior>();
+            if (metadataBehavior == null)
             {
-                serviceBehavior = new ServiceAuthorizationBehavior();
-                host.Description.Behaviors.Add(serviceBehavior);
+                metadataBehavior = new ServiceMetadataBehavior();
+                host.Description.Behaviors.Add(metadataBehavior);
             }
-            serviceBehavior.PrincipalPermissionMode = PrincipalPermissionMode.Custom;
+            metadataBehavior.HttpGetEnabled = true;
+
+            // Enable security on the service.
+            ServiceAuthorizationBehavior authorizationBehavior = host.Description.Behaviors.Find<ServiceAuthorizationBehavior>();
+            if (authorizationBehavior == null)
+            {
+                authorizationBehavior = new ServiceAuthorizationBehavior();
+                host.Description.Behaviors.Add(authorizationBehavior);
+            }
+            authorizationBehavior.PrincipalPermissionMode = PrincipalPermissionMode.Custom;
             List<IAuthorizationPolicy> policies = new List<IAuthorizationPolicy>();
             policies.Add((IAuthorizationPolicy)Activator.CreateInstance(typeof(SecurityPolicy)));
-            serviceBehavior.ExternalAuthorizationPolicies = policies.AsReadOnly();
+            authorizationBehavior.ExternalAuthorizationPolicies = policies.AsReadOnly();
+
+            // Configure windows security on default enpoints.
+            if (integratedSecurity)
+            {
+                host.AddDefaultEndpoints();
+                foreach (ServiceEndpoint endpoint in host.Description.Endpoints)
+                {
+                    BasicHttpBinding basicBinding = endpoint.Binding as BasicHttpBinding;
+                    if (basicBinding != null)
+                    {
+                        basicBinding.Security.Mode = BasicHttpSecurityMode.TransportCredentialOnly;
+                        basicBinding.Security.Transport.ClientCredentialType = HttpClientCredentialType.Windows;
+                    }
+                }
+            }
 
             return host;
         }

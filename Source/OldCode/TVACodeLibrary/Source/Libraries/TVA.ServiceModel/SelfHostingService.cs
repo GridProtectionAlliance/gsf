@@ -38,6 +38,9 @@
 //  12/09/2010 - Pinal C. Patel
 //       Modified GetUnusedPort() to use TVA.Security.Cryptography.Random instead of System.Random to
 //       unsure unique numbers.
+//  10/11/2011 - Pinal C. Patel
+//       Added GetAuthenticationSchemes() static method that can be used to check the security settings
+//       of the hosting web server.
 //
 //*******************************************************************************************************
 
@@ -263,6 +266,7 @@ using System.IdentityModel.Policy;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Reflection;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Description;
@@ -377,6 +381,9 @@ namespace TVA.ServiceModel
     public class SelfHostingService : Adapter, ISelfHostingService
     {
         #region [ Members ]
+
+        // Constants
+        private const string HostedAspNetEnvironment = "System.ServiceModel.Activation.HostedAspNetEnvironment, System.ServiceModel.Activation, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35";
 
         // Events
 
@@ -1018,6 +1025,17 @@ namespace TVA.ServiceModel
                 default:
                     return null;
             }
+        }
+
+        /// <summary>
+        /// Gets the security setting of the hosting environment (For example: IIS web site or virtual directory).
+        /// </summary>
+        public static AuthenticationSchemes GetAuthenticationSchemes(Uri baseAddress)
+        {
+            Type type = Type.GetType(HostedAspNetEnvironment);
+            object instance = Activator.CreateInstance(type, true);
+
+            return (AuthenticationSchemes)instance.GetType().InvokeMember("GetAuthenticationSchemes", BindingFlags.InvokeMethod, null, instance, new object[] { baseAddress });
         }
 
         #endregion
