@@ -56,7 +56,7 @@ namespace TimeSeriesFramework.Transport
         private Guid[] m_unauthorizedKeys;
 
         [NonSerialized] // SignalID reverse lookup runtime cache
-        private Dictionary<Guid, ushort> m_signalIDCache;
+        private ConcurrentDictionary<Guid, ushort> m_signalIDCache;
 
         #endregion
 
@@ -68,7 +68,7 @@ namespace TimeSeriesFramework.Transport
         public SignalIndexCache()
         {
             m_reference = new ConcurrentDictionary<ushort, Tuple<Guid, string, uint>>();
-            m_signalIDCache = new Dictionary<Guid, ushort>();
+            m_signalIDCache = new ConcurrentDictionary<Guid, ushort>();
         }
 
         /// <summary>
@@ -139,11 +139,8 @@ namespace TimeSeriesFramework.Transport
             }
             set
             {
-                lock (m_signalIDCache)
-                {
-                    m_signalIDCache.Clear();
-                    m_reference = value;
-                }
+                m_signalIDCache.Clear();
+                m_reference = value;
             }
         }
 
@@ -198,27 +195,24 @@ namespace TimeSeriesFramework.Transport
         /// <returns>Runtime signal index for given <see cref="Guid"/> <paramref name="signalID"/>.</returns>
         public ushort GetSignalIndex(Guid signalID)
         {
-            ushort index = ushort.MaxValue;
-
-            lock (m_signalIDCache)
+            return m_signalIDCache.GetOrAdd(signalID, id =>
             {
-                if (!m_signalIDCache.TryGetValue(signalID, out index))
+                ushort index = ushort.MaxValue;
+
+                foreach (KeyValuePair<ushort, Tuple<Guid, string, uint>> item in m_reference)
                 {
-                    foreach (KeyValuePair<ushort, Tuple<Guid, string, uint>> item in m_reference)
+                    if (item.Value.Item1 == id)
                     {
-                        if (item.Value.Item1 == signalID)
-                        {
-                            index = item.Key;
-                            break;
-                        }
+                        index = item.Key;
+                        break;
                     }
-
-                    if (index == ushort.MaxValue)
-                        m_signalIDCache.Add(signalID, index);
                 }
-            }
 
-            return index;
+                if (index == ushort.MaxValue)
+                    m_signalIDCache.TryAdd(signalID, index);
+
+                return index;
+            });
         }
 
         #endregion
