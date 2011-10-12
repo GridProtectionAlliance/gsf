@@ -564,6 +564,23 @@ namespace TimeSeriesFramework.UI
         public abstract string GetCurrentItemName();
 
         /// <summary>
+        /// Displays status messages as a auto closing popup.
+        /// </summary>
+        /// <param name="statusText">Text to be displayed on popup window.</param>
+        /// <returns>Boolean flag indicating success.</returns>
+        public virtual bool DisplayStatusMessage(string statusText)
+        {
+            if (m_status != null)
+            {
+                m_status.Text = statusText;
+                m_status.Visibility = Visibility.Visible;
+                m_timer.Start();
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Loads the records for the associated <see cref="IDataModel"/>.
         /// </summary>
         public virtual void Load()
@@ -613,9 +630,7 @@ namespace TimeSeriesFramework.UI
                     {
                         if (m_status != null)
                         {
-                            m_status.Text = result;
-                            m_status.Visibility = Visibility.Visible;
-                            m_timer.Start();
+                            DisplayStatusMessage(result);
                         }
                         else
                         {
@@ -655,9 +670,7 @@ namespace TimeSeriesFramework.UI
 
                     if (m_status != null)
                     {
-                        m_status.Text = result;
-                        m_status.Visibility = Visibility.Visible;
-                        m_timer.Start();
+                        DisplayStatusMessage(result);
                     }
                     else
                     {
