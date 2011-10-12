@@ -285,10 +285,7 @@ namespace TimeSeriesFramework.Transport
                 buffer[index++] = (byte)flags;
 
                 // Encode runtime ID
-                if (ID == Guid.Empty)
-                    EndianOrder.BigEndian.CopyBytes(m_signalIndexCache.GetSignalIndex(Key), buffer, index);
-                else
-                    EndianOrder.BigEndian.CopyBytes(m_signalIndexCache.GetSignalIndex(ID), buffer, index);
+                EndianOrder.BigEndian.CopyBytes(m_signalIndexCache.GetSignalIndex(ID), buffer, index);
 
                 index += 2;
 

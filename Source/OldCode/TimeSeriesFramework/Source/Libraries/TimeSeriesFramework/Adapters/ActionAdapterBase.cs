@@ -802,6 +802,10 @@ namespace TimeSeriesFramework.Adapters
 
             SetTemporalConstraint(startTime, stopTime, parameters);
 
+            // When processing historical data, timestamps should not be evaluated for reasonability
+            if (this.TemporalConstraintIsDefined())
+                PerformTimestampReasonabilityCheck = false;
+
             if (settings.TryGetValue("processingInterval", out setting))
                 ProcessingInterval = int.Parse(setting);
         }

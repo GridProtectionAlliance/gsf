@@ -56,10 +56,7 @@ namespace TimeSeriesFramework.Transport
         private Guid[] m_unauthorizedKeys;
 
         [NonSerialized] // SignalID reverse lookup runtime cache
-        private ConcurrentDictionary<Guid, ushort> m_signalIDCache;
-
-        [NonSerialized] // MeasurementKey reverse lookup runtime cache
-        private ConcurrentDictionary<MeasurementKey, ushort> m_keyCache;
+        private Dictionary<Guid, ushort> m_signalIDCache;
 
         #endregion
 
@@ -71,6 +68,7 @@ namespace TimeSeriesFramework.Transport
         public SignalIndexCache()
         {
             m_reference = new ConcurrentDictionary<ushort, Tuple<Guid, string, uint>>();
+            m_signalIDCache = new Dictionary<Guid, ushort>();
         }
 
         /// <summary>
@@ -141,7 +139,11 @@ namespace TimeSeriesFramework.Transport
             }
             set
             {
-                m_reference = value;
+                lock (m_signalIDCache)
+                {
+                    m_signalIDCache.Clear();
+                    m_reference = value;
+                }
             }
         }
 
@@ -171,6 +173,20 @@ namespace TimeSeriesFramework.Transport
             }
         }
 
+        /// <summary>
+        /// Gets the current maximum integer signal index;
+        /// </summary>
+        public ushort MaximumIndex
+        {
+            get
+            {
+                if (m_reference.Count == 0)
+                    return 0;
+
+                return (ushort)(m_reference.Max(kvp => kvp.Key) + 1);
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -182,25 +198,27 @@ namespace TimeSeriesFramework.Transport
         /// <returns>Runtime signal index for given <see cref="Guid"/> <paramref name="signalID"/>.</returns>
         public ushort GetSignalIndex(Guid signalID)
         {
-            // We create a runtime cache of these indexes by signal ID since they will be looked up over and over
-            if (m_signalIDCache == null)
-                m_signalIDCache = new ConcurrentDictionary<Guid, ushort>();
+            ushort index = ushort.MaxValue;
 
-            return m_signalIDCache.GetOrAdd(signalID, id => m_reference.First(kvp => kvp.Value.Item1 == id).Key);
-        }
+            lock (m_signalIDCache)
+            {
+                if (!m_signalIDCache.TryGetValue(signalID, out index))
+                {
+                    foreach (KeyValuePair<ushort, Tuple<Guid, string, uint>> item in m_reference)
+                    {
+                        if (item.Value.Item1 == signalID)
+                        {
+                            index = item.Key;
+                            break;
+                        }
+                    }
 
-        /// <summary>
-        /// Gets runtime signal index for given <see cref="MeasurementKey"/>.
-        /// </summary>
-        /// <param name="key"><see cref="MeasurementKey"/> used to lookup associated runtime signal index.</param>
-        /// <returns>Runtime signal index for given <see cref="MeasurementKey"/> <paramref name="key"/>.</returns>
-        public ushort GetSignalIndex(MeasurementKey key)
-        {
-            // We create a runtime cache of these indexes by measurement key since they will be looked up over and over
-            if (m_keyCache == null)
-                m_keyCache = new ConcurrentDictionary<MeasurementKey, ushort>();
+                    if (index == ushort.MaxValue)
+                        m_signalIDCache.Add(signalID, index);
+                }
+            }
 
-            return m_keyCache.GetOrAdd(key, mk => m_reference.First(kvp => kvp.Value.Item2.Equals(mk)).Key);
+            return index;
         }
 
         #endregion
