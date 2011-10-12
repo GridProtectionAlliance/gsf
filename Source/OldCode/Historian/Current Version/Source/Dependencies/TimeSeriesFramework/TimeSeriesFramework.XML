@@ -6644,13 +6644,6 @@
             <param name="signalID"><see cref="T:System.Guid"/> signal ID used to lookup associated runtime signal index.</param>
             <returns>Runtime signal index for given <see cref="T:System.Guid"/> <paramref name="signalID"/>.</returns>
         </member>
-        <member name="M:TimeSeriesFramework.Transport.SignalIndexCache.GetSignalIndex(TimeSeriesFramework.MeasurementKey)">
-            <summary>
-            Gets runtime signal index for given <see cref="T:TimeSeriesFramework.MeasurementKey"/>.
-            </summary>
-            <param name="key"><see cref="T:TimeSeriesFramework.MeasurementKey"/> used to lookup associated runtime signal index.</param>
-            <returns>Runtime signal index for given <see cref="T:TimeSeriesFramework.MeasurementKey"/> <paramref name="key"/>.</returns>
-        </member>
         <member name="P:TimeSeriesFramework.Transport.SignalIndexCache.SubscriberID">
             <summary>
             Gets or sets the <see cref="T:System.Guid"/> based subscriber ID of this <see cref="T:TimeSeriesFramework.Transport.SignalIndexCache"/>.
@@ -6669,6 +6662,11 @@
         <member name="P:TimeSeriesFramework.Transport.SignalIndexCache.UnauthorizedKeys">
             <summary>
             Gets or sets reference to array of requested input measurement keys that were unauthorized.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SignalIndexCache.MaximumIndex">
+            <summary>
+            Gets the current maximum integer signal index;
             </summary>
         </member>
         <member name="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription">
