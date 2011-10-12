@@ -70,9 +70,11 @@
                     <Menu x:Name="MenuMain" ItemsSource="{Binding}" Style="{StaticResource MenuStyle}" ItemContainerStyleSelector="{StaticResource MenuItemStyleSelector}"
                       HorizontalAlignment="Left"/>
                 </Border>
+                
+            </Grid>            
 
-            </Grid>
-
+            <TextBlock x:Name="TextBlockResult" Visibility="Collapsed" Foreground="#FFFFFFFF" FontWeight="Bold" VerticalAlignment="Center" Height="Auto" Margin="0,5,5,0" Padding="0"/>
+            
             <GroupBox x:Name="GroupBoxMain" Margin="2,-5,2,2">
                 <Border Padding="2" BorderThickness="1" Background="{StaticResource MenuBackgroundBrush}" CornerRadius="5">
                     <Frame x:Name="FrameContent" NavigationUIVisibility="Hidden" HorizontalAlignment="Center" Width="850"/>

@@ -33,7 +33,9 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Threading;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using TimeSeriesFramework.UI.Commands;
 using TVA.Data;
 
@@ -93,6 +95,8 @@ namespace TimeSeriesFramework.UI
         private bool m_propertyChanged;
         private bool m_autoSave;
         private bool m_hideMessages;
+        private DispatcherTimer m_timer;
+        private TextBlock m_status;
 
         #endregion
 
@@ -111,6 +115,12 @@ namespace TimeSeriesFramework.UI
                 Load();
             else                    // otherwise, user does not want to display list and just dealing with form alone.
                 ItemsSource = null;
+
+            m_timer = new DispatcherTimer();
+            m_timer.Interval = TimeSpan.FromSeconds(5);
+            m_timer.Tick += new EventHandler(m_timer_Tick);
+
+            m_status = (TextBlock)Application.Current.MainWindow.FindName("TextBlockResult");
         }
 
         #endregion
@@ -521,6 +531,27 @@ namespace TimeSeriesFramework.UI
         #region [ Methods ]
 
         /// <summary>
+        /// Handles timer's tick event to display status messages.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        protected virtual void m_timer_Tick(object sender, EventArgs e)
+        {
+            if (m_status != null)
+            {
+                if (m_status.Visibility == Visibility.Collapsed)
+                {
+                    m_status.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    m_status.Visibility = Visibility.Collapsed;
+                    m_timer.Stop();
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets the primary key value of the <see cref="CurrentItem"/>.
         /// </summary>
         /// <returns>The primary key value of the <see cref="CurrentItem"/>.</returns>
@@ -580,7 +611,17 @@ namespace TimeSeriesFramework.UI
 
                     if (!m_hideMessages)
                     {
-                        Popup(result, "Save " + DataModelName, MessageBoxImage.Information);
+                        if (m_status != null)
+                        {
+                            m_status.Text = result;
+                            m_status.Visibility = Visibility.Visible;
+                            m_timer.Start();
+                        }
+                        else
+                        {
+                            Popup(result, "Save " + DataModelName, MessageBoxImage.Information);
+                        }
+
                         Load();
                     }
                 }
@@ -612,7 +653,16 @@ namespace TimeSeriesFramework.UI
 
                     Load();
 
-                    Popup(result, "Delete " + DataModelName, MessageBoxImage.Information);
+                    if (m_status != null)
+                    {
+                        m_status.Text = result;
+                        m_status.Visibility = Visibility.Visible;
+                        m_timer.Start();
+                    }
+                    else
+                    {
+                        Popup(result, "Delete " + DataModelName, MessageBoxImage.Information);
+                    }
                 }
                 catch (Exception ex)
                 {
