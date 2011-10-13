@@ -10,6 +10,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  10/06/2011 - Pinal C. Patel
 //       Generated original version of source code.
+//  10/12/2011 - Pinal C. Patel
+//       Added the ability to specify endpoint binding information.
 //
 //*******************************************************************************************************
 
@@ -235,6 +237,7 @@ using System.IdentityModel.Policy;
 using System.Net;
 using System.ServiceModel;
 using System.ServiceModel.Activation;
+using System.ServiceModel.Channels;
 using System.ServiceModel.Description;
 
 namespace TVA.ServiceModel.Activation
@@ -245,6 +248,46 @@ namespace TVA.ServiceModel.Activation
     /// <see cref="SecurityPolicy"/>
     public class SecureServiceHostFactory : ServiceHostFactory
     {
+        #region [ Members ]
+
+        // Fields
+        private string m_protocol;
+        private string m_address;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SecureServiceHostFactory"/> class.
+        /// </summary>
+        public SecureServiceHostFactory()
+            : this(string.Empty)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SecureServiceHostFactory"/> class.
+        /// </summary>
+        /// <param name="protocol">Protocol used by the service.</param>
+        public SecureServiceHostFactory(string protocol)
+            : this(protocol, string.Empty)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SecureServiceHostFactory"/> class.
+        /// </summary>
+        /// <param name="protocol">Protocol used the service.</param>
+        /// <param name="address">Address of the service.</param>
+        public SecureServiceHostFactory(string protocol, string address)
+        {
+            m_protocol = protocol;
+            m_address = address;
+        }
+
+        #endregion
+
         #region [ Methods ]
 
         /// <summary>
@@ -258,7 +301,7 @@ namespace TVA.ServiceModel.Activation
             // Check security requirement.
             bool integratedSecurity = (SelfHostingService.GetAuthenticationSchemes(baseAddresses[0]) & AuthenticationSchemes.Anonymous) != AuthenticationSchemes.Anonymous;
 
-            // Create data service host.
+            // Create service host.
             ServiceHost host = base.CreateServiceHost(serviceType, baseAddresses);
 
             // Enable metadata publishing.
@@ -282,17 +325,56 @@ namespace TVA.ServiceModel.Activation
             policies.Add((IAuthorizationPolicy)Activator.CreateInstance(typeof(SecurityPolicy)));
             authorizationBehavior.ExternalAuthorizationPolicies = policies.AsReadOnly();
 
-            // Configure windows security on default enpoints.
-            if (integratedSecurity)
+            // Create endpoint and configure security.
+            host.AddDefaultEndpoints();
+            if (string.IsNullOrEmpty(m_protocol))
             {
-                host.AddDefaultEndpoints();
+                // Use the default endpoint.
                 foreach (ServiceEndpoint endpoint in host.Description.Endpoints)
                 {
                     BasicHttpBinding basicBinding = endpoint.Binding as BasicHttpBinding;
                     if (basicBinding != null)
                     {
-                        basicBinding.Security.Mode = BasicHttpSecurityMode.TransportCredentialOnly;
-                        basicBinding.Security.Transport.ClientCredentialType = HttpClientCredentialType.Windows;
+                        // Default endpoint uses BasicHttpBinding.
+                        if (integratedSecurity)
+                        {
+                            // Enable security.
+                            basicBinding.Security.Mode = BasicHttpSecurityMode.TransportCredentialOnly;
+                            basicBinding.Security.Transport.ClientCredentialType = HttpClientCredentialType.Windows;
+                        }
+                        else
+                        {
+                            // Disable sercurity.
+                            basicBinding.Security.Mode = BasicHttpSecurityMode.None;
+                            basicBinding.Security.Transport.ClientCredentialType = HttpClientCredentialType.None;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Create endpoint using the specifics.
+                host.Description.Endpoints.Clear();
+
+                Binding serviceBinding;
+                ServiceEndpoint serviceEndpoint;
+                serviceBinding = serviceBinding = SelfHostingService.CreateServiceBinding(ref m_protocol, integratedSecurity);
+                if (serviceBinding != null)
+                {
+                    // Binding created for the endpoint.
+                    Type contract = serviceType.GetInterface("I" + serviceType.Name);
+                    if (!string.IsNullOrEmpty(m_address))
+                        serviceEndpoint = host.AddServiceEndpoint(contract, serviceBinding, m_address);
+                    else
+                        serviceEndpoint = host.AddServiceEndpoint(contract, serviceBinding, string.Empty);
+
+                    // Special handling for REST endpoint.
+                    if (serviceBinding is WebHttpBinding)
+                    {
+                        WebHttpBehavior restBehavior = new WebHttpBehavior();
+                        restBehavior.HelpEnabled = true;
+
+                        serviceEndpoint.Behaviors.Add(restBehavior);
                     }
                 }
             }

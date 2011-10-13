@@ -859,7 +859,9 @@ namespace TVA.ServiceModel
             if (string.IsNullOrEmpty(address))
                 return null;
 
-            switch (new Uri(address.ToLower()).Scheme)
+            int index = address.IndexOf("://");
+            string scheme = address.Substring(0, index >= 0 ? index : address.Length);
+            switch (scheme.ToLower())
             {
                 case "http":
                 case "http.soap11":
