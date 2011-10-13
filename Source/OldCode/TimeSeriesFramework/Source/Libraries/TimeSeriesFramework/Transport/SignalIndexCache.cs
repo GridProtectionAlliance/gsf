@@ -171,7 +171,7 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
-        /// Gets the current maximum integer signal index;
+        /// Gets the current maximum integer signal index.
         /// </summary>
         public ushort MaximumIndex
         {
@@ -195,13 +195,13 @@ namespace TimeSeriesFramework.Transport
         /// <returns>Runtime signal index for given <see cref="Guid"/> <paramref name="signalID"/>.</returns>
         public ushort GetSignalIndex(Guid signalID)
         {
-            return m_signalIDCache.GetOrAdd(signalID, id =>
-            {
-                ushort index = ushort.MaxValue;
+            ushort index = ushort.MaxValue;
 
+            if (!m_signalIDCache.TryGetValue(signalID, out index))
+            {
                 foreach (KeyValuePair<ushort, Tuple<Guid, string, uint>> item in m_reference)
                 {
-                    if (item.Value.Item1 == id)
+                    if (item.Value.Item1 == signalID)
                     {
                         index = item.Key;
                         break;
@@ -210,9 +210,9 @@ namespace TimeSeriesFramework.Transport
 
                 if (index == ushort.MaxValue)
                     m_signalIDCache.TryAdd(signalID, index);
+            }
 
-                return index;
-            });
+            return index;
         }
 
         #endregion
