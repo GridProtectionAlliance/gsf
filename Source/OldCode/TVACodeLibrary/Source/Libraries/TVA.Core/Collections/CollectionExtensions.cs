@@ -39,6 +39,8 @@
 //       Added dictionary Merge() extensions method for IDictionary and Any/All extensions for BitArray.
 //  03/22/2011 - J. Ritchie Carroll
 //       Modified array copy extension to handle zero length (i.e., empty) source arrays.
+//  10/17/2011 - J. Ritchie Carroll
+//       Added the ability to specify a default value for Majority and Minority when none exists.
 //
 //*******************************************************************************************************
 
@@ -367,14 +369,26 @@ namespace TVA.Collections
         }
 
         /// <summary>
-        /// Returns the majority value in the collection, or default value if no item represents the majority.
+        /// Returns the majority value in the collection, or default type value if no item represents the majority.
         /// </summary>
         /// <typeparam name="T"><see cref="Type"/> of elements in the <paramref name="source"/>.</typeparam>
         /// <param name="source">An enumeration over which to find the majority element.</param>
         /// <returns>The majority value in the collection.</returns>
         public static T Majority<T>(this IEnumerable<T> source)
         {
-            T majority = default(T);
+            return source.Majority(default(T));
+        }
+
+        /// <summary>
+        /// Returns the majority value in the collection, or <paramref name="defaultValue"/> if no item represents the majority.
+        /// </summary>
+        /// <typeparam name="T"><see cref="Type"/> of elements in the <paramref name="source"/>.</typeparam>
+        /// <param name="source">An enumeration over which to find the majority element.</param>
+        /// <param name="defaultValue">Default value to return if no item represents the majority.</param>
+        /// <returns>The majority value in the collection.</returns>
+        public static T Majority<T>(this IEnumerable<T> source, T defaultValue)
+        {
+            T majority = defaultValue;
 
             if ((object)source != null && source.Count() > 1)
             {
@@ -407,14 +421,26 @@ namespace TVA.Collections
         }
 
         /// <summary>
-        /// Returns the minority value in the collection, or default value if no item represents the minority.
+        /// Returns the minority value in the collection, or default type value if no item represents the minority.
         /// </summary>
         /// <typeparam name="T"><see cref="Type"/> of elements in the <paramref name="source"/>.</typeparam>
         /// <param name="source">An enumeration over which to find the minority element.</param>
         /// <returns>The minority value in the collection.</returns>
         public static T Minority<T>(this IEnumerable<T> source)
         {
-            T minority = default(T);
+            return source.Minority(default(T));
+        }
+
+        /// <summary>
+        /// Returns the minority value in the collection, or <paramref name="defaultValue"/> if no item represents the minority.
+        /// </summary>
+        /// <typeparam name="T"><see cref="Type"/> of elements in the <paramref name="source"/>.</typeparam>
+        /// <param name="source">An enumeration over which to find the minority element.</param>
+        /// <param name="defaultValue">Default value to return if no item represents the minority.</param>
+        /// <returns>The minority value in the collection.</returns>
+        public static T Minority<T>(this IEnumerable<T> source, T defaultValue)
+        {
+            T minority = defaultValue;
 
             if ((object)source != null && source.Count() > 1)
             {
