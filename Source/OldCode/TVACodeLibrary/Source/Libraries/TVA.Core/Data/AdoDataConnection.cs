@@ -13,6 +13,8 @@
 //       Generated original version of source code.
 //  09/19/2011 - Stephen C. Wills
 //       Added database awareness and Oracle database compatibility.
+//  10/18/2011 - J. Ritchie Carroll
+//       Modified ADO database class to allow directly instantied instances, as well as configured.
 //
 //*******************************************************************************************************
 
@@ -266,45 +268,120 @@ namespace TVA.Data
     public enum DatabaseType
     {
         /// <summary>
-        /// Underlying database type is Microsoft Access.
+        /// Underlying ADO database type is Microsoft Access.
         /// </summary>
         Access,
 
         /// <summary>
-        /// Underlying database type is SQL Server.
+        /// Underlying ADO database type is SQL Server.
         /// </summary>
         SQLServer,
 
         /// <summary>
-        /// Underlying database type is MySQL.
+        /// Underlying ADO database type is MySQL.
         /// </summary>
         MySQL,
 
         /// <summary>
-        /// Underlying database type is Oracle.
+        /// Underlying ADO database type is Oracle.
         /// </summary>
         Oracle,
 
         /// <summary>
-        /// Underlying database type is SQLite.
+        /// Underlying ADO database type is SQLite.
         /// </summary>
         SQLite,
 
         /// <summary>
-        /// Underlying database type is unknown or not needed.
+        /// Underlying ADO database type is unknown.
         /// </summary>
         Other
     }
 
     /// <summary>
-    /// Creates a new <see cref="IDbConnection"/> to a configured ADO.NET data source.
+    /// Creates a new <see cref="IDbConnection"/> from any specified or configured ADO.NET data source.
     /// </summary>
+    /// <remarks>
+    /// Example connection and data provider strings:
+    /// <list type="table">
+    ///     <listheader>
+    ///         <term>Database type</term>
+    ///         <description>Example connection string / data provider string</description>
+    ///     </listheader>
+    ///     <item>
+    ///         <term>SQL Server</term>
+    ///         <description>
+    ///         ConnectionString = "Data Source=serverName; Initial Catalog=databaseName; User ID=userName; Password=password"<br/>
+    ///         DataProviderString = "AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter"
+    ///         </description>
+    ///     </item>
+    ///     <item>
+    ///         <term>Oracle</term>
+    ///         <description>
+    ///         ConnectionString = "Data Source=tnsName; User ID=schemaUserName; Password=schemaPassword"<br/>
+    ///         DataProviderString = "AssemblyName={Oracle.DataAccess, Version=2.112.2.0, Culture=neutral, PublicKeyToken=89b483f429c47342}; ConnectionType=Oracle.DataAccess.Client.OracleConnection; AdapterType=Oracle.DataAccess.Client.OracleDataAdapter"
+    ///         </description>
+    ///     </item>
+    ///     <item>
+    ///         <term>MySQL</term>
+    ///         <description>
+    ///         ConnectionString = "Server=serverName; Database=databaseName; Uid=root; Pwd=password; allow user variables = true"<br/>
+    ///         DataProviderString = "AssemblyName={MySql.Data, Version=6.3.6.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d}; ConnectionType=MySql.Data.MySqlClient.MySqlConnection; AdapterType=MySql.Data.MySqlClient.MySqlDataAdapter"
+    ///         </description>
+    ///     </item>
+    ///     <item>
+    ///         <term>SQLite</term>
+    ///         <description>
+    ///         ConnectionString = "Data Source=databaseName.db; Version=3"<br/>
+    ///         DataProviderString = "AssemblyName={System.Data.SQLite, Version=1.0.74.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139}; ConnectionType=System.Data.SQLite.SQLiteConnection; AdapterType=System.Data.SQLite.SQLiteDataAdapter"
+    ///         </description>
+    ///     </item>
+    ///     <item>
+    ///         <term>Access / OleDB</term>
+    ///         <description>
+    ///         ConnectionString = "Provider=Microsoft.Jet.OLEDB.4.0; Data Source=databaseName.mdb"<br/>
+    ///         DataProviderString = "AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.OleDb.OleDbConnection; AdapterType=System.Data.OleDb.OleDbDataAdapter"
+    ///         </description>
+    ///     </item>
+    ///     <item>
+    ///         <term>ODBC Connection</term>
+    ///         <description>
+    ///         ConnectionString = "Driver={SQL Server Native Client 10.0}; Server=serverName; Database=databaseName; Uid=userName; Pwd=password"<br/>
+    ///         DataProviderString = "AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.Odbc.OdbcConnection; AdapterType=System.Data.Odbc.OdbcDataAdapter"
+    ///         </description>
+    ///     </item>
+    /// </list>
+    /// Example configuration file that defines connection settings:
+    /// <code>
+    /// <![CDATA[
+    /// <?xml version="1.0" encoding="utf-8"?>
+    /// <configuration>
+    ///   <configSections>
+    ///     <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+    ///   </configSections>
+    ///   <categorizedSettings>
+    ///     <systemSettings>
+    ///       <add name="ConnectionString" value="Data Source=localhost\SQLEXPRESS; Initial Catalog=MyDatabase; Integrated Security=SSPI" description="ADO database connection string" encrypted="false" />
+    ///       <add name="DataProviderString" value="AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter" description="ADO database provider string" encrypted="false" />
+    ///     </systemSettings>
+    ///   </categorizedSettings>
+    ///   <startup>
+    ///     <supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.0" />
+    ///   </startup>
+    /// </configuration>
+    /// ]]>
+    /// </code>
+    /// </remarks>
     public class AdoDataConnection : IDisposable
     {
         #region [ Members ]
 
-        //Fields
+        // Fields
         private IDbConnection m_connection;
+        private DatabaseType m_databaseType;
+        private string m_connectionString;
+        private Type m_connectionType;
+        private Type m_adapterType;
         private bool m_disposed;
 
         #endregion
@@ -312,66 +389,121 @@ namespace TVA.Data
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="AdoDataConnection"/>.
+        /// Creates and opens a new <see cref="AdoDataConnection"/> based on connection settings in configuration file.
         /// </summary>
         /// <param name="settingsCategory">Settings category to use for connection settings.</param>
         public AdoDataConnection(string settingsCategory)
         {
+            if (string.IsNullOrWhiteSpace(settingsCategory))
+                throw new ArgumentNullException("settingsCategory", "Parameter cannot be null or empty");
+
             // Only need to establish data types and load settings once since they are being loaded from config file
-            if ((object)s_connectionType == null || string.IsNullOrEmpty(s_connectionString))
+            if ((object)s_configuredConnection == null)
             {
+                string connectionString, dataProviderString;
+
                 try
                 {
                     // Load connection settings from the system settings category				
                     ConfigurationFile config = ConfigurationFile.Current;
                     CategorizedSettingsElementCollection configSettings = config.Settings[settingsCategory];
 
-                    string dataProviderString = configSettings["DataProviderString"].Value;
-                    s_connectionString = configSettings["ConnectionString"].Value;
+                    connectionString = configSettings["ConnectionString"].Value;
+                    dataProviderString = configSettings["DataProviderString"].Value;
 
-                    if (string.IsNullOrEmpty(s_connectionString))
-                        throw new NullReferenceException("ConnectionString setting was undefined.");
+                    if (string.IsNullOrWhiteSpace(connectionString))
+                        throw new NullReferenceException("ConnectionString setting is not defined in the configuration file.");
 
-                    if (string.IsNullOrEmpty(dataProviderString))
-                        throw new NullReferenceException("DataProviderString setting was undefined.");
-
-                    // Attempt to load configuration from an ADO.NET database connection
-                    Dictionary<string, string> settings;
-                    string assemblyName, connectionTypeName, adapterTypeName;
-                    Assembly assembly;
-
-                    settings = dataProviderString.ParseKeyValuePairs();
-                    assemblyName = settings["AssemblyName"].ToNonNullString();
-                    connectionTypeName = settings["ConnectionType"].ToNonNullString();
-                    adapterTypeName = settings["AdapterType"].ToNonNullString();
-
-                    if (string.IsNullOrEmpty(connectionTypeName))
-                        throw new NullReferenceException("Database connection type was undefined.");
-
-                    if (string.IsNullOrEmpty(adapterTypeName))
-                        throw new NullReferenceException("Database adapter type was undefined.");
-
-                    assembly = Assembly.Load(new AssemblyName(assemblyName));
-                    s_connectionType = assembly.GetType(connectionTypeName);
-                    s_adapterType = assembly.GetType(adapterTypeName);
-                    s_databaseType = GetDatabaseType();
+                    if (string.IsNullOrWhiteSpace(dataProviderString))
+                        throw new NullReferenceException("DataProviderString setting is not defined in the configuration file.");
                 }
                 catch (Exception ex)
                 {
-                    throw new InvalidOperationException("Failed to load defined data provider - check \"DataProviderString\" in configuration file: " + ex.Message, ex);
+                    throw new InvalidOperationException("Failed to load ADO database connection settings from configuration file: " + ex.Message, ex);
                 }
+
+                // Define connection settings without opening a connection
+                s_configuredConnection = new AdoDataConnection(connectionString, dataProviderString, false);
             }
 
             try
             {
+                // Copy static instance member variables
+                m_databaseType = s_configuredConnection.m_databaseType;
+                m_connectionString = s_configuredConnection.m_connectionString;
+                m_connectionType = s_configuredConnection.m_connectionType;
+                m_adapterType = s_configuredConnection.m_adapterType;
+
                 // Open ADO.NET provider connection
-                m_connection = (IDbConnection)Activator.CreateInstance(s_connectionType);
-                m_connection.ConnectionString = s_connectionString;
+                m_connection = (IDbConnection)Activator.CreateInstance(m_connectionType);
+                m_connection.ConnectionString = m_connectionString;
                 m_connection.Open();
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException("Failed to open data connection - check \"ConnectionString\" in configuration file: " + ex.Message, ex);
+                throw new InvalidOperationException("Failed to open ADO data connection, verify \"ConnectionString\" in configuration file: " + ex.Message, ex);
+            }
+        }
+        /// <summary>
+        /// Creates and opens a new <see cref="AdoDataConnection"/> from specified <paramref name="connectionString"/> and <paramref name="dataProviderString"/>.
+        /// </summary>
+        /// <param name="connectionString">Database specific ADO connection string.</param>
+        /// <param name="dataProviderString">Key/value pairs that define which ADO assembly and types to load.</param>
+        public AdoDataConnection(string connectionString, string dataProviderString)
+            : this(connectionString, dataProviderString, true)
+        {
+        }
+
+        // Creates a new AdoDataConnection, optionally opening connection.
+        private AdoDataConnection(string connectionString, string dataProviderString, bool openConnection)
+        {
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new ArgumentNullException("connectionString", "Parameter cannot be null or empty");
+
+            if (string.IsNullOrWhiteSpace(dataProviderString))
+                throw new ArgumentNullException("dataProviderString", "Parameter cannot be null or empty");
+
+            try
+            {
+                // Attempt to load configuration from an ADO.NET database connection
+                Dictionary<string, string> settings;
+                string assemblyName, connectionTypeName, adapterTypeName;
+                Assembly assembly;
+
+                settings = dataProviderString.ParseKeyValuePairs();
+                assemblyName = settings["AssemblyName"].ToNonNullString();
+                connectionTypeName = settings["ConnectionType"].ToNonNullString();
+                adapterTypeName = settings["AdapterType"].ToNonNullString();
+
+                if (string.IsNullOrEmpty(connectionTypeName))
+                    throw new NullReferenceException("ADO database connection type was undefined.");
+
+                if (string.IsNullOrEmpty(adapterTypeName))
+                    throw new NullReferenceException("ADO database adapter type was undefined.");
+
+                assembly = Assembly.Load(new AssemblyName(assemblyName));
+                m_connectionType = assembly.GetType(connectionTypeName);
+                m_adapterType = assembly.GetType(adapterTypeName);
+                m_databaseType = GetDatabaseType();
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Failed to load ADO data provider, verify \"DataProviderString\": " + ex.Message, ex);
+            }
+
+            if (openConnection)
+            {
+                try
+                {
+                    // Open ADO.NET provider connection
+                    m_connection = (IDbConnection)Activator.CreateInstance(m_connectionType);
+                    m_connection.ConnectionString = m_connectionString;
+                    m_connection.Open();
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException("Failed to open ADO data connection, verify \"ConnectionString\": " + ex.Message, ex);
+                }
             }
         }
 
@@ -405,18 +537,28 @@ namespace TVA.Data
         {
             get
             {
-                return s_adapterType;
+                return m_adapterType;
             }
         }
 
         /// <summary>
-        /// Gets the type of the database underlying the <see cref="AdoDataConnection"/>.
+        /// Gets or sets the type of the database underlying the <see cref="AdoDataConnection"/>.
         /// </summary>
+        /// <remarks>
+        /// This value is automatically assigned based on the adapter type specified in the data provider string, however,
+        /// if the database type cannot be determined it will be set to <see cref="TVA.Data.DatabaseType.Other"/>. In this
+        /// case, if you know the behavior of your custom ADO database connection matches that of another defined database
+        /// type, you can manually assign the database type to allow for database interaction interoperability.
+        /// </remarks>
         public DatabaseType DatabaseType
         {
             get
             {
-                return s_databaseType;
+                return m_databaseType;
+            }
+            set
+            {
+                m_databaseType = value;
             }
         }
 
@@ -427,7 +569,7 @@ namespace TVA.Data
         {
             get
             {
-                return s_databaseType == DatabaseType.Access;
+                return m_databaseType == DatabaseType.Access;
             }
         }
 
@@ -438,7 +580,7 @@ namespace TVA.Data
         {
             get
             {
-                return s_databaseType == DatabaseType.SQLServer;
+                return m_databaseType == DatabaseType.SQLServer;
             }
         }
 
@@ -449,7 +591,7 @@ namespace TVA.Data
         {
             get
             {
-                return s_databaseType == DatabaseType.MySQL;
+                return m_databaseType == DatabaseType.MySQL;
             }
         }
 
@@ -460,7 +602,7 @@ namespace TVA.Data
         {
             get
             {
-                return s_databaseType == DatabaseType.Oracle;
+                return m_databaseType == DatabaseType.Oracle;
             }
         }
 
@@ -471,93 +613,13 @@ namespace TVA.Data
         {
             get
             {
-                return s_databaseType == DatabaseType.SQLite;
+                return m_databaseType == DatabaseType.SQLite;
             }
         }
 
         #endregion
 
         #region [ Methods ]
-
-        /// <summary>
-        /// Returns proper <see cref="System.Boolean"/> implementation for connected <see cref="AdoDataConnection"/> database type.
-        /// </summary>
-        /// <param name="value"><see cref="System.Boolean"/> to format per database type.</param>
-        /// <returns>Proper <see cref="System.Boolean"/> implementation for connected <see cref="AdoDataConnection"/> database type.</returns>
-        public object Bool(bool value)
-        {
-            if (IsOracle)
-                return value ? 1 : 0;
-
-            return value;
-        }
-
-        /// <summary>
-        /// Returns proper <see cref="System.Guid"/> implementation for connected <see cref="AdoDataConnection"/> database type.
-        /// </summary>
-        /// <param name="guid"><see cref="System.Guid"/> to format per database type.</param>
-        /// <returns>Proper <see cref="System.Guid"/> implementation for connected <see cref="AdoDataConnection"/> database type.</returns>
-        public object Guid(Guid guid)
-        {
-            if (IsJetEngine)
-                return "{" + guid.ToString() + "}";
-
-            if (IsOracle || IsSqlite)
-                return guid.ToString();
-
-            //return "P" + guid.ToString();
-
-            return guid;
-        }
-
-        /// <summary>
-        /// Retrieves <see cref="System.Guid"/> based on database type.
-        /// </summary>
-        /// <param name="row"><see cref="DataRow"/> from which value needs to be retrieved.</param>
-        /// <param name="fieldName">Name of the field which contains <see cref="System.Guid"/>.</param>
-        /// <returns><see cref="System.Guid"/>.</returns>
-        public Guid Guid(DataRow row, string fieldName)
-        {
-            if (IsJetEngine || IsMySQL || IsOracle || IsSqlite)
-                return System.Guid.Parse(row.Field<object>(fieldName).ToString());
-
-            return row.Field<Guid>(fieldName);
-        }
-
-        /// <summary>
-        /// Returns current UTC time in implementation that is proper for connected <see cref="AdoDataConnection"/> database type.
-        /// </summary>
-        /// <param name="usePrecisionTime">Set to <c>true</c> to use precision time.</param>
-        /// <returns>Current UTC time in implementation that is proper for connected <see cref="AdoDataConnection"/> database type.</returns>
-        public object UtcNow(bool usePrecisionTime = false)
-        {
-            if (usePrecisionTime)
-            {
-                if (IsJetEngine)
-                    return PrecisionTimer.UtcNow.ToOADate();
-
-                return PrecisionTimer.UtcNow;
-            }
-
-            if (IsJetEngine)
-                return DateTime.UtcNow.ToOADate();
-
-            return DateTime.UtcNow;
-        }
-
-        /// <summary>
-        /// Creates a parameterized query string for the underlying database type 
-        /// based on the given format string and the parameter names.
-        /// </summary>
-        /// <param name="format">A composite format string.</param>
-        /// <param name="parameterNames">A string array that contains zero or more parameter names to format.</param>
-        /// <returns>A parameterized query string based on the given format and parameter names.</returns>
-        public string ParameterizedQueryString(string format, params string[] parameterNames)
-        {
-            char paramChar = IsOracle ? ':' : '@';
-            object[] parameters = parameterNames.Select(name => paramChar + name).ToArray();
-            return string.Format(format, parameters);
-        }
 
         /// <summary>
         /// Releases all the resources used by the <see cref="AdoDataConnection"/> object.
@@ -592,32 +654,107 @@ namespace TVA.Data
             }
         }
 
+        /// <summary>
+        /// Returns proper <see cref="System.Boolean"/> implementation for connected <see cref="AdoDataConnection"/> database type.
+        /// </summary>
+        /// <param name="value"><see cref="System.Boolean"/> to format per database type.</param>
+        /// <returns>Proper <see cref="System.Boolean"/> implementation for connected <see cref="AdoDataConnection"/> database type.</returns>
+        public object Bool(bool value)
+        {
+            if (IsOracle)
+                return value ? 1 : 0;
+
+            return value;
+        }
+
+        /// <summary>
+        /// Returns proper <see cref="System.Guid"/> implementation for connected <see cref="AdoDataConnection"/> database type.
+        /// </summary>
+        /// <param name="guid"><see cref="System.Guid"/> to format per database type.</param>
+        /// <returns>Proper <see cref="System.Guid"/> implementation for connected <see cref="AdoDataConnection"/> database type.</returns>
+        public object Guid(Guid guid)
+        {
+            if (IsJetEngine)
+                return "{" + guid.ToString() + "}";
+
+            if (IsOracle || IsSqlite)
+                return guid.ToString();
+
+            //return "P" + guid.ToString();
+
+            return guid;
+        }
+
+        /// <summary>
+        /// Retrieves <see cref="System.Guid"/> from a <see cref="DataRow"/> field based on database type.
+        /// </summary>
+        /// <param name="row"><see cref="DataRow"/> from which value needs to be retrieved.</param>
+        /// <param name="fieldName">Name of the field which contains <see cref="System.Guid"/>.</param>
+        /// <returns><see cref="System.Guid"/>.</returns>
+        public Guid Guid(DataRow row, string fieldName)
+        {
+            if (IsJetEngine || IsMySQL || IsOracle || IsSqlite)
+                return System.Guid.Parse(row.Field<object>(fieldName).ToString());
+
+            return row.Field<Guid>(fieldName);
+        }
+
+        /// <summary>
+        /// Returns current UTC time in an implementation that is proper for connected <see cref="AdoDataConnection"/> database type.
+        /// </summary>
+        /// <param name="usePrecisionTime">Set to <c>true</c> to use precision time.</param>
+        /// <returns>Current UTC time in implementation that is proper for connected <see cref="AdoDataConnection"/> database type.</returns>
+        public object UtcNow(bool usePrecisionTime = false)
+        {
+            if (usePrecisionTime)
+            {
+                if (IsJetEngine)
+                    return PrecisionTimer.UtcNow.ToOADate();
+
+                return PrecisionTimer.UtcNow;
+            }
+
+            if (IsJetEngine)
+                return DateTime.UtcNow.ToOADate();
+
+            return DateTime.UtcNow;
+        }
+
+        /// <summary>
+        /// Creates a parameterized query string for the underlying database type based on the given format string and parameter names.
+        /// </summary>
+        /// <param name="format">A composite format string.</param>
+        /// <param name="parameterNames">A string array that contains zero or more parameter names to format.</param>
+        /// <returns>A parameterized query string based on the given format and parameter names.</returns>
+        public string ParameterizedQueryString(string format, params string[] parameterNames)
+        {
+            char paramChar = IsOracle ? ':' : '@';
+            object[] parameters = parameterNames.Select(name => paramChar + name).ToArray();
+            return string.Format(format, parameters);
+        }
+
         private DatabaseType GetDatabaseType()
         {
             DatabaseType type = DatabaseType.Other;
 
-            if ((object)s_adapterType != null)
+            if ((object)m_adapterType != null)
             {
-                switch (s_adapterType.Name)
+                switch (m_adapterType.Name)
                 {
                     case "SqlDataAdapter":
                         type = DatabaseType.SQLServer;
                         break;
-
                     case "MySqlDataAdapter":
                         type = DatabaseType.MySQL;
                         break;
-
                     case "OracleDataAdapter":
                         type = DatabaseType.Oracle;
                         break;
-
                     case "SQLiteDataAdapter":
                         type = DatabaseType.SQLite;
                         break;
-
-                    default:
-                        if ((object)m_connection != null && m_connection.ConnectionString.Contains("Microsoft.Jet.OLEDB"))
+                    case "OleDbDataAdapter":
+                        if ((object)m_connectionString != null && m_connectionString.Contains("Microsoft.Jet.OLEDB"))
                             type = DatabaseType.Access;
                         break;
                 }
@@ -631,10 +768,7 @@ namespace TVA.Data
         #region [ Static ]
 
         // Static Fields
-        private static Type s_connectionType;
-        private static Type s_adapterType;
-        private static DatabaseType s_databaseType;
-        private static string s_connectionString;
+        private static AdoDataConnection s_configuredConnection;
 
         // Static Methods
 
@@ -643,7 +777,10 @@ namespace TVA.Data
         /// </summary>
         public static void ReloadConfigurationSettings()
         {
-            s_connectionType = null;
+            if ((object)s_configuredConnection != null)
+                s_configuredConnection.Dispose();
+
+            s_configuredConnection = null;
         }
 
         #endregion

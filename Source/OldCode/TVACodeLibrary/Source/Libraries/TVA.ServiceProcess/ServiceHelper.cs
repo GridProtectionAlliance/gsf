@@ -731,7 +731,10 @@ namespace TVA.ServiceProcess
             }
             set
             {
-                m_healthMonitorInterval = value;
+                if (value <= 0.0D)
+                    m_healthMonitorInterval = DefaultHealthMonitorInterval;
+                else
+                    m_healthMonitorInterval = value;
 
                 if (m_performanceMonitor != null)
                     m_performanceMonitor.SamplingInterval = m_healthMonitorInterval * 1000.0D;
@@ -1368,6 +1371,7 @@ namespace TVA.ServiceProcess
                 {
                     m_performanceMonitor = new PerformanceMonitor(m_healthMonitorInterval * 1000.0D, true);
                     m_clientRequestHandlers.Add(new ClientRequestHandler("Health", "Displays a report of resource utilization for the service", ShowHealthReport));
+                    m_clientRequestHandlers.Add(new ClientRequestHandler("ResetHealthMonitor", "Resets the system resource utilization monitor", ResetHealthMonitor));
                 }
             }
 
@@ -2731,13 +2735,65 @@ namespace TVA.ServiceProcess
             {
                 if (m_performanceMonitor != null)
                 {
-                    if (requestInfo.Request.Arguments.Exists("lifetime"))
-                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "\r\n" + m_performanceMonitor.LifetimeStatus + "\r\n");
-                    else
-                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "\r\n" + m_performanceMonitor.Status + "\r\n");
+                    try
+                    {
+                        if (requestInfo.Request.Arguments.Exists("lifetime"))
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "\r\n" + m_performanceMonitor.LifetimeStatus + "\r\n");
+                        else
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "\r\n" + m_performanceMonitor.Status + "\r\n");
+                    }
+                    catch (Exception ex)
+                    {
+                        m_errorLogger.Log(ex);
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to query system health monitor status: {0}\r\n\r\n", ex.Message);
+                    }
                 }
                 else
-                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Warning, "Performance monitor is not available.");
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Warning, "System health monitor is unavailable.\r\n\r\n");
+            }
+        }
+
+        private void ResetHealthMonitor(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Resets the system resource utilization monitor.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       ResetHealthMonitor -options");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
+            }
+            else
+            {
+                try
+                {
+                    // Dispose existing performance monitor
+                    if (m_performanceMonitor != null)
+                        m_performanceMonitor.Dispose();
+
+                    // Recreate the performance monitor
+                    m_performanceMonitor = new PerformanceMonitor(m_healthMonitorInterval * 1000.0D, true);
+
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "System health monitor successfully reset.\r\n\r\n");
+                }
+                catch (Exception ex)
+                {
+                    m_errorLogger.Log(ex);
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to reset system health monitor: {0}\r\n\r\n", ex.Message);
+                }
             }
         }
 

@@ -420,7 +420,7 @@ namespace TVA.Communication
 
                     // If allowDualModeSocket is true and the enpoint is IPv6, we setup a dual-mode socket
                     // by setting the IPv6Only socket option to false
-                    if (allowDualStackSocket && endpoint.AddressFamily == AddressFamily.InterNetworkV6)
+                    if (allowDualStackSocket && endpoint.AddressFamily == AddressFamily.InterNetworkV6 && Environment.OSVersion.Version.Major > 5)
                         socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
 
                     // Associate the socket with the local endpoint
@@ -436,7 +436,7 @@ namespace TVA.Communication
 
                         // If allowDualModeSocket is true and the endpoint is IPv6, we setup a dual-mode socket
                         // by setting the IPv6Only socket option to false
-                        if (allowDualStackSocket && endpoint.AddressFamily == AddressFamily.InterNetworkV6)
+                        if (allowDualStackSocket && endpoint.AddressFamily == AddressFamily.InterNetworkV6 && Environment.OSVersion.Version.Major > 5)
                             socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
 
                         socket.Bind(endpoint);
