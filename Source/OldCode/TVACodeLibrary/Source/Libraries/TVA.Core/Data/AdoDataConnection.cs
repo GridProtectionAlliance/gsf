@@ -463,6 +463,9 @@ namespace TVA.Data
             if (string.IsNullOrWhiteSpace(dataProviderString))
                 throw new ArgumentNullException("dataProviderString", "Parameter cannot be null or empty");
 
+            // Cache connection string as member level variable
+            m_connectionString = connectionString;
+
             try
             {
                 // Attempt to load configuration from an ADO.NET database connection
