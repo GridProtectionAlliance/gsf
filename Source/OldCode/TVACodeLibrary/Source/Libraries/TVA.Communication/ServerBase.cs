@@ -1166,7 +1166,7 @@ namespace TVA.Communication
                 settings.Add("SecureSession", m_secureSession, "True if the data exchanged between the server and clients will be encrypted using a private session passphrase; otherwise False.");
                 settings.Add("ReceiveTimeout", m_receiveTimeout, "Number of milliseconds the server will wait for data to be received from the clients.");
                 settings.Add("ReceiveBufferSize", m_receiveBufferSize, "Size of the buffer used by the server for receiving data from the clients.");
-                settings.Add("Compression", m_compression, "Compression strength (NoCompression; DefaultCompression; BestSpeed; BestCompression; MultiPass) to be used for compressing the data exchanged between the server and clients.");
+                settings.Add("Compression", m_compression, "Compression strength (NoCompression; Standard; MultiPass) to be used for compressing the data exchanged between the server and clients.");
                 ConfigurationString = settings["ConfigurationString"].ValueAs(m_configurationString);
                 MaxClientConnections = settings["MaxClientConnections"].ValueAs(m_maxClientConnections);
                 Handshake = settings["Handshake"].ValueAs(m_handshake);

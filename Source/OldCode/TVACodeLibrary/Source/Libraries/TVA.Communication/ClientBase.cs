@@ -506,7 +506,10 @@ namespace TVA.Communication
         /// <summary>
         /// Gets the server URI.
         /// </summary>
-        public abstract string ServerUri { get; }
+        public abstract string ServerUri
+        {
+            get;
+        }
 
         #endregion
 
@@ -1153,7 +1156,7 @@ namespace TVA.Communication
                 settings.Add("SecureSession", m_secureSession, "True if the data exchanged between the client and server will be encrypted using a private session passphrase; otherwise False.");
                 settings.Add("ReceiveTimeout", m_receiveTimeout, "Number of milliseconds the client will wait for data to be received from the server.");
                 settings.Add("ReceiveBufferSize", m_receiveBufferSize, "Size of the buffer used by the client for receiving data from the server.");
-                settings.Add("Compression", m_compression, "Compression strength (NoCompression; DefaultCompression; BestSpeed; BestCompression; MultiPass) to be used for compressing the data exchanged between the client and server.");
+                settings.Add("Compression", m_compression, "Compression strength (NoCompression; Standard; MultiPass) to be used for compressing the data exchanged between the client and server.");
                 ConnectionString = settings["ConnectionString"].ValueAs(m_connectionString);
                 MaxConnectionAttempts = settings["MaxConnectionAttempts"].ValueAs(m_maxConnectionAttempts);
                 Handshake = settings["Handshake"].ValueAs(m_handshake);
@@ -1317,7 +1320,7 @@ namespace TVA.Communication
             m_currentState = ClientState.Connected;
             m_disconnectTime = 0;
             m_connectTime = DateTime.Now.Ticks;     // Save the time when the client connected to the server.
-            
+
             if (m_connectHandle != null)
                 m_connectHandle.Set();              // Signal any waiting threads about successful connection.
 
