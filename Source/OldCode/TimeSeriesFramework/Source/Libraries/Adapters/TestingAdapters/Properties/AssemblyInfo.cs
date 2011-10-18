@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("TestingAdapters")]
-[assembly: AssemblyDescription("openPDC testing input and output adapters.")]
+[assembly: AssemblyDescription("Time-series framework testing input and output adapters.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Grid Protection Alliance")]
 [assembly: AssemblyProduct("TestingAdapters")]

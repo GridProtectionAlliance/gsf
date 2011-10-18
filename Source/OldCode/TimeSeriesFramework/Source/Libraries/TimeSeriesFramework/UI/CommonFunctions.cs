@@ -202,6 +202,7 @@ namespace TimeSeriesFramework.UI
         /// Retrieves connection string information to connect to backed windows service from UI.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to database.</param>
+        /// <param name="overwrite">Flag that determines if cached connection string should be overwritten.</param>
         /// <returns>Connection string to connect to backend windows service.</returns>
         public static string ServiceConnectionString(this AdoDataConnection database, bool overwrite = false)
         {

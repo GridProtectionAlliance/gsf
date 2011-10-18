@@ -212,7 +212,7 @@ namespace WavSubscriptionDemo
         {
             string localNamespace = this.GetType().Namespace;
             AboutDialog aboutDialog = new AboutDialog();
-            aboutDialog.SetCompanyUrl("http://www.openpdc.com/");
+            aboutDialog.SetCompanyUrl("http://www.gridprotectionalliance.org/");
             aboutDialog.SetCompanyLogo(AssemblyInfo.EntryAssembly.GetEmbeddedResource(localNamespace + ".Resources.HelpAboutLogo.png"));
             aboutDialog.SetCompanyDisclaimer(AssemblyInfo.EntryAssembly.GetEmbeddedResource(localNamespace + ".Resources.Disclaimer.txt"));
             aboutDialog.ShowDialog();

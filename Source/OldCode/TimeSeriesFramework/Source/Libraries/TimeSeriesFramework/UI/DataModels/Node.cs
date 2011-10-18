@@ -211,6 +211,9 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Gets flag that determines if settings have been updated.
+        /// </summary>
         public bool SettingsUpdated
         {
             get

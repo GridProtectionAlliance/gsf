@@ -24,7 +24,7 @@
 using System.ComponentModel;
 using TimeSeriesFramework;
 
-namespace openPDCManager
+namespace TsfManager
 {
     [RunInstaller(true)]
     public partial class ApplicationInstall : InstallerBase

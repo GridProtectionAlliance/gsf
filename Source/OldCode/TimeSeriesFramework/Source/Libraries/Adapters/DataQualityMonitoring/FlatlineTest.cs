@@ -390,7 +390,7 @@ namespace DataQualityMonitoring
         private void SendEmailNotification(IEnumerable<IMeasurement> measurements, bool flatlined)
         {
             Ticks now = DateTime.Now.Ticks;
-            Mail message = new Mail("notifications@openpdc.com", m_adminEmailAddress, m_smtpServer);
+            Mail message = new Mail("notifications@company.com", m_adminEmailAddress, m_smtpServer);
             StringBuilder body = new StringBuilder();
 
             body.AppendLine("Measurement Key, Value, Timestamp");

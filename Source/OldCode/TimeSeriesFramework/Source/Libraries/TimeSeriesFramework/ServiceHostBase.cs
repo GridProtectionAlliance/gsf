@@ -302,19 +302,19 @@ namespace TimeSeriesFramework
 
             // Example connection settings
             CategorizedSettingsElementCollection exampleSettings = configFile.Settings["exampleConnectionSettings"];
-            exampleSettings.Add("SqlServer.ConnectionString", "Data Source=serverName; Initial Catalog=openPDC; User ID=userName; Password=password", "Example SQL Server database connection string");
+            exampleSettings.Add("SqlServer.ConnectionString", "Data Source=serverName; Initial Catalog=databaseName; User ID=userName; Password=password", "Example SQL Server database connection string");
             exampleSettings.Add("SqlServer.DataProviderString", "AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter", "Example SQL Server database .NET provider string");
-            exampleSettings.Add("MySQL.ConnectionString", "Server=serverName;Database=openPDC; Uid=root; Pwd=password; allow user variables = true;", "Example MySQL database connection string");
+            exampleSettings.Add("MySQL.ConnectionString", "Server=serverName;Database=databaseName; Uid=root; Pwd=password; allow user variables = true;", "Example MySQL database connection string");
             exampleSettings.Add("MySQL.DataProviderString", "AssemblyName={MySql.Data, Version=6.3.6.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d}; ConnectionType=MySql.Data.MySqlClient.MySqlConnection; AdapterType=MySql.Data.MySqlClient.MySqlDataAdapter", "Example MySQL database .NET provider string");
             exampleSettings.Add("Oracle.ConnectionString", "Data Source=tnsName; User ID=schemaUserName; Password=schemaPassword", "Example Oracle database connection string");
             exampleSettings.Add("Oracle.DataProviderString", "AssemblyName={Oracle.DataAccess, Version=2.112.2.0, Culture=neutral, PublicKeyToken=89b483f429c47342}; ConnectionType=Oracle.DataAccess.Client.OracleConnection; AdapterType=Oracle.DataAccess.Client.OracleDataAdapter", "Example Oracle database .NET provider string");
-            exampleSettings.Add("SQLite.ConnectionString", "Data Source=openPDC.db; Version=3", "Example SQLite database connection string");
+            exampleSettings.Add("SQLite.ConnectionString", "Data Source=databaseName.db; Version=3", "Example SQLite database connection string");
             exampleSettings.Add("SQLite.DataProviderString", "AssemblyName={System.Data.SQLite, Version=1.0.74.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139}; ConnectionType=System.Data.SQLite.SQLiteConnection; AdapterType=System.Data.SQLite.SQLiteDataAdapter", "Example SQLite database .NET provider string");
-            exampleSettings.Add("OleDB.ConnectionString", "Provider=Microsoft.Jet.OLEDB.4.0; Data Source=openPDC.mdb", "Example Microsoft Access (via OleDb) database connection string");
+            exampleSettings.Add("OleDB.ConnectionString", "Provider=Microsoft.Jet.OLEDB.4.0; Data Source=databaseName.mdb", "Example Microsoft Access (via OleDb) database connection string");
             exampleSettings.Add("OleDB.DataProviderString", "AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.OleDb.OleDbConnection; AdapterType=System.Data.OleDb.OleDbDataAdapter", "Example OleDb database .NET provider string");
-            exampleSettings.Add("Odbc.ConnectionString", "Driver={SQL Server Native Client 10.0}; Server=serverName; Database=openPDC; Uid=userName; Pwd=password;", "Example ODBC database connection string");
+            exampleSettings.Add("Odbc.ConnectionString", "Driver={SQL Server Native Client 10.0}; Server=serverName; Database=databaseName; Uid=userName; Pwd=password;", "Example ODBC database connection string");
             exampleSettings.Add("Odbc.DataProviderString", "AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.Odbc.OdbcConnection; AdapterType=System.Data.Odbc.OdbcDataAdapter", "Example ODBC database .NET provider string");
-            exampleSettings.Add("WebService.ConnectionString", "http://localhost/openPDC/SystemConfiguration.xml", "Example web service connection string");
+            exampleSettings.Add("WebService.ConnectionString", "http://localhost/ConfigSource/SystemConfiguration.xml", "Example web service connection string");
             exampleSettings.Add("XmlFile.ConnectionString", "SystemConfiguration.xml", "Example XML configuration file connection string");
 
             // Retrieve configuration cache directory as defined in the config file

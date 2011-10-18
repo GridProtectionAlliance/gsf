@@ -63,7 +63,7 @@ namespace MongoAdapters
         /// </summary>
         public MongoInputAdapter()
         {
-            m_databaseName = "openPDC";
+            m_databaseName = "TSFData";
             m_collectionName = "measurements";
             m_server = "localhost";
             m_port = 27017;
@@ -80,7 +80,7 @@ namespace MongoAdapters
         /// </summary>
         [ConnectionStringParameter,
         Description("Define the name of the MongoDB database."),
-        DefaultValue("openPDC")]
+        DefaultValue("TSFData")]
         public string DatabaseName
         {
             get
