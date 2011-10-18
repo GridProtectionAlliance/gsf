@@ -4,6 +4,38 @@
         <name>TVA.ServiceModel</name>
     </assembly>
     <members>
+        <member name="T:TVA.ServiceModel.Activation.SecureServiceHostFactory">
+            <summary>
+            A service host factory for WCF Services that enables role-based security using <see cref="T:TVA.ServiceModel.SecurityPolicy"/>.
+            </summary>
+            <see cref="T:TVA.ServiceModel.SecurityPolicy"/>
+        </member>
+        <member name="M:TVA.ServiceModel.Activation.SecureServiceHostFactory.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.ServiceModel.Activation.SecureServiceHostFactory"/> class.
+            </summary>
+        </member>
+        <member name="M:TVA.ServiceModel.Activation.SecureServiceHostFactory.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.ServiceModel.Activation.SecureServiceHostFactory"/> class.
+            </summary>
+            <param name="protocol">Protocol used by the service.</param>
+        </member>
+        <member name="M:TVA.ServiceModel.Activation.SecureServiceHostFactory.#ctor(System.String,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.ServiceModel.Activation.SecureServiceHostFactory"/> class.
+            </summary>
+            <param name="protocol">Protocol used the service.</param>
+            <param name="address">Address of the service.</param>
+        </member>
+        <member name="M:TVA.ServiceModel.Activation.SecureServiceHostFactory.CreateServiceHost(System.Type,System.Uri[])">
+            <summary>
+            Creates a new <see cref="T:System.ServiceModel.ServiceHost"/> from the URI.
+            </summary>
+            <param name="serviceType">Specifies the type of WCF service to host.</param>
+            <param name="baseAddresses">An array of base addresses for the service.</param>
+            <returns>New <see cref="T:System.ServiceModel.ServiceHost"/>.</returns>
+        </member>
         <member name="T:TVA.ServiceModel.NamespaceDoc">
             <summary>
             Contains classes and interfaces that provide the basic infrastructure for writting web services.
@@ -287,6 +319,11 @@
             The <paramref name="enableSecurity"/> parameter value is ignored Mono deployments since security bindings are not implemented.
             </para>
             </remarks>
+        </member>
+        <member name="M:TVA.ServiceModel.SelfHostingService.GetAuthenticationSchemes(System.Uri)">
+            <summary>
+            Gets the security setting of the hosting environment (For example: IIS web site or virtual directory).
+            </summary>
         </member>
         <member name="E:TVA.ServiceModel.SelfHostingService.ServiceHostCreated">
             <summary>

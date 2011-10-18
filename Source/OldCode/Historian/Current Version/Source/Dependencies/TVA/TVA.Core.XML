@@ -26989,49 +26989,138 @@
         </member>
         <member name="F:TVA.Data.DatabaseType.Access">
             <summary>
-            Underlying database type is Microsoft Access.
+            Underlying ADO database type is Microsoft Access.
             </summary>
         </member>
         <member name="F:TVA.Data.DatabaseType.SQLServer">
             <summary>
-            Underlying database type is SQL Server.
+            Underlying ADO database type is SQL Server.
             </summary>
         </member>
         <member name="F:TVA.Data.DatabaseType.MySQL">
             <summary>
-            Underlying database type is MySQL.
+            Underlying ADO database type is MySQL.
             </summary>
         </member>
         <member name="F:TVA.Data.DatabaseType.Oracle">
             <summary>
-            Underlying database type is Oracle.
+            Underlying ADO database type is Oracle.
             </summary>
         </member>
         <member name="F:TVA.Data.DatabaseType.SQLite">
             <summary>
-            Underlying database type is SQLite.
+            Underlying ADO database type is SQLite.
             </summary>
         </member>
         <member name="F:TVA.Data.DatabaseType.Other">
             <summary>
-            Underlying database type is unknown or not needed.
+            Underlying ADO database type is unknown.
             </summary>
         </member>
         <member name="T:TVA.Data.AdoDataConnection">
             <summary>
-            Creates a new <see cref="T:System.Data.IDbConnection"/> to a configured ADO.NET data source.
+            Creates a new <see cref="T:System.Data.IDbConnection"/> from any specified or configured ADO.NET data source.
             </summary>
+            <remarks>
+            Example connection and data provider strings:
+            <list type="table">
+                <listheader>
+                    <term>Database type</term>
+                    <description>Example connection string / data provider string</description>
+                </listheader>
+                <item>
+                    <term>SQL Server</term>
+                    <description>
+                    ConnectionString = "Data Source=serverName; Initial Catalog=databaseName; User ID=userName; Password=password"<br/>
+                    DataProviderString = "AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter"
+                    </description>
+                </item>
+                <item>
+                    <term>Oracle</term>
+                    <description>
+                    ConnectionString = "Data Source=tnsName; User ID=schemaUserName; Password=schemaPassword"<br/>
+                    DataProviderString = "AssemblyName={Oracle.DataAccess, Version=2.112.2.0, Culture=neutral, PublicKeyToken=89b483f429c47342}; ConnectionType=Oracle.DataAccess.Client.OracleConnection; AdapterType=Oracle.DataAccess.Client.OracleDataAdapter"
+                    </description>
+                </item>
+                <item>
+                    <term>MySQL</term>
+                    <description>
+                    ConnectionString = "Server=serverName; Database=databaseName; Uid=root; Pwd=password; allow user variables = true"<br/>
+                    DataProviderString = "AssemblyName={MySql.Data, Version=6.3.6.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d}; ConnectionType=MySql.Data.MySqlClient.MySqlConnection; AdapterType=MySql.Data.MySqlClient.MySqlDataAdapter"
+                    </description>
+                </item>
+                <item>
+                    <term>SQLite</term>
+                    <description>
+                    ConnectionString = "Data Source=databaseName.db; Version=3"<br/>
+                    DataProviderString = "AssemblyName={System.Data.SQLite, Version=1.0.74.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139}; ConnectionType=System.Data.SQLite.SQLiteConnection; AdapterType=System.Data.SQLite.SQLiteDataAdapter"
+                    </description>
+                </item>
+                <item>
+                    <term>Access / OleDB</term>
+                    <description>
+                    ConnectionString = "Provider=Microsoft.Jet.OLEDB.4.0; Data Source=databaseName.mdb"<br/>
+                    DataProviderString = "AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.OleDb.OleDbConnection; AdapterType=System.Data.OleDb.OleDbDataAdapter"
+                    </description>
+                </item>
+                <item>
+                    <term>ODBC Connection</term>
+                    <description>
+                    ConnectionString = "Driver={SQL Server Native Client 10.0}; Server=serverName; Database=databaseName; Uid=userName; Pwd=password"<br/>
+                    DataProviderString = "AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.Odbc.OdbcConnection; AdapterType=System.Data.Odbc.OdbcDataAdapter"
+                    </description>
+                </item>
+            </list>
+            Example configuration file that defines connection settings:
+            <code>
+            <![CDATA[
+            <?xml version="1.0" encoding="utf-8"?>
+            <configuration>
+              <configSections>
+                <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+              </configSections>
+              <categorizedSettings>
+                <systemSettings>
+                  <add name="ConnectionString" value="Data Source=localhost\SQLEXPRESS; Initial Catalog=MyDatabase; Integrated Security=SSPI" description="ADO database connection string" encrypted="false" />
+                  <add name="DataProviderString" value="AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter" description="ADO database provider string" encrypted="false" />
+                </systemSettings>
+              </categorizedSettings>
+              <startup>
+                <supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.0" />
+              </startup>
+            </configuration>
+            ]]>
+            </code>
+            </remarks>
         </member>
         <member name="M:TVA.Data.AdoDataConnection.#ctor(System.String)">
             <summary>
-            Creates a new <see cref="T:TVA.Data.AdoDataConnection"/>.
+            Creates and opens a new <see cref="T:TVA.Data.AdoDataConnection"/> based on connection settings in configuration file.
             </summary>
             <param name="settingsCategory">Settings category to use for connection settings.</param>
+        </member>
+        <member name="M:TVA.Data.AdoDataConnection.#ctor(System.String,System.String)">
+            <summary>
+            Creates and opens a new <see cref="T:TVA.Data.AdoDataConnection"/> from specified <paramref name="connectionString"/> and <paramref name="dataProviderString"/>.
+            </summary>
+            <param name="connectionString">Database specific ADO connection string.</param>
+            <param name="dataProviderString">Key/value pairs that define which ADO assembly and types to load.</param>
         </member>
         <member name="M:TVA.Data.AdoDataConnection.Finalize">
             <summary>
             Releases the unmanaged resources before the <see cref="T:TVA.Data.AdoDataConnection"/> object is reclaimed by <see cref="T:System.GC"/>.
             </summary>
+        </member>
+        <member name="M:TVA.Data.AdoDataConnection.Dispose">
+            <summary>
+            Releases all the resources used by the <see cref="T:TVA.Data.AdoDataConnection"/> object.
+            </summary>
+        </member>
+        <member name="M:TVA.Data.AdoDataConnection.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TVA.Data.AdoDataConnection"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         </member>
         <member name="M:TVA.Data.AdoDataConnection.Bool(System.Boolean)">
             <summary>
@@ -27049,7 +27138,7 @@
         </member>
         <member name="M:TVA.Data.AdoDataConnection.Guid(System.Data.DataRow,System.String)">
             <summary>
-            Retrieves <see cref="T:System.Guid"/> based on database type.
+            Retrieves <see cref="T:System.Guid"/> from a <see cref="T:System.Data.DataRow"/> field based on database type.
             </summary>
             <param name="row"><see cref="T:System.Data.DataRow"/> from which value needs to be retrieved.</param>
             <param name="fieldName">Name of the field which contains <see cref="T:System.Guid"/>.</param>
@@ -27057,30 +27146,18 @@
         </member>
         <member name="M:TVA.Data.AdoDataConnection.UtcNow(System.Boolean)">
             <summary>
-            Returns current UTC time in implementation that is proper for connected <see cref="T:TVA.Data.AdoDataConnection"/> database type.
+            Returns current UTC time in an implementation that is proper for connected <see cref="T:TVA.Data.AdoDataConnection"/> database type.
             </summary>
             <param name="usePrecisionTime">Set to <c>true</c> to use precision time.</param>
             <returns>Current UTC time in implementation that is proper for connected <see cref="T:TVA.Data.AdoDataConnection"/> database type.</returns>
         </member>
         <member name="M:TVA.Data.AdoDataConnection.ParameterizedQueryString(System.String,System.String[])">
             <summary>
-            Creates a parameterized query string for the underlying database type 
-            based on the given format string and the parameter names.
+            Creates a parameterized query string for the underlying database type based on the given format string and parameter names.
             </summary>
             <param name="format">A composite format string.</param>
             <param name="parameterNames">A string array that contains zero or more parameter names to format.</param>
             <returns>A parameterized query string based on the given format and parameter names.</returns>
-        </member>
-        <member name="M:TVA.Data.AdoDataConnection.Dispose">
-            <summary>
-            Releases all the resources used by the <see cref="T:TVA.Data.AdoDataConnection"/> object.
-            </summary>
-        </member>
-        <member name="M:TVA.Data.AdoDataConnection.Dispose(System.Boolean)">
-            <summary>
-            Releases the unmanaged resources used by the <see cref="T:TVA.Data.AdoDataConnection"/> object and optionally releases the managed resources.
-            </summary>
-            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         </member>
         <member name="M:TVA.Data.AdoDataConnection.ReloadConfigurationSettings">
             <summary>
@@ -27099,8 +27176,14 @@
         </member>
         <member name="P:TVA.Data.AdoDataConnection.DatabaseType">
             <summary>
-            Gets the type of the database underlying the <see cref="T:TVA.Data.AdoDataConnection"/>.
+            Gets or sets the type of the database underlying the <see cref="T:TVA.Data.AdoDataConnection"/>.
             </summary>
+            <remarks>
+            This value is automatically assigned based on the adapter type specified in the data provider string, however,
+            if the database type cannot be determined it will be set to <see cref="F:TVA.Data.DatabaseType.Other"/>. In this
+            case, if you know the behavior of your custom ADO database connection matches that of another defined database
+            type, you can manually assign the database type to allow for database interaction interoperability.
+            </remarks>
         </member>
         <member name="P:TVA.Data.AdoDataConnection.IsJetEngine">
             <summary>
@@ -34312,18 +34395,36 @@
         </member>
         <member name="M:TVA.Collections.CollectionExtensions.Majority``1(System.Collections.Generic.IEnumerable{``0})">
             <summary>
-            Returns the majority value in the collection, or default value if no item represents the majority.
+            Returns the majority value in the collection, or default type value if no item represents the majority.
             </summary>
             <typeparam name="T"><see cref="T:System.Type"/> of elements in the <paramref name="source"/>.</typeparam>
             <param name="source">An enumeration over which to find the majority element.</param>
             <returns>The majority value in the collection.</returns>
         </member>
+        <member name="M:TVA.Collections.CollectionExtensions.Majority``1(System.Collections.Generic.IEnumerable{``0},``0)">
+            <summary>
+            Returns the majority value in the collection, or <paramref name="defaultValue"/> if no item represents the majority.
+            </summary>
+            <typeparam name="T"><see cref="T:System.Type"/> of elements in the <paramref name="source"/>.</typeparam>
+            <param name="source">An enumeration over which to find the majority element.</param>
+            <param name="defaultValue">Default value to return if no item represents the majority.</param>
+            <returns>The majority value in the collection.</returns>
+        </member>
         <member name="M:TVA.Collections.CollectionExtensions.Minority``1(System.Collections.Generic.IEnumerable{``0})">
             <summary>
-            Returns the minority value in the collection, or default value if no item represents the minority.
+            Returns the minority value in the collection, or default type value if no item represents the minority.
             </summary>
             <typeparam name="T"><see cref="T:System.Type"/> of elements in the <paramref name="source"/>.</typeparam>
             <param name="source">An enumeration over which to find the minority element.</param>
+            <returns>The minority value in the collection.</returns>
+        </member>
+        <member name="M:TVA.Collections.CollectionExtensions.Minority``1(System.Collections.Generic.IEnumerable{``0},``0)">
+            <summary>
+            Returns the minority value in the collection, or <paramref name="defaultValue"/> if no item represents the minority.
+            </summary>
+            <typeparam name="T"><see cref="T:System.Type"/> of elements in the <paramref name="source"/>.</typeparam>
+            <param name="source">An enumeration over which to find the minority element.</param>
+            <param name="defaultValue">Default value to return if no item represents the minority.</param>
             <returns>The minority value in the collection.</returns>
         </member>
         <member name="M:TVA.Collections.CollectionExtensions.AddRange``1(System.Collections.Generic.IList{``0},System.Collections.Generic.IEnumerable{``0})">
