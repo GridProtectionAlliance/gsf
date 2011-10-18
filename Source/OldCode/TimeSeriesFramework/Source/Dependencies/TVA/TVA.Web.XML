@@ -1448,11 +1448,6 @@
             <param name="buttons">Buttons to be displayed in the message box.</param>
             <param name="doPostBack">True if a post-back is to be performed when either OK, Retry, or Yes buttons are clicked in the message box, otherwise False.</param>
         </member>
-        <member name="M:TVA.Web.Embedded.SecurityServiceHostFactory.GetAuthenticationSchemes(System.Uri)">
-            <summary>
-            Gets the security setting of the hosting environment (For example: IIS web site or virtual directory).
-            </summary>
-        </member>
         <member name="T:TVA.Web.Embedded.ISecurityService">
             <summary>
             Embedded WCF service contract used for securing external facing WCF services.
