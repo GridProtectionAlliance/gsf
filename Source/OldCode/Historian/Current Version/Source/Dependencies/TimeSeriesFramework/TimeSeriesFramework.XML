@@ -6666,7 +6666,7 @@
         </member>
         <member name="P:TimeSeriesFramework.Transport.SignalIndexCache.MaximumIndex">
             <summary>
-            Gets the current maximum integer signal index;
+            Gets the current maximum integer signal index.
             </summary>
         </member>
         <member name="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription">
