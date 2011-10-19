@@ -49,6 +49,7 @@
 
                         <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Right">
                             <Button x:Name="ButtonRestore" Content="Restore Default" Margin="2" Width="Auto" Click="ButtonRestore_Click"/>
+                            <Button Content="Cancel" Margin="2" Click="ButtonCancel_Click"/>
                             <Button x:Name="ButtonSave" Content="Save" Margin="2" IsDefault="True" Click="ButtonSave_Click"/>
                         </StackPanel>
 

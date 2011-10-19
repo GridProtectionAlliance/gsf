@@ -26,6 +26,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
+using System.Windows.Input;
 using System.Windows.Media;
 using TVA;
 using TVA.ServiceProcess;
@@ -58,11 +59,18 @@ namespace TimeSeriesFramework.UI.UserControls
             InitializeComponent();
             this.Loaded += new RoutedEventHandler(MonitoringUserControl_Loaded);
             this.Unloaded += new RoutedEventHandler(MonitoringUserControl_Unloaded);
+            this.KeyUp += new System.Windows.Input.KeyEventHandler(MonitoringUserControl_KeyUp);
         }
 
         #endregion
 
         #region [ Methods ]
+
+        private void MonitoringUserControl_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape && PopupSettings.IsOpen)
+                PopupSettings.IsOpen = false;
+        }
 
         /// <summary>
         /// Hanldes loaded event.
@@ -251,6 +259,11 @@ namespace TimeSeriesFramework.UI.UserControls
             {
                 TextBoxNumberOfMessages.Text = m_numberOfMessages.ToString();
             }
+            PopupSettings.IsOpen = false;
+        }
+
+        private void ButtonCancel_Click(object sender, RoutedEventArgs e)
+        {
             PopupSettings.IsOpen = false;
         }
 
