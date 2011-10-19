@@ -100,7 +100,7 @@
                           
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
             <TextBox x:Name="TextBoxSearch" Width="150"/>
-            <Button Content="Search" Command="{Binding Path=SearchCommand}" CommandParameter="{Binding ElementName=TextBoxSearch, Path=Text}" ToolTip="Search measurements" Margin="2"/>
+            <Button Content="Search" Command="{Binding Path=SearchCommand}" CommandParameter="{Binding ElementName=TextBoxSearch, Path=Text}" ToolTip="Search measurements" Margin="2" IsDefault="True"/>
             <Button Content="Show All" Command="{Binding Path=ShowAllCommand}" ToolTip="Show all measurements" Margin="2"/>
         </StackPanel>
         
