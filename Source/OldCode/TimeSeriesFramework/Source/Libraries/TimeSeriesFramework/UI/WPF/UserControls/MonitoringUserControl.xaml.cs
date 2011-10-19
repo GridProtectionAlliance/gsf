@@ -60,6 +60,12 @@ namespace TimeSeriesFramework.UI.UserControls
             this.Loaded += new RoutedEventHandler(MonitoringUserControl_Loaded);
             this.Unloaded += new RoutedEventHandler(MonitoringUserControl_Unloaded);
             this.KeyUp += new System.Windows.Input.KeyEventHandler(MonitoringUserControl_KeyUp);
+            PopupSettings.Closed += new EventHandler(PopupSettings_Closed);
+        }
+
+        private void PopupSettings_Closed(object sender, EventArgs e)
+        {
+            TextBoxServiceRequest.Focus();
         }
 
         #endregion

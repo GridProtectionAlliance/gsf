@@ -100,7 +100,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         public override void Save()
         {
             bool reconnect = false;
-            if (CurrentItem.SettingsUpdated)
+            if (CurrentItem.SettingsUpdated || IsNewRecord)
                 reconnect = true;
 
             base.Save();
