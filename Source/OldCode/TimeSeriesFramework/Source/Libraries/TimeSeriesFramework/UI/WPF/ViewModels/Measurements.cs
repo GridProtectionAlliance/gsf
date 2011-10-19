@@ -133,6 +133,21 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets all the measurements retrieved during Load().
+        /// </summary>
+        public ObservableCollection<DataModels.Measurement> AllMeasurements
+        {
+            get
+            {
+                return m_measurements;
+            }
+            set
+            {
+                m_measurements = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -193,7 +208,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// Hanldes <see cref="SearchCommand"/>.
         /// </summary>
         /// <param name="paramter">string value to search for in measurement collection.</param>
-        public void Search(object paramter)
+        public virtual void Search(object paramter)
         {
             if (paramter != null && !string.IsNullOrEmpty(paramter.ToString()))
             {

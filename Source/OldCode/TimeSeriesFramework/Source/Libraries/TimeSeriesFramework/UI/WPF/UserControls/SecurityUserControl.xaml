@@ -52,14 +52,6 @@
                 <Setter Property="Margin" Value="2" />
             </Style>
 
-            <Style TargetType="ComboBox">
-                <Setter Property="Width" Value="{StaticResource ItemSize}"/>
-                <Setter Property="Height" Value="25"/>
-                <Setter Property="Margin" Value="2"/>
-                <Setter Property="VerticalAlignment" Value="Center" />
-                <Setter Property="HorizontalAlignment" Value="Left"/>
-            </Style>
-
             <Style TargetType="TextBlock">
                 <Setter Property="Margin" Value="2" />
                 <Setter Property="TextAlignment" Value="Right" />
