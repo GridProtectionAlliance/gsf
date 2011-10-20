@@ -21,6 +21,9 @@
 //       Fixed a bug that required users to login before password could be reset.
 //  07/20/2011 - Pinal C. Patel
 //       Added tracing for diagnosing unexpected error conditions.
+//  10/20/2011 - Pinal C. Patel
+//       Updated GetReferrerUrl() and GetRedirectUrl() methods to generate relative URLs instead
+//       of absolute ones so redirection would work when reverse proxy is involved.
 //
 //*******************************************************************************************************
 
@@ -243,6 +246,7 @@
 using System;
 using System.Security;
 using System.Text;
+using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 using TVA.Configuration;
@@ -738,24 +742,23 @@ namespace TVA.Web.Embedded
         private string GetReferrerUrl()
         {
             if (Request[ReturnUrlRequestKey] != null)
+                // Redirect to specified return URL.
                 return Request[ReturnUrlRequestKey];
             else if (Request.UrlReferrer != null)
-                return Request.UrlReferrer.AbsolutePath;
+                // Redirect to referring URL.
+                return VirtualPathUtility.ToAppRelative(Request.UrlReferrer.AbsolutePath);
             else
-                return Request.Url.AbsolutePath;
+                // Redirect to self.
+                return VirtualPathUtility.ToAppRelative(Request.Url.AbsolutePath);
         }
 
         private string GetRedirectUrl(string newStatusCode)
         {
             StringBuilder url = new StringBuilder();
-            if (string.IsNullOrEmpty(Request.Url.Query))
+            url.AppendFormat("{0}?", VirtualPathUtility.ToAppRelative(Request.Url.AbsolutePath));
+            if (!string.IsNullOrEmpty(Request.Url.Query))
             {
-                url.AppendFormat("{0}?", Request.Url.AbsoluteUri.TrimEnd('/'));
-            }
-            else
-            {
-                url.AppendFormat("{0}?", Request.Url.AbsoluteUri.Replace(Request.Url.Query, ""));
-
+                // Query parameters are present in the current request.
                 foreach (string pair in Request.Url.Query.TrimStart('?').Split('&'))
                 {
                     string[] pairSplit = pair.Split('=');
