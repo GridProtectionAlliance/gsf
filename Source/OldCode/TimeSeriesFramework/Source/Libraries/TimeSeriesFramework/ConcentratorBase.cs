@@ -1040,7 +1040,8 @@ namespace TimeSeriesFramework
         /// you want data to be sorted and processed as fast as possible.
         /// </para>
         /// <para>
-        /// Setting this value to <c>true</c> will force <see cref="UseLocalClockAsRealTime"/> to be <c>true</c>.
+        /// Setting this value to <c>true</c> will force <see cref="UseLocalClockAsRealTime"/> to be <c>true</c>
+        /// and <see cref="AllowSortsByArrival"/> to be <c>false</c>.
         /// </para>
         /// </remarks>
         public bool ProcessByReceivedTimestamp
@@ -1057,7 +1058,10 @@ namespace TimeSeriesFramework
                 m_processByReceivedTimestamp = value;
 
                 if (m_processByReceivedTimestamp)
+                {
                     m_useLocalClockAsRealTime = true;
+                    m_allowSortsByArrival = false;
+                }
             }
         }
 
@@ -1185,10 +1189,15 @@ namespace TimeSeriesFramework
         /// to be sorted by arrival time.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// Value defaults to <c>true</c>, so any incoming measurement with a bad timestamp quality will be sorted
         /// according to its arrival time. Setting the property to <c>false</c> will cause all measurements with a
         /// bad timestamp quality to be discarded. This property will only be considered when
         /// <see cref="IgnoreBadTimestamps"/> is <c>false</c>.
+        /// </para>
+        /// <para>
+        /// Value will be forced to <c>false</c> if <see cref="ProcessByReceivedTimestamp"/> is <c>true</c>.
+        /// </para>
         /// </remarks>
         public bool AllowSortsByArrival
         {
@@ -1198,7 +1207,10 @@ namespace TimeSeriesFramework
             }
             set
             {
-                m_allowSortsByArrival = value;
+                if (m_processByReceivedTimestamp)
+                    m_allowSortsByArrival = false;
+                else
+                    m_allowSortsByArrival = value;
             }
         }
 
