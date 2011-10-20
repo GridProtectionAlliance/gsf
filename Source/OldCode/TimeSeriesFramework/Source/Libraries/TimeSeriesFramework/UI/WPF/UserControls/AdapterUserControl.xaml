@@ -82,7 +82,7 @@
                         <Button Content="Browse..." Click="Browse_Click" />
                     </StackPanel>
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Type" />
-                    <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Source={StaticResource AdapterTypeList}}" DisplayMemberPath="Value"
+                    <ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" ItemsSource="{Binding Source={StaticResource AdapterTypeList}}" DisplayMemberPath="Value" HorizontalContentAlignment="Left" Width="400"
                               SelectedItem="{tsfBinding:Column Path=TypeName, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource AdapterTypeList}}" />
                 </Grid>
             </GroupBox>
