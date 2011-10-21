@@ -59,8 +59,8 @@
             <TextBlock Text="Assembly Name" Grid.Row="2" Grid.Column="2" />
             <TextBox Grid.Row="2" Grid.Column="3" Text="{tsfBinding:Column Path=AssemblyName}" />
             <TextBlock Text="Connection String" Grid.Row="3" Grid.Column="0" VerticalAlignment="Top" />
-            <TextBox Grid.Row="3" Grid.Column="1" Text="{tsfBinding:Column Path=ConnectionString}" Height="50" TextWrapping="Wrap" />
-            <TextBlock Text="Decription" Grid.Row="3" Grid.Column="2" VerticalAlignment="Top" />
+            <TextBox Grid.Row="3" Grid.Column="1" Text="{tsfBinding:Column Path=ConnectionString}" Height="50" TextWrapping="Wrap" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+            <TextBlock Text="Description" Grid.Row="3" Grid.Column="2" VerticalAlignment="Top" />
             <TextBox Grid.Row="3" Grid.Column="3" Text="{tsfBinding:Column Path=Description}" Height="50" TextWrapping="Wrap" />
             <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="0" HorizontalAlignment="Right">
                 <TextBlock Text="Load Order" Style="{StaticResource RequiredLabel}" />
