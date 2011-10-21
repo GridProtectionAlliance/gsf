@@ -1075,6 +1075,157 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Retrieves statistic measurements for a device.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="deviceID">ID of the device to filter data.</param>
+        /// <returns><see cref="ObservableCollection{T}"/> type collection of Measurement.</returns>
+        public static ObservableCollection<Measurement> GetInputStatisticMeasurements(AdoDataConnection database, int deviceID)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+                ObservableCollection<Measurement> measurementList = new ObservableCollection<Measurement>();
+                string query;
+                DataTable measurementTable;
+
+                if (deviceID == 0)
+                {
+                    query = database.ParameterizedQueryString("SELECT * FROM StatisticMeasurement WHERE NodeID = {0} AND DeviceID > 0 ORDER BY SignalReference", "nodeID");
+                    measurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+                }
+                else
+                {
+                    query = database.ParameterizedQueryString("SELECT * FROM StatisticMeasurement WHERE NodeID = {0} AND DeviceID = {1} ORDER BY SignalReference", "nodeID", "deviceID");
+                    measurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID(), deviceID);
+                }
+
+                foreach (DataRow row in measurementTable.Rows)
+                {
+                    if (row.Field<string>("SignalAcronym") == "STAT") // Just one more filter.
+                    {
+                        measurementList.Add(new Measurement()
+                        {
+                            SignalID = database.Guid(row, "SignalID"),
+                            HistorianID = row.ConvertNullableField<int>("HistorianID"),
+                            PointID = row.ConvertField<int>("PointID"),
+                            DeviceID = row.ConvertNullableField<int>("DeviceID"),
+                            PointTag = row.Field<string>("PointTag"),
+                            AlternateTag = row.Field<string>("AlternateTag"),
+                            SignalTypeID = row.ConvertField<int>("SignalTypeID"),
+                            PhasorSourceIndex = row.ConvertNullableField<int>("PhasorSourceIndex"),
+                            SignalReference = row.Field<string>("SignalReference"),
+                            Adder = row.ConvertField<double>("Adder"),
+                            Multiplier = row.ConvertField<double>("Multiplier"),
+                            Internal = Convert.ToBoolean(row.Field<object>("Internal")),
+                            Subscribed = Convert.ToBoolean(row.Field<object>("Subscribed")),
+                            Description = row.Field<string>("Description"),
+                            Enabled = false,    // We set this false here because we are going to use this flag to see if user has selected it on the wizard.
+                            m_historianAcronym = row.Field<string>("HistorianAcronym"),
+                            m_deviceAcronym = row.Field<object>("DeviceAcronym") == null ? string.Empty : row.Field<string>("DeviceAcronym"),
+                            m_signalName = row.Field<string>("SignalName"),
+                            m_signalAcronym = row.Field<string>("SignalAcronym"),
+                            m_signalSuffix = row.Field<string>("SignalTypeSuffix"),
+                            m_phasorLabel = row.Field<string>("PhasorLabel"),
+                            m_framesPerSecond = Convert.ToInt32(row.Field<object>("FramesPerSecond") ?? 30),
+                            m_id = row.Field<string>("ID"),
+                            m_companyAcronym = row.Field<object>("CompanyAcronym") == null ? string.Empty : row.Field<string>("CompanyAcronym"),
+                            m_companyName = row.Field<object>("CompanyName") == null ? string.Empty : row.Field<string>("CompanyName"),
+                            Selected = false
+                        });
+                    }
+                }
+
+                return measurementList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+
+        /// <summary>
+        /// Retrieves statistic measurements for output stream.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="outputStreamAcronym">Acronym of the output stream to filter data.</param>
+        /// <returns><see cref="ObservableCollection{T}"/> type collection of Measurement.</returns>
+        public static ObservableCollection<Measurement> GetOutputStatisticMeasurements(AdoDataConnection database, string outputStreamAcronym)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+                ObservableCollection<Measurement> measurementList = new ObservableCollection<Measurement>();
+
+                string query = database.ParameterizedQueryString("SELECT * FROM StatisticMeasurement WHERE NodeID = {0} AND DeviceID IS NULL ORDER BY SignalReference", "nodeID");
+                DataTable measurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+
+                foreach (DataRow row in measurementTable.Rows)
+                {
+                    if (row.Field<string>("SignalAcronym") == "STAT") // Just one more filter.
+                    {
+                        bool continueProcess = false;
+                        if (!string.IsNullOrEmpty(outputStreamAcronym))
+                        {
+                            if (row.Field<string>("SignalReference").StartsWith(outputStreamAcronym + "!OS"))
+                                continueProcess = true;
+                        }
+                        else
+                        {
+                            continueProcess = true;
+                        }
+
+                        if (continueProcess)
+                        {
+                            measurementList.Add(new Measurement()
+                            {
+                                SignalID = database.Guid(row, "SignalID"),
+                                HistorianID = row.ConvertNullableField<int>("HistorianID"),
+                                PointID = row.ConvertField<int>("PointID"),
+                                DeviceID = row.ConvertNullableField<int>("DeviceID"),
+                                PointTag = row.Field<string>("PointTag"),
+                                AlternateTag = row.Field<string>("AlternateTag"),
+                                SignalTypeID = row.ConvertField<int>("SignalTypeID"),
+                                PhasorSourceIndex = row.ConvertNullableField<int>("PhasorSourceIndex"),
+                                SignalReference = row.Field<string>("SignalReference"),
+                                Adder = row.ConvertField<double>("Adder"),
+                                Multiplier = row.ConvertField<double>("Multiplier"),
+                                Internal = Convert.ToBoolean(row.Field<object>("Internal")),
+                                Subscribed = Convert.ToBoolean(row.Field<object>("Subscribed")),
+                                Description = row.Field<string>("Description"),
+                                Enabled = false,    // We set this false here because we are going to use this flag to see if user has selected it on the wizard.
+                                m_historianAcronym = row.Field<string>("HistorianAcronym"),
+                                m_deviceAcronym = row.Field<object>("DeviceAcronym") == null ? string.Empty : row.Field<string>("DeviceAcronym"),
+                                m_signalName = row.Field<string>("SignalName"),
+                                m_signalAcronym = row.Field<string>("SignalAcronym"),
+                                m_signalSuffix = row.Field<string>("SignalTypeSuffix"),
+                                m_phasorLabel = row.Field<string>("PhasorLabel"),
+                                m_framesPerSecond = Convert.ToInt32(row.Field<object>("FramesPerSecond") ?? 30),
+                                m_id = row.Field<string>("ID"),
+                                m_companyAcronym = row.Field<object>("CompanyAcronym") == null ? string.Empty : row.Field<string>("CompanyAcronym"),
+                                m_companyName = row.Field<object>("CompanyName") == null ? string.Empty : row.Field<string>("CompanyName"),
+                                Selected = false
+                            });
+                        }
+                    }
+                }
+
+                return measurementList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
         #endregion
     }
 }

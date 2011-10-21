@@ -109,6 +109,12 @@ namespace TimeSeriesFramework.UI.ViewModels
                 CommonFunctions.ConnectWindowsServiceClient(true);
         }
 
+        public override void Delete()
+        {
+            base.Delete();
+            CommonFunctions.ConnectWindowsServiceClient(true);
+        }
+
         #endregion
     }
 }
