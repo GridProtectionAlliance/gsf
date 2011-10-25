@@ -35,6 +35,14 @@ namespace TimeSeriesFramework.UI.UserControls
     /// </summary>
     public partial class AdapterUserControl : UserControl
     {
+        #region [ Members ]
+
+        private ViewModels.Adapters m_dataContext;
+
+        #endregion
+
+        #region [ Constructor ]
+
         /// <summary>
         /// Creates an instance of <see cref="AdapterUserControl"/> class.
         /// </summary>
@@ -42,8 +50,13 @@ namespace TimeSeriesFramework.UI.UserControls
         {
             InitializeComponent();
             this.Unloaded += new RoutedEventHandler(AdapterUserControl_Unloaded);
-            this.DataContext = new ViewModels.Adapters(7, adapterType);
+            m_dataContext = new ViewModels.Adapters(7, adapterType);
+            this.DataContext = m_dataContext;
         }
+
+        #endregion
+
+        #region [ Methods ]
 
         /// <summary>
         /// Handles unload event of the <see cref="AdapterUserControl"/>.
@@ -104,5 +117,12 @@ namespace TimeSeriesFramework.UI.UserControls
                 dataContext.CurrentItem.ConnectionString = settings.JoinKeyValuePairs();
             }
         }
+
+        private void DataGrid_Sorting(object sender, DataGridSortingEventArgs e)
+        {
+            m_dataContext.SortData(e.Column.SortMemberPath);
+        }
+
+        #endregion
     }
 }

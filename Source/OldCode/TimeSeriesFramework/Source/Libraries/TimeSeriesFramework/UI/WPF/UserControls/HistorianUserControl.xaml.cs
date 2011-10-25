@@ -33,6 +33,12 @@ namespace TimeSeriesFramework.UI.UserControls
     /// </summary>
     public partial class HistorianUserControl : UserControl
     {
+        #region [ Members ]
+
+        private Historians m_dataContext;
+
+        #endregion
+
         #region [ Constructor ]
 
         /// <summary>
@@ -42,7 +48,8 @@ namespace TimeSeriesFramework.UI.UserControls
         {
             InitializeComponent();
             this.Unloaded += new RoutedEventHandler(HistorianUserControl_Unloaded);
-            this.DataContext = new Historians(15);
+            m_dataContext = new Historians(15);
+            this.DataContext = m_dataContext;
         }
 
         #endregion
@@ -56,7 +63,7 @@ namespace TimeSeriesFramework.UI.UserControls
         /// <param name="e">Arguments for the event.</param>
         void HistorianUserControl_Unloaded(object sender, RoutedEventArgs e)
         {
-            (this.DataContext as Historians).ProcessPropertyChange();
+            m_dataContext.ProcessPropertyChange();
         }
 
         /// <summary>
@@ -75,6 +82,11 @@ namespace TimeSeriesFramework.UI.UserControls
                         e.Handled = true;
                 }
             }
+        }
+
+        private void DataGrid_Sorting(object sender, DataGridSortingEventArgs e)
+        {
+            m_dataContext.SortData(e.Column.SortMemberPath);
         }
 
         #endregion

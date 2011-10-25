@@ -35,6 +35,12 @@ namespace TimeSeriesFramework.UI.UserControls
     /// </summary>
     public partial class MeasurementUserControl : UserControl
     {
+        #region [ Members ]
+
+        private Measurements m_dataContext;
+
+        #endregion
+
         #region [ Constructor ]
 
         /// <summary>
@@ -53,7 +59,8 @@ namespace TimeSeriesFramework.UI.UserControls
         {
             InitializeComponent();
             this.Unloaded += new RoutedEventHandler(MeasurementUserControl_Unloaded);
-            this.DataContext = new Measurements(deviceID, 17);
+            m_dataContext = new Measurements(deviceID, 17);
+            this.DataContext = m_dataContext;
         }
 
         #endregion
@@ -67,7 +74,7 @@ namespace TimeSeriesFramework.UI.UserControls
         /// <param name="e">Arguments of the event.</param>
         void MeasurementUserControl_Unloaded(object sender, RoutedEventArgs e)
         {
-            (this.DataContext as Measurements).ProcessPropertyChange();
+            m_dataContext.ProcessPropertyChange();
         }
 
         /// <summary>
@@ -86,6 +93,11 @@ namespace TimeSeriesFramework.UI.UserControls
                         e.Handled = true;
                 }
             }
+        }
+
+        private void DataGrid_Sorting(object sender, DataGridSortingEventArgs e)
+        {
+            m_dataContext.SortData(e.Column.SortMemberPath);
         }
 
         #endregion

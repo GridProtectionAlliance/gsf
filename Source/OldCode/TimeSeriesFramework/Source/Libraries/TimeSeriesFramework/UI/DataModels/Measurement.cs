@@ -960,7 +960,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Retrieves a <see cref="Measurement"/> information from the database based on query string filter.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="whereClause">query string to fileter data.</param>
+        /// <param name="whereClause"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <returns><see cref="Measurement"/> information.</returns>
         public static Measurement GetMeasurement(AdoDataConnection database, string whereClause)
         {
@@ -1004,6 +1004,63 @@ namespace TimeSeriesFramework.UI.DataModels
                 };
 
                 return measurement;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Retrieves <see cref="ObservableCollection{T}"/> of <see cref="Measurement"/> based on the whereClause.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="whereClause"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <returns><see cref="ObservableCollection{T}"/> type collection of <see cref="Measurement"/>.</returns>
+        public static ObservableCollection<Measurement> GetMeasurements(AdoDataConnection database, string whereClause)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+                ObservableCollection<Measurement> measurementList = new ObservableCollection<Measurement>();
+                DataTable measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail " + whereClause);
+                foreach (DataRow row in measurementTable.Rows)
+                {
+                    measurementList.Add(new Measurement()
+                    {
+                        SignalID = database.Guid(row, "SignalID"),
+                        HistorianID = row.ConvertNullableField<int>("HistorianID"),
+                        PointID = row.ConvertField<int>("PointID"),
+                        DeviceID = row.ConvertNullableField<int>("DeviceID"),
+                        PointTag = row.Field<string>("PointTag"),
+                        AlternateTag = row.Field<string>("AlternateTag"),
+                        SignalTypeID = row.ConvertField<int>("SignalTypeID"),
+                        PhasorSourceIndex = row.ConvertNullableField<int>("PhasorSourceIndex"),
+                        SignalReference = row.Field<string>("SignalReference"),
+                        Adder = row.ConvertField<double>("Adder"),
+                        Multiplier = row.ConvertField<double>("Multiplier"),
+                        Internal = Convert.ToBoolean(row.Field<object>("Internal")),
+                        Subscribed = Convert.ToBoolean(row.Field<object>("Subscribed")),
+                        Description = row.Field<string>("Description"),
+                        Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
+                        m_historianAcronym = row.Field<string>("HistorianAcronym"),
+                        m_deviceAcronym = row.Field<object>("DeviceAcronym") == null ? string.Empty : row.Field<string>("DeviceAcronym"),
+                        m_signalName = row.Field<string>("SignalName"),
+                        m_signalAcronym = row.Field<string>("SignalAcronym"),
+                        m_signalSuffix = row.Field<string>("SignalTypeSuffix"),
+                        m_phasorLabel = row.Field<string>("PhasorLabel"),
+                        m_framesPerSecond = Convert.ToInt32(row.Field<object>("FramesPerSecond") ?? 30),
+                        m_id = row.Field<string>("ID"),
+                        m_companyAcronym = row.Field<object>("CompanyAcronym") == null ? string.Empty : row.Field<string>("CompanyAcronym"),
+                        m_companyName = row.Field<object>("CompanyName") == null ? string.Empty : row.Field<string>("CompanyName"),
+                        Selected = false
+                    });
+                }
+
+                return measurementList;
             }
             finally
             {

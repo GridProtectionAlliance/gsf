@@ -33,6 +33,12 @@ namespace TimeSeriesFramework.UI.UserControls
     /// </summary>
     public partial class VendorDeviceUserControl : UserControl
     {
+        #region [ Members ]
+
+        private VendorDevices m_dataContext;
+
+        #endregion
+
         #region [ Constructor ]
 
         /// <summary>
@@ -42,7 +48,8 @@ namespace TimeSeriesFramework.UI.UserControls
         {
             InitializeComponent();
             this.Unloaded += new RoutedEventHandler(VendorDeviceUserControl_Unloaded);
-            this.DataContext = new VendorDevices(26);
+            m_dataContext = new VendorDevices(26);
+            this.DataContext = m_dataContext;
         }
 
         /// <summary>
@@ -52,7 +59,7 @@ namespace TimeSeriesFramework.UI.UserControls
         /// <param name="e">Arguments of the event.</param>
         void VendorDeviceUserControl_Unloaded(object sender, RoutedEventArgs e)
         {
-            (this.DataContext as VendorDevices).ProcessPropertyChange();
+            m_dataContext.ProcessPropertyChange();
         }
 
         #endregion
@@ -72,7 +79,11 @@ namespace TimeSeriesFramework.UI.UserControls
             }
         }
 
-        #endregion
+        private void DataGrid_Sorting(object sender, DataGridSortingEventArgs e)
+        {
+            m_dataContext.SortData(e.Column.SortMemberPath);
+        }
 
+        #endregion
     }
 }

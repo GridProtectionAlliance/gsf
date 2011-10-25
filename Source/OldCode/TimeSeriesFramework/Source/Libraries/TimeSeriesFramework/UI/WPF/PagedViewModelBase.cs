@@ -30,6 +30,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Windows;
@@ -882,6 +883,15 @@ namespace TimeSeriesFramework.UI
                 CurrentItem = new TDataModel();
                 CurrentPageNumber = 0;
             }
+        }
+
+        public virtual void SortData(string sortMemeberPath)
+        {
+            ItemsSource = new ObservableCollection<TDataModel>(
+                from item in ItemsSource
+                orderby typeof(TDataModel).GetProperty(sortMemeberPath).GetValue(item, null)
+                select item
+                );
         }
 
         #endregion

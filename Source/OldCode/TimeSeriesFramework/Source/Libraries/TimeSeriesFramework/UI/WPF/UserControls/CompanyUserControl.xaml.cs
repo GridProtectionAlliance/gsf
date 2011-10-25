@@ -33,6 +33,12 @@ namespace TimeSeriesFramework.UI.UserControls
     /// </summary>
     public partial class CompanyUserControl : UserControl
     {
+        #region [ Members ]
+
+        private Companies m_dataContext;
+
+        #endregion
+
         #region [ Constructor ]
 
         /// <summary>
@@ -42,7 +48,8 @@ namespace TimeSeriesFramework.UI.UserControls
         {
             InitializeComponent();
             this.Unloaded += new RoutedEventHandler(CompanyUserControl_Unloaded);
-            this.DataContext = new Companies(25, false);
+            m_dataContext = new Companies(25, false);
+            this.DataContext = m_dataContext;
         }
 
         #endregion
@@ -56,7 +63,7 @@ namespace TimeSeriesFramework.UI.UserControls
         /// <param name="e">Arguments for the event.</param>
         void CompanyUserControl_Unloaded(object sender, RoutedEventArgs e)
         {
-            (this.DataContext as Companies).ProcessPropertyChange();
+            m_dataContext.ProcessPropertyChange();
         }
 
         /// <summary>
@@ -75,6 +82,11 @@ namespace TimeSeriesFramework.UI.UserControls
                         e.Handled = true;
                 }
             }
+        }
+
+        private void DataGrid_Sorting(object sender, DataGridSortingEventArgs e)
+        {
+            m_dataContext.SortData(e.Column.SortMemberPath);
         }
 
         #endregion
