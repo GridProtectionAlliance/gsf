@@ -131,6 +131,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="ResizableWindow.cs" />
+    <Compile Include="TsfPopup.cs" />
     <Compile Include="UserControls\AdapterUserControl.xaml.cs">
       <DependentUpon>AdapterUserControl.xaml</DependentUpon>
     </Compile>

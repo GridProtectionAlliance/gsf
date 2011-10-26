@@ -6,6 +6,7 @@
              mc:Ignorable="d" d:DesignHeight="650" d:DesignWidth="850"
              xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:uc="clr-namespace:TimeSeriesFramework.UI.UserControls"
+             xmlns:tsf="clr-namespace:TimeSeriesFramework.UI"
              xmlns:tsfBinding="clr-namespace:TimeSeriesFramework.UI.Binding;assembly=TimeSeriesFramework.UI"
              Background="Transparent">
     <UserControl.Resources>
@@ -28,7 +29,8 @@
         </Grid.ColumnDefinitions>
                      
         <StackPanel Orientation="Vertical">
-            <Popup x:Name="PopupSettings">
+            <tsf:TsfPopup x:Name="PopupSettings" Topmost="False">
+            <!--<Popup x:Name="PopupSettings">-->
                 
                 <Border CornerRadius="5" BorderThickness="1" Background="White" BorderBrush="Blue">
                     
@@ -57,8 +59,9 @@
                     
                 </Border>
                 
-            </Popup>
-            
+            <!--</Popup>-->
+            </tsf:TsfPopup>
+
             <ScrollViewer x:Name="ScrollViewerMonitor" Background="Black" Margin="2" Height="605" 
                             VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" VerticalContentAlignment="Top">
                 <ScrollViewer.Content>
