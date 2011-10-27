@@ -69,8 +69,8 @@ namespace TimeSeriesFramework.UI.Converters
                             value = !(bool)value;
                     }
 
-                    if ((bool)value)
-                        return Visibility.Visible;
+                    if (!(bool)value)
+                        return Visibility.Collapsed;
                 }
             }
 
