@@ -74,7 +74,7 @@ namespace TimeSeriesFramework.UI.Converters
                 }
             }
 
-            return Visibility.Collapsed;
+            return Visibility.Visible;
         }
 
         /// <summary>
