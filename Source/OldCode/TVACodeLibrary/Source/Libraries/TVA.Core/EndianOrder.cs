@@ -17,6 +17,8 @@
 //       Updated comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  10/27/2011 - J. Ritchie Carroll
+//       Added a GetBytes<T> overload.
 //
 //*******************************************************************************************************
 
@@ -760,6 +762,52 @@ namespace TVA
             m_copyBuffer(value, startIndex, buffer, 0, 16);
 
             return new Guid(buffer);
+        }
+
+        /// <summary>
+        /// Returns the specified value as an array of bytes in the target endian-order.
+        /// </summary>
+        /// <param name="value">The value to convert.</param>
+        /// <returns>An array of bytes with length 1.</returns>
+        /// <typeparam name="T">Native value type to get bytes for.</typeparam>
+        /// <exception cref="ArgumentException"><paramref name="value"/> type is not primitive.</exception>
+        /// <exception cref="InvalidOperationException">Cannot get bytes for <paramref name="value"/> type.</exception>
+        public byte[] GetBytes<T>(T value) where T : struct
+        {
+            if (!typeof(T).IsPrimitive)
+                throw new ArgumentException("Value type is not primitive", "value");
+
+            IConvertible nativeValue = (IConvertible)value;
+
+            switch (nativeValue.GetTypeCode())
+            {
+                case TypeCode.Char:
+                    return GetBytes(nativeValue.ToChar(null));
+                case TypeCode.Boolean:
+                    return GetBytes(nativeValue.ToBoolean(null));
+                case TypeCode.SByte:
+                    return GetBytes(nativeValue.ToSByte(null));
+                case TypeCode.Byte:
+                    return GetBytes(nativeValue.ToByte(null));
+                case TypeCode.Int16:
+                    return GetBytes(nativeValue.ToInt16(null));
+                case TypeCode.UInt16:
+                    return GetBytes(nativeValue.ToUInt16(null));
+                case TypeCode.Int32:
+                    return GetBytes(nativeValue.ToInt32(null));
+                case TypeCode.UInt32:
+                    return GetBytes(nativeValue.ToUInt32(null));
+                case TypeCode.Int64:
+                    return GetBytes(nativeValue.ToInt64(null));
+                case TypeCode.UInt64:
+                    return GetBytes(nativeValue.ToUInt64(null));
+                case TypeCode.Single:
+                    return GetBytes(nativeValue.ToSingle(null));
+                case TypeCode.Double:
+                    return GetBytes(nativeValue.ToDouble(null));
+                default:
+                    throw new InvalidOperationException("Cannot get bytes for value type " + nativeValue.GetTypeCode());
+            }
         }
 
         /// <summary>

@@ -63,6 +63,7 @@
     <DocumentationFile>..\..\..\Build\Output\Release\Libraries\TVA.Core.XML</DocumentationFile>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <UseVSHostingProcess>false</UseVSHostingProcess>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
     <OutputPath>..\..\..\Build\Output\Mono\Libraries\</OutputPath>
@@ -184,6 +185,7 @@
     <Compile Include="Interop\NamespaceDoc.cs" />
     <Compile Include="Interop\VBArrayDescriptor.cs" />
     <Compile Include="Interop\WindowsApi.cs" />
+    <Compile Include="IO\BufferPool.cs" />
     <Compile Include="IO\Checksums\ChecksumExtensions.cs" />
     <Compile Include="IO\Checksums\Crc16.cs" />
     <Compile Include="IO\Checksums\Crc32.cs" />
@@ -196,6 +198,7 @@
     <Compile Include="IO\Compression\CompressionExtensions.cs" />
     <Compile Include="IO\Compression\FileCompressor.cs" />
     <Compile Include="IO\Compression\NamespaceDoc.cs" />
+    <Compile Include="IO\Compression\PatternCompressor.cs" />
     <Compile Include="IO\ExportDestination.cs" />
     <Compile Include="IO\FilePath.cs" />
     <Compile Include="IO\InterprocessCache.cs" />
