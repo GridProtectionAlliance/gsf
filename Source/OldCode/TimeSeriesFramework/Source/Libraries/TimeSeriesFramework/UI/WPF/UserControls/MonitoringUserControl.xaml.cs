@@ -260,11 +260,13 @@ namespace TimeSeriesFramework.UI.UserControls
 
         private void ButtonRestore_Click(object sender, RoutedEventArgs e)
         {
-            IsolatedStorageManager.InitializeIsolatedStorage(true);
-            if (int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("NumberOfMessages").ToString(), out m_numberOfMessages))
-            {
-                TextBoxNumberOfMessages.Text = m_numberOfMessages.ToString();
-            }
+            TextBoxNumberOfMessages.Text = "75";
+            m_numberOfMessages = 75;
+            //IsolatedStorageManager.InitializeIsolatedStorage(true);
+            //if (int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("NumberOfMessages").ToString(), out m_numberOfMessages))
+            //{
+            //    TextBoxNumberOfMessages.Text = m_numberOfMessages.ToString();
+            //}
             PopupSettings.IsOpen = false;
         }
 

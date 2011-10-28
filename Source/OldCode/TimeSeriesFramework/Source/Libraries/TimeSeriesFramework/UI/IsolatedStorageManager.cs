@@ -121,6 +121,12 @@ namespace TimeSeriesFramework.UI
             if (!s_userStoreForAssembly.FileExists("MeasurementsDataRefreshInterval") || overWriteExisting)
                 WriteToIsolatedStorage("MeasurementsDataRefreshInterval", 10);
 
+            if (!s_userStoreForAssembly.FileExists("StreamStatisticsDataRefreshInterval") || overWriteExisting)
+                WriteToIsolatedStorage("StatisticsDataRefreshInterval", 10);
+
+            if (!s_userStoreForAssembly.FileExists("RealtimeMeasurementsDataRefreshInterval") || overWriteExisting)
+                WriteToIsolatedStorage("MeasurementsDataRefreshInterval", 10);
+
             if (!s_userStoreForAssembly.FileExists("DisplayXAxis") || overWriteExisting)
                 WriteToIsolatedStorage("DisplayXAxis", "false");
 
