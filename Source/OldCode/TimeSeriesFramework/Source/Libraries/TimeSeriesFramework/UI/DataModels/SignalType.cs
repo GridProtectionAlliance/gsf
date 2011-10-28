@@ -205,16 +205,16 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 if (!string.IsNullOrEmpty(source) && source.ToUpper() == "PMU")
                 {
-                    query = "SELECT ID, Acronym, Name, Suffix, Abbreviation, Source, EngineeringUnits FROM SignalType Where Source = 'PMU' ORDER BY Name";
+                    query = "SELECT ID, Acronym, Name, Suffix, Abbreviation, Source, EngineeringUnits FROM SignalType Where Source = 'PMU' AND SUFFIX IN ('FQ','DF','SF','AV','DV','CV') ORDER BY Name";
                 }
                 else if (!string.IsNullOrEmpty(source) && source.ToUpper() == "PHASOR" && !string.IsNullOrEmpty(phasorType))
                 {
                     if (phasorType.ToUpper() == "V")
                         query = "SELECT ID, Acronym, Name, Suffix, Abbreviation, Source, EngineeringUnits FROM SignalType Where Source = 'Phasor' " +
-                            "AND Acronym LIKE 'V%' ORDER BY Name";
+                            "AND Acronym IN ('VPHM', 'VPHA') ORDER BY Name";
                     else if (phasorType.ToUpper() == "I")
                         query = "SELECT ID, Acronym, Name, Suffix, Abbreviation, Source, EngineeringUnits FROM SignalType Where Source = 'Phasor' " +
-                            "AND Acronym LIKE 'I%' ORDER BY Name";
+                            "AND Acronym IN ('IPHM', 'IPHA') ORDER BY Name";
                 }
 
                 DataTable signalTypeTable = database.Connection.RetrieveData(database.AdapterType, query);
@@ -282,17 +282,7 @@ namespace TimeSeriesFramework.UI.DataModels
         public static ObservableCollection<SignalType> GetPmuSignalTypes()
         {
             if (s_pmuSignalTypes == null || s_pmuSignalTypes.Count == 0)
-            {
-                s_pmuSignalTypes = new ObservableCollection<SignalType>()
-                {
-                    new SignalType(){ID = 5, Abbreviation = "F", Acronym = "FREQ", EngineeringUnits = "Hz", Name = "Frequency", Suffix = "FQ"},
-                    new SignalType(){ID = 6, Abbreviation = "DF", Acronym = "DFDT", EngineeringUnits = "", Name = "Frequency Delta (dF/dt)", Suffix = "DF"},
-                    new SignalType(){ID = 8, Abbreviation = "S", Acronym = "FLAG", EngineeringUnits = "", Name = "Status Flags", Suffix = "SF"},
-                    new SignalType(){ID = 7, Abbreviation = "A", Acronym = "ALOG", EngineeringUnits = "", Name = "Analog Value", Suffix = "AV"},
-                    new SignalType(){ID = 9, Abbreviation = "D", Acronym = "DIGI", EngineeringUnits = "", Name = "Digital Value", Suffix = "DV"},
-                    new SignalType(){ID = 10, Abbreviation = "C", Acronym = "CALC", EngineeringUnits = "", Name = "Calculated Value", Suffix = "CV"}
-                };
-            }
+                s_pmuSignalTypes = Load(null, "PMU");
 
             return s_pmuSignalTypes;
         }
@@ -304,13 +294,7 @@ namespace TimeSeriesFramework.UI.DataModels
         public static ObservableCollection<SignalType> GetVoltagePhasorSignalTypes()
         {
             if (s_voltagePhasorSignalTypes == null || s_voltagePhasorSignalTypes.Count == 0)
-            {
-                s_voltagePhasorSignalTypes = new ObservableCollection<SignalType>()
-                {
-                    new SignalType(){ID = 3, Abbreviation = "V", Acronym = "VPHM", EngineeringUnits = "Volts", Name = "Voltage Magnitude", Suffix = "PM"},
-                    new SignalType(){ID = 4, Abbreviation = "VH", Acronym = "VPHA", EngineeringUnits = "Degrees", Name = "Voltage Phase Angle", Suffix = "PA"}
-                };
-            }
+                s_voltagePhasorSignalTypes = Load(null, "Phasor", "V");
 
             return s_voltagePhasorSignalTypes;
         }
@@ -322,13 +306,7 @@ namespace TimeSeriesFramework.UI.DataModels
         public static ObservableCollection<SignalType> GetCurrentPhasorSignalTypes()
         {
             if (s_currentPhasorSignalTypes == null || s_currentPhasorSignalTypes.Count == 0)
-            {
-                s_currentPhasorSignalTypes = new ObservableCollection<SignalType>()
-                {
-                    new SignalType(){ID = 1, Abbreviation = "I", Acronym = "IPHM", EngineeringUnits = "Amps", Name = "Current Magnitude", Suffix = "PM"},
-                    new SignalType(){ID = 2, Abbreviation = "IH", Acronym = "IPHA", EngineeringUnits = "Degrees", Name = "Current Phase Angle", Suffix = "PA"}
-                };
-            }
+                s_currentPhasorSignalTypes = Load(null, "Phasor", "I");
 
             return s_currentPhasorSignalTypes;
         }
