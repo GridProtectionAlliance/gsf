@@ -84,6 +84,7 @@
   <ItemGroup>
     <Compile Include="DateTimeExtensionTest.cs" />
     <Compile Include="EnumExtensionsTest.cs" />
+    <Compile Include="PatternCompressorTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StringExtensionsTest.cs" />
   </ItemGroup>
