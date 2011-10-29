@@ -425,7 +425,7 @@ namespace TVA.IO.Compression
                         values++;
                     }
 
-                    usedLength = (int)bufferIndex - (int)pBuffer;
+                    usedLength = (int)bufferIndex - (int)pBuffer + 1;
 
                     // Check to see if we failed to compress data (hopefully rare)
                     if (usedLength > dataLength)
@@ -467,7 +467,7 @@ namespace TVA.IO.Compression
         /// <remarks>
         /// As an optimization this function is using pointers to native structures, as such the endian order decoding and encoding of the values will always be in the native endian order of the operating system.
         /// </remarks>
-        public unsafe static int CompressDoubleEnumeration(this byte[] source, int startIndex, int dataLength, int bufferLength, byte compressionStrength = 100)
+        public unsafe static int CompressDoubleEnumeration(this byte[] source, int startIndex, int dataLength, int bufferLength, byte compressionStrength = 50)
         {
             const int SizeOfDouble = sizeof(double);
 
@@ -601,7 +601,7 @@ namespace TVA.IO.Compression
                             pResult += (SizeOfDouble - smallestDifference - 1);
 
                         // Add only needed bytes to the output buffer
-                        for (int j = 0; j < smallestDifference + 2; j++, bufferIndex++, pResult++)
+                        for (int j = 0; j < smallestDifference; j++, bufferIndex++, pResult++)
                         {
                             *bufferIndex = *pResult;
                         }
@@ -622,7 +622,7 @@ namespace TVA.IO.Compression
                         values++;
                     }
 
-                    usedLength = (int)bufferIndex - (int)pBuffer;
+                    usedLength = (int)bufferIndex - (int)pBuffer + 1;
 
                     // Check to see if we failed to compress data (hopefully rare)
                     if (usedLength > dataLength)

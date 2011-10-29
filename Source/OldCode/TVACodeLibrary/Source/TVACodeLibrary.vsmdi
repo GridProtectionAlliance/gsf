@@ -5,9 +5,10 @@
   </TestList>
   <TestList name="Patterned Compression Tests" id="9a7b5ee0-814f-402c-a19a-471ce9006584" parentListId="8c43106b-9dc1-4907-a29f-aa66a61bf5b6">
     <TestLinks>
-      <TestLink id="8ec0fa1d-a25d-f719-d6b4-568fa6279cf0" name="TestArrayOfDoubleCompression" storage="..\build\output\debug\libraries\tests\tva.core.tests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+      <TestLink id="87943a45-6612-2016-9921-e3f3af1cef80" name="TestArrayOfDoubleCompressionOnRandomData" storage="..\build\output\debug\libraries\tests\tva.core.tests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
       <TestLink id="3a366f1d-9b7e-8664-f573-8e5ce5243a1b" name="TestArrayOfFloatCompressionOnRandomData" storage="..\build\output\debug\libraries\tests\tva.core.tests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
       <TestLink id="07f9d88c-5256-b0d0-c27c-22dc45937b51" name="TestArrayOfFloatCompressionOnSequentialData" storage="..\build\output\debug\libraries\tests\tva.core.tests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+      <TestLink id="2fcd38a4-f638-0199-de78-b9f9d60c142b" name="TestArrayOfDoubleCompressionOnSequentialData" storage="..\build\output\debug\libraries\tests\tva.core.tests.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     </TestLinks>
   </TestList>
 </TestLists>

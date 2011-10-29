@@ -153,19 +153,21 @@ namespace TVA.Core.Tests
         }
 
         [TestMethod]
-        public void TestArrayOfDoubleCompression()
+        // Sequential data seems to compress ~23% with this algorithm
+        public void TestArrayOfDoubleCompressionOnSequentialData()
         {
+            StringBuilder results = new StringBuilder();
             MemoryStream buffer = new MemoryStream();
             Random rnd = new Random();
 
-            double value = rnd.NextDouble() * 99999.99D;
+            double value = (double)(rnd.NextDouble() * 99999.99D);
 
             for (int i = 0; i < TotalTestSampleSize; i++)
             {
-                value += 0.0011;
+                value += 0.055D;
 
                 if (i % 10 == 0)
-                    value = rnd.NextDouble() * 99999.99D;
+                    value = (rnd.NextDouble() * 99999.99D);
 
                 buffer.Write(BitConverter.GetBytes(value), 0, 8);
             }
@@ -176,7 +178,64 @@ namespace TVA.Core.Tests
             byte[] arrayOfDoubles = buffer.ToArray();
             int bufferLen = arrayOfDoubles.Length;
             int dataLen = bufferLen - 1;
+
+            // Make sure a buffer exists in the buffer pool so that operation time will not be skewed by buffer initialization:
+            BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + TotalTestSampleSize));
+
+            Ticks stopTime, startTime = PrecisionTimer.UtcNow.Ticks;
             int compressedLen = arrayOfDoubles.CompressDoubleEnumeration(0, dataLen, bufferLen);
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+
+            // Publish results to debug window
+            results.AppendFormat("Results of double precision floating point compression algorithm over sequential data:\r\n\r\n");
+            results.AppendFormat("Total number of samples: \t{0:#,##0}\r\n", TotalTestSampleSize);
+            results.AppendFormat("Total number of bytes:   \t{0:#,##0}\r\n", dataLen);
+            results.AppendFormat("Total Calculation time:  \t{0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
+            results.AppendFormat("Calculation speed:       \t{0:#,##0.0000} Mb/sec\r\n", (dataLen / (double)SI2.Mega) / (stopTime - startTime).ToSeconds());
+            results.AppendFormat("Compression strength:    \t{0:0.00%}", (dataLen - compressedLen) / (double)dataLen);
+            Debug.WriteLine(results.ToString());
+
+            Assert.AreNotEqual(compressedLen, dataLen);
+        }
+
+        [TestMethod]
+        // Random data seems to compress ~7%
+        public void TestArrayOfDoubleCompressionOnRandomData()
+        {
+            StringBuilder results = new StringBuilder();
+            MemoryStream buffer = new MemoryStream();
+            Random rnd = new Random();
+
+            double value;
+
+            for (int i = 0; i < TotalTestSampleSize; i++)
+            {
+                value = (rnd.NextDouble() * 99999.99D);
+                buffer.Write(BitConverter.GetBytes(value), 0, 8);
+            }
+
+            // Add one byte of extra space to accomodate compression algorithm
+            buffer.WriteByte(0xff);
+
+            byte[] arrayOfDoubles = buffer.ToArray();
+            int bufferLen = arrayOfDoubles.Length;
+            int dataLen = bufferLen - 1;
+
+            // Make sure a buffer exists in the buffer pool so that operation time will not be skewed by buffer initialization:
+            BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + TotalTestSampleSize));
+
+            Ticks stopTime, startTime = PrecisionTimer.UtcNow.Ticks;
+            int compressedLen = arrayOfDoubles.CompressDoubleEnumeration(0, dataLen, bufferLen);
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+
+            // Publish results to debug window
+            results.AppendFormat("Results of double precision floating point compression algorithm over random data:\r\n\r\n");
+            results.AppendFormat("Total number of samples: \t{0:#,##0}\r\n", TotalTestSampleSize);
+            results.AppendFormat("Total number of bytes:   \t{0:#,##0}\r\n", dataLen);
+            results.AppendFormat("Total Calculation time:  \t{0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
+            results.AppendFormat("Calculation speed:       \t{0:#,##0.0000} Mb/sec\r\n", (dataLen / (double)SI2.Mega) / (stopTime - startTime).ToSeconds());
+            results.AppendFormat("Compression strength:    \t{0:0.00%}", (dataLen - compressedLen) / (double)dataLen);
+            Debug.WriteLine(results.ToString());
 
             Assert.AreNotEqual(compressedLen, dataLen);
         }
