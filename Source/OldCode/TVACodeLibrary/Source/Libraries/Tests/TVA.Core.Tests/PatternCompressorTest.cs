@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TVA.IO;
 using TVA.IO.Compression;
 using TVA.Units;
 
@@ -90,6 +91,9 @@ namespace TVA.Core.Tests
             int bufferLen = arrayOfFloats.Length;
             int dataLen = bufferLen - 1;
 
+            // Make sure a buffer exists in the buffer pool so that operation time will not be skewed by buffer initialization:
+            BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + TotalTestSampleSize));
+
             Ticks stopTime, startTime = PrecisionTimer.UtcNow.Ticks;
             int compressedLen = arrayOfFloats.CompressFloatEnumeration(0, dataLen, bufferLen);
             stopTime = PrecisionTimer.UtcNow.Ticks;
@@ -128,6 +132,9 @@ namespace TVA.Core.Tests
             byte[] arrayOfFloats = buffer.ToArray();
             int bufferLen = arrayOfFloats.Length;
             int dataLen = bufferLen - 1;
+
+            // Make sure a buffer exists in the buffer pool so that operation time will not be skewed by buffer initialization:
+            BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + TotalTestSampleSize));
 
             Ticks stopTime, startTime = PrecisionTimer.UtcNow.Ticks;
             int compressedLen = arrayOfFloats.CompressFloatEnumeration(0, dataLen, bufferLen);
