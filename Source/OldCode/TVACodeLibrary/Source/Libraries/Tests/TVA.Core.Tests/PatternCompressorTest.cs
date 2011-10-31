@@ -66,7 +66,7 @@ namespace TVA.Core.Tests
 
         [TestMethod]
         // Sequential data averages ~66% with a compression stength of 5
-        // Compression on same buffer using GZip has less than 1% compression (0.11%)
+        // Compression on same buffer using GZip has less than 1% compression (0.19%)
         // Sample calculation speed = 17.9 MB/s
         public void TestArrayOfFloatCompressionOnSequentialData()
         {
@@ -93,12 +93,21 @@ namespace TVA.Core.Tests
             int bufferLen = arrayOfFloats.Length;
             int dataLen = bufferLen - 1;
             int gzipLen = arrayOfFloats.Compress().Length;
+            Ticks stopTime, startTime;
 
             // Make sure a buffer exists in the buffer pool so that operation time will not be skewed by buffer initialization:
+            startTime = PrecisionTimer.UtcNow.Ticks;
             BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + TotalTestSampleSize));
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+            results.AppendFormat("Buffer Pool initial take time: {0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
-            Ticks stopTime, startTime = PrecisionTimer.UtcNow.Ticks;
-            int compressedLen = arrayOfFloats.CompressFloatEnumeration(0, dataLen, bufferLen, 5);
+            startTime = PrecisionTimer.UtcNow.Ticks;
+            BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + TotalTestSampleSize));
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+            results.AppendFormat("Buffer Pool cached take time: {0}\r\n\r\n", (stopTime - startTime).ToElapsedTimeString(4));
+
+            startTime = PrecisionTimer.UtcNow.Ticks;
+            int compressedLen = arrayOfFloats.Compress32bitEnumeration(0, dataLen, bufferLen, 5);
             stopTime = PrecisionTimer.UtcNow.Ticks;
 
             // Publish results to debug window
@@ -108,7 +117,69 @@ namespace TVA.Core.Tests
             results.AppendFormat("Total Calculation time:  \t{0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
             results.AppendFormat("Calculation speed:       \t{0:#,##0.0000} MB/sec\r\n", (dataLen / (double)SI2.Mega) / (stopTime - startTime).ToSeconds());
             results.AppendFormat("Compression results:     \t{0:0.00%}\r\n", (dataLen - compressedLen) / (double)dataLen);
-            results.AppendFormat("Standard gzip results:   \t{0:0.00%}\r\n", (dataLen - gzipLen) / (double)gzipLen);
+            results.AppendFormat("Standard gzip results:   \t{0:0.00%}\r\n", (dataLen - gzipLen) / (double)dataLen);
+            Debug.WriteLine(results.ToString());
+
+            Assert.AreNotEqual(compressedLen, dataLen);
+        }
+
+        [TestMethod]
+        // Sequential data averages ~71% with a compression stength of 5
+        // Compression on same buffer using GZip averages ~16% compression
+        // Sample calculation speed = 18.5 MB/s
+        public void TestArrayOfIntCompressionOnSequentialData()
+        {
+            StringBuilder results = new StringBuilder();
+            MemoryStream buffer = new MemoryStream();
+            Random rnd = new Random();
+
+            uint value = (uint)(rnd.NextDouble() * 100000);
+
+            for (int i = 0; i < TotalTestSampleSize; i++)
+            {
+                unchecked
+                {
+                    value++;
+                }
+
+                if (i % 10 == 0)
+                    value = (uint)(rnd.NextDouble() * 100000);
+
+                buffer.Write(BitConverter.GetBytes(value), 0, 4);
+            }
+
+            // Add one byte of extra space to accomodate compression algorithm
+            buffer.WriteByte(0xff);
+
+            byte[] arrayOfInts = buffer.ToArray();
+            int bufferLen = arrayOfInts.Length;
+            int dataLen = bufferLen - 1;
+            int gzipLen = arrayOfInts.Compress().Length;
+            Ticks stopTime, startTime;
+
+            // Make sure a buffer exists in the buffer pool so that operation time will not be skewed by buffer initialization:
+            startTime = PrecisionTimer.UtcNow.Ticks;
+            BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + TotalTestSampleSize));
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+            results.AppendFormat("Buffer Pool initial take time: {0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
+
+            startTime = PrecisionTimer.UtcNow.Ticks;
+            BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + TotalTestSampleSize));
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+            results.AppendFormat("Buffer Pool cached take time: {0}\r\n\r\n", (stopTime - startTime).ToElapsedTimeString(4));
+
+            startTime = PrecisionTimer.UtcNow.Ticks;
+            int compressedLen = arrayOfInts.Compress32bitEnumeration(0, dataLen, bufferLen, 5);
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+
+            // Publish results to debug window
+            results.AppendFormat("Results of integer compression algorithm over sequential data:\r\n\r\n");
+            results.AppendFormat("Total number of samples: \t{0:#,##0}\r\n", TotalTestSampleSize);
+            results.AppendFormat("Total number of bytes:   \t{0:#,##0}\r\n", dataLen);
+            results.AppendFormat("Total Calculation time:  \t{0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
+            results.AppendFormat("Calculation speed:       \t{0:#,##0.0000} MB/sec\r\n", (dataLen / (double)SI2.Mega) / (stopTime - startTime).ToSeconds());
+            results.AppendFormat("Compression results:     \t{0:0.00%}\r\n", (dataLen - compressedLen) / (double)dataLen);
+            results.AppendFormat("Standard gzip results:   \t{0:0.00%}\r\n", (dataLen - gzipLen) / (double)dataLen);
             Debug.WriteLine(results.ToString());
 
             Assert.AreNotEqual(compressedLen, dataLen);
@@ -139,12 +210,21 @@ namespace TVA.Core.Tests
             int bufferLen = arrayOfFloats.Length;
             int dataLen = bufferLen - 1;
             int gzipLen = arrayOfFloats.Compress().Length;
+            Ticks stopTime, startTime;
 
             // Make sure a buffer exists in the buffer pool so that operation time will not be skewed by buffer initialization:
+            startTime = PrecisionTimer.UtcNow.Ticks;
             BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + TotalTestSampleSize));
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+            results.AppendFormat("Buffer Pool initial take time: {0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
-            Ticks stopTime, startTime = PrecisionTimer.UtcNow.Ticks;
-            int compressedLen = arrayOfFloats.CompressFloatEnumeration(0, dataLen, bufferLen, 15);
+            startTime = PrecisionTimer.UtcNow.Ticks;
+            BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + TotalTestSampleSize));
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+            results.AppendFormat("Buffer Pool cached take time: {0}\r\n\r\n", (stopTime - startTime).ToElapsedTimeString(4));
+
+            startTime = PrecisionTimer.UtcNow.Ticks;
+            int compressedLen = arrayOfFloats.Compress32bitEnumeration(0, dataLen, bufferLen, 15);
             stopTime = PrecisionTimer.UtcNow.Ticks;
 
             // Publish results to debug window
@@ -154,16 +234,71 @@ namespace TVA.Core.Tests
             results.AppendFormat("Total Calculation time:  \t{0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
             results.AppendFormat("Calculation speed:       \t{0:#,##0.0000} MB/sec\r\n", (dataLen / (double)SI2.Mega) / (stopTime - startTime).ToSeconds());
             results.AppendFormat("Compression results:     \t{0:0.00%}\r\n", (dataLen - compressedLen) / (double)dataLen);
-            results.AppendFormat("Standard gzip results:   \t{0:0.00%}\r\n", (dataLen - gzipLen) / (double)gzipLen);
+            results.AppendFormat("Standard gzip results:   \t{0:0.00%}\r\n", (dataLen - gzipLen) / (double)dataLen);
             Debug.WriteLine(results.ToString());
 
             Assert.AreNotEqual(compressedLen, dataLen);
         }
 
         [TestMethod]
-        // Sequential data averages ~30% with compression strength of 5
+        // Random data averages ~51% compression with a compression strength of 15
         // Compression on same buffer using GZip has no compression (-0.12%)
-        // Sample calculation speed = 21.6 MB/s
+        // Sample calculation speed = 5.1 MB/s
+        public void TestArrayOfIntCompressionOnRandomData()
+        {
+            StringBuilder results = new StringBuilder();
+            MemoryStream buffer = new MemoryStream();
+            Random rnd = new Random();
+
+            uint value;
+
+            for (int i = 0; i < TotalTestSampleSize; i++)
+            {
+                value = (uint)(rnd.NextDouble() * 100000);
+                buffer.Write(BitConverter.GetBytes(value), 0, 4);
+            }
+
+            // Add one byte of extra space to accomodate compression algorithm
+            buffer.WriteByte(0xff);
+
+            byte[] arrayOfInts = buffer.ToArray();
+            int bufferLen = arrayOfInts.Length;
+            int dataLen = bufferLen - 1;
+            int gzipLen = arrayOfInts.Compress().Length;
+            Ticks stopTime, startTime;
+
+            // Make sure a buffer exists in the buffer pool so that operation time will not be skewed by buffer initialization:
+            startTime = PrecisionTimer.UtcNow.Ticks;
+            BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + TotalTestSampleSize));
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+            results.AppendFormat("Buffer Pool initial take time: {0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
+
+            startTime = PrecisionTimer.UtcNow.Ticks;
+            BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + TotalTestSampleSize));
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+            results.AppendFormat("Buffer Pool cached take time: {0}\r\n\r\n", (stopTime - startTime).ToElapsedTimeString(4));
+
+            startTime = PrecisionTimer.UtcNow.Ticks;
+            int compressedLen = arrayOfInts.Compress32bitEnumeration(0, dataLen, bufferLen, 15);
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+
+            // Publish results to debug window
+            results.AppendFormat("Results of integer compression algorithm over random data:\r\n\r\n");
+            results.AppendFormat("Total number of samples: \t{0:#,##0}\r\n", TotalTestSampleSize);
+            results.AppendFormat("Total number of bytes:   \t{0:#,##0}\r\n", dataLen);
+            results.AppendFormat("Total Calculation time:  \t{0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
+            results.AppendFormat("Calculation speed:       \t{0:#,##0.0000} MB/sec\r\n", (dataLen / (double)SI2.Mega) / (stopTime - startTime).ToSeconds());
+            results.AppendFormat("Compression results:     \t{0:0.00%}\r\n", (dataLen - compressedLen) / (double)dataLen);
+            results.AppendFormat("Standard gzip results:   \t{0:0.00%}\r\n", (dataLen - gzipLen) / (double)dataLen);
+            Debug.WriteLine(results.ToString());
+
+            Assert.AreNotEqual(compressedLen, dataLen);
+        }
+
+        [TestMethod]
+        // Sequential data averages ~30.5% with compression strength of 5
+        // Compression on same buffer using GZip has no compression (-0.12%)
+        // Sample calculation speed = 20 MB/s
         public void TestArrayOfDoubleCompressionOnSequentialData()
         {
             StringBuilder results = new StringBuilder();
@@ -189,12 +324,21 @@ namespace TVA.Core.Tests
             int bufferLen = arrayOfDoubles.Length;
             int dataLen = bufferLen - 1;
             int gzipLen = arrayOfDoubles.Compress().Length;
+            Ticks stopTime, startTime;
 
             // Make sure a buffer exists in the buffer pool so that operation time will not be skewed by buffer initialization:
+            startTime = PrecisionTimer.UtcNow.Ticks;
             BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + 2 * TotalTestSampleSize));
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+            results.AppendFormat("Buffer Pool initial take time: {0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
-            Ticks stopTime, startTime = PrecisionTimer.UtcNow.Ticks;
-            int compressedLen = arrayOfDoubles.CompressDoubleEnumeration(0, dataLen, bufferLen, 5);
+            startTime = PrecisionTimer.UtcNow.Ticks;
+            BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + 2 * TotalTestSampleSize));
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+            results.AppendFormat("Buffer Pool cached take time: {0}\r\n\r\n", (stopTime - startTime).ToElapsedTimeString(4));
+
+            startTime = PrecisionTimer.UtcNow.Ticks;
+            int compressedLen = arrayOfDoubles.Compress64bitEnumeration(0, dataLen, bufferLen, 5);
             stopTime = PrecisionTimer.UtcNow.Ticks;
 
             // Publish results to debug window
@@ -204,14 +348,76 @@ namespace TVA.Core.Tests
             results.AppendFormat("Total Calculation time:  \t{0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
             results.AppendFormat("Calculation speed:       \t{0:#,##0.0000} MB/sec\r\n", (dataLen / (double)SI2.Mega) / (stopTime - startTime).ToSeconds());
             results.AppendFormat("Compression results:     \t{0:0.00%}\r\n", (dataLen - compressedLen) / (double)dataLen);
-            results.AppendFormat("Standard gzip results:   \t{0:0.00%}\r\n", (dataLen - gzipLen) / (double)gzipLen);
+            results.AppendFormat("Standard gzip results:   \t{0:0.00%}\r\n", (dataLen - gzipLen) / (double)dataLen);
             Debug.WriteLine(results.ToString());
 
             Assert.AreNotEqual(compressedLen, dataLen);
         }
 
         [TestMethod]
-        // Random data averages ~10% compression with compression strength of 150
+        // Sequential data averages ~73% with compression strength of 5
+        // Compression on same buffer using GZip averages ~59% compression
+        // Sample calculation speed = 30 MB/s
+        public void TestArrayOfLongCompressionOnSequentialData()
+        {
+            StringBuilder results = new StringBuilder();
+            MemoryStream buffer = new MemoryStream();
+            Random rnd = new Random();
+
+            ulong value = (ulong)(rnd.NextDouble() * 100000);
+
+            for (int i = 0; i < TotalTestSampleSize; i++)
+            {
+                unchecked
+                {
+                    value++;
+                }
+
+                if (i % 10 == 0)
+                    value = (ulong)(rnd.NextDouble() * 100000);
+
+                buffer.Write(BitConverter.GetBytes(value), 0, 8);
+            }
+
+            // Add one byte of extra space to accomodate compression algorithm
+            buffer.WriteByte(0xff);
+
+            byte[] arrayOfLongs = buffer.ToArray();
+            int bufferLen = arrayOfLongs.Length;
+            int dataLen = bufferLen - 1;
+            int gzipLen = arrayOfLongs.Compress().Length;
+            Ticks stopTime, startTime;
+
+            // Make sure a buffer exists in the buffer pool so that operation time will not be skewed by buffer initialization:
+            startTime = PrecisionTimer.UtcNow.Ticks;
+            BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + 2 * TotalTestSampleSize));
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+            results.AppendFormat("Buffer Pool initial take time: {0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
+
+            startTime = PrecisionTimer.UtcNow.Ticks;
+            BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + 2 * TotalTestSampleSize));
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+            results.AppendFormat("Buffer Pool cached take time: {0}\r\n\r\n", (stopTime - startTime).ToElapsedTimeString(4));
+
+            startTime = PrecisionTimer.UtcNow.Ticks;
+            int compressedLen = arrayOfLongs.Compress64bitEnumeration(0, dataLen, bufferLen, 5);
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+
+            // Publish results to debug window
+            results.AppendFormat("Results of long integer compression algorithm over sequential data:\r\n\r\n");
+            results.AppendFormat("Total number of samples: \t{0:#,##0}\r\n", TotalTestSampleSize);
+            results.AppendFormat("Total number of bytes:   \t{0:#,##0}\r\n", dataLen);
+            results.AppendFormat("Total Calculation time:  \t{0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
+            results.AppendFormat("Calculation speed:       \t{0:#,##0.0000} MB/sec\r\n", (dataLen / (double)SI2.Mega) / (stopTime - startTime).ToSeconds());
+            results.AppendFormat("Compression results:     \t{0:0.00%}\r\n", (dataLen - compressedLen) / (double)dataLen);
+            results.AppendFormat("Standard gzip results:   \t{0:0.00%}\r\n", (dataLen - gzipLen) / (double)dataLen);
+            Debug.WriteLine(results.ToString());
+
+            Assert.AreNotEqual(compressedLen, dataLen);
+        }
+
+        [TestMethod]
+        // Random data averages ~11% compression with compression strength of 150
         // Compression on same buffer using GZip has no compression (-0.12%)
         // Sample calculation speed = 1.4 MB/s
         public void TestArrayOfDoubleCompressionOnRandomData()
@@ -235,12 +441,21 @@ namespace TVA.Core.Tests
             int bufferLen = arrayOfDoubles.Length;
             int dataLen = bufferLen - 1;
             int gzipLen = arrayOfDoubles.Compress().Length;
+            Ticks stopTime, startTime;
 
             // Make sure a buffer exists in the buffer pool so that operation time will not be skewed by buffer initialization:
+            startTime = PrecisionTimer.UtcNow.Ticks;
             BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + 2 * TotalTestSampleSize));
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+            results.AppendFormat("Buffer Pool initial take time: {0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
-            Ticks stopTime, startTime = PrecisionTimer.UtcNow.Ticks;
-            int compressedLen = arrayOfDoubles.CompressDoubleEnumeration(0, dataLen, bufferLen, 150);
+            startTime = PrecisionTimer.UtcNow.Ticks;
+            BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + 2 * TotalTestSampleSize));
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+            results.AppendFormat("Buffer Pool cached take time: {0}\r\n\r\n", (stopTime - startTime).ToElapsedTimeString(4));
+
+            startTime = PrecisionTimer.UtcNow.Ticks;
+            int compressedLen = arrayOfDoubles.Compress64bitEnumeration(0, dataLen, bufferLen, 150);
             stopTime = PrecisionTimer.UtcNow.Ticks;
 
             // Publish results to debug window
@@ -250,7 +465,62 @@ namespace TVA.Core.Tests
             results.AppendFormat("Total Calculation time:  \t{0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
             results.AppendFormat("Calculation speed:       \t{0:#,##0.0000} MB/sec\r\n", (dataLen / (double)SI2.Mega) / (stopTime - startTime).ToSeconds());
             results.AppendFormat("Compression results:     \t{0:0.00%}\r\n", (dataLen - compressedLen) / (double)dataLen);
-            results.AppendFormat("Standard gzip results:   \t{0:0.00%}\r\n", (dataLen - gzipLen) / (double)gzipLen);
+            results.AppendFormat("Standard gzip results:   \t{0:0.00%}\r\n", (dataLen - gzipLen) / (double)dataLen);
+            Debug.WriteLine(results.ToString());
+
+            Assert.AreNotEqual(compressedLen, dataLen);
+        }
+
+        [TestMethod]
+        // Random data averages ~66.5% compression with compression strength of 150
+        // Compression on same buffer using GZip averages 50% compression
+        // Sample calculation speed = 1 MB/s
+        public void TestArrayOfLongCompressionOnRandomData()
+        {
+            StringBuilder results = new StringBuilder();
+            MemoryStream buffer = new MemoryStream();
+            Random rnd = new Random();
+
+            ulong value;
+
+            for (int i = 0; i < TotalTestSampleSize; i++)
+            {
+                value = (ulong)(rnd.NextDouble() * 100000);
+                buffer.Write(BitConverter.GetBytes(value), 0, 8);
+            }
+
+            // Add one byte of extra space to accomodate compression algorithm
+            buffer.WriteByte(0xff);
+
+            byte[] arrayOfLongs = buffer.ToArray();
+            int bufferLen = arrayOfLongs.Length;
+            int dataLen = bufferLen - 1;
+            int gzipLen = arrayOfLongs.Compress().Length;
+            Ticks stopTime, startTime;
+
+            // Make sure a buffer exists in the buffer pool so that operation time will not be skewed by buffer initialization:
+            startTime = PrecisionTimer.UtcNow.Ticks;
+            BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + 2 * TotalTestSampleSize));
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+            results.AppendFormat("Buffer Pool initial take time: {0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
+
+            startTime = PrecisionTimer.UtcNow.Ticks;
+            BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + 2 * TotalTestSampleSize));
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+            results.AppendFormat("Buffer Pool cached take time: {0}\r\n\r\n", (stopTime - startTime).ToElapsedTimeString(4));
+
+            startTime = PrecisionTimer.UtcNow.Ticks;
+            int compressedLen = arrayOfLongs.Compress64bitEnumeration(0, dataLen, bufferLen, 150);
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+
+            // Publish results to debug window
+            results.AppendFormat("Results of long integer compression algorithm over random data:\r\n\r\n");
+            results.AppendFormat("Total number of samples: \t{0:#,##0}\r\n", TotalTestSampleSize);
+            results.AppendFormat("Total number of bytes:   \t{0:#,##0}\r\n", dataLen);
+            results.AppendFormat("Total Calculation time:  \t{0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
+            results.AppendFormat("Calculation speed:       \t{0:#,##0.0000} MB/sec\r\n", (dataLen / (double)SI2.Mega) / (stopTime - startTime).ToSeconds());
+            results.AppendFormat("Compression results:     \t{0:0.00%}\r\n", (dataLen - compressedLen) / (double)dataLen);
+            results.AppendFormat("Standard gzip results:   \t{0:0.00%}\r\n", (dataLen - gzipLen) / (double)dataLen);
             Debug.WriteLine(results.ToString());
 
             Assert.AreNotEqual(compressedLen, dataLen);

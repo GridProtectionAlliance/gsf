@@ -378,7 +378,8 @@ namespace TVA.Diagnostics
         /// <param name="aliasName">The alias name for the <see cref="PerformanceCounter"/> object.</param>
         /// <param name="valueUnit">The measurement unit for the statistical values of the <see cref="PerformanceCounter"/> object.</param>
         /// <param name="valueDivisor">The divisor to be applied to the statistical values of the <see cref="PerformanceCounter"/> object.</param>
-        public PerformanceCounter(string categoryName, string counterName, string instanceName, string aliasName, string valueUnit, float valueDivisor)
+        /// <param name="readOnly">Flag that determines if this counter is read-only.</param>
+        public PerformanceCounter(string categoryName, string counterName, string instanceName, string aliasName, string valueUnit, float valueDivisor, bool readOnly = true)
         {
             this.AliasName = aliasName;
             this.ValueUnit = valueUnit;
@@ -387,6 +388,7 @@ namespace TVA.Diagnostics
             m_samplingWindow = DefaultSamplingWindow;
             m_samples = new List<float>();
             m_counter = new System.Diagnostics.PerformanceCounter(categoryName, counterName, instanceName);
+            m_counter.ReadOnly = readOnly;
 
             Reset();
         }

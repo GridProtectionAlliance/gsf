@@ -271,7 +271,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Text;
-using System.Timers;
+using System.Threading;
 using TVA.Units;
 
 namespace TVA.Diagnostics
@@ -311,6 +311,11 @@ namespace TVA.Diagnostics
         // Constants
 
         /// <summary>
+        /// Name of the custom thread pool counters category.
+        /// </summary>
+        public const string ThreadPoolCountersCategoryName = "TVAThreadPoolCounters";
+
+        /// <summary>
         /// Default interval for sampling the <see cref="Counters"/>.
         /// </summary>
         public const double DefaultSamplingInterval = 1000.0D;
@@ -318,7 +323,7 @@ namespace TVA.Diagnostics
         // Fields
         private string m_processName;
         private List<PerformanceCounter> m_counters;
-        private Timer m_samplingTimer;
+        private System.Timers.Timer m_samplingTimer;
         private bool m_disposed;
 
         #endregion
@@ -381,7 +386,7 @@ namespace TVA.Diagnostics
                 AddCounter("Process", "Working Set", m_processName, "Process Memory Usage", "Megabytes", SI2.Mega);
                 AddCounter(".NET CLR Memory", "# Bytes in all Heaps", m_processName, "CLR Memory Usage", "Megabytes", SI2.Mega);
                 AddCounter(".NET CLR Memory", "Large Object Heap size", m_processName, "Large Object Heap", "Megabytes", SI2.Mega);
-                //                                                                                      1234567890123456
+                //                                                                                         1234567890123456
                 AddCounter(".NET CLR Exceptions", "# of Exceps Thrown", m_processName, "Exception Count", "Total Exceptions", 1);
                 AddCounter(".NET CLR Exceptions", "# of Exceps Thrown / sec", m_processName, "Exception Rate", "Exceptions / sec", 1);
 
@@ -405,11 +410,19 @@ namespace TVA.Diagnostics
                     AddCounter("IPv6", "Datagrams Received/sec", "", "IPv6 Incoming Rate", "Datagrams / sec", 1);
                 }
 
+                if (PerformanceCounterCategory.Exists(ThreadPoolCountersCategoryName))
+                {
+                    // Add custom thread pool counters                                                             1234567890123456
+                    AddCounter(ThreadPoolCountersCategoryName, "Worker Threads", m_processName, "Worker Threads", "Active in Pool", 1, false);
+                    //                                                                                   12345678901234567890
+                    AddCounter(ThreadPoolCountersCategoryName, "Completion Port Threads", m_processName, "I/O Port Threads", "Active in Pool", 1, false);
+                }
+
                 // Perform initial sample for counters since in case timer interval is large
                 SampleCounters();
             }
 
-            m_samplingTimer = new Timer(samplingInterval);
+            m_samplingTimer = new System.Timers.Timer(samplingInterval);
             m_samplingTimer.Elapsed += m_samplingTimer_Elapsed;
             m_samplingTimer.Start();
         }
@@ -833,11 +846,12 @@ namespace TVA.Diagnostics
         /// <param name="aliasName">The alias name for the <see cref="PerformanceCounter"/> object.</param>
         /// <param name="valueUnit">The measurement unit for the statistical values of the <see cref="PerformanceCounter"/> object.</param>
         /// <param name="valueDivisor">The divisor to be applied to the statistical values of the <see cref="PerformanceCounter"/> object.</param>
-        public void AddCounter(string categoryName, string counterName, string instanceName, string aliasName, string valueUnit, float valueDivisor)
+        /// <param name="readOnly">Flag that determines if this counter is read-only.</param>
+        public void AddCounter(string categoryName, string counterName, string instanceName, string aliasName, string valueUnit, float valueDivisor, bool readOnly = true)
         {
             try
             {
-                AddCounter(new PerformanceCounter(categoryName, counterName, instanceName, aliasName, valueUnit, valueDivisor));
+                AddCounter(new PerformanceCounter(categoryName, counterName, instanceName, aliasName, valueUnit, valueDivisor, readOnly));
             }
             catch
             {
@@ -919,6 +933,28 @@ namespace TVA.Diagnostics
         {
             lock (m_counters)
             {
+                // Sample custom thread pool counters
+                PerformanceCounter workerThreadsCounter = FindCounter(ThreadPoolCountersCategoryName, "Worker Threads");
+                PerformanceCounter completionPortThreadsCounter = FindCounter(ThreadPoolCountersCategoryName, "Completion Port Threads");
+
+                if (workerThreadsCounter != null && completionPortThreadsCounter != null)
+                {
+                    System.Diagnostics.PerformanceCounter workerThreads = workerThreadsCounter.BaseCounter;
+                    System.Diagnostics.PerformanceCounter completionPortThreads = completionPortThreadsCounter.BaseCounter;
+
+                    if (workerThreads != null && completionPortThreads != null)
+                    {
+                        int availableWorkerThreads, availableCompletionPortThreads, minimumWorkerThreads, minimumCompletionPortThreads, maximumWorkerThreads, maximumCompletionPortThreads;
+
+                        ThreadPool.GetMinThreads(out minimumWorkerThreads, out minimumCompletionPortThreads);
+                        ThreadPool.GetMaxThreads(out maximumWorkerThreads, out maximumCompletionPortThreads);
+                        ThreadPool.GetAvailableThreads(out availableWorkerThreads, out availableCompletionPortThreads);
+
+                        workerThreads.RawValue = maximumWorkerThreads - availableWorkerThreads;
+                        completionPortThreads.RawValue = maximumCompletionPortThreads - availableCompletionPortThreads;
+                    }
+                }                
+
                 foreach (PerformanceCounter counter in m_counters)
                 {
                     counter.Sample();
@@ -929,6 +965,45 @@ namespace TVA.Diagnostics
         private void m_samplingTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             SampleCounters();
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+
+        // Static Constructor
+        static PerformanceMonitor()
+        {
+            try
+            {
+                if (!PerformanceCounterCategory.Exists(ThreadPoolCountersCategoryName))
+                {
+                    CounterCreationDataCollection customPerformanceCounters = new CounterCreationDataCollection();
+
+                    // Create custom counter objects for thread pool monitoring
+                    CounterCreationData workerThreadCounter = new CounterCreationData();
+                    workerThreadCounter.CounterName = "Worker Threads";
+                    workerThreadCounter.CounterHelp = "Active worker threads in the thread pool";
+                    workerThreadCounter.CounterType = PerformanceCounterType.NumberOfItems32;
+
+                    CounterCreationData completionPortThreadCounter = new CounterCreationData();
+                    completionPortThreadCounter.CounterName = "Completion Port Threads";
+                    completionPortThreadCounter.CounterHelp = "Active completion port threads in the thread pool";
+                    completionPortThreadCounter.CounterType = PerformanceCounterType.NumberOfItems32;
+
+                    // Add custom counter objects to CounterCreationDataCollection
+                    customPerformanceCounters.Add(workerThreadCounter);
+                    customPerformanceCounters.Add(completionPortThreadCounter);
+
+                    // Bind the counters to the PerformanceCounterCategory
+                    PerformanceCounterCategory category = PerformanceCounterCategory.Create(ThreadPoolCountersCategoryName, "Application thread pool counters", PerformanceCounterCategoryType.MultiInstance, customPerformanceCounters);
+                }
+            }
+            catch
+            {
+                // Not failing if custom counters cannot be created
+            }
         }
 
         #endregion

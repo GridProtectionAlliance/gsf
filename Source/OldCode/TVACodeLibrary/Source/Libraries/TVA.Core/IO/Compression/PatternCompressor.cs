@@ -259,9 +259,9 @@ namespace TVA.IO.Compression
     public static class PatternCompressor
     {
         /// <summary>
-        /// Compress a byte array of 32-bit floats using a patterned compression method.
+        /// Compress a byte array containing a sequential list of 32-bit structures (e.g., floating point numbers, integers or unsigned integers) using a patterned compression method.
         /// </summary>
-        /// <param name="source">The <see cref="Byte"/> array containing 32-bit floats to compress. Compression will happen inline on this buffer.</param>
+        /// <param name="source">The <see cref="Byte"/> array containing 32-bit values to compress. Compression will happen inline on this buffer.</param>
         /// <param name="startIndex">An <see cref="Int32"/> representing the start index of the byte array.</param>
         /// <param name="dataLength">The number of bytes in the buffer that represents actual data.</param>
         /// <param name="bufferLength">The number of bytes available for use in the buffer; actual buffer length must be at least one byte larger than <paramref name="dataLength"/> since it's possible that data cannot be compressed. This extra byte will be used indicate an uncompressed buffer.</param>
@@ -276,9 +276,9 @@ namespace TVA.IO.Compression
         /// <remarks>
         /// As an optimization this function is using pointers to native structures, as such the endian order decoding and encoding of the values will always be in the native endian order of the operating system.
         /// </remarks>
-        public unsafe static int CompressFloatEnumeration(this byte[] source, int startIndex, int dataLength, int bufferLength, byte compressionStrength = 5)
+        public unsafe static int Compress32bitEnumeration(this byte[] source, int startIndex, int dataLength, int bufferLength, byte compressionStrength = 5)
         {
-            const int SizeOfFloat = sizeof(float);
+            const int SizeOf32Bits = sizeof(uint);
 
             // Queue length of 16 forces reservation of 4 bits on single byte decompression key to allow for back track indicies of 0 to 15, this
             // means minimal compression size of 4 total bytes would be 1 byte (i.e., 1 byte for decompression key), or max of 75% compression.
@@ -290,7 +290,7 @@ namespace TVA.IO.Compression
             if (dataLength <= 0)
                 throw new ArgumentOutOfRangeException("dataLength", "Data length must be greater than or equal to zero");
 
-            if (dataLength % SizeOfFloat != 0)
+            if (dataLength % SizeOf32Bits != 0)
                 throw new ArgumentException("Data length must be a multiple of 4", "dataLength");
 
             if (bufferLength < dataLength + 1)
@@ -304,10 +304,10 @@ namespace TVA.IO.Compression
 
             byte[] buffer = null;
             int maxQueueLength = compressionStrength + 1;
-            float[] queue = new float[maxQueueLength];
+            uint[] queue = new uint[maxQueueLength];
             int queueLength = 0;
             int usedLength = 0;
-            int count = dataLength / SizeOfFloat;
+            int count = dataLength / SizeOf32Bits;
             int queueStartIndex = 0;
 
             try
@@ -319,15 +319,15 @@ namespace TVA.IO.Compression
                 fixed (byte* pSource = source, pBuffer = buffer)
                 {
                     byte* bufferIndex = pBuffer;
-                    float* values = (float*)pSource;
+                    uint* values = (uint*)pSource;
 
                     // Reserve initial byte for compression buffer flags
                     *bufferIndex = 0;
                     bufferIndex++;
 
                     // Always add first value to the buffer as-is
-                    *(float*)bufferIndex = *values;
-                    bufferIndex += SizeOfFloat;
+                    *(uint*)bufferIndex = *values;
+                    bufferIndex += SizeOf32Bits;
 
                     // Initialize first set of queue values for back reference
                     for (int i = 0; i < (count < maxQueueLength ? count : maxQueueLength); i++, values++, queueLength++)
@@ -336,16 +336,16 @@ namespace TVA.IO.Compression
                     }
 
                     // Reset values collection pointer starting at second item
-                    values = (float*)pSource;
+                    values = (uint*)pSource;
                     values++;
 
                     // Starting with second item, begin compression sequence
                     for (int index = 1; index < count; index++)
                     {
-                        float test, current = *values;
+                        uint test, current = *values;
                         uint bestResult = 0;
                         byte backReferenceIndex = 0;
-                        int smallestDifference = SizeOfFloat;
+                        int smallestDifference = SizeOf32Bits;
                         int queueIndex = queueStartIndex;
 
                         // Test each each item in back reference queue for best compression
@@ -356,8 +356,8 @@ namespace TVA.IO.Compression
                             // Get first item from queue
                             test = queue[queueIndex];
 
-                            // Interpret values as integers and xor current value and queue value for total byte differences
-                            uint result = *(uint*)&current ^ *(uint*)&test;
+                            // Xor current value and queue value (interpreted as integers) for total byte differences
+                            uint result = current ^ test;
 
                             if ((result & 0xffffffff) != result)
                                 difference = 4; // Value differs by 4 bytes
@@ -401,7 +401,7 @@ namespace TVA.IO.Compression
 
                         // If desired bytes are in big endian order, then they are right most in memory so skip ahead
                         if (!BitConverter.IsLittleEndian)
-                            pResult += (SizeOfFloat - smallestDifference - 1);
+                            pResult += (SizeOf32Bits - smallestDifference - 1);
 
                         // Add only needed bytes to the output buffer (maybe none!)
                         for (int j = 0; j < smallestDifference; j++, bufferIndex++, pResult++)
@@ -451,9 +451,9 @@ namespace TVA.IO.Compression
         }
 
         /// <summary>
-        /// Compress a byte array of 64-bit doubles using a patterned compression method.
+        /// Compress a byte array containing a sequential list of 64-bit structures (e.g., double precision floating point numbers, long integers or unsigned long integers) using a patterned compression method.
         /// </summary>
-        /// <param name="source">The <see cref="Byte"/> array containing 64-bit doubles to compress. Compression will happen inline on this buffer.</param>
+        /// <param name="source">The <see cref="Byte"/> array containing 64-bit values to compress. Compression will happen inline on this buffer.</param>
         /// <param name="startIndex">An <see cref="Int32"/> representing the start index of the byte array.</param>
         /// <param name="dataLength">The number of bytes in the buffer that represents actual data.</param>
         /// <param name="bufferLength">The number of bytes available for use in the buffer; actual buffer length must be at least one byte larger than <paramref name="dataLength"/> since it's possible that data cannot be compressed. This extra byte will be used indicate an uncompressed buffer.</param>
@@ -467,9 +467,9 @@ namespace TVA.IO.Compression
         /// <remarks>
         /// As an optimization this function is using pointers to native structures, as such the endian order decoding and encoding of the values will always be in the native endian order of the operating system.
         /// </remarks>
-        public unsafe static int CompressDoubleEnumeration(this byte[] source, int startIndex, int dataLength, int bufferLength, byte compressionStrength = 5)
+        public unsafe static int Compress64bitEnumeration(this byte[] source, int startIndex, int dataLength, int bufferLength, byte compressionStrength = 5)
         {
-            const int SizeOfDouble = sizeof(double);
+            const int SizeOf64Bits = sizeof(ulong);
 
             // Algorithm uses all 8-bits of decompression key plus 1 full byte for back track indicies, 256 maximum, to yield 75% maximum compression.
             // Compression algorithm is best suited for data that differs fractionally over time (e.g., 60.05, 60.08, 60.09, 60.11...)
@@ -479,7 +479,7 @@ namespace TVA.IO.Compression
             if (dataLength <= 0)
                 throw new ArgumentOutOfRangeException("dataLength", "Data length must be greater than or equal to zero");
 
-            if (dataLength % SizeOfDouble != 0)
+            if (dataLength % SizeOf64Bits != 0)
                 throw new ArgumentException("Data length must be a multiple of 8", "dataLength");
 
             if (bufferLength < dataLength + 1)
@@ -490,10 +490,10 @@ namespace TVA.IO.Compression
 
             byte[] buffer = null;
             int maxQueueLength = compressionStrength + 1;
-            double[] queue = new double[maxQueueLength];
+            ulong[] queue = new ulong[maxQueueLength];
             int queueLength = 0;
             int usedLength = 0;
-            int count = dataLength / SizeOfDouble;
+            int count = dataLength / SizeOf64Bits;
             int queueStartIndex = 0;
 
             try
@@ -505,15 +505,15 @@ namespace TVA.IO.Compression
                 fixed (byte* pSource = source, pBuffer = buffer)
                 {
                     byte* bufferIndex = pBuffer;
-                    double* values = (double*)pSource;
+                    ulong* values = (ulong*)pSource;
 
                     // Reserve initial byte for compression buffer flags
                     *bufferIndex = 0;
                     bufferIndex++;
 
                     // Always add first value to the buffer as-is
-                    *(double*)bufferIndex = *values;
-                    bufferIndex += SizeOfDouble;
+                    *(ulong*)bufferIndex = *values;
+                    bufferIndex += SizeOf64Bits;
 
                     // Initialize first set of queue values for back reference
                     for (int i = 0; i < (count < maxQueueLength ? count : maxQueueLength); i++, values++, queueLength++)
@@ -522,16 +522,16 @@ namespace TVA.IO.Compression
                     }
 
                     // Reset values collection pointer starting at second item
-                    values = (double*)pSource;
+                    values = (ulong*)pSource;
                     values++;
 
                     // Starting with second item, begin compression sequence
                     for (int index = 1; index < count; index++)
                     {
-                        double test, current = *values;
+                        ulong test, current = *values;
                         ulong bestResult = 0;
                         byte backReferenceIndex = 0;
-                        int smallestDifference = SizeOfDouble;
+                        int smallestDifference = SizeOf64Bits;
                         int queueIndex = queueStartIndex;
 
                         // Test each each item in back reference queue for best compression
@@ -542,8 +542,8 @@ namespace TVA.IO.Compression
                             // Get first item from queue
                             test = queue[queueIndex];
 
-                            // Interpret values as integers and xor current value and queue value for total byte differences
-                            ulong result = *(ulong*)&current ^ *(ulong*)&test;
+                            // Xor current value and queue value (interpreted as integers) for total byte differences
+                            ulong result = current ^ test;
 
                             if ((result & 0xffffffffffffffff) != result)
                                 difference = 8; // Value differs by 8 bytes
@@ -598,7 +598,7 @@ namespace TVA.IO.Compression
 
                         // If desired bytes are in big endian order, then they are right most in memory so skip ahead
                         if (!BitConverter.IsLittleEndian)
-                            pResult += (SizeOfDouble - smallestDifference - 1);
+                            pResult += (SizeOf64Bits - smallestDifference - 1);
 
                         // Add only needed bytes to the output buffer
                         for (int j = 0; j < smallestDifference; j++, bufferIndex++, pResult++)
