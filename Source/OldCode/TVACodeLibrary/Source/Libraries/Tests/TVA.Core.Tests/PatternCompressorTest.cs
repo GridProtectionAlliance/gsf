@@ -107,8 +107,8 @@ namespace TVA.Core.Tests
             results.AppendFormat("Total number of bytes:   \t{0:#,##0}\r\n", dataLen);
             results.AppendFormat("Total Calculation time:  \t{0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
             results.AppendFormat("Calculation speed:       \t{0:#,##0.0000} MB/sec\r\n", (dataLen / (double)SI2.Mega) / (stopTime - startTime).ToSeconds());
-            results.AppendFormat("Compression strength:    \t{0:0.00%}\r\n", (dataLen - compressedLen) / (double)dataLen);
-            results.AppendFormat("Compared to gzip:        \t{0:0.00%}\r\n", (dataLen - gzipLen) / (double)gzipLen);
+            results.AppendFormat("Compression results:     \t{0:0.00%}\r\n", (dataLen - compressedLen) / (double)dataLen);
+            results.AppendFormat("Standard gzip results:   \t{0:0.00%}\r\n", (dataLen - gzipLen) / (double)gzipLen);
             Debug.WriteLine(results.ToString());
 
             Assert.AreNotEqual(compressedLen, dataLen);
@@ -153,8 +153,8 @@ namespace TVA.Core.Tests
             results.AppendFormat("Total number of bytes:   \t{0:#,##0}\r\n", dataLen);
             results.AppendFormat("Total Calculation time:  \t{0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
             results.AppendFormat("Calculation speed:       \t{0:#,##0.0000} MB/sec\r\n", (dataLen / (double)SI2.Mega) / (stopTime - startTime).ToSeconds());
-            results.AppendFormat("Compression strength:    \t{0:0.00%}\r\n", (dataLen - compressedLen) / (double)dataLen);
-            results.AppendFormat("Compared to gzip:        \t{0:0.00%}\r\n", (dataLen - gzipLen) / (double)gzipLen);
+            results.AppendFormat("Compression results:     \t{0:0.00%}\r\n", (dataLen - compressedLen) / (double)dataLen);
+            results.AppendFormat("Standard gzip results:   \t{0:0.00%}\r\n", (dataLen - gzipLen) / (double)gzipLen);
             Debug.WriteLine(results.ToString());
 
             Assert.AreNotEqual(compressedLen, dataLen);
@@ -203,8 +203,8 @@ namespace TVA.Core.Tests
             results.AppendFormat("Total number of bytes:   \t{0:#,##0}\r\n", dataLen);
             results.AppendFormat("Total Calculation time:  \t{0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
             results.AppendFormat("Calculation speed:       \t{0:#,##0.0000} MB/sec\r\n", (dataLen / (double)SI2.Mega) / (stopTime - startTime).ToSeconds());
-            results.AppendFormat("Compression strength:    \t{0:0.00%}\r\n", (dataLen - compressedLen) / (double)dataLen);
-            results.AppendFormat("Compared to gzip:        \t{0:0.00%}\r\n", (dataLen - gzipLen) / (double)gzipLen);
+            results.AppendFormat("Compression results:     \t{0:0.00%}\r\n", (dataLen - compressedLen) / (double)dataLen);
+            results.AppendFormat("Standard gzip results:   \t{0:0.00%}\r\n", (dataLen - gzipLen) / (double)gzipLen);
             Debug.WriteLine(results.ToString());
 
             Assert.AreNotEqual(compressedLen, dataLen);
@@ -249,8 +249,8 @@ namespace TVA.Core.Tests
             results.AppendFormat("Total number of bytes:   \t{0:#,##0}\r\n", dataLen);
             results.AppendFormat("Total Calculation time:  \t{0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
             results.AppendFormat("Calculation speed:       \t{0:#,##0.0000} MB/sec\r\n", (dataLen / (double)SI2.Mega) / (stopTime - startTime).ToSeconds());
-            results.AppendFormat("Compression strength:    \t{0:0.00%}\r\n", (dataLen - compressedLen) / (double)dataLen);
-            results.AppendFormat("Compared to gzip:        \t{0:0.00%}\r\n", (dataLen - gzipLen) / (double)gzipLen);
+            results.AppendFormat("Compression results:     \t{0:0.00%}\r\n", (dataLen - compressedLen) / (double)dataLen);
+            results.AppendFormat("Standard gzip results:   \t{0:0.00%}\r\n", (dataLen - gzipLen) / (double)gzipLen);
             Debug.WriteLine(results.ToString());
 
             Assert.AreNotEqual(compressedLen, dataLen);
