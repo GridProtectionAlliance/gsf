@@ -467,7 +467,7 @@ namespace TVA.IO.Compression
         /// <remarks>
         /// As an optimization this function is using pointers to native structures, as such the endian order decoding and encoding of the values will always be in the native endian order of the operating system.
         /// </remarks>
-        public unsafe static int CompressDoubleEnumeration(this byte[] source, int startIndex, int dataLength, int bufferLength, byte compressionStrength = 50)
+        public unsafe static int CompressDoubleEnumeration(this byte[] source, int startIndex, int dataLength, int bufferLength, byte compressionStrength = 5)
         {
             const int SizeOfDouble = sizeof(double);
 
@@ -498,8 +498,8 @@ namespace TVA.IO.Compression
 
             try
             {
-                // Grab a working buffer from the pool, note that maximum zero compression size would be size of all original values plus one byte for each value
-                buffer = BufferPool.TakeBuffer(dataLength + count);
+                // Grab a working buffer from the pool, note that maximum zero compression size would be size of all original values plus two bytes for each value
+                buffer = BufferPool.TakeBuffer(dataLength + 2 * count);
 
                 // Pin buffers to be navigated so that .NET doesn't move them around
                 fixed (byte* pSource = source, pBuffer = buffer)
