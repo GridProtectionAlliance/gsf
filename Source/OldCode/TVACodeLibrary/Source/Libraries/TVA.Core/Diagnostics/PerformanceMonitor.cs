@@ -313,7 +313,7 @@ namespace TVA.Diagnostics
         /// <summary>
         /// Name of the custom thread pool counters category.
         /// </summary>
-        public const string ThreadPoolCountersCategoryName = "TVAThreadPoolCounters";
+        public const string ThreadPoolCountersCategoryName = "TVA Thread Pool Counters";
 
         /// <summary>
         /// Default interval for sampling the <see cref="Counters"/>.
@@ -381,6 +381,15 @@ namespace TVA.Diagnostics
                 AddCounter("Process", "Handle Count", m_processName, "Process Handle Count", "Total Handles", 1);
                 AddCounter("Process", "Thread Count", m_processName, "Process Thread Count", "System Threads", 1);
                 AddCounter(".NET CLR LocksAndThreads", "# of current logical Threads", m_processName, "CLR Thread Count", "Managed Threads", 1);
+
+                if (PerformanceCounterCategory.Exists(ThreadPoolCountersCategoryName))
+                {
+                    // Add custom thread pool counters                                                             1234567890123456
+                    AddCounter(ThreadPoolCountersCategoryName, "Worker Threads", m_processName, "Worker Threads", "Active in Pool", 1, false);
+                    //                                                                                   12345678901234567890
+                    AddCounter(ThreadPoolCountersCategoryName, "Completion Port Threads", m_processName, "I/O Port Threads", "Active in Pool", 1, false);
+                }
+
                 AddCounter(".NET CLR LocksAndThreads", "Current Queue Length", m_processName, "Thread Queue Size", "Waiting Threads", 1);
                 AddCounter(".NET CLR LocksAndThreads", "Contention Rate / sec", m_processName, "Lock Contention Rate", "Attempts / sec", 1);
                 AddCounter("Process", "Working Set", m_processName, "Process Memory Usage", "Megabytes", SI2.Mega);
@@ -408,14 +417,6 @@ namespace TVA.Diagnostics
                 {
                     AddCounter("IPv6", "Datagrams Sent/sec", "", "IPv6 Outgoing Rate", "Datagrams / sec", 1);
                     AddCounter("IPv6", "Datagrams Received/sec", "", "IPv6 Incoming Rate", "Datagrams / sec", 1);
-                }
-
-                if (PerformanceCounterCategory.Exists(ThreadPoolCountersCategoryName))
-                {
-                    // Add custom thread pool counters                                                             1234567890123456
-                    AddCounter(ThreadPoolCountersCategoryName, "Worker Threads", m_processName, "Worker Threads", "Active in Pool", 1, false);
-                    //                                                                                   12345678901234567890
-                    AddCounter(ThreadPoolCountersCategoryName, "Completion Port Threads", m_processName, "I/O Port Threads", "Active in Pool", 1, false);
                 }
 
                 // Perform initial sample for counters since in case timer interval is large
@@ -944,9 +945,8 @@ namespace TVA.Diagnostics
 
                     if (workerThreads != null && completionPortThreads != null)
                     {
-                        int availableWorkerThreads, availableCompletionPortThreads, minimumWorkerThreads, minimumCompletionPortThreads, maximumWorkerThreads, maximumCompletionPortThreads;
+                        int maximumWorkerThreads, maximumCompletionPortThreads, availableWorkerThreads, availableCompletionPortThreads;
 
-                        ThreadPool.GetMinThreads(out minimumWorkerThreads, out minimumCompletionPortThreads);
                         ThreadPool.GetMaxThreads(out maximumWorkerThreads, out maximumCompletionPortThreads);
                         ThreadPool.GetAvailableThreads(out availableWorkerThreads, out availableCompletionPortThreads);
 
@@ -970,7 +970,6 @@ namespace TVA.Diagnostics
         #endregion
 
         #region [ Static ]
-
 
         // Static Constructor
         static PerformanceMonitor()
