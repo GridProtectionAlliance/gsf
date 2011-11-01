@@ -665,53 +665,15 @@ namespace TVA.Security
         /// <returns>true if logging was successful, otherwise false.</returns>
         protected virtual bool LogLogin(bool loginSuccess)
         {
-            if (!string.IsNullOrEmpty(ApplicationName))
+            if (!string.IsNullOrWhiteSpace(SettingsCategory) && UserData != null && UserData.IsDefined && !string.IsNullOrWhiteSpace(UserData.Username))
             {
-                if (!UserData.IsDefined)
-                    return false;
-
                 AdoDataConnection database = new AdoDataConnection(SettingsCategory);
-                using (IDbConnection dbConnection = database.Connection)
+
+                using (IDbConnection connection = database.Connection)
                 {
-                    IDbCommand command = dbConnection.CreateCommand();
-                    command.CommandType = CommandType.Text;
-                    IDbDataParameter param;
-
-                    if (database.IsOracle)
-                    {
-                        command.CommandText = "INSERT INTO AccessLog (UserName, AccessGranted, \"Comment\") VALUES (:userName, :accessGranted, :comm)";
-                        param = command.CreateParameter();
-                        param.ParameterName = ":userName";
-                        param.Value = UserData.Username;
-                        command.Parameters.Add(param);
-                        param = command.CreateParameter();
-                        param.ParameterName = ":accessGranted";
-                        param.Value = loginSuccess ? 1 : 0;
-                        command.Parameters.Add(param);
-                        param = command.CreateParameter();
-                        param.ParameterName = ":comm";
-                        param.Value = "";
-                        command.Parameters.Add(param);
-                    }
-                    else
-                    {
-                        command.CommandText = "INSERT INTO AccessLog (UserName, AccessGranted, Comment) VALUES (@userName, @accessGranted, @comment)";
-                        param = command.CreateParameter();
-                        param.ParameterName = "@userName";
-                        param.Value = UserData.Username;
-                        command.Parameters.Add(param);
-                        param = command.CreateParameter();
-                        param.ParameterName = "@accessGranted";
-                        param.Value = loginSuccess;
-                        command.Parameters.Add(param);
-                        param = command.CreateParameter();
-                        param.ParameterName = "@comment";
-                        param.Value = "";
-                        command.Parameters.Add(param);
-                    }
-
-                    command.ExecuteNonQuery();
+                    connection.ExecuteNonQuery(database.ParameterizedQueryString("INSERT INTO AccessLog (UserName, AccessGranted) VALUES ({0}, {1})", "userName", "accessGranted"), UserData.Username, loginSuccess ? 1 : 0);
                 }
+
                 return true;
             }
 
@@ -726,32 +688,22 @@ namespace TVA.Security
         /// <returns>true if logging was successful, otherwise false.</returns>
         protected virtual bool LogError(string source, string message)
         {
-            if (!string.IsNullOrEmpty(ApplicationName))
+            if (!string.IsNullOrWhiteSpace(SettingsCategory) && !string.IsNullOrWhiteSpace(source) && !string.IsNullOrWhiteSpace(message))
             {
                 try
                 {
                     AdoDataConnection database = new AdoDataConnection(SettingsCategory);
 
-                    using (IDbConnection dbConnection = database.Connection)
+                    using (IDbConnection connection = database.Connection)
                     {
-                        IDbCommand command = dbConnection.CreateCommand();
-                        command.CommandType = CommandType.Text;
-                        IDbDataParameter param;
-                        command.CommandText = database.ParameterizedQueryString("INSERT INTO ErrorLog (Source, Message) VALUES ({0}, {1})", "source", "message");
-                        param = command.CreateParameter();
-                        param.ParameterName = database.IsOracle ? ":source" : "@source";
-                        param.Value = source;
-                        command.Parameters.Add(param);
-                        param = command.CreateParameter();
-                        param.ParameterName = database.IsOracle ? ":message" : "@message";
-                        param.Value = message;
-                        command.Parameters.Add(param);
-                        command.ExecuteNonQuery();
+                        connection.ExecuteNonQuery(database.ParameterizedQueryString("INSERT INTO ErrorLog (Source, Message) VALUES ({0}, {1})", "source", "message"), source, message);
                     }
+
                     return true;
                 }
                 catch
                 {
+                    // Nothing to-do if failure cannot be logged
                 }
             }
 
