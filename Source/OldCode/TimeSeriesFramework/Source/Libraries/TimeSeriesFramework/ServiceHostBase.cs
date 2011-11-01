@@ -92,6 +92,10 @@ namespace TimeSeriesFramework
     {
         #region [ Members ]
 
+        // Constants
+        private const int DefaultMinThreadPoolSize = 25;
+        private const int DefaultMaxThreadPoolSize = 2048;
+
         // Fields
         private IaonSession m_iaonSession;
         private string m_nodeIDQueryString;
@@ -299,6 +303,10 @@ namespace TimeSeriesFramework
             systemSettings.Add("UniqueAdaptersIDs", "True", "Set to true if all runtime adapter ID's will be unique to allow for easier adapter specification");
             systemSettings.Add("ProcessPriority", "High", "Sets desired process priority: Normal, AboveNormal, High, RealTime");
             systemSettings.Add("AllowRemoteRestart", "True", "Controls ability to remotely restart the host service.");
+            systemSettings.Add("MinThreadPoolWorkerThreads", DefaultMinThreadPoolSize, "Defines the minimum number of allowed thread pool worker threads.");
+            systemSettings.Add("MaxThreadPoolWorkerThreads", DefaultMaxThreadPoolSize, "Defines the maximum number of allowed thread pool worker threads.");
+            systemSettings.Add("MinThreadPoolIOPortThreads", DefaultMinThreadPoolSize, "Defines the minimum number of allowed thread pool I/O completion port threads (used by socket layer).");
+            systemSettings.Add("MaxThreadPoolIOPortThreads", DefaultMaxThreadPoolSize, "Defines the maximum number of allowed thread pool I/O completion port threads (used by socket layer).");
 
             // Example connection settings
             CategorizedSettingsElementCollection exampleSettings = configFile.Settings["exampleConnectionSettings"];
@@ -339,6 +347,18 @@ namespace TimeSeriesFramework
             m_cachedConfigurationFile = FilePath.AddPathSuffix(cachePath) + systemSettings["CachedConfigurationFile"].Value;
             m_uniqueAdapterIDs = systemSettings["UniqueAdaptersIDs"].ValueAsBoolean(true);
             m_allowRemoteRestart = systemSettings["AllowRemoteRestart"].ValueAsBoolean(true);
+
+            // Setup default thread pool size
+            try
+            {
+                ThreadPool.SetMinThreads(systemSettings["MinThreadPoolWorkerThreads"].ValueAs<int>(DefaultMinThreadPoolSize), systemSettings["MinThreadPoolIOPortThreads"].ValueAs<int>(DefaultMinThreadPoolSize));
+                ThreadPool.SetMaxThreads(systemSettings["MaxThreadPoolWorkerThreads"].ValueAs<int>(DefaultMaxThreadPoolSize), systemSettings["MaxThreadPoolIOPortThreads"].ValueAs<int>(DefaultMaxThreadPoolSize));
+            }
+            catch (Exception ex)
+            {
+                DisplayStatusMessage("Failed to set desired thread pool size due to exception: {0}", UpdateType.Alarm, ex.Message);
+                m_serviceHelper.ErrorLogger.Log(ex);
+            }
 
             // Define guid with query string delimeters according to database needs
             Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
@@ -542,6 +562,14 @@ namespace TimeSeriesFramework
             }
             else
                 DisplayStatusMessage("System initialization failed due to unavailable configuration.", UpdateType.Alarm);
+
+            // Log current thread pool size
+            int minWorkerThreads, minIOThreads, maxWorkerThreads, maxIOThreads;
+            
+            ThreadPool.GetMinThreads(out minWorkerThreads, out minIOThreads);
+            ThreadPool.GetMaxThreads(out maxWorkerThreads, out maxIOThreads);
+
+            DisplayStatusMessage("Thread pool size: minimum {0} worker {1} I/O, maximum {2} worker {3} I/O", UpdateType.Information, minWorkerThreads, minIOThreads, maxWorkerThreads, maxIOThreads);
         }
 
         // Load the the system configuration data set

@@ -885,11 +885,15 @@ namespace TimeSeriesFramework.UI
             }
         }
 
-        public virtual void SortData(string sortMemeberPath)
+        /// <summary>
+        /// Sorts model data.
+        /// </summary>
+        /// <param name="sortMemberPath">Member path for sorting.</param>
+        public virtual void SortData(string sortMemberPath)
         {
             ItemsSource = new ObservableCollection<TDataModel>(
                 from item in ItemsSource
-                orderby typeof(TDataModel).GetProperty(sortMemeberPath).GetValue(item, null)
+                orderby typeof(TDataModel).GetProperty(sortMemberPath).GetValue(item, null)
                 select item
                 );
         }

@@ -830,9 +830,19 @@ namespace TimeSeriesFramework.Adapters
                         // If any adapters support temporal processing, add them to the temporal configuration
                         if (temporalAdapters.Length > 0)
                         {
-                            foreach (DataRow row in realtimeConfiguration.Tables[tableName].Select(string.Format("ID IN ({0})", temporalAdapters.Select(row => row["ID"].ToString()).ToDelimitedString(','))))
+                            DataTable realtimeTable = realtimeConfiguration.Tables[tableName];
+                            DataTable temporalTable = temporalConfiguration.Tables[tableName];
+
+                            foreach (DataRow row in realtimeTable.Select(string.Format("ID IN ({0})", temporalAdapters.Select(row => row["ID"].ToString()).ToDelimitedString(','))))
                             {
-                                temporalConfiguration.Tables[tableName].Rows.Add(row);
+                                DataRow newRow = temporalTable.NewRow();
+
+                                for (int x = 0; x < realtimeTable.Columns.Count; x++)
+                                {
+                                    newRow[x] = row[x];
+                                }
+
+                                temporalConfiguration.Tables[tableName].Rows.Add(newRow);
                             }
                         }
 

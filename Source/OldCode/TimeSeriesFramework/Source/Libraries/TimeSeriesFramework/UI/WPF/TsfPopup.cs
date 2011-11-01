@@ -36,14 +36,27 @@ namespace TimeSeriesFramework.UI
     /// </summary>
     public class TsfPopup : Popup
     {
+        #region [ Members ]
+
+        // Nested Types
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct RECT
+        {
+            public int Left;
+            public int Top;
+            public int Right;
+            public int Bottom;
+        }
+
+        #endregion
+        
         #region [ Properties ]
 
         /// <summary>
         /// Dependency property to define zorder of the <see cref="TsfPopup"/>.
         /// </summary>
-        public static DependencyProperty TopmostProperty = Window.TopmostProperty.AddOwner(
-            typeof(TsfPopup),
-            new FrameworkPropertyMetadata(false, OnTopmostChanged));
+        public static DependencyProperty TopmostProperty = Window.TopmostProperty.AddOwner(typeof(TsfPopup), new FrameworkPropertyMetadata(false, OnTopmostChanged));
 
         /// <summary>
         /// Gets or sets Topmost flag for <see cref="TsfPopup"/>.
@@ -69,6 +82,10 @@ namespace TimeSeriesFramework.UI
             (obj as TsfPopup).UpdateWindow();
         }
 
+        /// <summary>
+        /// Responds to the condition in which the value of the <see cref="System.Windows.Controls.Primitives.Popup.IsOpen"/> property changes from <c>false</c> to <c>true</c>.
+        /// </summary>
+        /// <param name="e">The event arguments.</param>
         protected override void OnOpened(EventArgs e)
         {
             UpdateWindow();
@@ -80,23 +97,14 @@ namespace TimeSeriesFramework.UI
             RECT rect;
 
             if (GetWindowRect(hwnd, out rect))
-            {
                 SetWindowPos(hwnd, Topmost ? -1 : -2, rect.Left, rect.Top, (int)this.Width, (int)this.Height, 0);
-            }
         }
 
         #endregion
 
-        #region [ P/Invoke imports & definitions ]
+        #region [ Static ]
 
-        [StructLayout(LayoutKind.Sequential)]
-        public struct RECT
-        {
-            public int Left;
-            public int Top;
-            public int Right;
-            public int Bottom;
-        }
+        // Static Methods
 
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -105,6 +113,6 @@ namespace TimeSeriesFramework.UI
         [DllImport("user32", EntryPoint = "SetWindowPos")]
         private static extern int SetWindowPos(IntPtr hWnd, int hwndInsertAfter, int x, int y, int cx, int cy, int wFlags);
 
-        #endregion
+        #endregion        
     }
 }

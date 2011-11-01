@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -1122,14 +1123,14 @@ namespace TimeSeriesFramework.Adapters
                     else
                     {
                         // Expression match failed, attempt to parse absolute time specification.
-                        dateTime = DateTime.Parse(timetag);
+                        dateTime = DateTime.Parse(timetag, CultureInfo.InvariantCulture);
                     }
                 }
             }
             else
             {
                 // Absolute time is specified.
-                dateTime = DateTime.Parse(timetag);
+                dateTime = DateTime.Parse(timetag, CultureInfo.InvariantCulture);
             }
 
             return dateTime;
