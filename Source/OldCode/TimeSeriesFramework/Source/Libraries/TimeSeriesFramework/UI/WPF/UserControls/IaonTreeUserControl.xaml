@@ -27,9 +27,9 @@
                             <ToolTipService.ToolTip>
                                 <TextBlock Width="500" TextWrapping="Wrap" Text="{Binding Path=ConnectionString}"/>
                             </ToolTipService.ToolTip>
-                            <TextBlock Width="{StaticResource LargeItemSize}" Text="{Binding Path=AdapterName}"/>
-                            <TextBlock Width="{StaticResource XLargeItemSize}" Text="{Binding Path=AssemblyName}"/>
-                            <TextBlock Width="{StaticResource XXLargeItemSize}" Text="{Binding Path=TypeName}"/>                            
+                            <TextBlock Width="{StaticResource LargeItemSize}" Text="{Binding Path=AdapterName}" TextAlignment="Left"/>
+                            <TextBlock Width="{StaticResource XLargeItemSize}" Text="{Binding Path=AssemblyName}" TextAlignment="Left"/>
+                            <TextBlock Width="{StaticResource XXLargeItemSize}" Text="{Binding Path=TypeName}" TextAlignment="Left"/>
                         </StackPanel>
                     </HierarchicalDataTemplate>
                     <HierarchicalDataTemplate x:Key="RootNodeTemplate" ItemTemplate="{StaticResource ChildNodeTemplate}" ItemsSource="{Binding Path=AdapterList}">
