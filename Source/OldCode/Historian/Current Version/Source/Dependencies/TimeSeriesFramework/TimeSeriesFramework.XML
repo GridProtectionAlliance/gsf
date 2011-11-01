@@ -850,7 +850,8 @@
             you want data to be sorted and processed as fast as possible.
             </para>
             <para>
-            Setting this value to <c>true</c> will force <see cref="P:TimeSeriesFramework.ConcentratorBase.UseLocalClockAsRealTime"/> to be <c>true</c>.
+            Setting this value to <c>true</c> will force <see cref="P:TimeSeriesFramework.ConcentratorBase.UseLocalClockAsRealTime"/> to be <c>true</c>
+            and <see cref="P:TimeSeriesFramework.ConcentratorBase.AllowSortsByArrival"/> to be <c>false</c>.
             </para>
             </remarks>
         </member>
@@ -906,10 +907,15 @@
             to be sorted by arrival time.
             </summary>
             <remarks>
+            <para>
             Value defaults to <c>true</c>, so any incoming measurement with a bad timestamp quality will be sorted
             according to its arrival time. Setting the property to <c>false</c> will cause all measurements with a
             bad timestamp quality to be discarded. This property will only be considered when
             <see cref="P:TimeSeriesFramework.ConcentratorBase.IgnoreBadTimestamps"/> is <c>false</c>.
+            </para>
+            <para>
+            Value will be forced to <c>false</c> if <see cref="P:TimeSeriesFramework.ConcentratorBase.ProcessByReceivedTimestamp"/> is <c>true</c>.
+            </para>
             </remarks>
         </member>
         <member name="P:TimeSeriesFramework.ConcentratorBase.UseLocalClockAsRealTime">
