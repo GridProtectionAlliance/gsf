@@ -80,14 +80,11 @@ namespace TimeSeriesFramework.UI
         }
 
         /// <summary>
-        /// Initializes or resets existing values in <see cref="IsolatedStorageFile"/> to default values.
+        /// Initializes or resets existing settings for input status and monitoring screen in <see cref="IsolatedStorageFile"/> to default values.
         /// </summary>
         /// <param name="overWriteExisting">Boolean flag indicating if existing values should be reset to default value.</param>
-        public static void InitializeIsolatedStorage(bool overWriteExisting)
+        public static void InitializeStorageForInputStatusMonitor(bool overWriteExisting)
         {
-            if (!s_userStoreForAssembly.FileExists("NumberOfMessages") || overWriteExisting)
-                WriteToIsolatedStorage("NumberOfMessages", 75);
-
             if (!s_userStoreForAssembly.FileExists("ForceIPv4") || overWriteExisting)
                 WriteToIsolatedStorage("ForceIPv4", "true");
 
@@ -121,12 +118,6 @@ namespace TimeSeriesFramework.UI
             if (!s_userStoreForAssembly.FileExists("MeasurementsDataRefreshInterval") || overWriteExisting)
                 WriteToIsolatedStorage("MeasurementsDataRefreshInterval", 10);
 
-            if (!s_userStoreForAssembly.FileExists("StreamStatisticsDataRefreshInterval") || overWriteExisting)
-                WriteToIsolatedStorage("StatisticsDataRefreshInterval", 10);
-
-            if (!s_userStoreForAssembly.FileExists("RealtimeMeasurementsDataRefreshInterval") || overWriteExisting)
-                WriteToIsolatedStorage("MeasurementsDataRefreshInterval", 10);
-
             if (!s_userStoreForAssembly.FileExists("DisplayXAxis") || overWriteExisting)
                 WriteToIsolatedStorage("DisplayXAxis", "false");
 
@@ -150,6 +141,48 @@ namespace TimeSeriesFramework.UI
 
             if (!s_userStoreForAssembly.FileExists("DisplayLegend") || overWriteExisting)
                 WriteToIsolatedStorage("DisplayLegend", "true");
+        }
+
+        /// <summary>
+        /// Initializes or resets existing settings for remote console screen in <see cref="IsolatedStorageFile"/> to default values.
+        /// </summary>
+        /// <param name="overWriteExisting">Boolean flag indicating if existing values should be reset to default value.</param>
+        public static void InitializeStorageForRemoteConsole(bool overWriteExisting)
+        {
+            if (!s_userStoreForAssembly.FileExists("NumberOfMessages") || overWriteExisting)
+                WriteToIsolatedStorage("NumberOfMessages", 75);
+        }
+
+        /// <summary>
+        /// Initializes or resets existing settings for stream statistics screen in <see cref="IsolatedStorageFile"/> to default values.
+        /// </summary>
+        /// <param name="overWriteExisting">Boolean flag indicating if existing values should be reset to default value.</param>
+        public static void InitializeStorageForStreamStatistics(bool overWriteExisting)
+        {
+            if (!s_userStoreForAssembly.FileExists("StreamStatisticsDataRefreshInterval") || overWriteExisting)
+                WriteToIsolatedStorage("StreamStatisticsDataRefreshInterval", 10);
+        }
+
+        /// <summary>
+        /// Initializes or resets existing settings for real-time measurements screen in <see cref="IsolatedStorageFile"/> to default values.
+        /// </summary>
+        /// <param name="overWriteExisting">Boolean flag indicating if existing values should be reset to default value.</param>
+        public static void InitializeStorageForRealTimeMeasurements(bool overWriteExisting)
+        {
+            if (!s_userStoreForAssembly.FileExists("RealtimeMeasurementsDataRefreshInterval") || overWriteExisting)
+                WriteToIsolatedStorage("RealtimeMeasurementsDataRefreshInterval", 10);
+        }
+
+        /// <summary>
+        /// Initializes or resets existing values in <see cref="IsolatedStorageFile"/> to default values.
+        /// </summary>
+        /// <param name="overWriteExisting">Boolean flag indicating if existing values should be reset to default value.</param>
+        public static void InitializeIsolatedStorage(bool overWriteExisting)
+        {
+            InitializeStorageForInputStatusMonitor(overWriteExisting);
+            InitializeStorageForRealTimeMeasurements(overWriteExisting);
+            InitializeStorageForRemoteConsole(overWriteExisting);
+            InitializeStorageForStreamStatistics(overWriteExisting);
         }
     }
 }
