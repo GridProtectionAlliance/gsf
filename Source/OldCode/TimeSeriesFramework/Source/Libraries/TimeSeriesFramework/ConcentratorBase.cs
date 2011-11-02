@@ -1650,6 +1650,9 @@ namespace TimeSeriesFramework
                 {
                     if (disposing)
                     {
+                        // Make sure concentrator is stopped
+                        Stop();
+
                         DetachFromFrameRateTimer(m_framesPerSecond, m_processingInterval);
 
                         m_publicationThread = null;
