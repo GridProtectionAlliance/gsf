@@ -1617,7 +1617,7 @@ namespace TVA.ServiceProcess
         /// <remarks>
         /// This method is used to send an actionable client response that can be used for responding to an event after a command has been issued.
         /// </remarks>
-        public void SendActionableResponse(ClientRequestInfo requestInfo, bool success, object attachment, string status = null, params object[] args)
+        public void SendActionableResponse(ClientRequestInfo requestInfo, bool success, object attachment = null, string status = null, params object[] args)
         {
             try
             {
@@ -1634,8 +1634,9 @@ namespace TVA.ServiceProcess
 
                 ServiceResponse response = new ServiceResponse(responseType, message);
 
-                // Add attachments to service response
-                response.Attachments.Add(attachment);
+                // Add any specified attachment to the service response
+                if (attachment != null)
+                    response.Attachments.Add(attachment);
 
                 // Send response to service
                 SendResponse(requestInfo.Sender.ClientID, response);
@@ -2809,7 +2810,7 @@ namespace TVA.ServiceProcess
 
                 // Also allow consumers to directly consume message via event in response to a health request
                 if (requestInfo.Request.Arguments.Exists("actionable"))
-                    SendActionableResponse(requestInfo, success, message);
+                    SendActionableResponse(requestInfo, success, null, message);
             }
         }
 
@@ -2890,7 +2891,7 @@ namespace TVA.ServiceProcess
 
                 // Also allow consumers to directly consume message via event in response to a status request
                 if (requestInfo.Request.Arguments.Exists("actionable"))
-                    SendActionableResponse(requestInfo, true, message);
+                    SendActionableResponse(requestInfo, true, null, message);
             }
         }
 
@@ -3625,7 +3626,7 @@ namespace TVA.ServiceProcess
 
                 // Also allow consumers to directly consume message via event in response to a version request
                 if (requestInfo.Request.Arguments.Exists("actionable"))
-                    SendActionableResponse(requestInfo, true, message);
+                    SendActionableResponse(requestInfo, true, null, message);
             }
         }
 
@@ -3671,7 +3672,7 @@ namespace TVA.ServiceProcess
 
                 // Also allow consumers to directly consume message via event in response to a time request
                 if (requestInfo.Request.Arguments.Exists("actionable"))
-                    SendActionableResponse(requestInfo, true, message);
+                    SendActionableResponse(requestInfo, true, null, message);
             }
         }
 
