@@ -2785,25 +2785,25 @@ namespace TVA.ServiceProcess
                     try
                     {
                         if (requestInfo.Request.Arguments.Exists("lifetime"))
-                            message = "\r\n" + m_performanceMonitor.LifetimeStatus + "\r\n";
+                            message = m_performanceMonitor.LifetimeStatus;
                         else
-                            message = "\r\n" + m_performanceMonitor.Status + "\r\n";
+                            message = m_performanceMonitor.Status;
 
-                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message);
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "\r\n" + message + "\r\n");
                         success = true;
                     }
                     catch (Exception ex)
                     {
                         m_errorLogger.Log(ex);
-                        message = string.Format("Failed to query system health monitor status: {0}\r\n\r\n", ex.Message);
-                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, message);
+                        message = "Failed to query system health monitor status: " + ex.Message;
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, message + "\r\n\r\n");
                         success = false;
                     }
                 }
                 else
                 {
-                    message = "System health monitor is unavailable.\r\n\r\n";
-                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Warning, message);
+                    message = "System health monitor is unavailable.";
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Warning, message + "\r\n\r\n");
                     success = false;
                 }
 
@@ -3618,11 +3618,10 @@ namespace TVA.ServiceProcess
                 versionInfo.AppendFormat("  App Domain: {0}, running on .NET {1}\r\n", AppDomain.CurrentDomain.FriendlyName, Environment.Version.ToString());
                 versionInfo.AppendFormat("   Code Base: {0}\r\n", serviceAssembly.CodeBase);
                 versionInfo.AppendFormat("  Build Date: {0}\r\n", serviceAssembly.BuildDate.ToString());
-                versionInfo.AppendFormat("     Version: {0}\r\n", serviceAssembly.Version.ToString());
-                versionInfo.AppendLine();
+                versionInfo.AppendFormat("     Version: {0}", serviceAssembly.Version.ToString());
 
                 string message = versionInfo.ToString();
-                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message);
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message + "\r\n\r\n");
 
                 // Also allow consumers to directly consume message via event in response to a version request
                 if (requestInfo.Request.Arguments.Exists("actionable"))
@@ -3664,11 +3663,11 @@ namespace TVA.ServiceProcess
                 //  Current system time: yyyy-MM-dd HH:mm:ss.fff, yyyy-MM-dd HH:mm:ss.fff UTC
                 // Total system runtime: xx days yy hours zz minutes ii seconds
                 if (m_remotingServer != null)
-                    message = string.Format(" Current system time: {0}, {1} UTC\r\nTotal system runtime: {2}\r\n\r\n", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"), m_remotingServer.RunTime.ToString());
+                    message = string.Format(" Current system time: {0}, {1} UTC\r\nTotal system runtime: {2}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"), m_remotingServer.RunTime.ToString());
                 else
-                    message = string.Format("Current system time: {0}, {1} UTC\r\n\r\n", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                    message = string.Format("Current system time: {0}, {1} UTC", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"));
 
-                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message);
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message + "\r\n\r\n");
 
                 // Also allow consumers to directly consume message via event in response to a time request
                 if (requestInfo.Request.Arguments.Exists("actionable"))
