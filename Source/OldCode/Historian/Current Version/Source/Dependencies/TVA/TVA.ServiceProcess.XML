@@ -496,6 +496,19 @@
             <param name="client">ID of the client to whom the <paramref name="response"/> is to be sent.</param>
             <param name="response">The <see cref="T:TVA.ServiceProcess.ServiceResponse"/> to be sent to the <paramref name="client"/>.</param>
         </member>
+        <member name="M:TVA.ServiceProcess.ServiceHelper.SendActionableResponse(TVA.ServiceProcess.ClientRequestInfo,System.Boolean,System.Object,System.String,System.Object[])">
+            <summary>
+            Sends an actionable response to client along with an optional formatted message and attachment.
+            </summary>
+            <param name="requestInfo"><see cref="T:TVA.ServiceProcess.ClientRequestInfo"/> instance containing the client request.</param>
+            <param name="success">Flag that determines if this response to client request was a success.</param>
+            <param name="attachment">Attachment to send with response.</param>
+            <param name="status">Formatted status message to send with response.</param>
+            <param name="args">Arguments of the formatted status message.</param>
+            <remarks>
+            This method is used to send an actionable client response that can be used for responding to an event after a command has been issued.
+            </remarks>
+        </member>
         <member name="M:TVA.ServiceProcess.ServiceHelper.UpdateStatus(TVA.UpdateType,System.String,System.Object[])">
             <summary>
             Provides a status update to all <see cref="P:TVA.ServiceProcess.ServiceHelper.RemoteClients"/>.
@@ -980,6 +993,15 @@
             </summary>
             <param name="requestCommand">Command for which an <see cref="T:TVA.ServiceProcess.ClientRequestInfo"/> object is to be created.</param>
             <returns>An <see cref="T:TVA.ServiceProcess.ClientRequestInfo"/> object.</returns>
+        </member>
+        <member name="M:TVA.ServiceProcess.ClientHelper.TryParseActionableResponse(TVA.ServiceProcess.ServiceResponse,System.String@,System.Boolean@)">
+            <summary>
+            Attempts to parse an actionable reponse sent from the service.
+            </summary>
+            <param name="serviceResponse"><see cref="T:TVA.ServiceProcess.ServiceResponse"/> to test for actionable response.</param>
+            <param name="sourceCommand">Command that invoked <paramref name="serviceResponse"/>.</param>
+            <param name="responseSuccess">Boolean success state of <paramref name="serviceResponse"/>.</param>
+            <returns><c>true</c> if actionable response was able to be parsed successfully; otherwise <c>false</c>.</returns>
         </member>
         <member name="E:TVA.ServiceProcess.ClientHelper.ReceivedServiceUpdate">
             <summary>
