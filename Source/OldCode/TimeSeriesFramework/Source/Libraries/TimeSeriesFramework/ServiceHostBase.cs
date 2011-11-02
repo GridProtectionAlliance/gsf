@@ -565,7 +565,7 @@ namespace TimeSeriesFramework
 
             // Log current thread pool size
             int minWorkerThreads, minIOThreads, maxWorkerThreads, maxIOThreads;
-            
+
             ThreadPool.GetMinThreads(out minWorkerThreads, out minIOThreads);
             ThreadPool.GetMaxThreads(out maxWorkerThreads, out maxIOThreads);
 
@@ -1952,25 +1952,7 @@ namespace TimeSeriesFramework
         /// <param name="success">Flag that determines if this response to client request was a success.</param>
         protected virtual void SendResponse(ClientRequestInfo requestInfo, bool success)
         {
-            try
-            {
-                string responseType = requestInfo.Request.Command + (success ? ":Success" : ":Failure");
-
-                // Send response to service
-                m_serviceHelper.SendResponse(requestInfo.Sender.ClientID, new ServiceResponse(responseType));
-
-                if (m_serviceHelper.LogStatusUpdates && m_serviceHelper.StatusLog.IsOpen)
-                {
-                    string arguments = requestInfo.Request.Arguments.ToString();
-                    string message = responseType + (string.IsNullOrWhiteSpace(arguments) ? "" : "(" + arguments + ")");
-                    m_serviceHelper.StatusLog.WriteTimestampedLine(message);
-                }
-            }
-            catch (Exception ex)
-            {
-                m_serviceHelper.ErrorLogger.Log(ex);
-                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to send client response due to an exception: " + ex.Message + "\r\n\r\n");
-            }
+            SendResponseWithAttachment(requestInfo, success, null, null);
         }
 
         /// <summary>
@@ -1982,31 +1964,7 @@ namespace TimeSeriesFramework
         /// <param name="args">Arguments of the formatted status message.</param>
         protected virtual void SendResponse(ClientRequestInfo requestInfo, bool success, string status, params object[] args)
         {
-            try
-            {
-                string responseType = requestInfo.Request.Command + (success ? ":Success" : ":Failure");
-                string message;
-
-                if (args.Length == 0)
-                    message = status + "\r\n\r\n";
-                else
-                    message = string.Format(status, args) + "\r\n\r\n";
-
-                // Send response to service
-                m_serviceHelper.SendResponse(requestInfo.Sender.ClientID, new ServiceResponse(responseType, message));
-
-                if (m_serviceHelper.LogStatusUpdates && m_serviceHelper.StatusLog.IsOpen)
-                {
-                    string arguments = requestInfo.Request.Arguments.ToString();
-                    message = responseType + (string.IsNullOrWhiteSpace(arguments) ? "" : "(" + arguments + ")") + " - " + message;
-                    m_serviceHelper.StatusLog.WriteTimestampedLine(message);
-                }
-            }
-            catch (Exception ex)
-            {
-                m_serviceHelper.ErrorLogger.Log(ex);
-                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to send client response \"" + status.ToNonNullString() + "\" due to an exception: " + ex.Message + "\r\n\r\n");
-            }
+            SendResponseWithAttachment(requestInfo, success, null, status, args);
         }
 
         /// <summary>
@@ -2021,33 +1979,31 @@ namespace TimeSeriesFramework
         {
             try
             {
-                string responseType = requestInfo.Request.Command + (success ? ":Success" : ":Failure");
-                string message;
+                // Send actionable response
+                m_serviceHelper.SendActionableResponse(requestInfo, success, attachment, status, args);
 
-                if (args.Length == 0)
-                    message = status + "\r\n\r\n";
-                else
-                    message = string.Format(status, args) + "\r\n\r\n";
-
-                ServiceResponse response = new ServiceResponse(responseType, message);
-
-                // Add attachments to service response
-                response.Attachments.Add(attachment);
-
-                // Send response to service
-                m_serviceHelper.SendResponse(requestInfo.Sender.ClientID, response);
-
+                // Log details of client request as well as response
                 if (m_serviceHelper.LogStatusUpdates && m_serviceHelper.StatusLog.IsOpen)
                 {
+                    string responseType = requestInfo.Request.Command + (success ? ":Success" : ":Failure");
                     string arguments = requestInfo.Request.Arguments.ToString();
-                    message = responseType + (string.IsNullOrWhiteSpace(arguments) ? "" : "(" + arguments + ")") + " - " + message;
+                    string message = responseType + (string.IsNullOrWhiteSpace(arguments) ? "" : "(" + arguments + ")");
+
+                    if (status != null)
+                    {
+                        if (args.Length == 0)
+                            message += " - " + status;
+                        else
+                            message += " - " + string.Format(status, args);
+                    }
+
                     m_serviceHelper.StatusLog.WriteTimestampedLine(message);
                 }
             }
             catch (Exception ex)
             {
                 m_serviceHelper.ErrorLogger.Log(ex);
-                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to send client response with attachment \"" + status.ToNonNullString() + "\" due to an exception: " + ex.Message + "\r\n\r\n");
+                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to send client response due to an exception: " + ex.Message + "\r\n\r\n");
             }
         }
 

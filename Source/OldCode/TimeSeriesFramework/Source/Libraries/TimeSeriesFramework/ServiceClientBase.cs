@@ -310,32 +310,17 @@ namespace TimeSeriesFramework
         /// <param name="e">Event argument containing the service response.</param>
         protected virtual void ClientHelper_ReceivedServiceResponse(object sender, EventArgs<ServiceResponse> e)
         {
-            string response = e.Argument.Type;
-            string message = e.Argument.Message;
+            string sourceCommand;
+            bool responseSuccess;
 
-            // Handle response message, if any
-            if (!string.IsNullOrWhiteSpace(response))
+            if (ClientHelper.TryParseActionableResponse(e.Argument, out sourceCommand, out responseSuccess))
             {
-                // Reponse types are formatted as "Command:Success" or "Command:Failure"
-                string[] parts = response.Split(':');
-                string action;
-                bool success;
+                string message = e.Argument.Message;
 
-                if (parts.Length > 1)
-                {
-                    action = parts[0].Trim().ToTitleCase();
-                    success = (string.Compare(parts[1].Trim(), "Success", true) == 0);
-                }
-                else
-                {
-                    action = response;
-                    success = true;
-                }
-
-                if (success)
+                if (responseSuccess)
                 {
                     if (string.IsNullOrWhiteSpace(message))
-                        Console.Write(string.Format("{0} command processed successfully.\r\n\r\n", action));
+                        Console.Write(string.Format("{0} command processed successfully.\r\n\r\n", sourceCommand));
                     else
                         Console.Write(string.Format("{0}\r\n\r\n", message));
                 }
@@ -344,13 +329,13 @@ namespace TimeSeriesFramework
                     Console.ForegroundColor = ConsoleColor.Red;
 
                     if (string.IsNullOrWhiteSpace(message))
-                        Console.Write(string.Format("{0} failure.\r\n\r\n", action));
+                        Console.Write(string.Format("{0} failure.\r\n\r\n", sourceCommand));
                     else
-                        Console.Write(string.Format("{0} failure: {1}\r\n\r\n", action, message));
+                        Console.Write(string.Format("{0} failure: {1}\r\n\r\n", sourceCommand, message));
 
                     Console.ForegroundColor = m_originalFgColor;
                 }
-            }            
+            }
         }
 
         /// <summary>
