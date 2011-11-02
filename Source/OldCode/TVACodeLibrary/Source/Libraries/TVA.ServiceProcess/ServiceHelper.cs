@@ -1607,6 +1607,47 @@ namespace TVA.ServiceProcess
         }
 
         /// <summary>
+        /// Sends an actionable response to client along with an optional formatted message and attachment.
+        /// </summary>
+        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
+        /// <param name="success">Flag that determines if this response to client request was a success.</param>
+        /// <param name="attachment">Attachment to send with response.</param>
+        /// <param name="status">Formatted status message to send with response.</param>
+        /// <param name="args">Arguments of the formatted status message.</param>
+        /// <remarks>
+        /// This method is used to send an actionable client response that can be used for responding to an event after a command has been issued.
+        /// </remarks>
+        public void SendActionableResponse(ClientRequestInfo requestInfo, bool success, object attachment, string status = null, params object[] args)
+        {
+            try
+            {
+                string responseType = requestInfo.Request.Command + (success ? ":Success" : ":Failure");
+                string message = "";
+
+                if (!string.IsNullOrWhiteSpace(status))
+                {
+                    if (args.Length == 0)
+                        message = status + "\r\n\r\n";
+                    else
+                        message = string.Format(status, args) + "\r\n\r\n";
+                }
+
+                ServiceResponse response = new ServiceResponse(responseType, message);
+
+                // Add attachments to service response
+                response.Attachments.Add(attachment);
+
+                // Send response to service
+                SendResponse(requestInfo.Sender.ClientID, response);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.Log(ex);
+                UpdateStatus(UpdateType.Alarm, "Failed to send actionable client response with attachment due to an exception: " + ex.Message + "\r\n\r\n");
+            }
+        }
+
+        /// <summary>
         /// Provides a status update to all <see cref="RemoteClients"/>.
         /// </summary>
         /// <param name="message">Text message to be transmitted to all <see cref="RemoteClients"/>.</param>
@@ -2727,29 +2768,48 @@ namespace TVA.ServiceProcess
                 helpMessage.Append("       -lifetime".PadRight(20));
                 helpMessage.Append("Shows utilization over entire service lifetime");
                 helpMessage.AppendLine();
+                helpMessage.Append("       -actionable".PadRight(20));
+                helpMessage.Append("Returns results via an actionable event");
+                helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
                 UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
+                string message;
+                bool success;
+
                 if (m_performanceMonitor != null)
                 {
                     try
                     {
                         if (requestInfo.Request.Arguments.Exists("lifetime"))
-                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "\r\n" + m_performanceMonitor.LifetimeStatus + "\r\n");
+                            message = "\r\n" + m_performanceMonitor.LifetimeStatus + "\r\n";
                         else
-                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "\r\n" + m_performanceMonitor.Status + "\r\n");
+                            message = "\r\n" + m_performanceMonitor.Status + "\r\n";
+
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message);
+                        success = true;
                     }
                     catch (Exception ex)
                     {
                         m_errorLogger.Log(ex);
-                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to query system health monitor status: {0}\r\n\r\n", ex.Message);
+                        message = string.Format("Failed to query system health monitor status: {0}\r\n\r\n", ex.Message);
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, message);
+                        success = false;
                     }
                 }
                 else
-                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Warning, "System health monitor is unavailable.\r\n\r\n");
+                {
+                    message = "System health monitor is unavailable.\r\n\r\n";
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Warning, message);
+                    success = false;
+                }
+
+                // Also allow consumers to directly consume message via event in response to a health request
+                if (requestInfo.Request.Arguments.Exists("actionable"))
+                    SendActionableResponse(requestInfo, success, message);
             }
         }
 
@@ -2816,13 +2876,21 @@ namespace TVA.ServiceProcess
                 helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
                 helpMessage.AppendLine();
+                helpMessage.Append("       -actionable".PadRight(20));
+                helpMessage.Append("Returns results via an actionable event");
+                helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
                 UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
-                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, Status);
+                string message = Status;
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message);
+
+                // Also allow consumers to directly consume message via event in response to a status request
+                if (requestInfo.Request.Arguments.Exists("actionable"))
+                    SendActionableResponse(requestInfo, true, message);
             }
         }
 
@@ -3528,6 +3596,9 @@ namespace TVA.ServiceProcess
                 helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
                 helpMessage.AppendLine();
+                helpMessage.Append("       -actionable".PadRight(20));
+                helpMessage.Append("Returns results via an actionable event");
+                helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
                 UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
@@ -3550,7 +3621,12 @@ namespace TVA.ServiceProcess
                 versionInfo.AppendFormat("     Version: {0}\r\n", serviceAssembly.Version.ToString());
                 versionInfo.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, versionInfo.ToString());
+                string message = versionInfo.ToString();
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message);
+
+                // Also allow consumers to directly consume message via event in response to a version request
+                if (requestInfo.Request.Arguments.Exists("actionable"))
+                    SendActionableResponse(requestInfo, true, message);
             }
         }
 
@@ -3573,20 +3649,30 @@ namespace TVA.ServiceProcess
                 helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
                 helpMessage.AppendLine();
+                helpMessage.Append("       -actionable".PadRight(20));
+                helpMessage.Append("Returns results via an actionable event");
+                helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
                 UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
+                string message;
                 //          1         2         3         4         5         6         7         8
                 // 12345678901234567890123456789012345678901234567890123456789012345678901234567890
                 //  Current system time: yyyy-MM-dd HH:mm:ss.fff, yyyy-MM-dd HH:mm:ss.fff UTC
                 // Total system runtime: xx days yy hours zz minutes ii seconds
                 if (m_remotingServer != null)
-                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, " Current system time: {0}, {1} UTC\r\nTotal system runtime: {2}\r\n\r\n", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"), m_remotingServer.RunTime.ToString());
+                    message = string.Format(" Current system time: {0}, {1} UTC\r\nTotal system runtime: {2}\r\n\r\n", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"), m_remotingServer.RunTime.ToString());
                 else
-                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Current system time: {0}, {1} UTC\r\n\r\n", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                    message = string.Format("Current system time: {0}, {1} UTC\r\n\r\n", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message);
+
+                // Also allow consumers to directly consume message via event in response to a time request
+                if (requestInfo.Request.Arguments.Exists("actionable"))
+                    SendActionableResponse(requestInfo, true, message);
             }
         }
 

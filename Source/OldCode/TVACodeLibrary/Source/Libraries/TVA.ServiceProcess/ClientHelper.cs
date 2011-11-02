@@ -665,7 +665,10 @@ namespace TVA.ServiceProcess
             m_authenticationComplete = false;
             m_remotingClient.Connect();                                     // Wait for connection.
             if (m_remotingClient.Enabled)
-                while (!m_authenticationComplete) { Thread.Sleep(100); }    // Wait for authentication.
+                while (!m_authenticationComplete)
+                {
+                    Thread.Sleep(100);
+                }    // Wait for authentication.
         }
 
         /// <summary>
@@ -852,7 +855,10 @@ namespace TVA.ServiceProcess
 
             // Attempt reconnection on a seperate thread.
             if (m_attemptReconnection)
-                new Thread((ThreadStart)delegate() { Connect(); }).Start();
+                new Thread((ThreadStart)delegate()
+                {
+                    Connect();
+                }).Start();
         }
 
         private void RemotingClient_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
@@ -960,6 +966,46 @@ namespace TVA.ServiceProcess
             ClientRequestInfo requestInfo = new ClientRequestInfo(new ClientInfo(), request);
 
             return requestInfo;
+        }
+
+        /// <summary>
+        /// Attempts to parse an actionable reponse sent from the service.
+        /// </summary>
+        /// <param name="serviceResponse"><see cref="ServiceResponse"/> to test for actionable response.</param>
+        /// <param name="sourceCommand">Command that invoked <paramref name="serviceResponse"/>.</param>
+        /// <param name="responseSuccess">Boolean success state of <paramref name="serviceResponse"/>.</param>
+        /// <returns><c>true</c> if actionable response was able to be parsed successfully; otherwise <c>false</c>.</returns>
+        public static bool TryParseActionableResponse(ServiceResponse serviceResponse, out string sourceCommand, out bool responseSuccess)
+        {
+            bool parseSucceeded = false;
+
+            sourceCommand = null;
+            responseSuccess = false;
+
+            try
+            {
+                string response = serviceResponse.Type;
+
+                // Attempt to parse response message
+                if (!string.IsNullOrWhiteSpace(response))
+                {
+                    // Reponse types are formatted as "Command:Success" or "Command:Failure"
+                    string[] parts = response.Split(':');
+
+                    if (parts.Length > 1)
+                    {
+                        sourceCommand = parts[0].Trim().ToTitleCase();
+                        responseSuccess = (string.Compare(parts[1].Trim(), "Success", true) == 0);
+                        parseSucceeded = true;
+                    }
+                }
+            }
+            catch
+            {
+                parseSucceeded = false;
+            }
+
+            return parseSucceeded;
         }
 
         #endregion
