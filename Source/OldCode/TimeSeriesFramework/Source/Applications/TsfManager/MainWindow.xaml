@@ -5,7 +5,7 @@
         Title="MainWindow" Height="800" Width="900"    
         xmlns:tsfconv="clr-namespace:TimeSeriesFramework.UI.Converters;assembly=TimeSeriesFramework.UI"
         xmlns:tsf="clr-namespace:TimeSeriesFramework.UI;assembly=TimeSeriesFramework.UI.WPF"
-        Background="{StaticResource MainBackgroundBrush}">
+        Background="{StaticResource MainBackgroundBrush}" FontSize="{StaticResource SmallTextSize}">
         
     <Window.Resources>        
         <tsfconv:RoleBasedVisibilityConverter x:Key="roleBasedVisibilityConverter" />

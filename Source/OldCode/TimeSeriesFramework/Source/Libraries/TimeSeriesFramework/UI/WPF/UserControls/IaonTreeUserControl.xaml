@@ -37,7 +37,7 @@
                             <TextBlock Text="{Binding Path=AdapterType}" FontSize="{StaticResource LargeTextSize}" VerticalAlignment="Center" HorizontalAlignment="Left" FontWeight="Bold" Margin="5"/>
                             <Border>
                                 <StackPanel Orientation="Horizontal" Margin="2">
-                                    <TextBlock Text="" Width="{StaticResource BlankItemSize}" TextAlignment="Center" FontSize="{StaticResource LargeTextSize}" FontWeight="Bold"/>                                    
+                                    <TextBlock Text="" Width="{StaticResource BlankItemSize}" TextAlignment="Center" FontWeight="Bold"/>                                    
                                     <TextBlock Text="Adapter Name" Width="{StaticResource LargeItemSize}" TextAlignment="Center" FontWeight="Bold"/>
                                     <TextBlock Text="Assembly Name" Width="{StaticResource XLargeItemSize}" TextAlignment="Center" FontWeight="Bold"/>
                                     <TextBlock Text="Type Name" Width="{StaticResource XXLargeItemSize}" TextAlignment="Center" FontWeight="Bold"/>                                    

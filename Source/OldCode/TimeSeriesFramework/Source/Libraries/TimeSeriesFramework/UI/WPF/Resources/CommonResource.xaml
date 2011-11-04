@@ -8,7 +8,7 @@
     <sys:Double x:Key="XXSmallTextSize">5</sys:Double>
     <sys:Double x:Key="XSmallTextSize">6</sys:Double>
     <sys:Double x:Key="SmallerTextSize">8</sys:Double>
-    <sys:Double x:Key="SmallTextSize">10</sys:Double>
+    <sys:Double x:Key="SmallTextSize">9</sys:Double>
     <sys:Double x:Key="TextSize">12</sys:Double>
     <sys:Double x:Key="LargeTextSize">14</sys:Double>
     <sys:Double x:Key="LargerTextSize">18</sys:Double>
@@ -101,7 +101,7 @@
     <Style x:Key="MainTitleStyle" TargetType="TextBlock">
         <Setter Property="Foreground" Value="{StaticResource MainTitleForegroundBrush}"/>
         <Setter Property="Effect" Value="{StaticResource TextDarkShadowEffect}"/>
-        <Setter Property="FontSize" Value="32"/>        
+        <Setter Property="FontSize" Value="30"/>        
     </Style>
 
     <Style x:Key="CenterAlignCellStyle" TargetType="sdk:DataGridCell">
@@ -163,14 +163,15 @@
         <Setter Property="Margin" Value="5"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
         <Setter Property="HorizontalAlignment" Value="Left"/>
-        <Setter Property="FontSize" Value="{StaticResource TextSize}" />
+        <!--<Setter Property="FontSize" Value="{StaticResource TextSize}" />-->
     </Style>
 
     <Style x:Key="DataGridColumnHeaderStyle" TargetType="sdk:DataGridColumnHeader">
         <Setter Property="Height" Value="25"/>
         <Setter Property="Background" Value="{StaticResource HeaderRowBackgroundBrush}"/>            
         <Setter Property="Foreground" Value="#FF000000"/>
-        <Setter Property="FontSize" Value="{StaticResource LargeTextSize}" />
+        <!--<Setter Property="FontSize" Value="{StaticResource SmallTextSize}" />-->
+        <Setter Property="FontWeight" Value="Bold"/>
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
@@ -209,7 +210,7 @@
         <Setter Property="Width" Value="{StaticResource LargeItemSize}"/>
         <Setter Property="Height" Value="40"/>
         <Setter Property="FontWeight" Value="Bold"/>
-        <Setter Property="FontSize" Value="{StaticResource TextSize}"/>
+        <!--<Setter Property="FontSize" Value="{StaticResource TextSize}"/>-->
     </Style>
 
     <Style TargetType="{x:Type MenuItem}" x:Key="MenuSeparatorStyle">
@@ -228,7 +229,7 @@
 
     <Style TargetType="{x:Type MenuItem}" x:Key="MenuItemStyle">
         <Setter Property="Command" Value="{Binding Command}" />        
-        <Setter Property="FontSize" Value="12"/>
+        <!--<Setter Property="FontSize" Value="12"/>-->
         <Setter Property="FontWeight" Value="Bold"/>
         <Setter Property="HorizontalAlignment" Value="Left"/>
         <Setter Property="Margin" Value="1"/>
@@ -251,7 +252,7 @@
         <Setter Property="Margin" Value="5" />
         <Setter Property="TextAlignment" Value="Right" />
         <Setter Property="HorizontalAlignment" Value="Right" />        
-        <Setter Property="FontSize" Value="{StaticResource TextSize}" />
+        <!--<Setter Property="FontSize" Value="{StaticResource TextSize}" />-->
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
     
@@ -277,7 +278,7 @@
     <conv:StringToBooleanConverter x:Key="StringToBooleanConverter"/>
     
     <ControlTemplate x:Key="HyperlinkStyleButtonTemplate" TargetType="Button">
-        <TextBlock Text="{TemplateBinding Content}" FontSize="{StaticResource TextSize}" TextDecorations="Underline" Cursor="Hand" 
+        <TextBlock Text="{TemplateBinding Content}" TextDecorations="Underline" Cursor="Hand" 
                    HorizontalAlignment="Center" Width="Auto" Height="Auto" Foreground="#FF3366FF"/>
     </ControlTemplate>
     

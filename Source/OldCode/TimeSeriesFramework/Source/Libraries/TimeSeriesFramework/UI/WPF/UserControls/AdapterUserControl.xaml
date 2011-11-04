@@ -120,7 +120,7 @@
 
                     <StackPanel Grid.Row="0" Grid.Column="2" Margin="10,5,0,0">
                         <TextBlock Name="ParameterValueTextBlock" Margin="0" Text="Value" HorizontalAlignment="Center" VerticalAlignment="Top" />
-                        <Button Content="Default" Margin="0" FontSize="10" Width="Auto" HorizontalAlignment="Center" ToolTip="Click to restore the default value." Click="Default_Click" />
+                        <Button Content="Default" Margin="0" Width="Auto" HorizontalAlignment="Center" ToolTip="Click to restore the default value." Click="Default_Click" />
                     </StackPanel>
                     <StackPanel Grid.Row="0" Grid.Column="3" DataContext="{Binding ElementName=ParameterListBox, Path=SelectedItem}">
                         <StackPanel.Resources>
