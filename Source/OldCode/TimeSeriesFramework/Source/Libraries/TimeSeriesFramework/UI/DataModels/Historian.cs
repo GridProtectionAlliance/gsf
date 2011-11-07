@@ -432,7 +432,13 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 foreach (DataRow row in historianTable.Rows)
                 {
-                    historianList[row.ConvertField<int>("ID")] = row.Field<string>("Acronym");
+                    if (!includeStatHistorian)
+                    {
+                        if (row.Field<string>("Acronym").ToUpper() != "STAT")
+                            historianList[row.ConvertField<int>("ID")] = row.Field<string>("Acronym");
+                    }
+                    else
+                        historianList[row.ConvertField<int>("ID")] = row.Field<string>("Acronym");
                 }
 
                 return historianList;
