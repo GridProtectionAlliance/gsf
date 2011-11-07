@@ -279,11 +279,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Threading;
 using TVA.Configuration;
-using System.Net.Security;
 
 namespace TVA.Communication
 {
@@ -1025,10 +1025,9 @@ namespace TVA.Communication
                         }
                     }
                 }
-                catch (ObjectDisposedException ex)
+                catch (ObjectDisposedException)
                 {
-                    // Terminate connection when client is disposed.
-                    OnReceiveDataException(ex);
+                    // Make sure connection is terminated when client is disposed.
                     TerminateConnection(tcpClient, true);
                 }
                 catch (SocketException ex)
@@ -1116,10 +1115,9 @@ namespace TVA.Communication
                     OnReceiveDataComplete(tcpClient.ReceiveBuffer, tcpClient.ReceiveBufferLength);
                     ReceivePayloadUnawareAsync(tcpClient);
                 }
-                catch (ObjectDisposedException ex)
+                catch (ObjectDisposedException)
                 {
-                    // Terminate connection when client is disposed.
-                    OnReceiveDataException(ex);
+                    // Make sure connection is terminated when client is disposed.
                     TerminateConnection(tcpClient, true);
                 }
                 catch (SocketException ex)

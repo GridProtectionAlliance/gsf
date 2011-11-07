@@ -270,11 +270,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Principal;
 using System.Threading;
 using TVA.Configuration;
-using System.Net.Security;
-using System.Security.Principal;
 
 namespace TVA.Communication
 {
@@ -1006,10 +1006,9 @@ namespace TVA.Communication
                         }
                     }
                 }
-                catch (ObjectDisposedException ex)
+                catch (ObjectDisposedException)
                 {
-                    // Terminate connection when client is disposed.
-                    OnReceiveClientDataException(tcpClient.ID, ex);
+                    // Make sure connection is terminated when server is disposed.
                     TerminateConnection(tcpClient, true);
                 }
                 catch (SocketException ex)
@@ -1074,6 +1073,7 @@ namespace TVA.Communication
         private void ReceivePayloadUnawareAsyncCallback(IAsyncResult asyncResult)
         {
             TransportProvider<Socket> tcpClient = (TransportProvider<Socket>)asyncResult.AsyncState;
+
             if (!asyncResult.IsCompleted)
             {
                 // Timedout on reception of data so notify via event and continue waiting for data.
@@ -1096,10 +1096,9 @@ namespace TVA.Communication
                     OnReceiveClientDataComplete(tcpClient.ID, tcpClient.ReceiveBuffer, tcpClient.ReceiveBufferLength);
                     ReceivePayloadUnawareAsync(tcpClient);
                 }
-                catch (ObjectDisposedException ex)
+                catch (ObjectDisposedException)
                 {
-                    // Terminate connection when client is disposed.
-                    OnReceiveClientDataException(tcpClient.ID, ex);
+                    // Make sure connection is terminated when server is disposed.
                     TerminateConnection(tcpClient, true);
                 }
                 catch (SocketException ex)

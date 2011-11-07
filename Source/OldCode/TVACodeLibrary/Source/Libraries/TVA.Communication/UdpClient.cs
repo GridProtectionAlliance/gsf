@@ -915,10 +915,9 @@ namespace TVA.Communication
                     OnReceiveDataComplete(udpClient.ReceiveBuffer, udpClient.ReceiveBufferLength);
                     ReceivePayloadAsync(udpClient);
                 }
-                catch (ObjectDisposedException ex)
+                catch (ObjectDisposedException)
                 {
-                    // Terminate connection when client is disposed.
-                    OnReceiveDataException(ex);
+                    // Make sure connection is terminated when client is disposed.
                     TerminateConnection(udpClient, true);
                 }
                 catch (SocketException ex)

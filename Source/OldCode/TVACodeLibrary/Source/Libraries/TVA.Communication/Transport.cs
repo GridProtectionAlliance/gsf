@@ -367,34 +367,54 @@ namespace TVA.Communication
             }
             else
             {
-                switch (hostNameOrAddress)
+                IPAddress address;
+                bool ipStackMismatch = false;
+
+                // Attempt to parse provided address name as a literal IP address
+                if (IPAddress.TryParse(hostNameOrAddress, out address))
                 {
-                    // Handle IP "0" as a special case since DNS lookup is unavailable for this address
-                    case "::0":
-                    case "0.0.0.0":
-                        return new IPEndPoint(IPAddress.Parse(hostNameOrAddress), port);
-                    default:
-                        // Host name or IP was provided, attempt lookup - note that exception can occur if DNS lookup fails
-                        IPAddress[] addressList = Dns.GetHostEntry(hostNameOrAddress).AddressList;
+                    // As long as desired IP stack matches format of specified IP address, return end point for address
+                    if ((stack == IPStack.IPv6 && address.AddressFamily == AddressFamily.InterNetworkV6) ||
+                        (stack == IPStack.IPv4 && address.AddressFamily == AddressFamily.InterNetwork))
+                        return new IPEndPoint(address, port);
 
-                        if (addressList.Length > 0)
-                        {
-                            // Traverse address list looking for first match on desired IP stack
-                            foreach (IPAddress address in addressList)
-                            {
-                                if ((stack == IPStack.IPv6 && address.AddressFamily == AddressFamily.InterNetworkV6) ||
-                                    (stack == IPStack.IPv4 && address.AddressFamily == AddressFamily.InterNetwork))
-                                    return new IPEndPoint(address, port);
-                            }
-
-                            // If no available matching address was found for desired IP stack, default to first address in list
-                            return new IPEndPoint(addressList[0], port);
-                        }
-
-                        break;
+                    // User specified an IP address that is mismatch with the desired IP stack. If the DNS server
+                    // responds to this IP, we can attempt to see if an IP is defined for the desired IP stack, 
+                    // otherwise this is an exception
+                    ipStackMismatch = true;
                 }
 
-                throw new InvalidOperationException("No valid IP addresses could be found for host named " + hostNameOrAddress);
+                try
+                {
+                    // Failed to parse an IP address for the deisred stack - this may simply be that a host name was provided
+                    // so we attempt a DNS lookup. Note that exceptions will occur if DNS lookup fails.
+                    IPAddress[] dnsAddressList = Dns.GetHostEntry(hostNameOrAddress).AddressList;
+
+                    if (dnsAddressList.Length > 0)
+                    {
+                        // Traverse address list looking for first match on desired IP stack
+                        foreach (IPAddress dnsAddress in dnsAddressList)
+                        {
+                            if ((stack == IPStack.IPv6 && dnsAddress.AddressFamily == AddressFamily.InterNetworkV6) ||
+                                (stack == IPStack.IPv4 && dnsAddress.AddressFamily == AddressFamily.InterNetwork))
+                                return new IPEndPoint(dnsAddress, port);
+                        }
+
+                        // If no available matching address was found for desired IP stack, this is an IP stack mismatch
+                        ipStackMismatch = true;
+                    }
+
+                    throw new InvalidOperationException(string.Format("No valid {0} addresses could be found for \"{1}\"", stack,  hostNameOrAddress));
+                }
+                catch
+                {
+                    // Spell out a specific error message for ip stack mismatches
+                    if (ipStackMismatch)
+                        throw new InvalidOperationException(string.Format("IP address mismatch: unable to find an {0} address for \"{1}\"", stack, hostNameOrAddress));
+
+                    // Otherwise report original exception
+                    throw;
+                }
             }
         }
 
