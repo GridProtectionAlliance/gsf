@@ -97,11 +97,13 @@ namespace TimeSeriesFramework.UI
 
         private void source_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-            // zoom into the content.  Calculate the zoom factor based on the direction of the mouse wheel.
+            // Zoom into the content.  Calculate the zoom factor based on the direction of the mouse wheel.
             double zoomFactor = m_defaultZoomFactor;
             if (e.Delta <= 0) zoomFactor = 1.0 / m_defaultZoomFactor;
+
             // DoZoom requires both the logical and physical location of the mouse pointer
-            var physicalPoint = e.GetPosition(this);
+            Point physicalPoint = e.GetPosition(this);
+
             DoZoom(zoomFactor, m_transformGroup.Inverse.Transform(physicalPoint), physicalPoint);
 
         }
@@ -110,7 +112,7 @@ namespace TimeSeriesFramework.UI
         {
             if (this.IsMouseCaptured)
             {
-                // we're done.  reset the cursor and release the mouse pointer
+                // We're done.  reset the cursor and release the mouse pointer
                 this.Cursor = Cursors.Arrow;
                 this.ReleaseMouseCapture();
             }
@@ -132,7 +134,7 @@ namespace TimeSeriesFramework.UI
                 // if the mouse is captured then move the content by changing the translate transform.  
                 // use the Pan Animation to animate to the new location based on the delta between the 
                 // starting point of the mouse and the current point.
-                var physicalPoint = e.GetPosition(this);
+                Point physicalPoint = e.GetPosition(this);
                 m_translateTransform.BeginAnimation(TranslateTransform.XProperty, CreatePanAnimation(physicalPoint.X - m_screenStartPoint.X + m_startOffset.X), HandoffBehavior.Compose);
                 m_translateTransform.BeginAnimation(TranslateTransform.YProperty, CreatePanAnimation(physicalPoint.Y - m_screenStartPoint.Y + m_startOffset.Y), HandoffBehavior.Compose);
             }
@@ -143,11 +145,13 @@ namespace TimeSeriesFramework.UI
         /// <returns>Double animation</returns>
         private DoubleAnimation CreatePanAnimation(double toValue)
         {
-            var da = new DoubleAnimation(toValue, new Duration(TimeSpan.FromMilliseconds(300)));
+            DoubleAnimation da = new DoubleAnimation(toValue, new Duration(TimeSpan.FromMilliseconds(300)));
+
             da.AccelerationRatio = 0.1;
             da.DecelerationRatio = 0.9;
             da.FillBehavior = FillBehavior.HoldEnd;
             da.Freeze();
+
             return da;
         }
 
@@ -156,11 +160,13 @@ namespace TimeSeriesFramework.UI
         /// <returns>Double animation.</returns>
         private DoubleAnimation CreateZoomAnimation(double toValue)
         {
-            var da = new DoubleAnimation(toValue, new Duration(TimeSpan.FromMilliseconds(500)));
+            DoubleAnimation da = new DoubleAnimation(toValue, new Duration(TimeSpan.FromMilliseconds(500)));
+
             da.AccelerationRatio = 0.1;
             da.DecelerationRatio = 0.9;
             da.FillBehavior = FillBehavior.HoldEnd;
             da.Freeze();
+
             return da;
         }
 
@@ -188,28 +194,5 @@ namespace TimeSeriesFramework.UI
         }
 
         #endregion
-
-        #region [ Operators ]
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Fields
-
-        // Static Constructor
-
-        // Static Properties
-
-        // Static Methods
-
-        #endregion
-
-
-
-
-
-
-
     }
 }

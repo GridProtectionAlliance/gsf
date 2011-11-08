@@ -50,7 +50,7 @@ namespace TimeSeriesFramework.UI
         }
 
         #endregion
-        
+
         #region [ Properties ]
 
         /// <summary>
@@ -93,7 +93,7 @@ namespace TimeSeriesFramework.UI
 
         private void UpdateWindow()
         {
-            var hwnd = ((HwndSource)PresentationSource.FromVisual(this.Child)).Handle;
+            IntPtr hwnd = ((HwndSource)PresentationSource.FromVisual(this.Child)).Handle;
             RECT rect;
 
             if (GetWindowRect(hwnd, out rect))
@@ -113,6 +113,6 @@ namespace TimeSeriesFramework.UI
         [DllImport("user32", EntryPoint = "SetWindowPos")]
         private static extern int SetWindowPos(IntPtr hWnd, int hwndInsertAfter, int x, int y, int cx, int cy, int wFlags);
 
-        #endregion        
+        #endregion
     }
 }
