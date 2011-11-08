@@ -78,8 +78,14 @@
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Search Directory" />
                     <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
                         <TextBox DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}, Path=DataContext}"
-                                 Name="SearchDirectoryTextBox" Text="{tsfBinding:Column Path=SearchDirectory}" />
-                        <Button Content="Browse..." Click="Browse_Click" />
+                                 Name="SearchDirectoryTextBox" Text="{tsfBinding:Column Path=SearchDirectory}" Width="{StaticResource XXLargeItemSize}"/>
+                        <Button Click="Browse_Click" Width="Auto" ToolTip="Browse">
+                            <Button.Template>
+                                <ControlTemplate>
+                                    <Image Source="/TimeSeriesFramework.UI;component/images/Folder.png" Height="24" Width="24" />
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
                     </StackPanel>
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Type" />
                     <ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" ItemsSource="{Binding Source={StaticResource AdapterTypeList}}" DisplayMemberPath="Value" HorizontalContentAlignment="Left" Width="400"
