@@ -1563,7 +1563,7 @@ namespace TVA.Historian.Files
                     state = m_stateFile.Read(i);
                     state.ActiveDataBlockIndex = -1;
                     state.ActiveDataBlockSlot = 1;
-                    if (state.ArchivedData.Time > endTime)
+                    if (state.ArchivedData.Time.CompareTo(endTime) > 0)
                         endTime = state.ArchivedData.Time;
 
                     m_stateFile.Write(state.HistorianID, state);
@@ -1862,12 +1862,12 @@ namespace TVA.Historian.Files
                 throw new InvalidOperationException("Data can only be directly read from files that are Active");
 
             // Ensure that the start and end time are valid.
-            if (startTime > endTime)
+            if (startTime.CompareTo(endTime) > 0)
                 throw new ArgumentException("End Time preceeds Start Time in the specified timespan");
 
             List<Info> dataFiles = new List<Info>();
 
-            if (startTime < m_fat.FileStartTime)
+            if (startTime.CompareTo(m_fat.FileStartTime) < 0)
             {
                 // Data is to be read from historic file(s) - make sure that the list has been built
                 if (m_buildHistoricFileListThread.IsAlive)
@@ -1882,7 +1882,7 @@ namespace TVA.Historian.Files
                 }
             }
 
-            if (endTime >= m_fat.FileStartTime)
+            if (endTime.CompareTo(m_fat.FileStartTime) >= 0)
             {
                 // Data is to be read from the active file.
                 Info activeFileInfo = new Info();
@@ -1912,6 +1912,7 @@ namespace TVA.Historian.Files
                         file.StateFile = m_stateFile;
                         file.IntercomFile = m_intercomFile;
                         file.MetadataFile = m_metadataFile;
+                        file.FileAccessMode = FileAccess.Read;
                         file.Open();
                     }
 
@@ -2515,6 +2516,8 @@ namespace TVA.Historian.Files
                     historicArchiveFile.StateFile = m_stateFile;
                     historicArchiveFile.IntercomFile = m_intercomFile;
                     historicArchiveFile.MetadataFile = m_metadataFile;
+                    historicArchiveFile.FileAccessMode = FileAccess.Read;
+
                     try
                     {
                         historicArchiveFile.Open();
@@ -2523,9 +2526,9 @@ namespace TVA.Historian.Files
                         fileInfo.StartTimeTag = historicArchiveFile.Fat.FileStartTime;
                         fileInfo.EndTimeTag = historicArchiveFile.Fat.FileEndTime;
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-
+                        OnHistoricFileListBuildException(new InvalidOperationException(string.Format("Failed to access historic data file \"{0}\" due to exception: {1}", FilePath.GetFileName(fileName), ex.Message), ex));
                     }
                     finally
                     {
@@ -2564,16 +2567,16 @@ namespace TVA.Historian.Files
 
         private bool FindHistoricArchiveFileForRead(Info fileInfo)
         {
-            return (fileInfo != null && ((m_readSearchStartTimeTag >= fileInfo.StartTimeTag && m_readSearchStartTimeTag <= fileInfo.EndTimeTag) ||
-                                         (m_readSearchEndTimeTag >= fileInfo.StartTimeTag && m_readSearchEndTimeTag <= fileInfo.EndTimeTag) ||
-                                         (m_readSearchStartTimeTag < fileInfo.StartTimeTag && m_readSearchEndTimeTag > fileInfo.EndTimeTag)));
+            return (fileInfo != null && ((m_readSearchStartTimeTag.CompareTo(fileInfo.StartTimeTag) >= 0 && m_readSearchStartTimeTag.CompareTo(fileInfo.EndTimeTag) <= 0) ||
+                                         (m_readSearchEndTimeTag.CompareTo(fileInfo.StartTimeTag) >= 0 && m_readSearchEndTimeTag.CompareTo(fileInfo.EndTimeTag) <= 0) ||
+                                         (m_readSearchStartTimeTag.CompareTo(fileInfo.StartTimeTag) < 0 && m_readSearchEndTimeTag.CompareTo(fileInfo.EndTimeTag) > 0)));
         }
 
         private bool FindHistoricArchiveFileForWrite(Info fileInfo)
         {
             return (fileInfo != null &&
-                    m_writeSearchTimeTag >= fileInfo.StartTimeTag &&
-                    m_writeSearchTimeTag <= fileInfo.EndTimeTag);
+                    m_writeSearchTimeTag.CompareTo(fileInfo.StartTimeTag) >= 0 &&
+                    m_writeSearchTimeTag.CompareTo(fileInfo.EndTimeTag) <= 0);
         }
 
         private bool IsNewHistoricArchiveFile(Info fileInfo)
@@ -2668,7 +2671,7 @@ namespace TVA.Historian.Files
                     }
 
                     // Update information about the latest data point received.
-                    if (dataPoint.Time > system.LatestDataTime)
+                    if (dataPoint.Time.CompareTo(system.LatestDataTime) > 0)
                     {
                         system.LatestDataID = dataPoint.HistorianID;
                         system.LatestDataTime = dataPoint.Time;
@@ -2676,7 +2679,7 @@ namespace TVA.Historian.Files
                     }
 
                     // Check for data that out-of-sequence based on it's time.
-                    if (dataPoint.Time <= state.PreviousData.Time)
+                    if (dataPoint.Time.CompareTo(state.PreviousData.Time) <= 0)
                     {
                         if (dataPoint.Time == state.PreviousData.Time)
                         {
@@ -2820,7 +2823,7 @@ namespace TVA.Historian.Files
                     m_fat.DataPointsReceived++;
                     if (archiveData)
                     {
-                        if (dataPoint.Time >= m_fat.FileStartTime)
+                        if (dataPoint.Time.CompareTo(m_fat.FileStartTime) >= 0)
                         {
                             // Data belongs to this file.
                             ArchiveDataBlock dataBlock;

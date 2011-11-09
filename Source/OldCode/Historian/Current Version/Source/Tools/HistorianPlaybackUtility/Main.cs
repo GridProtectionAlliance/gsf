@@ -134,6 +134,8 @@ namespace HistorianPlaybackUtility
                 OutputChannelTabs.TabPages.Remove(SerialSettingsTab);
             }
 
+            Application.DoEvents();
+
             // Initialize member variables.
             m_activeThreads = new List<Thread>();
             m_archiveFile = new ArchiveFile();
@@ -146,6 +148,7 @@ namespace HistorianPlaybackUtility
             m_archiveFile.FileAccessMode = FileAccess.Read;
             m_archiveFile.HistoricFileListBuildStart += ArchiveFile_HistoricFileListBuildStart;
             m_archiveFile.HistoricFileListBuildComplete += ArchiveFile_HistoricFileListBuildComplete;
+            m_archiveFile.HistoricFileListBuildException += ArchiveFile_HistoricFileListBuildException;
             m_archiveFile.DataReadException += ArchiveFile_DataReadException;
             m_rolloverWatcher = new System.Timers.Timer();
             m_rolloverWatcher.Interval = 1000;
@@ -370,17 +373,20 @@ namespace HistorianPlaybackUtility
 
         private void ShowUpdateMessage(string message, params object[] args)
         {
-            this.Invoke((ThreadStart)delegate()
+            if (this.InvokeRequired)
             {
-                StringBuilder outputText = new StringBuilder();
+                this.Invoke((ThreadStart)delegate()
+                {
+                    StringBuilder outputText = new StringBuilder();
 
-                outputText.AppendFormat("[{0}] ", DateTime.Now.ToString());
-                outputText.AppendFormat(message, args);
-                outputText.Append("\r\n");
+                    outputText.AppendFormat("[{0}] ", DateTime.Now.ToString());
+                    outputText.AppendFormat(message, args);
+                    outputText.Append("\r\n");
 
-                MessagesOutput.AppendText(outputText.ToString());
-                Application.DoEvents();
-            });
+                    MessagesOutput.AppendText(outputText.ToString());
+                    Application.DoEvents();
+                });
+            }
         }
 
         #region [ Handlers ]
@@ -718,6 +724,11 @@ namespace HistorianPlaybackUtility
         private void ArchiveFile_HistoricFileListBuildComplete(object sender, EventArgs e)
         {
             ShowUpdateMessage("Completed building list of historic archive files.");
+        }
+
+        private void ArchiveFile_HistoricFileListBuildException(object sender, EventArgs<Exception> e)
+        {
+            ShowUpdateMessage(e.Argument.Message);
         }
 
         private void ArchiveFile_DataReadException(object sender, TVA.EventArgs<Exception> e)

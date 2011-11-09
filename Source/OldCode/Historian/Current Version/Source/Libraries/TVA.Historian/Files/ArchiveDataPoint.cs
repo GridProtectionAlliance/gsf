@@ -198,7 +198,7 @@ namespace TVA.Historian.Files
             }
             set
             {
-                if (value < TimeTag.MinValue || value > TimeTag.MaxValue)
+                if (value.CompareTo(TimeTag.MinValue) < 0 || value.CompareTo(TimeTag.MaxValue) > 0)
                     throw new ArgumentException("Value must between 01/01/1995 and 01/19/2063");
 
                 m_time = value;
@@ -258,7 +258,7 @@ namespace TVA.Historian.Files
         {
             get
             {
-                return ((m_time == TimeTag.MinValue) &&
+                return ((m_time.CompareTo(TimeTag.MinValue) == 0) &&
                         (m_value == default(float)) &&
                         (Quality == Quality.Unknown));
             }
