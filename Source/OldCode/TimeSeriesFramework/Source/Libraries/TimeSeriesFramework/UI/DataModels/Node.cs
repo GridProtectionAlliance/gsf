@@ -344,7 +344,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets or sets the current <see cref="Node"/>'s Real Time Statistic Service URL.
+        /// Gets or sets the current <see cref="Node"/>'s Real-time Statistic Service URL.
         /// </summary>
         [DataType(DataType.Url, ErrorMessage = "Real-time statistics service URL is not formatted properly.")]
         public string RealTimeStatisticServiceUrl
