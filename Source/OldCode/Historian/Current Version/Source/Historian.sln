@@ -52,6 +52,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Microsoft", "Microsoft", "{CF46AEFA-F388-4964-80A1-6865877431C6}"
 	ProjectSection(SolutionItems) = preProject
 		Dependencies\Microsoft\System.Windows.Controls.DataVisualization.Toolkit.dll = Dependencies\Microsoft\System.Windows.Controls.DataVisualization.Toolkit.dll
+		Dependencies\Microsoft\System.Windows.Controls.Input.Toolkit.dll = Dependencies\Microsoft\System.Windows.Controls.Input.Toolkit.dll
+		Dependencies\Microsoft\System.Windows.Controls.Layout.Toolkit.dll = Dependencies\Microsoft\System.Windows.Controls.Layout.Toolkit.dll
 		Dependencies\Microsoft\WPFToolkit.dll = Dependencies\Microsoft\WPFToolkit.dll
 	EndProjectSection
 EndProject
