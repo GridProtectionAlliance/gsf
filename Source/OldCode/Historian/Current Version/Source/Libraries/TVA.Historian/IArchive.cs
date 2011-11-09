@@ -73,10 +73,19 @@ namespace TVA.Historian
         /// Reads time-series data from the repository.
         /// </summary>
         /// <param name="historianID">Historian identifier for which <see cref="IDataPoint"/>s are to be read.</param>
-        /// <param name="startTime"><see cref="System.String"/> representation of the start time (in GMT) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
-        /// <param name="endTime"><see cref="System.String"/> representation of the end time (in GMT) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
+        /// <param name="startTime"><see cref="System.String"/> representation of the start time (in UTC) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
+        /// <param name="endTime"><see cref="System.String"/> representation of the end time (in UTC) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="IDataPoint"/>s.</returns>
         IEnumerable<IDataPoint> ReadData(int historianID, string startTime, string endTime);
+
+        /// <summary>
+        /// Reads time-series data from the repository.
+        /// </summary>
+        /// <param name="historianIDs">Historian identifiers for which <see cref="IDataPoint"/>s are to be read.</param>
+        /// <param name="startTime"><see cref="System.String"/> representation of the start time (in UTC) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
+        /// <param name="endTime"><see cref="System.String"/> representation of the end time (in UTC) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
+        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="IDataPoint"/>s.</returns>
+        IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, string startTime, string endTime);
 
         /// <summary>
         /// Read meta information for the specified <paramref name="historianID"/>.

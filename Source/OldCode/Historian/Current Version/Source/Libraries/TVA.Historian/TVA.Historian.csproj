@@ -107,6 +107,7 @@
     <Compile Include="DataListener.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="DataServices\SerializableReadRequestData.cs" />
     <Compile Include="Exporters\CsvExporter.cs" />
     <Compile Include="Exporters\DataMonitorExporter.cs" />
     <Compile Include="Exporters\Export.cs" />
@@ -142,6 +143,7 @@
     <Compile Include="Files\MetadataRecordSecurityFlags.cs" />
     <Compile Include="Files\MetadataRecordSummary.cs" />
     <Compile Include="Files\NamespaceDoc.cs" />
+    <Compile Include="Files\TimeSortedDataPointScanner.cs" />
     <Compile Include="Files\StateFile.cs" />
     <Compile Include="Files\StateRecord.cs" />
     <Compile Include="Files\StateRecordDataPoint.cs" />

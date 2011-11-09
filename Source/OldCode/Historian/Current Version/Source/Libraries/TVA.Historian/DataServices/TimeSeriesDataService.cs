@@ -37,6 +37,7 @@
 using System;
 using System.Collections.Generic;
 using System.ServiceModel;
+using System.Text;
 using TVA.Historian.Files;
 
 namespace TVA.Historian.DataServices
@@ -54,7 +55,7 @@ namespace TVA.Historian.DataServices
         /// Initializes a new instance of the <see cref="TimeSeriesDataService"/> class.
         /// </summary>
         public TimeSeriesDataService()
-            :base()
+            : base()
         {
             Endpoints = "http.rest://localhost:6152/historian";
         }
@@ -171,6 +172,26 @@ namespace TVA.Historian.DataServices
         public SerializableTimeSeriesData ReadRangeHistoricTimeSeriesDataAsJson(string fromID, string toID, string startTime, string endTime)
         {
             return ReadHistoricTimeSeriesData(fromID, toID, startTime, endTime);
+        }
+
+        /// <summary>
+        /// Reads historic time-series data from the <see cref="DataService.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
+        /// </summary>
+        /// <param name="data">JSON serialized post request.</param>
+        /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
+        public SerializableTimeSeriesData ReadSelectHistoricTimeSeriesDataAsJsonPost(SerializableReadRequestData data)
+        {
+            StringBuilder idList = new StringBuilder();
+
+            foreach (int id in data.idArray)
+            {
+                if (idList.Length > 0)
+                    idList.Append(',');
+
+                idList.Append(id);
+            }
+
+            return ReadHistoricTimeSeriesData(idList.ToString(), data.startTime, data.endTime);
         }
 
         private void WriteTimeSeriesData(SerializableTimeSeriesData data)
@@ -304,14 +325,19 @@ namespace TVA.Historian.DataServices
                 int id = 0;
                 SerializableTimeSeriesData data = new SerializableTimeSeriesData();
                 List<SerializableTimeSeriesDataPoint> points = new List<SerializableTimeSeriesDataPoint>();
+                List<int> historianIDs = new List<int>();
+
                 foreach (string singleID in idList.Split(',', ';'))
                 {
-                    id = int.Parse(singleID);
-                    foreach (IDataPoint point in Archive.ReadData(id, startTime, endTime))
-                    {
-                        points.Add(new SerializableTimeSeriesDataPoint(point));
-                    }
+                    if (int.TryParse(singleID, out id))
+                        historianIDs.Add(id);
                 }
+
+                foreach (IDataPoint point in Archive.ReadData(historianIDs, startTime, endTime))
+                {
+                    points.Add(new SerializableTimeSeriesDataPoint(point));
+                }
+
                 data.TimeSeriesDataPoints = points.ToArray();
 
                 return data;
@@ -339,13 +365,18 @@ namespace TVA.Historian.DataServices
                 // Read historic time-series data from the archive.
                 SerializableTimeSeriesData data = new SerializableTimeSeriesData();
                 List<SerializableTimeSeriesDataPoint> points = new List<SerializableTimeSeriesDataPoint>();
+                List<int> historianIDs = new List<int>();
+
                 for (int id = int.Parse(fromID); id <= int.Parse(toID); id++)
                 {
-                    foreach (IDataPoint point in Archive.ReadData(id, startTime, endTime))
-                    {
-                        points.Add(new SerializableTimeSeriesDataPoint(point));
-                    }
+                    historianIDs.Add(id);
                 }
+
+                foreach (IDataPoint point in Archive.ReadData(historianIDs, startTime, endTime))
+                {
+                    points.Add(new SerializableTimeSeriesDataPoint(point));
+                }
+
                 data.TimeSeriesDataPoints = points.ToArray();
 
                 return data;

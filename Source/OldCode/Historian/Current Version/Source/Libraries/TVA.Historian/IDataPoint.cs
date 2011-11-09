@@ -30,6 +30,7 @@
 //******************************************************************************************************
 
 using System;
+using TVA.Historian.Files;
 using TVA.Parsing;
 
 namespace TVA.Historian
@@ -193,6 +194,11 @@ namespace TVA.Historian
         /// Gets or sets the <see cref="Quality"/> of the time-series data point.
         /// </summary>
         Quality Quality { get; set; }
+
+        /// <summary>
+        /// Gets or sets associated <see cref="MetadataRecord"/> of the time-series data point.
+        /// </summary>
+        MetadataRecord Metadata { get; set; }
 
         #endregion
     }

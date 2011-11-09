@@ -29,7 +29,6 @@
 //
 //******************************************************************************************************
 
-
 using System;
 using TVA.Parsing;
 
@@ -147,7 +146,7 @@ namespace TVA.Historian.Files
         {
             get
             {
-                return new ArchiveDataBlock(m_parent, m_index, m_historianID, false);
+                return GetDataBlock(true);
             }
         }
 
@@ -192,6 +191,16 @@ namespace TVA.Historian.Files
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Gets the <see cref="ArchiveDataBlock"/> associated with this <see cref="ArchiveDataBlockPointer"/>.
+        /// </summary>
+        /// <param name="preRead">true to pre-read data to locate write cursor.</param>
+        /// <returns>The <see cref="ArchiveDataBlock"/> associated with this <see cref="ArchiveDataBlockPointer"/>.</returns>
+        public ArchiveDataBlock GetDataBlock(bool preRead)
+        {
+            return new ArchiveDataBlock(m_parent, m_index, m_historianID, false, preRead);
+        }
 
         /// <summary>
         /// Deallocates the <see cref="DataBlock"/> to store new <see cref="ArchiveDataPoint"/>s.
@@ -281,5 +290,33 @@ namespace TVA.Historian.Files
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Extension methods for the <see cref="ArchiveDataBlockPointer"/>.
+    /// </summary>
+    public static class ArchiveDataBlockPointerExtensions
+    {
+        /// <summary>
+        /// Tests if the <paramref name="dataBlockPointer"/> matches the specified search criteria.
+        /// </summary>
+        /// <param name="dataBlockPointer"><see cref="ArchiveDataBlockPointer"/> to test.</param>
+        /// <param name="historianID">Desired historian ID.</param>
+        /// <param name="startTime">Desired start time.</param>
+        /// <param name="endTime">Desired end time.</param>
+        /// <returns><c>true</c> if the specified <paramref name="dataBlockPointer"/> is for <paramref name="historianID"/> and falls within the <paramref name="startTime"/> and <paramref name="endTime"/>; otherwise <c>false</c>.</returns>
+        public static bool Matches(this ArchiveDataBlockPointer dataBlockPointer, int historianID, TimeTag startTime, TimeTag endTime)
+        {
+            if (dataBlockPointer != null)
+                // Note: The StartTime value of the pointer is ignored if m_searchStartTime = TimeTag.MinValue and
+                //       m_searchEndTime = TimeTag.MaxValue. In this case only the PointID value is compared. This
+                //       comes in handy when the first or last pointer is to be found from the list of pointers for
+                //       a point ID in addition to all the pointers for a point ID.
+                return dataBlockPointer.HistorianID == historianID &&
+                        (startTime.CompareTo(TimeTag.MinValue) == 0 || dataBlockPointer.StartTime.CompareTo(startTime) >= 0) &&
+                        (endTime.CompareTo(TimeTag.MaxValue) == 0 || dataBlockPointer.StartTime.CompareTo(endTime) <= 0);
+            else
+                return false;
+        }
     }
 }

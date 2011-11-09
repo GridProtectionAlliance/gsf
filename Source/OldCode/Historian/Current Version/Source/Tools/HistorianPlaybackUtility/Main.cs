@@ -26,14 +26,18 @@
 //       Updated header and license agreement.
 //  12/12/2010 - Pinal C. Patel
 //       Fixed a bug that was preventing all of the exported data from being written to output file.
+//  11/08/2011 - J. Ritchie Carroll
+//       Added enhanced export formatting and time-sorted outputs.
 //
 //******************************************************************************************************
 
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.IO.Ports;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -46,7 +50,6 @@ using TVA.Historian.Packets;
 using TVA.IO;
 using TVA.Reflection;
 using TVA.Windows.Forms;
-using System.Globalization;
 
 namespace HistorianPlaybackUtility
 {
@@ -57,6 +60,7 @@ namespace HistorianPlaybackUtility
         // Nested Types
         private class Metadata
         {
+            public MetadataRecord MetadataRecord;
             public string Instance;
             public int PointID;
             public string PointName;
@@ -64,6 +68,7 @@ namespace HistorianPlaybackUtility
 
             public Metadata(MetadataRecord metadata)
             {
+                MetadataRecord = metadata;
                 Instance = metadata.PlantCode;
                 PointID = metadata.HistorianID;
                 PointName = metadata.Name;
@@ -126,7 +131,7 @@ namespace HistorianPlaybackUtility
             else
             {
                 // No serial ports where found on this machineso the option for serial output will be removed
-                OutputCannelTabs.TabPages.Remove(SerialSettingsTab);
+                OutputChannelTabs.TabPages.Remove(SerialSettingsTab);
             }
 
             // Initialize member variables.
@@ -177,6 +182,56 @@ namespace HistorianPlaybackUtility
             }
         }
 
+        private void ProcessSequential(object state)
+        {
+            object[] info = (object[])state;
+            string ids = (string)info[0];
+
+            lock (m_activeThreads)
+            {
+                m_activeThreads.Add(Thread.CurrentThread);
+            }
+
+            try
+            {
+                foreach (string value in ids.Split(','))
+                {
+                    Thread workerThread = new Thread(Process);
+                    info[0] = value;
+                    workerThread.Start(info);
+                    workerThread.Join();
+                }
+            }
+            finally
+            {
+                lock (m_activeThreads)
+                {
+                    m_activeThreads.Remove(Thread.CurrentThread);
+                    if (m_activeThreads.Count == 0)
+                    {
+                        ShowUpdateMessage("Waiting for pending transmissions to complete...");
+                        while (m_transmitStarts != (m_transmitCompletes + m_transmitExceptions))
+                        {
+                            Thread.Sleep(1000);
+                        }
+                        ShowUpdateMessage("Transmissions complete ({0} errors).", m_transmitExceptions);
+
+                        m_transmitClient.SendDataStart -= m_transmitClient_SendDataStart;
+                        m_transmitClient.SendDataComplete -= m_transmitClient_SendDataComplete;
+                        m_transmitClient.SendDataException -= m_transmitClient_SendDataException;
+                        m_transmitClient.Dispose();
+
+                        this.BeginInvoke((ThreadStart)delegate()
+                        {
+                            StopProcessing.Visible = false;
+                            StartProcessing.Visible = true;
+                            SplitContainerTop.Enabled = true;
+                        });
+                    }
+                }
+            }
+        }
+
         private void Process(object state)
         {
             object[] info = (object[])state;
@@ -186,6 +241,7 @@ namespace HistorianPlaybackUtility
             bool repeatTransmit = (bool)info[3];
             string dataFormat = (string)info[4];
             int sampleRate = (int)info[5];
+            Dictionary<int, Metadata> metadata = info[6] as Dictionary<int, Metadata>;
 
             int sleepTime = 0;
             if (sampleRate > 0)
@@ -198,65 +254,89 @@ namespace HistorianPlaybackUtility
                     m_activeThreads.Add(Thread.CurrentThread);
                 }
 
-                ShowUpdateMessage("Started processing point {0} on thread {1}...", ids, Thread.CurrentThread.ManagedThreadId);
+                ShowUpdateMessage("Processing \"{0}\"...", ids);
 
                 while (true)
                 {
-                    foreach (string id in ids.Split(','))
+                    int id;
+                    List<int> historianIDs = new List<int>();
+
+                    foreach (string value in ids.Split(','))
                     {
-                        IEnumerable<IDataPoint> data = m_archiveFile.ReadData(int.Parse(id), startTime, endTime);
-                        ShowUpdateMessage("Processing measurements for point {0}...", id);
-                        int count = 0;
-                        byte[] buffer = null;
-                        if (string.IsNullOrEmpty(dataFormat))
-                        {
-                            // Output in binary format.
-                            foreach (IDataPoint sample in data)
-                            {
-                                m_transmitClient.SendAsync(new PacketType1(sample).BinaryImage, 0, PacketType1.ByteCount);
-                                count++;
-
-                                // Abort for rollover, when needed
-                                if (!m_rolloverWaitHandle.WaitOne(0)) break;
-
-                                // Sleep for throttling, if requested
-                                if (sleepTime > 0)
-                                    Thread.Sleep(sleepTime);
-                            }
-                        }
-                        else
-                        {
-                            // Output in plain-text format.
-                            foreach (IDataPoint sample in data)
-                            {
-                                buffer = Encoding.ASCII.GetBytes(string.Format(dataFormat, sample, sample, sample, sample));
-                                m_transmitClient.SendAsync(buffer, 0, buffer.Length);
-                                count++;
-
-                                // Abort for rollover, when needed
-                                if (!m_rolloverWaitHandle.WaitOne(0))
-                                    break;
-
-                                // Sleep for throttling, if requested
-                                if (sleepTime > 0)
-                                    Thread.Sleep(sleepTime);
-                            }
-                        }
-                        ShowUpdateMessage("Processed {0} measurements for point {1}.", count, id);
+                        if (int.TryParse(value, out id))
+                            historianIDs.Add(id);
                     }
+
+                    ShowUpdateMessage("Reading measurements...");
+                    IEnumerable<IDataPoint> data = m_archiveFile.ReadData(historianIDs, startTime, endTime);
+
+                    int count = 0;
+                    byte[] buffer = null;
+
+                    if (string.IsNullOrEmpty(dataFormat))
+                    {
+                        // Output in binary format.
+                        foreach (IDataPoint sample in data)
+                        {
+                            m_transmitClient.SendAsync(new PacketType1(sample).BinaryImage, 0, PacketType1.ByteCount);
+                            count++;
+
+                            // Abort for rollover, when needed
+                            if (!m_rolloverWaitHandle.WaitOne(0))
+                                break;
+
+                            // Sleep for throttling, if requested
+                            if (sleepTime > 0)
+                                Thread.Sleep(sleepTime);
+                        }
+                    }
+                    else
+                    {
+                        Metadata localMetadata;
+                        object[] args = new object[dataFormat.Split('{').Where(value => !string.IsNullOrWhiteSpace(value)).Select(value => int.Parse(value.Split(':')[0])).Max() + 1];
+
+                        // Output in plain-text format.
+                        foreach (IDataPoint sample in data)
+                        {
+                            // Associate metadata record with this data point if it's available                            
+                            if (metadata != null && metadata.TryGetValue(sample.HistorianID, out localMetadata))
+                                sample.Metadata = localMetadata.MetadataRecord;
+
+                            // Initialize arguments array with current sample for formatting
+                            for (int i = 0; i < args.Length; i++)
+                            {
+                                args[i] = sample;
+                            }
+
+                            buffer = Encoding.ASCII.GetBytes(string.Format(dataFormat, args));
+
+                            m_transmitClient.SendAsync(buffer, 0, buffer.Length);
+                            count++;
+
+                            // Abort for rollover, when needed
+                            if (!m_rolloverWaitHandle.WaitOne(0))
+                                break;
+
+                            // Sleep for throttling, if requested
+                            if (sleepTime > 0)
+                                Thread.Sleep(sleepTime);
+                        }
+                    }
+                    ShowUpdateMessage("Read {0} measurements.", count);
 
                     if (!repeatTransmit)
                         break;
                 }
-                ShowUpdateMessage("Completed processing point {0} on thread {1}.", ids, Thread.CurrentThread.ManagedThreadId);
+
+                ShowUpdateMessage("Completed processing \"{0}\".", ids);
             }
             catch (ThreadAbortException)
             {
-                ShowUpdateMessage("Aborted processing point {0} on thread {1}.", ids, Thread.CurrentThread.ManagedThreadId);
+                ShowUpdateMessage("Aborted processing \"{0}\".", ids);
             }
             catch (Exception ex)
             {
-                ShowUpdateMessage("Error processing point {0} on thread {1} - {2}", ids, Thread.CurrentThread.ManagedThreadId, ex.Message);
+                ShowUpdateMessage("Error processing \"{0}\": {1}", ids, ex.Message);
             }
             finally
             {
@@ -290,20 +370,17 @@ namespace HistorianPlaybackUtility
 
         private void ShowUpdateMessage(string message, params object[] args)
         {
-            if (this.InvokeRequired)
+            this.Invoke((ThreadStart)delegate()
             {
-                this.Invoke((ThreadStart)delegate()
-                {
-                    StringBuilder outputText = new StringBuilder();
+                StringBuilder outputText = new StringBuilder();
 
-                    outputText.AppendFormat("[{0}] ", DateTime.Now.ToString());
-                    outputText.AppendFormat(message, args);
-                    outputText.Append("\r\n");
+                outputText.AppendFormat("[{0}] ", DateTime.Now.ToString());
+                outputText.AppendFormat(message, args);
+                outputText.Append("\r\n");
 
-                    MessagesOutput.AppendText(outputText.ToString());
-                    Application.DoEvents();
-                });
-            }
+                MessagesOutput.AppendText(outputText.ToString());
+                Application.DoEvents();
+            });
         }
 
         #region [ Handlers ]
@@ -311,6 +388,9 @@ namespace HistorianPlaybackUtility
         private void Main_Load(object sender, EventArgs e)
         {
             this.RestoreLayout();
+            OutputPlainTextData.Checked = true;
+            OutputChannelTabs.SelectedIndex = 2;
+            FileNameInput.Text = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Output.csv");
         }
 
         private void Main_FormClosing(object sender, FormClosingEventArgs e)
@@ -505,16 +585,18 @@ namespace HistorianPlaybackUtility
                 // Create new client.
                 ShowUpdateMessage("Initializing client...");
                 List<object> state = new List<object>();
+                Dictionary<int, Metadata> metadata = new Dictionary<int, Metadata>();
                 state.Add(null);
                 state.Add(startTime);
                 state.Add(endTime);
                 state.Add(RepeatDataProcessing.Checked);
                 state.Add(OutputPlainTextDataFormat.Text);
                 state.Add(int.Parse(ProcessDataAtIntervalSampleRate.Text));
+                state.Add(metadata);
                 m_transmitStarts = 0;
                 m_transmitCompletes = 0;
                 m_transmitExceptions = 0;
-                switch (OutputCannelTabs.SelectedIndex)
+                switch (OutputChannelTabs.SelectedIndex)
                 {
                     case 0: // TCP
                         m_transmitClient = ClientBase.Create(string.Format("Protocol=TCP;Server={0}:{1}", TCPServerInput.Text, TCPPortInput.Text));
@@ -534,39 +616,43 @@ namespace HistorianPlaybackUtility
                 m_transmitClient.SendDataStart += m_transmitClient_SendDataStart;
                 m_transmitClient.SendDataComplete += m_transmitClient_SendDataComplete;
                 m_transmitClient.SendDataException += m_transmitClient_SendDataException;
-                ShowUpdateMessage("Client initialized!");
+                ShowUpdateMessage("Client initialized.");
 
                 // Connect the newly created client.
                 ShowUpdateMessage("Connecting client...");
                 m_transmitClient.Connect();
+
                 if (m_transmitClient.CurrentState == ClientState.Connected)
                 {
                     // Client connected successfully.
-                    ShowUpdateMessage("Client connected!");
+                    ShowUpdateMessage("Client connected.");
 
                     // Queue all selected points for processing.
-                    string selection = "";
+                    StringBuilder selection = new StringBuilder();
                     Metadata definition = null;
+
                     for (int i = 0; i < IDInput.CheckedItems.Count; i++)
                     {
-                        definition = (Metadata)IDInput.CheckedItems[i];
-                        if (ProcessDataInParallel.Checked)
-                        {
-                            ShowUpdateMessage("Queuing processing request for point {0}...", definition.PointID);
-                            state[0] = definition.PointID.ToString();
-                            ThreadPool.QueueUserWorkItem(Process, state.ToArray());
-                        }
-                        selection += definition.PointID + ",";   // Update information to be persisted.
-                    }
-                    selection = selection.TrimEnd(',');
+                        if (selection.Length > 0)
+                            selection.Append(',');
 
-                    if (!ProcessDataInParallel.Checked)
+                        definition = (Metadata)IDInput.CheckedItems[i];
+                        selection.Append(definition.PointID);
+                        metadata.Add(definition.PointID, definition);
+                    }
+
+                    state[0] = selection.ToString();
+
+                    if (ProcessDataInParallel.Checked)
                     {
-                        state[0] = selection;
                         ThreadPool.QueueUserWorkItem(Process, state.ToArray());
                     }
+                    else
+                    {
+                        ThreadPool.QueueUserWorkItem(ProcessSequential, state.ToArray());
+                    }
 
-                    ConfigurationFile.Current.Settings.General["Selection", true].Value = selection.TrimEnd(',');
+                    ConfigurationFile.Current.Settings.General["Selection", true].Value = selection.ToString();
                     ConfigurationFile.Current.Save();
 
                     StopProcessing.Visible = true;
@@ -620,7 +706,7 @@ namespace HistorianPlaybackUtility
 
         private void OutputPlainTextData_CheckedChanged(object sender, EventArgs e)
         {
-            OutputPlainTextDataFormat.Text = "{0:I},{1:T},{2:V},{3:Q}\r\n";
+            OutputPlainTextDataFormat.Text = "{0:Source}:{1:ID},{2:Name},{3:Synonym1},{4:Time},{5:UnixTime},{6:Value},{7:Quality},{8:Description}\r\n";
             OutputPlainTextDataFormat.Enabled = true;
         }
 

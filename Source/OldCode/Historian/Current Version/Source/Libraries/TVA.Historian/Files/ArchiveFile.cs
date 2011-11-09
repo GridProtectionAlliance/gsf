@@ -1696,7 +1696,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Reads <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveFile"/>.
+        /// Reads all <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveFile"/> for the specified <paramref name="historianID"/>.
         /// </summary>
         /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
@@ -1706,10 +1706,20 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
+        /// Reads all <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveFile"/> for the specified <paramref name="historianIDs"/>.
+        /// </summary>
+        /// <param name="historianIDs">Historian identifiers for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
+        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
+        public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs)
+        {
+            return ReadData(historianIDs, TimeTag.MinValue);
+        }
+
+        /// <summary>
         /// Reads <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveFile"/>.
         /// </summary>
         /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
-        /// <param name="startTime"><see cref="String"/> representation of the start time (in GMT) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="startTime"><see cref="String"/> representation of the start time (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
         public IEnumerable<IDataPoint> ReadData(int historianID, string startTime)
         {
@@ -1719,9 +1729,20 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Reads <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveFile"/>.
         /// </summary>
+        /// <param name="historianIDs">Historian identifiers for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
+        /// <param name="startTime"><see cref="String"/> representation of the start time (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
+        public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, string startTime)
+        {
+            return ReadData(historianIDs, startTime, TimeTag.MinValue.ToString());
+        }
+
+        /// <summary>
+        /// Reads <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveFile"/>.
+        /// </summary>
         /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
-        /// <param name="startTime"><see cref="String"/> representation of the start time (in GMT) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
-        /// <param name="endTime"><see cref="String"/> representation of the end time (in GMT) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="startTime"><see cref="String"/> representation of the start time (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="endTime"><see cref="String"/> representation of the end time (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
         public IEnumerable<IDataPoint> ReadData(int historianID, string startTime, string endTime)
         {
@@ -1731,8 +1752,20 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Reads <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveFile"/>.
         /// </summary>
+        /// <param name="historianIDs">Historian identifiers for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
+        /// <param name="startTime"><see cref="String"/> representation of the start time (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="endTime"><see cref="String"/> representation of the end time (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
+        public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, string startTime, string endTime)
+        {
+            return ReadData(historianIDs, TimeTag.Parse(startTime), TimeTag.Parse(endTime));
+        }
+
+        /// <summary>
+        /// Reads <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveFile"/>.
+        /// </summary>
         /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
-        /// <param name="startTime">Start <see cref="DateTime"/> (in GMT) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="startTime">Start <see cref="DateTime"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
         public IEnumerable<IDataPoint> ReadData(int historianID, DateTime startTime)
         {
@@ -1742,9 +1775,20 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Reads <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveFile"/>.
         /// </summary>
+        /// <param name="historianIDs">Historian identifiers for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
+        /// <param name="startTime">Start <see cref="DateTime"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
+        public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, DateTime startTime)
+        {
+            return ReadData(historianIDs, startTime, TimeTag.MinValue.ToDateTime());
+        }
+
+        /// <summary>
+        /// Reads <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveFile"/>.
+        /// </summary>
         /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
-        /// <param name="startTime">Start <see cref="DateTime"/> (in GMT) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
-        /// <param name="endTime">End <see cref="DateTime"/> (in GMT) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="startTime">Start <see cref="DateTime"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="endTime">End <see cref="DateTime"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
         public IEnumerable<IDataPoint> ReadData(int historianID, DateTime startTime, DateTime endTime)
         {
@@ -1754,8 +1798,20 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Reads <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveFile"/>.
         /// </summary>
+        /// <param name="historianIDs">Historian identifiers for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
+        /// <param name="startTime">Start <see cref="DateTime"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="endTime">End <see cref="DateTime"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
+        public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, DateTime startTime, DateTime endTime)
+        {
+            return ReadData(historianIDs, new TimeTag(startTime), new TimeTag(endTime));
+        }
+
+        /// <summary>
+        /// Reads <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveFile"/>.
+        /// </summary>
         /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
-        /// <param name="startTime">Start <see cref="TimeTag"/> (in GMT) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="startTime">Start <see cref="TimeTag"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
         public IEnumerable<IDataPoint> ReadData(int historianID, TimeTag startTime)
         {
@@ -1765,11 +1821,34 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Reads <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveFile"/>.
         /// </summary>
+        /// <param name="historianIDs">Historian identifiers for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
+        /// <param name="startTime">Start <see cref="TimeTag"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
+        public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, TimeTag startTime)
+        {
+            return ReadData(historianIDs, startTime, TimeTag.MaxValue);
+        }
+
+        /// <summary>
+        /// Reads <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveFile"/>.
+        /// </summary>
         /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
-        /// <param name="startTime">Start <see cref="TimeTag"/> (in GMT) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
-        /// <param name="endTime">End <see cref="TimeTag"/> (in GMT) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="startTime">Start <see cref="TimeTag"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="endTime">End <see cref="TimeTag"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
         public IEnumerable<IDataPoint> ReadData(int historianID, TimeTag startTime, TimeTag endTime)
+        {
+            return ReadData(new int[] { historianID }, startTime, endTime);
+        }
+
+        /// <summary>
+        /// Reads <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveFile"/>.
+        /// </summary>
+        /// <param name="historianIDs">Historian identifiers for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
+        /// <param name="startTime">Start <see cref="TimeTag"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="endTime">End <see cref="TimeTag"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
+        public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, TimeTag startTime, TimeTag endTime)
         {
             // Yeild to archive rollover process.
             m_rolloverWaitHandle.WaitOne();
@@ -1787,14 +1866,16 @@ namespace TVA.Historian.Files
                 throw new ArgumentException("End Time preceeds Start Time in the specified timespan");
 
             List<Info> dataFiles = new List<Info>();
+
             if (startTime < m_fat.FileStartTime)
             {
-                // Data is to be read from historic file(s).
+                // Data is to be read from historic file(s) - make sure that the list has been built
                 if (m_buildHistoricFileListThread.IsAlive)
                     m_buildHistoricFileListThread.Join();
 
                 m_readSearchStartTimeTag = startTime;
                 m_readSearchEndTimeTag = endTime;
+
                 lock (m_historicArchiveFiles)
                 {
                     dataFiles.AddRange(m_historicArchiveFiles.FindAll(FindHistoricArchiveFileForRead));
@@ -1815,7 +1896,7 @@ namespace TVA.Historian.Files
             foreach (Info dataFile in dataFiles)
             {
                 ArchiveFile file = null;
-                IList<ArchiveDataBlock> dataBlocks;
+
                 try
                 {
                     if (dataFile.FileName == m_fileName)
@@ -1834,37 +1915,13 @@ namespace TVA.Historian.Files
                         file.Open();
                     }
 
-                    dataBlocks = file.Fat.FindDataBlocks(historianID, startTime, endTime);
+                    // Create new time sorted data point scanner for the desired points in this file and given time range
+                    TimeSortedDataPointScanner scanner = new TimeSortedDataPointScanner(file.Fat, historianIDs, startTime, endTime, (sender, e) => OnDataReadException(e.Argument));
 
-                    if (dataBlocks.Count > 0)
+                    // Return data points
+                    foreach (IDataPoint dataPoint in scanner.Read())
                     {
-                        // Read data from all matching data blocks.
-                        for (int i = 0; i < dataBlocks.Count; i++)
-                        {
-                            // Attach to data read exception event for the data block
-                            dataBlocks[i].DataReadException += DataReadException;
-
-                            if (i == 0 || i == dataBlocks.Count - 1)
-                            {
-                                // Scan for data through first and last data blocks.
-                                foreach (ArchiveDataPoint data in dataBlocks[i].Read())
-                                {
-                                    if (data.Time >= startTime && data.Time <= endTime)
-                                        yield return data;
-                                }
-                            }
-                            else
-                            {
-                                // Read all of the data from rest of the data blocks.
-                                foreach (ArchiveDataPoint data in dataBlocks[i].Read())
-                                {
-                                    yield return data;
-                                }
-                            }
-
-                            // Detach from data read exception event for the data block
-                            dataBlocks[i].DataReadException -= DataReadException;
-                        }
+                        yield return dataPoint;
                     }
                 }
                 finally

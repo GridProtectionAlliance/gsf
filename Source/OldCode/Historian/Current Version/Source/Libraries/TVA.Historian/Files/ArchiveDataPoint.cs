@@ -86,6 +86,7 @@ namespace TVA.Historian.Files
         private TimeTag m_time;
         private float m_value;
         private int m_flags;
+        private MetadataRecord m_metadata;
 
         #endregion
 
@@ -232,6 +233,21 @@ namespace TVA.Historian.Files
             set
             {
                 Flags = Flags.SetMaskedValue(QualityMask, (int)value);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the associated <see cref="MetadataRecord"/> with this <see cref="ArchiveDataPoint"/>.
+        /// </summary>
+        public virtual MetadataRecord Metadata
+        {
+            get
+            {
+                return m_metadata;
+            }
+            set
+            {
+                m_metadata = value;
             }
         }
 
@@ -383,7 +399,7 @@ namespace TVA.Historian.Files
         /// <returns>A <see cref="string"/> value.</returns>
         public virtual string ToString(IFormatProvider provider)
         {
-            return ToString(null, provider);
+            return ToString("", provider);
         }
 
         /// <summary>
@@ -396,21 +412,57 @@ namespace TVA.Historian.Files
         public virtual string ToString(string format, IFormatProvider provider)
         {
             if (provider == null)
-                provider = CultureInfo.CurrentCulture;
+                provider = CultureInfo.InvariantCulture;
 
-            switch (format)
+            switch (format.ToUpperInvariant())
             {
                 case "I":
+                case "ID":
                     return m_historianID.ToString(provider);
                 case "T":
+                case "TIME":
                     return m_time.ToString();
+                case "U":
+                case "UNIXTIME":
+                    return (new UnixTimeTag(m_time.ToDateTime())).Value.ToString("0.000", provider);
                 case "V":
+                case "VALUE":
                     return m_value.ToString(provider);
                 case "Q":
+                case "QUALITY":
                     return Quality.ToString();
+                case "N":
+                case "NAME":
+                    if (Metadata != null)
+                        return Metadata.Name;
+                    return "";
+                case "D":
+                case "DESCRIPTION":
+                    if (Metadata != null)
+                        return Metadata.Description;
+                    return "";
+                case "S":
+                case "SOURCE":
+                    if (Metadata != null)
+                        return Metadata.PlantCode;
+                    return "";
+                case "S1":
+                case "SYNONYM1":
+                    if (Metadata != null)
+                        return Metadata.Synonym1;
+                    return "";
+                case "S2":
+                case "SYNONYM2":
+                    if (Metadata != null)
+                        return Metadata.Synonym2;
+                    return "";
+                case "S3":
+                case "SYNONYM3":
+                    if (Metadata != null)
+                        return Metadata.Synonym3;
+                    return "";
                 default:
-                    return string.Format("ID={0}; Time={1}; Value={2}; Quality={3}",
-                                         m_historianID.ToString(provider), m_time.ToString(), m_value.ToString(provider), Quality.ToString());
+                    throw new FormatException("Invalid format identifer specified for ArchiveDataPoint: " + format);
             }
         }
 

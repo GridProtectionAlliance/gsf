@@ -92,7 +92,8 @@ namespace TVA.Historian.Files
         /// <param name="index">0-based index of the <see cref="ArchiveDataBlock"/>.</param>
         /// <param name="historianID">Historian identifier whose <see cref="ArchiveDataPoint"/> is stored in the <see cref="ArchiveDataBlock"/>.</param>
         /// <param name="reset">true if the <see cref="ArchiveDataBlock"/> is to be <see cref="Reset()"/>; otherwise false.</param>
-        internal ArchiveDataBlock(ArchiveFile parent, int index, int historianID, bool reset)
+        /// <param name="preRead">true to pre-read data to locate write cursor.</param>
+        internal ArchiveDataBlock(ArchiveFile parent, int index, int historianID, bool reset, bool preRead = true)
         {
             m_parent = parent;
             m_index = index;
@@ -106,9 +107,9 @@ namespace TVA.Historian.Files
                 // Clear existing data.
                 Reset();
             }
-            else
+            else if (preRead)
             {
-                // Read existing data.
+                // Scan through existing data to locate write cursor
                 foreach (ArchiveDataPoint dataPoint in Read())
                 {
                 }

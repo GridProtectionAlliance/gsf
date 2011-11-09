@@ -41,7 +41,7 @@ namespace TVA.Historian
     /// <summary>
     /// Represents a historian time tag as number of seconds from the <see cref="BaseDate"/>.
     /// </summary>
-    public class TimeTag : TimeTagBase
+    public class TimeTag : TimeTagBase, IComparable<TimeTag>
     {
         #region [ Constructors ]
 
@@ -85,6 +85,22 @@ namespace TVA.Historian
             return ToString("dd-MMM-yyyy HH:mm:ss.fff");
         }
 
+        /// <summary>
+        /// Compares this time tag instance to another time tag instance and returns an integer that indicates whether the value of this instance
+        /// is less than, equal to, or greater than the value of the other time tag.
+        /// </summary>
+        /// <param name="other">A <see cref="TimeTag"/> instance to compare.</param>
+        /// <returns>A signed number indicating the relative values of this instance and the other value.</returns>
+        /// <remarks>
+        /// Time tags are compared by their value.
+        /// </remarks>
+        public int CompareTo(TimeTag other)
+        {
+            double tVal = Value;
+            double oVal = other.Value;
+            return tVal < oVal ? -1 : tVal > oVal ? 1 : 0;
+        }
+
         #endregion
 
         #region [ Static ]
@@ -122,7 +138,7 @@ namespace TVA.Historian
         /// </summary>
         public static TimeTag Now
         {
-            get 
+            get
             {
                 return new TimeTag(PrecisionTimer.Now.Ticks - BaseDate.Ticks);
             }

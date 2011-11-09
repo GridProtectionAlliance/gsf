@@ -46,7 +46,7 @@
             this.StartTimeLabel = new System.Windows.Forms.Label();
             this.IDInput = new System.Windows.Forms.CheckedListBox();
             this.OutputSelectionContainer = new System.Windows.Forms.GroupBox();
-            this.OutputCannelTabs = new System.Windows.Forms.TabControl();
+            this.OutputChannelTabs = new System.Windows.Forms.TabControl();
             this.TCPSettingsTab = new System.Windows.Forms.TabPage();
             this.TCPPortInput = new System.Windows.Forms.TextBox();
             this.TCPPortLabel = new System.Windows.Forms.Label();
@@ -100,7 +100,7 @@
             this.SplitContainerTop.SuspendLayout();
             this.InputSelectionContainer.SuspendLayout();
             this.OutputSelectionContainer.SuspendLayout();
-            this.OutputCannelTabs.SuspendLayout();
+            this.OutputChannelTabs.SuspendLayout();
             this.TCPSettingsTab.SuspendLayout();
             this.UDPSettingsTab.SuspendLayout();
             this.FileSettingsTab.SuspendLayout();
@@ -114,7 +114,6 @@
             // 
             this.SplitContainerFull.Dock = System.Windows.Forms.DockStyle.Fill;
             this.SplitContainerFull.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
-            this.SplitContainerFull.IsSplitterFixed = true;
             this.SplitContainerFull.Location = new System.Drawing.Point(0, 0);
             this.SplitContainerFull.Name = "SplitContainerFull";
             this.SplitContainerFull.Orientation = System.Windows.Forms.Orientation.Horizontal;
@@ -128,14 +127,13 @@
             this.SplitContainerFull.Panel2.Controls.Add(this.MessagesContainer);
             this.SplitContainerFull.Panel2.Controls.Add(this.StartProcessing);
             this.SplitContainerFull.Panel2.Controls.Add(this.StopProcessing);
-            this.SplitContainerFull.Size = new System.Drawing.Size(692, 566);
-            this.SplitContainerFull.SplitterDistance = 324;
+            this.SplitContainerFull.Size = new System.Drawing.Size(684, 562);
+            this.SplitContainerFull.SplitterDistance = 350;
             this.SplitContainerFull.TabIndex = 0;
             // 
             // SplitContainerTop
             // 
             this.SplitContainerTop.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.SplitContainerTop.IsSplitterFixed = true;
             this.SplitContainerTop.Location = new System.Drawing.Point(0, 0);
             this.SplitContainerTop.Name = "SplitContainerTop";
             // 
@@ -146,14 +144,14 @@
             // SplitContainerTop.Panel2
             // 
             this.SplitContainerTop.Panel2.Controls.Add(this.OutputSelectionContainer);
-            this.SplitContainerTop.Size = new System.Drawing.Size(692, 324);
-            this.SplitContainerTop.SplitterDistance = 346;
+            this.SplitContainerTop.Size = new System.Drawing.Size(684, 350);
+            this.SplitContainerTop.SplitterDistance = 342;
             this.SplitContainerTop.TabIndex = 0;
             // 
             // InputSelectionContainer
             // 
-            this.InputSelectionContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.InputSelectionContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.InputSelectionContainer.Controls.Add(this.SearchPhraseClear);
             this.InputSelectionContainer.Controls.Add(this.SearchPhraseFind);
             this.InputSelectionContainer.Controls.Add(this.ArchiveLocationBrowse);
@@ -168,7 +166,7 @@
             this.InputSelectionContainer.Controls.Add(this.IDInput);
             this.InputSelectionContainer.Location = new System.Drawing.Point(12, 12);
             this.InputSelectionContainer.Name = "InputSelectionContainer";
-            this.InputSelectionContainer.Size = new System.Drawing.Size(328, 309);
+            this.InputSelectionContainer.Size = new System.Drawing.Size(324, 335);
             this.InputSelectionContainer.TabIndex = 1001;
             this.InputSelectionContainer.TabStop = false;
             this.InputSelectionContainer.Text = "Input Selection";
@@ -177,7 +175,7 @@
             // 
             this.SearchPhraseClear.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.SearchPhraseClear.AutoSize = true;
-            this.SearchPhraseClear.Location = new System.Drawing.Point(265, 59);
+            this.SearchPhraseClear.Location = new System.Drawing.Point(260, 59);
             this.SearchPhraseClear.Name = "SearchPhraseClear";
             this.SearchPhraseClear.Size = new System.Drawing.Size(32, 13);
             this.SearchPhraseClear.TabIndex = 4;
@@ -189,7 +187,7 @@
             // 
             this.SearchPhraseFind.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.SearchPhraseFind.AutoSize = true;
-            this.SearchPhraseFind.Location = new System.Drawing.Point(298, 59);
+            this.SearchPhraseFind.Location = new System.Drawing.Point(293, 59);
             this.SearchPhraseFind.Name = "SearchPhraseFind";
             this.SearchPhraseFind.Size = new System.Drawing.Size(27, 13);
             this.SearchPhraseFind.TabIndex = 3;
@@ -201,7 +199,7 @@
             // 
             this.ArchiveLocationBrowse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.ArchiveLocationBrowse.AutoSize = true;
-            this.ArchiveLocationBrowse.Location = new System.Drawing.Point(283, 17);
+            this.ArchiveLocationBrowse.Location = new System.Drawing.Point(278, 17);
             this.ArchiveLocationBrowse.Name = "ArchiveLocationBrowse";
             this.ArchiveLocationBrowse.Size = new System.Drawing.Size(42, 13);
             this.ArchiveLocationBrowse.TabIndex = 1;
@@ -220,11 +218,11 @@
             // 
             // SearchPhraseInput
             // 
-            this.SearchPhraseInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.SearchPhraseInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.SearchPhraseInput.Location = new System.Drawing.Point(6, 75);
             this.SearchPhraseInput.Name = "SearchPhraseInput";
-            this.SearchPhraseInput.Size = new System.Drawing.Size(316, 21);
+            this.SearchPhraseInput.Size = new System.Drawing.Size(311, 21);
             this.SearchPhraseInput.TabIndex = 2;
             this.SearchPhraseInput.MouseClick += new System.Windows.Forms.MouseEventHandler(this.SearchPhraseInput_MouseClick);
             this.SearchPhraseInput.TextChanged += new System.EventHandler(this.SearchPhraseInput_TextChanged);
@@ -235,18 +233,18 @@
             this.EndTimeInput.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.EndTimeInput.CustomFormat = "MM/dd/yyyy HH:mm:ss";
             this.EndTimeInput.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
-            this.EndTimeInput.Location = new System.Drawing.Point(177, 277);
+            this.EndTimeInput.Location = new System.Drawing.Point(172, 308);
             this.EndTimeInput.Name = "EndTimeInput";
             this.EndTimeInput.Size = new System.Drawing.Size(145, 21);
             this.EndTimeInput.TabIndex = 7;
             // 
             // ArchiveLocationInput
             // 
-            this.ArchiveLocationInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.ArchiveLocationInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.ArchiveLocationInput.Location = new System.Drawing.Point(6, 33);
             this.ArchiveLocationInput.Name = "ArchiveLocationInput";
-            this.ArchiveLocationInput.Size = new System.Drawing.Size(316, 21);
+            this.ArchiveLocationInput.Size = new System.Drawing.Size(311, 21);
             this.ArchiveLocationInput.TabIndex = 0;
             this.ArchiveLocationInput.TextChanged += new System.EventHandler(this.ArchiveLocationInput_TextChanged);
             // 
@@ -263,7 +261,7 @@
             // 
             this.StartTimeInput.CustomFormat = "MM/dd/yyyy HH:mm:ss";
             this.StartTimeInput.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
-            this.StartTimeInput.Location = new System.Drawing.Point(6, 277);
+            this.StartTimeInput.Location = new System.Drawing.Point(6, 308);
             this.StartTimeInput.Name = "StartTimeInput";
             this.StartTimeInput.Size = new System.Drawing.Size(145, 21);
             this.StartTimeInput.TabIndex = 6;
@@ -272,7 +270,7 @@
             // 
             this.EndTimeLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.EndTimeLabel.AutoSize = true;
-            this.EndTimeLabel.Location = new System.Drawing.Point(174, 261);
+            this.EndTimeLabel.Location = new System.Drawing.Point(169, 292);
             this.EndTimeLabel.Name = "EndTimeLabel";
             this.EndTimeLabel.Size = new System.Drawing.Size(96, 13);
             this.EndTimeLabel.TabIndex = 0;
@@ -281,7 +279,7 @@
             // StartTimeLabel
             // 
             this.StartTimeLabel.AutoSize = true;
-            this.StartTimeLabel.Location = new System.Drawing.Point(3, 261);
+            this.StartTimeLabel.Location = new System.Drawing.Point(3, 292);
             this.StartTimeLabel.Name = "StartTimeLabel";
             this.StartTimeLabel.Size = new System.Drawing.Size(102, 13);
             this.StartTimeLabel.TabIndex = 0;
@@ -289,21 +287,21 @@
             // 
             // IDInput
             // 
-            this.IDInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.IDInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.IDInput.CheckOnClick = true;
             this.IDInput.FormattingEnabled = true;
             this.IDInput.HorizontalScrollbar = true;
             this.IDInput.Location = new System.Drawing.Point(6, 102);
             this.IDInput.Name = "IDInput";
-            this.IDInput.Size = new System.Drawing.Size(316, 148);
+            this.IDInput.Size = new System.Drawing.Size(311, 180);
             this.IDInput.TabIndex = 5;
             // 
             // OutputSelectionContainer
             // 
-            this.OutputSelectionContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.OutputSelectionContainer.Controls.Add(this.OutputCannelTabs);
+            this.OutputSelectionContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.OutputSelectionContainer.Controls.Add(this.OutputChannelTabs);
             this.OutputSelectionContainer.Controls.Add(this.ProcessingSpeedContainer);
             this.OutputSelectionContainer.Controls.Add(this.RepeatDataProcessing);
             this.OutputSelectionContainer.Controls.Add(this.ProcessDataInParallel);
@@ -311,24 +309,24 @@
             this.OutputSelectionContainer.Controls.Add(this.OutputChannelLabel);
             this.OutputSelectionContainer.Location = new System.Drawing.Point(3, 12);
             this.OutputSelectionContainer.Name = "OutputSelectionContainer";
-            this.OutputSelectionContainer.Size = new System.Drawing.Size(328, 309);
+            this.OutputSelectionContainer.Size = new System.Drawing.Size(324, 335);
             this.OutputSelectionContainer.TabIndex = 1001;
             this.OutputSelectionContainer.TabStop = false;
             this.OutputSelectionContainer.Text = "Output Selection";
             // 
-            // OutputCannelTabs
+            // OutputChannelTabs
             // 
-            this.OutputCannelTabs.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.OutputCannelTabs.Controls.Add(this.TCPSettingsTab);
-            this.OutputCannelTabs.Controls.Add(this.UDPSettingsTab);
-            this.OutputCannelTabs.Controls.Add(this.FileSettingsTab);
-            this.OutputCannelTabs.Controls.Add(this.SerialSettingsTab);
-            this.OutputCannelTabs.Location = new System.Drawing.Point(6, 33);
-            this.OutputCannelTabs.Name = "OutputCannelTabs";
-            this.OutputCannelTabs.SelectedIndex = 0;
-            this.OutputCannelTabs.Size = new System.Drawing.Size(317, 109);
-            this.OutputCannelTabs.TabIndex = 8;
+            this.OutputChannelTabs.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.OutputChannelTabs.Controls.Add(this.TCPSettingsTab);
+            this.OutputChannelTabs.Controls.Add(this.UDPSettingsTab);
+            this.OutputChannelTabs.Controls.Add(this.FileSettingsTab);
+            this.OutputChannelTabs.Controls.Add(this.SerialSettingsTab);
+            this.OutputChannelTabs.Location = new System.Drawing.Point(6, 33);
+            this.OutputChannelTabs.Name = "OutputChannelTabs";
+            this.OutputChannelTabs.SelectedIndex = 0;
+            this.OutputChannelTabs.Size = new System.Drawing.Size(314, 109);
+            this.OutputChannelTabs.TabIndex = 8;
             // 
             // TCPSettingsTab
             // 
@@ -339,7 +337,7 @@
             this.TCPSettingsTab.Location = new System.Drawing.Point(4, 22);
             this.TCPSettingsTab.Name = "TCPSettingsTab";
             this.TCPSettingsTab.Padding = new System.Windows.Forms.Padding(3);
-            this.TCPSettingsTab.Size = new System.Drawing.Size(309, 83);
+            this.TCPSettingsTab.Size = new System.Drawing.Size(355, 83);
             this.TCPSettingsTab.TabIndex = 0;
             this.TCPSettingsTab.Text = "TCP";
             this.TCPSettingsTab.UseVisualStyleBackColor = true;
@@ -387,7 +385,7 @@
             this.UDPSettingsTab.Location = new System.Drawing.Point(4, 22);
             this.UDPSettingsTab.Name = "UDPSettingsTab";
             this.UDPSettingsTab.Padding = new System.Windows.Forms.Padding(3);
-            this.UDPSettingsTab.Size = new System.Drawing.Size(309, 83);
+            this.UDPSettingsTab.Size = new System.Drawing.Size(355, 83);
             this.UDPSettingsTab.TabIndex = 1;
             this.UDPSettingsTab.Text = "UDP";
             this.UDPSettingsTab.UseVisualStyleBackColor = true;
@@ -433,7 +431,7 @@
             this.FileSettingsTab.Controls.Add(this.FileNameLabel);
             this.FileSettingsTab.Location = new System.Drawing.Point(4, 22);
             this.FileSettingsTab.Name = "FileSettingsTab";
-            this.FileSettingsTab.Size = new System.Drawing.Size(309, 83);
+            this.FileSettingsTab.Size = new System.Drawing.Size(306, 83);
             this.FileSettingsTab.TabIndex = 2;
             this.FileSettingsTab.Text = "File";
             this.FileSettingsTab.UseVisualStyleBackColor = true;
@@ -454,7 +452,7 @@
             this.FileNameInput.Name = "FileNameInput";
             this.FileNameInput.Size = new System.Drawing.Size(172, 21);
             this.FileNameInput.TabIndex = 13;
-            this.FileNameInput.Text = "output.dat";
+            this.FileNameInput.Text = "output.csv";
             // 
             // FileNameLabel
             // 
@@ -481,7 +479,7 @@
             this.SerialSettingsTab.Controls.Add(this.SerialPortLabel);
             this.SerialSettingsTab.Location = new System.Drawing.Point(4, 22);
             this.SerialSettingsTab.Name = "SerialSettingsTab";
-            this.SerialSettingsTab.Size = new System.Drawing.Size(309, 83);
+            this.SerialSettingsTab.Size = new System.Drawing.Size(355, 83);
             this.SerialSettingsTab.TabIndex = 3;
             this.SerialSettingsTab.Text = "Serial";
             this.SerialSettingsTab.UseVisualStyleBackColor = true;
@@ -491,7 +489,7 @@
             this.SerialRtsEnable.AutoSize = true;
             this.SerialRtsEnable.Location = new System.Drawing.Point(264, 60);
             this.SerialRtsEnable.Name = "SerialRtsEnable";
-            this.SerialRtsEnable.Size = new System.Drawing.Size(48, 17);
+            this.SerialRtsEnable.Size = new System.Drawing.Size(45, 17);
             this.SerialRtsEnable.TabIndex = 30;
             this.SerialRtsEnable.Text = "RTS";
             this.SerialRtsEnable.UseVisualStyleBackColor = true;
@@ -501,7 +499,7 @@
             this.SerialDtrEnable.AutoSize = true;
             this.SerialDtrEnable.Location = new System.Drawing.Point(222, 60);
             this.SerialDtrEnable.Name = "SerialDtrEnable";
-            this.SerialDtrEnable.Size = new System.Drawing.Size(49, 17);
+            this.SerialDtrEnable.Size = new System.Drawing.Size(46, 17);
             this.SerialDtrEnable.TabIndex = 29;
             this.SerialDtrEnable.Text = "DTR";
             this.SerialDtrEnable.UseVisualStyleBackColor = true;
@@ -616,9 +614,9 @@
             this.ProcessingSpeedContainer.Controls.Add(this.ProcessDataFullSpeed);
             this.ProcessingSpeedContainer.Controls.Add(this.ProcessDataAtIntervalSampleRate);
             this.ProcessingSpeedContainer.Controls.Add(this.ProcessDataAtInterval);
-            this.ProcessingSpeedContainer.Location = new System.Drawing.Point(5, 212);
+            this.ProcessingSpeedContainer.Location = new System.Drawing.Point(5, 244);
             this.ProcessingSpeedContainer.Name = "ProcessingSpeedContainer";
-            this.ProcessingSpeedContainer.Size = new System.Drawing.Size(317, 44);
+            this.ProcessingSpeedContainer.Size = new System.Drawing.Size(263, 44);
             this.ProcessingSpeedContainer.TabIndex = 1001;
             // 
             // ProcessDataFullSpeed
@@ -657,9 +655,9 @@
             // RepeatDataProcessing
             // 
             this.RepeatDataProcessing.AutoSize = true;
-            this.RepeatDataProcessing.Location = new System.Drawing.Point(8, 281);
+            this.RepeatDataProcessing.Location = new System.Drawing.Point(8, 313);
             this.RepeatDataProcessing.Name = "RepeatDataProcessing";
-            this.RepeatDataProcessing.Size = new System.Drawing.Size(214, 17);
+            this.RepeatDataProcessing.Size = new System.Drawing.Size(218, 17);
             this.RepeatDataProcessing.TabIndex = 21;
             this.RepeatDataProcessing.Text = "Repeat processing of data until stopped";
             this.RepeatDataProcessing.UseVisualStyleBackColor = true;
@@ -667,28 +665,35 @@
             // ProcessDataInParallel
             // 
             this.ProcessDataInParallel.AutoSize = true;
-            this.ProcessDataInParallel.Location = new System.Drawing.Point(8, 262);
+            this.ProcessDataInParallel.Checked = true;
+            this.ProcessDataInParallel.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.ProcessDataInParallel.Location = new System.Drawing.Point(8, 294);
             this.ProcessDataInParallel.Name = "ProcessDataInParallel";
-            this.ProcessDataInParallel.Size = new System.Drawing.Size(209, 17);
+            this.ProcessDataInParallel.Size = new System.Drawing.Size(260, 17);
             this.ProcessDataInParallel.TabIndex = 20;
-            this.ProcessDataInParallel.Text = "Process selected data points in parallel";
+            this.ProcessDataInParallel.Text = "Process selected data points in time sorted order";
             this.ProcessDataInParallel.UseVisualStyleBackColor = true;
             // 
             // OutputFormatContainer
             // 
+            this.OutputFormatContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.OutputFormatContainer.Controls.Add(this.OutputPlainTextDataFormat);
             this.OutputFormatContainer.Controls.Add(this.OutputPlainTextData);
             this.OutputFormatContainer.Controls.Add(this.OutputBinaryData);
             this.OutputFormatContainer.Location = new System.Drawing.Point(5, 144);
             this.OutputFormatContainer.Name = "OutputFormatContainer";
-            this.OutputFormatContainer.Size = new System.Drawing.Size(317, 65);
+            this.OutputFormatContainer.Size = new System.Drawing.Size(315, 97);
             this.OutputFormatContainer.TabIndex = 1001;
             // 
             // OutputPlainTextDataFormat
             // 
+            this.OutputPlainTextDataFormat.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.OutputPlainTextDataFormat.Location = new System.Drawing.Point(21, 40);
             this.OutputPlainTextDataFormat.Name = "OutputPlainTextDataFormat";
-            this.OutputPlainTextDataFormat.Size = new System.Drawing.Size(292, 22);
+            this.OutputPlainTextDataFormat.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
+            this.OutputPlainTextDataFormat.Size = new System.Drawing.Size(290, 54);
             this.OutputPlainTextDataFormat.TabIndex = 17;
             this.OutputPlainTextDataFormat.Text = "";
             // 
@@ -697,10 +702,9 @@
             this.OutputPlainTextData.AutoSize = true;
             this.OutputPlainTextData.Location = new System.Drawing.Point(4, 23);
             this.OutputPlainTextData.Name = "OutputPlainTextData";
-            this.OutputPlainTextData.Size = new System.Drawing.Size(179, 17);
+            this.OutputPlainTextData.Size = new System.Drawing.Size(183, 17);
             this.OutputPlainTextData.TabIndex = 16;
-            this.OutputPlainTextData.TabStop = true;
-            this.OutputPlainTextData.Text = "Output data in plain-text format";
+            this.OutputPlainTextData.Text = "Output data in plain-text format:";
             this.OutputPlainTextData.UseVisualStyleBackColor = true;
             this.OutputPlainTextData.CheckedChanged += new System.EventHandler(this.OutputPlainTextData_CheckedChanged);
             // 
@@ -728,13 +732,13 @@
             // 
             // MessagesContainer
             // 
-            this.MessagesContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.MessagesContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.MessagesContainer.Controls.Add(this.MessagesOutput);
             this.MessagesContainer.Location = new System.Drawing.Point(12, 3);
             this.MessagesContainer.Name = "MessagesContainer";
-            this.MessagesContainer.Size = new System.Drawing.Size(669, 198);
+            this.MessagesContainer.Size = new System.Drawing.Size(661, 168);
             this.MessagesContainer.TabIndex = 1001;
             this.MessagesContainer.TabStop = false;
             this.MessagesContainer.Text = "Messages";
@@ -745,20 +749,20 @@
             this.MessagesOutput.Dock = System.Windows.Forms.DockStyle.Fill;
             this.MessagesOutput.Font = new System.Drawing.Font("Lucida Console", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.MessagesOutput.ForeColor = System.Drawing.SystemColors.Window;
-            this.MessagesOutput.Location = new System.Drawing.Point(3, 16);
+            this.MessagesOutput.Location = new System.Drawing.Point(3, 17);
             this.MessagesOutput.Multiline = true;
             this.MessagesOutput.Name = "MessagesOutput";
             this.MessagesOutput.ReadOnly = true;
             this.MessagesOutput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.MessagesOutput.Size = new System.Drawing.Size(663, 179);
+            this.MessagesOutput.Size = new System.Drawing.Size(655, 148);
             this.MessagesOutput.TabIndex = 0;
             // 
             // StartProcessing
             // 
             this.StartProcessing.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.StartProcessing.Location = new System.Drawing.Point(603, 207);
+            this.StartProcessing.Location = new System.Drawing.Point(595, 177);
             this.StartProcessing.Name = "StartProcessing";
-            this.StartProcessing.Size = new System.Drawing.Size(75, 23);
+            this.StartProcessing.Size = new System.Drawing.Size(78, 25);
             this.StartProcessing.TabIndex = 22;
             this.StartProcessing.Text = "Start";
             this.StartProcessing.UseVisualStyleBackColor = true;
@@ -767,7 +771,7 @@
             // StopProcessing
             // 
             this.StopProcessing.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.StopProcessing.Location = new System.Drawing.Point(603, 207);
+            this.StopProcessing.Location = new System.Drawing.Point(595, 135);
             this.StopProcessing.Name = "StopProcessing";
             this.StopProcessing.Size = new System.Drawing.Size(75, 23);
             this.StopProcessing.TabIndex = 22;
@@ -777,7 +781,9 @@
             // 
             // SaveFile
             // 
-            this.SaveFile.Filter = "All Files (*.*)|*.*";
+            this.SaveFile.DefaultExt = "csv";
+            this.SaveFile.FileName = "Output.csv";
+            this.SaveFile.Filter = "CSV Files (*.csv)|*.csv|All Files (*.*)|*.*";
             this.SaveFile.OverwritePrompt = false;
             this.SaveFile.Title = "Save / Append to Text File";
             // 
@@ -785,14 +791,14 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(692, 566);
+            this.ClientSize = new System.Drawing.Size(684, 562);
             this.Controls.Add(this.SplitContainerFull);
             this.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(700, 600);
             this.Name = "Main";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Historian Playback Utility v{0}";
+            this.Text = "Historian Playback / Export Utility v{0}";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Main_FormClosing);
             this.Load += new System.EventHandler(this.Main_Load);
             this.SplitContainerFull.Panel1.ResumeLayout(false);
@@ -807,7 +813,7 @@
             this.InputSelectionContainer.PerformLayout();
             this.OutputSelectionContainer.ResumeLayout(false);
             this.OutputSelectionContainer.PerformLayout();
-            this.OutputCannelTabs.ResumeLayout(false);
+            this.OutputChannelTabs.ResumeLayout(false);
             this.TCPSettingsTab.ResumeLayout(false);
             this.TCPSettingsTab.PerformLayout();
             this.UDPSettingsTab.ResumeLayout(false);
@@ -855,7 +861,7 @@
         private System.Windows.Forms.RadioButton OutputPlainTextData;
         private System.Windows.Forms.RadioButton OutputBinaryData;
         private System.Windows.Forms.Label OutputChannelLabel;
-        private System.Windows.Forms.TabControl OutputCannelTabs;
+        private System.Windows.Forms.TabControl OutputChannelTabs;
         private System.Windows.Forms.TabPage TCPSettingsTab;
         private System.Windows.Forms.TextBox TCPPortInput;
         private System.Windows.Forms.Label TCPPortLabel;

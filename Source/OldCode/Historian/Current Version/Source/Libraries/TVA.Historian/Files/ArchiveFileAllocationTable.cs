@@ -46,6 +46,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using TVA.Interop;
 using TVA.Parsing;
 
@@ -73,9 +74,6 @@ namespace TVA.Historian.Files
         private int m_dataBlockCount;
         private List<ArchiveDataBlockPointer> m_dataBlockPointers;
         private ArchiveFile m_parent;
-        private int m_searchHistorianID;    // <=|
-        private TimeTag m_searchStartTime;  // <=| Used for finding data block pointer in m_dataBlockPointers
-        private TimeTag m_searchEndTime;    // <=|
 
         #endregion
 
@@ -446,6 +444,7 @@ namespace TVA.Historian.Files
 
             // Initialize newly added data blocks.
             ArchiveDataBlock dataBlock;
+
             for (int i = m_dataBlockCount - dataBlocksToAdd; i < m_dataBlockCount; i++)
             {
                 dataBlock = new ArchiveDataBlock(m_parent, i, -1, true);
@@ -456,58 +455,53 @@ namespace TVA.Historian.Files
         /// Returns the first <see cref="ArchiveDataBlock"/> in the <see cref="ArchiveFile"/> for the specified <paramref name="historianID"/>.
         /// </summary>
         /// <param name="historianID">Historian identifier whose <see cref="ArchiveDataBlock"/> is to be retrieved.</param>
+        /// <param name="preRead">true to pre-read data to locate write cursor.</param>
         /// <returns><see cref="ArchiveDataBlock"/> object if a match is found; otherwise null.</returns>
-        public ArchiveDataBlock FindDataBlock(int historianID)
+        public ArchiveDataBlock FindDataBlock(int historianID, bool preRead = true)
         {
-            ArchiveDataBlockPointer pointer = null;
+            ArchiveDataBlockPointer pointer;
+
             lock (m_dataBlockPointers)
             {
-                // Setup the search criteria to find the first data block pointer for the specified id.
-                m_searchHistorianID = historianID;
-                m_searchStartTime = TimeTag.MinValue;
-                m_searchEndTime = TimeTag.MaxValue;
-
-                pointer = m_dataBlockPointers.Find(FindDataBlockPointer);
+                pointer = m_dataBlockPointers.FirstOrDefault(dataBlockPointer => dataBlockPointer.HistorianID == historianID);
             }
 
             if (pointer == null)
                 return null;
             else
-                return pointer.DataBlock;
+                return pointer.GetDataBlock(preRead);
         }
 
         /// <summary>
         /// Returns the last <see cref="ArchiveDataBlock"/> in the <see cref="ArchiveFile"/> for the specified <paramref name="historianID"/>.
         /// </summary>
         /// <param name="historianID">Historian identifier.</param>
+        /// <param name="preRead">true to pre-read data to locate write cursor.</param>
         /// <returns><see cref="ArchiveDataBlock"/> object if a match is found; otherwise null.</returns>
-        public ArchiveDataBlock FindLastDataBlock(int historianID)
+        public ArchiveDataBlock FindLastDataBlock(int historianID, bool preRead = true)
         {
-            ArchiveDataBlockPointer pointer = null;
+            ArchiveDataBlockPointer pointer;
+
             lock (m_dataBlockPointers)
             {
-                // Setup the search criteria to find the last data block pointer for the specified id.
-                m_searchHistorianID = historianID;
-                m_searchStartTime = TimeTag.MinValue;
-                m_searchEndTime = TimeTag.MaxValue;
-
-                pointer = m_dataBlockPointers.FindLast(FindDataBlockPointer);
+                pointer = m_dataBlockPointers.LastOrDefault(dataBlockPointer => dataBlockPointer.HistorianID == historianID);
             }
 
             if (pointer == null)
                 return null;
             else
-                return pointer.DataBlock;
+                return pointer.GetDataBlock(preRead);
         }
 
         /// <summary>
         /// Returns all <see cref="ArchiveDataBlock"/>s in the <see cref="ArchiveFile"/> for the specified <paramref name="historianID"/>.
         /// </summary>
         /// <param name="historianID">Historian identifier.</param>
+        /// <param name="preRead">true to pre-read data to locate write cursor.</param>
         /// <returns>A collection of <see cref="ArchiveDataBlock"/>s.</returns>
-        public IList<ArchiveDataBlock> FindDataBlocks(int historianID)
+        public List<ArchiveDataBlock> FindDataBlocks(int historianID, bool preRead = true)
         {
-            return FindDataBlocks(historianID, TimeTag.MinValue);
+            return FindDataBlocks(historianID, TimeTag.MinValue, preRead);
         }
 
         /// <summary>
@@ -515,10 +509,11 @@ namespace TVA.Historian.Files
         /// </summary>
         /// <param name="historianID">Historian identifier.</param>
         /// <param name="startTime">Start <see cref="TimeTag"/>.</param>
+        /// <param name="preRead">true to pre-read data to locate write cursor.</param>
         /// <returns>A collection of <see cref="ArchiveDataBlock"/>s.</returns>
-        public IList<ArchiveDataBlock> FindDataBlocks(int historianID, TimeTag startTime)
+        public List<ArchiveDataBlock> FindDataBlocks(int historianID, TimeTag startTime, bool preRead = true)
         {
-            return FindDataBlocks(historianID, startTime, TimeTag.MaxValue);
+            return FindDataBlocks(historianID, startTime, TimeTag.MaxValue, preRead);
         }
 
         /// <summary>
@@ -527,50 +522,48 @@ namespace TVA.Historian.Files
         /// <param name="historianID">Historian identifier.</param>
         /// <param name="startTime">Start <see cref="TimeTag"/>.</param>
         /// <param name="endTime">End <see cref="TimeTag"/>.</param>
+        /// <param name="preRead">true to pre-read data to locate write cursor.</param>
         /// <returns>A collection of <see cref="ArchiveDataBlock"/>s.</returns>
-        public IList<ArchiveDataBlock> FindDataBlocks(int historianID, TimeTag startTime, TimeTag endTime)
+        public List<ArchiveDataBlock> FindDataBlocks(int historianID, TimeTag startTime, TimeTag endTime, bool preRead = true)
         {
-            List<ArchiveDataBlockPointer> blockPointers = null;
+            if ((object)startTime == null)
+                startTime = TimeTag.MaxValue;
+
+            if ((object)endTime == null)
+                endTime = TimeTag.MaxValue;
+
+            List<ArchiveDataBlockPointer> blockPointers;
+
             lock (m_dataBlockPointers)
             {
-                // Setup the search criteria to find all data block pointers for the specified point id
-                // that fall between the specified start and end time.
-                m_searchHistorianID = historianID;
-                m_searchStartTime = (startTime != null ? startTime : TimeTag.MinValue);
-                m_searchEndTime = (endTime != null ? endTime : TimeTag.MaxValue);
+                // Get all block pointers for given point ID over specified time range
+                blockPointers = m_dataBlockPointers.FindAll(dataBlockPointer => dataBlockPointer.Matches(historianID, startTime, endTime));
 
-                blockPointers = m_dataBlockPointers.FindAll(FindDataBlockPointer);
-
-                if (!(m_searchStartTime == TimeTag.MinValue || m_searchEndTime == TimeTag.MaxValue))
+                // Look for pointer to data block on the borders of the specified range which may contain data
+                if (!(startTime == TimeTag.MinValue || endTime == TimeTag.MaxValue))
                 {
-                    // Look for pointer to data block on the borders of the specified range which may contain data.
                     // There are 2 different search criteria for this:
-                    // 1) If matching data block pointers have been found, then find data block pointer before the 
-                    //    first matching data block pointer.
-                    // OR
+                    // 1) If matching data block pointers have been found, then find data block pointer before the first matching data block pointer.
+                    //    or
                     // 2) Find the last data block pointer in the time range of TimeTag.MinValue to m_searchEndTime.
-                    m_searchStartTime = TimeTag.MinValue;
-                    if (blockPointers.Count > 0)
-                        m_searchEndTime = new TimeTag(blockPointers[0].StartTime.Value - 1);
 
-                    ArchiveDataBlockPointer match = m_dataBlockPointers.FindLast(FindDataBlockPointer);
-                    if (match != null)
-                        blockPointers.Insert(0, match);
+                    TimeTag searchEndTime = endTime;
+
+                    if (blockPointers.Count > 0)
+                        searchEndTime = new TimeTag(blockPointers.First().StartTime.Value - 1.0D);
+
+                    ArchiveDataBlockPointer borderMatch = m_dataBlockPointers.LastOrDefault(dataBlockPointer => dataBlockPointer.Matches(historianID, TimeTag.MinValue, searchEndTime));
+                    if (borderMatch != null)
+                        blockPointers.Insert(0, borderMatch);
                 }
             }
 
-            // Build a list of data blocks that correspond to the found data block pointers.
-            List<ArchiveDataBlock> blocks = new List<ArchiveDataBlock>();
-            for (int i = 0; i < blockPointers.Count; i++)
-            {
-                blocks.Add(blockPointers[i].DataBlock);
-            }
-
-            return blocks;
+            // Return list of data blocks for given block pointers
+            return blockPointers.Select(pointer => pointer.GetDataBlock(preRead)).ToList();
         }
 
         /// <summary>
-        /// Returns an <see cref="ArchiveDataBlock"/> for writting <see cref="ArchiveDataPoint"/>s for the specified <paramref name="historianID"/>.
+        /// Returns an <see cref="ArchiveDataBlock"/> for writing <see cref="ArchiveDataPoint"/>s for the specified <paramref name="historianID"/>.
         /// </summary>
         /// <param name="historianID">Historian identifier for which the <see cref="ArchiveDataBlock"/> is being requested.</param>
         /// <param name="dataTime"><see cref="TimeTag"/> of the <see cref="ArchiveDataPoint"/> to be written to the <see cref="ArchiveDataBlock"/>.</param>
@@ -678,23 +671,6 @@ namespace TVA.Historian.Files
             }
 
             return dataBlock;
-        }
-
-        /// <summary>
-        /// Finds <see cref="ArchiveDataBlockPointer"/> that match the search criteria that is determined by member variables.
-        /// </summary>
-        private bool FindDataBlockPointer(ArchiveDataBlockPointer dataBlockPointer)
-        {
-            if (dataBlockPointer != null)
-                // Note: The StartTime value of the pointer is ignored if m_searchStartTime = TimeTag.MinValue and
-                //       m_searchEndTime = TimeTag.MaxValue. In this case only the PointID value is compared. This
-                //       comes in handy when the first or last pointer is to be found from the list of pointers for
-                //       a point ID in addition to all the pointer for a point ID.
-                return ((dataBlockPointer.HistorianID == m_searchHistorianID) &&
-                        (m_searchStartTime == TimeTag.MinValue || dataBlockPointer.StartTime >= m_searchStartTime) &&
-                        (m_searchEndTime == TimeTag.MaxValue || dataBlockPointer.StartTime <= m_searchEndTime));
-            else
-                return false;
         }
 
         #endregion
