@@ -47,9 +47,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TimeSeriesFramework", "Time
 		Dependencies\TimeSeriesFramework\TimeSeriesFramework.XML = Dependencies\TimeSeriesFramework\TimeSeriesFramework.XML
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HistorianView", "Tools\HistorianView\HistorianView.csproj", "{2E9DA7CC-960A-40A6-BC90-1FBD7B7994F0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Microsoft", "Microsoft", "{CF46AEFA-F388-4964-80A1-6865877431C6}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\Microsoft\System.Windows.Controls.DataVisualization.Toolkit.dll = Dependencies\Microsoft\System.Windows.Controls.DataVisualization.Toolkit.dll
+		Dependencies\Microsoft\WPFToolkit.dll = Dependencies\Microsoft\WPFToolkit.dll
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 5
+		SccNumberOfProjects = 6
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs07
 		SccLocalPath0 = .
@@ -69,31 +77,53 @@ Global
 		SccProjectTopLevelParentUniqueName4 = Historian.sln
 		SccProjectName4 = Libraries/Hadoop.Replication
 		SccLocalPath4 = Libraries\\Hadoop.Replication
+		SccProjectUniqueName5 = Tools\\HistorianView\\HistorianView.csproj
+		SccProjectTopLevelParentUniqueName5 = Historian.sln
+		SccProjectName5 = Tools/HistorianView
+		SccLocalPath5 = Tools\\HistorianView
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = Historian.vsmdi
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|x86 = Debug|x86
 		Release|Any CPU = Release|Any CPU
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{7E1ABF87-8936-44E5-85C0-37044E0D3877}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7E1ABF87-8936-44E5-85C0-37044E0D3877}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E1ABF87-8936-44E5-85C0-37044E0D3877}.Debug|x86.ActiveCfg = Debug|Any CPU
 		{7E1ABF87-8936-44E5-85C0-37044E0D3877}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E1ABF87-8936-44E5-85C0-37044E0D3877}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E1ABF87-8936-44E5-85C0-37044E0D3877}.Release|x86.ActiveCfg = Release|Any CPU
 		{D405B0BE-88EE-4224-AA8C-4A6817481C17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D405B0BE-88EE-4224-AA8C-4A6817481C17}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D405B0BE-88EE-4224-AA8C-4A6817481C17}.Debug|x86.ActiveCfg = Debug|Any CPU
 		{D405B0BE-88EE-4224-AA8C-4A6817481C17}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D405B0BE-88EE-4224-AA8C-4A6817481C17}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D405B0BE-88EE-4224-AA8C-4A6817481C17}.Release|x86.ActiveCfg = Release|Any CPU
 		{07016E6A-01B1-4B3D-B1D6-F9131A1BEB6E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{07016E6A-01B1-4B3D-B1D6-F9131A1BEB6E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{07016E6A-01B1-4B3D-B1D6-F9131A1BEB6E}.Debug|x86.ActiveCfg = Debug|Any CPU
 		{07016E6A-01B1-4B3D-B1D6-F9131A1BEB6E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{07016E6A-01B1-4B3D-B1D6-F9131A1BEB6E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{07016E6A-01B1-4B3D-B1D6-F9131A1BEB6E}.Release|x86.ActiveCfg = Release|Any CPU
 		{B561487F-79CC-4982-848E-C12F44B4669C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B561487F-79CC-4982-848E-C12F44B4669C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B561487F-79CC-4982-848E-C12F44B4669C}.Debug|x86.ActiveCfg = Debug|Any CPU
 		{B561487F-79CC-4982-848E-C12F44B4669C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B561487F-79CC-4982-848E-C12F44B4669C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B561487F-79CC-4982-848E-C12F44B4669C}.Release|x86.ActiveCfg = Release|Any CPU
+		{2E9DA7CC-960A-40A6-BC90-1FBD7B7994F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E9DA7CC-960A-40A6-BC90-1FBD7B7994F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E9DA7CC-960A-40A6-BC90-1FBD7B7994F0}.Debug|x86.ActiveCfg = Debug|x86
+		{2E9DA7CC-960A-40A6-BC90-1FBD7B7994F0}.Debug|x86.Build.0 = Debug|x86
+		{2E9DA7CC-960A-40A6-BC90-1FBD7B7994F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E9DA7CC-960A-40A6-BC90-1FBD7B7994F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E9DA7CC-960A-40A6-BC90-1FBD7B7994F0}.Release|x86.ActiveCfg = Release|x86
+		{2E9DA7CC-960A-40A6-BC90-1FBD7B7994F0}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -104,7 +134,9 @@ Global
 		{7E1ABF87-8936-44E5-85C0-37044E0D3877} = {20CF9816-9699-464B-AD26-397CD4E6D96E}
 		{D405B0BE-88EE-4224-AA8C-4A6817481C17} = {EA3B8DD4-F77A-409D-BE8E-1391EA5B0BE4}
 		{07016E6A-01B1-4B3D-B1D6-F9131A1BEB6E} = {4A8304B6-A0C7-480E-9C2F-CCC4DC922647}
+		{2E9DA7CC-960A-40A6-BC90-1FBD7B7994F0} = {4A8304B6-A0C7-480E-9C2F-CCC4DC922647}
 		{E7897B57-AE67-4ABC-B35A-47C5074EF95B} = {94822134-56F8-4F3F-9BCD-2656324C37AD}
 		{CDCA5604-FEC5-4392-84E9-787D56779CA9} = {94822134-56F8-4F3F-9BCD-2656324C37AD}
+		{CF46AEFA-F388-4964-80A1-6865877431C6} = {94822134-56F8-4F3F-9BCD-2656324C37AD}
 	EndGlobalSection
 EndGlobal
