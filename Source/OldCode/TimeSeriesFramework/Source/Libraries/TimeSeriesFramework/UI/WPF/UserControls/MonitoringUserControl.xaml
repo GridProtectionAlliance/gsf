@@ -73,9 +73,11 @@
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Row="1">
             <TextBox x:Name="TextBoxServiceRequest" Width="{StaticResource XXXLargeItemSize}" GotFocus="TextBoxServiceRequest_GotFocus" />
             <Button x:Name="ButtonSendServiceRequest" Content="Send Command" Width="Auto" Click="ButtonSendServiceRequest_Click" IsDefault="True"/>
-            <Button x:Name="ButtonDisplaySettings" Content="Display Settings" Template="{StaticResource HyperlinkStyleButtonTemplate}" 
-                    Margin="25,0,0,0" VerticalAlignment="Center" Width="Auto" Click="ButtonDisplaySettings_Click"/>
+            
         </StackPanel>
-        
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Row="1" Margin="728,10,12,12">
+        <Button x:Name="ButtonDisplaySettings" Content="Display Settings" Template="{StaticResource HyperlinkStyleButtonTemplate}" 
+                    Margin="25,7.5,0,0" VerticalAlignment="Center" Width="Auto" Click="ButtonDisplaySettings_Click"/>
+        </StackPanel>
     </Grid>
 </UserControl>
