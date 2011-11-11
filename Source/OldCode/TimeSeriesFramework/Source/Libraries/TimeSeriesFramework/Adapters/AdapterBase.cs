@@ -652,7 +652,7 @@ namespace TimeSeriesFramework.Adapters
 
                 status.AppendLine();
 
-                if (OutputMeasurements != null)
+                if (OutputMeasurements != null && OutputMeasurements.Length > OutputMeasurements.Count(m => m.Key == MeasurementKey.Undefined))
                 {
                     status.AppendFormat("       Output measurements: {0} defined measurements", OutputMeasurements.Length);
                     status.AppendLine();
@@ -660,7 +660,7 @@ namespace TimeSeriesFramework.Adapters
 
                     for (int i = 0; i < Common.Min(OutputMeasurements.Length, MaxMeasurementsToShow); i++)
                     {
-                        status.Append(OutputMeasurements[i].ToString().TruncateRight(50).PadLeft(50));
+                        status.Append(OutputMeasurements[i].ToString().TruncateRight(40).PadLeft(40));
                         status.Append(" ");
                         status.AppendLine(OutputMeasurements[i].ID.ToString());
                     }
@@ -671,7 +671,7 @@ namespace TimeSeriesFramework.Adapters
                     status.AppendLine();
                 }
 
-                if (InputMeasurementKeys != null)
+                if (InputMeasurementKeys != null && InputMeasurementKeys.Length > InputMeasurementKeys.Count(k => k == MeasurementKey.Undefined))
                 {
                     status.AppendFormat("        Input measurements: {0} defined measurements", InputMeasurementKeys.Length);
                     status.AppendLine();

@@ -114,9 +114,8 @@ namespace TimeSeriesFramework.Transport
             // Since historical data is requested, we "turn off" interaction with the outside real-time world
             // by removing this adapter from external routes. To accomplish this we expose I/O demands for an
             // undefined measurement. Note: assigning to null would mean "broadcast" of all data is desired.
-            MeasurementKey undefined = new MeasurementKey(Guid.Empty, uint.MaxValue, "__");
-            clientSubscription.InputMeasurementKeys = new MeasurementKey[] { undefined };
-            clientSubscription.OutputMeasurements = new Measurement[] { new Measurement() { Key = undefined } };
+            clientSubscription.InputMeasurementKeys = new MeasurementKey[] { MeasurementKey.Undefined };
+            clientSubscription.OutputMeasurements = new Measurement[] { Measurement.Undefined };
 
             // Create a new Iaon session
             session = new IaonSession();

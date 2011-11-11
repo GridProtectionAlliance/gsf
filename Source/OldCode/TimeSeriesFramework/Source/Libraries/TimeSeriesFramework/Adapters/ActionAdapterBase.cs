@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using TVA;
@@ -627,7 +628,7 @@ namespace TimeSeriesFramework.Adapters
 
                 status.AppendLine();
 
-                if (OutputMeasurements != null)
+                if (OutputMeasurements != null && OutputMeasurements.Length > OutputMeasurements.Count(m => m.Key == MeasurementKey.Undefined))
                 {
                     status.AppendFormat("       Output measurements: {0} defined measurements", OutputMeasurements.Length);
                     status.AppendLine();
@@ -635,7 +636,7 @@ namespace TimeSeriesFramework.Adapters
 
                     for (int i = 0; i < Common.Min(OutputMeasurements.Length, MaxMeasurementsToShow); i++)
                     {
-                        status.Append(OutputMeasurements[i].ToString().TruncateRight(50).PadLeft(50));
+                        status.Append(OutputMeasurements[i].ToString().TruncateRight(40).PadLeft(40));
                         status.Append(" ");
                         status.AppendLine(OutputMeasurements[i].ID.ToString());
                     }
@@ -646,7 +647,7 @@ namespace TimeSeriesFramework.Adapters
                     status.AppendLine();
                 }
 
-                if (InputMeasurementKeys != null)
+                if (InputMeasurementKeys != null && InputMeasurementKeys.Length > InputMeasurementKeys.Count(k => k == MeasurementKey.Undefined))
                 {
                     status.AppendFormat("        Input measurements: {0} defined measurements", InputMeasurementKeys.Length);
                     status.AppendLine();
@@ -654,7 +655,7 @@ namespace TimeSeriesFramework.Adapters
 
                     for (int i = 0; i < Common.Min(InputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
                     {
-                        status.AppendLine(InputMeasurementKeys[i].ToString().TruncateRight(50).CenterText(50));
+                        status.AppendLine(InputMeasurementKeys[i].ToString().TruncateRight(25).CenterText(50));
                     }
 
                     if (InputMeasurementKeys.Length > MaxMeasurementsToShow)
@@ -801,10 +802,6 @@ namespace TimeSeriesFramework.Adapters
             settings.TryGetValue("timeConstraintParameters", out parameters);
 
             SetTemporalConstraint(startTime, stopTime, parameters);
-
-            // When processing historical data, timestamps should not be evaluated for reasonability
-            if (this.TemporalConstraintIsDefined())
-                PerformTimestampReasonabilityCheck = false;
 
             if (settings.TryGetValue("processingInterval", out setting))
                 ProcessingInterval = int.Parse(setting);
@@ -1035,6 +1032,13 @@ namespace TimeSeriesFramework.Adapters
                 m_stopTimeConstraint = AdapterBase.ParseTimeTag(stopTime);
             else
                 m_stopTimeConstraint = DateTime.MaxValue;
+
+            // When processing historical data, timestamps should not be evaluated for reasonability
+            if (this.TemporalConstraintIsDefined())
+            {
+                PerformTimestampReasonabilityCheck = false;
+                LeadTime = double.MaxValue;
+            }
         }
 
         /// <summary>

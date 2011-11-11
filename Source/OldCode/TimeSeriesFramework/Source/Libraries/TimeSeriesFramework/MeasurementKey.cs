@@ -325,6 +325,11 @@ namespace TimeSeriesFramework
         private static ConcurrentDictionary<Guid, MeasurementKey> s_idCache = new ConcurrentDictionary<Guid, MeasurementKey>();
         private static ConcurrentDictionary<string, ConcurrentDictionary<uint, MeasurementKey>> s_keyCache = new ConcurrentDictionary<string, ConcurrentDictionary<uint, MeasurementKey>>(StringComparer.InvariantCultureIgnoreCase);
 
+        /// <summary>
+        /// Represents an undefined measurement key.
+        /// </summary>
+        public static readonly MeasurementKey Undefined = new MeasurementKey(Guid.Empty, uint.MaxValue, "__");
+
         // Static Methods
 
         /// <summary>

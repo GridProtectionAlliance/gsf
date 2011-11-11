@@ -487,6 +487,14 @@ namespace TimeSeriesFramework
         #region [ Static ]
 
         /// <summary>
+        /// Represents an undefined measurement.
+        /// </summary>
+        public static readonly Measurement Undefined = new Measurement()
+        {
+            Key = MeasurementKey.Undefined
+        };
+
+        /// <summary>
         /// Creates a copy of the specified measurement.
         /// </summary>
         /// <param name="measurementToClone">Specified measurement to clone.</param>

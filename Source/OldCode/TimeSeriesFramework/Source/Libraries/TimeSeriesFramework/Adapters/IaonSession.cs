@@ -325,25 +325,28 @@ namespace TimeSeriesFramework.Adapters
             {
                 m_allAdapters.DataSource = value;
 
-                // Create a new temporal support identification table
-                DataTable temporalSupport = new DataTable("TemporalSupport");
-
-                temporalSupport.Columns.Add("Source", typeof(string));
-                temporalSupport.Columns.Add("ID", typeof(uint));
-
-                // Add rows for each Iaon adapter collection to identify which adapters support temporal processing
-                foreach (IAdapterCollection collection in m_allAdapters)
+                if (value != null)
                 {
-                    foreach (IAdapter adapter in collection.Where(adapter => adapter.SupportsTemporalProcessing))
+                    // Create a new temporal support identification table
+                    DataTable temporalSupport = new DataTable("TemporalSupport");
+
+                    temporalSupport.Columns.Add("Source", typeof(string));
+                    temporalSupport.Columns.Add("ID", typeof(uint));
+
+                    // Add rows for each Iaon adapter collection to identify which adapters support temporal processing
+                    foreach (IAdapterCollection collection in m_allAdapters)
                     {
-                        temporalSupport.Rows.Add(collection.DataMember, adapter.ID);
+                        foreach (IAdapter adapter in collection.Where(adapter => adapter.SupportsTemporalProcessing))
+                        {
+                            temporalSupport.Rows.Add(collection.DataMember, adapter.ID);
+                        }
                     }
+
+                    if (m_allAdapters.DataSource.Tables.Contains("TemporalSupport"))
+                        m_allAdapters.DataSource.Tables.Remove("TemporalSupport");
+
+                    m_allAdapters.DataSource.Tables.Add(temporalSupport.Copy());
                 }
-
-                if (m_allAdapters.DataSource.Tables.Contains("TemporalSupport"))
-                    m_allAdapters.DataSource.Tables.Remove("TemporalSupport");
-
-                m_allAdapters.DataSource.Tables.Add(temporalSupport.Copy());
             }
         }
 
@@ -508,6 +511,9 @@ namespace TimeSeriesFramework.Adapters
         {
             // Initialize all adapters
             m_allAdapters.Initialize();
+
+            // Initialize temporal support tables
+            DataSource = DataSource;
 
             // Start all adapters
             if (autoStart)
