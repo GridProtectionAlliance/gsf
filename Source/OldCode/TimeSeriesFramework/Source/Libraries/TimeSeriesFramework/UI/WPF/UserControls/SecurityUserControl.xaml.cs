@@ -87,14 +87,17 @@ namespace TimeSeriesFramework.UI.UserControls
             m_userAccounts.CurrentItem.UseADAuthentication = (bool)RadioButtonWindows.IsChecked;
             if (m_userAccounts.IsNewRecord)
             {
-                if (string.IsNullOrEmpty(TextBoxPassword.Password) || !Regex.IsMatch(TextBoxPassword.Password, m_strongPasswordRegex))
+                if ((bool)RadioButtonDatabase.IsChecked)
                 {
-                    MessageBox.Show("Please provide valid password value." + Environment.NewLine + m_invalidPasswordMessage, "Invalid Password", MessageBoxButton.OK);
-                    e.Cancel = true;
-                }
-                else
-                {
-                    m_userAccounts.CurrentItem.Password = FormsAuthentication.HashPasswordForStoringInConfigFile(@"O3990\P78f9E66b:a35_V©6M13©6~2&[" + TextBoxPassword.Password, "SHA1");
+                    if (string.IsNullOrEmpty(TextBoxPassword.Password) || !Regex.IsMatch(TextBoxPassword.Password, m_strongPasswordRegex))
+                    {
+                        MessageBox.Show("Please provide valid password value." + Environment.NewLine + m_invalidPasswordMessage, "Invalid Password", MessageBoxButton.OK);
+                        e.Cancel = true;
+                    }
+                    else
+                    {
+                        m_userAccounts.CurrentItem.Password = FormsAuthentication.HashPasswordForStoringInConfigFile(@"O3990\P78f9E66b:a35_V©6M13©6~2&[" + TextBoxPassword.Password, "SHA1");
+                    }
                 }
             }
             else

@@ -83,7 +83,7 @@
         <sdk:DataGrid ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" PreviewKeyDown="DataGrid_PreviewKeyDown"
                       Sorting="DataGrid_Sorting">
             <sdk:DataGrid.Columns>
-                <sdk:DataGridTextColumn Header="Node ID" Width="3*" Binding="{tsfBinding:Column Path=ID}"/>
+                <sdk:DataGridTextColumn Header="Node ID" Width="3*" Binding="{tsfBinding:Column Path=ID}" IsReadOnly="True"/>
                 <sdk:DataGridTextColumn Header="Name" Width="2*" Binding="{tsfBinding:Column Path=Name}" />
                 <sdk:DataGridCheckBoxColumn Header="Master" Width="*" Binding="{tsfBinding:Column Path=Master}" />
                 <sdk:DataGridCheckBoxColumn Header="Enabled" Width="*" Binding="{tsfBinding:Column Path=Enabled}" />
