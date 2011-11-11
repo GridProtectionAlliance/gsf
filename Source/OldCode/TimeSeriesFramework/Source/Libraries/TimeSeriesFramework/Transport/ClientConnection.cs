@@ -372,7 +372,9 @@ namespace TimeSeriesFramework.Transport
             set
             {
                 m_subscription = value;
-                m_subscription.HostName = m_hostName;
+
+                if (m_subscription != null)
+                    m_subscription.HostName = m_hostName;
             }
         }
 
