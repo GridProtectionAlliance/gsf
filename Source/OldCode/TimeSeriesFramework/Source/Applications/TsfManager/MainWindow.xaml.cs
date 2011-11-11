@@ -225,8 +225,36 @@ namespace TsfManager
             catch { }
             finally
             {
+                updateButtons();
                 m_navigationProcessed = false;
             }
+        }
+
+        private void updateButtons()
+        {
+
+            if (FrameContent.CanGoBack)
+            {
+                backDisabled.Visibility = Visibility.Collapsed;
+                backEnabled.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                backEnabled.Visibility = Visibility.Collapsed;
+                backDisabled.Visibility = Visibility.Visible;
+            }
+
+            if (FrameContent.CanGoForward)
+            {
+                forwardDisabled.Visibility = Visibility.Collapsed;
+                forwardEnabled.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                forwardEnabled.Visibility = Visibility.Collapsed;
+                forwardDisabled.Visibility = Visibility.Visible;
+            }
+            
         }
 
         private void ButtonBack_Click(object sender, RoutedEventArgs e)

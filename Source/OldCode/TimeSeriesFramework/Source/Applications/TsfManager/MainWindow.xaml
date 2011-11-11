@@ -49,14 +49,16 @@
                     <TextBlock Text="Current Node: " Foreground="White"/>
                     <ComboBox x:Name="ComboboxNode" DisplayMemberPath="Value" SelectionChanged="ComboboxNode_SelectionChanged" Width="150"/>
                     <Ellipse x:Name="EllipseConnectionState" Fill="{StaticResource RedRadialGradientBrush}" Width="16" Height="16" Margin="2,0,5,0" />
-                    <Button Width="Auto" Height="Auto" ToolTip="Go Back" Margin="0,0,5,0" Click="ButtonBack_Click" IsEnabled="{Binding ElementName=FrameContent, Path=CanGoBack}">
+                    <Button x:Name="backEnabled" Width="Auto" Height="Auto" ToolTip="Go Back" Margin="0,0,5,0" Click="ButtonBack_Click" IsEnabled="{Binding ElementName=FrameContent, Path=CanGoBack}">
                         <Button.Template>
                             <ControlTemplate>
                                 <Image Source="/TimeSeriesFramework.UI;component/images/Back.png" Height="24" Width="24"/>
                             </ControlTemplate>
                         </Button.Template>
                     </Button>
-                    <Button Width="Auto" Height="Auto" ToolTip="Go Forward" Margin="0,0,5,0" Click="ButtonForward_Click" IsEnabled="{Binding ElementName=FrameContent, Path=CanGoForward}">
+                    <Image x:Name="backDisabled" Source="/TimeSeriesFramework.UI;component/images/BackGray.png" Margin="0,0,5,0" Height="24" Width="24" Visibility="Collapsed"/>
+                    <Image x:Name="forwardDisabled" Source="/TimeSeriesFramework.UI;component/images/ForwardGray.png" Margin="0,0,5,0" Height="24" Width="24" Visibility="Collapsed"/>
+                    <Button x:Name="forwardEnabled" Width="Auto" Height="Auto" ToolTip="Go Forward" Margin="0,0,5,0" Click="ButtonForward_Click" IsEnabled="{Binding ElementName=FrameContent, Path=CanGoForward}">
                         <Button.Template>
                             <ControlTemplate>
                                 <Image Source="/TimeSeriesFramework.UI;component/images/Forward.png" Height="24" Width="24"/>
