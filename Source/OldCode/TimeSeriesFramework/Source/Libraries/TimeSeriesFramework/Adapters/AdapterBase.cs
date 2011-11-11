@@ -660,7 +660,7 @@ namespace TimeSeriesFramework.Adapters
 
                     for (int i = 0; i < Common.Min(OutputMeasurements.Length, MaxMeasurementsToShow); i++)
                     {
-                        status.Append(OutputMeasurements[i].ToString().TruncateRight(25).PadLeft(25));
+                        status.Append(OutputMeasurements[i].ToString().TruncateRight(50).PadLeft(50));
                         status.Append(" ");
                         status.AppendLine(OutputMeasurements[i].ID.ToString());
                     }

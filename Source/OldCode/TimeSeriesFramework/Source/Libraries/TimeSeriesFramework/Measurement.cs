@@ -553,8 +553,9 @@ namespace TimeSeriesFramework
         /// Returns a <see cref="String"/> that represents the specified <see cref="IMeasurement"/>.
         /// </summary>
         /// <param name="measurement"><see cref="IMeasurement"/> to convert to a <see cref="String"/> representation.</param>
+        /// <param name="includeTagName">Set to <c>true</c> to include measurement's tag name, if defined; otherwise set to <c>false</c>.</param>
         /// <returns>A <see cref="String"/> that represents the specified <see cref="IMeasurement"/>.</returns>
-        public static string ToString(IMeasurement measurement)
+        public static string ToString(IMeasurement measurement, bool includeTagName = true)
         {
             if (measurement == null)
             {
@@ -565,10 +566,10 @@ namespace TimeSeriesFramework
                 string tagName = measurement.TagName;
                 string keyText = measurement.Key.ToString();
 
-                if (string.IsNullOrWhiteSpace(tagName))
-                    return keyText;
-                else
+                if (includeTagName && !string.IsNullOrWhiteSpace(tagName))
                     return string.Format("{0} [{1}]", tagName, keyText);
+                else
+                    return keyText;
             }
         }
 

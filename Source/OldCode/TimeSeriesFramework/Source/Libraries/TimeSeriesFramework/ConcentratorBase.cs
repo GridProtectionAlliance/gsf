@@ -2074,7 +2074,7 @@ namespace TimeSeriesFramework
         /// </remarks>
         protected internal virtual IFrame CreateNewFrame(Ticks timestamp)
         {
-            return new Frame(timestamp);
+            return new Frame(timestamp, m_expectedMeasurements);
         }
 
         /// <summary>

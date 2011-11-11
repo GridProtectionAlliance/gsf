@@ -59,7 +59,8 @@ namespace TimeSeriesFramework
         /// Constructs a new <see cref="Frame"/> given the specified parameters.
         /// </summary>
         /// <param name="timestamp">Timestamp, in ticks, for this <see cref="Frame"/>.</param>
-        public Frame(Ticks timestamp)
+        /// <param name="expectedMeasurements">Expected number of measurements for the <see cref="Frame"/>.</param>
+        public Frame(Ticks timestamp, int expectedMeasurements = -1)
         {
             m_timestamp = timestamp;
 #if UseHighResolutionTime
@@ -67,7 +68,11 @@ namespace TimeSeriesFramework
 #else
             m_receivedTimestamp = DateTime.UtcNow.Ticks;
 #endif
-            m_measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>();
+            if (expectedMeasurements > 0)
+                m_measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>(s_defaultConcurrencyLevel, expectedMeasurements * 2);
+            else
+                m_measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>();
+
             m_sortedMeasurements = -1;
         }
 
@@ -376,6 +381,13 @@ namespace TimeSeriesFramework
         {
             return frame1.CompareTo(frame2) <= 0;
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static int s_defaultConcurrencyLevel = Environment.ProcessorCount * 4;
 
         #endregion
     }
