@@ -956,7 +956,8 @@ namespace TVA.Communication
             catch (Exception ex)
             {
                 // Notify of the exception.
-                OnReceiveDataException(ex);
+                if (!(ex is NullReferenceException))
+                    OnReceiveDataException(ex);
             }
         }
 
