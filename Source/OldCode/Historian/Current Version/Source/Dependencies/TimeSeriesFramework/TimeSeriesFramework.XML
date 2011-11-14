@@ -1170,11 +1170,12 @@
             <para>Implementors need only track the value.</para>
             </remarks>
         </member>
-        <member name="M:TimeSeriesFramework.Frame.#ctor(TVA.Ticks)">
+        <member name="M:TimeSeriesFramework.Frame.#ctor(TVA.Ticks,System.Int32)">
             <summary>
             Constructs a new <see cref="T:TimeSeriesFramework.Frame"/> given the specified parameters.
             </summary>
             <param name="timestamp">Timestamp, in ticks, for this <see cref="T:TimeSeriesFramework.Frame"/>.</param>
+            <param name="expectedMeasurements">Expected number of measurements for the <see cref="T:TimeSeriesFramework.Frame"/>.</param>
         </member>
         <member name="M:TimeSeriesFramework.Frame.#ctor(TVA.Ticks,System.Collections.Generic.IDictionary{TimeSeriesFramework.MeasurementKey,TimeSeriesFramework.IMeasurement})">
             <summary>
@@ -2044,6 +2045,11 @@
             <param name="measurement2">A <see cref="T:TimeSeriesFramework.Measurement"/> right hand operand.</param>
             <returns>A boolean representing the result.</returns>
         </member>
+        <member name="F:TimeSeriesFramework.Measurement.Undefined">
+            <summary>
+            Represents an undefined measurement.
+            </summary>
+        </member>
         <member name="M:TimeSeriesFramework.Measurement.Clone(TimeSeriesFramework.IMeasurement)">
             <summary>
             Creates a copy of the specified measurement.
@@ -2068,11 +2074,12 @@
             <param name="timestamp">New timestamp, in ticks, for cloned measurement.</param>
             <returns>A copy of the <see cref="T:TimeSeriesFramework.Measurement"/> object.</returns>
         </member>
-        <member name="M:TimeSeriesFramework.Measurement.ToString(TimeSeriesFramework.IMeasurement)">
+        <member name="M:TimeSeriesFramework.Measurement.ToString(TimeSeriesFramework.IMeasurement,System.Boolean)">
             <summary>
             Returns a <see cref="T:System.String"/> that represents the specified <see cref="T:TimeSeriesFramework.IMeasurement"/>.
             </summary>
             <param name="measurement"><see cref="T:TimeSeriesFramework.IMeasurement"/> to convert to a <see cref="T:System.String"/> representation.</param>
+            <param name="includeTagName">Set to <c>true</c> to include measurement's tag name, if defined; otherwise set to <c>false</c>.</param>
             <returns>A <see cref="T:System.String"/> that represents the specified <see cref="T:TimeSeriesFramework.IMeasurement"/>.</returns>
         </member>
         <member name="M:TimeSeriesFramework.Measurement.AverageValueFilter(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
@@ -2279,6 +2286,11 @@
             <param name="key1">A <see cref="T:TimeSeriesFramework.MeasurementKey"/> left hand operand.</param>
             <param name="key2">A <see cref="T:TimeSeriesFramework.MeasurementKey"/> right hand operand.</param>
             <returns>A boolean representing the result.</returns>
+        </member>
+        <member name="F:TimeSeriesFramework.MeasurementKey.Undefined">
+            <summary>
+            Represents an undefined measurement key.
+            </summary>
         </member>
         <member name="M:TimeSeriesFramework.MeasurementKey.Parse(System.String,System.Guid)">
             <summary>
