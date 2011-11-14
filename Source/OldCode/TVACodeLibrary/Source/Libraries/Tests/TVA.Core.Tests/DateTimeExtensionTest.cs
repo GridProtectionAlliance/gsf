@@ -478,7 +478,7 @@ namespace TVA.Core.Tests
             // Act
             DateTime result = testTime2.LocalTimeToCentralTime();
             //// Assert
-            Assert.AreEqual(testTime1.AddHours(-5), result);
+            Assert.AreEqual(testTime1.AddHours(-6), result);
         }
 
         // This method Converts given local time to Central timee, by comparing it to the system clock time
@@ -489,7 +489,7 @@ namespace TVA.Core.Tests
             // Act
             DateTime result = testTime2.LocalTimeToCentralTime();
             //// Assert
-            Assert.AreEqual(testTime1.AddHours(-5), result);
+            Assert.AreEqual(testTime1.AddHours(-6), result);
         }
 
         // This method Converts given local time to Mountain time, by comparing it to the system clock time
@@ -500,7 +500,7 @@ namespace TVA.Core.Tests
             //// Act
             DateTime result = testTime2.LocalTimeToMountainTime();
             //// Assert
-            Assert.AreEqual(testTime1.AddHours(-6), result);
+            Assert.AreEqual(testTime1.AddHours(-7), result);
 
         }
 
@@ -513,7 +513,7 @@ namespace TVA.Core.Tests
             //// Act
             DateTime result = testTime2.LocalTimeToMountainTime();
             //// Assert
-            Assert.AreEqual(dtResult.AddHours(-6), result);
+            Assert.AreEqual(dtResult.AddHours(-7), result);
 
         }
 
@@ -525,7 +525,7 @@ namespace TVA.Core.Tests
             //// Act
             DateTime result = testTime2.LocalTimeToPacificTime();
             //// Assert
-            Assert.AreEqual(testTime1.AddHours(-7), result);//USTimeZones.Pacific
+            Assert.AreEqual(testTime1.AddHours(-8), result);//USTimeZones.Pacific
 
         }
 
@@ -537,7 +537,7 @@ namespace TVA.Core.Tests
             //// Act
             DateTime result = testTime2.LocalTimeToPacificTime();
             //// Assert
-            Assert.AreEqual(dtResult.AddHours(-7), result);
+            Assert.AreEqual(dtResult.AddHours(-8), result);
         }
 
         // This method Converts given local time to Universally Coordinated Time (a.k.a., Greenwich Meridian Time), by comparing it to the system clock time
@@ -596,7 +596,7 @@ namespace TVA.Core.Tests
             //// Act
             DateTime result = testTime1.UniversalTimeToEasternTime();
             //// Assert
-            Assert.AreEqual(testTime1.AddHours(-4), result);
+            Assert.AreEqual(testTime1.AddHours(-5), result);
 
         }
 
@@ -609,7 +609,7 @@ namespace TVA.Core.Tests
             //// Act
             DateTime result = testTime1.UniversalTimeToEasternTime();
             //// Assert
-            Assert.AreEqual(dtResult.AddHours(-4), result);
+            Assert.AreEqual(dtResult.AddHours(-5), result);
 
         }
 
@@ -621,7 +621,7 @@ namespace TVA.Core.Tests
             //// Act
             DateTime result = testTime1.UniversalTimeToCentralTime();
             //// Assert
-            Assert.AreEqual(testTime1.AddHours(-5), result);
+            Assert.AreEqual(testTime1.AddHours(-6), result);
 
         }
 
@@ -633,7 +633,7 @@ namespace TVA.Core.Tests
             //// Act
             DateTime result = testTime1.UniversalTimeToCentralTime();
             //// Assert
-            Assert.AreEqual(dtResult.AddHours(-5), result);
+            Assert.AreEqual(dtResult.AddHours(-6), result);
         }
 
         //  This method Converts the specified Universally Coordinated Time timestamp to Mountain time timestamp, by comparing it to the system clock time
@@ -644,7 +644,7 @@ namespace TVA.Core.Tests
             //// Act
             DateTime result = testTime1.UniversalTimeToMountainTime();
             //// Assert
-            Assert.AreEqual(testTime1.AddHours(-6), result);
+            Assert.AreEqual(testTime1.AddHours(-7), result);
 
         }
 
@@ -656,7 +656,7 @@ namespace TVA.Core.Tests
             //// Act
             DateTime result = testTime1.UniversalTimeToMountainTime();
             //// Assert
-            Assert.AreEqual(dtResult.AddHours(-6), result);
+            Assert.AreEqual(dtResult.AddHours(-7), result);
 
         }
 
@@ -668,7 +668,7 @@ namespace TVA.Core.Tests
             //// Act
             DateTime result = testTime1.UniversalTimeToPacificTime();
             //// Assert            
-            Assert.AreEqual(testTime1.AddHours(-7), result);
+            Assert.AreEqual(testTime1.AddHours(-8), result);
 
         }
 
@@ -680,7 +680,7 @@ namespace TVA.Core.Tests
             //// Act
             DateTime result = testTime1.UniversalTimeToPacificTime();
             //// Assert
-            Assert.AreEqual(dtResult.AddHours(-7), result);
+            Assert.AreEqual(dtResult.AddHours(-8), result);
 
         }
 
@@ -741,7 +741,7 @@ namespace TVA.Core.Tests
             //// Act
             DateTime result = testTime2.LocalTimeToEasternTime();
             //// Assert
-            Assert.AreEqual(testTime1.AddHours(-4), result);
+            Assert.AreEqual(testTime1.AddHours(-5), result);
 
         }
 
@@ -753,7 +753,7 @@ namespace TVA.Core.Tests
             //// Act
             DateTime result = testTime2.LocalTimeToEasternTime();
             //// Assert
-            Assert.AreEqual(dtResult.AddHours(-4), result);
+            Assert.AreEqual(dtResult.AddHours(-5), result);
 
         }
     }
