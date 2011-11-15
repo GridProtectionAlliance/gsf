@@ -80,6 +80,7 @@
     <Compile Include="Activation\SecureDataServiceHostFactory.cs" />
     <Compile Include="SecurityPolicy.cs" />
     <Compile Include="SelfHostingService.cs" />
+    <Compile Include="Service.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TVA.Core\TVA.Core.csproj">

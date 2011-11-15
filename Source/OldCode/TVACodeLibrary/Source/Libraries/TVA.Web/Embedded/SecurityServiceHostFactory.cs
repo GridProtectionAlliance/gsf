@@ -276,7 +276,7 @@ namespace TVA.Web.Embedded
         protected override ServiceHost CreateServiceHost(Type serviceType, Uri[] baseAddresses)
         {
             // Check security requirement.
-            bool integratedSecurity = (SelfHostingService.GetAuthenticationSchemes(baseAddresses[0]) & AuthenticationSchemes.Anonymous) != AuthenticationSchemes.Anonymous;
+            bool integratedSecurity = (Service.GetAuthenticationSchemes(baseAddresses[0]) & AuthenticationSchemes.Anonymous) != AuthenticationSchemes.Anonymous;
 
             // Initialize host and binding.
             ServiceHost host = new ServiceHost(serviceType, baseAddresses);
