@@ -12,6 +12,8 @@
 //       Generated original version of source code.
 //  10/12/2011 - Pinal C. Patel
 //       Added the ability to specify endpoint binding information.
+//  11/16/2011 - Pinal C. Patel
+//       Added PublishMetadata and DisableSecurity properties.
 //
 //*******************************************************************************************************
 
@@ -253,6 +255,8 @@ namespace TVA.ServiceModel.Activation
         // Fields
         private string m_protocol;
         private string m_address;
+        private bool m_publishMetadata;
+        private bool m_disableSecurity;
 
         #endregion
 
@@ -278,12 +282,47 @@ namespace TVA.ServiceModel.Activation
         /// <summary>
         /// Initializes a new instance of the <see cref="SecureServiceHostFactory"/> class.
         /// </summary>
-        /// <param name="protocol">Protocol used the service.</param>
+        /// <param name="protocol">Protocol used by the service.</param>
         /// <param name="address">Address of the service.</param>
         public SecureServiceHostFactory(string protocol, string address)
         {
             m_protocol = protocol;
             m_address = address;
+            m_publishMetadata = true;
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether service metadata is to be published.
+        /// </summary>
+        public bool PublishMetadata 
+        {
+            get
+            {
+                return m_publishMetadata;
+            }
+            set
+            {
+                m_publishMetadata = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether security on the service is to be disabled. 
+        /// </summary>
+        public bool DisableSecurity 
+        {
+            get
+            {
+                return m_disableSecurity;
+            }
+            set
+            {
+                m_disableSecurity = value;
+            }
         }
 
         #endregion
@@ -305,25 +344,31 @@ namespace TVA.ServiceModel.Activation
             ServiceHost host = base.CreateServiceHost(serviceType, baseAddresses);
 
             // Enable metadata publishing.
-            ServiceMetadataBehavior metadataBehavior = host.Description.Behaviors.Find<ServiceMetadataBehavior>();
-            if (metadataBehavior == null)
+            if (m_publishMetadata)
             {
-                metadataBehavior = new ServiceMetadataBehavior();
-                host.Description.Behaviors.Add(metadataBehavior);
+                ServiceMetadataBehavior metadataBehavior = host.Description.Behaviors.Find<ServiceMetadataBehavior>();
+                if (metadataBehavior == null)
+                {
+                    metadataBehavior = new ServiceMetadataBehavior();
+                    host.Description.Behaviors.Add(metadataBehavior);
+                }
+                metadataBehavior.HttpGetEnabled = true;
             }
-            metadataBehavior.HttpGetEnabled = true;
 
             // Enable security on the service.
-            ServiceAuthorizationBehavior authorizationBehavior = host.Description.Behaviors.Find<ServiceAuthorizationBehavior>();
-            if (authorizationBehavior == null)
+            if (!m_disableSecurity)
             {
-                authorizationBehavior = new ServiceAuthorizationBehavior();
-                host.Description.Behaviors.Add(authorizationBehavior);
+                ServiceAuthorizationBehavior authorizationBehavior = host.Description.Behaviors.Find<ServiceAuthorizationBehavior>();
+                if (authorizationBehavior == null)
+                {
+                    authorizationBehavior = new ServiceAuthorizationBehavior();
+                    host.Description.Behaviors.Add(authorizationBehavior);
+                }
+                authorizationBehavior.PrincipalPermissionMode = PrincipalPermissionMode.Custom;
+                List<IAuthorizationPolicy> policies = new List<IAuthorizationPolicy>();
+                policies.Add((IAuthorizationPolicy)Activator.CreateInstance(typeof(SecurityPolicy)));
+                authorizationBehavior.ExternalAuthorizationPolicies = policies.AsReadOnly();
             }
-            authorizationBehavior.PrincipalPermissionMode = PrincipalPermissionMode.Custom;
-            List<IAuthorizationPolicy> policies = new List<IAuthorizationPolicy>();
-            policies.Add((IAuthorizationPolicy)Activator.CreateInstance(typeof(SecurityPolicy)));
-            authorizationBehavior.ExternalAuthorizationPolicies = policies.AsReadOnly();
 
             // Create endpoint and configure security.
             host.AddDefaultEndpoints();
@@ -358,7 +403,7 @@ namespace TVA.ServiceModel.Activation
 
                 Binding serviceBinding;
                 ServiceEndpoint serviceEndpoint;
-                serviceBinding = serviceBinding = Service.CreateServiceBinding(ref m_protocol, integratedSecurity);
+                serviceBinding = Service.CreateServiceBinding(ref m_protocol, integratedSecurity);
                 if (serviceBinding != null)
                 {
                     // Binding created for the endpoint.
@@ -372,7 +417,7 @@ namespace TVA.ServiceModel.Activation
                     if (serviceBinding is WebHttpBinding)
                     {
                         WebHttpBehavior restBehavior = new WebHttpBehavior();
-                        restBehavior.HelpEnabled = true;
+                        restBehavior.HelpEnabled = m_publishMetadata;
 
                         serviceEndpoint.Behaviors.Add(restBehavior);
                     }

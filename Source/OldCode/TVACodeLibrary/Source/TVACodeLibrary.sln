@@ -19,7 +19,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		TVA.snk = TVA.snk
 		TVACodeLibrary.testrunconfig = TVACodeLibrary.testrunconfig
-		TVACodeLibrary.vsmdi = TVACodeLibrary.vsmdi
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Core", "Libraries\TVA.Core\TVA.Core.csproj", "{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88}"
