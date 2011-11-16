@@ -761,11 +761,14 @@ namespace TimeSeriesFramework.Adapters
 
             string startTime, stopTime, parameters;
 
-            settings.TryGetValue("startTimeConstraint", out startTime);
-            settings.TryGetValue("stopTimeConstraint", out stopTime);
-            settings.TryGetValue("timeConstraintParameters", out parameters);
+            bool startTimeDefined = settings.TryGetValue("startTimeConstraint", out startTime);
+            bool stopTimeDefined = settings.TryGetValue("stopTimeConstraint", out stopTime);
 
-            SetTemporalConstraint(startTime, stopTime, parameters);
+            if (startTimeDefined || stopTimeDefined)
+            {
+                settings.TryGetValue("timeConstraintParameters", out parameters);
+                SetTemporalConstraint(startTime, stopTime, parameters);
+            }
 
             if (settings.TryGetValue("processingInterval", out setting))
                 ProcessingInterval = int.Parse(setting);

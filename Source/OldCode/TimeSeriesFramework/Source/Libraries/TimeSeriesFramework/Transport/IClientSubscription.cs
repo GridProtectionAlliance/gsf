@@ -185,12 +185,12 @@ namespace TimeSeriesFramework.Transport
             session.AllAdapters.SetTemporalConstraint(startTime, stopTime, parameters);
             session.AllAdapters.ProcessingInterval = clientSubscription.ProcessingInterval;
 
+            // Start temporal session adapters
+            session.AllAdapters.Start();
+
             // Recalculate routing tables to accomodate addtion of proxy adapter
             // and possible changes due to assignment of temporal constraints
             session.RecalculateRoutingTables();
-
-            // Start temporal session adapters
-            session.AllAdapters.Start();
 
             return session;
         }

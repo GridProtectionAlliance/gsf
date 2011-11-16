@@ -515,12 +515,14 @@ namespace TimeSeriesFramework.Adapters
             // Initialize temporal support tables
             DataSource = DataSource;
 
-            // Start all adapters
             if (autoStart)
+            {
+                // Start all adapters
                 m_allAdapters.Start();
 
-            // Spawn routing table calculation
-            RecalculateRoutingTables();
+                // Spawn routing table calculation
+                RecalculateRoutingTables();
+            }
         }
 
         /// <summary>
