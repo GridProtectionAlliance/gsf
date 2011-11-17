@@ -268,8 +268,24 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// </summary>
         public override void Load()
         {
-            ItemsSource = Adapter.Load(null, m_adapterType);
-            CurrentItem.Type = m_adapterType;
+            try
+            {
+                ItemsSource = Adapter.Load(null, m_adapterType);
+                CurrentItem.Type = m_adapterType;
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException != null)
+                {
+                    Popup(ex.Message + Environment.NewLine + "Inner Exception: " + ex.InnerException.Message, "Load " + DataModelName + " Exception:", MessageBoxImage.Error);
+                    CommonFunctions.LogException(null, "Load " + DataModelName, ex.InnerException);
+                }
+                else
+                {
+                    Popup(ex.Message, "Load " + DataModelName + " Exception:", MessageBoxImage.Error);
+                    CommonFunctions.LogException(null, "Load " + DataModelName, ex);
+                }
+            }
         }
 
         /// <summary>
@@ -284,7 +300,16 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
             catch (Exception ex)
             {
-                Popup("ERROR: " + ex.Message, "Delete Adapter", MessageBoxImage.Error);
+                if (ex.InnerException != null)
+                {
+                    Popup(ex.Message + Environment.NewLine + "Inner Exception: " + ex.InnerException.Message, "Delete " + DataModelName + " Exception:", MessageBoxImage.Error);
+                    CommonFunctions.LogException(null, "Delete " + DataModelName, ex.InnerException);
+                }
+                else
+                {
+                    Popup(ex.Message, "Delete " + DataModelName + " Exception:", MessageBoxImage.Error);
+                    CommonFunctions.LogException(null, "Delete " + DataModelName, ex);
+                }
             }
         }
 
@@ -555,8 +580,8 @@ namespace TimeSeriesFramework.UI.ViewModels
             bool isRequired = false;
             object defaultValue = null;
             string description = null;
-            
-            if(m_parameterList != null)
+
+            if (m_parameterList != null)
                 parameter = m_parameterList.SingleOrDefault(param => param.Name.Equals(info.Name, StringComparison.CurrentCultureIgnoreCase));
 
             // These are different cases, but we need to extract the description
@@ -605,7 +630,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         {
             AdapterConnectionStringParameter parameter = null;
 
-            if(m_parameterList != null)
+            if (m_parameterList != null)
                 parameter = m_parameterList.SingleOrDefault(param => param.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase));
 
             if (parameter == null)

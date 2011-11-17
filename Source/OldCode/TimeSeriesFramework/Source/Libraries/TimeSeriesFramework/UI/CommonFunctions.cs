@@ -609,11 +609,11 @@ namespace TimeSeriesFramework.UI
         }
 
         /// <summary>
-        /// 
+        /// Returns min and max point id values for a given node.
         /// </summary>
-        /// <param name="connection"></param>
-        /// <param name="nodeID"></param>
-        /// <returns></returns>
+        /// <param name="connection"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="nodeID">ID of the node to filter data.</param>
+        /// <returns>KeyValuePair containing min and max point id.</returns>
         public static KeyValuePair<int?, int?> GetMinMaxPointIDs(AdoDataConnection connection, Guid nodeID)
         {
             KeyValuePair<int?, int?> minMaxPointIDs = new KeyValuePair<int?, int?>(1, 5000);
@@ -639,7 +639,7 @@ namespace TimeSeriesFramework.UI
 
             return minMaxPointIDs;
         }
-
+                
         /// <summary>
         /// Stores exception in the database
         /// </summary>

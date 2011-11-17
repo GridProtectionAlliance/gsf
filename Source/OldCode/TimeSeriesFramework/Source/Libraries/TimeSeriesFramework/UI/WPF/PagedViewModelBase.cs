@@ -599,9 +599,15 @@ namespace TimeSeriesFramework.UI
             catch (Exception ex)
             {
                 if (ex.InnerException != null)
+                {
                     Popup(ex.Message + Environment.NewLine + "Inner Exception: " + ex.InnerException.Message, "Load " + DataModelName + " Exception:", MessageBoxImage.Error);
+                    CommonFunctions.LogException(null, "Load " + DataModelName, ex.InnerException);
+                }
                 else
+                {
                     Popup(ex.Message, "Load " + DataModelName + " Exception:", MessageBoxImage.Error);
+                    CommonFunctions.LogException(null, "Load " + DataModelName, ex);
+                }
             }
             finally
             {
@@ -644,9 +650,15 @@ namespace TimeSeriesFramework.UI
                 catch (Exception ex)
                 {
                     if (ex.InnerException != null)
+                    {
                         Popup(ex.Message + Environment.NewLine + "Inner Exception: " + ex.InnerException.Message, "Save " + DataModelName + " Exception:", MessageBoxImage.Error);
+                        CommonFunctions.LogException(null, "Save " + DataModelName, ex.InnerException);
+                    }
                     else
+                    {
                         Popup(ex.Message, "Save " + DataModelName + " Exception:", MessageBoxImage.Error);
+                        CommonFunctions.LogException(null, "Save " + DataModelName, ex);
+                    }
                 }
             }
         }
@@ -681,9 +693,15 @@ namespace TimeSeriesFramework.UI
                 catch (Exception ex)
                 {
                     if (ex.InnerException != null)
+                    {
                         Popup(ex.Message + Environment.NewLine + "Inner Exception: " + ex.InnerException.Message, "Delete " + DataModelName + " Exception:", MessageBoxImage.Error);
+                        CommonFunctions.LogException(null, "Delete " + DataModelName, ex.InnerException);
+                    }
                     else
+                    {
                         Popup(ex.Message, "Delete " + DataModelName + " Exception:", MessageBoxImage.Error);
+                        CommonFunctions.LogException(null, "Delete " + DataModelName, ex);
+                    }
                 }
             }
         }
