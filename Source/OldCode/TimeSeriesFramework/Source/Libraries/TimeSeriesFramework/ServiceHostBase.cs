@@ -35,6 +35,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Reflection;
+using System.Runtime;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
@@ -423,8 +424,10 @@ namespace TimeSeriesFramework
                 "  Working Memory: {7}\r\n\r\n" +
                 "  Execution Mode: {8}-bit\r\n\r\n" +
                 "      Processors: {9}\r\n\r\n" +
-                " Process Account: {10}\\{11}\r\n\r\n" +
-                "{12}\r\n",
+                "  GC Server Mode: {10}\r\n\r\n" +
+                " GC Latency Mode: {11}\r\n\r\n" +
+                " Process Account: {12}\\{13}\r\n\r\n" +
+                "{14}\r\n",
                 stars,
                 m_iaonSession.NodeID,
                 DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"),
@@ -435,6 +438,8 @@ namespace TimeSeriesFramework
                 SI2.ToScaledIECString(Environment.WorkingSet, 3, "B"),
                 IntPtr.Size * 8,
                 Environment.ProcessorCount,
+                GCSettings.IsServerGC,
+                GCSettings.LatencyMode,
                 Environment.UserDomainName,
                 Environment.UserName,
                 stars);
