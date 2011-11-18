@@ -386,6 +386,10 @@ namespace TVA.Communication
 
                 try
                 {
+                    // Handle "localhost" as a special case, returning proper loopback address for the desired IP stack
+                    if (string.Compare(hostNameOrAddress, "localhost", true) == 0)
+                        return new IPEndPoint(stack == IPStack.IPv6 ? IPAddress.IPv6Loopback : IPAddress.Loopback, port);
+
                     // Failed to parse an IP address for the deisred stack - this may simply be that a host name was provided
                     // so we attempt a DNS lookup. Note that exceptions will occur if DNS lookup fails.
                     IPAddress[] dnsAddressList = Dns.GetHostEntry(hostNameOrAddress).AddressList;
@@ -404,7 +408,7 @@ namespace TVA.Communication
                         ipStackMismatch = true;
                     }
 
-                    throw new InvalidOperationException(string.Format("No valid {0} addresses could be found for \"{1}\"", stack,  hostNameOrAddress));
+                    throw new InvalidOperationException(string.Format("No valid {0} addresses could be found for \"{1}\"", stack, hostNameOrAddress));
                 }
                 catch
                 {
