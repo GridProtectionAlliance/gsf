@@ -473,12 +473,18 @@ namespace TVA.Core.Tests
         //  This method Converts given local time to Central timee, by comparing it to the system clock time
         //  and returns boolean variable as false for valid case and test will pass.
         [TestMethod]
-        public void LocalTimeToCentralTime_ValidCase()
+        public void LocalTimeToCentralTime_Isvalid()
         {
             // Act
             DateTime result = testTime2.LocalTimeToCentralTime();
-            //// Assert
-            Assert.AreEqual(testTime1.AddHours(-6), result);
+            double offset = -6.0;
+
+            if (TimeZoneInfo.Local.IsDaylightSavingTime(DateTime.Now))
+                offset = -5.0;
+            
+            /// Assert
+            Assert.AreEqual(testTime1.AddHours(offset), result);
+
         }
 
         // This method Converts given local time to Central timee, by comparing it to the system clock time
@@ -488,8 +494,14 @@ namespace TVA.Core.Tests
         {
             // Act
             DateTime result = testTime2.LocalTimeToCentralTime();
-            //// Assert
-            Assert.AreEqual(testTime1.AddHours(-6), result);
+            double offset = -6.0;
+
+            if (TimeZoneInfo.Local.IsDaylightSavingTime(DateTime.Now))
+                offset = -5.0;
+
+            /// Assert
+            Assert.AreEqual(testTime1.AddHours(offset), result);
+            
         }
 
         // This method Converts given local time to Mountain time, by comparing it to the system clock time
@@ -497,11 +509,16 @@ namespace TVA.Core.Tests
         [TestMethod]
         public void LocalTimeToMountainTime_ValidCase()
         {
-            //// Act
+            // Act
             DateTime result = testTime2.LocalTimeToMountainTime();
-            //// Assert
-            Assert.AreEqual(testTime1.AddHours(-7), result);
+            double offset = -7.0;
 
+            if (TimeZoneInfo.Local.IsDaylightSavingTime(DateTime.Now))
+                offset = -6.0;
+
+            /// Assert
+            Assert.AreEqual(testTime1.AddHours(offset), result);
+            
         }
 
         //  This method Converts given local time to Mountain time, by comparing it to the system clock time
@@ -510,10 +527,15 @@ namespace TVA.Core.Tests
         [TestMethod]
         public void LocalTimeToMountainTime_InValidCase()
         {
-            //// Act
+            // Act
             DateTime result = testTime2.LocalTimeToMountainTime();
-            //// Assert
-            Assert.AreEqual(dtResult.AddHours(-7), result);
+            double offset = -7.0;
+
+            if (TimeZoneInfo.Local.IsDaylightSavingTime(DateTime.Now))
+                offset = -6.0;
+
+            /// Assert
+            Assert.AreEqual(dtResult.AddHours(offset), result);
 
         }
 
@@ -522,11 +544,15 @@ namespace TVA.Core.Tests
         [TestMethod]
         public void LocalTimeToPacificTime_ValidCase()
         {
-            //// Act
+            // Act
             DateTime result = testTime2.LocalTimeToPacificTime();
-            //// Assert
-            Assert.AreEqual(testTime1.AddHours(-8), result);//USTimeZones.Pacific
+            double offset = -8.0;
 
+            if (TimeZoneInfo.Local.IsDaylightSavingTime(DateTime.Now))
+                offset = -7.0;
+
+            /// Assert
+            Assert.AreEqual(testTime1.AddHours(offset), result);
         }
 
         // This method Converts given local time to Pacific time, by comparing it to the system clock time
@@ -534,10 +560,15 @@ namespace TVA.Core.Tests
         [TestMethod]
         public void LocalTimeToPacificTime_InValidCase()
         {
-            //// Act
+            // Act
             DateTime result = testTime2.LocalTimeToPacificTime();
-            //// Assert
-            Assert.AreEqual(dtResult.AddHours(-8), result);
+            double offset = -8.0;
+
+            if (TimeZoneInfo.Local.IsDaylightSavingTime(DateTime.Now))
+                offset = -7.0;
+
+            /// Assert
+            Assert.AreEqual(dtResult.AddHours(offset), result);
         }
 
         // This method Converts given local time to Universally Coordinated Time (a.k.a., Greenwich Meridian Time), by comparing it to the system clock time
@@ -593,11 +624,15 @@ namespace TVA.Core.Tests
         [TestMethod]
         public void UniversalTimeToEasternTime_ValidCase()
         {
-            //// Act
+            // Act
             DateTime result = testTime1.UniversalTimeToEasternTime();
-            //// Assert
-            Assert.AreEqual(testTime1.AddHours(-5), result);
+            double offset = -5.0;
 
+            if (TimeZoneInfo.Local.IsDaylightSavingTime(DateTime.Now))
+                offset = -4.0;
+
+            /// Assert
+            Assert.AreEqual(testTime1.AddHours(offset), result);
         }
 
         // This method Converts the specified Universally Coordinated Time timestamp to Eastern time timestamp, by comparing it to the system clock time
@@ -606,11 +641,15 @@ namespace TVA.Core.Tests
         public void UniversalTimeToEasternTime_InValidCase()
         {
             DateTime dt = DateTime.UtcNow;
-            //// Act
+            // Act
             DateTime result = testTime1.UniversalTimeToEasternTime();
-            //// Assert
-            Assert.AreEqual(dtResult.AddHours(-5), result);
+            double offset = -5.0;
 
+            if (TimeZoneInfo.Local.IsDaylightSavingTime(DateTime.Now))
+                offset = -4.0;
+
+            /// Assert
+            Assert.AreEqual(dtResult.AddHours(offset), result);
         }
 
         // This method Converts the specified Universally Coordinated Time timestamp to Central time timestamp, by comparing it to the system clock time
@@ -618,11 +657,15 @@ namespace TVA.Core.Tests
         [TestMethod]
         public void UniversalTimeToCentralTime_ValidCase()
         {
-            //// Act
+            // Act
             DateTime result = testTime1.UniversalTimeToCentralTime();
-            //// Assert
-            Assert.AreEqual(testTime1.AddHours(-6), result);
+            double offset = -6.0;
 
+            if (TimeZoneInfo.Local.IsDaylightSavingTime(DateTime.Now))
+                offset = -5.0;
+
+            /// Assert
+            Assert.AreEqual(testTime1.AddHours(offset), result);
         }
 
         // This method Converts the specified Universally Coordinated Time timestamp to Central time timestamp, by comparing it to the system clock time
@@ -630,10 +673,15 @@ namespace TVA.Core.Tests
         [TestMethod]
         public void UniversalTimeToCentralTime_InValidCase()
         {
-            //// Act
+            // Act
             DateTime result = testTime1.UniversalTimeToCentralTime();
-            //// Assert
-            Assert.AreEqual(dtResult.AddHours(-6), result);
+            double offset = -6.0;
+
+            if (TimeZoneInfo.Local.IsDaylightSavingTime(DateTime.Now))
+                offset = -5.0;
+
+            /// Assert
+            Assert.AreEqual(testTime1.AddHours(offset), result);
         }
 
         //  This method Converts the specified Universally Coordinated Time timestamp to Mountain time timestamp, by comparing it to the system clock time
@@ -641,11 +689,15 @@ namespace TVA.Core.Tests
         [TestMethod]
         public void UniversalTimeToMountainTime_ValidCase()
         {
-            //// Act
+            // Act
             DateTime result = testTime1.UniversalTimeToMountainTime();
-            //// Assert
-            Assert.AreEqual(testTime1.AddHours(-7), result);
+            double offset = -7.0;
 
+            if (TimeZoneInfo.Local.IsDaylightSavingTime(DateTime.Now))
+                offset = -6.0;
+
+            /// Assert
+            Assert.AreEqual(testTime1.AddHours(offset), result);
         }
 
         // This method Converts the specified Universally Coordinated Time timestamp to Mountain time timestamp, by comparing it to the system clock time
@@ -653,11 +705,15 @@ namespace TVA.Core.Tests
         [TestMethod]
         public void UniversalTimeToMountainTime_InValidCase()
         {
-            //// Act
+            // Act
             DateTime result = testTime1.UniversalTimeToMountainTime();
-            //// Assert
-            Assert.AreEqual(dtResult.AddHours(-7), result);
+            double offset = -7.0;
 
+            if (TimeZoneInfo.Local.IsDaylightSavingTime(DateTime.Now))
+                offset = -6.0;
+
+            /// Assert
+            Assert.AreEqual(dtResult.AddHours(offset), result);
         }
 
         // This method Converts the specified Universally Coordinated Time timestamp to Pacific time timestamp, by comparing it to the system clock time
@@ -665,11 +721,15 @@ namespace TVA.Core.Tests
         [TestMethod]
         public void UniversalTimeToPacificTime_AValidCase()
         {
-            //// Act
+            // Act
             DateTime result = testTime1.UniversalTimeToPacificTime();
-            //// Assert            
-            Assert.AreEqual(testTime1.AddHours(-8), result);
+            double offset = -8.0;
 
+            if (TimeZoneInfo.Local.IsDaylightSavingTime(DateTime.Now))
+                offset = -7.0;
+
+            /// Assert
+            Assert.AreEqual(testTime1.AddHours(offset), result);
         }
 
         //  This method Converts the specified Universally Coordinated Time timestamp to Pacific time timestamp, by comparing it to the system clock time
@@ -677,11 +737,15 @@ namespace TVA.Core.Tests
         [TestMethod]
         public void UniversalTimeToPacificTime_InValidCase()
         {
-            //// Act
+            // Act
             DateTime result = testTime1.UniversalTimeToPacificTime();
-            //// Assert
-            Assert.AreEqual(dtResult.AddHours(-8), result);
+            double offset = -8.0;
 
+            if (TimeZoneInfo.Local.IsDaylightSavingTime(DateTime.Now))
+                offset = -7.0;
+
+            /// Assert
+            Assert.AreEqual(dtResult.AddHours(offset), result);
         }
 
         // This method Converts the specified Universally Coordinated Time timestamp to timestamp in specified time zone, by comparing it to the system clock time
@@ -732,16 +796,20 @@ namespace TVA.Core.Tests
 
         }
 
-
         // This method Converts given local time to Eastern time, by comparing it to the system clock time
         //  and returns boolean variable as false for valid case and test will pass
         [TestMethod]
         public void LocalTimeToEasternTime_ValidCase()
         {
-            //// Act
+            // Act
             DateTime result = testTime2.LocalTimeToEasternTime();
-            //// Assert
-            Assert.AreEqual(testTime1.AddHours(-5), result);
+            double offset = -5.0;
+
+            if (TimeZoneInfo.Local.IsDaylightSavingTime(DateTime.Now))
+                offset = -4.0;
+
+            /// Assert
+            Assert.AreEqual(testTime1.AddHours(offset), result);
 
         }
 
@@ -750,10 +818,15 @@ namespace TVA.Core.Tests
         [TestMethod]
         public void LocalTimeToEasternTime_InValidCase()
         {
-            //// Act
+            // Act
             DateTime result = testTime2.LocalTimeToEasternTime();
-            //// Assert
-            Assert.AreEqual(dtResult.AddHours(-5), result);
+            double offset = -5.0;
+
+            if (TimeZoneInfo.Local.IsDaylightSavingTime(DateTime.Now))
+                offset = -4.0;
+
+            /// Assert
+            Assert.AreEqual(testTime1.AddHours(offset), result);
 
         }
     }
