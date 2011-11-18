@@ -304,7 +304,7 @@ namespace TVA.IO.Compression
 
             byte[] buffer = null;
             int maxQueueLength = compressionStrength + 1;
-            uint[] queue = new uint[maxQueueLength];
+            uint* queue = stackalloc uint[maxQueueLength];
             int queueLength = 0;
             int usedLength = 0;
             int count = dataLength / SizeOf32Bits;
@@ -490,7 +490,7 @@ namespace TVA.IO.Compression
 
             byte[] buffer = null;
             int maxQueueLength = compressionStrength + 1;
-            ulong[] queue = new ulong[maxQueueLength];
+            ulong* queue = stackalloc ulong[maxQueueLength];
             int queueLength = 0;
             int usedLength = 0;
             int count = dataLength / SizeOf64Bits;
