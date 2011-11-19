@@ -32,11 +32,14 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Xml;
 using Microsoft.Win32;
+using TVA;
 using TVA.Collections;
 using TVA.Configuration;
 using TVA.Historian;
 using TVA.Historian.Files;
 using TVA.IO;
+using System.Threading;
+using System.Globalization;
 
 namespace HistorianView
 {
@@ -238,8 +241,9 @@ namespace HistorianView
             InitializeComponent();
             InitializeChartWindow();
 
-            StartTime = DateTime.UtcNow.AddMinutes(-5);
-            EndTime = DateTime.UtcNow;
+            StartTime = TimeTag.Parse("*-5M").ToDateTime();
+            EndTime = TimeTag.Parse("*").ToDateTime();
+            m_currentTimeCheckBox.IsChecked = true;
 
             string lastArchiveLocations = ConfigurationFile.Current.Settings.General["ArchiveLocations", true].ValueAs("");
 
