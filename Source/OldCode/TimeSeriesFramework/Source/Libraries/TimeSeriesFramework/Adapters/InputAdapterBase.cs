@@ -49,6 +49,15 @@ namespace TimeSeriesFramework.Adapters
         /// </remarks>
         public event EventHandler<EventArgs<ICollection<IMeasurement>>> NewMeasurements;
 
+        /// <summary>
+        /// Indicates to the host that processing for the input adapter has completed.
+        /// </summary>
+        /// <remarks>
+        /// This event is expected to only be raised when an input adapter has been designed to process
+        /// a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+        /// </remarks>
+        public event EventHandler ProcessingComplete;
+
         // Fields
         private List<string> m_outputSourceIDs;
         private MeasurementKey[] m_requestedOutputMeasurementKeys;
@@ -334,12 +343,12 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
-        /// Raises <see cref="AdapterBase.ProcessException"/> event.
+        /// Raises the <see cref="ProcessingComplete"/> event.
         /// </summary>
-        /// <param name="ex">Processing <see cref="Exception"/>.</param>
-        protected override void OnProcessException(Exception ex)
+        protected virtual void OnProcessingComplete()
         {
-            base.OnProcessException(ex);
+            if (ProcessingComplete != null)
+                ProcessingComplete(this, EventArgs.Empty);
         }
 
         private void m_connectionTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)

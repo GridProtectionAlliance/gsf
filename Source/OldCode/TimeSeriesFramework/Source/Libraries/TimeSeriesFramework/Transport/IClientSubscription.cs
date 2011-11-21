@@ -34,6 +34,15 @@ namespace TimeSeriesFramework.Transport
     public interface IClientSubscription : IActionAdapter
     {
         /// <summary>
+        /// Indicates to the host that processing for an input adapter (via temporal session) has completed.
+        /// </summary>
+        /// <remarks>
+        /// This event is expected to only be raised when an input adapter has been designed to process
+        /// a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+        /// </remarks>
+        event EventHandler<EventArgs<IClientSubscription, EventArgs>> ProcessingComplete;
+
+        /// <summary>
         /// Gets the <see cref="Guid"/> client TCP connection identifier of this <see cref="IClientSubscription"/>.
         /// </summary>
         Guid ClientID
@@ -86,6 +95,13 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
         void OnProcessException(Exception ex);
+
+        /// <summary>
+        /// Explictly raises the <see cref="IInputAdapter.ProcessingComplete"/> event.
+        /// </summary>
+        /// <param name="sender"><see cref="IInputAdapter"/> raising the notification.</param>
+        /// <param name="e">Event arguments for notification, if any.</param>
+        void OnProcessingCompleted(object sender, EventArgs e);
     }
 
     /// <summary>
@@ -96,6 +112,7 @@ namespace TimeSeriesFramework.Transport
         // Define cache of dyanmically defined event handlers associated with each client subscription
         private static Dictionary<IClientSubscription, EventHandler<EventArgs<string, UpdateType>>> s_statusMessageHandlers = new Dictionary<IClientSubscription, EventHandler<EventArgs<string, UpdateType>>>();
         private static Dictionary<IClientSubscription, EventHandler<EventArgs<Exception>>> s_processExceptionHandlers = new Dictionary<IClientSubscription, EventHandler<EventArgs<Exception>>>();
+        private static Dictionary<IClientSubscription, EventHandler> s_processingCompletedHandlers = new Dictionary<IClientSubscription, EventHandler>();
 
         /// <summary>
         /// Returns a new temporal <see cref="IaonSession"/> for a <see cref="IClientSubscription"/>.
@@ -130,14 +147,17 @@ namespace TimeSeriesFramework.Transport
                     clientSubscription.OnStatusMessage("0x" + (int)e.Argument2 + e.Argument1);
             };
             EventHandler<EventArgs<Exception>> processExceptionHandler = (sender, e) => clientSubscription.OnProcessException(e.Argument);
+            EventHandler processingCompletedHandler = (sender, e) => clientSubscription.OnProcessingCompleted(sender, e);
 
             // Cache dynamic event handlers so they can be detached later
             s_statusMessageHandlers[clientSubscription] = statusMessageHandler;
             s_processExceptionHandlers[clientSubscription] = processExceptionHandler;
+            s_processingCompletedHandlers[clientSubscription] = processingCompletedHandler;
 
             // Attach handlers to new session - this will proxy all temporal session messages through the client session adapter
             session.StatusMessage += statusMessageHandler;
             session.ProcessException += processExceptionHandler;
+            session.ProcessingComplete += processingCompletedHandler;
 
             // Send the first message indicating a new temporal session is being established
             statusMessageHandler(null, new EventArgs<string, UpdateType>(
@@ -206,6 +226,7 @@ namespace TimeSeriesFramework.Transport
             {
                 EventHandler<EventArgs<string, UpdateType>> statusMessageFunction;
                 EventHandler<EventArgs<Exception>> processExceptionFunction;
+                EventHandler processingCompletedFunction;
 
                 // Lookup event handlers, detach and remove
                 if (s_statusMessageHandlers.TryGetValue(adapter, out statusMessageFunction))
@@ -218,6 +239,12 @@ namespace TimeSeriesFramework.Transport
                 {
                     session.ProcessException -= processExceptionFunction;
                     s_processExceptionHandlers.Remove(adapter);
+                }
+
+                if (s_processingCompletedHandlers.TryGetValue(adapter, out processingCompletedFunction))
+                {
+                    session.ProcessingComplete -= processingCompletedFunction;
+                    s_processingCompletedHandlers.Remove(adapter);
                 }
 
                 session.Dispose();

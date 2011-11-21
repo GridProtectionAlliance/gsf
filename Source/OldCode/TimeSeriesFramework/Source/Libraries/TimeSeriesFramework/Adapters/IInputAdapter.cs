@@ -41,6 +41,15 @@ namespace TimeSeriesFramework.Adapters
         event EventHandler<EventArgs<ICollection<IMeasurement>>> NewMeasurements;
 
         /// <summary>
+        /// Indicates to the host that processing for the input adapter has completed.
+        /// </summary>
+        /// <remarks>
+        /// This event is expected to only be raised when an input adapter has been designed to process
+        /// a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+        /// </remarks>
+        event EventHandler ProcessingComplete;
+
+        /// <summary>
         /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter output measurements.
         /// </summary>
         /// <remarks>

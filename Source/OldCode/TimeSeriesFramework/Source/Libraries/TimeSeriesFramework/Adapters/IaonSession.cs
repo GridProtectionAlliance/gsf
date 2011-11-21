@@ -98,6 +98,15 @@ namespace TimeSeriesFramework.Adapters
         public event EventHandler<EventArgs<int>> UnprocessedMeasurements;
 
         /// <summary>
+        /// Indicates to the host that processing for one of the input adapters has completed.
+        /// </summary>
+        /// <remarks>
+        /// This event is expected to only be raised when an input adapter has been designed to process
+        /// a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+        /// </remarks>
+        public event EventHandler ProcessingComplete;
+
+        /// <summary>
         /// Event is raised when this <see cref="AdapterCollectionBase{T}"/> is disposed or an <see cref="IAdapter"/> in the collection is disposed.
         /// </summary>
         public event EventHandler Disposed;
@@ -173,6 +182,7 @@ namespace TimeSeriesFramework.Adapters
                 m_inputAdapters.NewMeasurements += m_routingTables.BroadcastMeasurementsHandler;
 
             m_inputAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
+            m_inputAdapters.ProcessingComplete += ProcessingCompleteHandler;
 
             // Create action adapters collection
             m_actionAdapters = new ActionAdapterCollection();
@@ -218,7 +228,7 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Gets the all adapters collection for this <see cref="IaonSession"/>.
         /// </summary>
-        public AllAdaptersCollection AllAdapters
+        public virtual AllAdaptersCollection AllAdapters
         {
             get
             {
@@ -229,7 +239,7 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Gets the input adapter collection for this <see cref="IaonSession"/>.
         /// </summary>
-        public InputAdapterCollection InputAdapters
+        public virtual InputAdapterCollection InputAdapters
         {
             get
             {
@@ -240,7 +250,7 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Gets the action adapter collection for this <see cref="IaonSession"/>.
         /// </summary>
-        public ActionAdapterCollection ActionAdapters
+        public virtual ActionAdapterCollection ActionAdapters
         {
             get
             {
@@ -251,7 +261,7 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Gets the output adapter collection for this <see cref="IaonSession"/>.
         /// </summary>
-        public OutputAdapterCollection OutputAdapters
+        public virtual OutputAdapterCollection OutputAdapters
         {
             get
             {
@@ -262,7 +272,7 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Gets or sets flag that determines if measurement routing should be used.
         /// </summary>
-        public bool UseMeasurementRouting
+        public virtual bool UseMeasurementRouting
         {
             get
             {
@@ -304,7 +314,7 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Gets the routing tables for this <see cref="IaonSession"/>.
         /// </summary>
-        public RoutingTables RoutingTables
+        public virtual RoutingTables RoutingTables
         {
             get
             {
@@ -315,7 +325,7 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Gets or sets the configuration <see cref="DataSet"/> for this <see cref="IaonSession"/>.
         /// </summary>
-        public DataSet DataSource
+        public virtual DataSet DataSource
         {
             get
             {
@@ -353,7 +363,7 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Gets or sets the <see cref="Guid"/> node ID  for this <see cref="IaonSession"/>.
         /// </summary>
-        public Guid NodeID
+        public virtual Guid NodeID
         {
             get
             {
@@ -368,7 +378,7 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Gets name assigned to this <see cref="IaonSession"/>, if any.
         /// </summary>
-        public string Name
+        public virtual string Name
         {
             get
             {
@@ -383,24 +393,27 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Gets the combined status of the adapters in this <see cref="IaonSession"/>.
         /// </summary>
-        public string Status
+        public virtual string Status
         {
             get
             {
                 StringBuilder status = new StringBuilder();
 
+                status.AppendLine();
                 status.AppendLine(">> Input Adapters:");
                 status.AppendLine();
 
                 if (m_inputAdapters != null)
                     status.AppendLine(m_inputAdapters.Status);
 
+                status.AppendLine();
                 status.AppendLine(">> Action Adapters:");
                 status.AppendLine();
 
                 if (m_actionAdapters != null)
                     status.AppendLine(m_actionAdapters.Status);
 
+                status.AppendLine();
                 status.AppendLine(">> Output Adapters:");
                 status.AppendLine();
 
@@ -446,6 +459,7 @@ namespace TimeSeriesFramework.Adapters
                             else
                                 m_inputAdapters.NewMeasurements -= m_routingTables.BroadcastMeasurementsHandler;
 
+                            m_inputAdapters.ProcessingComplete -= ProcessingCompleteHandler;
                             m_inputAdapters.Dispose();
                         }
                         m_inputAdapters = null;
@@ -507,7 +521,7 @@ namespace TimeSeriesFramework.Adapters
         /// Initialize and start adapters.
         /// </summary>
         /// <param name="autoStart">Sets flag that determines if adapters should be automatically started.</param>
-        public void Initialize(bool autoStart = true)
+        public virtual void Initialize(bool autoStart = true)
         {
             // Initialize all adapters
             m_allAdapters.Initialize();
@@ -530,7 +544,7 @@ namespace TimeSeriesFramework.Adapters
         /// </summary>
         /// <param name="collection">Name of collection over which to check support (e.g., "InputAdapters"); or <c>null</c> for all collections.</param>
         /// <returns>Flag that determines if temporal processing is supported in this <see cref="IaonSession"/>.</returns>
-        public bool TemporalProcessingSupportExists(string collection = null)
+        public virtual bool TemporalProcessingSupportExists(string collection = null)
         {
             try
             {
@@ -579,7 +593,7 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Recalculates routing tables as long as all adapters have been initialized.
         /// </summary>
-        public void RecalculateRoutingTables()
+        public virtual void RecalculateRoutingTables()
         {
             if (m_useMeasurementRouting && m_routingTables != null && m_allAdapters != null && m_allAdapters.Initialized)
                 m_routingTables.CalculateRoutingTables();
@@ -588,9 +602,10 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Raises the <see cref="StatusMessage"/> event.
         /// </summary>
+        /// <param name="sender">Object source raising the event.</param>
         /// <param name="status">New status message.</param>
         /// <param name="type"><see cref="UpdateType"/> of status message.</param>
-        protected virtual void OnStatusMessage(string status, UpdateType type = UpdateType.Information)
+        protected virtual void OnStatusMessage(object sender, string status, UpdateType type = UpdateType.Information)
         {
             if (StatusMessage != null)
             {
@@ -599,80 +614,98 @@ namespace TimeSeriesFramework.Adapters
                 if (type == UpdateType.Information && (object)status != null && status.Length > 3 && status.StartsWith("0x") && Enum.TryParse(status[2].ToString(), out type))
                     status = status.Substring(3);
 
-                StatusMessage(this, new EventArgs<string, UpdateType>(status, type));
+                StatusMessage(sender, new EventArgs<string, UpdateType>(status, type));
             }
         }
 
         /// <summary>
         /// Raises the <see cref="StatusMessage"/> event with a formatted status message.
         /// </summary>
+        /// <param name="sender">Object source raising the event.</param>
         /// <param name="formattedStatus">Formatted status message.</param>
         /// <param name="type"><see cref="UpdateType"/> of status message.</param>
         /// <param name="args">Arguments for <paramref name="formattedStatus"/>.</param>
         /// <remarks>
         /// This overload combines string.Format and SendStatusMessage for convienence.
         /// </remarks>
-        protected virtual void OnStatusMessage(string formattedStatus, UpdateType type, params object[] args)
+        protected virtual void OnStatusMessage(object sender, string formattedStatus, UpdateType type, params object[] args)
         {
             if (StatusMessage != null)
-                OnStatusMessage(string.Format(formattedStatus, args), type);
+                OnStatusMessage(sender, string.Format(formattedStatus, args), type);
         }
 
         /// <summary>
         /// Raises <see cref="ProcessException"/> event.
         /// </summary>
+        /// <param name="sender">Object source raising the event.</param>
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
-        protected virtual void OnProcessException(Exception ex)
+        protected virtual void OnProcessException(object sender, Exception ex)
         {
             if (ProcessException != null)
-                ProcessException(this, new EventArgs<Exception>(ex));
+                ProcessException(sender, new EventArgs<Exception>(ex));
         }
 
         /// <summary>
         /// Raises <see cref="InputMeasurementKeysUpdated"/> event.
         /// </summary>
-        protected virtual void OnInputMeasurementKeysUpdated()
+        /// <param name="sender">Object source raising the event.</param>
+        protected virtual void OnInputMeasurementKeysUpdated(object sender)
         {
             if (InputMeasurementKeysUpdated != null)
-                InputMeasurementKeysUpdated(this, EventArgs.Empty);
+                InputMeasurementKeysUpdated(sender, EventArgs.Empty);
         }
 
         /// <summary>
         /// Raises <see cref="OutputMeasurementsUpdated"/> event.
         /// </summary>
-        protected virtual void OnOutputMeasurementsUpdated()
+        /// <param name="sender">Object source raising the event.</param>
+        protected virtual void OnOutputMeasurementsUpdated(object sender)
         {
             if (OutputMeasurementsUpdated != null)
-                OutputMeasurementsUpdated(this, EventArgs.Empty);
+                OutputMeasurementsUpdated(sender, EventArgs.Empty);
         }
 
         /// <summary>
         /// Raises the <see cref="UnpublishedSamples"/> event.
         /// </summary>
+        /// <param name="sender">Object source raising the event.</param>
         /// <param name="seconds">Total number of unpublished seconds of data.</param>
-        protected virtual void OnUnpublishedSamples(int seconds)
+        protected virtual void OnUnpublishedSamples(object sender, int seconds)
         {
             if (UnpublishedSamples != null)
-                UnpublishedSamples(this, new EventArgs<int>(seconds));
+                UnpublishedSamples(sender, new EventArgs<int>(seconds));
         }
 
         /// <summary>
         /// Raises the <see cref="UnprocessedMeasurements"/> event.
         /// </summary>
+        /// <param name="sender">Object source raising the event.</param>
         /// <param name="unprocessedMeasurements">Total measurements in the queue that have not been processed.</param>
-        protected virtual void OnUnprocessedMeasurements(int unprocessedMeasurements)
+        protected virtual void OnUnprocessedMeasurements(object sender, int unprocessedMeasurements)
         {
             if (UnprocessedMeasurements != null)
-                UnprocessedMeasurements(this, new EventArgs<int>(unprocessedMeasurements));
+                UnprocessedMeasurements(sender, new EventArgs<int>(unprocessedMeasurements));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ProcessingComplete"/> event.
+        /// </summary>
+        /// <param name="sender">Object source raising the event.</param>
+        /// <param name="e"><see cref="EventArgs"/>, if any.</param>
+        protected virtual void OnProcessingComplete(object sender, EventArgs e = null)
+        {
+            if (ProcessingComplete != null)
+                ProcessingComplete(sender, e ?? EventArgs.Empty);
         }
 
         /// <summary>
         /// Raises the <see cref="Disposed"/> event.
         /// </summary>
-        protected virtual void OnDisposed()
+        /// <param name="sender">Object source raising the event.</param>
+        protected virtual void OnDisposed(object sender)
         {
             if (Disposed != null)
-                Disposed(this, EventArgs.Empty);
+                Disposed(sender, EventArgs.Empty);
         }
 
         /// <summary>
@@ -680,9 +713,10 @@ namespace TimeSeriesFramework.Adapters
         /// </summary>
         /// <param name="sender">Event source of the status message.</param>
         /// <param name="e">Event arguments containing the status message to report.</param>
-        public void StatusMessageHandler(object sender, EventArgs<string> e)
+        public virtual void StatusMessageHandler(object sender, EventArgs<string> e)
         {
-            OnStatusMessage("[{0}] {1}", UpdateType.Information, GetDerivedName(sender), e.Argument);
+            // Bubble message up to any event subscribers
+            OnStatusMessage(sender, "[{0}] {1}", UpdateType.Information, GetDerivedName(sender), e.Argument);
         }
 
         /// <summary>
@@ -690,10 +724,12 @@ namespace TimeSeriesFramework.Adapters
         /// </summary>
         /// <param name="sender">Event source of the exception.</param>
         /// <param name="e">Event arguments containing the exception to report.</param>
-        public void ProcessExceptionHandler(object sender, EventArgs<Exception> e)
+        public virtual void ProcessExceptionHandler(object sender, EventArgs<Exception> e)
         {
-            OnStatusMessage("[{0}] {1}", UpdateType.Alarm, GetDerivedName(sender), e.Argument.Message);
-            OnProcessException(e.Argument);
+            OnStatusMessage(sender, "[{0}] {1}", UpdateType.Alarm, GetDerivedName(sender), e.Argument.Message);
+
+            // Bubble message up to any event subscribers
+            OnProcessException(sender, e.Argument);
         }
 
         /// <summary>
@@ -701,13 +737,13 @@ namespace TimeSeriesFramework.Adapters
         /// </summary>
         /// <param name="sender">Sending object.</param>
         /// <param name="e">Event arguments, if any.</param>
-        public void InputMeasurementKeysUpdatedHandler(object sender, EventArgs e)
+        public virtual void InputMeasurementKeysUpdatedHandler(object sender, EventArgs e)
         {
             // When adapter measurement keys are dynamically updated, routing tables need to be updated
             RecalculateRoutingTables();
 
             // Bubble message up to any event subscribers
-            OnInputMeasurementKeysUpdated();
+            OnInputMeasurementKeysUpdated(sender);
         }
 
         /// <summary>
@@ -715,26 +751,13 @@ namespace TimeSeriesFramework.Adapters
         /// </summary>
         /// <param name="sender">Sending object.</param>
         /// <param name="e">Event arguments, if any.</param>
-        public void OutputMeasurementsUpdatedHandler(object sender, EventArgs e)
+        public virtual void OutputMeasurementsUpdatedHandler(object sender, EventArgs e)
         {
             // When adapter measurement keys are dynamically updated, routing tables need to be updated
             RecalculateRoutingTables();
 
             // Bubble message up to any event subscribers
-            OnOutputMeasurementsUpdated();
-        }
-
-        /// <summary>
-        /// Event handler for disposed events from all adapters.
-        /// </summary>
-        /// <param name="sender">Sending object.</param>
-        /// <param name="e">Event arguments, if any.</param>
-        public void DisposedHandler(object sender, EventArgs e)
-        {
-            OnStatusMessage("[{0}] Disposed.", UpdateType.Information, GetDerivedName(sender));
-
-            // Bubble message up to any event subscribers
-            OnDisposed();
+            OnOutputMeasurementsUpdated(sender);
         }
 
         /// <summary>
@@ -746,7 +769,7 @@ namespace TimeSeriesFramework.Adapters
         /// Time-series framework uses this handler to monitor the number of unpublished samples, in seconds of data, in action adapters.<br/>
         /// This method is typically called once per second.
         /// </remarks>
-        public void UnpublishedSamplesHandler(object sender, EventArgs<int> e)
+        public virtual void UnpublishedSamplesHandler(object sender, EventArgs<int> e)
         {
             int secondsOfData = e.Argument;
             int threshold = m_defaultSampleSizeWarningThreshold;
@@ -758,7 +781,10 @@ namespace TimeSeriesFramework.Adapters
                 threshold = (int)(2 * Math.Ceiling(concentrator.LagTime));
 
             if (secondsOfData > threshold)
-                OnStatusMessage("[{0}] There are {1} seconds of unpublished data in the action adapter concentration queue.", UpdateType.Warning, GetDerivedName(sender), secondsOfData);
+                OnStatusMessage(sender, "[{0}] There are {1} seconds of unpublished data in the action adapter concentration queue.", UpdateType.Warning, GetDerivedName(sender), secondsOfData);
+
+            // Bubble message up to any event subscribers
+            OnUnpublishedSamples(sender, e.Argument);
         }
 
         /// <summary>
@@ -770,7 +796,7 @@ namespace TimeSeriesFramework.Adapters
         /// Time-series framework uses this handler to monitor the number of unprocessed measurements in output adapters.<br/>
         /// This method is typically called once per second.
         /// </remarks>
-        public void UnprocessedMeasurementsHandler(object sender, EventArgs<int> e)
+        public virtual void UnprocessedMeasurementsHandler(object sender, EventArgs<int> e)
         {
             int unprocessedMeasurements = e.Argument;
 
@@ -783,23 +809,52 @@ namespace TimeSeriesFramework.Adapters
                     // If an output adapter queue size exceeds the defined measurement dumping threshold,
                     // then the queue will be truncated before system runs out of memory
                     outputAdpater.RemoveMeasurements(m_measurementDumpingThreshold);
-                    OnStatusMessage("[{0}] System exercised evasive action to convserve memory and dumped {1} unprocessed measurements from the output queue :(", UpdateType.Alarm, outputAdpater.Name, m_measurementDumpingThreshold);
-                    OnStatusMessage("[{0}] NOTICE: Please adjust measurement threshold settings and/or increase amount of available system memory.", UpdateType.Warning, outputAdpater.Name);
+                    OnStatusMessage(sender, "[{0}] System exercised evasive action to convserve memory and dumped {1} unprocessed measurements from the output queue :(", UpdateType.Alarm, outputAdpater.Name, m_measurementDumpingThreshold);
+                    OnStatusMessage(sender, "[{0}] NOTICE: Please adjust measurement threshold settings and/or increase amount of available system memory.", UpdateType.Warning, outputAdpater.Name);
                 }
                 else
                 {
                     // It is only expected that output adapters will be mapped to this handler, but in case
                     // another adapter type uses this handler we will still display a message
-                    OnStatusMessage("[{0}] CRITICAL: There are {1} unprocessed measurements in the adapter queue - but sender \"{2}\" is not an IOutputAdapter, so no evasive action can be exercised.", UpdateType.Warning, GetDerivedName(sender), unprocessedMeasurements, sender.GetType().Name);
+                    OnStatusMessage(sender, "[{0}] CRITICAL: There are {1} unprocessed measurements in the adapter queue - but sender \"{2}\" is not an IOutputAdapter, so no evasive action can be exercised.", UpdateType.Warning, GetDerivedName(sender), unprocessedMeasurements, sender.GetType().Name);
                 }
             }
             else if (unprocessedMeasurements > m_measurementWarningThreshold)
             {
                 if (unprocessedMeasurements >= m_measurementDumpingThreshold - m_measurementWarningThreshold)
-                    OnStatusMessage("[{0}] CRITICAL: There are {1} unprocessed measurements in the output queue.", UpdateType.Warning, GetDerivedName(sender), unprocessedMeasurements);
+                    OnStatusMessage(sender, "[{0}] CRITICAL: There are {1} unprocessed measurements in the output queue.", UpdateType.Warning, GetDerivedName(sender), unprocessedMeasurements);
                 else
-                    OnStatusMessage("[{0}] There are {1} unprocessed measurements in the output queue.", UpdateType.Warning, GetDerivedName(sender), unprocessedMeasurements);
+                    OnStatusMessage(sender, "[{0}] There are {1} unprocessed measurements in the output queue.", UpdateType.Warning, GetDerivedName(sender), unprocessedMeasurements);
             }
+
+            // Bubble message up to any event subscribers
+            OnUnprocessedMeasurements(sender, e.Argument);
+        }
+
+        /// <summary>
+        /// Event handler for processing complete notifications from input adapters.
+        /// </summary>
+        /// <param name="sender">Event source reference to input adapter that is reporting processing completion.</param>
+        /// <param name="e">Event arguments for event, if any; otherwise <see cref="EventArgs.Empty"/>.</param>
+        public virtual void ProcessingCompleteHandler(object sender, EventArgs e)
+        {
+            OnStatusMessage(sender, "[{0}] Processing completed.", UpdateType.Information, GetDerivedName(sender));
+
+            // Bubble message up to any event subscribers
+            OnProcessingComplete(sender, e);
+        }
+
+        /// <summary>
+        /// Event handler for disposed events from all adapters.
+        /// </summary>
+        /// <param name="sender">Sending object.</param>
+        /// <param name="e">Event arguments, if any.</param>
+        public virtual void DisposedHandler(object sender, EventArgs e)
+        {
+            OnStatusMessage(sender, "[{0}] Disposed.", UpdateType.Information, GetDerivedName(sender));
+
+            // Bubble message up to any event subscribers
+            OnDisposed(sender);
         }
 
         #endregion

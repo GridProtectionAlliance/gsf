@@ -140,9 +140,9 @@ namespace TimeSeriesFramework.Adapters
             if (item != null)
             {
                 // Wire up events
-                item.NewMeasurements += NewMeasurements;
-                item.UnpublishedSamples += UnpublishedSamples;
-                item.DiscardingMeasurements += DiscardingMeasurements;
+                item.NewMeasurements += item_NewMeasurements;
+                item.UnpublishedSamples += item_UnpublishedSamples;
+                item.DiscardingMeasurements += item_DiscardingMeasurements;
                 base.InitializeItem(item);
             }
         }
@@ -156,11 +156,32 @@ namespace TimeSeriesFramework.Adapters
             if (item != null)
             {
                 // Un-wire events
-                item.NewMeasurements -= NewMeasurements;
-                item.UnpublishedSamples -= UnpublishedSamples;
-                item.DiscardingMeasurements -= DiscardingMeasurements;
+                item.NewMeasurements -= item_NewMeasurements;
+                item.UnpublishedSamples -= item_UnpublishedSamples;
+                item.DiscardingMeasurements -= item_DiscardingMeasurements;
                 base.DisposeItem(item);
             }
+        }
+
+        // Raise new measurements event on behalf of each item in collection
+        private void item_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
+        {
+            if (NewMeasurements != null)
+                NewMeasurements(sender, e);
+        }
+
+        // Raise unpublished samples event on behalf of each item in collection
+        private void item_UnpublishedSamples(object sender, EventArgs<int> e)
+        {
+            if (UnpublishedSamples != null)
+                UnpublishedSamples(sender, e);
+        }
+
+        // Raise discarding measurements event on behalf of each item in collection
+        private void item_DiscardingMeasurements(object sender, EventArgs<IEnumerable<IMeasurement>> e)
+        {
+            if (DiscardingMeasurements != null)
+                DiscardingMeasurements(sender, e);
         }
 
         #endregion

@@ -1369,11 +1369,11 @@ namespace TimeSeriesFramework.Adapters
             if (item != null)
             {
                 // Wire up events
-                item.StatusMessage += StatusMessage;
-                item.ProcessException += ProcessException;
-                item.InputMeasurementKeysUpdated += InputMeasurementKeysUpdated;
-                item.OutputMeasurementsUpdated += OutputMeasurementsUpdated;
-                item.Disposed += Disposed;
+                item.StatusMessage += item_StatusMessage;
+                item.ProcessException += item_ProcessException;
+                item.InputMeasurementKeysUpdated += item_InputMeasurementKeysUpdated;
+                item.OutputMeasurementsUpdated += item_OutputMeasurementsUpdated;
+                item.Disposed += item_Disposed;
 
                 // Associate parent collection
                 item.AssignParentCollection(this);
@@ -1417,10 +1417,10 @@ namespace TimeSeriesFramework.Adapters
             if (item != null)
             {
                 // Un-wire events
-                item.StatusMessage -= StatusMessage;
-                item.ProcessException -= ProcessException;
-                item.InputMeasurementKeysUpdated -= InputMeasurementKeysUpdated;
-                item.OutputMeasurementsUpdated -= OutputMeasurementsUpdated;
+                item.StatusMessage -= item_StatusMessage;
+                item.ProcessException -= item_ProcessException;
+                item.InputMeasurementKeysUpdated -= item_InputMeasurementKeysUpdated;
+                item.OutputMeasurementsUpdated -= item_OutputMeasurementsUpdated;
 
                 // Make sure initialization handles are cleared in case any failed
                 // initializations are still pending
@@ -1431,8 +1431,43 @@ namespace TimeSeriesFramework.Adapters
 
                 // Dipose of item, then un-wire disposed event
                 item.Dispose();
-                item.Disposed -= Disposed;
+                item.Disposed -= item_Disposed;
             }
+        }
+
+        // Raise status message event on behalf of each item in collection
+        private void item_StatusMessage(object sender, EventArgs<string> e)
+        {
+            if (StatusMessage != null)
+                StatusMessage(sender, e);
+        }
+
+        // Raise process exception event on behalf of each item in collection
+        private void item_ProcessException(object sender, EventArgs<Exception> e)
+        {
+            if (ProcessException != null)
+                ProcessException(sender, e);
+        }
+
+        // Raise input measurement keys updated event on behalf of each item in collection
+        private void item_InputMeasurementKeysUpdated(object sender, EventArgs e)
+        {
+            if (InputMeasurementKeysUpdated != null)
+                InputMeasurementKeysUpdated(sender, e);
+        }
+
+        // Raise output measurements updated event on behalf of each item in collection
+        private void item_OutputMeasurementsUpdated(object sender, EventArgs e)
+        {
+            if (OutputMeasurementsUpdated != null)
+                OutputMeasurementsUpdated(sender, e);
+        }
+
+        // Raise disposed event on behalf of each item in collection
+        private void item_Disposed(object sender, EventArgs e)
+        {
+            if (Disposed != null)
+                Disposed(sender, e);
         }
 
         // We monitor the total number of measurements destined for archival here...

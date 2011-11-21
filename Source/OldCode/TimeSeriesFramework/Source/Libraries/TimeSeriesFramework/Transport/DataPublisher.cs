@@ -113,7 +113,14 @@ namespace TimeSeriesFramework.Transport
         /// <remarks>
         /// Manually requests that server send a new set of cipher keys for data packet encryption.
         /// </remarks>
-        RotateCipherKeys = 0x04
+        RotateCipherKeys = 0x04,
+        /// <summary>
+        /// Update processing interval.
+        /// </summary>
+        /// <remarks>
+        /// Manually requests server to update the processing interval with the following specified value.
+        /// </remarks>
+        UpdateProcessingInterval = 0x05
     }
 
     /// <summary>
@@ -174,6 +181,13 @@ namespace TimeSeriesFramework.Transport
         /// </remarks>
         DataStartTime = 0x86,
         /// <summary>
+        /// Processing complete notification.
+        /// </summary>
+        /// <remarks>
+        /// Unsolicited response provides notification that input processing has completed, typically via temporal constraint.
+        /// </remarks>
+        ProcessingComplete = 0x87,
+        /// <summary>
         /// No operation keep-alive ping.
         /// </summary>
         /// <remarks>
@@ -219,6 +233,17 @@ namespace TimeSeriesFramework.Transport
     public class DataPublisher : ActionAdapterCollection
     {
         #region [ Members ]
+
+        // Events
+
+        /// <summary>
+        /// Indicates to the host that processing for an input adapter (via temporal session) has completed.
+        /// </summary>
+        /// <remarks>
+        /// This event is expected to only be raised when an input adapter has been designed to process
+        /// a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+        /// </remarks>
+        public event EventHandler ProcessingComplete;
 
         // Constants
 
@@ -663,6 +688,8 @@ namespace TimeSeriesFramework.Transport
             return result;
         }
 
+        // Handle input processing complete notifications
+
         /// <summary>
         /// Sends response back to specified client.
         /// </summary>
@@ -859,7 +886,7 @@ namespace TimeSeriesFramework.Transport
         #region [ Server Command Request Handlers ]
 
         // Handles authentication request
-        private void HandleAuthenticationRequest(ClientConnection connection, byte[] buffer, int length)
+        private void HandleAuthenticationRequest(ClientConnection connection, byte[] buffer, int startIndex, int length)
         {
             Guid clientID = connection.ClientID;
             string message;
@@ -904,7 +931,8 @@ namespace TimeSeriesFramework.Transport
                     if (length >= 5)
                     {
                         // First 4 bytes beyond command byte represent an integer representing the length of the authentication string that follows
-                        int byteLength = EndianOrder.BigEndian.ToInt32(buffer, 1);
+                        int byteLength = EndianOrder.BigEndian.ToInt32(buffer, startIndex);
+                        startIndex += 4;
 
                         // Byte length should be reasonable
                         if (byteLength >= 16 && byteLength <= 256)
@@ -912,7 +940,8 @@ namespace TimeSeriesFramework.Transport
                             if (length >= 5 + byteLength)
                             {
                                 // Decrypt encoded portion of buffer
-                                byte[] bytes = buffer.Decrypt(5, byteLength, sharedSecret, CipherStrength.Aes256);
+                                byte[] bytes = buffer.Decrypt(startIndex, byteLength, sharedSecret, CipherStrength.Aes256);
+                                startIndex += byteLength;
 
                                 // Validate the authentication ID - if it matches, connection is authenticated
                                 connection.Authenticated = (string.Compare(authenticationID, Encoding.Unicode.GetString(bytes, CipherSaltLength, bytes.Length - CipherSaltLength)) == 0);
@@ -968,7 +997,7 @@ namespace TimeSeriesFramework.Transport
         }
 
         // Handles subscribe request
-        private void HandleSubscribeRequest(ClientConnection connection, byte[] buffer, int length)
+        private void HandleSubscribeRequest(ClientConnection connection, byte[] buffer, int startIndex, int length)
         {
             Guid clientID = connection.ClientID;
             IClientSubscription subscription;
@@ -981,17 +1010,21 @@ namespace TimeSeriesFramework.Transport
                 if (length >= 6)
                 {
                     // Next byte is the data packet flags
-                    DataPacketFlags flags = (DataPacketFlags)buffer[1];
+                    DataPacketFlags flags = (DataPacketFlags)buffer[startIndex];
+                    startIndex++;
+
                     bool useSynchronizedSubscription = ((byte)(flags & DataPacketFlags.Synchronized) > 0);
                     bool useCompactMeasurementFormat = ((byte)(flags & DataPacketFlags.Compact) > 0);
                     bool addSubscription = false;
 
                     // Next 4 bytes are an integer representing the length of the connection string that follows
-                    int byteLength = EndianOrder.BigEndian.ToInt32(buffer, 2);
+                    int byteLength = EndianOrder.BigEndian.ToInt32(buffer, startIndex);
+                    startIndex += 4;
 
                     if (byteLength > 0 && length >= 6 + byteLength)
                     {
-                        string connectionString = Encoding.Unicode.GetString(buffer, 6, byteLength);
+                        string connectionString = Encoding.Unicode.GetString(buffer, startIndex, byteLength);
+                        startIndex += byteLength;
 
                         // Get client subscription
                         if (connection.Subscription == null)
@@ -1106,6 +1139,9 @@ namespace TimeSeriesFramework.Transport
                             {
                                 Add(subscription);
                             }
+
+                            // Attach to processing completed notification
+                            subscription.ProcessingComplete += subscription_ProcessingComplete;
                         }
                         else
                         {
@@ -1128,14 +1164,14 @@ namespace TimeSeriesFramework.Transport
                             connection.RotateCipherKeys();
 
                         // Send success response
-                        if (subscription.InputMeasurementKeys != null)
+                        if (subscription.TemporalConstraintIsDefined())
                         {
-                            message = string.Format("Client subscribed as {0}compact {1}synchronized with {2} signals.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un", subscription.InputMeasurementKeys.Length);
+                            message = string.Format("Client subscribed as {0}compact {1}synchronized with a temporal constraint.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un");
                         }
                         else
                         {
-                            if (subscription.TemporalConstraintIsDefined())
-                                message = string.Format("Client subscribed as {0}compact {1}synchronized with a temporal constraint.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un");
+                            if (subscription.InputMeasurementKeys != null)
+                                message = string.Format("Client subscribed as {0}compact {1}synchronized with {2} signals.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un", subscription.InputMeasurementKeys.Length);
                             else
                                 message = string.Format("Client subscribed as {0}compact {1}synchronized, but no signals were specified. Make sure \"inputMeasurementKeys\" setting is properly defined.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un");
                         }
@@ -1175,6 +1211,11 @@ namespace TimeSeriesFramework.Transport
             Guid clientID = connection.ClientID;
 
             RemoveClientSubscription(clientID); // This does not disconnect client command channel...
+
+            // Detach from processing completed notification
+            if (connection.Subscription != null)
+                connection.Subscription.ProcessingComplete -= subscription_ProcessingComplete;
+
             connection.Subscription = null;
 
             SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.Unsubscribe, "Client unsubscribed.");
@@ -1226,6 +1267,56 @@ namespace TimeSeriesFramework.Transport
             OnStatusMessage(connection.ConnectionID + " cipher keys rotated.");
         }
 
+        // Handles request to update processing interval on client session
+        private void HandleUpdateProcessingInterval(ClientConnection connection, byte[] buffer, int startIndex, int length)
+        {
+            Guid clientID = connection.ClientID;
+            string message;
+
+            // Make sure there is enough buffer for new processing interval value
+            if (length >= 4)
+            {
+                // Next 4 bytes are an integer representing the new processing interval
+                int processingInterval = EndianOrder.BigEndian.ToInt32(buffer, startIndex);
+
+                IClientSubscription subscription = connection.Subscription;
+
+                if (subscription != null)
+                {
+                    subscription.ProcessingInterval = processingInterval;
+                    SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.UpdateProcessingInterval, "New processing interval of {0} assigned.", processingInterval);
+                    OnStatusMessage("{0} was assigned a new processing interval of {1}.", connection.ConnectionID, processingInterval);
+                }
+                else
+                {
+                    message = "Client subcription was not available, could not update processing interval.";
+                    SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.UpdateProcessingInterval, message);
+                    OnProcessException(new InvalidOperationException(message));
+                }
+            }
+            else
+            {
+                message = "Not enough buffer was provided to update client processing interval.";
+                SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.UpdateProcessingInterval, message);
+                OnProcessException(new InvalidOperationException(message));
+            }
+        }
+
+        // Bubble up processing complete notifications from subscriptions
+        private void subscription_ProcessingComplete(object sender, EventArgs<IClientSubscription, EventArgs> e)
+        {
+            // Expose notification via data publisher event subscribers
+            if (ProcessingComplete != null)
+                ProcessingComplete(sender, e.Argument2);
+
+            IClientSubscription subscription = e.Argument1;
+            string senderType = sender == null ? "N/A" : sender.GetType().Name;
+
+            // Send direct notification to associated client
+            if (subscription != null)
+                SendClientResponse(subscription.ClientID, ServerResponse.ProcessingComplete, ServerCommand.Subscribe, senderType);
+        }
+
         #endregion
 
         #region [ Command Channel Handlers ]
@@ -1260,13 +1351,15 @@ namespace TimeSeriesFramework.Transport
             Guid clientID = e.Argument1;
             byte[] buffer = e.Argument2;
             int length = e.Argument3;
+            int index = 0;
 
             if (length > 0 && buffer != null)
             {
                 ClientConnection connection;
                 ServerCommand command;
                 string message;
-                byte commandByte = buffer[0];
+                byte commandByte = buffer[index];
+                index++;
 
                 // Attempt to parse solicited server command
                 bool validServerCommand = Enum.TryParse<ServerCommand>(commandByte.ToString(), out command);
@@ -1282,7 +1375,7 @@ namespace TimeSeriesFramework.Transport
                     if (command == ServerCommand.Authenticate)
                     {
                         // Handle authenticate
-                        HandleAuthenticationRequest(connection, buffer, length);
+                        HandleAuthenticationRequest(connection, buffer, index, length);
                         return;
                     }
                     else if (m_requireAuthentication && !connection.Authenticated)
@@ -1297,7 +1390,7 @@ namespace TimeSeriesFramework.Transport
                     {
                         case ServerCommand.Subscribe:
                             // Handle subscribe
-                            HandleSubscribeRequest(connection, buffer, length);
+                            HandleSubscribeRequest(connection, buffer, index, length);
                             break;
                         case ServerCommand.Unsubscribe:
                             // Handle unsubscribe
@@ -1310,6 +1403,10 @@ namespace TimeSeriesFramework.Transport
                         case ServerCommand.RotateCipherKeys:
                             // Handle rotation of cipher keys
                             HandleRotateCipherKeys(connection);
+                            break;
+                        case ServerCommand.UpdateProcessingInterval:
+                            // Handle request to update processing interval
+                            HandleUpdateProcessingInterval(connection, buffer, index, length);
                             break;
                     }
                 }

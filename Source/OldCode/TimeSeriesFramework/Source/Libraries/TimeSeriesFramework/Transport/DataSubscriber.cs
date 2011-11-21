@@ -69,6 +69,15 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         public event EventHandler<EventArgs<Ticks>> DataStartTime;
 
+        /// <summary>
+        /// Indicates that processing for an input adapter (via temporal session) has completed.
+        /// </summary>
+        /// <remarks>
+        /// This event is expected to only be raised when an input adapter has been designed to process
+        /// a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+        /// </remarks>
+        public new event EventHandler<EventArgs<string>> ProcessingComplete;
+
         // Fields
         private TcpClient m_commandChannel;
         private UdpClient m_dataChannel;
@@ -172,6 +181,29 @@ namespace TimeSeriesFramework.Transport
             get
             {
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the desired processing interval, in milliseconds, for the adapter.
+        /// </summary>
+        /// <remarks>
+        /// With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
+        /// basically a delay, or timer interval, overwhich to process data. A value of -1 means to use the default processing
+        /// interval while a value of 0 means to process data as fast as possible.
+        /// </remarks>
+        public override int ProcessingInterval
+        {
+            get
+            {
+                return base.ProcessingInterval;
+            }
+            set
+            {
+                base.ProcessingInterval = value;
+
+                // Request server update the processing interval
+                SendServerCommand(ServerCommand.UpdateProcessingInterval, EndianOrder.BigEndian.GetBytes(value));
             }
         }
 
@@ -995,6 +1027,10 @@ namespace TimeSeriesFramework.Transport
                             // Raise data start time event
                             OnDataStartTime(EndianOrder.BigEndian.ToInt64(buffer, responseIndex));
                             break;
+                        case ServerResponse.ProcessingComplete:
+                            // Raise input processing completed event
+                            OnProcessingComplete(InterpretResponseMessage(buffer, responseIndex, responseLength));
+                            break;
                         case ServerResponse.UpdateSignalIndexCache:
                             // Deserialize new signal index cache
                             m_remoteSignalIndexCache = Serialization.Deserialize<SignalIndexCache>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary);
@@ -1225,6 +1261,19 @@ namespace TimeSeriesFramework.Transport
         {
             if (DataStartTime != null)
                 DataStartTime(this, new EventArgs<Ticks>(startTime));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ProcessingComplete"/> event.
+        /// </summary>
+        /// <param name="source">Type name of adapter that sent the processing completed notification.</param>
+        protected void OnProcessingComplete(string source)
+        {
+            if (ProcessingComplete != null)
+                ProcessingComplete(this, new EventArgs<string>(source));
+
+            // Also raise base class event in case this event has been subscribed
+            OnProcessingComplete();
         }
 
         #region [ Command Channel Event Handlers ]

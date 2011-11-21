@@ -39,6 +39,17 @@ namespace TimeSeriesFramework.Transport
     {
         #region [ Members ]
 
+        // Events
+
+        /// <summary>
+        /// Indicates to the host that processing for an input adapter (via temporal session) has completed.
+        /// </summary>
+        /// <remarks>
+        /// This event is expected to only be raised when an input adapter has been designed to process
+        /// a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+        /// </remarks>
+        public event EventHandler<EventArgs<IClientSubscription, EventArgs>> ProcessingComplete;
+
         // Fields
         private SignalIndexCache m_signalIndexCache;
         private DataPublisher m_parent;
@@ -144,6 +155,30 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
+        /// Gets or sets the desired processing interval, in milliseconds, for the adapter.
+        /// </summary>
+        /// <remarks>
+        /// With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
+        /// basically a delay, or timer interval, overwhich to process data. A value of -1 means to use the default processing
+        /// interval while a value of 0 means to process data as fast as possible.
+        /// </remarks>
+        public override int ProcessingInterval
+        {
+            get
+            {
+                return base.ProcessingInterval;
+            }
+            set
+            {
+                base.ProcessingInterval = value;
+
+                // Update processing interval in private temporal session, if defined
+                if (m_iaonSession != null && m_iaonSession.AllAdapters != null)
+                    m_iaonSession.AllAdapters.ProcessingInterval = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets primary keys of input measurements the <see cref="UnsynchronizedClientSubscription"/> expects, if any.
         /// </summary>
         /// <remarks>
@@ -161,7 +196,10 @@ namespace TimeSeriesFramework.Transport
                 lock (this)
                 {
                     base.InputMeasurementKeys = value;
-                    m_parent.UpdateSignalIndexCache(m_clientID, m_signalIndexCache, value);
+
+                    // Update signal index cache unless "detaching" from real-time
+                    if (value != null && !(value.Length == 1 && value[0] == MeasurementKey.Undefined))
+                        m_parent.UpdateSignalIndexCache(m_clientID, m_signalIndexCache, value);
                 }
             }
         }
@@ -454,6 +492,13 @@ namespace TimeSeriesFramework.Transport
         void IClientSubscription.OnProcessException(Exception ex)
         {
             OnProcessException(ex);
+        }
+
+        // Explicitly implement processing completed event bubbler to satisfy IClientSubscription interface
+        void IClientSubscription.OnProcessingCompleted(object sender, EventArgs e)
+        {
+            if (ProcessingComplete != null)
+                ProcessingComplete(sender, new EventArgs<IClientSubscription, EventArgs>(this, e));
         }
 
         #endregion

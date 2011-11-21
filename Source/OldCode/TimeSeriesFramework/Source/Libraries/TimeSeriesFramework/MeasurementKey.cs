@@ -24,6 +24,9 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
+using TVA;
+using TVA.Data;
 
 namespace TimeSeriesFramework
 {
@@ -367,6 +370,40 @@ namespace TimeSeriesFramework
             {
                 key = default(MeasurementKey);
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Establish default <see cref="MeasurementKey"/> cache.
+        /// </summary>
+        /// <param name="connection">The database connection.</param>
+        /// <param name="adapterType">The database adapter type.</param>
+        /// <param name="measurementTable">Measurement table name used to load measurement key cache.</param>
+        /// <remarks>
+        /// Source tables are expected to have at least the following fields:
+        /// <code>
+        ///      ID          NVARCHAR    Measurement key formatted as: ArchiveSource:PointID
+        ///      SignalID    GUID        Unique identification for measurement
+        /// </code>
+        /// </remarks>
+        public static void EstablishDefaultCache(IDbConnection connection, Type adapterType, string measurementTable = "ActiveMeasurement")
+        {
+            string keyID;
+            string[] elems;
+
+            // Establish default measurement key cache
+            foreach (DataRow measurement in connection.RetrieveData(adapterType, string.Format("SELECT ID, SignalID FROM {0}", measurementTable)).Rows)
+            {
+                keyID = measurement["ID"].ToNonNullString();
+
+                if (!string.IsNullOrWhiteSpace(keyID))
+                {
+                    elems = keyID.Split(':');
+
+                    // Cache new measurement key with associated Guid signal ID
+                    if (elems.Length == 2)
+                        new MeasurementKey(measurement["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), uint.Parse(elems[1].Trim()), elems[0].Trim());
+                }
             }
         }
 

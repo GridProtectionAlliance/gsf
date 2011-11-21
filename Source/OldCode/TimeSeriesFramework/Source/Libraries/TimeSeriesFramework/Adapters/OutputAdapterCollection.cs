@@ -181,7 +181,7 @@ namespace TimeSeriesFramework.Adapters
             if (item != null)
             {
                 // Wire up unprocessed measurements event
-                item.UnprocessedMeasurements += UnprocessedMeasurements;                
+                item.UnprocessedMeasurements += item_UnprocessedMeasurements;
                 base.InitializeItem(item);
             }
         }
@@ -195,9 +195,16 @@ namespace TimeSeriesFramework.Adapters
             if (item != null)
             {
                 // Un-wire unprocessed measurements event
-                item.UnprocessedMeasurements -= UnprocessedMeasurements;
+                item.UnprocessedMeasurements -= item_UnprocessedMeasurements;
                 base.DisposeItem(item);
             }
+        }
+
+        // Raise unprocessed measurements event on behalf of each item in collection
+        private void item_UnprocessedMeasurements(object sender, EventArgs<int> e)
+        {
+            if (UnprocessedMeasurements != null)
+                UnprocessedMeasurements(sender, e);
         }
 
         #endregion

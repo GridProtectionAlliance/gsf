@@ -44,6 +44,15 @@ namespace TimeSeriesFramework.Adapters
         /// </remarks>
         public event EventHandler<EventArgs<ICollection<IMeasurement>>> NewMeasurements;
 
+        /// <summary>
+        /// Indicates to the host that processing for one of the input adapters has completed.
+        /// </summary>
+        /// <remarks>
+        /// This event is expected to only be raised when an input adapter has been designed to process
+        /// a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+        /// </remarks>
+        public event EventHandler ProcessingComplete;
+
         #endregion
 
         #region [ Constructors ]
@@ -73,6 +82,15 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
+        /// Raises the <see cref="ProcessingComplete"/> event.
+        /// </summary>
+        protected virtual void OnProcessingComplete()
+        {
+            if (ProcessingComplete != null)
+                ProcessingComplete(this, EventArgs.Empty);
+        }
+
+        /// <summary>
         /// Wires events and initializes new <see cref="IInputAdapter"/> implementation.
         /// </summary>
         /// <param name="item">New <see cref="IInputAdapter"/> implementation.</param>
@@ -81,7 +99,8 @@ namespace TimeSeriesFramework.Adapters
             if (item != null)
             {
                 // Wire up new measurement event
-                item.NewMeasurements += NewMeasurements;                
+                item.NewMeasurements += item_NewMeasurements;
+                item.ProcessingComplete += item_ProcessingComplete;
                 base.InitializeItem(item);
             }
         }
@@ -95,9 +114,24 @@ namespace TimeSeriesFramework.Adapters
             if (item != null)
             {
                 // Un-wire new meaurements event
-                item.NewMeasurements -= NewMeasurements;
+                item.NewMeasurements -= item_NewMeasurements;
+                item.ProcessingComplete -= item_ProcessingComplete;
                 base.DisposeItem(item);
             }
+        }
+
+        // Raise new measurements event on behalf of each item in collection
+        private void item_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
+        {
+            if (NewMeasurements != null)
+                NewMeasurements(sender, e);
+        }
+
+        // Raise processing complete event on behalf of each item in collection
+        private void item_ProcessingComplete(object sender, EventArgs e)
+        {
+            if (ProcessingComplete != null)
+                ProcessingComplete(sender, e);
         }
 
         #endregion
