@@ -214,9 +214,10 @@
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Height" Value="25"/>
         <Setter Property="Background" Value="{StaticResource HeaderRowBackgroundBrush}"/>
-        <Setter Property="Foreground" Value="#FF000000"/>
+        <Setter Property="Foreground" Value="#FF000000"/>        
         <Setter Property="FontWeight" Value="Bold"/>
         <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="Padding" Value="0"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type sdk:DataGridColumnHeader}">
@@ -230,7 +231,7 @@
                               Background="{StaticResource HeaderRowBackgroundBrush}"                               
                               Grid.ColumnSpan="2" />
 
-                        <ContentPresenter Margin="6,3,6,3" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                        <ContentPresenter Margin="0" VerticalAlignment="Center" HorizontalAlignment="Center" />
 
                         <Thumb x:Name="PART_LeftHeaderGripper"
                                    HorizontalAlignment="Left"
