@@ -119,14 +119,26 @@ namespace TimeSeriesFramework.UI.UserControls
 
         private void SecurityUserControl_Unloaded(object sender, RoutedEventArgs e)
         {
-            m_userAccounts.BeforeSave -= m_userAccounts_BeforeSave;
-            m_userAccounts.Saved -= m_userAccounts_Changed;
-            m_userAccounts.Deleted -= m_userAccounts_Changed;
-            m_securityGroups.Saved -= m_securityGroups_Changed;
-            m_securityGroups.Deleted -= m_securityGroups_Changed;
-            m_userAccounts = null;
-            m_securityGroups = null;
-            m_applicationRoles = null;
+            try
+            {
+                if (m_userAccounts != null)
+                {
+                    m_userAccounts.BeforeSave -= m_userAccounts_BeforeSave;
+                    m_userAccounts.Saved -= m_userAccounts_Changed;
+                    m_userAccounts.Deleted -= m_userAccounts_Changed;
+                }
+                if (m_securityGroups != null)
+                {
+                    m_securityGroups.Saved -= m_securityGroups_Changed;
+                    m_securityGroups.Deleted -= m_securityGroups_Changed;
+                }
+            }
+            finally
+            {
+                m_userAccounts = null;
+                m_securityGroups = null;
+                m_applicationRoles = null;
+            }
         }
 
         private void m_securityGroups_Changed(object sender, System.EventArgs e)
