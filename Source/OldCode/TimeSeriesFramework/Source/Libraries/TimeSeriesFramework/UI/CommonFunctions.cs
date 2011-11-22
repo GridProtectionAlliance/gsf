@@ -491,7 +491,7 @@ namespace TimeSeriesFramework.UI
                         {
                             s_windowsServiceClient = new WindowsServiceClient(connectionString);
                             s_windowsServiceClient.Helper.RemotingClient.MaxConnectionAttempts = -1;
-
+                            s_windowsServiceClient.Helper.RemotingClient.ConnectionEstablished += new EventHandler(RemotingClient_ConnectionEstablished);
                             System.Threading.ThreadPool.QueueUserWorkItem(ConnectAsync, null);
                         }
                     }
@@ -502,6 +502,11 @@ namespace TimeSeriesFramework.UI
                     }
                 }
             }
+        }
+
+        static void RemotingClient_ConnectionEstablished(object sender, EventArgs e)
+        {
+            ServiceConntectionRefreshed(null, EventArgs.Empty);
         }
 
         /// <summary>
@@ -639,7 +644,7 @@ namespace TimeSeriesFramework.UI
 
             return minMaxPointIDs;
         }
-                
+
         /// <summary>
         /// Stores exception in the database
         /// </summary>
