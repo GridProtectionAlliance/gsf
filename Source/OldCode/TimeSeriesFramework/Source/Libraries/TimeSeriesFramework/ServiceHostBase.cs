@@ -96,6 +96,7 @@ namespace TimeSeriesFramework
         // Constants
         private const int DefaultMinThreadPoolSize = 25;
         private const int DefaultMaxThreadPoolSize = 2048;
+        private const int DefaultGCGenZeroInterval = 500;
 
         // Fields
         private IaonSession m_iaonSession;
@@ -106,6 +107,7 @@ namespace TimeSeriesFramework
         private string m_cachedConfigurationFile;
         private bool m_uniqueAdapterIDs;
         private bool m_allowRemoteRestart;
+        private System.Timers.Timer m_gcGenZeroTimer;
         private MultipleDestinationExporter m_healthExporter;
         private MultipleDestinationExporter m_statusExporter;
 
@@ -308,6 +310,7 @@ namespace TimeSeriesFramework
             systemSettings.Add("MaxThreadPoolWorkerThreads", DefaultMaxThreadPoolSize, "Defines the maximum number of allowed thread pool worker threads.");
             systemSettings.Add("MinThreadPoolIOPortThreads", DefaultMinThreadPoolSize, "Defines the minimum number of allowed thread pool I/O completion port threads (used by socket layer).");
             systemSettings.Add("MaxThreadPoolIOPortThreads", DefaultMaxThreadPoolSize, "Defines the maximum number of allowed thread pool I/O completion port threads (used by socket layer).");
+            systemSettings.Add("GCGenZeroInterval", DefaultGCGenZeroInterval, "Defines the interval, in milliseconds, over which to force a generation zero garbage collection. Set to -1 to disable.");
 
             // Example connection settings
             CategorizedSettingsElementCollection exampleSettings = configFile.Settings["exampleConnectionSettings"];
@@ -359,6 +362,17 @@ namespace TimeSeriesFramework
             {
                 DisplayStatusMessage("Failed to set desired thread pool size due to exception: {0}", UpdateType.Alarm, ex.Message);
                 m_serviceHelper.ErrorLogger.Log(ex);
+            }
+
+            // Define a generation zero garbage collection timer
+            int gcGenZeroInterval = systemSettings["GCGenZeroInterval"].ValueAs<int>(DefaultGCGenZeroInterval);
+
+            if (gcGenZeroInterval > 0)
+            {
+                m_gcGenZeroTimer = new System.Timers.Timer();
+                m_gcGenZeroTimer.Elapsed += m_gcGenZeroTimer_Elapsed;
+                m_gcGenZeroTimer.Interval = gcGenZeroInterval;
+                m_gcGenZeroTimer.Enabled = true;
             }
 
             // Define guid with query string delimeters according to database needs
@@ -495,6 +509,15 @@ namespace TimeSeriesFramework
         /// </remarks>
         protected virtual void ServiceStoppingHandler(object sender, EventArgs e)
         {
+            // Stop generation zero garbage collection timer
+            if (m_gcGenZeroTimer != null)
+            {
+                m_gcGenZeroTimer.Enabled = false;
+                m_gcGenZeroTimer.Elapsed -= m_gcGenZeroTimer_Elapsed;
+                m_gcGenZeroTimer.Dispose();
+            }
+            m_gcGenZeroTimer = null;
+
             // Dispose system health exporter
             if (m_healthExporter != null)
             {
@@ -543,6 +566,26 @@ namespace TimeSeriesFramework
             {
                 m_serviceHelper.ErrorLogger.ErrorLog.Flush();
                 m_serviceHelper.ErrorLogger.ErrorLog.LogException -= LogExceptionHandler;
+            }
+        }
+
+        // Generation zero garbage collection handler
+        private void m_gcGenZeroTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            // The time-series framework can allocate hundreds of thousands of measurements per second, non-stop, as a result the typical
+            // wait for breathing room style algorithms for timing garbage collections are not practical. A simple forced generation zero
+            // collection on a timer is often the best way to stabilize garbage collection so that it can stay ahead of the curve and
+            // reduce overall garbage collection times, which pauses all threads, for the large volumes of short lifespan data.
+            if (Monitor.TryEnter(m_gcGenZeroTimer))
+            {
+                try
+                {
+                    GC.Collect(0);
+                }
+                finally
+                {
+                    Monitor.Exit(m_gcGenZeroTimer);
+                }
             }
         }
 
