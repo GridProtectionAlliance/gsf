@@ -62,7 +62,7 @@
             <!--</Popup>-->
             </tsf:TsfPopup>
 
-            <ScrollViewer x:Name="ScrollViewerMonitor" Background="Black" Margin="2" Height="605" 
+            <ScrollViewer x:Name="ScrollViewerMonitor" Background="Black" Margin="2" Height="590" 
                             VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" VerticalContentAlignment="Top">
                 <ScrollViewer.Content>
                     <TextBlock x:Name="TextBlockServiceStatus" TextAlignment="Left" VerticalAlignment="Top" HorizontalAlignment="Left" Foreground="White" TextWrapping="Wrap" Margin="2" Height="Auto" Width="800"  FontFamily="Courier New"/>
