@@ -46,6 +46,7 @@ using NAudio.Wave;
 using TimeSeriesFramework;
 using TimeSeriesFramework.Transport;
 using TVA;
+using TVA.IO;
 
 namespace NAudioWpfDemo
 {
@@ -128,7 +129,11 @@ namespace NAudioWpfDemo
         /// the client when a song is chosen. The port value of the UDP parameter defines the port
         /// on which the client will listen for data from the server.
         /// </remarks>
-        public string ConnectionUri { get; set; }
+        public string ConnectionUri
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets a flag that determines whether to enable compression on the UDP stream.
@@ -137,7 +142,11 @@ namespace NAudioWpfDemo
         /// Compression is typically enabled on the TCP stream, therefore this flag doesn't
         /// do anything if the udp parameter is not supplied in the <see cref="ConnectionUri"/>.
         /// </remarks>
-        public bool EnableCompression { get; set; }
+        public bool EnableCompression
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets a flag that determines whether to enable encryption on the data stream.
@@ -149,7 +158,11 @@ namespace NAudioWpfDemo
         /// requirements may actually go up when both compression and encryption are enabled.
         /// Note that TCP channel is typically compressed by default.
         /// </remarks>
-        public bool EnableEncryption { get; set; }
+        public bool EnableEncryption
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets a flag that determines whether to enable IPv6.
@@ -158,7 +171,11 @@ namespace NAudioWpfDemo
         /// This application forces the use of either IPv4 or IPv6.
         /// If IPv6 is not enabled, IPv4 will be forced.
         /// </remarks>
-        public bool IPv6Enabled { get; set; }
+        public bool IPv6Enabled
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets the sample rate of the playback.
@@ -615,78 +632,85 @@ namespace NAudioWpfDemo
         // Handles the dump timer's Tick event.
         private void DumpTimer_Tick(object sender, EventArgs e)
         {
-            List<IMeasurement[]> dumpMeasurements = new List<IMeasurement[]>();
-            IMeasurement dequeuedMeasurement;
+            byte[] buffer = BufferPool.TakeBuffer(65536);
 
-            byte[] buf = new byte[65536];
-            int count = 0;
-
-            // Remove all the measurements from the buffer
-            // and place them in the list of samples.
-            while (m_buffer.Count > m_numChannels)
+            try
             {
-                IMeasurement[] sample = new IMeasurement[m_numChannels];
+                List<IMeasurement[]> dumpMeasurements = new List<IMeasurement[]>();
+                IMeasurement dequeuedMeasurement = null;
+                int count = 0;
 
-                for (int i = 0; i < m_numChannels; i++)
+                // Remove all the measurements from the buffer and place them in the list of samples.
+                while (m_buffer.Count > m_numChannels)
                 {
-                    Guid id;
-                    int index;
+                    IMeasurement[] sample = new IMeasurement[m_numChannels];
 
-                    m_buffer.TryDequeue(out dequeuedMeasurement);
-                    id = dequeuedMeasurement.ID;
-                    index = m_channelIndexes[id];
-                    sample[index] = dequeuedMeasurement;
+                    for (int i = 0; i < m_numChannels; i++)
+                    {
+                        Guid id;
+                        int index;
+
+                        m_buffer.TryDequeue(out dequeuedMeasurement);
+                        id = dequeuedMeasurement.ID;
+                        index = m_channelIndexes[id];
+                        sample[index] = dequeuedMeasurement;
+                    }
+
+                    dumpMeasurements.Add(sample);
                 }
 
-                dumpMeasurements.Add(sample);
-            }
+                foreach (IMeasurement[] sample in dumpMeasurements)
+                {
+                    // Put the sample in the buffer.
+                    for (int i = 0; i < m_numChannels; i++)
+                    {
+                        byte[] channelValue;
 
-            foreach (IMeasurement[] sample in dumpMeasurements)
+                        if (sample[i] != null)
+                            channelValue = EndianOrder.LittleEndian.GetBytes((short)sample[i].Value);
+                        else
+                            channelValue = new byte[2];
+
+                        Buffer.BlockCopy(channelValue, 0, buffer, count, 2);
+                        count += 2;
+                    }
+
+                    // If the buffer is full, send it to the
+                    // sound card and start a new buffer.
+                    if (count + (m_numChannels * 2) > buffer.Length)
+                    {
+                        m_waveProvider.AddSamples(buffer, 0, count);
+                        count = 0;
+                    }
+
+                    // Notify the user interface of new samples.
+                    if (OnSample != null)
+                    {
+                        const float volume = 0.000035F;
+                        float left = (sample[0] != null) ? (float)sample[0].Value : 0.0F;
+                        float right = (sample[1] != null) ? (float)sample[1].Value : 0.0F;
+                        OnSample(this, new SampleEventArgs(left * volume, right * volume));
+                    }
+                }
+
+                // Send remaining samples to the sound card.
+                if (count > 0)
+                    m_waveProvider.AddSamples(buffer, 0, count);
+
+                // If the buffer was empty, we're missing a full quarter second of data!
+                // Go back to buffering, stop the dump timer, and start the timeout timer.
+                //if (dumpMeasurements.Count == 0 && m_dumpTimer != null)
+                //{
+                //    OnStateChanged(PlaybackState.Buffering);
+                //    m_dumpTimer.Stop();
+                //    m_timeoutTimer.Start();
+                //}
+            }
+            finally
             {
-                // Put the sample in the buffer.
-                for (int i = 0; i < m_numChannels; i++)
-                {
-                    byte[] channelValue;
-
-                    if (sample[i] != null)
-                        channelValue = EndianOrder.LittleEndian.GetBytes((short)sample[i].Value);
-                    else
-                        channelValue = new byte[2];
-
-                    Buffer.BlockCopy(channelValue, 0, buf, count, 2);
-                    count += 2;
-                }
-
-                // If the buffer is full, send it to the
-                // sound card and start a new buffer.
-                if (count + (m_numChannels * 2) > buf.Length)
-                {
-                    m_waveProvider.AddSamples(buf, 0, count);
-                    count = 0;
-                }
-
-                // Notify the user interface of new samples.
-                if (OnSample != null)
-                {
-                    const float volume = 0.000035F;
-                    float left = (sample[0] != null) ? (float)sample[0].Value : 0.0F;
-                    float right = (sample[1] != null) ? (float)sample[1].Value : 0.0F;
-                    OnSample(this, new SampleEventArgs(left * volume, right * volume));
-                }
+                if (buffer != null)
+                    BufferPool.ReturnBuffer(buffer);
             }
-
-            // Send remaining samples to the sound card.
-            if (count > 0)
-                m_waveProvider.AddSamples(buf, 0, count);
-
-            // If the buffer was empty, we're missing a full quarter second of data!
-            // Go back to buffering, stop the dump timer, and start the timeout timer.
-            //if (dumpMeasurements.Count == 0 && m_dumpTimer != null)
-            //{
-            //    OnStateChanged(PlaybackState.Buffering);
-            //    m_dumpTimer.Stop();
-            //    m_timeoutTimer.Start();
-            //}
         }
 
         // Handles the stat timer's Elapsed event. Calculates the statistics since the last
