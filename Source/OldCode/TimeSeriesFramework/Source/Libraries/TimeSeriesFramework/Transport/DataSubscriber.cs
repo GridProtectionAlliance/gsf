@@ -1126,7 +1126,7 @@ namespace TimeSeriesFramework.Transport
                     {
                         foreach (DataRow row in metadata.Tables["DeviceDetail"].Rows)
                         {
-                            Guid uniqueID = row.Field<Guid>("UniqueID");
+                            Guid uniqueID = adoDatabase.Guid(row, "UniqueID"); // row.Field<Guid>("UniqueID");
                             query = adoDatabase.ParameterizedQueryString("SELECT COUNT(*) FROM Device WHERE UniqueID = {0}", "deviceGuid");
 
                             if (Convert.ToInt32(connection.ExecuteScalar(query, uniqueID)) == 0)
@@ -1171,7 +1171,7 @@ namespace TimeSeriesFramework.Transport
                             if (!string.IsNullOrWhiteSpace(deviceAcronym) && deviceIDs.ContainsKey(deviceAcronym) && !string.IsNullOrWhiteSpace(signalTypeAcronym) && signalTypeIDs.ContainsKey(signalTypeAcronym))
                             {
                                 string pointTag = sourcePrefix + row.Field<string>("PointTag") ?? string.Empty;
-                                Guid signalID = row.Field<Guid>("SignalID");
+                                Guid signalID = adoDatabase.Guid(row, "SignalID");  // row.Field<Guid>("SignalID");
 
                                 query = adoDatabase.ParameterizedQueryString("SELECT COUNT(*) FROM Measurement WHERE SignalID = {0}", "signalID");
 
