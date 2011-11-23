@@ -65,17 +65,19 @@
             Recalculates routing tables as long as all adapters have been initialized.
             </summary>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OnStatusMessage(System.String,TVA.UpdateType)">
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OnStatusMessage(System.Object,System.String,TVA.UpdateType)">
             <summary>
             Raises the <see cref="E:TimeSeriesFramework.Adapters.IaonSession.StatusMessage"/> event.
             </summary>
+            <param name="sender">Object source raising the event.</param>
             <param name="status">New status message.</param>
             <param name="type"><see cref="T:TVA.UpdateType"/> of status message.</param>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OnStatusMessage(System.String,TVA.UpdateType,System.Object[])">
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OnStatusMessage(System.Object,System.String,TVA.UpdateType,System.Object[])">
             <summary>
             Raises the <see cref="E:TimeSeriesFramework.Adapters.IaonSession.StatusMessage"/> event with a formatted status message.
             </summary>
+            <param name="sender">Object source raising the event.</param>
             <param name="formattedStatus">Formatted status message.</param>
             <param name="type"><see cref="T:TVA.UpdateType"/> of status message.</param>
             <param name="args">Arguments for <paramref name="formattedStatus"/>.</param>
@@ -83,38 +85,51 @@
             This overload combines string.Format and SendStatusMessage for convienence.
             </remarks>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OnProcessException(System.Exception)">
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OnProcessException(System.Object,System.Exception)">
             <summary>
             Raises <see cref="E:TimeSeriesFramework.Adapters.IaonSession.ProcessException"/> event.
             </summary>
+            <param name="sender">Object source raising the event.</param>
             <param name="ex">Processing <see cref="T:System.Exception"/>.</param>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OnInputMeasurementKeysUpdated">
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OnInputMeasurementKeysUpdated(System.Object)">
             <summary>
             Raises <see cref="E:TimeSeriesFramework.Adapters.IaonSession.InputMeasurementKeysUpdated"/> event.
             </summary>
+            <param name="sender">Object source raising the event.</param>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OnOutputMeasurementsUpdated">
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OnOutputMeasurementsUpdated(System.Object)">
             <summary>
             Raises <see cref="E:TimeSeriesFramework.Adapters.IaonSession.OutputMeasurementsUpdated"/> event.
             </summary>
+            <param name="sender">Object source raising the event.</param>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OnUnpublishedSamples(System.Int32)">
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OnUnpublishedSamples(System.Object,System.Int32)">
             <summary>
             Raises the <see cref="E:TimeSeriesFramework.Adapters.IaonSession.UnpublishedSamples"/> event.
             </summary>
+            <param name="sender">Object source raising the event.</param>
             <param name="seconds">Total number of unpublished seconds of data.</param>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OnUnprocessedMeasurements(System.Int32)">
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OnUnprocessedMeasurements(System.Object,System.Int32)">
             <summary>
             Raises the <see cref="E:TimeSeriesFramework.Adapters.IaonSession.UnprocessedMeasurements"/> event.
             </summary>
+            <param name="sender">Object source raising the event.</param>
             <param name="unprocessedMeasurements">Total measurements in the queue that have not been processed.</param>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OnDisposed">
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OnProcessingComplete(System.Object,System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Adapters.IaonSession.ProcessingComplete"/> event.
+            </summary>
+            <param name="sender">Object source raising the event.</param>
+            <param name="e"><see cref="T:System.EventArgs"/>, if any.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.OnDisposed(System.Object)">
             <summary>
             Raises the <see cref="E:TimeSeriesFramework.Adapters.IaonSession.Disposed"/> event.
             </summary>
+            <param name="sender">Object source raising the event.</param>
         </member>
         <member name="M:TimeSeriesFramework.Adapters.IaonSession.StatusMessageHandler(System.Object,TVA.EventArgs{System.String})">
             <summary>
@@ -144,13 +159,6 @@
             <param name="sender">Sending object.</param>
             <param name="e">Event arguments, if any.</param>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.IaonSession.DisposedHandler(System.Object,System.EventArgs)">
-            <summary>
-            Event handler for disposed events from all adapters.
-            </summary>
-            <param name="sender">Sending object.</param>
-            <param name="e">Event arguments, if any.</param>
-        </member>
         <member name="M:TimeSeriesFramework.Adapters.IaonSession.UnpublishedSamplesHandler(System.Object,TVA.EventArgs{System.Int32})">
             <summary>
             Event handler for monitoring unpublished samples.
@@ -172,6 +180,20 @@
             Time-series framework uses this handler to monitor the number of unprocessed measurements in output adapters.<br/>
             This method is typically called once per second.
             </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.ProcessingCompleteHandler(System.Object,System.EventArgs)">
+            <summary>
+            Event handler for processing complete notifications from input adapters.
+            </summary>
+            <param name="sender">Event source reference to input adapter that is reporting processing completion.</param>
+            <param name="e">Event arguments for event, if any; otherwise <see cref="F:System.EventArgs.Empty"/>.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.DisposedHandler(System.Object,System.EventArgs)">
+            <summary>
+            Event handler for disposed events from all adapters.
+            </summary>
+            <param name="sender">Sending object.</param>
+            <param name="e">Event arguments, if any.</param>
         </member>
         <member name="M:TimeSeriesFramework.Adapters.IaonSession.ExtractTemporalConfiguration(System.Data.DataSet)">
             <summary>
@@ -227,6 +249,15 @@
             <para>
             <see cref="F:TVA.EventArgs`1.Argument"/> is total number of unprocessed measurements.
             </para>
+            </remarks>
+        </member>
+        <member name="E:TimeSeriesFramework.Adapters.IaonSession.ProcessingComplete">
+            <summary>
+            Indicates to the host that processing for one of the input adapters has completed.
+            </summary>
+            <remarks>
+            This event is expected to only be raised when an input adapter has been designed to process
+            a finite amount of data, e.g., reading a historical range of data during temporal procesing.
             </remarks>
         </member>
         <member name="E:TimeSeriesFramework.Adapters.IaonSession.Disposed">
@@ -2309,6 +2340,21 @@
             <param name="signalID"><see cref="T:System.Guid"/> based signal ID associated with this <see cref="T:TimeSeriesFramework.MeasurementKey"/>, if defined.</param>
             <param name="key">Output <see cref="T:TimeSeriesFramework.MeasurementKey"/> in which to stored parsed value.</param>
             <returns>A <c>true</c> if <see cref="T:TimeSeriesFramework.MeasurementKey"/>representation contained in <paramref name="value"/> could be parsed; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.MeasurementKey.EstablishDefaultCache(System.Data.IDbConnection,System.Type,System.String)">
+            <summary>
+            Establish default <see cref="T:TimeSeriesFramework.MeasurementKey"/> cache.
+            </summary>
+            <param name="connection">The database connection.</param>
+            <param name="adapterType">The database adapter type.</param>
+            <param name="measurementTable">Measurement table name used to load measurement key cache.</param>
+            <remarks>
+            Source tables are expected to have at least the following fields:
+            <code>
+                 ID          NVARCHAR    Measurement key formatted as: ArchiveSource:PointID
+                 SignalID    GUID        Unique identification for measurement
+            </code>
+            </remarks>
         </member>
         <member name="P:TimeSeriesFramework.MeasurementKey.SignalID">
             <summary>
@@ -4419,6 +4465,15 @@
             <see cref="F:TVA.EventArgs`1.Argument"/> is a collection of new measurements for host to process.
             </remarks>
         </member>
+        <member name="E:TimeSeriesFramework.Adapters.IInputAdapter.ProcessingComplete">
+            <summary>
+            Indicates to the host that processing for the input adapter has completed.
+            </summary>
+            <remarks>
+            This event is expected to only be raised when an input adapter has been designed to process
+            a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+            </remarks>
+        </member>
         <member name="P:TimeSeriesFramework.Adapters.IInputAdapter.OutputSourceIDs">
             <summary>
             Gets or sets <see cref="P:TimeSeriesFramework.MeasurementKey.Source"/> values used to filter output measurements.
@@ -4506,11 +4561,10 @@
             Raises the <see cref="E:TimeSeriesFramework.Adapters.InputAdapterBase.NewMeasurements"/> event.
             </summary>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.InputAdapterBase.OnProcessException(System.Exception)">
+        <member name="M:TimeSeriesFramework.Adapters.InputAdapterBase.OnProcessingComplete">
             <summary>
-            Raises <see cref="E:TimeSeriesFramework.Adapters.AdapterBase.ProcessException"/> event.
+            Raises the <see cref="E:TimeSeriesFramework.Adapters.InputAdapterBase.ProcessingComplete"/> event.
             </summary>
-            <param name="ex">Processing <see cref="T:System.Exception"/>.</param>
         </member>
         <member name="E:TimeSeriesFramework.Adapters.InputAdapterBase.NewMeasurements">
             <summary>
@@ -4518,6 +4572,15 @@
             </summary>
             <remarks>
             <see cref="F:TVA.EventArgs`1.Argument"/> is a collection of new measurements for host to process.
+            </remarks>
+        </member>
+        <member name="E:TimeSeriesFramework.Adapters.InputAdapterBase.ProcessingComplete">
+            <summary>
+            Indicates to the host that processing for the input adapter has completed.
+            </summary>
+            <remarks>
+            This event is expected to only be raised when an input adapter has been designed to process
+            a finite amount of data, e.g., reading a historical range of data during temporal procesing.
             </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.InputAdapterBase.OutputSourceIDs">
@@ -4576,6 +4639,11 @@
             </summary>
             <param name="measurements">New measurements.</param>
         </member>
+        <member name="M:TimeSeriesFramework.Adapters.InputAdapterCollection.OnProcessingComplete">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Adapters.InputAdapterCollection.ProcessingComplete"/> event.
+            </summary>
+        </member>
         <member name="M:TimeSeriesFramework.Adapters.InputAdapterCollection.InitializeItem(TimeSeriesFramework.Adapters.IInputAdapter)">
             <summary>
             Wires events and initializes new <see cref="T:TimeSeriesFramework.Adapters.IInputAdapter"/> implementation.
@@ -4594,6 +4662,15 @@
             </summary>
             <remarks>
             <see cref="F:TVA.EventArgs`1.Argument"/> is collection of new measurements for host to process.
+            </remarks>
+        </member>
+        <member name="E:TimeSeriesFramework.Adapters.InputAdapterCollection.ProcessingComplete">
+            <summary>
+            Indicates to the host that processing for one of the input adapters has completed.
+            </summary>
+            <remarks>
+            This event is expected to only be raised when an input adapter has been designed to process
+            a finite amount of data, e.g., reading a historical range of data during temporal procesing.
             </remarks>
         </member>
         <member name="T:TimeSeriesFramework.Adapters.IOutputAdapter">
@@ -5192,6 +5269,14 @@
             Manually requests that server send a new set of cipher keys for data packet encryption.
             </remarks>
         </member>
+        <member name="F:TimeSeriesFramework.Transport.ServerCommand.UpdateProcessingInterval">
+            <summary>
+            Update processing interval.
+            </summary>
+            <remarks>
+            Manually requests server to update the processing interval with the following specified value.
+            </remarks>
+        </member>
         <member name="T:TimeSeriesFramework.Transport.ServerResponse">
             <summary>
             Server responses sent by <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/> and received by <see cref="T:TimeSeriesFramework.Transport.DataSubscriber"/>.
@@ -5251,6 +5336,14 @@
             </summary>
             <remarks>
             Unsolicited response provides the start time of data being processed from the first measurement.
+            </remarks>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.ServerResponse.ProcessingComplete">
+            <summary>
+            Processing complete notification.
+            </summary>
+            <remarks>
+            Unsolicited response provides notification that input processing has completed, typically via temporal constraint.
             </remarks>
         </member>
         <member name="F:TimeSeriesFramework.Transport.ServerResponse.NoOP">
@@ -5417,6 +5510,15 @@
             <param name="command">In response to command.</param>
             <param name="data">Data to return to client; null if none.</param>
             <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="E:TimeSeriesFramework.Transport.DataPublisher.ProcessingComplete">
+            <summary>
+            Indicates to the host that processing for an input adapter (via temporal session) has completed.
+            </summary>
+            <remarks>
+            This event is expected to only be raised when an input adapter has been designed to process
+            a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+            </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Transport.DataPublisher.RequireAuthentication">
             <summary>
@@ -5700,6 +5802,12 @@
             </summary>
             <param name="startTime">Start time, in <see cref="T:TVA.Ticks"/>, of first measurement transmitted.</param>
         </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.OnProcessingComplete(System.String)">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Transport.DataSubscriber.ProcessingComplete"/> event.
+            </summary>
+            <param name="source">Type name of adapter that sent the processing completed notification.</param>
+        </member>
         <member name="E:TimeSeriesFramework.Transport.DataSubscriber.ConnectionEstablished">
             <summary>
             Occurs when client connection to the data publication server is established.
@@ -5724,6 +5832,15 @@
             <summary>
             Occurs when first measurement is transmitted by data publication server.
             </summary>
+        </member>
+        <member name="E:TimeSeriesFramework.Transport.DataSubscriber.ProcessingComplete">
+            <summary>
+            Indicates that processing for an input adapter (via temporal session) has completed.
+            </summary>
+            <remarks>
+            This event is expected to only be raised when an input adapter has been designed to process
+            a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+            </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Transport.DataSubscriber.RequireAuthentication">
             <summary>
@@ -5753,6 +5870,16 @@
             Although the data subscriber provisions support for temporal processing by receiving historical data from a remote source,
             the adapter opens sockets and does not need to be engaged within an actual temporal <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/>, therefore
             this method returns <c>false</c> to make sure the adapter doesn't get instantiated within a temporal session.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataSubscriber.ProcessingInterval">
+            <summary>
+            Gets or sets the desired processing interval, in milliseconds, for the adapter.
+            </summary>
+            <remarks>
+            With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
+            basically a delay, or timer interval, overwhich to process data. A value of -1 means to use the default processing
+            interval while a value of 0 means to process data as fast as possible.
             </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Transport.DataSubscriber.Status">
@@ -6586,6 +6713,22 @@
             </summary>
             <param name="ex">Processing <see cref="T:System.Exception"/>.</param>
         </member>
+        <member name="M:TimeSeriesFramework.Transport.IClientSubscription.OnProcessingCompleted(System.Object,System.EventArgs)">
+            <summary>
+            Explictly raises the <see cref="E:TimeSeriesFramework.Adapters.IInputAdapter.ProcessingComplete"/> event.
+            </summary>
+            <param name="sender"><see cref="T:TimeSeriesFramework.Adapters.IInputAdapter"/> raising the notification.</param>
+            <param name="e">Event arguments for notification, if any.</param>
+        </member>
+        <member name="E:TimeSeriesFramework.Transport.IClientSubscription.ProcessingComplete">
+            <summary>
+            Indicates to the host that processing for an input adapter (via temporal session) has completed.
+            </summary>
+            <remarks>
+            This event is expected to only be raised when an input adapter has been designed to process
+            a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+            </remarks>
+        </member>
         <member name="P:TimeSeriesFramework.Transport.IClientSubscription.ClientID">
             <summary>
             Gets the <see cref="T:System.Guid"/> client TCP connection identifier of this <see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/>.
@@ -6734,6 +6877,15 @@
             <param name="frame"><see cref="T:TimeSeriesFramework.IFrame"/> of measurements with the same timestamp that arrived within <see cref="P:TimeSeriesFramework.ConcentratorBase.LagTime"/> that are ready for processing.</param>
             <param name="index">Index of <see cref="T:TimeSeriesFramework.IFrame"/> within a second ranging from zero to <c><see cref="P:TimeSeriesFramework.ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
         </member>
+        <member name="E:TimeSeriesFramework.Transport.SynchronizedClientSubscription.ProcessingComplete">
+            <summary>
+            Indicates to the host that processing for an input adapter (via temporal session) has completed.
+            </summary>
+            <remarks>
+            This event is expected to only be raised when an input adapter has been designed to process
+            a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+            </remarks>
+        </member>
         <member name="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.ClientID">
             <summary>
             Gets the <see cref="T:System.Guid"/> client TCP connection identifier of this <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/>.
@@ -6758,6 +6910,16 @@
             <summary>
             Gets or sets host name used to identify connection source of client subscription.
             </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.ProcessingInterval">
+            <summary>
+            Gets or sets the desired processing interval, in milliseconds, for the adapter.
+            </summary>
+            <remarks>
+            With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
+            basically a delay, or timer interval, overwhich to process data. A value of -1 means to use the default processing
+            interval while a value of 0 means to process data as fast as possible.
+            </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.InputMeasurementKeys">
             <summary>
@@ -6861,6 +7023,15 @@
             so that dyanmic updates to keys will be synchronized with filtering to prevent interference.
             </remarks>
         </member>
+        <member name="E:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.ProcessingComplete">
+            <summary>
+            Indicates to the host that processing for an input adapter (via temporal session) has completed.
+            </summary>
+            <remarks>
+            This event is expected to only be raised when an input adapter has been designed to process
+            a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+            </remarks>
+        </member>
         <member name="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.ClientID">
             <summary>
             Gets the <see cref="T:System.Guid"/> client TCP connection identifier of this <see cref="T:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription"/>.
@@ -6885,6 +7056,16 @@
             <summary>
             Gets or sets host name used to identify connection source of client subscription.
             </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.ProcessingInterval">
+            <summary>
+            Gets or sets the desired processing interval, in milliseconds, for the adapter.
+            </summary>
+            <remarks>
+            With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
+            basically a delay, or timer interval, overwhich to process data. A value of -1 means to use the default processing
+            interval while a value of 0 means to process data as fast as possible.
+            </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.InputMeasurementKeys">
             <summary>
