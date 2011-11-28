@@ -1,10 +1,11 @@
 ﻿//*******************************************************************************************************
 //  SecurityProviderBase.cs - Gbtc
 //
-//  Tennessee Valley Authority, 2010
+//  Tennessee Valley Authority, 2011
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -25,6 +26,8 @@
 //  01/05/2011 - Pinal C. Patel
 //       Added CanRefreshData, CanUpdateData, CanResetPassword and CanChangePassword properties along 
 //       with accompanying RefreshData(), UpdateData(), ResetPassword() and ChangePassword() methods.
+//  11/23/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //*******************************************************************************************************
 
@@ -244,6 +247,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.Configuration;
 using TVA.Configuration;
@@ -373,6 +395,13 @@ namespace TVA.Security
         /// </summary>
         public const string DefaultSettingsCategory = "SecurityProvider";
 
+        // Events
+
+        /// <summary>
+        /// Occurs when the class has been disposed.
+        /// </summary>
+        public event EventHandler Disposed;
+
         // Fields
         private string m_applicationName;
         private string m_connectionString;
@@ -455,7 +484,7 @@ namespace TVA.Security
             }
         }
 
-         /// <summary>
+        /// <summary>
         /// Gets or sets a boolean value that indicates whether security provider settings are to be saved to the config file.
         /// </summary>
         public bool PersistSettings
@@ -529,7 +558,7 @@ namespace TVA.Security
         /// <summary>
         /// Geta a boolean value that indicates whether <see cref="UpdateData"/> operation is supported.
         /// </summary>
-        public virtual bool CanUpdateData 
+        public virtual bool CanUpdateData
         {
             get
             {
@@ -540,7 +569,7 @@ namespace TVA.Security
         /// <summary>
         /// Gets a boolean value that indicates whether <see cref="ResetPassword"/> operation is supported.
         /// </summary>
-        public virtual bool CanResetPassword 
+        public virtual bool CanResetPassword
         {
             get
             {
@@ -551,7 +580,7 @@ namespace TVA.Security
         /// <summary>
         /// Gets a boolean value that indicates whether <see cref="ChangePassword"/> operation is supported.
         /// </summary>
-        public virtual bool CanChangePassword 
+        public virtual bool CanChangePassword
         {
             get
             {
@@ -677,7 +706,7 @@ namespace TVA.Security
         public virtual string TranslateRole(string role)
         {
             // Most providers will not perform any kind of translation on role names.
-            return role;  
+            return role;
         }
 
         /// <summary>
@@ -700,6 +729,9 @@ namespace TVA.Security
                 finally
                 {
                     m_disposed = true;  // Prevent duplicate dispose.
+
+                    if (Disposed != null)
+                        Disposed(this, EventArgs.Empty);
                 }
             }
         }

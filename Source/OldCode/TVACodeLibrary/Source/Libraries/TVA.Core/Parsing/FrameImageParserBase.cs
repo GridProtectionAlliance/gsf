@@ -15,6 +15,8 @@
 //          BinaryImageParserBase => FrameImageParserBase => MultiSourceFrameImageParserBase.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  11/23/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //*******************************************************************************************************
 
@@ -265,7 +267,7 @@ namespace TVA.Parsing
     /// <typeparam name="TOutputType">Type of the interface or class used to represent outputs.</typeparam>
     [Description("Defines the basic functionality for parsing a binary data stream represented as frames with common headers and returning the parsed data via an event."),
     DefaultEvent("DataParsed")]
-    public abstract class FrameImageParserBase<TTypeIdentifier, TOutputType> : BinaryImageParserBase, IFrameImageParser<TTypeIdentifier, TOutputType> where TOutputType : ISupportFrameImage<TTypeIdentifier>
+    public abstract class FrameImageParserBase<TTypeIdentifier, TOutputType> : BinaryImageParserBase, IFrameImageParser<TTypeIdentifier, TOutputType> where TOutputType : class, ISupportFrameImage<TTypeIdentifier>, new()
     {
         #region [ Members ]
 
@@ -326,6 +328,21 @@ namespace TVA.Parsing
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets flag that determines if object pooling is allowed.
+        /// </summary>
+        /// <remarks>
+        /// Object pooling is allowed by default for <typeparamref name="TOutputType"/>'s that implement <see cref="ISupportLifecycle"/>,
+        /// override and return <c>false</c> if you do not want your frame image parser to use object pooling.
+        /// </remarks>
+        public virtual bool AllowObjectPooling
+        {
+            get
+            {
+                return true;
+            }
+        }
 
         /// <summary>
         /// Gets current status of <see cref="FrameImageParserBase{TTypeIdentifier,TOutputType}"/>.
@@ -425,7 +442,12 @@ namespace TVA.Parsing
                     //      - type is related to class or interface specified for the output
                     TypeInfo outputType = new TypeInfo();
                     outputType.RuntimeType = asmType;
-                    outputType.CreateNew = FastObjectFactory.GetCreateObjectFunction<TOutputType>(asmType);
+
+                    // If object pooling is allowed and class implementation supports life cycle, use object pool instead of creating an object each time one is parsed
+                    if (AllowObjectPooling && (object)asmType.GetInterface("TVA.ISupportLifecycle") != null)
+                        outputType.CreateNew = ReusableObjectPool<TOutputType>.TakeObject;
+                    else
+                        outputType.CreateNew = FastObjectFactory.GetCreateObjectFunction<TOutputType>(asmType);
 
                     // We'll hold all of the matching types in this list temporarily until their IDs are determined.
                     outputTypes.Add(outputType);
@@ -475,7 +497,7 @@ namespace TVA.Parsing
             {
                 instance = outputType.CreateNew();
                 instance.CommonHeader = commonHeader;
-                parsedLength = instance.Initialize(buffer, offset, length);
+                parsedLength = instance.ParseBinaryImage(buffer, offset, length);
 
                 // Expose parsed type to consumer
                 if (parsedLength > 0)
@@ -517,7 +539,7 @@ namespace TVA.Parsing
         /// <para>
         /// Derived classes need to provide a common header instance (i.e., class that implements <see cref="ICommonHeader{TTypeIdentifier}"/>)
         /// for the output types; this will primarily include an ID of the <see cref="Type"/> that the data image represents.  This parsing is
-        /// only for common header information, actual parsing will be handled by output type via its <see cref="ISupportBinaryImage.Initialize"/>
+        /// only for common header information, actual parsing will be handled by output type via its <see cref="ISupportBinaryImage.ParseBinaryImage"/>
         /// method. This header image should also be used to add needed complex state information about the output type being parsed if needed.
         /// </para>
         /// <para>

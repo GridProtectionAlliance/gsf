@@ -358,7 +358,7 @@ namespace TVA.Media
     }
 
     #endregion
-    
+
     /// <summary>
     /// Represents the "extensible" format structure for a WAVE media format file.
     /// </summary>
@@ -396,6 +396,13 @@ namespace TVA.Media
     public class WaveFormatExtensible : ISupportBinaryImage
     {
         #region [ Members ]
+
+        // Constants
+
+        /// <summary>
+        /// The fixed byte length of a <see cref="WaveFormatExtensible"/> instance.
+        /// </summary>
+        public const int FixedLength = 22;
 
         // Fields
         private ushort m_sampleValue;
@@ -489,30 +496,13 @@ namespace TVA.Media
         }
 
         /// <summary>
-        /// Gets binary representation of this <see cref="WaveFormatExtensible"/> instance.
-        /// </summary>
-        public byte[] BinaryImage
-        {
-            get
-            {
-                byte[] binaryImage = new byte[BinaryLength];
-
-                EndianOrder.LittleEndian.CopyBytes(m_sampleValue, binaryImage, 0);
-                EndianOrder.LittleEndian.CopyBytes((int)m_channelMask, binaryImage, 2);
-                EndianOrder.LittleEndian.CopyBytes(m_subFormat, binaryImage, 6);               
-
-                return binaryImage;
-            }
-        }
-
-        /// <summary>
         /// Gets the length of the binary representation of this <see cref="WaveFormatExtensible"/> instance.
         /// </summary>
         public int BinaryLength
         {
             get
             {
-                return 22;
+                return FixedLength;
             }
         }
 
@@ -521,23 +511,48 @@ namespace TVA.Media
         #region [ Methods ]
 
         /// <summary>
-        /// Parses <see cref="WaveFormatExtensible"/> object from <paramref name="binaryImage"/>.
+        /// Parses <see cref="WaveFormatExtensible"/> object by parsing the specified <paramref name="buffer"/> containing a binary image.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initialization.</param>
-        /// <param name="startIndex">0-based starting index in the <paramref name="binaryImage"/> to be used for initialization.</param>
-        /// <param name="length">Valid number of bytes within binary image.</param>
-        /// <returns>The number of bytes used for initialization in the <paramref name="binaryImage"/> (i.e., the number of bytes parsed).</returns>
-        /// <exception cref="InvalidOperationException">Not enough length in binary image to parse WaveFormatExtensible object.</exception>
-        public int Initialize(byte[] binaryImage, int startIndex, int length)
+        /// <param name="buffer">Buffer containing binary image to parse.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start parsing.</param>
+        /// <param name="length">Valid number of bytes within <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        /// <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed).</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <paramref name="length"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
-            if (length < BinaryLength)
-                throw new InvalidOperationException("Not enough length in binary image to parse WaveFormatExtensible object");
+            buffer.ValidateParameters(startIndex, length);
 
-            m_sampleValue = EndianOrder.LittleEndian.ToUInt16(binaryImage, startIndex);
-            m_channelMask = (Speakers)EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2);
-            m_subFormat = EndianOrder.LittleEndian.ToGuid(binaryImage, startIndex + 6);
+            m_sampleValue = EndianOrder.LittleEndian.ToUInt16(buffer, startIndex);
+            m_channelMask = (Speakers)EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 2);
+            m_subFormat = EndianOrder.LittleEndian.ToGuid(buffer, startIndex + 6);
 
             return BinaryLength;
+        }
+
+        /// <summary>
+        /// Generates a binary representation of this <see cref="WaveFormatExtensible"/> and copies it into the given buffer.
+        /// </summary>
+        /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+        /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <see cref="ISupportBinaryImage.BinaryLength"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <see cref="ISupportBinaryImage.BinaryLength"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public int GenerateBinaryImage(byte[] buffer, int startIndex)
+        {
+            buffer.ValidateParameters(startIndex, FixedLength);
+
+            EndianOrder.LittleEndian.CopyBytes(m_sampleValue, buffer, 0);
+            EndianOrder.LittleEndian.CopyBytes((int)m_channelMask, buffer, 2);
+            EndianOrder.LittleEndian.CopyBytes(m_subFormat, buffer, 6);
+
+            return FixedLength;
         }
 
         #endregion

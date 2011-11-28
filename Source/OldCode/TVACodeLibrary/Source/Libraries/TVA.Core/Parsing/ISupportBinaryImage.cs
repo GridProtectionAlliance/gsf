@@ -1,10 +1,11 @@
 //*******************************************************************************************************
 //  ISupportBinaryImage.cs - Gbtc
 //
-//  Tennessee Valley Authority, 2009
+//  Tennessee Valley Authority, 2011
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -12,6 +13,8 @@
 //       Generated original version of source code.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  11/22/2011 - J. Ritchie Carroll
+//       Converted interface to use a write based image method instead of a property as an optimization.
 //
 //*******************************************************************************************************
 
@@ -231,33 +234,123 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
+using System;
+using System.IO;
 namespace TVA.Parsing
 {
     /// <summary>
-    /// Specifies that this <see cref="System.Type"/> can support production or consumption of a binary image that represents the object.
+    /// Specifies that an object can support production or consumption of a binary image that represents the object.
     /// </summary>
     public interface ISupportBinaryImage
     {
         /// <summary>
-        /// Gets the binary image of the object.
-        /// </summary>
-        byte[] BinaryImage { get; }
-
-        /// <summary>
         /// Gets the length of the binary image.
         /// </summary>
-        /// <remarks>
-        /// <see cref="BinaryLength"/> should typically be a constant value but does not have to be.
-        /// </remarks>
-        int BinaryLength { get; }
+        int BinaryLength
+        {
+            get;
+        }
 
         /// <summary>
-        /// Initializes object from the specified binary image.
+        /// Initializes object by parsing the specified <paramref name="buffer"/> containing a binary image.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initialization.</param>
-        /// <param name="startIndex">0-based starting index in the <paramref name="binaryImage"/> to be used for initialization.</param>
-        /// <param name="length">Valid number of bytes within binary image.</param>
-        /// <returns>The number of bytes used for initialization in the <paramref name="binaryImage"/> (i.e., the number of bytes parsed).</returns>
-        int Initialize(byte[] binaryImage, int startIndex, int length);
+        /// <param name="buffer">Buffer containing binary image to parse.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start parsing.</param>
+        /// <param name="length">Valid number of bytes within <paramref name="buffer"/> to read from <paramref name="startIndex"/>.</param>
+        /// <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed).</returns>
+        /// <remarks>
+        /// Implementors should validate <paramref name="startIndex"/> and <paramref name="length"/> against <paramref name="buffer"/> length.
+        /// The <see cref="BufferExtensions.ValidateParameters"/> method can be used to perform this validation.
+        /// </remarks>
+        int ParseBinaryImage(byte[] buffer, int startIndex, int length);
+
+        /// <summary>
+        /// Generates binary image of the object and copies it into the given buffer, for <see cref="BinaryLength"/> bytes.
+        /// </summary>
+        /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+        /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+        /// <remarks>
+        /// Implementors should validate <paramref name="startIndex"/> and <see cref="BinaryLength"/> against <paramref name="buffer"/> length.
+        /// The <see cref="BufferExtensions.ValidateParameters"/> method can be used to perform this validation.
+        /// </remarks>
+        int GenerateBinaryImage(byte[] buffer, int startIndex);
+    }
+
+    /// <summary>
+    /// Defines extension functions related to <see cref="ISupportBinaryImage"/> implementations.
+    /// </summary>
+    public static class ISupportBinaryImageExtensions
+    {
+        /// <summary>
+        /// Returns a binary image of an object that implements <see cref="ISupportBinaryImage"/>.
+        /// </summary>
+        /// <param name="imageSource"><see cref="ISupportBinaryImage"/> source.</param>
+        /// <returns>A binary image of an object that implements <see cref="ISupportBinaryImage"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="imageSource"/> cannot be null.</exception>
+        /// <remarks>
+        /// This is a convienence method. It is often optimal to use <see cref="ISupportBinaryImage.GenerateBinaryImage"/>
+        /// directly using a common buffer instead of always allocating new buffers.
+        /// </remarks>
+        public static byte[] BinaryImage(this ISupportBinaryImage imageSource)
+        {
+            if ((object)imageSource == null)
+                throw new ArgumentNullException("imageSource");
+
+            int length = imageSource.BinaryLength;
+            byte[] buffer = new byte[length];
+
+            imageSource.GenerateBinaryImage(buffer, 0);
+
+            return buffer;
+        }
+
+        /// <summary>
+        /// Copies binary image of object that implements <see cref="ISupportBinaryImage"/> to a stream.
+        /// </summary>
+        /// <param name="imageSource"><see cref="ISupportBinaryImage"/> source.</param>
+        /// <param name="stream">Destination <see cref="Stream"/>.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="imageSource"/> cannot be null.</exception>
+        public static void CopyBinaryImageToStream(this ISupportBinaryImage imageSource, Stream stream)
+        {
+            if ((object)imageSource == null)
+                throw new ArgumentNullException("imageSource");
+
+            int length = imageSource.BinaryLength;
+            byte[] buffer = BufferPool.TakeBuffer(length);
+
+            try
+            {
+                // Copy generated binary image to buffer
+                imageSource.GenerateBinaryImage(buffer, 0);
+
+                // Write buffer to stream
+                stream.Write(buffer, 0, length);
+            }
+            finally
+            {
+                if (buffer != null)
+                    BufferPool.ReturnBuffer(buffer);
+            }
+        }
     }
 }

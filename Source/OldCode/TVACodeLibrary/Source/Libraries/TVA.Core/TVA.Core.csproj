@@ -187,7 +187,7 @@
     <Compile Include="Interop\NamespaceDoc.cs" />
     <Compile Include="Interop\VBArrayDescriptor.cs" />
     <Compile Include="Interop\WindowsApi.cs" />
-    <Compile Include="IO\BufferPool.cs" />
+    <Compile Include="BufferPool.cs" />
     <Compile Include="IO\Checksums\ChecksumExtensions.cs" />
     <Compile Include="IO\Checksums\Crc16.cs" />
     <Compile Include="IO\Checksums\Crc32.cs" />
@@ -286,6 +286,7 @@
     <Compile Include="ProcessProgressHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reflection\NamespaceDoc.cs" />
+    <Compile Include="ReusableObjectPool.cs" />
     <Compile Include="Scheduling\NamespaceDoc.cs" />
     <Compile Include="Security\Cryptography\NamespaceDoc.cs" />
     <Compile Include="Security\Cryptography\Random.cs" />

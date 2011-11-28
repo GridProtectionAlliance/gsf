@@ -1,10 +1,11 @@
 ﻿//*******************************************************************************************************
 //  IAdapter.cs - Gbtc
 //
-//  Tennessee Valley Authority, 2010
+//  Tennessee Valley Authority, 2011
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -18,6 +19,8 @@
 //  04/08/2011 - Pinal C. Patel
 //       Added ExecutionException event.
 //       Renamed StatusUpdate event to StatusMessage.
+//  11/23/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //*******************************************************************************************************
 
@@ -237,6 +240,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using TVA.Configuration;
 
@@ -269,11 +291,6 @@ namespace TVA.Adapters
         /// </remarks>
         event EventHandler<EventArgs<string, Exception>> ExecutionException;
 
-        /// <summary>
-        /// Occurs when <see cref="IAdapter"/> is disposed.
-        /// </summary>
-        event EventHandler Disposed;
-
         #endregion
 
         #region [ Properties ]
@@ -281,27 +298,44 @@ namespace TVA.Adapters
         /// <summary>
         /// Gets or sets the text representation of the <see cref="IAdapter"/>'s <see cref="TypeName"/>.
         /// </summary>
-        string TypeName { get; set; }
+        string TypeName
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the path to the file where the <see cref="IAdapter"/> is housed.
         /// </summary>
-        string HostFile { get; set; }
+        string HostFile
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets the <see cref="AppDomain"/> in which the <see cref="IAdapter"/> is executing.
         /// </summary>
-        AppDomain Domain { get; }
+        AppDomain Domain
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets the memory utilzation of the <see cref="IAdapter"/> in bytes if executing in a seperate <see cref="AppDomain"/>, otherwise <see cref="Double.NaN"/>.
         /// </summary>
-        double MemoryUsage { get; }
+        double MemoryUsage
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets the % processor utilization of the <see cref="IAdapter"/> if executing in a seperate <see cref="AppDomain"/> otherwise <see cref="Double.NaN"/>.
         /// </summary>
-        double ProcessorUsage { get; }
+        double ProcessorUsage
+        {
+            get;
+        }
 
         #endregion
     }

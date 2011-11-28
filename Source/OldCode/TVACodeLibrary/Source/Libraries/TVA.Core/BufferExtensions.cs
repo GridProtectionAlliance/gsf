@@ -1,10 +1,11 @@
 ﻿//*******************************************************************************************************
 //  BufferExtensions.cs - Gbtc
 //
-//  Tennessee Valley Authority, 2009
+//  Tennessee Valley Authority, 2011
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -25,6 +26,8 @@
 //       IndexOfSequence(byte[], byte[])
 //       IndexOfSequence(byte[], byte[], int)
 //       IndexOfSequence(byte[], byte[], int, int)
+//  11/22/2011 - J. Ritchie Carroll
+//       Added common case buffer parameter validation extensions.
 //
 //*******************************************************************************************************
 
@@ -244,6 +247,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.IO;
 
@@ -252,23 +274,21 @@ namespace TVA
     /// <summary>Defines extension functions related to buffer manipulation.</summary>
     public static class BufferExtensions
     {
-        /// <summary>Returns a copy of the specified portion of the <paramref name="source"/> buffer.</summary>
-        /// <param name="source">Source buffer.</param>
-        /// <param name="startIndex">Offset into <paramref name="source"/> buffer.</param>
-        /// <param name="length">Length of <paramref name="source"/> buffer to copy at <paramref name="startIndex"/> offset.</param>
-        /// <returns>A buffer of data copied from the specified portion of the source buffer.</returns>
-        /// <remarks>
-        /// Returned buffer will be extended as needed to make it the specified <paramref name="length"/>, but
-        /// it will never be less than the source buffer length - <paramref name="startIndex"/>.
-        /// </remarks>
+        /// <summary>
+        /// Validates that the specified <paramref name="startIndex"/> and <paramref name="length"/> are valid within the given <paramref name="buffer"/>.
+        /// </summary>
+        /// <param name="buffer">Buffer to validate.</param>
+        /// <param name="startIndex">0-based start index into the <paramref name="buffer"/>.</param>
+        /// <param name="length">Valid number of bytes within <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="startIndex"/> is outside the range of valid indexes for the source buffer -or-
-        /// <paramref name="length"/> is less than 0.
+        /// <paramref name="startIndex"/> or <paramref name="length"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
         /// </exception>
-        public static byte[] BlockCopy(this byte[] source, int startIndex, int length)
+        public static void ValidateParameters(this byte[] buffer, int startIndex, int length)
         {
-            if ((object)source == null)
-                throw new ArgumentNullException("source");
+            if ((object)buffer == null)
+                throw new ArgumentNullException("buffer");
 
             if (startIndex < 0)
                 throw new ArgumentOutOfRangeException("startIndex", "cannot be negative");
@@ -276,12 +296,46 @@ namespace TVA
             if (length < 0)
                 throw new ArgumentOutOfRangeException("length", "cannot be negative");
 
-            if (startIndex >= source.Length)
-                throw new ArgumentOutOfRangeException("startIndex", "not a valid index into source buffer");
+            if (startIndex + length > buffer.Length)
+                throw new ArgumentOutOfRangeException("length", "operation will exceed buffer length from startIndex");
+        }
 
-            byte[] copiedBytes = new byte[source.Length - startIndex < length ? source.Length - startIndex : length];
+        /// <summary>Returns a copy of the specified portion of the <paramref name="buffer"/> buffer.</summary>
+        /// <param name="buffer">Source buffer.</param>
+        /// <param name="startIndex">Offset into <paramref name="buffer"/> buffer.</param>
+        /// <param name="length">Length of <paramref name="buffer"/> buffer to copy at <paramref name="startIndex"/> offset.</param>
+        /// <returns>A buffer of data copied from the specified portion of the source buffer.</returns>
+        /// <remarks>
+        /// <para>
+        /// Returned buffer will be extended as needed to make it the specified <paramref name="length"/>, but
+        /// it will never be less than the source buffer length - <paramref name="startIndex"/>.
+        /// </para>
+        /// <para>
+        /// This is a convenience function. If an existing buffer is already available, using the <see cref="Buffer.BlockCopy"/>
+        /// directly instead of this extension method will be optimal since this method always allocates a new return buffer.
+        /// </para>
+        /// </remarks>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> is outside the range of valid indexes for the source buffer -or-
+        /// <paramref name="length"/> is less than 0.
+        /// </exception>
+        public static byte[] BlockCopy(this byte[] buffer, int startIndex, int length)
+        {
+            if ((object)buffer == null)
+                throw new ArgumentNullException("buffer");
 
-            Buffer.BlockCopy(source, startIndex, copiedBytes, 0, copiedBytes.Length);
+            if (startIndex < 0)
+                throw new ArgumentOutOfRangeException("startIndex", "cannot be negative");
+
+            if (length < 0)
+                throw new ArgumentOutOfRangeException("length", "cannot be negative");
+
+            if (startIndex >= buffer.Length)
+                throw new ArgumentOutOfRangeException("startIndex", "not a valid index into the buffer");
+
+            byte[] copiedBytes = new byte[buffer.Length - startIndex < length ? buffer.Length - startIndex : length];
+
+            Buffer.BlockCopy(buffer, startIndex, copiedBytes, 0, copiedBytes.Length);
 
             return copiedBytes;
         }

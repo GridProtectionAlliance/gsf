@@ -275,6 +275,7 @@ using System.Net.Sockets;
 using System.Security.Principal;
 using System.Threading;
 using TVA.Configuration;
+using TVA.Parsing;
 
 namespace TVA.Communication
 {
@@ -840,7 +841,7 @@ namespace TVA.Communication
                     Payload.ProcessReceived(ref tcpClient.ReceiveBuffer, ref tcpClient.ReceiveBufferOffset, ref tcpClient.ReceiveBufferLength, Encryption, SharedSecret, Compression);
 
                     HandshakeMessage handshake = new HandshakeMessage();
-                    if (handshake.Initialize(tcpClient.ReceiveBuffer, tcpClient.ReceiveBufferOffset, tcpClient.ReceiveBufferLength) != -1)
+                    if (handshake.ParseBinaryImage(tcpClient.ReceiveBuffer, tcpClient.ReceiveBufferOffset, tcpClient.ReceiveBufferLength) != -1)
                     {
                         // Received handshake message could be parsed successfully.
                         if (handshake.ID != Guid.Empty)
@@ -856,7 +857,7 @@ namespace TVA.Communication
                             }
 
                             // Prepare binary image of handshake response to be transmitted.
-                            tcpClient.SendBuffer = handshake.BinaryImage;
+                            tcpClient.SendBuffer = handshake.BinaryImage();
                             tcpClient.SendBufferOffset = 0;
                             tcpClient.SendBufferLength = tcpClient.SendBuffer.Length;
                             Payload.ProcessTransmit(ref tcpClient.SendBuffer, ref tcpClient.SendBufferOffset, ref tcpClient.SendBufferLength, Encryption, SharedSecret, Compression);

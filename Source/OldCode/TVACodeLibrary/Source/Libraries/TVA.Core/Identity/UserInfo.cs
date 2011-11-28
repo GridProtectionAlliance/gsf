@@ -1,7 +1,7 @@
 //*******************************************************************************************************
 //  UserInfo.cs - Gbtc
 //
-//  Tennessee Valley Authority, 2009
+//  Tennessee Valley Authority, 2011
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
@@ -76,6 +76,8 @@
 //       access to domain.
 //  09/21/2011 - J. Ritchie Carroll
 //       Added Mono implementation exception regions.
+//  11/23/2011 - J. Ritchie Carroll
+//       Modified to support new life cycle interface requirements (i.e., Diposed event).
 //
 //*******************************************************************************************************
 
@@ -402,6 +404,13 @@ namespace TVA.Identity
         /// Specifies the default value for the <see cref="SettingsCategory"/> property.
         /// </summary>
         public const string DefaultSettingsCategory = "ActiveDirectory";
+
+        // Events
+
+        /// <summary>
+        /// Occurs when the class has been disposed.
+        /// </summary>
+        public event EventHandler Disposed;
 
         private const int ACCOUNTDISABLED = 2;
         private const int LOCKED = 16;
@@ -1262,6 +1271,9 @@ namespace TVA.Identity
                 {
                     m_enabled = false;  // Mark as disabled.
                     m_disposed = true;  // Prevent duplicate dispose.
+
+                    if (Disposed != null)
+                        Disposed(this, EventArgs.Empty);
                 }
             }
         }

@@ -274,6 +274,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Media;
+using TVA.Parsing;
 
 namespace TVA.Media
 {
@@ -1143,9 +1144,9 @@ namespace TVA.Media
         public void Save(Stream destination)
         {
             m_waveHeader.ChunkSize = 4 + m_waveFormat.BinaryLength + m_waveData.BinaryLength;
-            destination.Write(m_waveHeader.BinaryImage, 0, m_waveHeader.BinaryLength);
-            destination.Write(m_waveFormat.BinaryImage, 0, m_waveFormat.BinaryLength);
-            destination.Write(m_waveData.BinaryImage, 0, m_waveData.BinaryLength);
+            m_waveHeader.CopyBinaryImageToStream(destination);
+            m_waveFormat.CopyBinaryImageToStream(destination);
+            m_waveData.CopyBinaryImageToStream(destination);
         }
 
         /// <summary>

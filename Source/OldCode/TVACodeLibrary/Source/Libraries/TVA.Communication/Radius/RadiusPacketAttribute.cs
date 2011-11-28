@@ -1,15 +1,18 @@
 ﻿//*******************************************************************************************************
 //  RadiusPacketAttribute.cs - Gbtc
 //
-//  Tennessee Valley Authority, 2010
+//  Tennessee Valley Authority, 2011
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
 //  11/26/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  11/23/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //*******************************************************************************************************
 
@@ -227,6 +230,25 @@
  representative as follows: J. Ritchie Carroll <mailto:jrcarrol@tva.gov>.
 
 */
+#endregion
+
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
 #endregion
 
 using System;
@@ -488,12 +510,12 @@ namespace TVA.Communication.Radius
         /// <summary>
         /// Initializes a new instance of the <see cref="RadiusPacketAttribute"/> class.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="RadiusPacketAttribute"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        public RadiusPacketAttribute(byte[] binaryImage, int startIndex, int length)
+        /// <param name="buffer">Buffer containing binary image to be used for initializing <see cref="RadiusPacketAttribute"/>.</param>
+        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
+        /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        public RadiusPacketAttribute(byte[] buffer, int startIndex, int length)
         {
-            Initialize(binaryImage, startIndex, length);
+            ParseBinaryImage(buffer, startIndex, length);
         }
 
         #endregion
@@ -536,7 +558,7 @@ namespace TVA.Communication.Radius
         }
 
         /// <summary>
-        /// Gets the lenght of the <see cref="BinaryImage"/>.
+        /// Gets the length of the <see cref="RadiusPacketAttribute"/>.
         /// </summary>
         public int BinaryLength
         {
@@ -550,54 +572,64 @@ namespace TVA.Communication.Radius
             }
         }
 
-        /// <summary>
-        /// Gets the binary representation of the <see cref="RadiusPacketAttribute"/>.
-        /// </summary>
-        public byte[] BinaryImage
-        {
-            get
-            {
-                byte[] image = new byte[BinaryLength];
-
-                image[0] = Convert.ToByte(m_type);
-                image[1] = (byte)image.Length;
-                Array.Copy(m_value, 0, image, 2, m_value.Length);
-
-                return image;
-            }
-        }
-
         #endregion
 
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes <see cref="RadiusPacketAttribute"/> from the specified <paramref name="binaryImage"/>.
+        /// Parses <see cref="RadiusPacketAttribute"/> object by parsing the specified <paramref name="buffer"/> containing a binary image.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="RadiusPacketAttribute"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="RadiusPacketAttribute"/>.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="binaryImage"/> is null.</exception>
-        public int Initialize(byte[] binaryImage, int startIndex, int length)
+        /// <param name="buffer">Buffer containing binary image to parse.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start parsing.</param>
+        /// <param name="length">Valid number of bytes within <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        /// <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed), or 0 if not enough data.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        public int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
-            if (binaryImage == null)
-                throw new ArgumentNullException("binaryImage");
+            if (buffer == null)
+                throw new ArgumentNullException("buffer");
 
-            if (length >= BinaryLength)
+            int imageLength = BinaryLength;
+
+            if (length >= imageLength)
             {
                 // Binary image has sufficient data.
-                m_type = (AttributeType)(binaryImage[startIndex]);
-                m_value = new byte[Convert.ToInt16(binaryImage[startIndex + 1] - 2)];
-                Array.Copy(binaryImage, startIndex + 2, m_value, 0, m_value.Length);
+                m_type = (AttributeType)(buffer[startIndex]);
+                m_value = new byte[Convert.ToInt16(buffer[startIndex + 1] - 2)];
+                Buffer.BlockCopy(buffer, startIndex + 2, m_value, 0, m_value.Length);
 
-                return BinaryLength;
+                return imageLength;
             }
             else
             {
                 // Binary image does not have sufficient data.
                 return 0;
             }
+        }
+
+        /// <summary>
+        /// Generates a binary representation of this <see cref="RadiusPacketAttribute"/> object and copies it into the given buffer.
+        /// </summary>
+        /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+        /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <see cref="ISupportBinaryImage.BinaryLength"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <see cref="ISupportBinaryImage.BinaryLength"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public int GenerateBinaryImage(byte[] buffer, int startIndex)
+        {
+            int length = BinaryLength;
+
+            buffer.ValidateParameters(startIndex, length);
+
+            // Populate the buffer
+            buffer[startIndex] = Convert.ToByte(m_type);
+            buffer[startIndex + 1] = (byte)length;
+            Buffer.BlockCopy(m_value, 0, buffer, startIndex + 2, m_value.Length);
+
+            return length;
         }
 
         #endregion

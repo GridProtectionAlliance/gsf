@@ -1,10 +1,11 @@
 ﻿//*******************************************************************************************************
 //  IsamDataFileBase.cs - Gbtc
 //
-//  Tennessee Valley Authority, 2009
+//  Tennessee Valley Authority, 2011
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -39,6 +40,8 @@
 //       Fixed thread synchronization bug in ReadFromDisk().
 //  04/07/2011 - Pinal C. Patel
 //       Removed inheritance from Component class to allow for serialization.
+//  11/23/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //*******************************************************************************************************
 
@@ -256,6 +259,25 @@
  representative as follows: J. Ritchie Carroll <mailto:jrcarrol@tva.gov>.
 
 */
+#endregion
+
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
 #endregion
 
 using System;
@@ -525,6 +547,11 @@ namespace TVA.IO
         /// Occurs when file data on the disk is modified.
         /// </summary>
         public event EventHandler FileModified;
+
+        /// <summary>
+        /// Occurs when the class has been disposed.
+        /// </summary>
+        public event EventHandler Disposed;
 
         // Fields
         private string m_fileName;
@@ -962,9 +989,9 @@ namespace TVA.IO
         {
             if (!m_initialized)
             {
-                LoadSettings();                             // Load settings from the config file.
-                m_recordBuffer = new byte[GetRecordSize()]; // Create buffer for reading records.
-                m_initialized = true;                       // Initialize only once.
+                LoadSettings();                                 // Load settings from the config file.
+                m_recordBuffer = new byte[GetRecordSize()];     // Create buffer for reading records.
+                m_initialized = true;                           // Initialize only once.
             }
         }
 
@@ -1424,6 +1451,9 @@ namespace TVA.IO
                 finally
                 {
                     m_disposed = true;          // Prevent duplicate dispose.
+
+                    if (Disposed != null)
+                        Disposed(this, EventArgs.Empty);
                 }
             }
         }
@@ -1471,7 +1501,7 @@ namespace TVA.IO
             lock (m_fileData)
             {
                 m_fileData.Seek((recordIndex - 1) * record.BinaryLength, SeekOrigin.Begin);
-                m_fileData.Write(record.BinaryImage, 0, record.BinaryLength);
+                record.CopyBinaryImageToStream(m_fileData);
             }
         }
 
@@ -1499,7 +1529,7 @@ namespace TVA.IO
             {
                 m_fileData.Seek((recordIndex - 1) * m_recordBuffer.Length, SeekOrigin.Begin);
                 m_fileData.Read(m_recordBuffer, 0, m_recordBuffer.Length);
-                newRecord.Initialize(m_recordBuffer, 0, m_recordBuffer.Length);
+                newRecord.ParseBinaryImage(m_recordBuffer, 0, m_recordBuffer.Length);
             }
 
             return newRecord;

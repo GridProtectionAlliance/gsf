@@ -1,7 +1,7 @@
 ﻿//*******************************************************************************************************
 //  AdapterLoader.cs - Gbtc
 //
-//  Tennessee Valley Authority, 2009
+//  Tennessee Valley Authority, 2011
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
@@ -44,6 +44,8 @@
 //       from bytes to megabytes.
 //  09/21/2011 - J. Ritchie Carroll
 //       Added Mono implementation exception regions.
+//  11/23/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //*******************************************************************************************************
 
@@ -593,6 +595,11 @@ namespace TVA.Adapters
         /// <see cref="EventArgs{T1,T2}.Argument2"/> is the <see cref="Exception"/> encountered when executing an operation on the adapter.
         /// </remarks>
         public event EventHandler<EventArgs<T, Exception>> OperationExecutionException;
+
+        /// <summary>
+        /// Occurs when the class has been disposed.
+        /// </summary>
+        public event EventHandler Disposed;
 
         // Fields
         private string m_adapterDirectory;
@@ -1389,6 +1396,9 @@ namespace TVA.Adapters
                 {
                     m_enabled = false;  // Mark as disabled.
                     m_disposed = true;  // Prevent duplicate dispose.
+
+                    if (Disposed != null)
+                        Disposed(this, EventArgs.Empty);
                 }
             }
         }

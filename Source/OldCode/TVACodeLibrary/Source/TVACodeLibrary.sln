@@ -156,9 +156,6 @@ Global
 		SccProjectName21 = Libraries/Tests/TVA.ServiceBus.Tests
 		SccLocalPath21 = Libraries\\Tests\\TVA.ServiceBus.Tests
 	EndGlobalSection
-	GlobalSection(TestCaseManagementSettings) = postSolution
-		CategoryFile = TVACodeLibrary.vsmdi
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|x86 = Debug|x86

@@ -287,6 +287,11 @@ namespace TVA.Media
         /// </summary>
         public const string RiffTypeID = "RIFF";
 
+        /// <summary>
+        /// The fixed byte length of a <see cref="RiffChunk"/> instance.
+        /// </summary>
+        public new const int FixedLength = RiffChunk.FixedLength + 4;
+
         // Fields
         private string m_format;
 
@@ -301,7 +306,13 @@ namespace TVA.Media
         public RiffHeaderChunk(string format)
             : base(RiffTypeID)
         {
-            Format = format;
+            if (string.IsNullOrWhiteSpace(format))
+                throw new ArgumentNullException("value");
+
+            if (format.Length != 4)
+                throw new ArgumentOutOfRangeException("value", "Format must be exactly 4 characters in length");
+
+            m_format = format;
         }
 
         /// <summary>Reads a new RIFF header from the specified stream.</summary>
@@ -313,21 +324,32 @@ namespace TVA.Media
         public RiffHeaderChunk(RiffChunk preRead, Stream source, string format)
             : base(preRead, RiffTypeID)
         {
-            Format = format;
+            if (string.IsNullOrWhiteSpace(format))
+                throw new ArgumentNullException("value");
 
-            int length = BinaryLength - preRead.BinaryLength;
-            byte[] buffer = new byte[length];
+            if (format.Length != 4)
+                throw new ArgumentOutOfRangeException("value", "Format must be exactly 4 characters in length");
 
-            int bytesRead = source.Read(buffer, 0, length);
+            byte[] buffer = BufferPool.TakeBuffer(4);
 
-            if (bytesRead < length)
-                throw new InvalidOperationException("RIFF format section too small, media file corrupted");
+            try
+            {
+                int bytesRead = source.Read(buffer, 0, 4);
 
-            // Read and validate format stored in RIFF section
-            Initialize(buffer, 0, bytesRead);
+                if (bytesRead < 4)
+                    throw new InvalidOperationException("RIFF format section too small, media file corrupted");
 
-            if (Format != Format)
-                throw new InvalidDataException(string.Format("{0} format expected but got {1}, this does not appear to be a valid {0} file", Format, format));
+                // Read format stored in RIFF section
+                m_format = Encoding.ASCII.GetString(buffer, 0, 4);
+
+                if (m_format != format)
+                    throw new InvalidDataException(string.Format("{0} format expected but got {1}, this does not appear to be a valid {0} file", format, m_format));
+            }
+            finally
+            {
+                if (buffer != null)
+                    BufferPool.ReturnBuffer(buffer);
+            }
         }
 
         #endregion
@@ -356,30 +378,13 @@ namespace TVA.Media
         }
 
         /// <summary>
-        /// Gets binary representation of RIFF header chunk.
-        /// </summary>
-        public override byte[] BinaryImage
-        {
-            get
-            {
-                byte[] binaryImage = new byte[BinaryLength];
-                int startIndex = base.BinaryLength;
-
-                Buffer.BlockCopy(base.BinaryImage, 0, binaryImage, 0, startIndex);
-                Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_format), 0, binaryImage, startIndex, 4);
-
-                return binaryImage;
-            }
-        }
-
-        /// <summary>
         /// Gets length of binary representation of RIFF header chunk.
         /// </summary>
         public new int BinaryLength
         {
             get
             {
-                return base.BinaryLength + 4;
+                return FixedLength;
             }
         }
 
@@ -388,22 +393,30 @@ namespace TVA.Media
         #region [ Methods ]
 
         /// <summary>
-        /// Parses <see cref="RiffHeaderChunk"/> object from <paramref name="binaryImage"/>.
+        /// Generates binary image of the object and copies it into the given buffer.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initialization.</param>
-        /// <param name="startIndex">0-based starting index in the <paramref name="binaryImage"/> to be used for initialization.</param>
-        /// <param name="length">Valid number of bytes within binary image.</param>
-        /// <returns>The number of bytes used for initialization in the <paramref name="binaryImage"/> (i.e., the number of bytes parsed).</returns>
-        /// <exception cref="InvalidOperationException">Not enough buffer length provided to read RIFF format section ID.</exception>
-        public int Initialize(byte[] binaryImage, int startIndex, int length)
+        /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+        /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <see cref="ISupportBinaryImage.BinaryLength"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <see cref="ISupportBinaryImage.BinaryLength"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public override int GenerateBinaryImage(byte[] buffer, int startIndex)
         {
-            if (length < 4)
-                throw new InvalidOperationException("Not enough buffer length provided to read RIFF format section ID");
+            buffer.ValidateParameters(startIndex, FixedLength);
 
-            // Read format ID stored in RIFF section
-            m_format = Encoding.ASCII.GetString(binaryImage, 0, 4);
+            startIndex += base.GenerateBinaryImage(buffer, startIndex);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_format), 0, buffer, startIndex, 4);
 
-            return 4;
+            return FixedLength;
+        }
+
+        // This is not currently needed since the RIFF header chunk is initialized during construction
+        int ISupportBinaryImage.ParseBinaryImage(byte[] buffer, int startIndex, int length)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>

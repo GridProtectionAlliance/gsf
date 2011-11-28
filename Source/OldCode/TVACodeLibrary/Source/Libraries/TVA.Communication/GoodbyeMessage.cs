@@ -1,10 +1,11 @@
 //*******************************************************************************************************
 //  GoodbyeMessage.cs - Gbtc
 //
-//  Tennessee Valley Authority, 2009
+//  Tennessee Valley Authority, 2011
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -14,6 +15,8 @@
 //       Converted to C#.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  11/23/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //*******************************************************************************************************
 
@@ -233,6 +236,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using TVA.Parsing;
 
@@ -241,16 +263,19 @@ namespace TVA.Communication
     [Serializable()]
     internal class GoodbyeMessage : ISupportBinaryImage
     {
-        /// <summary>
-        /// 2-Byte identifier for <see cref="GoodbyeMessage"/>.
-        /// </summary>
-        public static byte[] MessageIdentifier = { 0xA3, 0xC4 };
+        #region [ Members ]
+
+        // Fields
 
         /// <summary>
         /// Gets or sets the disconnecting client's ID.
         /// </summary>
         /// <remarks>Max size is 16.</remarks>
         public Guid ID;
+
+        #endregion
+
+        #region [ Constructors ]
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GoodbyeMessage"/> class.
@@ -268,46 +293,44 @@ namespace TVA.Communication
             ID = id;
         }
 
+        #endregion
+
+        #region [ Properties ]
+
         /// <summary>
-        /// Gets the length of the <see cref="BinaryImage"/>.
+        /// Gets the length of the <see cref="GoodbyeMessage"/>.
         /// </summary>
         public int BinaryLength
         {
-            get { return MessageIdentifier.Length + 16; }
-        }
-
-        /// <summary>
-        /// Gets the binary representation of the <see cref="GoodbyeMessage"/> object.
-        /// </summary>
-        public byte[] BinaryImage
-        {
             get
             {
-                // Create the image.
-                byte[] image = new byte[BinaryLength];
-                // Populate the image.
-                Buffer.BlockCopy(MessageIdentifier, 0, image, 0, MessageIdentifier.Length);
-                Buffer.BlockCopy(ID.ToByteArray(), 0, image, MessageIdentifier.Length, 16);
-                // Return the image.
-                return image;
+                return MessageIdentifier.Length + 16;
             }
         }
 
+        #endregion
+
+        #region [ Methods ]
+
         /// <summary>
-        /// Initializes the <see cref="GoodbyeMessage"/> object from the binary image.
+        /// Parses <see cref="GoodbyeMessage"/> object by parsing the specified <paramref name="buffer"/> containing a binary image.
         /// </summary>
-        public int Initialize(byte[] binaryImage, int startIndex, int length)
+        /// <param name="buffer">Buffer containing binary image to parse.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start parsing.</param>
+        /// <param name="length">Valid number of bytes within <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        /// <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed), or -1 if not enough data.</returns>
+        public int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
             if (length - startIndex >= BinaryLength)
             {
-                if (binaryImage.CompareTo(0, MessageIdentifier, 0, MessageIdentifier.Length) != 0)
+                if (buffer.CompareTo(0, MessageIdentifier, 0, MessageIdentifier.Length) != 0)
                     // Message identifier don't match.
                     return -1;
 
                 try
                 {
                     // Binary image has sufficient data.
-                    ID = new Guid(binaryImage.BlockCopy(startIndex + MessageIdentifier.Length, 16));
+                    ID = new Guid(buffer.BlockCopy(startIndex + MessageIdentifier.Length, 16));
 
                     return BinaryLength;
                 }
@@ -322,5 +345,42 @@ namespace TVA.Communication
                 return -1;
             }
         }
+
+        /// <summary>
+        /// Generates a binary representation of this <see cref="GoodbyeMessage"/> object and copies it into the given buffer.
+        /// </summary>
+        /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+        /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <see cref="ISupportBinaryImage.BinaryLength"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <see cref="ISupportBinaryImage.BinaryLength"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public int GenerateBinaryImage(byte[] buffer, int startIndex)
+        {
+            int length = BinaryLength;
+
+            buffer.ValidateParameters(startIndex, length);
+
+            // Populate the image.
+            Buffer.BlockCopy(MessageIdentifier, 0, buffer, startIndex, MessageIdentifier.Length);
+            Buffer.BlockCopy(ID.ToByteArray(), 0, buffer, startIndex + MessageIdentifier.Length, 16);
+
+            return length;
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+
+        /// <summary>
+        /// 2-Byte identifier for <see cref="GoodbyeMessage"/>.
+        /// </summary>
+        public static byte[] MessageIdentifier = { 0xA3, 0xC4 };
+
+        #endregion
     }
 }

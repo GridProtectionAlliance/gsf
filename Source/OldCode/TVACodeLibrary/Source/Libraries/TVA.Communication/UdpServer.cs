@@ -1,7 +1,7 @@
 //*******************************************************************************************************
 //  UdpServer.cs - Gbtc
 //
-//  Tennessee Valley Authority, 2009
+//  Tennessee Valley Authority, 2011
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
@@ -278,6 +278,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Threading;
+using TVA.Parsing;
 
 namespace TVA.Communication
 {
@@ -587,7 +588,7 @@ namespace TVA.Communication
             if (Handshake)
             {
                 // Handshake is enabled so we'll notify the client.
-                udpClient.SendBuffer = new GoodbyeMessage(udpClient.ID).BinaryImage;
+                udpClient.SendBuffer = new GoodbyeMessage(udpClient.ID).BinaryImage();
                 udpClient.SendBufferOffset = 0;
                 udpClient.SendBufferLength = udpClient.SendBuffer.Length;
                 Payload.ProcessTransmit(ref udpClient.SendBuffer, ref udpClient.SendBufferOffset, ref udpClient.SendBufferLength, Encryption, udpClient.Secretkey, Compression);
@@ -738,7 +739,7 @@ namespace TVA.Communication
                 Payload.ProcessReceived(ref udpServer.ReceiveBuffer, ref udpServer.ReceiveBufferOffset, ref udpServer.ReceiveBufferLength, Encryption, SharedSecret, Compression);
 
                 HandshakeMessage handshake = new HandshakeMessage();
-                if (handshake.Initialize(udpServer.ReceiveBuffer, udpServer.ReceiveBufferOffset, udpServer.ReceiveBufferLength) != -1)
+                if (handshake.ParseBinaryImage(udpServer.ReceiveBuffer, udpServer.ReceiveBufferOffset, udpServer.ReceiveBufferLength) != -1)
                 {
                     // Received handshake message is parsed successfully
                     if (handshake.ID != Guid.Empty)
@@ -762,7 +763,7 @@ namespace TVA.Communication
                         }
 
                         // Prepare binary image of handshake response to be transmitted
-                        udpClient.SendBuffer = handshake.BinaryImage;
+                        udpClient.SendBuffer = handshake.BinaryImage();
                         udpClient.SendBufferOffset = 0;
                         udpClient.SendBufferLength = udpClient.SendBuffer.Length;
                         Payload.ProcessTransmit(ref udpClient.SendBuffer, ref udpClient.SendBufferOffset, ref udpClient.SendBufferLength, Encryption, SharedSecret, Compression);
@@ -1000,7 +1001,7 @@ namespace TVA.Communication
             Payload.ProcessReceived(ref buffer, ref offset, ref length, Encryption, client.Secretkey, Compression);
 
             // Check if data is for goodbye message.
-            return (new GoodbyeMessage().Initialize(buffer, offset, length) != -1);
+            return (new GoodbyeMessage().ParseBinaryImage(buffer, offset, length) != -1);
         }
 
         /// <summary>

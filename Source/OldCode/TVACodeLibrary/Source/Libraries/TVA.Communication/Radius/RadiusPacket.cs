@@ -1,15 +1,18 @@
 ﻿//*******************************************************************************************************
 //  RadiusPacket.cs - Gbtc
 //
-//  Tennessee Valley Authority, 2010
+//  Tennessee Valley Authority, 2011
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
 //  11/26/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  11/23/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //*******************************************************************************************************
 
@@ -229,6 +232,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
@@ -361,7 +383,7 @@ namespace TVA.Communication.Radius
         public RadiusPacket(byte[] binaryImage, int startIndex, int length)
             : this()
         {
-            Initialize(binaryImage, startIndex, length);
+            ParseBinaryImage(binaryImage, startIndex, length);
         }
 
         #endregion
@@ -416,7 +438,7 @@ namespace TVA.Communication.Radius
 
                 if (value == null || value.Length != 16)
                     throw new ArgumentException("Value must 16-byte long.");
-                
+
                 m_authenticator = value;
             }
         }
@@ -433,7 +455,7 @@ namespace TVA.Communication.Radius
         }
 
         /// <summary>
-        /// Gets the lenght of the <see cref="BinaryImage"/>.
+        /// Gets the length of the <see cref="RadiusPacket"/>.
         /// </summary>
         public int BinaryLength
         {
@@ -441,6 +463,7 @@ namespace TVA.Communication.Radius
             {
                 // 20 bytes are fixed + length of all attributes combined
                 int length = 20;
+
                 foreach (RadiusPacketAttribute attribute in m_attributes)
                 {
                     if (attribute != null)
@@ -451,75 +474,84 @@ namespace TVA.Communication.Radius
             }
         }
 
-        /// <summary>
-        /// Gets the binary representation of the <see cref="RadiusPacket"/>.
-        /// </summary>
-        public byte[] BinaryImage
-        {
-            get
-            {
-                byte[] image = new byte[BinaryLength];
-
-                image[0] = Convert.ToByte(m_type);
-                image[1] = m_identifier;
-                Array.Copy(EndianOrder.GetBytes((ushort)BinaryLength), 0, image, 2, 2);
-                Array.Copy(m_authenticator, 0, image, 4, m_authenticator.Length);
-                int cursor = 20;
-                foreach (RadiusPacketAttribute attribute in m_attributes)
-                {
-                    if (attribute != null)
-                    {
-                        Array.Copy(attribute.BinaryImage, 0, image, cursor, attribute.BinaryLength);
-                        cursor += attribute.BinaryLength;
-                    }
-                }
-
-                return image;
-            }
-        }
-
         #endregion
 
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes <see cref="RadiusPacket"/> from the specified <paramref name="binaryImage"/>.
+        /// Parses <see cref="RadiusPacket"/> object by parsing the specified <paramref name="buffer"/> containing a binary image.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="RadiusPacket"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="RadiusPacket"/>.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="binaryImage"/> is null.</exception>
-        public int Initialize(byte[] binaryImage, int startIndex, int length)
+        /// <param name="buffer">Buffer containing binary image to parse.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start parsing.</param>
+        /// <param name="length">Valid number of bytes within <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        /// <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed), or 0 if not enough data.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        public int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
-            if (binaryImage == null)
-                throw new ArgumentNullException("binaryImage");
+            if (buffer == null)
+                throw new ArgumentNullException("buffer");
 
-            if (length >= BinaryLength)
+            int imageLength = BinaryLength;
+
+            if (length >= imageLength)
             {
                 // Binary image has sufficient data.
                 UInt16 size;
-                m_type = (PacketType)(binaryImage[startIndex]);
-                m_identifier = binaryImage[startIndex + 1];
-                size = EndianOrder.ToUInt16(binaryImage, startIndex + 2);
-                Array.Copy(binaryImage, 4, m_authenticator, 0, m_authenticator.Length);
+                m_type = (PacketType)(buffer[startIndex]);
+                m_identifier = buffer[startIndex + 1];
+                size = EndianOrder.ToUInt16(buffer, startIndex + 2);
+                Buffer.BlockCopy(buffer, startIndex + 4, m_authenticator, 0, m_authenticator.Length);
 
                 // Parse all attributes in the packet.
                 int cursor = 20;
+
                 while (cursor < size)
                 {
-                    RadiusPacketAttribute attribute = new RadiusPacketAttribute(binaryImage, startIndex + cursor, length);
+                    RadiusPacketAttribute attribute = new RadiusPacketAttribute(buffer, startIndex + cursor, length);
                     m_attributes.Add(attribute);
                     cursor += attribute.BinaryLength;
                 }
 
-                return BinaryLength;
+                return imageLength;
             }
             else
             {
                 // Binary image does not have sufficient data.
                 return 0;
             }
+        }
+
+        /// <summary>
+        /// Generates a binary representation of this <see cref="RadiusPacket"/> object and copies it into the given buffer.
+        /// </summary>
+        /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+        /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <see cref="ISupportBinaryImage.BinaryLength"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <see cref="ISupportBinaryImage.BinaryLength"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public int GenerateBinaryImage(byte[] buffer, int startIndex)
+        {
+            int length = BinaryLength;
+
+            buffer.ValidateParameters(startIndex, length);
+
+            // Populate the buffer
+            buffer[startIndex] = Convert.ToByte(m_type);
+            buffer[startIndex + 1] = m_identifier;
+            Buffer.BlockCopy(EndianOrder.GetBytes((ushort)BinaryLength), 0, buffer, startIndex + 2, 2);
+            Buffer.BlockCopy(m_authenticator, 0, buffer, startIndex + 4, m_authenticator.Length);
+            startIndex += 20;
+
+            foreach (RadiusPacketAttribute attribute in m_attributes)
+            {
+                if (attribute != null)
+                    startIndex += attribute.GenerateBinaryImage(buffer, startIndex);
+            }
+
+            return length;
         }
 
         /// <summary>
@@ -530,10 +562,11 @@ namespace TVA.Communication.Radius
         public byte[] GetAttributeValue(AttributeType attributeType)
         {
             RadiusPacketAttribute match = m_attributes.Find(attribute => attribute.Type == attributeType);
-            if (match != null)
+
+            if (match == null)
                 return null;
-            else
-                return match.Value;
+
+            return match.Value;
         }
 
         #endregion
@@ -580,23 +613,29 @@ namespace TVA.Communication.Radius
         /// <returns>A byte array.</returns>
         public static byte[] CreateResponseAuthenticator(string sharedSecret, RadiusPacket requestPacket, RadiusPacket responsePacket)
         {
-            byte[] requestBytes = requestPacket.BinaryImage;
-            byte[] responseBytes = responsePacket.BinaryImage;
-            byte[] sharedSecretBytes = Encoding.GetBytes(sharedSecret);
-            byte[] inputBuffer = new byte[responseBytes.Length + sharedSecretBytes.Length];
-
             // Response authenticator is generated as follows:
             // MD5(Code + Identifier + Length + Request Authenticator + Attributes + Shared Secret)
             //   where:
             //   Code, Identifier, Length & Attributes are from the response RADIUS packet
             //   Request Authenticator is from the request RADIUS packet
             //   Shared Secret is the shared secret ket
+            int length = responsePacket.BinaryLength;
+            byte[] sharedSecretBytes = Encoding.GetBytes(sharedSecret);
+            byte[] buffer = BufferPool.TakeBuffer(length + sharedSecretBytes.Length);
 
-            Array.Copy(responseBytes, 0, inputBuffer, 0, responseBytes.Length);
-            Array.Copy(requestBytes, 4, inputBuffer, 4, 16);
-            Array.Copy(sharedSecretBytes, 0, inputBuffer, responseBytes.Length, sharedSecretBytes.Length);
+            try
+            {
+                responsePacket.GenerateBinaryImage(buffer, 0);
+                Buffer.BlockCopy(requestPacket.BinaryImage(), 4, buffer, 4, 16);
+                Buffer.BlockCopy(sharedSecretBytes, 0, buffer, length, sharedSecretBytes.Length);
 
-            return new MD5CryptoServiceProvider().ComputeHash(inputBuffer);
+                return new MD5CryptoServiceProvider().ComputeHash(buffer);
+            }
+            finally
+            {
+                if (buffer != null)
+                    BufferPool.ReturnBuffer(buffer);
+            }
         }
 
         /// <summary>
@@ -617,7 +656,9 @@ namespace TVA.Communication.Radius
                 byte[] passwordBytes = Encoding.GetBytes(password);
                 byte[] sharedSecretBytes = Encoding.GetBytes(sharedSecret);
                 byte[] md5HashInputBytes = new byte[sharedSecretBytes.Length + 16];
+
                 MD5CryptoServiceProvider md5Provider = new MD5CryptoServiceProvider();
+
                 if (passwordBytes.Length % 16 == 0)
                 {
                     // Length of password is a multiple of 16.
@@ -631,12 +672,14 @@ namespace TVA.Communication.Radius
                 }
 
                 // Copy the password to the result buffer where it'll be XORed.
-                Array.Copy(passwordBytes, 0, result, 0, passwordBytes.Length);
+                Buffer.BlockCopy(passwordBytes, 0, result, 0, passwordBytes.Length);
+
                 // For the first 16-byte segment of the password, password characters are to be XORed with the
                 // MD5 hash value that's computed as follows:
                 //   MD5(Shared secret key + Request authenticator)
-                Array.Copy(sharedSecretBytes, 0, md5HashInputBytes, 0, sharedSecretBytes.Length);
-                Array.Copy(requestAuthenticator, 0, md5HashInputBytes, sharedSecretBytes.Length, requestAuthenticator.Length);
+                Buffer.BlockCopy(sharedSecretBytes, 0, md5HashInputBytes, 0, sharedSecretBytes.Length);
+                Buffer.BlockCopy(requestAuthenticator, 0, md5HashInputBytes, sharedSecretBytes.Length, requestAuthenticator.Length);
+
                 for (int i = 0; i <= result.Length - 1; i += 16)
                 {
                     // Perform XOR-based encryption of the password in 16-byte segments.
@@ -645,7 +688,7 @@ namespace TVA.Communication.Radius
                         // For passwords that are more than 16 characters in length, each consecutive 16-byte
                         // segment of the password is XORed with MD5 hash value that's computed as follows:
                         //   MD5(Shared secret key + XOR bytes used in the previous segment)
-                        Array.Copy(xorBytes, 0, md5HashInputBytes, sharedSecretBytes.Length, xorBytes.Length);
+                        Buffer.BlockCopy(xorBytes, 0, md5HashInputBytes, sharedSecretBytes.Length, xorBytes.Length);
                     }
                     xorBytes = md5Provider.ComputeHash(md5HashInputBytes);
 

@@ -269,6 +269,7 @@
 using System;
 using System.IO;
 using System.Text;
+using TVA.Parsing;
 
 namespace TVA.Media
 {
@@ -316,9 +317,16 @@ namespace TVA.Media
     /// </list>
     /// </para>
     /// </remarks>
-    public class RiffChunk
+    public class RiffChunk : ISupportBinaryImage
     {
         #region [ Members ]
+
+        // Constants
+
+        /// <summary>
+        /// The fixed byte length of a <see cref="RiffChunk"/> instance.
+        /// </summary>
+        public const int FixedLength = 8;
 
         // Fields
         private string m_typeID;
@@ -394,35 +402,46 @@ namespace TVA.Media
         }
 
         /// <summary>
-        /// Returns a binary representation of this <see cref="RiffChunk"/>.
-        /// </summary>
-        public virtual byte[] BinaryImage
-        {
-            get
-            {
-                byte[] binaryImage = new byte[BinaryLength];
-
-                Buffer.BlockCopy(Encoding.ASCII.GetBytes(TypeID), 0, binaryImage, 0, 4);
-                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(ChunkSize), 0, binaryImage, 4, 4);
-
-                return binaryImage;
-            }
-        }
-
-        /// <summary>
         /// Gets the length of a <see cref="RiffChunk"/> consisting of type ID and chunk size (i.e., 8 bytes).
         /// </summary>
-        public int BinaryLength
+        public virtual int BinaryLength
         {
             get
             {
-                return 8;
+                return FixedLength;
             }
         }
 
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Generates a binary representation of this <see cref="RiffChunk"/> and copies it into the given buffer.
+        /// </summary>
+        /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+        /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <see cref="ISupportBinaryImage.BinaryLength"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <see cref="ISupportBinaryImage.BinaryLength"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public virtual int GenerateBinaryImage(byte[] buffer, int startIndex)
+        {
+            buffer.ValidateParameters(startIndex, FixedLength);
+
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(TypeID), 0, buffer, 0, 4);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(ChunkSize), 0, buffer, 4, 4);
+
+            return FixedLength;
+        }
+
+        // This is not currently needed since the RIFF chunks are read using the static ReadNext
+        int ISupportBinaryImage.ParseBinaryImage(byte[] buffer, int startIndex, int length)
+        {
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Creates a copy of the <see cref="RiffChunk"/>.
@@ -452,17 +471,25 @@ namespace TVA.Media
             RiffChunk riffChunk = new RiffChunk();
             int length = riffChunk.BinaryLength;
 
-            byte[] buffer = new byte[length];
+            byte[] buffer = BufferPool.TakeBuffer(length);
 
-            int bytesRead = source.Read(buffer, 0, length);
+            try
+            {
+                int bytesRead = source.Read(buffer, 0, length);
 
-            if (bytesRead < length)
-                throw new InvalidOperationException("RIFF chunk too small, media file corrupted");
+                if (bytesRead < length)
+                    throw new InvalidOperationException("RIFF chunk too small, media file corrupted");
 
-            riffChunk.TypeID = Encoding.ASCII.GetString(buffer, 0, 4);
-            riffChunk.ChunkSize = EndianOrder.LittleEndian.ToInt32(buffer, 4);
+                riffChunk.TypeID = Encoding.ASCII.GetString(buffer, 0, 4);
+                riffChunk.ChunkSize = EndianOrder.LittleEndian.ToInt32(buffer, 4);
 
-            return riffChunk;
+                return riffChunk;
+            }
+            finally
+            {
+                if (buffer != null)
+                    BufferPool.ReturnBuffer(buffer);
+            }
         }
 
         #endregion

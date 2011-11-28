@@ -412,7 +412,6 @@ namespace UDPRebroadcasterConsole
 
         private void ClientHelper_ReceivedServiceResponse(object sender, EventArgs<ServiceResponse> e)
         {
-            // TODO: Handle custom service responses here.
             Console.Write(string.Format("Received custom response \"{0}\" from remote service.\r\n\r\n", e.Argument.Type));
         }
 

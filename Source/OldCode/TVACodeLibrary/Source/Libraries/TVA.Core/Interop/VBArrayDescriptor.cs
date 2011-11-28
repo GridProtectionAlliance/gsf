@@ -1,10 +1,11 @@
 //*******************************************************************************************************
 //  VBArrayDescriptor.cs - Gbtc
 //
-//  Tennessee Valley Authority, 2009
+//  Tennessee Valley Authority, 2011
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -17,6 +18,8 @@
 //       Edited code comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  11/23/2011 - J. Ritchie Carroll
+//       Updated to support new ISupportBinaryImage buffer optimizations.
 //
 //*******************************************************************************************************
 
@@ -236,6 +239,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.Collections.Generic;
 using TVA.Parsing;
@@ -303,27 +325,6 @@ namespace TVA.Interop
         #region [ Properties ]
 
         /// <summary>
-        /// Gets a serialized version of <see cref="VBArrayDescriptor"/>.
-        /// </summary>
-        public byte[] BinaryImage
-        {
-            get
-            {
-                byte[] image = new byte[this.BinaryLength];
-
-                Array.Copy(BitConverter.GetBytes(m_arrayDimensionDescriptors.Count), 0, image, 0, 2);
-
-                for (int i = 0; i < m_arrayDimensionDescriptors.Count; i++)
-                {
-                    Array.Copy(BitConverter.GetBytes(m_arrayDimensionDescriptors[i].Length), 0, image, (i * DimensionDescriptor.BinaryLength) + 2, 4);
-                    Array.Copy(BitConverter.GetBytes(m_arrayDimensionDescriptors[i].LowerBound), 0, image, (i * DimensionDescriptor.BinaryLength) + 6, 4);
-                }
-
-                return image;
-            }
-        }
-
-        /// <summary>
         /// Gets the length of serialized <see cref="VBArrayDescriptor"/>.
         /// </summary>
         public int BinaryLength
@@ -338,8 +339,35 @@ namespace TVA.Interop
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Generates binary image of the object and copies it into the given buffer, for <see cref="ISupportBinaryImage.BinaryLength"/> bytes.
+        /// </summary>
+        /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+        /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <see cref="ISupportBinaryImage.BinaryLength"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <see cref="ISupportBinaryImage.BinaryLength"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public int GenerateBinaryImage(byte[] buffer, int startIndex)
+        {
+            int length = BinaryLength;
+            buffer.ValidateParameters(startIndex, length);
+
+            Buffer.BlockCopy(BitConverter.GetBytes(m_arrayDimensionDescriptors.Count), 0, buffer, startIndex, 2);
+
+            for (int i = 0; i < m_arrayDimensionDescriptors.Count; i++)
+            {
+                Buffer.BlockCopy(BitConverter.GetBytes(m_arrayDimensionDescriptors[i].Length), 0, buffer, (i * DimensionDescriptor.BinaryLength) + 2, 4);
+                Buffer.BlockCopy(BitConverter.GetBytes(m_arrayDimensionDescriptors[i].LowerBound), 0, buffer, (i * DimensionDescriptor.BinaryLength) + 6, 4);
+            }
+
+            return length;
+        }
+
         // Currently not supporting initialization from binary image
-        int ISupportBinaryImage.Initialize(byte[] binaryImage, int startIndex, int length)
+        int ISupportBinaryImage.ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
             throw new NotImplementedException();
         }

@@ -1,10 +1,11 @@
 //*******************************************************************************************************
 //  HandshakeMessage.cs - Gbtc
 //
-//  Tennessee Valley Authority, 2009
+//  Tennessee Valley Authority, 2011
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -16,6 +17,8 @@
 //       Added new header and license agreement.
 //  08/18/2011 - J. Ritchie Carroll
 //       Minor code clean up and code review.
+//  11/23/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //*******************************************************************************************************
 
@@ -266,10 +269,9 @@ namespace TVA.Communication
     [Serializable()]
     internal class HandshakeMessage : ISupportBinaryImage
     {
-        /// <summary>
-        /// 2-Byte identifier for <see cref="HandshakeMessage"/>.
-        /// </summary>
-        public static byte[] MessageIdentifier = { 0x98, 0xC4 };
+        #region [ Members ]
+
+        // Fields
 
         /// <summary>
         /// Gets or sets the unique identifier.
@@ -283,6 +285,10 @@ namespace TVA.Communication
         /// <remarks>Max size is 260.</remarks>
         public string Secretkey;
 
+        #endregion
+
+        #region [ Constructors ]
+
         /// <summary>
         /// Initializes a new instance of the <see cref="HandshakeMessage"/> class.
         /// </summary>
@@ -292,8 +298,12 @@ namespace TVA.Communication
             Secretkey = "";
         }
 
+        #endregion
+
+        #region [ Properties ]
+
         /// <summary>
-        /// Gets the length of the <see cref="BinaryImage"/>.
+        /// Gets the length of the <see cref="HandshakeMessage"/>.
         /// </summary>
         public int BinaryLength
         {
@@ -303,43 +313,30 @@ namespace TVA.Communication
             }
         }
 
-        /// <summary>
-        /// Gets the binary representation of the <see cref="HandshakeMessage"/> object.
-        /// </summary>
-        public byte[] BinaryImage
-        {
-            get
-            {
-                // Create the image buffer
-                byte[] image = new byte[BinaryLength];
+        #endregion
 
-                // Populate the buffer
-                Secretkey = Secretkey.PadRight(260).TruncateRight(260);
-                Buffer.BlockCopy(MessageIdentifier, 0, image, 0, MessageIdentifier.Length);
-                Buffer.BlockCopy(ID.ToByteArray(), 0, image, MessageIdentifier.Length, 16);
-                Buffer.BlockCopy(Encoding.ASCII.GetBytes(Secretkey), 0, image, MessageIdentifier.Length + 16, 260);
-
-                // Return the image
-                return image;
-            }
-        }
+        #region [ Methods ]
 
         /// <summary>
-        /// Initializes the <see cref="HandshakeMessage"/> object from the binary image.
+        /// Parses <see cref="HandshakeMessage"/> object by parsing the specified <paramref name="buffer"/> containing a binary image.
         /// </summary>
-        public int Initialize(byte[] binaryImage, int startIndex, int length)
+        /// <param name="buffer">Buffer containing binary image to parse.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start parsing.</param>
+        /// <param name="length">Valid number of bytes within <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        /// <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed), or -1 if not enough data.</returns>
+        public int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
             if (length - startIndex >= BinaryLength)
             {
                 // Validate message identifier matches
-                if (binaryImage.CompareTo(0, MessageIdentifier, 0, MessageIdentifier.Length) != 0)
+                if (buffer.CompareTo(0, MessageIdentifier, 0, MessageIdentifier.Length) != 0)
                     return -1;
 
                 try
                 {
                     // Parse binary image
-                    ID = new Guid(binaryImage.BlockCopy(startIndex + MessageIdentifier.Length, 16));
-                    Secretkey = Encoding.ASCII.GetString(binaryImage, startIndex + MessageIdentifier.Length + 16, 260).Trim();
+                    ID = new Guid(buffer.BlockCopy(startIndex + MessageIdentifier.Length, 16));
+                    Secretkey = Encoding.ASCII.GetString(buffer, startIndex + MessageIdentifier.Length + 16, 260).Trim();
 
                     return BinaryLength;
                 }
@@ -354,5 +351,44 @@ namespace TVA.Communication
                 return -1;
             }
         }
+
+        /// <summary>
+        /// Generates a binary representation of this <see cref="HandshakeMessage"/> object and copies it into the given buffer.
+        /// </summary>
+        /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+        /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <see cref="ISupportBinaryImage.BinaryLength"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <see cref="ISupportBinaryImage.BinaryLength"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public int GenerateBinaryImage(byte[] buffer, int startIndex)
+        {
+            int length = BinaryLength;
+
+            buffer.ValidateParameters(startIndex, length);
+
+            // Populate the buffer
+            Secretkey = Secretkey.PadRight(260).TruncateRight(260);
+            Buffer.BlockCopy(MessageIdentifier, 0, buffer, startIndex, MessageIdentifier.Length);
+            Buffer.BlockCopy(ID.ToByteArray(), 0, buffer, startIndex + MessageIdentifier.Length, 16);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(Secretkey), 0, buffer, startIndex + MessageIdentifier.Length + 16, 260);
+
+            return length;
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+
+        /// <summary>
+        /// 2-Byte identifier for <see cref="HandshakeMessage"/>.
+        /// </summary>
+        public static byte[] MessageIdentifier = { 0x98, 0xC4 };
+
+        #endregion
     }
 }

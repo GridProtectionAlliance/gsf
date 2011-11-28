@@ -284,6 +284,7 @@ using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Threading;
 using TVA.Configuration;
+using TVA.Parsing;
 
 namespace TVA.Communication
 {
@@ -770,7 +771,7 @@ namespace TVA.Communication
                     handshake.Secretkey = this.SharedSecret;
 
                     // Prepare binary image of handshake to be transmitted.
-                    tcpClient.SendBuffer = handshake.BinaryImage;
+                    tcpClient.SendBuffer = handshake.BinaryImage();
                     tcpClient.SendBufferOffset = 0;
                     tcpClient.SendBufferLength = tcpClient.SendBuffer.Length;
                     Payload.ProcessTransmit(ref tcpClient.SendBuffer, ref tcpClient.SendBufferOffset, ref tcpClient.SendBufferLength, Encryption, SharedSecret, Compression);
@@ -879,15 +880,16 @@ namespace TVA.Communication
                     tcpClient.Statistics.UpdateBytesReceived(tcpClient.Provider.EndReceive(asyncResult));
                     tcpClient.ReceiveBufferLength = tcpClient.Statistics.LastBytesReceived;
 
+                    // Client disconnected gracefully.
                     if (tcpClient.Statistics.LastBytesReceived == 0)
-                        // Client disconnected gracefully.
                         throw new SocketException((int)SocketError.Disconnecting);
 
                     // Process the received handshake response message.
                     Payload.ProcessReceived(ref tcpClient.ReceiveBuffer, ref tcpClient.ReceiveBufferOffset, ref tcpClient.ReceiveBufferLength, Encryption, SharedSecret, Compression);
 
                     HandshakeMessage handshake = new HandshakeMessage();
-                    if (handshake.Initialize(tcpClient.ReceiveBuffer, tcpClient.ReceiveBufferOffset, tcpClient.ReceiveBufferLength) != -1)
+
+                    if (handshake.ParseBinaryImage(tcpClient.ReceiveBuffer, tcpClient.ReceiveBufferOffset, tcpClient.ReceiveBufferLength) != -1)
                     {
                         // Received handshake response message could be parsed.
                         this.ServerID = handshake.ID;

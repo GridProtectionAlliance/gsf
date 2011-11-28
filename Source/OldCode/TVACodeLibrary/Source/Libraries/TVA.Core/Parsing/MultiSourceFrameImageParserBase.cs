@@ -1,10 +1,11 @@
 ﻿//*******************************************************************************************************
 //  MultiSourceFrameImageParserBase.cs - Gbtc
 //
-//  Tennessee Valley Authority, 2009
+//  Tennessee Valley Authority, 2011
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -235,6 +236,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 #pragma warning disable 0809
 
 using System;
@@ -264,7 +284,7 @@ namespace TVA.Parsing
     /// <typeparam name="TSourceIdentifier">Type of identifier for the data source.</typeparam>
     /// <typeparam name="TTypeIdentifier">Type of identifier used to distinguish output types.</typeparam>
     /// <typeparam name="TOutputType">Type of the interface or class used to represent outputs.</typeparam>
-    public abstract class MultiSourceFrameImageParserBase<TSourceIdentifier, TTypeIdentifier, TOutputType> : FrameImageParserBase<TTypeIdentifier, TOutputType> where TOutputType : ISupportFrameImage<TTypeIdentifier>
+    public abstract class MultiSourceFrameImageParserBase<TSourceIdentifier, TTypeIdentifier, TOutputType> : FrameImageParserBase<TTypeIdentifier, TOutputType> where TOutputType : class, ISupportFrameImage<TTypeIdentifier>, new()
     {
         #region [ Members ]
 
@@ -459,7 +479,7 @@ namespace TVA.Parsing
         /// </remarks>
         public virtual void Parse(TSourceIdentifier source, ISupportBinaryImage image)
         {
-            Parse(source, image.BinaryImage);
+            Parse(source, image.BinaryImage());
         }
 
         /// <summary>

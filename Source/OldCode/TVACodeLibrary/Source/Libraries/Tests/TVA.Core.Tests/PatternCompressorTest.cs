@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TVA.IO;
 using TVA.IO.Compression;
 using TVA.Units;
 
@@ -17,9 +16,6 @@ namespace TVA.Core.Tests
     {
         public PatternCompressorTest()
         {
-            //
-            // TODO: Add constructor logic here
-            //
         }
 
         private TestContext testContextInstance;

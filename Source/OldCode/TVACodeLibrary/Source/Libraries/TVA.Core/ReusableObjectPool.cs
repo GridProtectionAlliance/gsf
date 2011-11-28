@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  BufferPool.cs - Gbtc
+//  ReusableObjectPool.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2011
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -9,8 +9,8 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  10/27/2011 - J. Ritchie Carroll
-//       Initial version of source generated.
+//  11/23/2011 - J. Ritchie Carroll
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
@@ -250,62 +250,281 @@
 #endregion
 
 using System;
-using System.ServiceModel.Channels;
+using System.Collections.Concurrent;
 
-namespace TVA.IO
+namespace TVA
 {
     /// <summary>
-    /// Represents a common buffer pool that can be used by an application.
+    /// Represents a reusable object pool that can be used by an application.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The buffer pool is statically created at application startup and is available for all components and classes
-    /// within an application domain. Every time you need to use a buffer, you take one from the pool, use it, and
-    /// return it to the pool when done. This process is much faster than creating and destroying a buffer every
-    /// time you need to use one.
+    /// Object pooling can offer a significant performance boost in some scenarios. It is most effective when the cost
+    /// of construction is high and/or the rate of instantiation is high.
     /// </para>
     /// <para>
-    /// It is very imporant to return the pool to the buffer when you are finished using it. If you are using a buffer
-    /// scoped within a method, make sure to use a try/finally so that you can take the buffer within the try and
-    /// return the buffer within the finally. If you are using a buffer as a member scoped class field, make sure
-    /// you use the standard dispose pattern and return the buffer in the <see cref="IDisposable.Dispose"/> method.
+    /// This object pool is statically created at application startup, one per type, and is available for all components
+    /// and classes within an application domain. Every time you need to use an object, you take one from the pool, use
+    /// it, then return it to the pool when done. This process can be much faster than creating a new object every time
+    /// you need to use one.
+    /// </para>
+    /// <para>
+    /// When objects implement <see cref="ISupportLifecycle"/>, the <see cref="ReusableObjectPool{T}"/> will automatically
+    /// attach to the <see cref="ISupportLifecycle.Disposed"/> event and return the object to the pool when it's disposed.
+    /// When an object is taken from the pool, the <see cref="ISupportLifecycle.Initialize"/> method will be called to 
+    /// reinstantiate any need member variables. If class tracks a disposed flag, it should be reset during call to the
+    /// <see cref="ISupportLifecycle.Initialize"/> method so that class will be "un-disposed". Also, typical dispose
+    /// implementations call <see cref="GC.SuppressFinalize"/> in the <see cref="IDisposable.Dispose"/> method, as such the
+    /// <see cref="GC.ReRegisterForFinalize"/> should be called during <see cref="ISupportLifecycle.Initialize"/> method to
+    /// make sure class will be disposed by finalizer in case <see cref="IDisposable.Dispose"/> method is never called.
+    /// <example>
+    /// Here is an example class that implements <see cref="ISupportLifecycle"/> such that it will be automatically returned
+    /// to the pool when the class is disposed and automatically initialized when taken from the pool:
+    /// <code>
+    /// /// &lt;summary&gt;
+    /// /// Class that shows example implementation of reusable &lt;see cref="ISupportLifecycle"/&gt;.
+    /// /// &lt;/summary&gt;
+    /// public class ReusableClass : ISupportLifecycle
+    /// {
+    ///     #region [ Members ]
+    /// 
+    ///     // Events
+    ///     
+    ///     /// &lt;summary&gt;
+    ///     /// Occurs when the &lt;see cref="ReusableClass"/&gt; is disposed.
+    ///     /// &lt;/summary&gt;
+    ///     public event EventHandler Disposed;
+    ///     
+    ///     // Fields
+    ///     private System.Timers.Timer m_timer;    // Example member variable that needs initialization and disposal
+    ///     private bool m_enabled;
+    ///     private bool m_disposed;
+    /// 
+    ///     #endregion
+    ///
+    ///     #region [ Constructors ]
+    /// 
+    ///     /// &lt;summary&gt;
+    ///     /// Releases the unmanaged resources before the &lt;see cref="ReusableClass"/&gt; object is reclaimed by &lt;see cref="GC"/&gt;.
+    ///     /// &lt;/summary&gt;
+    ///     ~ReusableClass()
+    ///     {
+    ///         Dispose(false);
+    ///     }
+    /// 
+    ///     #endregion
+    /// 
+    ///     #region [ Properties ]
+    /// 
+    ///     /// &lt;summary&gt;
+    ///     /// Gets or sets a boolean value that indicates whether the &lt;see cref="ReusableClass"/&gt; object is currently enabled.
+    ///     /// &lt;/summary&gt;
+    ///     public bool Enabled
+    ///     {
+    ///         get
+    ///         {
+    ///             return m_enabled;
+    ///         }
+    ///         set
+    ///         {
+    ///             m_enabled = value;
+    /// 
+    ///             if (m_timer != null)
+    ///                 m_timer.Enabled = m_enabled;
+    ///         }
+    ///     }
+    /// 
+    ///     #endregion
+    /// 
+    ///     #region [ Methods ]
+    /// 
+    ///     /// &lt;summary&gt;
+    ///     /// Initializes the &lt;see cref="ReusableClass"/&gt; object.
+    ///     /// &lt;/summary&gt;
+    ///     public void Initialize()
+    ///     {
+    ///         // Undispose class instance if it is being reused
+    ///         if (m_disposed)
+    ///         {
+    ///             m_disposed = false;
+    ///             GC.ReRegisterForFinalize(this);
+    ///         }
+    ///         
+    ///         m_enabled = true;
+    /// 
+    ///         // Initialize member variables
+    ///         if (m_timer == null)
+    ///         {
+    ///             m_timer = new System.Timers.Timer(2000.0D);
+    ///             m_timer.Elapsed += m_timer_Elapsed;
+    ///             m_timer.Enabled = m_enabled;
+    ///         }
+    ///     }
+    /// 
+    ///     /// &lt;summary&gt;
+    ///     /// Releases all the resources used by the &lt;see cref="ReusableClass"/&gt; object.
+    ///     /// &lt;/summary&gt;
+    ///     public void Dispose()
+    ///     {
+    ///         Dispose(true);
+    ///         GC.SuppressFinalize(this);
+    ///     }
+    /// 
+    ///     /// &lt;summary&gt;
+    ///     /// Releases the unmanaged resources used by the &lt;see cref="ReusableClass"/&gt; object and optionally releases the managed resources.
+    ///     /// &lt;/summary&gt;
+    ///     /// &lt;param name="disposing"&gt;true to release both managed and unmanaged resources; false to release only unmanaged resources.&lt;/param&gt;
+    ///     protected virtual void Dispose(bool disposing)
+    ///     {
+    ///         if (!m_disposed)
+    ///         {
+    ///             try
+    ///             {
+    ///                 if (disposing)
+    ///                 {
+    ///                     // Dispose member variables
+    ///                     if (m_timer != null)
+    ///                     {
+    ///                         m_timer.Elapsed -= m_timer_Elapsed;
+    ///                         m_timer.Dispose();
+    ///                     }
+    ///                     m_timer = null;
+    ///                     
+    ///                     m_enabled = false;
+    ///                 }
+    ///             }
+    ///             finally
+    ///             {
+    ///                 m_disposed = true;
+    /// 
+    ///                 if (Disposed != null)
+    ///                     Disposed(this, EventArgs.Empty);
+    ///             }
+    ///         }
+    ///     }
+    /// 
+    ///     // Handle timer event
+    ///     private void m_timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+    ///     {
+    ///         // Do work here...
+    ///     }
+    /// 
+    ///     #endregion
+    /// }
+    /// </code>
+    /// </example>
+    /// </para>
+    /// <para>
+    /// If the pool objects do not implement <see cref="ISupportLifecycle"/> you can still use the object pool, but it
+    /// will be very imporant to return the object to the pool when you are finished using it. If you are using an object
+    /// scoped within a method, make sure to use a try/finally so that you can take the object within the try and return
+    /// the object within the finally. If you are using an object as a member scoped class field, make sure you use the
+    /// standard dispose pattern and return the object during the <see cref="IDisposable.Dispose"/> method call. In this
+    /// mode you will also need to manually initialze your object after you get it from the pool to reset its state.
     /// </para>
     /// </remarks>
-    public static class BufferPool
+    /// <typeparam name="T">Type of object to pool.</typeparam>
+    public class ReusableObjectPool<T> where T : class, new()
     {
-        // Note that the buffer manager will create an queue buffers as needed during run-time, the default maximum
-        // pool size and default maximum buffer sizes are set to int max. Even if an application should max the pool
-        // size, the buffer manager will still sucessfully provide and manage buffers - they simply won't be cached.
-        private static BufferManager s_bufferManager = BufferManager.CreateBufferManager(int.MaxValue, int.MaxValue);
+        private static ConcurrentQueue<T> s_objectPool = new ConcurrentQueue<T>();
 
         /// <summary>
-        /// Gets a buffer of at least the specified size from the pool.
+        /// Gets an object from the pool, or creates a new one if no pool items are available.
         /// </summary>
-        /// <param name="bufferSize">The size, in bytes, of the requested buffer.</param>
-        /// <returns>A byte array that is the requested size of the buffer.</returns>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="bufferSize"/> cannot be less than zero.</exception>
-        public static byte[] TakeBuffer(int bufferSize)
+        /// <returns>An available object from the pool, or a new one if no pool items are available.</returns>
+        /// <remarks>
+        /// If type of <typeparamref name="T"/> implements <see cref="ISupportLifecycle"/>, the pool will attach
+        /// to the item's <see cref="ISupportLifecycle.Disposed"/> event such that the object can be automatically
+        /// restored to the pool upon <see cref="IDisposable.Dispose"/>. It will be up to class implementors to
+        /// make sure <see cref="ISupportLifecycle.Initialize"/> makes the class ready for use as this method will
+        /// always be called for an object being taken from the pool.
+        /// </remarks>
+        public static T TakeObject()
         {
-            return s_bufferManager.TakeBuffer(bufferSize);
+            T item;
+            bool newItem = false;
+
+            // Attempt to provide user with a queued item
+            if (!s_objectPool.TryDequeue(out item))
+            {
+                // No items are available, create a new item for the object pool
+                item = FastObjectFactory<T>.CreateObjectFunction();
+                newItem = true;
+            }
+
+            // Automatically handle class life cycle if item implements support for this
+            ISupportLifecycle lifecycleItem = item as ISupportLifecycle;
+
+            if (lifecycleItem != null)
+            {
+                // Attach to dispose event so item can be automatically returned to the pool
+                if (newItem)
+                    lifecycleItem.Disposed += LifecycleItem_Disposed;
+
+                // Initialize or reinitialize (i.e., un-dispose) the item
+                lifecycleItem.Initialize();
+            }
+
+            return item;
         }
 
         /// <summary>
-        /// Returns a buffer to the pool.
+        /// Returns object to the pool.
         /// </summary>
-        /// <param name="buffer">A reference to the buffer being returned.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> reference cannot be null.</exception>
-        /// <exception cref="ArgumentException">Length of <paramref name="buffer"/> does not match the pool's buffer length property.</exception>
-        public static void ReturnBuffer(byte[] buffer)
+        /// <param name="item">Reference to the object being returned.</param>
+        /// <remarks>
+        /// If type of <typeparamref name="T"/> implements <see cref="ISupportLifecycle"/>, the pool will automatically
+        /// return the item to the pool when the <see cref="ISupportLifecycle.Disposed"/> event is raised, usually when
+        /// the object's <see cref="IDisposable.Dispose"/> method is called.
+        /// </remarks>
+        public static void ReturnObject(T item)
         {
-            s_bufferManager.ReturnBuffer(buffer);
+            if (item != null)
+                s_objectPool.Enqueue(item);
         }
 
         /// <summary>
-        /// Releases all the buffers currently cached in the manager.
+        /// Releases all the objects currently cached in the pool.
         /// </summary>
         public static void Clear()
         {
-            s_bufferManager.Clear();
+            T item;
+
+            while (!s_objectPool.IsEmpty)
+            {
+                s_objectPool.TryDequeue(out item);
+            }
+        }
+
+        /// <summary>
+        /// Allocates the pool to the desired <paramref name="size"/>.
+        /// </summary>
+        /// <param name="size">Desired pool size.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Pool <paramref name="size"/> must at least be one.</exception>
+        public static void SetPoolSize(int size)
+        {
+            if (size < 1)
+                throw new ArgumentOutOfRangeException("size", "pool size must at least be one");
+
+            for (int i = 0; i < size - s_objectPool.Count; i++)
+            {
+                T item = FastObjectFactory<T>.CreateObjectFunction();
+
+                // Automatically handle life cycle if item implements support for this
+                ISupportLifecycle lifecycleItem = item as ISupportLifecycle;
+
+                // Attach to dispose event so item can be automatically returned to the pool
+                if (lifecycleItem != null)
+                    lifecycleItem.Disposed += LifecycleItem_Disposed;
+
+                s_objectPool.Enqueue(item);
+            }
+        }
+
+        // Handler to automatically to return items to the queue 
+        private static void LifecycleItem_Disposed(object sender, EventArgs e)
+        {
+            ReturnObject(sender as T);
         }
     }
 }

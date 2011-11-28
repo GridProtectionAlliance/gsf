@@ -453,7 +453,7 @@ namespace TVA
                     exe.Read(exeHeader, 0, exeHeader.Length);
                     exe.Close();
 
-                    Array.Copy(exeHeader, 92, subSystem, 0, 2);
+                    Buffer.BlockCopy(exeHeader, 92, subSystem, 0, 2);
 
                     s_applicationType = ((ApplicationType)(BitConverter.ToInt16(subSystem, 0)));
                 }
