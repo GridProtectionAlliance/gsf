@@ -267,7 +267,7 @@ namespace TVA.Parsing
     /// <typeparam name="TOutputType">Type of the interface or class used to represent outputs.</typeparam>
     [Description("Defines the basic functionality for parsing a binary data stream represented as frames with common headers and returning the parsed data via an event."),
     DefaultEvent("DataParsed")]
-    public abstract class FrameImageParserBase<TTypeIdentifier, TOutputType> : BinaryImageParserBase, IFrameImageParser<TTypeIdentifier, TOutputType> where TOutputType : class, ISupportFrameImage<TTypeIdentifier>, new()
+    public abstract class FrameImageParserBase<TTypeIdentifier, TOutputType> : BinaryImageParserBase, IFrameImageParser<TTypeIdentifier, TOutputType> where TOutputType : ISupportFrameImage<TTypeIdentifier>
     {
         #region [ Members ]
 
@@ -279,6 +279,7 @@ namespace TVA.Parsing
             public Type RuntimeType;
             public TTypeIdentifier TypeID;
             public Func<TOutputType> CreateNew;
+            public bool SupportsLifecycle;
         }
 
         // Events
@@ -422,18 +423,18 @@ namespace TVA.Parsing
             ConstructorInfo typeCtor = null;
             List<TypeInfo> outputTypes = new List<TypeInfo>();  // Temporarily hold output types until their IDs are determined.
 
-            foreach (Type asmType in implementations)
+            foreach (Type type in implementations)
             {
                 // See if a parameterless constructor is available for this type
-                typeCtor = asmType.GetConstructor(Type.EmptyTypes);
+                typeCtor = type.GetConstructor(Type.EmptyTypes);
 
                 // Since user can call this overload with any list of types, we double check the type criteria.
                 // If output type is a class, see if current type derives from it, else if output type is an
                 // interface, see if current type implements it.
-                if ((object)typeCtor != null && !asmType.IsAbstract &&
+                if ((object)typeCtor != null && !type.IsAbstract &&
                 (
-                   (typeof(TOutputType).IsClass && asmType.IsSubclassOf(typeof(TOutputType))) ||
-                   (typeof(TOutputType).IsInterface && (object)asmType.GetInterface(typeof(TOutputType).Name) != null))
+                   (typeof(TOutputType).IsClass && type.IsSubclassOf(typeof(TOutputType))) ||
+                   (typeof(TOutputType).IsInterface && (object)type.GetInterface(typeof(TOutputType).Name) != null))
                 )
                 {
                     // The type meets the following criteria:
@@ -441,13 +442,19 @@ namespace TVA.Parsing
                     //      - is not abstract and can be instantiated.
                     //      - type is related to class or interface specified for the output
                     TypeInfo outputType = new TypeInfo();
-                    outputType.RuntimeType = asmType;
+                    outputType.RuntimeType = type;
 
                     // If object pooling is allowed and class implementation supports life cycle, use object pool instead of creating an object each time one is parsed
-                    if (AllowObjectPooling && (object)asmType.GetInterface("TVA.ISupportLifecycle") != null)
-                        outputType.CreateNew = ReusableObjectPool<TOutputType>.TakeObject;
+                    if (AllowObjectPooling && (object)type.GetInterface("TVA.ISupportLifecycle") != null)
+                    {
+                        outputType.SupportsLifecycle = true;
+                        outputType.CreateNew = () => ReusableObjectPool.TakeObject<TOutputType>(type);
+                    }
                     else
-                        outputType.CreateNew = FastObjectFactory.GetCreateObjectFunction<TOutputType>(asmType);
+                    {
+                        outputType.SupportsLifecycle = false;
+                        outputType.CreateNew = FastObjectFactory.GetCreateObjectFunction<TOutputType>(type);
+                    }
 
                     // We'll hold all of the matching types in this list temporarily until their IDs are determined.
                     outputTypes.Add(outputType);
@@ -465,6 +472,10 @@ namespace TVA.Parsing
                     m_outputTypes.Add(outputType.TypeID, outputType);
                 else
                     OnDuplicateTypeHandlerEncountered(outputType.RuntimeType, outputType.TypeID);
+
+                // Return object to the pool if it supports lifecycle management
+                if (outputType.SupportsLifecycle)
+                    ((IDisposable)instance).Dispose();
             }
         }
 
@@ -502,6 +513,8 @@ namespace TVA.Parsing
                 // Expose parsed type to consumer
                 if (parsedLength > 0)
                     OnDataParsed(instance);
+                else if (outputType.SupportsLifecycle)
+                    ((IDisposable)instance).Dispose();
             }
             else
             {

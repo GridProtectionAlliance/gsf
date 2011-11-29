@@ -230,7 +230,7 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Reflection;
 using System.Reflection.Emit;
 
@@ -252,10 +252,10 @@ namespace TVA
         static FastObjectFactory()
         {
             // This is markedly faster than using Activator.CreateInstance
-            Type objType = typeof(T);
-            DynamicMethod dynMethod = new DynamicMethod("ctor$" + objType.Name, objType, null, objType);
+            Type type = typeof(T);
+            DynamicMethod dynMethod = new DynamicMethod("ctor$" + type.Name, type, null, type);
             ILGenerator ilGen = dynMethod.GetILGenerator();
-            ilGen.Emit(OpCodes.Newobj, objType.GetConstructor(Type.EmptyTypes));
+            ilGen.Emit(OpCodes.Newobj, type.GetConstructor(Type.EmptyTypes));
             ilGen.Emit(OpCodes.Ret);
             s_createObjectFunction = (Func<T>)dynMethod.CreateDelegate(typeof(Func<T>));
         }
@@ -277,74 +277,62 @@ namespace TVA
     /// </summary>
     /// <remarks>
     /// <see cref="FastObjectFactory"/> should be used when you only have the <see cref="Type"/> of an object available (such as when you are
-    /// using reflection), otherwise you should use then generic <see cref="FastObjectFactory{T}"/>.
+    /// using reflection), otherwise you should use the generic <see cref="FastObjectFactory{T}"/>.
     /// </remarks>
     public static class FastObjectFactory
     {
         // We cache object creation functions by type so they are only created once
-        private static Dictionary<Type, Delegate> s_createObjectFunctions;
-
-        static FastObjectFactory()
-        {
-            s_createObjectFunctions = new Dictionary<Type, Delegate>();
-        }
+        private static ConcurrentDictionary<Type, Delegate> s_createObjectFunctions = new ConcurrentDictionary<Type, Delegate>();
 
         /// <summary>
-        /// Gets delegate that creates new instance of the <paramref name="objType"/>.
+        /// Gets delegate that creates new instance of the <paramref name="type"/>.
         /// </summary>
-        /// <param name="objType">Type of object to create quickly.</param>
+        /// <param name="type">Type of object to create quickly.</param>
         /// <returns>Delegate to use to quickly create new objects.</returns>
-        /// <exception cref="InvalidOperationException"><paramref name="objType"/> does not support parameterless public constructor.</exception>
-        public static Func<object> GetCreateObjectFunction(Type objType)
+        /// <exception cref="InvalidOperationException"><paramref name="type"/> does not support parameterless public constructor.</exception>
+        public static Func<object> GetCreateObjectFunction(Type type)
         {
-            return GetCreateObjectFunction<object>(objType);
+            return GetCreateObjectFunction<object>(type);
         }
 
         /// <summary>
-        /// Gets delegate of specified return type that creates new instance of the <paramref name="objType"/>.
+        /// Gets delegate of specified return type that creates new instance of the <paramref name="type"/>.
         /// </summary>
-        /// <param name="objType">Type of object to create quickly.</param>
+        /// <param name="type">Type of object to create quickly.</param>
         /// <typeparam name="T">Type of returned object function used to create objects quickly.</typeparam>
         /// <returns>Delegate to use to quickly create new objects.</returns>
         /// <exception cref="InvalidOperationException">
-        /// <paramref name="objType"/> does not support parameterless public constructor -or- 
-        /// <paramref name="objType"/> is not a subclass or interface implementation of function type definition.
+        /// <paramref name="type"/> does not support parameterless public constructor -or- 
+        /// <paramref name="type"/> is not a subclass or interface implementation of function type definition.
         /// </exception>
-        public static Func<T> GetCreateObjectFunction<T>(Type objType)
+        /// <remarks>
+        /// This function will validate that <typeparamref name="T"/> is related to <paramref name="type"/>.
+        /// </remarks>
+        public static Func<T> GetCreateObjectFunction<T>(Type type)
         {
-            Delegate createObjectFunction;
-
-            // Get parameterless constructor for this type
-            ConstructorInfo typeCtor = objType.GetConstructor(Type.EmptyTypes);
-
-            if ((object)typeCtor == null)
-                throw new InvalidOperationException("Specified type parameter does not support parameterless public constructor");
-
             // Since user can call this function with any type, we verify that it is related to the return type. If return type
             // is a class, see if type derives from it, else if return type is an interface, see if type implements it.
-            if (!objType.IsAbstract &&
+            if (!type.IsAbstract &&
             (
-               (typeof(T).IsClass && objType.IsSubclassOf(typeof(T))) ||
-               (typeof(T).IsInterface && (object)objType.GetInterface(typeof(T).Name) != null))
+               (typeof(T).IsClass && type.IsSubclassOf(typeof(T))) ||
+               (typeof(T).IsInterface && (object)type.GetInterface(typeof(T).Name) != null))
             )
             {
-                lock (s_createObjectFunctions)
+                return (Func<T>)s_createObjectFunctions.GetOrAdd(type, (objType) =>
                 {
-                    if (!s_createObjectFunctions.TryGetValue(objType, out createObjectFunction))
-                    {
-                        // This is markedly faster than using Activator.CreateInstance
-                        DynamicMethod dynMethod = new DynamicMethod("ctor_type$" + objType.Name, objType, null, objType);
-                        ILGenerator ilGen = dynMethod.GetILGenerator();
-                        ilGen.Emit(OpCodes.Newobj, typeCtor);
-                        ilGen.Emit(OpCodes.Ret);
-                        createObjectFunction = (Func<T>)dynMethod.CreateDelegate(typeof(Func<T>));
+                    // Get parameterless constructor for this type
+                    ConstructorInfo typeCtor = objType.GetConstructor(Type.EmptyTypes);
 
-                        // Cache object creation delegate for this type
-                        s_createObjectFunctions.Add(objType, createObjectFunction);
-                    }
-                }
+                    if ((object)typeCtor == null)
+                        throw new InvalidOperationException("Specified type parameter does not support parameterless public constructor");
 
-                return (Func<T>)createObjectFunction;
+                    // This is markedly faster than using Activator.CreateInstance
+                    DynamicMethod dynMethod = new DynamicMethod("ctor_type$" + objType.Name, objType, null, objType);
+                    ILGenerator ilGen = dynMethod.GetILGenerator();
+                    ilGen.Emit(OpCodes.Newobj, typeCtor);
+                    ilGen.Emit(OpCodes.Ret);
+                    return (Func<T>)dynMethod.CreateDelegate(typeof(Func<T>));
+                });
             }
             else
                 throw new InvalidOperationException("Specified type parameter is not a subclass or interface implementation of function type definition");

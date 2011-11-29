@@ -316,8 +316,7 @@ namespace TVA.Parsing
             if ((object)imageSource == null)
                 throw new ArgumentNullException("imageSource");
 
-            int length = imageSource.BinaryLength;
-            byte[] buffer = new byte[length];
+            byte[] buffer = new byte[imageSource.BinaryLength];
 
             imageSource.GenerateBinaryImage(buffer, 0);
 

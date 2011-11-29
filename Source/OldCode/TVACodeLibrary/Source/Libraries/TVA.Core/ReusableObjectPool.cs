@@ -527,4 +527,169 @@ namespace TVA
             ReturnObject(sender as T);
         }
     }
+
+    /// <summary>
+    /// Represents a reusable object pool that can be used by an application.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// See <see cref="ReusableObjectPool{T}"/> for more details on using object pooling.
+    /// </para>
+    /// <para>
+    /// <see cref="ReusableObjectPool"/> should be used when you only have the <see cref="Type"/> of an object available (such as when you are
+    /// using reflection), otherwise you should use the generic <see cref="ReusableObjectPool{T}"/>.
+    /// </para>
+    /// </remarks>
+    public class ReusableObjectPool
+    {
+        private static ConcurrentDictionary<Type, ConcurrentQueue<object>> s_objectPools = new ConcurrentDictionary<Type, ConcurrentQueue<object>>();
+
+        /// <summary>
+        /// Gets an object from the pool, or creates a new one if no pool items are available.
+        /// </summary>
+        /// <param name="type">Type of object to get from pool.</param>
+        /// <returns>An available object from the pool, or a new one if no pool items are available.</returns>
+        /// <exception cref="InvalidOperationException"><paramref name="type"/> does not support parameterless public constructor.</exception>
+        /// <remarks>
+        /// If <paramref name="type"/> implements <see cref="ISupportLifecycle"/>, the pool will attach
+        /// to the item's <see cref="ISupportLifecycle.Disposed"/> event such that the object can be automatically
+        /// restored to the pool upon <see cref="IDisposable.Dispose"/>. It will be up to class implementors to
+        /// make sure <see cref="ISupportLifecycle.Initialize"/> makes the class ready for use as this method will
+        /// always be called for an object being taken from the pool.
+        /// </remarks>
+        public static object TakeObject(Type type)
+        {
+            return TakeObject<object>(type);
+        }
+
+        /// <summary>
+        /// Gets an object from the pool, or creates a new one if no pool items are available.
+        /// </summary>
+        /// <param name="type">Type of object to get from pool.</param>
+        /// <typeparam name="T">Type of returned object to get from pool.</typeparam>
+        /// <returns>An available object from the pool, or a new one if no pool items are available.</returns>
+        /// <exception cref="InvalidOperationException">
+        /// <paramref name="type"/> does not support parameterless public constructor -or- 
+        /// <paramref name="type"/> is not a subclass or interface implementation of function type definition.
+        /// </exception>
+        /// <remarks>
+        /// <para>
+        /// This function will validate that <typeparamref name="T"/> is related to <paramref name="type"/>.
+        /// </para>
+        /// <para>
+        /// If <paramref name="type"/> implements <see cref="ISupportLifecycle"/>, the pool will attach
+        /// to the item's <see cref="ISupportLifecycle.Disposed"/> event such that the object can be automatically
+        /// restored to the pool upon <see cref="IDisposable.Dispose"/>. It will be up to class implementors to
+        /// make sure <see cref="ISupportLifecycle.Initialize"/> makes the class ready for use as this method will
+        /// always be called for an object being taken from the pool.
+        /// </para>
+        /// </remarks>
+        public static T TakeObject<T>(Type type)
+        {
+            object item;
+            bool newItem = false;
+
+            // Get or create object pool associated with specified type
+            ConcurrentQueue<object> objectPool = s_objectPools.GetOrAdd(type, (objType) => new ConcurrentQueue<object>());
+
+            // Attempt to provide user with a queued item
+            if (!objectPool.TryDequeue(out item))
+            {
+                // No items are available, create a new item for the object pool
+                item = FastObjectFactory.GetCreateObjectFunction<T>(type)();
+                newItem = true;
+            }
+
+            // Automatically handle class life cycle if item implements support for this
+            ISupportLifecycle lifecycleItem = item as ISupportLifecycle;
+
+            if (lifecycleItem != null)
+            {
+                // Attach to dispose event so item can be automatically returned to the pool
+                if (newItem)
+                    lifecycleItem.Disposed += LifecycleItem_Disposed;
+
+                // Initialize or reinitialize (i.e., un-dispose) the item
+                lifecycleItem.Initialize();
+            }
+
+            return (T)item;
+        }
+
+        /// <summary>
+        /// Returns object to the pool.
+        /// </summary>
+        /// <param name="item">Reference to the object being returned.</param>
+        /// <remarks>
+        /// If type of <paramref name="item"/> implements <see cref="ISupportLifecycle"/>, the pool will automatically
+        /// return the item to the pool when the <see cref="ISupportLifecycle.Disposed"/> event is raised, usually when
+        /// the object's <see cref="IDisposable.Dispose"/> method is called.
+        /// </remarks>
+        public static void ReturnObject(object item)
+        {
+            if (item != null)
+            {
+                ConcurrentQueue<object> objectPool;
+
+                // Try to get object pool associated with the specified item's type
+                if (s_objectPools.TryGetValue(item.GetType(), out objectPool))
+                    objectPool.Enqueue(item);
+            }
+        }
+
+        /// <summary>
+        /// Releases all the objects currently cached in the specified pool.
+        /// </summary>
+        /// <param name="type">Type of pool to clear.</param>
+        public static void Clear(Type type)
+        {
+            ConcurrentQueue<object> objectPool;
+
+            // Try to get object pool associated with the specified type
+            if (s_objectPools.TryGetValue(type, out objectPool))
+            {
+                object item;
+
+                while (!objectPool.IsEmpty)
+                {
+                    objectPool.TryDequeue(out item);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Allocates the pool to the desired <paramref name="size"/>.
+        /// </summary>
+        /// <param name="type">Type of pool to initialize.</param>
+        /// <param name="size">Desired pool size.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Pool <paramref name="size"/> must at least be one.</exception>
+        public static void SetPoolSize(Type type, int size)
+        {
+            if (size < 1)
+                throw new ArgumentOutOfRangeException("size", "pool size must at least be one");
+
+            // Get or create object pool associated with specified type
+            ConcurrentQueue<object> objectPool = s_objectPools.GetOrAdd(type, (objType) => new ConcurrentQueue<object>());
+
+            for (int i = 0; i < size - objectPool.Count; i++)
+            {
+                object item = FastObjectFactory.GetCreateObjectFunction(type)();
+
+                // Automatically handle life cycle if item implements support for this
+                ISupportLifecycle lifecycleItem = item as ISupportLifecycle;
+
+                // Attach to dispose event so item can be automatically returned to the pool
+                if (lifecycleItem != null)
+                    lifecycleItem.Disposed += LifecycleItem_Disposed;
+
+                objectPool.Enqueue(item);
+            }
+        }
+
+        // Handler to automatically to return items to the queue 
+        private static void LifecycleItem_Disposed(object sender, EventArgs e)
+        {
+            ReturnObject(sender);
+        }
+    }
 }
