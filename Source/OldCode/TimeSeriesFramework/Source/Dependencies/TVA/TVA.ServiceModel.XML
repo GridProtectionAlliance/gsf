@@ -320,6 +320,12 @@
             </summary>
             <returns>An <see cref="T:System.Int32"/> value.</returns>
         </member>
+        <member name="M:TVA.ServiceModel.SelfHostingService.GetServiceAddress">
+            <summary>
+            Gets an address where the <see cref="P:TVA.ServiceModel.SelfHostingService.ServiceHost"/> will host the service.
+            </summary>
+            <returns>A <see cref="T:System.String"/> value.</returns>
+        </member>
         <member name="M:TVA.ServiceModel.SelfHostingService.InitializeServiceHost">
             <summary>
             Initializes the <see cref="P:TVA.ServiceModel.SelfHostingService.ServiceHost"/>.
