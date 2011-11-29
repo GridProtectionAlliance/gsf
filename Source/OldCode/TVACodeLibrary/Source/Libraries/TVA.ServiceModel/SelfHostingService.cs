@@ -38,9 +38,9 @@
 //  12/09/2010 - Pinal C. Patel
 //       Modified GetUnusedPort() to use TVA.Security.Cryptography.Random instead of System.Random to
 //       unsure unique numbers.
-//  10/11/2011 - Pinal C. Patel
-//       Added GetAuthenticationSchemes() static method that can be used to check the security settings
-//       of the hosting web server.
+//  11/29/2011 - Pinal C. Patel
+//       Modified InitializeServiceHost() to not use a random port number for the service host address
+//       so that setting up security on the address is possible.
 //
 //*******************************************************************************************************
 
@@ -270,6 +270,7 @@ using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Description;
 using System.ServiceModel.Web;
+using System.Text.RegularExpressions;
 using TVA.Adapters;
 using TVA.Configuration;
 
@@ -647,6 +648,29 @@ namespace TVA.ServiceModel
         }
 
         /// <summary>
+        /// Gets an address where the <see cref="ServiceHost"/> will host the service.
+        /// </summary>
+        /// <returns>A <see cref="String"/> value.</returns>
+        protected virtual string GetServiceAddress()
+        {
+            // Regex matches:
+            // [http | ftp][.<protocol>]://localhost[:<port>][/<path>]
+            string regex = @"(\w+\.*\w*\://)(?<host>\w+\:*\d*)";
+
+            // Look through all of the specified endpoints.
+            foreach (string endpoint in m_endpoints.Split(';'))
+            {
+                // Use endpoint host information including port number for service address.
+                Match match = Regex.Match(endpoint, regex, RegexOptions.IgnoreCase);
+                if (match.Success && match.Groups["host"].Success)
+                    return string.Format("http://{0}", match.Groups["host"]);
+            }
+
+            // Return an empty string if endpoints are not in a valid format.
+            return string.Empty;
+        }
+
+        /// <summary>
         /// Initializes the <see cref="ServiceHost"/>.
         /// </summary>
         protected virtual void InitializeServiceHost()
@@ -654,8 +678,7 @@ namespace TVA.ServiceModel
             if (!string.IsNullOrEmpty(m_endpoints))
             {
                 // Initialize service host.
-                string serviceUri = string.Format("http://localhost:{0}", GetUnusedPort());
-
+                string serviceUri = GetServiceAddress();
                 if (m_singleton)
                     m_serviceHost = new ServiceHost(this, new Uri(serviceUri));
                 else
