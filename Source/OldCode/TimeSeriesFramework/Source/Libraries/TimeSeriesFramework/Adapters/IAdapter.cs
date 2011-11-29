@@ -70,15 +70,6 @@ namespace TimeSeriesFramework.Adapters
         event EventHandler OutputMeasurementsUpdated;
 
         /// <summary>
-        /// Event is raised when <see cref="IAdapter"/> is disposed.
-        /// </summary>
-        /// <remarks>
-        /// If an adapter references another adapter by enumerating the <see cref="Parent"/> collection, this
-        /// event should be monitored to release the reference.
-        /// </remarks>
-        event EventHandler Disposed;
-
-        /// <summary>
         /// Gets or sets <see cref="DataSet"/> based data source available to <see cref="IAdapter"/>.
         /// </summary>
         DataSet DataSource

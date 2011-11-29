@@ -451,7 +451,6 @@ namespace TimeSeriesFramework.Transport
         private void ProcessBinaryMeasurements(IEnumerable<ISupportBinaryImage> measurements, bool useCompactMeasurementFormat)
         {
             MemoryStream data = new MemoryStream();
-            byte[] buffer;
 
             // Serialize data packet flags into response
             DataPacketFlags flags = DataPacketFlags.NoFlags; // No flags means bit is cleared, i.e., unsynchronized
@@ -470,8 +469,7 @@ namespace TimeSeriesFramework.Transport
             // Serialize measurements to data buffer
             foreach (ISupportBinaryImage measurement in measurements)
             {
-                buffer = measurement.BinaryImage;
-                data.Write(buffer, 0, buffer.Length);
+                measurement.CopyBinaryImageToStream(data);
             }
 
             // Publish data packet to client

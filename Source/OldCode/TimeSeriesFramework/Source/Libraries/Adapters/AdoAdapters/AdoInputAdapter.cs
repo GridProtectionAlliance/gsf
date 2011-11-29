@@ -35,6 +35,7 @@ using TimeSeriesFramework.Adapters;
 using TimeSeriesFramework.Transport;
 using TVA;
 using TVA.IO;
+using TVA.Parsing;
 
 namespace AdoAdapters
 {
@@ -425,7 +426,7 @@ namespace AdoAdapters
 
                                 // Parse compact measurement
                                 measurement = new CompactMeasurement(signalIndexCache);
-                                measurement.Initialize(buffer, 0, compactMeasurementSize);
+                                measurement.ParseBinaryImage(buffer, 0, compactMeasurementSize);
 
                                 m_dbMeasurements.Add(measurement);
 
@@ -625,7 +626,7 @@ namespace AdoAdapters
                             // Write each compact measurement image to the file
                             for (int i = 0; i < m_dbMeasurements.Count; i++)
                             {
-                                data.Write(((CompactMeasurement)m_dbMeasurements[i]).BinaryImage, 0, compactMeasurementSize);
+                                ((ISupportBinaryImage)m_dbMeasurements[i]).CopyBinaryImageToStream(data);
                             }
                         }
                     }

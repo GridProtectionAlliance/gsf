@@ -201,7 +201,7 @@ namespace TimeSeriesFramework.Transport
             m_includeTime = includeTime;
 
             if (baseTimeOffsets == null)
-                m_baseTimeOffsets = new long[] { 0, 0 };
+                m_baseTimeOffsets = s_emptyBaseTimeOffsets;
             else
                 m_baseTimeOffsets = baseTimeOffsets;
         }
@@ -228,7 +228,7 @@ namespace TimeSeriesFramework.Transport
             m_includeTime = includeTime;
 
             if (baseTimeOffsets == null)
-                m_baseTimeOffsets = new long[] { 0, 0 };
+                m_baseTimeOffsets = s_emptyBaseTimeOffsets;
             else
                 m_baseTimeOffsets = baseTimeOffsets;
 
@@ -251,70 +251,7 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
-        /// Gets the binary image of the <see cref="CompactMeasurement"/>.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// Field:     Bytes: <br/>
-        /// --------   -------<br/>
-        ///  Flags        1   <br/>
-        ///   ID          2   <br/>
-        ///  Value        4   <br/>
-        ///  [Time]       2?  <br/>
-        /// </para>
-        /// <para>
-        /// Constant Length = 7<br/>
-        /// Variable Length = 2 or 8 (milliseconds plus offset or full fidelity time)
-        /// </para>
-        /// </remarks>
-        public byte[] BinaryImage
-        {
-            get
-            {
-                int index = 0;
-
-                // Encode flags
-                CompactMeasurementStateFlags flags = StateFlags.MapToCompactFlags() | (m_timeIndex == 0 ? CompactMeasurementStateFlags.NoFlags : CompactMeasurementStateFlags.TimeIndex);
-
-                // Allocate buffer to hold binary image
-                long baseTimeOffset = m_baseTimeOffsets[m_timeIndex];
-                int length = FixedLength + (m_includeTime ? (baseTimeOffset > 0 ? 2 : 8) : 0);
-                byte[] buffer = new byte[length];
-
-                // Added flags to beginning of buffer
-                buffer[index++] = (byte)flags;
-
-                // Encode runtime ID
-                EndianOrder.BigEndian.CopyBytes(m_signalIndexCache.GetSignalIndex(ID), buffer, index);
-
-                index += 2;
-
-                // Encode adjusted value (accounts for adder and multipler)
-                EndianOrder.BigEndian.CopyBytes((float)AdjustedValue, buffer, index);
-                index += 4;
-
-                if (m_includeTime)
-                {
-                    if (baseTimeOffset > 0)
-                    {
-                        // Encode millisecond offset timestamp
-                        EndianOrder.BigEndian.CopyBytes((ushort)(Timestamp - baseTimeOffset).ToMilliseconds(), buffer, index);
-                        index += 2;
-                    }
-                    else
-                    {
-                        // Encode full fidelity timestamp
-                        EndianOrder.BigEndian.CopyBytes((long)Timestamp, buffer, index);
-                        index += 8;
-                    }
-                }
-
-                return buffer;
-            }
-        }
-
-        /// <summary>
-        /// Gets the length of the <see cref="BinaryImage"/>.
+        /// Gets the length of the <see cref="CompactMeasurement"/>.
         /// </summary>
         public int BinaryLength
         {
@@ -331,29 +268,30 @@ namespace TimeSeriesFramework.Transport
         /// <summary>
         /// Initializes <see cref="CompactMeasurement"/> from the specified binary image.
         /// </summary>
-        /// <param name="buffer">Binary image to be used for initialization.</param>
-        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to be used for initialization.</param>
-        /// <param name="count">Valid number of bytes within binary image.</param>
+        /// <param name="buffer">Buffer containing binary image to parse.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start parsing.</param>
+        /// <param name="length">Valid number of bytes within <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
         /// <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed).</returns>
-        public int Initialize(byte[] buffer, int startIndex, int count)
+        /// <exception cref="InvalidOperationException">Not enough buffer available to deserialize measurement.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <paramref name="length"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
-            if (count < 1)
+            buffer.ValidateParameters(startIndex, length);
+
+            if (length < 1)
                 throw new InvalidOperationException("Not enough buffer available to deserialize measurement.");
 
             // Decode flags
             CompactMeasurementStateFlags flags = (CompactMeasurementStateFlags)buffer[startIndex];
-
             StateFlags = flags.MapToFullFlags();
             m_timeIndex = (byte)(flags & CompactMeasurementStateFlags.TimeIndex) > 0 ? 1 : 0;
 
+            int index = startIndex + 1;
             long baseTimeOffset = m_baseTimeOffsets[m_timeIndex];
-            int length = FixedLength + (m_includeTime ? (baseTimeOffset > 0 ? 2 : 8) : 0);
-            int index = 0;
-
-            if (count < length)
-                throw new InvalidOperationException("Not enough buffer available to deserialize measurement.");
-
-            index = startIndex + 1;
 
             // Decode runtime ID
             ushort id = EndianOrder.BigEndian.ToUInt16(buffer, index);
@@ -390,9 +328,84 @@ namespace TimeSeriesFramework.Transport
                 }
             }
 
+            return (index - startIndex);
+        }
+
+        /// <summary>
+        /// Generates binary image of the <see cref="CompactMeasurement"/> and copies it into the given buffer, for <see cref="ISupportBinaryImage.BinaryLength"/> bytes.
+        /// </summary>
+        /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+        /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <see cref="ISupportBinaryImage.BinaryLength"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <see cref="ISupportBinaryImage.BinaryLength"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        /// <remarks>
+        /// <para>
+        /// Field:     Bytes: <br/>
+        /// --------   -------<br/>
+        ///  Flags        1   <br/>
+        ///   ID          2   <br/>
+        ///  Value        4   <br/>
+        ///  [Time]       2?  <br/>
+        /// </para>
+        /// <para>
+        /// Constant Length = 7<br/>
+        /// Variable Length = 2 or 8 (milliseconds plus offset or full fidelity time)
+        /// </para>
+        /// </remarks>
+        public int GenerateBinaryImage(byte[] buffer, int startIndex)
+        {
+            int length = BinaryLength;
+
+            buffer.ValidateParameters(startIndex, length);
+
+            // Encode flags
+            CompactMeasurementStateFlags flags = StateFlags.MapToCompactFlags() | (m_timeIndex == 0 ? CompactMeasurementStateFlags.NoFlags : CompactMeasurementStateFlags.TimeIndex);
+
+            // Added flags to beginning of buffer
+            buffer[startIndex++] = (byte)flags;
+
+            // Encode runtime ID
+            EndianOrder.BigEndian.CopyBytes(m_signalIndexCache.GetSignalIndex(ID), buffer, startIndex);
+
+            startIndex += 2;
+
+            // Encode adjusted value (accounts for adder and multipler)
+            EndianOrder.BigEndian.CopyBytes((float)AdjustedValue, buffer, startIndex);
+            startIndex += 4;
+
+            if (m_includeTime)
+            {
+                long baseTimeOffset = m_baseTimeOffsets[m_timeIndex];
+
+                if (baseTimeOffset > 0)
+                {
+                    // Encode millisecond offset timestamp
+                    EndianOrder.BigEndian.CopyBytes((ushort)(Timestamp - baseTimeOffset).ToMilliseconds(), buffer, startIndex);
+                    //startIndex += 2;
+                }
+                else
+                {
+                    // Encode full fidelity timestamp
+                    EndianOrder.BigEndian.CopyBytes((long)Timestamp, buffer, startIndex);
+                    //startIndex += 8;
+                }
+            }
+
             return length;
         }
 
         #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static long[] s_emptyBaseTimeOffsets = new long[] { 0, 0 };
+
+        #endregion
+
     }
 }
