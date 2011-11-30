@@ -291,13 +291,13 @@ namespace TVA
                 throw new ArgumentNullException("buffer");
 
             if (startIndex < 0)
-                throw new ArgumentOutOfRangeException("startIndex", "cannot be negative");
+                throw new ArgumentOutOfRangeException("startIndex", "Buffer parameter cannot be negative");
 
             if (length < 0)
-                throw new ArgumentOutOfRangeException("length", "cannot be negative");
+                throw new ArgumentOutOfRangeException("length", "Buffer parameter cannot be negative");
 
             if (startIndex + length > buffer.Length)
-                throw new ArgumentOutOfRangeException("length", "operation will exceed buffer length from startIndex");
+                throw new ArgumentOutOfRangeException("length", string.Format("Buffer operation with startIndex of {0} and length of {1} will exceed {2} bytes of available buffer space", startIndex, length, buffer.Length));
         }
 
         /// <summary>Returns a copy of the specified portion of the <paramref name="buffer"/> buffer.</summary>

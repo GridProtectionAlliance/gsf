@@ -324,7 +324,7 @@ namespace TVA.Parsing
         }
 
         /// <summary>
-        /// Copies binary image of object that implements <see cref="ISupportBinaryImage"/> to a stream.
+        /// Copies binary image of object that implements <see cref="ISupportBinaryImage"/> to a <see cref="Stream"/>.
         /// </summary>
         /// <param name="imageSource"><see cref="ISupportBinaryImage"/> source.</param>
         /// <param name="stream">Destination <see cref="Stream"/>.</param>
@@ -340,10 +340,41 @@ namespace TVA.Parsing
             try
             {
                 // Copy generated binary image to buffer
-                imageSource.GenerateBinaryImage(buffer, 0);
+                int writeCount = imageSource.GenerateBinaryImage(buffer, 0);
 
-                // Write buffer to stream
-                stream.Write(buffer, 0, length);
+                // Write buffer bytes to stream, if any were generated
+                if (writeCount > 0)
+                    stream.Write(buffer, 0, writeCount);
+            }
+            finally
+            {
+                if (buffer != null)
+                    BufferPool.ReturnBuffer(buffer);
+            }
+        }
+
+        /// <summary>
+        /// Parses binary image of object that implements <see cref="ISupportBinaryImage"/> from a <see cref="Stream"/>.
+        /// </summary>
+        /// <param name="imageSource"><see cref="ISupportBinaryImage"/> source.</param>
+        /// <param name="stream">Source <see cref="Stream"/>.</param>
+        /// <returns>The number of bytes parsed from the <paramref name="stream"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="imageSource"/> cannot be null.</exception>
+        public static int ParseBinaryImageFromStream(this ISupportBinaryImage imageSource, Stream stream)
+        {
+            if ((object)imageSource == null)
+                throw new ArgumentNullException("imageSource");
+
+            int length = imageSource.BinaryLength;
+            byte[] buffer = BufferPool.TakeBuffer(length);
+
+            try
+            {
+                // Read buffer bytes from stream
+                int readCount = stream.Read(buffer, 0, length);
+
+                // Parse binary image from buffer bytes read from stream
+                return imageSource.ParseBinaryImage(buffer, 0, readCount);
             }
             finally
             {
