@@ -2543,15 +2543,6 @@
             Event is raised when <see cref="P:TimeSeriesFramework.Adapters.IAdapter.OutputMeasurements"/> are updated.
             </summary>
         </member>
-        <member name="E:TimeSeriesFramework.Adapters.IAdapter.Disposed">
-            <summary>
-            Event is raised when <see cref="T:TimeSeriesFramework.Adapters.IAdapter"/> is disposed.
-            </summary>
-            <remarks>
-            If an adapter references another adapter by enumerating the <see cref="P:TimeSeriesFramework.Adapters.IAdapter.Parent"/> collection, this
-            event should be monitored to release the reference.
-            </remarks>
-        </member>
         <member name="P:TimeSeriesFramework.Adapters.IAdapter.DataSource">
             <summary>
             Gets or sets <see cref="T:System.Data.DataSet"/> based data source available to <see cref="T:TimeSeriesFramework.Adapters.IAdapter"/>.
@@ -5952,7 +5943,7 @@
             Gets the executable name of the service client that can remotely access the time-series framework service.
             </summary>
         </member>
-        <member name="T:TimeSeriesFramework.SerializableMeasurement">
+        <member name="T:TimeSeriesFramework.Transport.SerializableMeasurement">
             <summary>
             Represents a <see cref="T:TimeSeriesFramework.IMeasurement"/> that can be serialized.
             </summary>
@@ -5963,35 +5954,49 @@
             purposes of size reduction.
             </remarks>
         </member>
-        <member name="F:TimeSeriesFramework.SerializableMeasurement.FixedLength">
+        <member name="F:TimeSeriesFramework.Transport.SerializableMeasurement.FixedLength">
             <summary>
-            Fixed byte length of a <see cref="T:TimeSeriesFramework.SerializableMeasurement"/>.
+            Fixed byte length of a <see cref="T:TimeSeriesFramework.Transport.SerializableMeasurement"/>.
             </summary>
         </member>
-        <member name="M:TimeSeriesFramework.SerializableMeasurement.#ctor">
+        <member name="M:TimeSeriesFramework.Transport.SerializableMeasurement.#ctor">
             <summary>
-            Creates a new <see cref="T:TimeSeriesFramework.SerializableMeasurement"/>.
+            Creates a new <see cref="T:TimeSeriesFramework.Transport.SerializableMeasurement"/>.
             </summary>
         </member>
-        <member name="M:TimeSeriesFramework.SerializableMeasurement.#ctor(TimeSeriesFramework.IMeasurement)">
+        <member name="M:TimeSeriesFramework.Transport.SerializableMeasurement.#ctor(TimeSeriesFramework.IMeasurement)">
             <summary>
-            Creates a new <see cref="T:TimeSeriesFramework.SerializableMeasurement"/> from an existing <see cref="T:TimeSeriesFramework.IMeasurement"/> value.
+            Creates a new <see cref="T:TimeSeriesFramework.Transport.SerializableMeasurement"/> from an existing <see cref="T:TimeSeriesFramework.IMeasurement"/> value.
             </summary>
             <param name="measurement">Source <see cref="T:TimeSeriesFramework.IMeasurement"/> value.</param>
         </member>
-        <member name="M:TimeSeriesFramework.SerializableMeasurement.Initialize(System.Byte[],System.Int32,System.Int32)">
+        <member name="M:TimeSeriesFramework.Transport.SerializableMeasurement.ParseBinaryImage(System.Byte[],System.Int32,System.Int32)">
             <summary>
-            Initializes <see cref="T:TimeSeriesFramework.SerializableMeasurement"/> from the specified binary image.
+            Initializes <see cref="T:TimeSeriesFramework.Transport.SerializableMeasurement"/> from the specified binary image.
             </summary>
-            <param name="buffer">Binary image to be used for initialization.</param>
-            <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to be used for initialization.</param>
-            <param name="count">Valid number of bytes within binary image.</param>
+            <param name="buffer">Buffer containing binary image to parse.</param>
+            <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start parsing.</param>
+            <param name="length">Valid number of bytes within <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
             <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed).</returns>
+            <exception cref="T:System.InvalidOperationException">Not enough buffer available to deserialize measurement.</exception>
+            <exception cref="T:System.ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">
+            <paramref name="startIndex"/> or <paramref name="length"/> is less than 0 -or- 
+            <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
+            </exception>
         </member>
-        <member name="P:TimeSeriesFramework.SerializableMeasurement.BinaryImage">
+        <member name="M:TimeSeriesFramework.Transport.SerializableMeasurement.GenerateBinaryImage(System.Byte[],System.Int32)">
             <summary>
-            Gets the binary image of the <see cref="T:TimeSeriesFramework.SerializableMeasurement"/>.
+            Generates binary image of the <see cref="T:TimeSeriesFramework.Transport.SerializableMeasurement"/> and copies it into the given buffer, for <see cref="P:TVA.Parsing.ISupportBinaryImage.BinaryLength"/> bytes.
             </summary>
+            <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+            <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+            <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">
+            <paramref name="startIndex"/> or <see cref="P:TVA.Parsing.ISupportBinaryImage.BinaryLength"/> is less than 0 -or- 
+            <paramref name="startIndex"/> and <see cref="P:TVA.Parsing.ISupportBinaryImage.BinaryLength"/> will exceed <paramref name="buffer"/> length.
+            </exception>
             <remarks>
             <para>
             Field:      Bytes:   <br/>
@@ -6014,9 +6019,9 @@
             </para>
             </remarks>
         </member>
-        <member name="P:TimeSeriesFramework.SerializableMeasurement.BinaryLength">
+        <member name="P:TimeSeriesFramework.Transport.SerializableMeasurement.BinaryLength">
             <summary>
-            Gets the length of the <see cref="P:TimeSeriesFramework.SerializableMeasurement.BinaryImage"/>.
+            Gets the length of the <see cref="T:TimeSeriesFramework.Transport.SerializableMeasurement"/>.
             </summary>
         </member>
         <member name="T:TimeSeriesFramework.ServiceClientBase">
@@ -6658,24 +6663,33 @@
             <param name="baseTimeOffsets">Base time offset array - set to <c>null</c> to use full fidelity measurement time.</param>
             <param name="timeIndex">Time index to use for base offset.</param>
         </member>
-        <member name="M:TimeSeriesFramework.Transport.CompactMeasurement.Initialize(System.Byte[],System.Int32,System.Int32)">
+        <member name="M:TimeSeriesFramework.Transport.CompactMeasurement.ParseBinaryImage(System.Byte[],System.Int32,System.Int32)">
             <summary>
             Initializes <see cref="T:TimeSeriesFramework.Transport.CompactMeasurement"/> from the specified binary image.
             </summary>
-            <param name="buffer">Binary image to be used for initialization.</param>
-            <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to be used for initialization.</param>
-            <param name="count">Valid number of bytes within binary image.</param>
+            <param name="buffer">Buffer containing binary image to parse.</param>
+            <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start parsing.</param>
+            <param name="length">Valid number of bytes within <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
             <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed).</returns>
+            <exception cref="T:System.InvalidOperationException">Not enough buffer available to deserialize measurement.</exception>
+            <exception cref="T:System.ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">
+            <paramref name="startIndex"/> or <paramref name="length"/> is less than 0 -or- 
+            <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
+            </exception>
         </member>
-        <member name="P:TimeSeriesFramework.Transport.CompactMeasurement.IncludeTime">
+        <member name="M:TimeSeriesFramework.Transport.CompactMeasurement.GenerateBinaryImage(System.Byte[],System.Int32)">
             <summary>
-            Gets flag that determines if time is serialized into measurement binary image.
+            Generates binary image of the <see cref="T:TimeSeriesFramework.Transport.CompactMeasurement"/> and copies it into the given buffer, for <see cref="P:TVA.Parsing.ISupportBinaryImage.BinaryLength"/> bytes.
             </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.Transport.CompactMeasurement.BinaryImage">
-            <summary>
-            Gets the binary image of the <see cref="T:TimeSeriesFramework.Transport.CompactMeasurement"/>.
-            </summary>
+            <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+            <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+            <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">
+            <paramref name="startIndex"/> or <see cref="P:TVA.Parsing.ISupportBinaryImage.BinaryLength"/> is less than 0 -or- 
+            <paramref name="startIndex"/> and <see cref="P:TVA.Parsing.ISupportBinaryImage.BinaryLength"/> will exceed <paramref name="buffer"/> length.
+            </exception>
             <remarks>
             <para>
             Field:     Bytes: <br/>
@@ -6691,9 +6705,14 @@
             </para>
             </remarks>
         </member>
+        <member name="P:TimeSeriesFramework.Transport.CompactMeasurement.IncludeTime">
+            <summary>
+            Gets flag that determines if time is serialized into measurement binary image.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Transport.CompactMeasurement.BinaryLength">
             <summary>
-            Gets the length of the <see cref="P:TimeSeriesFramework.Transport.CompactMeasurement.BinaryImage"/>.
+            Gets the length of the <see cref="T:TimeSeriesFramework.Transport.CompactMeasurement"/>.
             </summary>
         </member>
         <member name="T:TimeSeriesFramework.Transport.IClientSubscription">
