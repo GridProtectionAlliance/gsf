@@ -476,6 +476,11 @@
             </summary>
             <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         </member>
+        <member name="E:TVA.Security.SecurityProviderBase.Disposed">
+            <summary>
+            Occurs when the class has been disposed.
+            </summary>
+        </member>
         <member name="P:TVA.Security.SecurityProviderBase.ApplicationName">
             <summary>
             Gets or sets the name of the application being secured as defined in the backend security datastore.
