@@ -986,7 +986,11 @@ namespace TVA.Collections
                 }
                 else
                 {
-                    return m_processTimer.Enabled;
+                    lock (m_processTimer)
+                    {
+                        // Enabled flag changes are always in a critical section to ensure all items will be processed
+                        return m_processTimer.Enabled;
+                    }
                 }
             }
         }
@@ -1370,7 +1374,11 @@ namespace TVA.Collections
             else
             {
                 // Start intervaled processing, if there items in the queue
-                m_processTimer.Enabled = Count > 0;
+                lock (m_processTimer)
+                {
+                    // Enabled flag changes are always in a critical section to ensure all items will be processed
+                    m_processTimer.Enabled = Count > 0;
+                }
             }
         }
 
@@ -1397,7 +1405,13 @@ namespace TVA.Collections
             {
                 // Stops intervaled processing, if active.
                 if ((object)m_processTimer != null)
-                    m_processTimer.Enabled = false;
+                {
+                    lock (m_processTimer)
+                    {
+                        // Enabled flag changes are always in a critical section to ensure all items will be processed
+                        m_processTimer.Enabled = false;
+                    }
+                }
             }
 
             m_stopTime = DateTime.Now.Ticks;
@@ -1558,8 +1572,15 @@ namespace TVA.Collections
         {
             // For queues that are not processing in real-time, we start the intervaled process timer
             // when data is added, if it's not running already
-            if (!m_processingIsRealTime && !m_processTimer.Enabled)
-                m_processTimer.Enabled = m_enabled;
+            if (!m_processingIsRealTime)
+            {
+                lock (m_processTimer)
+                {
+                    // Enabled flag changes are always in a critical section to ensure all items will be processed
+                    if (m_enabled && !m_processTimer.Enabled)
+                        m_processTimer.Enabled = true;
+                }
+            }
         }
 
         /// <summary>
@@ -1813,8 +1834,12 @@ namespace TVA.Collections
             }
 
             // Stop the process timer if there is no more data to process.
-            if (m_processQueue.Count == 0)
-                m_processTimer.Enabled = false;
+            lock (m_processTimer)
+            {
+                // Enabled flag changes are always in a critical section to ensure all items will be processed
+                if (m_processQueue.Count == 0)
+                    m_processTimer.Enabled = false;
+            }
         }
 
         /// <summary>
