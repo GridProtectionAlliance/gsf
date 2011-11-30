@@ -712,7 +712,18 @@ namespace TimeSeriesFramework.UI
         public virtual void Clear()
         {
             if (CanClear)
-                CurrentItem = new TDataModel();
+            {
+                if (m_itemsSource != null)
+                {
+                    m_itemsSource.Insert(0, new TDataModel());
+                    OnPropertyChanged("ItemsSource");
+                    GeneratePages();
+                }
+                else
+                {
+                    CurrentItem = new TDataModel();
+                }
+            }
         }
 
         /// <summary>
