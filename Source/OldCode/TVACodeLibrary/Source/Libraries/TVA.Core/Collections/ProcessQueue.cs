@@ -292,6 +292,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using TVA.Units;
 
 namespace TVA.Collections
@@ -348,39 +349,32 @@ namespace TVA.Collections
 
         // Nested Types
 
-        #region [ ProcessThread class ]
-
         // Limits item processing time, if requested.
-        private class ProcessThread
+        private sealed class TemporalTask : IDisposable
         {
             private ProcessQueue<T> m_parent;
-            private Thread m_thread;
+            private Task m_task;
             private T m_item;
             private T[] m_items;
+            private bool m_disposed;
 
-            public ProcessThread(ProcessQueue<T> parent, T item)
+            private TemporalTask(ProcessQueue<T> parent, T item)
             {
                 m_parent = parent;
                 m_item = item;
-                m_thread = new Thread(ProcessItem);
-                m_thread.Start();
+                m_task = Task.Factory.StartNew(ProcessItem);
             }
 
-            public ProcessThread(ProcessQueue<T> parent, T[] items)
+            private TemporalTask(ProcessQueue<T> parent, T[] items)
             {
                 m_parent = parent;
                 m_items = items;
-                m_thread = new Thread(ProcessItems);
-                m_thread.Start();
+                m_task = Task.Factory.StartNew(ProcessItems);
             }
 
-            // Blocks calling thread until specified time has expired.
-            public bool WaitUntil(int timeout)
+            ~TemporalTask()
             {
-                bool threadComplete = m_thread.Join(timeout);
-                if (!threadComplete)
-                    m_thread.Abort();
-                return threadComplete;
+                Dispose(false);
             }
 
             private void ProcessItem()
@@ -392,9 +386,57 @@ namespace TVA.Collections
             {
                 m_parent.ProcessItems(m_items);
             }
-        }
 
-        #endregion
+            // Blocks calling thread until specified process timeout has expired.
+            private bool Wait()
+            {
+                return m_task.Wait(m_parent.ProcessTimeout);
+            }
+
+            void IDisposable.Dispose()
+            {
+                Dispose(true);
+                GC.SuppressFinalize(this);
+            }
+
+            private void Dispose(bool disposing)
+            {
+                if (!m_disposed)
+                {
+                    try
+                    {
+                        if (disposing)
+                        {
+                            if (m_task != null)
+                                m_task.Dispose();
+
+                            m_task = null;
+                            m_parent = null;
+                        }
+                    }
+                    finally
+                    {
+                        m_disposed = true;  // Prevent duplicate dispose.
+                    }
+                }
+            }
+
+            public static bool Process(ProcessQueue<T> parent, T item)
+            {
+                using (TemporalTask temporalProcess = new TemporalTask(parent, item))
+                {
+                    return temporalProcess.Wait();
+                }
+            }
+
+            public static bool Process(ProcessQueue<T> parent, T[] items)
+            {
+                using (TemporalTask temporalProcess = new TemporalTask(parent, items))
+                {
+                    return temporalProcess.Wait();
+                }
+            }
+        }
 
         // Constants
 
@@ -609,7 +651,7 @@ namespace TVA.Collections
             m_requeueModeOnTimeout = DefaultRequeueModeOnTimeout;
             m_requeueOnException = requeueOnException;
             m_requeueModeOnException = DefaultRequeueModeOnException;
-            m_realTimeProcessThreadPriority = ThreadPriority.Highest;
+            m_realTimeProcessThreadPriority = ThreadPriority.Normal;
 
             if (processInterval == RealTimeProcessInterval)
             {
@@ -1546,10 +1588,10 @@ namespace TVA.Collections
                     // When user function is provided, we call it to determine if item should be processed at this time.
                     return m_canProcessItemFunction(item);
                 }
-                catch (ThreadAbortException ex)
+                catch (ThreadAbortException)
                 {
                     // Rethrow thread abort so calling method can respond appropriately
-                    throw ex;
+                    throw;
                 }
                 catch (Exception ex)
                 {
@@ -1633,7 +1675,6 @@ namespace TVA.Collections
             }
         }
 
-
         /// <summary>
         /// Handles standard processing of a single item. 
         /// </summary>
@@ -1649,10 +1690,10 @@ namespace TVA.Collections
                 // Notifies consumers of successfully processed items.
                 OnItemProcessed(item);
             }
-            catch (ThreadAbortException ex)
+            catch (ThreadAbortException)
             {
                 // Rethrows thread abort, so calling method can respond appropriately.
-                throw ex;
+                throw;
             }
             catch (Exception ex)
             {
@@ -1664,7 +1705,6 @@ namespace TVA.Collections
                 OnProcessException(ex);
             }
         }
-
 
         /// <summary>
         /// Handles standard processing of multiple items.
@@ -1681,10 +1721,10 @@ namespace TVA.Collections
                 // Notifies consumers of successfully processed items.
                 OnItemsProcessed(items);
             }
-            catch (ThreadAbortException ex)
+            catch (ThreadAbortException)
             {
                 // Rethrows thread abort, so calling method can respond appropriately.
-                throw ex;
+                throw;
             }
             catch (Exception ex)
             {
@@ -1697,31 +1737,58 @@ namespace TVA.Collections
             }
         }
 
-
         /// <summary>
         /// Creates a real-time thread for processing items. 
         /// </summary>
         private void RealTimeThreadProc()
         {
+            long noWorkSleeps = 0;
+
             // Creates a real-time processing loop that will process items as quickly as possible.
             while (m_enabled)
             {
-                if ((object)m_processItemsFunction == null)
+                if (m_processQueue.Count > 0)
                 {
-                    // Processes one item at a time.
-                    ProcessNextItem();
+                    noWorkSleeps = 0;
+
+                    if ((object)m_processItemsFunction == null)
+                    {
+                        // Process one item at a time.
+                        using (Task processTask = Task.Factory.StartNew(ProcessNextItem))
+                        {
+                            // Wait for task to complete
+                            processTask.Wait();
+                        }
+                    }
+                    else
+                    {
+                        // Process multiple items at once.
+                        using (Task processTask = Task.Factory.StartNew(ProcessNextItems))
+                        {
+                            // Wait for task to complete
+                            processTask.Wait();
+                        }
+                    }
                 }
                 else
                 {
-                    // Processes multiple items at once.
-                    ProcessNextItems();
-                }
+                    int sleepTime = 1;
 
-                // Sleeps the thread between each loop to help minimize CPU loading.
-                Thread.Sleep(1);
+                    // Vary sleep time based on how often items are being processed, up to one second for very idle queues
+                    if (noWorkSleeps > 1000L)
+                        sleepTime = 1000;   // It will take well over 1.5 minutes of no data before sleeping for 1 second
+                    else if (noWorkSleeps > 100L)
+                        sleepTime = 100;    // It will take at least one second of no data before sleeping for 100ms
+                    else if (noWorkSleeps > 10L)
+                        sleepTime = 10;     // It will take at least 10ms of no data before sleeping for 10ms
+
+                    noWorkSleeps++;
+
+                    // Wait around for more items to process
+                    Thread.Sleep(sleepTime);
+                }
             }
         }
-
 
         /// <summary>
         /// Processes queued items on an interval.
@@ -1730,26 +1797,25 @@ namespace TVA.Collections
         /// <param name="e">Arguments for the elapsed event.</param>
         private void ProcessTimerThreadProc(object sender, System.Timers.ElapsedEventArgs e)
         {
-            // The system timer creates an intervaled processing loop that distributes item processing across multiple threads if needed
+            // The system timer creates an intervaled processing loop such that if an existing item processing
+            // call hasn't completed before next interval, multiple processing calls will be spawned thereby
+            // distributing item processing across multiple threads as needed. Since each timer call is on the
+            // thread pool anyway, there is no need to use tasks here (tasks just go on the thread pool as well)
             if ((object)m_processItemsFunction == null)
             {
-                // Processes one item at a time.
+                // Process one item at a time.
                 ProcessNextItem();
             }
             else
             {
-                // Processes multiple items at once.
+                // Process multiple items at once.
                 ProcessNextItems();
             }
 
-            lock (m_processQueue)
-            {
-                // Stops the process timer if there is no more data to process.
-                if (m_processQueue.Count == 0)
-                    m_processTimer.Enabled = false;
-            }
+            // Stop the process timer if there is no more data to process.
+            if (m_processQueue.Count == 0)
+                m_processTimer.Enabled = false;
         }
-
 
         /// <summary>
         /// Processes next item in queue, one at a time (i.e., ProcessingStyle = OneAtATime). 
@@ -1807,9 +1873,7 @@ namespace TVA.Collections
                         // completes, whichever comes first. This is a safe operation since the current thread
                         // (i.e., the timer event or real-time thread) was already an independent thread and will not
                         // block any other processing, including another timer event.
-                        ProcessThread processThread = new ProcessThread(this, nextItem);
-
-                        if (!processThread.WaitUntil(m_processTimeout))
+                        if (!TemporalTask.Process(this, nextItem))
                         {
                             // Notify user of process timeout, in case they want to do anything special.
                             OnItemTimedOut(nextItem);
@@ -1821,10 +1885,10 @@ namespace TVA.Collections
                     }
                 }
             }
-            catch (ThreadAbortException ex)
+            catch (ThreadAbortException)
             {
                 // Rethrows thread abort, so calling method can respond appropriately.
-                throw ex;
+                throw;
             }
             catch (Exception ex)
             {
@@ -1841,7 +1905,6 @@ namespace TVA.Collections
                 }
             }
         }
-
 
         /// <summary>
         /// Processes next items in an array of items as a group (i.e., ProcessingStyle = ManyAtOnce).
@@ -1899,9 +1962,7 @@ namespace TVA.Collections
                         // whichever comes first. This is a safe operation, since the current thread (i.e., the timer
                         // event or real-time thread) was already an independent thread and will not block any other
                         // processing, including another timer event.
-                        ProcessThread processThread = new ProcessThread(this, nextItems);
-
-                        if (!processThread.WaitUntil(m_processTimeout))
+                        if (!TemporalTask.Process(this, nextItems))
                         {
                             // Notify the user of the process timeout, in case they want to do anything special.
                             OnItemsTimedOut(nextItems);
@@ -1913,10 +1974,10 @@ namespace TVA.Collections
                     }
                 }
             }
-            catch (ThreadAbortException ex)
+            catch (ThreadAbortException)
             {
                 // Rethrows thread abort, so calling method can respond appropriately.
-                throw ex;
+                throw;
             }
             catch (Exception ex)
             {
