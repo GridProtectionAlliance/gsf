@@ -19470,10 +19470,19 @@
         </member>
         <member name="M:TVA.Parsing.ISupportBinaryImageExtensions.CopyBinaryImageToStream(TVA.Parsing.ISupportBinaryImage,System.IO.Stream)">
             <summary>
-            Copies binary image of object that implements <see cref="T:TVA.Parsing.ISupportBinaryImage"/> to a stream.
+            Copies binary image of object that implements <see cref="T:TVA.Parsing.ISupportBinaryImage"/> to a <see cref="T:System.IO.Stream"/>.
             </summary>
             <param name="imageSource"><see cref="T:TVA.Parsing.ISupportBinaryImage"/> source.</param>
             <param name="stream">Destination <see cref="T:System.IO.Stream"/>.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="imageSource"/> cannot be null.</exception>
+        </member>
+        <member name="M:TVA.Parsing.ISupportBinaryImageExtensions.ParseBinaryImageFromStream(TVA.Parsing.ISupportBinaryImage,System.IO.Stream)">
+            <summary>
+            Parses binary image of object that implements <see cref="T:TVA.Parsing.ISupportBinaryImage"/> from a <see cref="T:System.IO.Stream"/>.
+            </summary>
+            <param name="imageSource"><see cref="T:TVA.Parsing.ISupportBinaryImage"/> source.</param>
+            <param name="stream">Source <see cref="T:System.IO.Stream"/>.</param>
+            <returns>The number of bytes parsed from the <paramref name="stream"/>.</returns>
             <exception cref="T:System.ArgumentNullException"><paramref name="imageSource"/> cannot be null.</exception>
         </member>
         <member name="T:TVA.NumericExtensions">
