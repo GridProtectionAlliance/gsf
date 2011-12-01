@@ -49,6 +49,8 @@
 **  07/22/2011 - Pinal C. Patel
 **       Updated to skip NuGet package creation if versioning is skipped and added SkipNugetPackages
 **       property to allow NuGet package creation to be skipped even when versioning is performed.
+**  12/01/2011 - Pinal C. Patel
+**       Updated to version and build setup packages.
 **
 *******************************************************************************************************
 -->
@@ -86,6 +88,10 @@
         <VersionRegex>(?'BeforeVersion'AssemblyFileVersion\(%22)(?'CoreVersion'(\*|\d+)\.)+(\*|\d+)(?'AfterVersion'%22\))</VersionRegex>
         <VersionPrecision>4</VersionPrecision>
       </FilesToVersion>
+      <FilesToVersion Include="$(LocalFolder)\Source\**\*.vdproj">
+        <VersionRegex>(?'BeforeVersion'%22ProductVersion%22\s=\s%228:)(?'CoreVersion'(\d+)\.)+(\d+)(?'AfterVersion'%22)</VersionRegex>
+        <VersionPrecision>3</VersionPrecision>
+      </FilesToVersion>
     </ItemGroup>
   </Target>
 
@@ -97,6 +103,8 @@
         <Properties>SignAssembly=true;AssemblyOriginatorKeyFile=$(LocalFolder)\Source\TVA.snk;OutputPath=$(BuildOutputFolder)\Libraries\Signed</Properties>
       </ProjectsToBuild>
       <ProjectsToBuild Include="$(LocalFolder)\Build\Scripts\$(ProjectName).shfbproj" Condition="'$(SkipHelpFiles)' == ''"/>
+      <!-- List of installs to build. -->
+      <InstallsToBuild Include="$(LocalFolder)\Source\**\*.vdproj"/>
     </ItemGroup>
   </Target>
 
@@ -115,7 +123,7 @@
   <Target Name="BeforeDeployBuild">
     <ItemGroup>
       <!--List of binaries to archive.-->
-      <BinariesToArchive Include="$(BuildOutputFolder)\**\*.*"/>
+      <BinariesToArchive Include="$(BuildOutputFolder)\**\*.*" Exclude="$(BuildOutputFolder)\**\*.msi"/>
       <!--List of installs to archive.-->
       <InstallsToArchive Include="$(BuildOutputFolder)\**\*.msi"/>
       <!--Destinations of archive files (*.zip).-->

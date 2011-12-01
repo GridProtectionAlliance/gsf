@@ -65,9 +65,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.ServiceBus", "Libraries
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.ServiceBus.Tests", "Libraries\Tests\TVA.ServiceBus.Tests\TVA.ServiceBus.Tests.csproj", "{058C96F1-EFE5-4050-A6F6-FF901D0FA4D3}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TCPRebroadcaster", "TCPRebroadcaster", "{C00E78E4-081D-409A-ABB2-EA9FC50EE51E}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "UDPRebroadcasterSetup", "Tools\UDPRebroadcaster\UDPRebroadcasterSetup\UDPRebroadcasterSetup.vdproj", "{CFECCCD8-F61B-44CF-B47C-C5F2BCEBFEB3}"
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 22
+		SccNumberOfProjects = 23
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs05
 		SccLocalPath0 = .
@@ -155,6 +159,10 @@ Global
 		SccProjectTopLevelParentUniqueName21 = TVACodeLibrary.sln
 		SccProjectName21 = Libraries/Tests/TVA.ServiceBus.Tests
 		SccLocalPath21 = Libraries\\Tests\\TVA.ServiceBus.Tests
+		SccProjectUniqueName22 = Tools\\UDPRebroadcaster\\UDPRebroadcasterSetup\\UDPRebroadcasterSetup.vdproj
+		SccProjectTopLevelParentUniqueName22 = TVACodeLibrary.sln
+		SccProjectName22 = Tools/UDPRebroadcaster/UDPRebroadcasterSetup
+		SccLocalPath22 = Tools\\UDPRebroadcaster\\UDPRebroadcasterSetup
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -356,6 +364,12 @@ Global
 		{058C96F1-EFE5-4050-A6F6-FF901D0FA4D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{058C96F1-EFE5-4050-A6F6-FF901D0FA4D3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{058C96F1-EFE5-4050-A6F6-FF901D0FA4D3}.Release|x86.ActiveCfg = Release|Any CPU
+		{CFECCCD8-F61B-44CF-B47C-C5F2BCEBFEB3}.Debug|Any CPU.ActiveCfg = Debug
+		{CFECCCD8-F61B-44CF-B47C-C5F2BCEBFEB3}.Debug|x86.ActiveCfg = Debug
+		{CFECCCD8-F61B-44CF-B47C-C5F2BCEBFEB3}.Mono|Any CPU.ActiveCfg = Release
+		{CFECCCD8-F61B-44CF-B47C-C5F2BCEBFEB3}.Mono|x86.ActiveCfg = Release
+		{CFECCCD8-F61B-44CF-B47C-C5F2BCEBFEB3}.Release|Any CPU.ActiveCfg = Release
+		{CFECCCD8-F61B-44CF-B47C-C5F2BCEBFEB3}.Release|x86.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -375,8 +389,10 @@ Global
 		{35027A69-1A76-4312-B57B-F5826F0B87AF} = {6C78685B-1653-43B5-98C8-0470A173A848}
 		{129F9272-157F-4A37-B0A4-0F9E5E4A0FE6} = {6C78685B-1653-43B5-98C8-0470A173A848}
 		{2B73D94E-7597-4DEC-AF1A-4C9F5F885FD5} = {6C78685B-1653-43B5-98C8-0470A173A848}
+		{C00E78E4-081D-409A-ABB2-EA9FC50EE51E} = {6C78685B-1653-43B5-98C8-0470A173A848}
 		{6BFB4BFD-6906-4E92-8078-3AB5641AAFAB} = {1C4124EF-0F9C-47B9-B1CB-B2CA39AB0E57}
 		{216C7D13-CB2B-4E98-87D5-D8CA53FE97F7} = {1C4124EF-0F9C-47B9-B1CB-B2CA39AB0E57}
+		{CFECCCD8-F61B-44CF-B47C-C5F2BCEBFEB3} = {1C4124EF-0F9C-47B9-B1CB-B2CA39AB0E57}
 		{044C17D3-DEC9-4A57-9B4F-3664393C888E} = {F06A2E20-D5DD-4B88-9ABC-CEE7245829E3}
 		{10184FDE-42E4-4BC5-ADDC-F211D25FD94C} = {F06A2E20-D5DD-4B88-9ABC-CEE7245829E3}
 		{CC2B0A07-3D70-4261-A96E-D5A747A7B74F} = {F06A2E20-D5DD-4B88-9ABC-CEE7245829E3}

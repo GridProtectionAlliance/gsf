@@ -39,7 +39,8 @@
             // 
             // m_serviceInstaller
             // 
-            this.m_serviceInstaller.DisplayName = "UDPRebroadcaster";
+            this.m_serviceInstaller.Description = "Rebroadcasts UDP data to one or more UDP clients.";
+            this.m_serviceInstaller.DisplayName = "UDP Rebroadcaster";
             this.m_serviceInstaller.ServiceName = "UDPRebroadcaster";
             // 
             // ServiceInstall

@@ -231,10 +231,12 @@
 */
 #endregion
 
-//#define RunAsApp
+#if DEBUG
+#define RunAsApp
+#endif
 
 #if RunAsApp
-    using System.Windows.Forms;
+using System.Windows.Forms;
 #else
 using System.ServiceProcess;
 #endif

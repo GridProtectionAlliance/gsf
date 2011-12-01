@@ -306,10 +306,6 @@ namespace UDPRebroadcaster
             this.m_udpServer = new TVA.Communication.UdpServer(this.components);
             this.m_udpClient = new TVA.Communication.UdpClient(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper.ErrorLogger)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper.ErrorLogger.ErrorLog)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper.ProcessScheduler)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper.StatusLog)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_remotingServer)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_udpServer)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_udpClient)).BeginInit();
@@ -352,21 +348,20 @@ namespace UDPRebroadcaster
             // m_udpServer
             // 
             this.m_udpServer.ConfigurationString = "Port=0; Clients=localhost:3061";
+            this.m_udpServer.PersistSettings = true;
             this.m_udpServer.ReceiveBufferSize = 32768;
+            this.m_udpServer.SettingsCategory = "UdpServer";
             // 
             // m_udpClient
             // 
             this.m_udpClient.ConnectionString = "Server=localhost:0; Port=3050";
+            this.m_udpClient.PersistSettings = true;
             this.m_udpClient.ReceiveBufferSize = 32768;
             this.m_udpClient.SettingsCategory = "UdpClient";
             // 
             // ServiceHost
             // 
             this.ServiceName = "UDPRebroadcaster";
-            ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper.ErrorLogger.ErrorLog)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper.ErrorLogger)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper.ProcessScheduler)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper.StatusLog)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_remotingServer)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_udpServer)).EndInit();
