@@ -347,7 +347,7 @@ namespace UDPRebroadcaster
             // 
             // m_udpServer
             // 
-            this.m_udpServer.ConfigurationString = "Port=0; Clients=localhost:3061";
+            this.m_udpServer.ConfigurationString = "Port=0; Clients=localhost:3060";
             this.m_udpServer.PersistSettings = true;
             this.m_udpServer.ReceiveBufferSize = 32768;
             this.m_udpServer.SettingsCategory = "UdpServer";

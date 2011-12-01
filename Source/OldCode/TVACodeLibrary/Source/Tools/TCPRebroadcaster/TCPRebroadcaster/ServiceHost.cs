@@ -1,19 +1,15 @@
 ﻿//*******************************************************************************************************
 //  ServiceHost.cs - Gbtc
 //
-//  Tennessee Valley Authority, 2009
+//  Tennessee Valley Authority, 2011
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  08/20/2009 - Paul B. Trachian
+//  12/01/2011 - Pinal C. Patel
 //       Generated original version of source code.
-//  09/14/2009 - Stephen C. Wills
-//       Added new header and license agreement.
-//  10/23/2009 - Pinal C. Patel
-//       Fixed errors introduced by breaking change to add support for classification of service updates.
 //
 //*******************************************************************************************************
 
@@ -238,7 +234,7 @@ using System.ComponentModel;
 using System.ServiceProcess;
 using TVA;
 
-namespace UDPRebroadcaster
+namespace TCPRebroadcaster
 {
     public partial class ServiceHost : ServiceBase
     {
@@ -268,79 +264,73 @@ namespace UDPRebroadcaster
         private void ServiceHelper_ServiceStarted(object sender, EventArgs e)
         {
             // Register components.
-            m_serviceHelper.ServiceComponents.Add(m_udpServer);
-            m_serviceHelper.ServiceComponents.Add(m_udpClient);
+            m_serviceHelper.ServiceComponents.Add(m_tcpServer);
+            m_serviceHelper.ServiceComponents.Add(m_tcpClient);
 
-            // Start the UDP server.
-            m_udpServer.ClientConnected += UdpServer_ClientConnected;
-            m_udpServer.ClientDisconnected += UdpServer_ClientDisconnected;
-            m_udpServer.SendClientDataException += UdpServer_SendClientDataException;
-            m_udpServer.Start();
+            // Start the TCP server.
+            m_tcpServer.ClientConnected += TcpServer_ClientConnected;
+            m_tcpServer.ClientDisconnected += TcpServer_ClientDisconnected;
+            m_tcpServer.SendClientDataException += TcpServer_SendClientDataException;
+            m_tcpServer.Start();
 
-            // Connect the UDP client.
-            m_udpClient.ConnectionAttempt += UdpClient_ConnectionAttempt;
-            m_udpClient.ConnectionEstablished += UdpClient_ConnectionEstablished;
-            m_udpClient.ConnectionTerminated += UdpClient_ConnectionTerminated;
-            m_udpClient.ConnectionException += UdpClient_ConnectionException;
-            m_udpClient.ReceiveDataComplete += UdpClient_ReceiveDataComplete;
-            m_udpClient.ConnectAsync();
+            // Connect the TCP client.
+            m_tcpClient.ConnectionAttempt += TcpClient_ConnectionAttempt;
+            m_tcpClient.ConnectionEstablished += TcpClient_ConnectionEstablished;
+            m_tcpClient.ConnectionTerminated += TcpClient_ConnectionTerminated;
+            m_tcpClient.ReceiveDataComplete += TcpClient_ReceiveDataComplete;
+            m_tcpClient.ConnectAsync();
         }
 
         private void ServiceHelper_ServiceStopping(object sender, EventArgs e)
         {
             // Unregister event handlers.
-            m_udpServer.ClientConnected -= UdpServer_ClientConnected;
-            m_udpServer.ClientDisconnected -= UdpServer_ClientDisconnected;
-            m_udpServer.SendClientDataException -= UdpServer_SendClientDataException;
-            m_udpClient.ConnectionAttempt -= UdpClient_ConnectionAttempt;
-            m_udpClient.ConnectionEstablished -= UdpClient_ConnectionEstablished;
-            m_udpClient.ConnectionTerminated -= UdpClient_ConnectionTerminated;
-            m_udpClient.ConnectionException -= UdpClient_ConnectionException;
-            m_udpClient.ReceiveDataComplete -= UdpClient_ReceiveDataComplete;
+            m_tcpServer.ClientConnected -= TcpServer_ClientConnected;
+            m_tcpServer.ClientDisconnected -= TcpServer_ClientDisconnected;
+            m_tcpServer.SendClientDataException -= TcpServer_SendClientDataException;
+            m_tcpClient.ConnectionAttempt -= TcpClient_ConnectionAttempt;
+            m_tcpClient.ConnectionEstablished -= TcpClient_ConnectionEstablished;
+            m_tcpClient.ConnectionTerminated -= TcpClient_ConnectionTerminated;
+            m_tcpClient.ReceiveDataComplete -= TcpClient_ReceiveDataComplete;
         }
 
-        private void UdpServer_ClientConnected(object sender, EventArgs<Guid> e)
+        private void TcpServer_ClientConnected(object sender, EventArgs<Guid> e)
         {
             m_serviceHelper.UpdateStatus(UpdateType.Information, "[SERVER] Client connected\r\n\r\n");
         }
 
-        private void UdpServer_ClientDisconnected(object sender, EventArgs<Guid> e)
+        private void TcpServer_ClientDisconnected(object sender, EventArgs<Guid> e)
         {
             m_serviceHelper.UpdateStatus(UpdateType.Information, "[SERVER] Client disconnected\r\n\r\n");
         }
 
-        private void UdpServer_SendClientDataException(object sender, EventArgs<Guid, Exception> e)
+        private void TcpServer_SendClientDataException(object sender, EventArgs<Guid, Exception> e)
         {
             m_serviceHelper.ErrorLogger.Log(e.Argument2);
             m_serviceHelper.UpdateStatus(UpdateType.Information, "[SERVER] Error rebroadcasting data - {0}\r\n\r\n", e.Argument2.Message);
         }
 
-        private void UdpClient_ConnectionAttempt(object sender, EventArgs e)
+        private void TcpClient_ConnectionAttempt(object sender, EventArgs e)
         {
-            m_serviceHelper.UpdateStatus(UpdateType.Information, "[CLIENT] Attempting connection to {0}\r\n\r\n", m_udpClient.ServerUri);
+            m_serviceHelper.UpdateStatus(UpdateType.Information, "[CLIENT] Attempting connection to {0}\r\n\r\n", m_tcpClient.ServerUri);
         }
 
-        private void UdpClient_ConnectionEstablished(object sender, EventArgs e)
+        private void TcpClient_ConnectionEstablished(object sender, EventArgs e)
         {
             m_serviceHelper.UpdateStatus(UpdateType.Information, "[CLIENT] Connection established\r\n\r\n");
         }
 
-        private void UdpClient_ConnectionTerminated(object sender, EventArgs e)
+        private void TcpClient_ConnectionTerminated(object sender, EventArgs e)
         {
-            m_serviceHelper.UpdateStatus(UpdateType.Warning, "[CLIENT] Connection terminated\r\n\r\n");
+            m_tcpClient.ConnectAsync();
+            m_serviceHelper.UpdateStatus(UpdateType.Information, "[CLIENT] Connection terminated\r\n\r\n");
         }
 
-        private void UdpClient_ConnectionException(object sender, EventArgs<Exception> e)
-        {
-            m_serviceHelper.UpdateStatus(UpdateType.Alarm, "[CLIENT] Error connecting - {0}\r\n\r\n", e.Argument.Message);
-        }
-
-        private void UdpClient_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
+        private void TcpClient_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
         {
             try
             {
                 // Rebroadcast received data to all clients.
-                m_udpServer.MulticastAsync(e.Argument1, 0, e.Argument2);
+                m_tcpServer.MulticastAsync(e.Argument1, 0, e.Argument2);
             }
             catch (Exception ex)
             {
