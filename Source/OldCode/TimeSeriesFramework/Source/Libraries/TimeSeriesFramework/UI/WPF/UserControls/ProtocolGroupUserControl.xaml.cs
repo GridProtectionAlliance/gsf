@@ -21,19 +21,9 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using TimeSeriesFramework.UI.ViewModels;
 
 namespace TimeSeriesFramework.UI.UserControls
@@ -53,7 +43,7 @@ namespace TimeSeriesFramework.UI.UserControls
             InitializeComponent();
             this.Unloaded += new RoutedEventHandler(ProtocolGroupUserControl_Unloaded);
             this.DataContext = new Protocols(10);
-        } 
+        }
 
         #endregion
 
@@ -86,6 +76,13 @@ namespace TimeSeriesFramework.UI.UserControls
                 }
             }
         }
+
+        private void GridDetailView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if ((this.DataContext as Protocols).IsNewRecord)
+                DataGridList.SelectedIndex = -1;
+        }
+
         #endregion
     }
 }

@@ -24,7 +24,7 @@
             <CollectionViewSource Source="{Binding Path=SignalTypeLookupList}" x:Key="SignalTypeLookupList"/>
         </StackPanel.Resources>
 
-        <Grid x:Name="GridDetailView" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="5" DataContext="{Binding Path=CurrentItem, Mode=TwoWay}">
+        <Grid x:Name="GridDetailView" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="5" DataContext="{Binding Path=CurrentItem, Mode=TwoWay}" DataContextChanged="GridDetailView_DataContextChanged">
             <Grid.BindingGroup >
                 <BindingGroup Name="input"/>
             </Grid.BindingGroup>
@@ -95,7 +95,7 @@
             <TextBlock Grid.Row="5" Grid.Column="3" Text="{tsfBinding:Column Path=SignalID}" Width="{StaticResource XLargeItemSize}" TextAlignment="Left"/>
         </Grid>
 
-        <uc:DetailViewFooterUserControl DeleteCommand="{Binding DeleteCommand}" ClearCommand="{Binding ClearCommand}" SaveCommand="{Binding SaveCommand}"
+        <uc:DetailViewFooterUserControl x:Name="UserControlDetailViewFooter" DeleteCommand="{Binding DeleteCommand}" ClearCommand="{Binding ClearCommand}" SaveCommand="{Binding SaveCommand}"
                     SaveEnabled="{tsfBinding:DataOperation Path=(Validation.HasError)}" HorizontalAlignment="Right"/>
                           
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
@@ -104,7 +104,7 @@
             <Button Content="Show All" Command="{Binding Path=ShowAllCommand}" ToolTip="Show all measurements" Margin="2"/>
         </StackPanel>
         
-        <sdk:DataGrid ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" PreviewKeyDown="DataGrid_PreviewKeyDown"
+        <sdk:DataGrid x:Name="DataGridList" ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" PreviewKeyDown="DataGrid_PreviewKeyDown"
                       Sorting="DataGrid_Sorting">
             <sdk:DataGrid.Columns>
                 <sdk:DataGridTextColumn Header="ID" Width="*" Binding="{Binding Path=ID}" ToolTipService.ToolTip="{Binding Path=PointTag}" CellStyle="{StaticResource CenterAlignCellStyle}" IsReadOnly="True"/>

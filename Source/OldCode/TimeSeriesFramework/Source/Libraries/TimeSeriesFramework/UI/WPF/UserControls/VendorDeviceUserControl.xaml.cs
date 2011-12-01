@@ -52,6 +52,10 @@ namespace TimeSeriesFramework.UI.UserControls
             this.DataContext = m_dataContext;
         }
 
+        #endregion
+
+        #region [ Methods ]
+
         /// <summary>
         /// Hanldes unloaded event of the <see cref="VendorDeviceUserControl"/>.
         /// </summary>
@@ -61,10 +65,6 @@ namespace TimeSeriesFramework.UI.UserControls
         {
             m_dataContext.ProcessPropertyChange();
         }
-
-        #endregion
-
-        #region [ Methods ]
 
         private void DataGrid_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
@@ -84,6 +84,13 @@ namespace TimeSeriesFramework.UI.UserControls
             m_dataContext.SortData(e.Column.SortMemberPath);
         }
 
+        private void GridDetailView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (m_dataContext.IsNewRecord)
+                DataGridList.SelectedIndex = -1;
+        }
+
         #endregion
+
     }
 }

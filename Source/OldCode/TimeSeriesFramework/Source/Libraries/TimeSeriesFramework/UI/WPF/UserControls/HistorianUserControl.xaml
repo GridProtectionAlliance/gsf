@@ -22,7 +22,7 @@
             <CollectionViewSource Source="{Binding Path=NodeLookupList}" x:Key="NodeLookupList"/>
         </StackPanel.Resources>
         
-        <Grid x:Name="GridDetailView" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="5" DataContext="{Binding Path=CurrentItem, Mode=TwoWay}">
+        <Grid x:Name="GridDetailView" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="5" DataContext="{Binding Path=CurrentItem, Mode=TwoWay}" DataContextChanged="GridDetailView_DataContextChanged">
             <Grid.BindingGroup >
                 <BindingGroup Name="input"/>
             </Grid.BindingGroup>
@@ -82,10 +82,10 @@
             <CheckBox Content="Enabled" Grid.Row="5" Grid.Column="3" IsChecked="{tsfBinding:Column Path=Enabled}"/>
         </Grid>
 
-        <uc:DetailViewFooterUserControl DeleteCommand="{Binding DeleteCommand}" ClearCommand="{Binding ClearCommand}" SaveCommand="{Binding SaveCommand}"
+        <uc:DetailViewFooterUserControl x:Name="UserControlDetailViewFooter" DeleteCommand="{Binding DeleteCommand}" ClearCommand="{Binding ClearCommand}" SaveCommand="{Binding SaveCommand}"
                 SaveEnabled="{tsfBinding:DataOperation Path=(Validation.HasError)}" />
 
-        <sdk:DataGrid ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" PreviewKeyDown="DataGrid_PreviewKeyDown"
+        <sdk:DataGrid x:Name="DataGridList" ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" PreviewKeyDown="DataGrid_PreviewKeyDown"
                       Sorting="DataGrid_Sorting">
             <sdk:DataGrid.Columns>
                 <sdk:DataGridTextColumn Header="Acronym" Width="*" Binding="{tsfBinding:Column Path=Acronym}"/>

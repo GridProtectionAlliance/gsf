@@ -223,27 +223,31 @@ namespace TimeSeriesFramework.UI
             }
             set
             {
-                if (m_currentItem != null)
+                if (value != null)
                 {
-                    ProcessPropertyChange();
-                    m_currentItem.PropertyChanged -= m_currentItem_PropertyChanged;
+
+                    if (m_currentItem != null)
+                    {
+                        ProcessPropertyChange();
+                        m_currentItem.PropertyChanged -= m_currentItem_PropertyChanged;
+                    }
+
+                    m_currentItem = value;
+
+                    if (m_currentItem != null)
+                        m_currentItem.PropertyChanged += m_currentItem_PropertyChanged;
+
+                    OnPropertyChanged("CurrentItem");
+
+                    // If CurrentItem changes then raise OnPropertyChanged on CanDelete property.
+                    // This will help us display or hide certain item based on IsNewItem property value.                
+                    OnPropertyChanged("CanDelete");
+
+                    // If CurrentItem changes then raise OnPropertyChanged on IsNewRecord property.
+                    // This will help us enable or disable Initialize button where applicable.
+                    if (m_currentItem != null)
+                        OnPropertyChanged("IsNewRecord");
                 }
-
-                m_currentItem = value;
-
-                if (m_currentItem != null)
-                    m_currentItem.PropertyChanged += m_currentItem_PropertyChanged;
-
-                OnPropertyChanged("CurrentItem");
-
-                // If CurrentItem changes then raise OnPropertyChanged on CanDelete property.
-                // This will help us display or hide certain item based on IsNewItem property value.                
-                OnPropertyChanged("CanDelete");
-
-                // If CurrentItem changes then raise OnPropertyChanged on IsNewRecord property.
-                // This will help us enable or disable Initialize button where applicable.
-                if (m_currentItem != null)
-                    OnPropertyChanged("IsNewRecord");
             }
         }
 
@@ -713,16 +717,7 @@ namespace TimeSeriesFramework.UI
         {
             if (CanClear)
             {
-                if (m_itemsSource != null)
-                {
-                    m_itemsSource.Insert(0, new TDataModel());
-                    OnPropertyChanged("ItemsSource");
-                    GeneratePages();
-                }
-                else
-                {
-                    CurrentItem = new TDataModel();
-                }
+                CurrentItem = new TDataModel();
             }
         }
 
