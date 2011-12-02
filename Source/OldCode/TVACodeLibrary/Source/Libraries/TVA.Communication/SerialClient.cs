@@ -445,6 +445,45 @@ namespace TVA.Communication
         #region [ Methods ]
 
         /// <summary>
+        /// Reads a number of bytes from the current received data buffer and writes those bytes into a byte array at the specified offset.
+        /// </summary>
+        /// <param name="buffer">Destination buffer used to hold copied bytes.</param>
+        /// <param name="startIndex">0-based starting index into destination <paramref name="buffer"/> to begin writing data.</param>
+        /// <param name="length">The number of bytes to read from current received data buffer and write into <paramref name="buffer"/>.</param>
+        /// <returns>The number of bytes read.</returns>
+        /// <remarks>
+        /// This function should only be called from within the <see cref="ClientBase.ReceiveData"/> event handler. Calling this method outside
+        /// this event will have unexpected results.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">No received data buffer has been defined to read.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <paramref name="length"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public override int Read(byte[] buffer, int startIndex, int length)
+        {
+            buffer.ValidateParameters(startIndex, length);
+
+            if (m_serialClient.ReceiveBuffer != null)
+            {
+                int sourceLength = m_serialClient.ReceiveBufferLength;
+                int readBytes = length > sourceLength ? sourceLength : length;
+                Buffer.BlockCopy(m_serialClient.ReceiveBuffer, ReadIndex, buffer, startIndex, readBytes);
+
+                // Update read index for next call
+                ReadIndex += readBytes;
+
+                if (ReadIndex >= sourceLength)
+                    ReadIndex = 0;
+
+                return readBytes;
+            }
+
+            throw new InvalidOperationException("No received data buffer has been defined to read.");
+        }
+
+        /// <summary>
         /// Disconnects the <see cref="SerialClient"/> from the <see cref="SerialPort"/>.
         /// </summary>
         public override void Disconnect()
@@ -477,7 +516,10 @@ namespace TVA.Communication
 
             m_serialClient.ID = this.ClientID;
             m_serialClient.Secretkey = this.SharedSecret;
-            m_serialClient.ReceiveBuffer = new byte[ReceiveBufferSize];
+
+            if (m_serialClient.ReceiveBuffer == null || m_serialClient.ReceiveBuffer.Length < ReceiveBufferSize)
+                m_serialClient.ReceiveBuffer = new byte[ReceiveBufferSize];
+
             m_serialClient.Provider = new SerialPort();
 #if !MONO
             m_serialClient.Provider.ReceivedBytesThreshold = m_receivedBytesThreshold;
@@ -633,7 +675,7 @@ namespace TVA.Communication
                 }
                 catch (ThreadAbortException)
                 {
-                    break;
+                    throw;
                 }
                 catch (Exception ex)
                 {

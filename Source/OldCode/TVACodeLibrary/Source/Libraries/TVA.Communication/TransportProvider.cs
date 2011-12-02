@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -233,6 +234,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.Threading;
 
@@ -344,7 +364,7 @@ namespace TVA.Communication
             finally
             {
                 Provider = default(T);
-            }    
+            }
         }
 
         /// <summary>
@@ -356,20 +376,24 @@ namespace TVA.Communication
         /// <param name="asyncResult">The <see cref="IAsyncResult"/> of the asynchronous operation being monitored.</param>
         public void WaitAsync(int timeout, AsyncCallback asyncCallback, IAsyncResult asyncResult)
         {
-            ThreadPool.RegisterWaitForSingleObject(asyncResult.AsyncWaitHandle, 
-                                                   WaitAsyncCallback, 
-                                                   new object[] { asyncCallback, asyncResult }, 
-                                                   timeout, 
-                                                   true);
+            ThreadPool.RegisterWaitForSingleObject(asyncResult.AsyncWaitHandle, WaitAsyncCallback, new object[] { asyncCallback, asyncResult }, timeout, true);
         }
 
-        private void WaitAsyncCallback(object state, bool timedout)
+        private void WaitAsyncCallback(object state, bool timeout)
         {
-            if (timedout)
+            if (timeout)
             {
                 // The async operation timed-out, so we invoke the specified callback.
-                object[] data = (object[])state;
-                ((AsyncCallback)data[0])((IAsyncResult)data[1]);
+                object[] data = state as object[];
+
+                if (state != null)
+                {
+                    AsyncCallback asyncCallback = data[0] as AsyncCallback;
+                    IAsyncResult asyncResult = data[1] as IAsyncResult;
+
+                    if (asyncCallback != null && asyncResult != null)
+                        asyncCallback(asyncResult);
+                }
             }
         }
 

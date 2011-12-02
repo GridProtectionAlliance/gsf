@@ -477,6 +477,59 @@ namespace TVA.Communication
         #region [ Methods ]
 
         /// <summary>
+        /// Reads a number of bytes from the current received data buffer and writes those bytes into a byte array at the specified offset.
+        /// </summary>
+        /// <param name="clientID">ID of the client from which data buffer should be read.</param>
+        /// <param name="buffer">Destination buffer used to hold copied bytes.</param>
+        /// <param name="startIndex">0-based starting index into destination <paramref name="buffer"/> to begin writing data.</param>
+        /// <param name="length">The number of bytes to read from current received data buffer and write into <paramref name="buffer"/>.</param>
+        /// <returns>The number of bytes read.</returns>
+        /// <remarks>
+        /// This function should only be called from within the <see cref="ServerBase.ReceiveClientData"/> event handler. Calling this method
+        /// outside this event will have unexpected results.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">
+        /// No received data buffer has been defined to read -or-
+        /// Specified <paramref name="clientID"/> does not exist, cannot read buffer.
+        /// </exception>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <paramref name="length"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public override int Read(Guid clientID, byte[] buffer, int startIndex, int length)
+        {
+            buffer.ValidateParameters(startIndex, length);
+
+            TransportProvider<Socket> udpClient;
+
+            if (m_udpClients.TryGetValue(clientID, out udpClient))
+            {
+                if (udpClient.ReceiveBuffer != null)
+                {
+                    int readIndex = ReadIndicies[clientID];
+                    int sourceLength = udpClient.ReceiveBufferLength;
+                    int readBytes = length > sourceLength ? sourceLength : length;
+                    Buffer.BlockCopy(udpClient.ReceiveBuffer, readIndex, buffer, startIndex, readBytes);
+
+                    // Update read index for next call
+                    readIndex += readBytes;
+
+                    if (readIndex >= sourceLength)
+                        readIndex = 0;
+
+                    ReadIndicies[clientID] = readIndex;
+
+                    return readBytes;
+                }
+
+                throw new InvalidOperationException("No received data buffer has been defined to read.");
+            }
+
+            throw new InvalidOperationException("Specified client ID does not exist, cannot read buffer.");
+        }
+
+        /// <summary>
         /// Stops the <see cref="UdpServer"/> synchronously and disconnects all connected clients.
         /// </summary>
         public override void Stop()
@@ -515,7 +568,10 @@ namespace TVA.Communication
                 // Bind server socket to local end-point
                 m_udpServer = new TransportProvider<Socket>();
                 m_udpServer.ID = this.ServerID;
-                m_udpServer.ReceiveBuffer = new byte[ReceiveBufferSize];
+
+                if (m_udpServer.ReceiveBuffer == null || m_udpServer.ReceiveBuffer.Length < ReceiveBufferSize)
+                    m_udpServer.ReceiveBuffer = new byte[ReceiveBufferSize];
+
                 m_udpServer.Provider = Transport.CreateSocket(m_configData["interface"], int.Parse(m_configData["port"]), ProtocolType.Udp, m_ipStack, m_allowDualStackSocket);
 
                 // Notify that the server has been started successfully
@@ -545,7 +601,10 @@ namespace TVA.Communication
                             {
                                 TransportProvider<Socket> udpClient = new TransportProvider<Socket>();
                                 udpClient.Secretkey = SharedSecret;
-                                udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
+
+                                if (udpClient.ReceiveBuffer == null || udpClient.ReceiveBuffer.Length < ReceiveBufferSize)
+                                    udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
+
                                 udpClient.Provider = Transport.CreateSocket(m_configData["interface"], 0, ProtocolType.Udp, m_ipStack, m_allowDualStackSocket);
 
                                 // Disable SocketError.ConnectionReset exception from being thrown when the enpoint is not listening
@@ -746,7 +805,10 @@ namespace TVA.Communication
                     {
                         // Create a random socket and connect it to the client
                         TransportProvider<Socket> udpClient = new TransportProvider<Socket>();
-                        udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
+
+                        if (udpClient.ReceiveBuffer == null || udpClient.ReceiveBuffer.Length < ReceiveBufferSize)
+                            udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
+
                         udpClient.Secretkey = SharedSecret;
                         udpClient.Provider = Transport.CreateSocket(m_configData["interface"], 0, ProtocolType.Udp, m_ipStack, m_allowDualStackSocket);
                         udpClient.Provider.Connect(client);

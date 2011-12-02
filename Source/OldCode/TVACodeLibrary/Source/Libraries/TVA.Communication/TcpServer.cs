@@ -530,6 +530,59 @@ namespace TVA.Communication
         #region [ Methods ]
 
         /// <summary>
+        /// Reads a number of bytes from the current received data buffer and writes those bytes into a byte array at the specified offset.
+        /// </summary>
+        /// <param name="clientID">ID of the client from which data buffer should be read.</param>
+        /// <param name="buffer">Destination buffer used to hold copied bytes.</param>
+        /// <param name="startIndex">0-based starting index into destination <paramref name="buffer"/> to begin writing data.</param>
+        /// <param name="length">The number of bytes to read from current received data buffer and write into <paramref name="buffer"/>.</param>
+        /// <returns>The number of bytes read.</returns>
+        /// <remarks>
+        /// This function should only be called from within the <see cref="ServerBase.ReceiveClientData"/> event handler. Calling this method
+        /// outside this event will have unexpected results.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">
+        /// No received data buffer has been defined to read -or-
+        /// Specified <paramref name="clientID"/> does not exist, cannot read buffer.
+        /// </exception>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <paramref name="length"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public override int Read(Guid clientID, byte[] buffer, int startIndex, int length)
+        {
+            buffer.ValidateParameters(startIndex, length);
+
+            TransportProvider<Socket> tcpClient;
+
+            if (m_tcpClients.TryGetValue(clientID, out tcpClient))
+            {
+                if (tcpClient.ReceiveBuffer != null)
+                {
+                    int readIndex = ReadIndicies[clientID];
+                    int sourceLength = tcpClient.ReceiveBufferLength;
+                    int readBytes = length > sourceLength ? sourceLength : length;
+                    Buffer.BlockCopy(tcpClient.ReceiveBuffer, readIndex, buffer, startIndex, readBytes);
+
+                    // Update read index for next call
+                    readIndex += readBytes;
+
+                    if (readIndex >= sourceLength)
+                        readIndex = 0;
+
+                    ReadIndicies[clientID] = readIndex;
+
+                    return readBytes;
+                }
+
+                throw new InvalidOperationException("No received data buffer has been defined to read.");
+            }
+
+            throw new InvalidOperationException("Specified client ID does not exist, cannot read buffer.");
+        }
+
+        /// <summary>
         /// Saves <see cref="TcpServer"/> settings to the config file if the <see cref="ServerBase.PersistSettings"/> property is set to true.
         /// </summary>
         public override void SaveSettings()
@@ -799,7 +852,9 @@ namespace TVA.Communication
             // Prepare buffer used for receiving data.
             worker.ReceiveBufferOffset = 0;
             worker.ReceiveBufferLength = -1;
-            worker.ReceiveBuffer = new byte[ReceiveBufferSize];
+
+            if (worker.ReceiveBuffer == null || worker.ReceiveBuffer.Length < ReceiveBufferSize)
+                worker.ReceiveBuffer = new byte[ReceiveBufferSize];
 
             // Receive data asynchronously with a timeout.
             worker.WaitAsync(HandshakeTimeout,
@@ -909,13 +964,17 @@ namespace TVA.Communication
             if (m_payloadAware)
             {
                 // Payload boundaries are to be preserved.
-                worker.ReceiveBuffer = new byte[m_payloadMarker.Length + Payload.LengthSegment];
+                if (worker.ReceiveBuffer == null || worker.ReceiveBuffer.Length < m_payloadMarker.Length + Payload.LengthSegment)
+                    worker.ReceiveBuffer = new byte[m_payloadMarker.Length + Payload.LengthSegment];
+
                 ReceivePayloadAwareAsync(worker);
             }
             else
             {
                 // Payload boundaries are not to be preserved.
-                worker.ReceiveBuffer = new byte[ReceiveBufferSize];
+                if (worker.ReceiveBuffer == null || worker.ReceiveBuffer.Length < ReceiveBufferSize)
+                    worker.ReceiveBuffer = new byte[ReceiveBufferSize];
+
                 ReceivePayloadUnawareAsync(worker);
             }
         }
@@ -986,7 +1045,8 @@ namespace TVA.Communication
                         if (tcpClient.ReceiveBufferLength != -1)
                         {
                             // We have the payload length, so we'll create a buffer that's big enough to hold the entire payload.
-                            tcpClient.ReceiveBuffer = new byte[tcpClient.ReceiveBufferLength];
+                            if (tcpClient.ReceiveBuffer == null || tcpClient.ReceiveBuffer.Length < tcpClient.ReceiveBufferLength)
+                                tcpClient.ReceiveBuffer = new byte[tcpClient.ReceiveBufferLength];
                         }
 
                         ReceivePayloadAwareAsync(tcpClient);

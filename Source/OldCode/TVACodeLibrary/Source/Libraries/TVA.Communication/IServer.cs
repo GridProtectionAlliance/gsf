@@ -341,12 +341,29 @@ namespace TVA.Communication
         event EventHandler<EventArgs<Guid>> ReceiveClientDataTimeout;
 
         /// <summary>
-        /// Occurs when data is received from a client.
+        /// Occurs when unprocessed data has been received from a client.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This event can be used to receive a notification that client data has arrived. The <see cref="Read"/> method can then be used
+        /// to copy data to an existing buffer. In many cases it will be optimal to use an existing buffer instead of subscribing to the
+        /// <see cref="ReceiveClientDataComplete"/> event, however, the data that is available after calling the <see cref="Read"/> method
+        /// will be the original unprocessed data received by the client, i.e., not optionally decrypted or decompressed data.
+        /// </para>
+        /// <para>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the ID of the client from which data is received.<br/>
+        /// <see cref="EventArgs{T1,T2}.Argument2"/> is the number of bytes received in the buffer from the client.
+        /// </para>
+        /// </remarks>
+        event EventHandler<EventArgs<Guid, int>> ReceiveClientData;
+
+        /// <summary>
+        /// Occurs when data received from a client has been processed and is ready for consumption.
         /// </summary>
         /// <remarks>
         /// <see cref="EventArgs{T1,T2,T3}.Argument1"/> is the ID of the client from which data is received.<br/>
-        /// <see cref="EventArgs{T1,T2,T3}.Argument2"/> is the buffer containing data received from the client starting at index zero.<br/>
-        /// <see cref="EventArgs{T1,T2,T3}.Argument3"/> is the number of bytes received in the buffer from the client.
+        /// <see cref="EventArgs{T1,T2,T3}.Argument2"/> is a new buffer containing post-processed data received from the client starting at index zero.<br/>
+        /// <see cref="EventArgs{T1,T2,T3}.Argument3"/> is the number of post-processed bytes received in the buffer from the client.
         /// </remarks>
         event EventHandler<EventArgs<Guid, byte[], int>> ReceiveClientDataComplete;
 
@@ -366,93 +383,141 @@ namespace TVA.Communication
         /// <summary>
         /// Gets or sets the data required by the server to initialize.
         /// </summary>
-        string ConfigurationString { get; set; }
+        string ConfigurationString
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the maximum number of clients that can connect to the server.
         /// </summary>
-        int MaxClientConnections { get; set; }
+        int MaxClientConnections
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the server will do a handshake with the clients after the connection has been established.
         /// </summary>
-        bool Handshake { get; set; }
+        bool Handshake
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the number of milliseconds that the server will wait for the clients to initiate the <see cref="Handshake"/> process.
         /// </summary>
-        int HandshakeTimeout { get; set; }
+        int HandshakeTimeout
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the key to be used for ciphering the data exchanged between the server and clients.
         /// </summary>
-        string SharedSecret { get; set; }
+        string SharedSecret
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="CipherStrength"/> to be used for ciphering the data exchanged between the server and clients.
         /// </summary>
-        CipherStrength Encryption { get; set; }
+        CipherStrength Encryption
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the data exchanged between the server and clients will be encrypted using a private session passphrase.
         /// </summary>
-        bool SecureSession { get; set; }
+        bool SecureSession
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the number of milliseconds after which the server will raise the <see cref="ReceiveClientDataTimeout"/> event if no data is received from a client.
         /// </summary>
-        int ReceiveTimeout { get; set; }
+        int ReceiveTimeout
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the size of the buffer used by the server for receiving data from the clients.
         /// </summary>
-        int ReceiveBufferSize { get; set; }
+        int ReceiveBufferSize
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="CompressionStrength"/> to be used for compressing the data exchanged between the server and clients.
         /// </summary>
-        CompressionStrength Compression { get; set; }
+        CompressionStrength Compression
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="Encoding"/> to be used for the text sent to the connected clients.
         /// </summary>
-        Encoding TextEncoding { get; set; }
-
-        /// <summary>
-        /// Gets or sets a <see cref="Delegate"/> to be invoked instead of the <see cref="ReceiveClientDataComplete"/> event when data is received from clients.
-        /// </summary>
-        /// <remarks>
-        /// arg1 in <see cref="ReceiveClientDataHandler"/> is the ID or the client from which data is received.<br/>
-        /// arg2 in <see cref="ReceiveClientDataHandler"/> is the buffer containing data received from the client starting at index zero.<br/>
-        /// arg3 in <see cref="ReceiveClientDataHandler"/> is the zero-based starting offset into the buffer containing the data received from the server.<br/>
-        /// arg4 in <see cref="ReceiveClientDataHandler"/> is the number of bytes received from the client that is stored in the buffer (arg2).
-        /// </remarks>
-        Action<Guid, byte[], int, int> ReceiveClientDataHandler { get; set; }
+        Encoding TextEncoding
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets the current <see cref="ServerState"/>.
         /// </summary>
-        ServerState CurrentState { get; }
+        ServerState CurrentState
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets the <see cref="TransportProtocol"/> used by the server for the transportation of data with the clients.
         /// </summary>
-        TransportProtocol TransportProtocol { get; }
+        TransportProtocol TransportProtocol
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets the server's ID.
         /// </summary>
-        Guid ServerID { get; }
+        Guid ServerID
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets the IDs of clients connected to the server.
         /// </summary>
-        Guid[] ClientIDs { get; }
+        Guid[] ClientIDs
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets the <see cref="Time"/> for which the server has been running.
         /// </summary>
-        Time RunTime { get; }
+        Time RunTime
+        {
+            get;
+        }
 
         #endregion
 
@@ -514,6 +579,20 @@ namespace TVA.Communication
         /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
         /// <returns>Array of <see cref="WaitHandle"/> for the asynchronous operation.</returns>
         WaitHandle[] MulticastAsync(byte[] data, int offset, int length);
+
+        /// <summary>
+        /// Reads a number of bytes from the current received data buffer and writes those bytes into a byte array at the specified offset.
+        /// </summary>
+        /// <param name="clientID">ID of the client from which data buffer should be read.</param>
+        /// <param name="buffer">Destination buffer used to hold copied bytes.</param>
+        /// <param name="startIndex">0-based starting index into destination <paramref name="buffer"/> to begin writing data.</param>
+        /// <param name="length">The number of bytes to read from current received data buffer and write into <paramref name="buffer"/>.</param>
+        /// <returns>The number of bytes read.</returns>
+        /// <remarks>
+        /// This function should only be called from within the <see cref="ReceiveClientData"/> event handler. Calling this method outside this
+        /// event will have unexpected results.
+        /// </remarks>
+        int Read(Guid clientID, byte[] buffer, int startIndex, int length);
 
         #endregion
     }

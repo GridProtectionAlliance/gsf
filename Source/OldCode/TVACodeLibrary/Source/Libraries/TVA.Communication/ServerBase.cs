@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -31,6 +32,9 @@
 //       Added new header and license agreement.
 //  04/14/2011 - Pinal C. Patel
 //       Updated to use new serialization methods in TVA.Serialization class.
+//  12/02/2011 - J. Ritchie Carroll
+//       Updated event data publication to provide "copy" of resuable buffer instead of original
+//       buffer since you cannot assume how user will use the buffer (they may cache it).
 //
 //*******************************************************************************************************
 
@@ -250,7 +254,27 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
@@ -418,15 +442,34 @@ namespace TVA.Communication
         public event EventHandler<EventArgs<Guid>> ReceiveClientDataTimeout;
 
         /// <summary>
-        /// Occurs when data is received from a client.
+        /// Occurs when unprocessed data has been received from a client.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This event can be used to receive a notification that client data has arrived. The <see cref="Read"/> method can then be used
+        /// to copy data to an existing buffer. In many cases it will be optimal to use an existing buffer instead of subscribing to the
+        /// <see cref="ReceiveClientDataComplete"/> event, however, the data that is available after calling the <see cref="Read"/> method
+        /// will be the original unprocessed data received by the client, i.e., not optionally decrypted or decompressed data.
+        /// </para>
+        /// <para>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the ID of the client from which data is received.<br/>
+        /// <see cref="EventArgs{T1,T2}.Argument2"/> is the number of bytes received in the buffer from the client.
+        /// </para>
+        /// </remarks>
+        [Category("Data"),
+        Description("Occurs when unprocessed data has been received from a client.")]
+        public event EventHandler<EventArgs<Guid, int>> ReceiveClientData;
+
+        /// <summary>
+        /// Occurs when data received from a client has been processed and is ready for consumption.
         /// </summary>
         /// <remarks>
         /// <see cref="EventArgs{T1,T2,T3}.Argument1"/> is the ID of the client from which data is received.<br/>
-        /// <see cref="EventArgs{T1,T2,T3}.Argument2"/> is the buffer containing data received from the client starting at index zero.<br/>
-        /// <see cref="EventArgs{T1,T2,T3}.Argument3"/> is the number of bytes received in the buffer from the client.
+        /// <see cref="EventArgs{T1,T2,T3}.Argument2"/> is a new buffer containing post-processed data received from the client starting at index zero.<br/>
+        /// <see cref="EventArgs{T1,T2,T3}.Argument3"/> is the number of post-processed bytes received in the buffer from the client.
         /// </remarks>
         [Category("Data"),
-        Description("Occurs when data is received from a client.")]
+        Description("Occurs when data received from a client has been processed and is ready for consumption.")]
         public event EventHandler<EventArgs<Guid, byte[], int>> ReceiveClientDataComplete;
 
         /// <summary>
@@ -454,15 +497,15 @@ namespace TVA.Communication
         private bool m_persistSettings;
         private string m_settingsCategory;
         private Encoding m_textEncoding;
-        private Action<Guid, byte[], int, int> m_receiveClientDataHandler;
         private ServerState m_currentState;
         private TransportProtocol m_transportProtocol;
         private Guid m_serverID;
         private List<Guid> m_clientIDs;
         private Ticks m_stopTime;
         private Ticks m_startTime;
-        private bool m_disposed;
+        private ConcurrentDictionary<Guid, int> m_readIndicies;
         private bool m_initialized;
+        private bool m_disposed;
 
         #endregion
 
@@ -476,6 +519,7 @@ namespace TVA.Communication
         {
             m_serverID = Guid.NewGuid();
             m_clientIDs = new List<Guid>();
+            m_readIndicies = new ConcurrentDictionary<Guid, int>();
             m_textEncoding = Encoding.ASCII;
             m_currentState = ServerState.NotRunning;
             m_maxClientConnections = DefaultMaxClientConnections;
@@ -842,36 +886,6 @@ namespace TVA.Communication
         }
 
         /// <summary>
-        /// Gets or sets a <see cref="Delegate"/> to be invoked instead of the <see cref="ReceiveClientDataComplete"/> event when data is received from clients.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// This property only needs to be implemented if you need data from the clients absolutelty as fast as possible, for most uses this will not be necessary.  
-        /// Setting this property gives the consumer access to the data stream as soon as it's available, but this also bypasses <see cref="Encryption"/> and 
-        /// <see cref="Compression"/> on received data.
-        /// </para>
-        /// <para>
-        /// arg1 in <see cref="ReceiveClientDataHandler"/> is the ID or the client from which data is received.<br/>
-        /// arg2 in <see cref="ReceiveClientDataHandler"/> is the buffer containing data received from the client starting at index zero.<br/>
-        /// arg3 in <see cref="ReceiveClientDataHandler"/> is the zero based starting offset into the buffer containing the data received from the server.<br/>
-        /// arg4 in <see cref="ReceiveClientDataHandler"/> is the number of bytes received from the client that is stored in the buffer (arg2).
-        /// </para>
-        /// </remarks>
-        [Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public virtual Action<Guid, byte[], int, int> ReceiveClientDataHandler
-        {
-            get
-            {
-                return m_receiveClientDataHandler;
-            }
-            set
-            {
-                m_receiveClientDataHandler = value;
-            }
-        }
-
-        /// <summary>
         /// Gets the current <see cref="ServerState"/>.
         /// </summary>
         [Browsable(false)]
@@ -946,6 +960,17 @@ namespace TVA.Communication
         }
 
         /// <summary>
+        /// Gets current read indicies for received data buffers incremented at each <see cref="Read"/> call.
+        /// </summary>
+        protected ConcurrentDictionary<Guid, int> ReadIndicies
+        {
+            get
+            {
+                return m_readIndicies;
+            }
+        }
+
+        /// <summary>
         /// Gets the unique identifier of the server.
         /// </summary>
         [Browsable(false)]
@@ -1009,8 +1034,6 @@ namespace TVA.Communication
 
         #region [ Methods ]
 
-        #region [ Abstract ]
-
         /// <summary>
         /// When overridden in a derived class, starts the server.
         /// </summary>
@@ -1020,6 +1043,20 @@ namespace TVA.Communication
         /// When overridden in a derived class, stops the server.
         /// </summary>
         public abstract void Stop();
+
+        /// <summary>
+        /// When overridden in a derived class, reads a number of bytes from the current received data buffer and writes those bytes into a byte array at the specified offset.
+        /// </summary>
+        /// <param name="clientID">ID of the client from which data buffer should be read.</param>
+        /// <param name="buffer">Destination buffer used to hold copied bytes.</param>
+        /// <param name="startIndex">0-based starting index into destination <paramref name="buffer"/> to begin writing data.</param>
+        /// <param name="length">The number of bytes to read from current received data buffer and write into <paramref name="buffer"/>.</param>
+        /// <returns>The number of bytes read.</returns>
+        /// <remarks>
+        /// This function should only be called from within the <see cref="ReceiveClientData"/> event handler. Calling this method outside this event
+        /// will have unexpected results.
+        /// </remarks>
+        public abstract int Read(Guid clientID, byte[] buffer, int startIndex, int length);
 
         /// <summary>
         /// When overridden in a derived class, disconnects a connected client.
@@ -1049,8 +1086,6 @@ namespace TVA.Communication
         /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         protected abstract WaitHandle SendDataToAsync(Guid clientID, byte[] data, int offset, int length);
-
-        #endregion
 
         /// <summary>
         /// Initializes the server.
@@ -1448,6 +1483,9 @@ namespace TVA.Communication
                 m_clientIDs.Remove(clientID);
             }
 
+            int readIndex;
+            m_readIndicies.TryRemove(clientID, out readIndex);
+
             if (ClientDisconnected != null)
                 ClientDisconnected(this, new EventArgs<Guid>(clientID));
         }
@@ -1479,7 +1517,7 @@ namespace TVA.Communication
         /// <param name="ex">Exception to send to <see cref="SendClientDataException"/> event.</param>
         protected virtual void OnSendClientDataException(Guid clientID, Exception ex)
         {
-            if (SendClientDataException != null)
+            if (!(ex is ObjectDisposedException) && SendClientDataException != null)
                 SendClientDataException(this, new EventArgs<Guid, Exception>(clientID, ex));
         }
 
@@ -1494,6 +1532,22 @@ namespace TVA.Communication
         }
 
         /// <summary>
+        /// Raises the <see cref="ReceiveClientData"/> event.
+        /// </summary>
+        /// <param name="clientID">ID of the client from which data is received.</param>
+        /// <param name="size">Number of bytes received from the client.</param>
+        /// <remarks>
+        /// This event is automatically raised by call to <see cref="OnReceiveClientDataComplete"/> so that inheritors
+        /// never need to worry about raising this event. This method is only included here in case any custom server
+        /// implementations need to explicitly raise this event.
+        /// </remarks>
+        protected virtual void OnReceiveClientData(Guid clientID, int size)
+        {
+            if (ReceiveClientData != null)
+                ReceiveClientData(this, new EventArgs<Guid, int>(clientID, size));
+        }
+
+        /// <summary>
         /// Raises the <see cref="ReceiveClientDataComplete"/> event.
         /// </summary>
         /// <param name="clientID">ID of the client from which data is received.</param>
@@ -1501,27 +1555,33 @@ namespace TVA.Communication
         /// <param name="size">Number of bytes received from the client.</param>
         protected virtual void OnReceiveClientDataComplete(Guid clientID, byte[] data, int size)
         {
-            if (m_receiveClientDataHandler != null)
-            {
-                m_receiveClientDataHandler(clientID, data, 0, size);
-            }
+            // Reset buffer index used by read method
+            if (m_readIndicies.ContainsKey(clientID))
+                m_readIndicies[clientID] = 0;
             else
+                m_readIndicies.GetOrAdd(clientID, 0);
+
+            // Notify users of data ready
+            if (ReceiveClientData != null)
+                ReceiveClientData(this, new EventArgs<Guid, int>(clientID, size));
+
+            if (ReceiveClientDataComplete != null)
             {
-                if (ReceiveClientDataComplete != null)
+                try
                 {
-                    try
-                    {
-                        int offset = 0; // Received buffer will always have valid data starting at offset zero.
-                        Payload.ProcessReceived(ref data, ref offset, ref size, m_encryption, GetSessionSecret(clientID), m_compression);
-                    }
-                    catch
-                    {
-                        // Ignore encountered exception and pass-on the raw data.
-                    }
-                    finally
-                    {
-                        ReceiveClientDataComplete(this, new EventArgs<Guid, byte[], int>(clientID, data, size));
-                    }
+                    int offset = 0; // Received buffer will always have valid data starting at offset zero.
+                    Payload.ProcessReceived(ref data, ref offset, ref size, m_encryption, GetSessionSecret(clientID), m_compression);
+                }
+                catch (Exception ex)
+                {
+                    OnReceiveClientDataException(clientID, new InvalidOperationException("Failed to process received payload: " + ex.Message, ex));
+                }
+                finally
+                {
+                    // Most inheritors of this class "reuse" an existing buffer, as such you cannot assume what the user is going to do
+                    // with the buffer provided, so we pass in a "copy" of the buffer for the user since they may assume control of and
+                    // possibly even cache the provided buffer (e.g., passing the buffer to a process queue)
+                    ReceiveClientDataComplete(this, new EventArgs<Guid, byte[], int>(clientID, data.BlockCopy(0, size), size));
                 }
             }
         }
@@ -1533,7 +1593,7 @@ namespace TVA.Communication
         /// <param name="ex">Exception to send to <see cref="ReceiveClientDataException"/> event.</param>
         protected virtual void OnReceiveClientDataException(Guid clientID, Exception ex)
         {
-            if (ReceiveClientDataException != null)
+            if (!(ex is ObjectDisposedException) && ReceiveClientDataException != null)
                 ReceiveClientDataException(this, new EventArgs<Guid, Exception>(clientID, ex));
         }
 

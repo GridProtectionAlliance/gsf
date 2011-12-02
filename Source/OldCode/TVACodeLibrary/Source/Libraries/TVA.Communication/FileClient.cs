@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -241,6 +242,25 @@
  representative as follows: J. Ritchie Carroll <mailto:jrcarrol@tva.gov>.
 
 */
+#endregion
+
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
 #endregion
 
 using System;
@@ -496,7 +516,7 @@ namespace TVA.Communication
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether receiving (reading) of data will be initiated manually by calling <see cref="ReceiveData()"/>.
+        /// Gets or sets a boolean value that indicates whether receiving (reading) of data will be initiated manually by calling <see cref="ReadNextBuffer"/>.
         /// </summary>
         /// <remarks>
         /// <see cref="ReceiveInterval"/> will be set to -1 when <see cref="ReceiveOnDemand"/> is enabled.
@@ -653,11 +673,50 @@ namespace TVA.Communication
         #region [ Methods ]
 
         /// <summary>
-        /// Receives (reads) data from the <see cref="FileStream"/>.
+        /// Reads a number of bytes from the current received data buffer and writes those bytes into a byte array at the specified offset.
         /// </summary>
-        /// <exception cref="InvalidOperationException"><see cref="ReceiveData()"/> is called when <see cref="FileClient"/> is not connected.</exception>
-        /// <exception cref="InvalidOperationException"><see cref="ReceiveData()"/> is called when <see cref="ReceiveOnDemand"/> is disabled.</exception>
-        public void ReceiveData()
+        /// <param name="buffer">Destination buffer used to hold copied bytes.</param>
+        /// <param name="startIndex">0-based starting index into destination <paramref name="buffer"/> to begin writing data.</param>
+        /// <param name="length">The number of bytes to read from current received data buffer and write into <paramref name="buffer"/>.</param>
+        /// <returns>The number of bytes read.</returns>
+        /// <remarks>
+        /// This function should only be called from within the <see cref="ClientBase.ReceiveData"/> event handler. Calling this method outside
+        /// this event will have unexpected results.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">No received data buffer has been defined to read.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <paramref name="length"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public override int Read(byte[] buffer, int startIndex, int length)
+        {
+            buffer.ValidateParameters(startIndex, length);
+
+            if (m_fileClient.ReceiveBuffer != null)
+            {
+                int sourceLength = m_fileClient.ReceiveBufferLength;
+                int readBytes = length > sourceLength ? sourceLength : length;
+                Buffer.BlockCopy(m_fileClient.ReceiveBuffer, ReadIndex, buffer, startIndex, readBytes);
+
+                // Update read index for next call
+                ReadIndex += readBytes;
+
+                if (ReadIndex >= sourceLength)
+                    ReadIndex = 0;
+
+                return readBytes;
+            }
+
+            throw new InvalidOperationException("No received data buffer has been defined to read.");
+        }
+
+        /// <summary>
+        /// Receives (reads) next data buffer from the <see cref="FileStream"/>.
+        /// </summary>
+        /// <exception cref="InvalidOperationException"><see cref="ReadNextBuffer"/> is called when <see cref="FileClient"/> is not connected.</exception>
+        /// <exception cref="InvalidOperationException"><see cref="ReadNextBuffer"/> is called when <see cref="ReceiveOnDemand"/> is disabled.</exception>
+        public void ReadNextBuffer()
         {
             if (m_receiveOnDemand)
             {
@@ -672,7 +731,7 @@ namespace TVA.Communication
             }
             else
             {
-                throw new InvalidOperationException("ReceiveData() cannot be used when ReceiveOnDemand is disabled");
+                throw new InvalidOperationException("ReadNextBuffer() cannot be used when ReceiveOnDemand is disabled");
             }
         }
 
@@ -704,7 +763,10 @@ namespace TVA.Communication
 
             m_fileClient.ID = this.ClientID;
             m_fileClient.Secretkey = this.SharedSecret;
-            m_fileClient.ReceiveBuffer = new byte[ReceiveBufferSize];
+
+            if (m_fileClient.ReceiveBuffer == null || m_fileClient.ReceiveBuffer.Length < ReceiveBufferSize)
+                m_fileClient.ReceiveBuffer = new byte[ReceiveBufferSize];
+
 #if ThreadTracking
             m_connectionThread = new ManagedThread(OpenFile);
             m_connectionThread.Name = "TVA.Communication.FileClient.OpenFile()";
@@ -873,7 +935,8 @@ namespace TVA.Communication
             {
                 try
                 {
-                    OnConnectionAttempt(); ;
+                    OnConnectionAttempt();
+                    ;
 
                     // Open the file.
                     m_fileClient.Provider = new FileStream(FilePath.GetAbsolutePath(m_connectData["file"]), m_fileOpenMode, m_fileAccessMode, m_fileShareMode);
