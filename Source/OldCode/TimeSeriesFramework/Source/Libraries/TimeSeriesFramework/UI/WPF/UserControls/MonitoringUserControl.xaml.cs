@@ -100,7 +100,7 @@ namespace TimeSeriesFramework.UI.UserControls
         /// <param name="e">Event arguments.</param>
         private void MonitoringUserControl_Unloaded(object sender, RoutedEventArgs e)
         {
-            if (m_serviceClient != null)
+            if (m_serviceClient != null && m_serviceClient.Helper != null)
             {
                 m_serviceClient.Helper.ReceivedServiceResponse -= Helper_ReceivedServiceResponse;
                 m_serviceClient.Helper.ReceivedServiceUpdate -= Helper_ReceivedServiceUpdate;
