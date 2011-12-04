@@ -29,6 +29,8 @@
 //       Added IntegratedSecurity property to enable integrated windows authentication.
 //  09/21/2011 - J. Ritchie Carroll
 //       Added Mono implementation exception regions.
+//  12/04/2011 - J. Ritchie Carroll
+//       Modified to use concurrent dictionary.
 //
 //*******************************************************************************************************
 
@@ -268,6 +270,7 @@
 #endregion
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Net.Security;
@@ -390,7 +393,7 @@ namespace TVA.Communication
         private IPStack m_ipStack;
         private bool m_allowDualStackSocket;
         private Socket m_tcpServer;
-        private Dictionary<Guid, TransportProvider<Socket>> m_tcpClients;
+        private ConcurrentDictionary<Guid, TransportProvider<Socket>> m_tcpClients;
         private Dictionary<string, string> m_configData;
 
         #endregion
@@ -416,7 +419,7 @@ namespace TVA.Communication
             m_payloadMarker = Payload.DefaultMarker;
             m_integratedSecurity = DefaultIntegratedSecurity;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
-            m_tcpClients = new Dictionary<Guid, TransportProvider<Socket>>();
+            m_tcpClients = new ConcurrentDictionary<Guid, TransportProvider<Socket>>();
         }
 
         /// <summary>
@@ -680,13 +683,11 @@ namespace TVA.Communication
         public TransportProvider<Socket> Client(Guid clientID)
         {
             TransportProvider<Socket> tcpClient;
-            lock (m_tcpClients)
-            {
-                if (m_tcpClients.TryGetValue(clientID, out tcpClient))
-                    return tcpClient;
-                else
-                    throw new InvalidOperationException(string.Format("No client exists for Client ID \"{0}\"", clientID));
-            }
+
+            if (m_tcpClients.TryGetValue(clientID, out tcpClient))
+                return tcpClient;
+
+            throw new InvalidOperationException(string.Format("No client exists for Client ID \"{0}\"", clientID));
         }
 
         /// <summary>
@@ -805,10 +806,7 @@ namespace TVA.Communication
                     else
                     {
                         // No handshaking to be performed.
-                        lock (m_tcpClients)
-                        {
-                            m_tcpClients.Add(tcpClient.ID, tcpClient);
-                        }
+                        m_tcpClients.TryAdd(tcpClient.ID, tcpClient);
                         OnClientConnected(tcpClient.ID);
                         ReceivePayloadAsync(tcpClient);
                     }
@@ -921,10 +919,7 @@ namespace TVA.Communication
                             tcpClient.Provider.Send(tcpClient.SendBuffer);
 
                             // Handshake process is complete and client is considered connected.
-                            lock (m_tcpClients)
-                            {
-                                m_tcpClients.Add(tcpClient.ID, tcpClient);
-                            }
+                            m_tcpClients.TryAdd(tcpClient.ID, tcpClient);
                             OnClientConnected(tcpClient.ID);
                             ReceivePayloadAsync(tcpClient);
                         }
@@ -1191,14 +1186,11 @@ namespace TVA.Communication
         private void TerminateConnection(TransportProvider<Socket> client, bool raiseEvent)
         {
             client.Reset();
+
             if (raiseEvent)
                 OnClientDisconnected(client.ID);
 
-            lock (m_tcpClients)
-            {
-                if (m_tcpClients.ContainsKey(client.ID))
-                    m_tcpClients.Remove(client.ID);
-            }
+            m_tcpClients.TryRemove(client.ID, out client);
         }
 
         #endregion

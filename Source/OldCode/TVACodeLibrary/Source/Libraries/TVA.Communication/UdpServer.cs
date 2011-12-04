@@ -33,6 +33,8 @@
 //  03/10/2011 - Pinal C. Patel
 //       Fixed a bug reported by Jeffrey Martin at Areva-TD (jeffrey.martin-econ@areva-td.com) that
 //       prevented the ServerStopped event from being raised under certain configuration.
+//  12/04/2011 - J. Ritchie Carroll
+//       Modified to use concurrent dictionary.
 //
 //*******************************************************************************************************
 
@@ -272,6 +274,7 @@
 #endregion
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Net;
@@ -396,7 +399,7 @@ namespace TVA.Communication
 
         // Fields
         private TransportProvider<Socket> m_udpServer;
-        private Dictionary<Guid, TransportProvider<Socket>> m_udpClients;
+        private ConcurrentDictionary<Guid, TransportProvider<Socket>> m_udpClients;
         private IPStack m_ipStack;
         private bool m_allowDualStackSocket;
         private EndPoint m_udpClientEndPoint;
@@ -424,7 +427,7 @@ namespace TVA.Communication
         {
             base.ReceiveBufferSize = DefaultReceiveBufferSize;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
-            m_udpClients = new Dictionary<Guid, TransportProvider<Socket>>();
+            m_udpClients = new ConcurrentDictionary<Guid, TransportProvider<Socket>>();
         }
 
         /// <summary>
@@ -613,10 +616,7 @@ namespace TVA.Communication
                                 // Connect socket to the client endpoint so communication on the socket is restricted to a single endpoint
                                 udpClient.Provider.Connect(Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack));
 
-                                lock (m_udpClients)
-                                {
-                                    m_udpClients.Add(udpClient.ID, udpClient);
-                                }
+                                m_udpClients.TryAdd(udpClient.ID, udpClient);
 
                                 OnClientConnected(udpClient.ID);
 
@@ -668,13 +668,11 @@ namespace TVA.Communication
         public TransportProvider<Socket> Client(Guid clientID)
         {
             TransportProvider<Socket> udpClient;
-            lock (m_udpClients)
-            {
-                if (m_udpClients.TryGetValue(clientID, out udpClient))
-                    return udpClient;
-                else
-                    throw new InvalidOperationException(string.Format("No client exists for Client ID \"{0}\"", clientID));
-            }
+
+            if (m_udpClients.TryGetValue(clientID, out udpClient))
+                return udpClient;
+
+            throw new InvalidOperationException(string.Format("No client exists for Client ID \"{0}\"", clientID));
         }
 
         /// <summary>
@@ -834,10 +832,7 @@ namespace TVA.Communication
                         udpClient.Provider.SendTo(udpClient.SendBuffer, udpClient.Provider.RemoteEndPoint);
 
                         // Handshake process is complete and client is considered connected
-                        lock (m_udpClients)
-                        {
-                            m_udpClients.Add(udpClient.ID, udpClient);
-                        }
+                        m_udpClients.TryAdd(udpClient.ID, udpClient);
                         OnClientConnected(udpClient.ID);
 
                         try
@@ -901,17 +896,8 @@ namespace TVA.Communication
                 udpServer.Statistics.UpdateBytesReceived(udpServer.Provider.EndReceiveFrom(asyncResult, ref m_udpClientEndPoint));
                 udpServer.ReceiveBufferLength = udpServer.Statistics.LastBytesReceived;
 
-                // Get a local copy of all connected clients.
-                TransportProvider<Socket>[] clients = null;
-
-                lock (m_udpClients)
-                {
-                    clients = new TransportProvider<Socket>[m_udpClients.Count];
-                    m_udpClients.Values.CopyTo(clients, 0);
-                }
-
                 // Search connected clients for a client connected to the end-point from where this data is received.
-                foreach (TransportProvider<Socket> client in clients)
+                foreach (TransportProvider<Socket> client in m_udpClients.Values)
                 {
                     if (client.Provider.RemoteEndPoint.Equals(m_udpClientEndPoint))
                     {
@@ -1072,14 +1058,11 @@ namespace TVA.Communication
         private void TerminateConnection(TransportProvider<Socket> client, bool raiseEvent)
         {
             client.Reset();
+
             if (raiseEvent)
                 OnClientDisconnected(client.ID);
 
-            lock (m_udpClients)
-            {
-                if (m_udpClients.ContainsKey(client.ID))
-                    m_udpClients.Remove(client.ID);
-            }
+            m_udpClients.TryRemove(client.ID, out client);
         }
 
         #endregion

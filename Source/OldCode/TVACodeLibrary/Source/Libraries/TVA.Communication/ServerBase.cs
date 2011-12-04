@@ -35,6 +35,8 @@
 //  12/02/2011 - J. Ritchie Carroll
 //       Updated event data publication to provide "copy" of resuable buffer instead of original
 //       buffer since you cannot assume how user will use the buffer (they may cache it).
+//  12/04/2011 - J. Ritchie Carroll
+//       Modified to use concurrent dictionary.
 //
 //*******************************************************************************************************
 
@@ -279,6 +281,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
 using System.Drawing;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using TVA.Configuration;
@@ -500,10 +503,9 @@ namespace TVA.Communication
         private ServerState m_currentState;
         private TransportProtocol m_transportProtocol;
         private Guid m_serverID;
-        private List<Guid> m_clientIDs;
+        private ConcurrentDictionary<Guid, int> m_clientIDs;
         private Ticks m_stopTime;
         private Ticks m_startTime;
-        private ConcurrentDictionary<Guid, int> m_readIndicies;
         private bool m_initialized;
         private bool m_disposed;
 
@@ -518,8 +520,7 @@ namespace TVA.Communication
             : base()
         {
             m_serverID = Guid.NewGuid();
-            m_clientIDs = new List<Guid>();
-            m_readIndicies = new ConcurrentDictionary<Guid, int>();
+            m_clientIDs = new ConcurrentDictionary<Guid, int>();
             m_textEncoding = Encoding.ASCII;
             m_currentState = ServerState.NotRunning;
             m_maxClientConnections = DefaultMaxClientConnections;
@@ -929,10 +930,7 @@ namespace TVA.Communication
         {
             get
             {
-                lock (m_clientIDs)
-                {
-                    return m_clientIDs.ToArray();
-                }
+                return m_clientIDs.Keys.ToArray();
             }
         }
 
@@ -966,7 +964,7 @@ namespace TVA.Communication
         {
             get
             {
-                return m_readIndicies;
+                return m_clientIDs;
             }
         }
 
@@ -1008,10 +1006,7 @@ namespace TVA.Communication
                 status.Append(m_configurationString);
                 status.AppendLine();
                 status.Append("         Connected clients: ");
-                lock (m_clientIDs)
-                {
-                    status.Append(m_clientIDs.Count);
-                }
+                status.Append(m_clientIDs.Count);
                 status.AppendLine();
                 status.Append("           Maximum clients: ");
                 status.Append(m_maxClientConnections == -1 ? "Infinite" : m_maxClientConnections.ToString());
@@ -1463,10 +1458,7 @@ namespace TVA.Communication
         /// <param name="clientID">ID of client to send to <see cref="ClientConnected"/> event.</param>
         protected virtual void OnClientConnected(Guid clientID)
         {
-            lock (m_clientIDs)
-            {
-                m_clientIDs.Add(clientID);
-            }
+            m_clientIDs.TryAdd(clientID, 0);
 
             if (ClientConnected != null)
                 ClientConnected(this, new EventArgs<Guid>(clientID));
@@ -1478,13 +1470,8 @@ namespace TVA.Communication
         /// <param name="clientID">ID of client to send to <see cref="ClientDisconnected"/> event.</param>
         protected virtual void OnClientDisconnected(Guid clientID)
         {
-            lock (m_clientIDs)
-            {
-                m_clientIDs.Remove(clientID);
-            }
-
             int readIndex;
-            m_readIndicies.TryRemove(clientID, out readIndex);
+            m_clientIDs.TryRemove(clientID, out readIndex);
 
             if (ClientDisconnected != null)
                 ClientDisconnected(this, new EventArgs<Guid>(clientID));
@@ -1556,10 +1543,7 @@ namespace TVA.Communication
         protected virtual void OnReceiveClientDataComplete(Guid clientID, byte[] data, int size)
         {
             // Reset buffer index used by read method
-            if (m_readIndicies.ContainsKey(clientID))
-                m_readIndicies[clientID] = 0;
-            else
-                m_readIndicies.GetOrAdd(clientID, 0);
+            m_clientIDs[clientID] = 0;
 
             // Notify users of data ready
             if (ReceiveClientData != null)
