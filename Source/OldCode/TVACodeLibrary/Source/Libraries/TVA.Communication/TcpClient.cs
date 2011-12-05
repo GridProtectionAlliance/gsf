@@ -886,9 +886,7 @@ namespace TVA.Communication
             // Prepare buffer used for receiving data.
             worker.ReceiveBufferOffset = 0;
             worker.ReceiveBufferLength = -1;
-
-            if (worker.ReceiveBuffer == null || worker.ReceiveBuffer.Length < ReceiveBufferSize)
-                worker.ReceiveBuffer = new byte[ReceiveBufferSize];
+            worker.ReceiveBuffer = new byte[ReceiveBufferSize];
 
             // Receive data asynchronously with a timeout.
             worker.WaitAsync(HandshakeTimeout,
@@ -971,17 +969,13 @@ namespace TVA.Communication
             if (m_payloadAware)
             {
                 // Payload boundaries are to be preserved.
-                if (worker.ReceiveBuffer == null || worker.ReceiveBuffer.Length < m_payloadMarker.Length + Payload.LengthSegment)
-                    worker.ReceiveBuffer = new byte[m_payloadMarker.Length + Payload.LengthSegment];
-
+                worker.ReceiveBuffer = new byte[m_payloadMarker.Length + Payload.LengthSegment];
                 ReceivePayloadAwareAsync(worker);
             }
             else
             {
                 // Payload boundaries are not to be preserved.
-                if (worker.ReceiveBuffer == null || worker.ReceiveBuffer.Length < ReceiveBufferSize)
-                    worker.ReceiveBuffer = new byte[ReceiveBufferSize];
-
+                worker.ReceiveBuffer = new byte[ReceiveBufferSize];
                 ReceivePayloadUnawareAsync(worker);
             }
         }
@@ -1049,12 +1043,9 @@ namespace TVA.Communication
                         tcpClient.ReceiveBufferOffset = 0;
                         tcpClient.ReceiveBufferLength = Payload.ExtractLength(tcpClient.ReceiveBuffer, m_payloadMarker);
 
+                        // We have the payload length, so we'll create a buffer that's big enough to hold the entire payload.
                         if (tcpClient.ReceiveBufferLength != -1)
-                        {
-                            // We have the payload length, so we'll create a buffer that's big enough to hold the entire payload.
-                            if (tcpClient.ReceiveBuffer == null || tcpClient.ReceiveBuffer.Length < tcpClient.ReceiveBufferLength)
-                                tcpClient.ReceiveBuffer = new byte[tcpClient.ReceiveBufferLength];
-                        }
+                            tcpClient.ReceiveBuffer = new byte[tcpClient.ReceiveBufferLength];
 
                         ReceivePayloadAwareAsync(tcpClient);
                     }
@@ -1154,7 +1145,6 @@ namespace TVA.Communication
                     // Update statistics and pointers.
                     tcpClient.Statistics.UpdateBytesReceived(tcpClient.Provider.EndReceive(asyncResult));
                     tcpClient.ReceiveBufferLength = tcpClient.Statistics.LastBytesReceived;
-
 
                     if (tcpClient.Statistics.LastBytesReceived == 0)
                         // Client disconnected gracefully.

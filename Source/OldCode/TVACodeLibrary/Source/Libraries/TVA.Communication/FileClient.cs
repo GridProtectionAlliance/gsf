@@ -712,7 +712,7 @@ namespace TVA.Communication
         }
 
         /// <summary>
-        /// Receives (reads) next data buffer from the <see cref="FileStream"/>.
+        /// Reads next data buffer from the <see cref="FileStream"/>.
         /// </summary>
         /// <exception cref="InvalidOperationException"><see cref="ReadNextBuffer"/> is called when <see cref="FileClient"/> is not connected.</exception>
         /// <exception cref="InvalidOperationException"><see cref="ReadNextBuffer"/> is called when <see cref="ReceiveOnDemand"/> is disabled.</exception>
@@ -721,18 +721,12 @@ namespace TVA.Communication
             if (m_receiveOnDemand)
             {
                 if (CurrentState == ClientState.Connected)
-                {
                     ReadData();
-                }
-                else
-                {
-                    throw new InvalidOperationException("Client is currently not connected");
-                }
+
+                throw new InvalidOperationException("Client is currently not connected");
             }
-            else
-            {
-                throw new InvalidOperationException("ReadNextBuffer() cannot be used when ReceiveOnDemand is disabled");
-            }
+
+            throw new InvalidOperationException("ReadNextBuffer() cannot be used when ReceiveOnDemand is disabled");
         }
 
         /// <summary>
@@ -763,9 +757,7 @@ namespace TVA.Communication
 
             m_fileClient.ID = this.ClientID;
             m_fileClient.Secretkey = this.SharedSecret;
-
-            if (m_fileClient.ReceiveBuffer == null || m_fileClient.ReceiveBuffer.Length < ReceiveBufferSize)
-                m_fileClient.ReceiveBuffer = new byte[ReceiveBufferSize];
+            m_fileClient.ReceiveBuffer = new byte[ReceiveBufferSize];
 
 #if ThreadTracking
             m_connectionThread = new ManagedThread(OpenFile);

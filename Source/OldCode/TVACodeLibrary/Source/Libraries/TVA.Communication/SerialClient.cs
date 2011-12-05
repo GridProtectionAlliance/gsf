@@ -516,9 +516,7 @@ namespace TVA.Communication
 
             m_serialClient.ID = this.ClientID;
             m_serialClient.Secretkey = this.SharedSecret;
-
-            if (m_serialClient.ReceiveBuffer == null || m_serialClient.ReceiveBuffer.Length < ReceiveBufferSize)
-                m_serialClient.ReceiveBuffer = new byte[ReceiveBufferSize];
+            m_serialClient.ReceiveBuffer = new byte[ReceiveBufferSize];
 
             m_serialClient.Provider = new SerialPort();
 #if !MONO

@@ -571,9 +571,7 @@ namespace TVA.Communication
                 // Bind server socket to local end-point
                 m_udpServer = new TransportProvider<Socket>();
                 m_udpServer.ID = this.ServerID;
-
-                if (m_udpServer.ReceiveBuffer == null || m_udpServer.ReceiveBuffer.Length < ReceiveBufferSize)
-                    m_udpServer.ReceiveBuffer = new byte[ReceiveBufferSize];
+                m_udpServer.ReceiveBuffer = new byte[ReceiveBufferSize];
 
                 m_udpServer.Provider = Transport.CreateSocket(m_configData["interface"], int.Parse(m_configData["port"]), ProtocolType.Udp, m_ipStack, m_allowDualStackSocket);
 
@@ -604,9 +602,7 @@ namespace TVA.Communication
                             {
                                 TransportProvider<Socket> udpClient = new TransportProvider<Socket>();
                                 udpClient.Secretkey = SharedSecret;
-
-                                if (udpClient.ReceiveBuffer == null || udpClient.ReceiveBuffer.Length < ReceiveBufferSize)
-                                    udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
+                                udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
 
                                 udpClient.Provider = Transport.CreateSocket(m_configData["interface"], 0, ProtocolType.Udp, m_ipStack, m_allowDualStackSocket);
 
@@ -803,9 +799,7 @@ namespace TVA.Communication
                     {
                         // Create a random socket and connect it to the client
                         TransportProvider<Socket> udpClient = new TransportProvider<Socket>();
-
-                        if (udpClient.ReceiveBuffer == null || udpClient.ReceiveBuffer.Length < ReceiveBufferSize)
-                            udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
+                        udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
 
                         udpClient.Secretkey = SharedSecret;
                         udpClient.Provider = Transport.CreateSocket(m_configData["interface"], 0, ProtocolType.Udp, m_ipStack, m_allowDualStackSocket);

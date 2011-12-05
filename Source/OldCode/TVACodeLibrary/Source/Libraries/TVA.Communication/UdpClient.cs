@@ -573,9 +573,7 @@ namespace TVA.Communication
             m_udpClient = new TransportProvider<Socket>();
             m_udpClient.ID = this.ClientID;
             m_udpClient.Secretkey = SharedSecret;
-
-            if (m_udpClient.ReceiveBuffer == null || m_udpClient.ReceiveBuffer.Length < ReceiveBufferSize)
-                m_udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
+            m_udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
 
             // Create a server endpoint.
             if (m_connectData.ContainsKey("server"))
