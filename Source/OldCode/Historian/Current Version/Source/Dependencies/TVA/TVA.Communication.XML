@@ -71,6 +71,20 @@
             <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
             <returns>Array of <see cref="T:System.Threading.WaitHandle"/> for the asynchronous operation.</returns>
         </member>
+        <member name="M:TVA.Communication.IServer.Read(System.Guid,System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Reads a number of bytes from the current received data buffer and writes those bytes into a byte array at the specified offset.
+            </summary>
+            <param name="clientID">ID of the client from which data buffer should be read.</param>
+            <param name="buffer">Destination buffer used to hold copied bytes.</param>
+            <param name="startIndex">0-based starting index into destination <paramref name="buffer"/> to begin writing data.</param>
+            <param name="length">The number of bytes to read from current received data buffer and write into <paramref name="buffer"/>.</param>
+            <returns>The number of bytes read.</returns>
+            <remarks>
+            This function should only be called from within the <see cref="E:TVA.Communication.IServer.ReceiveClientData"/> event handler. Calling this method outside this
+            event will have unexpected results.
+            </remarks>
+        </member>
         <member name="E:TVA.Communication.IServer.ServerStarted">
             <summary>
             Occurs when the server is started.
@@ -137,14 +151,31 @@
             Occurs when no data is received from a client for the <see cref="P:TVA.Communication.IServer.ReceiveTimeout"/> time.
             </summary>
         </member>
+        <member name="E:TVA.Communication.IServer.ReceiveClientData">
+            <summary>
+            Occurs when unprocessed data has been received from a client.
+            </summary>
+            <remarks>
+            <para>
+            This event can be used to receive a notification that client data has arrived. The <see cref="M:TVA.Communication.IServer.Read(System.Guid,System.Byte[],System.Int32,System.Int32)"/> method can then be used
+            to copy data to an existing buffer. In many cases it will be optimal to use an existing buffer instead of subscribing to the
+            <see cref="E:TVA.Communication.IServer.ReceiveClientDataComplete"/> event, however, the data that is available after calling the <see cref="M:TVA.Communication.IServer.Read(System.Guid,System.Byte[],System.Int32,System.Int32)"/> method
+            will be the original unprocessed data received by the client, i.e., not optionally decrypted or decompressed data.
+            </para>
+            <para>
+            <see cref="F:TVA.EventArgs`2.Argument1"/> is the ID of the client from which data is received.<br/>
+            <see cref="F:TVA.EventArgs`2.Argument2"/> is the number of bytes received in the buffer from the client.
+            </para>
+            </remarks>
+        </member>
         <member name="E:TVA.Communication.IServer.ReceiveClientDataComplete">
             <summary>
-            Occurs when data is received from a client.
+            Occurs when data received from a client has been processed and is ready for consumption.
             </summary>
             <remarks>
             <see cref="F:TVA.EventArgs`3.Argument1"/> is the ID of the client from which data is received.<br/>
-            <see cref="F:TVA.EventArgs`3.Argument2"/> is the buffer containing data received from the client starting at index zero.<br/>
-            <see cref="F:TVA.EventArgs`3.Argument3"/> is the number of bytes received in the buffer from the client.
+            <see cref="F:TVA.EventArgs`3.Argument2"/> is a new buffer containing post-processed data received from the client starting at index zero.<br/>
+            <see cref="F:TVA.EventArgs`3.Argument3"/> is the number of post-processed bytes received in the buffer from the client.
             </remarks>
         </member>
         <member name="E:TVA.Communication.IServer.ReceiveClientDataException">
@@ -210,17 +241,6 @@
             <summary>
             Gets or sets the <see cref="T:System.Text.Encoding"/> to be used for the text sent to the connected clients.
             </summary>
-        </member>
-        <member name="P:TVA.Communication.IServer.ReceiveClientDataHandler">
-            <summary>
-            Gets or sets a <see cref="T:System.Delegate"/> to be invoked instead of the <see cref="E:TVA.Communication.IServer.ReceiveClientDataComplete"/> event when data is received from clients.
-            </summary>
-            <remarks>
-            arg1 in <see cref="P:TVA.Communication.IServer.ReceiveClientDataHandler"/> is the ID or the client from which data is received.<br/>
-            arg2 in <see cref="P:TVA.Communication.IServer.ReceiveClientDataHandler"/> is the buffer containing data received from the client starting at index zero.<br/>
-            arg3 in <see cref="P:TVA.Communication.IServer.ReceiveClientDataHandler"/> is the zero-based starting offset into the buffer containing the data received from the server.<br/>
-            arg4 in <see cref="P:TVA.Communication.IServer.ReceiveClientDataHandler"/> is the number of bytes received from the client that is stored in the buffer (arg2).
-            </remarks>
         </member>
         <member name="P:TVA.Communication.IServer.CurrentState">
             <summary>
@@ -323,6 +343,20 @@
             <summary>
             When overridden in a derived class, stops the server.
             </summary>
+        </member>
+        <member name="M:TVA.Communication.ServerBase.Read(System.Guid,System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            When overridden in a derived class, reads a number of bytes from the current received data buffer and writes those bytes into a byte array at the specified offset.
+            </summary>
+            <param name="clientID">ID of the client from which data buffer should be read.</param>
+            <param name="buffer">Destination buffer used to hold copied bytes.</param>
+            <param name="startIndex">0-based starting index into destination <paramref name="buffer"/> to begin writing data.</param>
+            <param name="length">The number of bytes to read from current received data buffer and write into <paramref name="buffer"/>.</param>
+            <returns>The number of bytes read.</returns>
+            <remarks>
+            This function should only be called from within the <see cref="E:TVA.Communication.ServerBase.ReceiveClientData"/> event handler. Calling this method outside this event
+            will have unexpected results.
+            </remarks>
         </member>
         <member name="M:TVA.Communication.ServerBase.DisconnectOne(System.Guid)">
             <summary>
@@ -573,6 +607,18 @@
             </summary>
             <param name="clientID">ID of client to send to <see cref="E:TVA.Communication.ServerBase.ReceiveClientDataTimeout"/> event.</param>
         </member>
+        <member name="M:TVA.Communication.ServerBase.OnReceiveClientData(System.Guid,System.Int32)">
+            <summary>
+            Raises the <see cref="E:TVA.Communication.ServerBase.ReceiveClientData"/> event.
+            </summary>
+            <param name="clientID">ID of the client from which data is received.</param>
+            <param name="size">Number of bytes received from the client.</param>
+            <remarks>
+            This event is automatically raised by call to <see cref="M:TVA.Communication.ServerBase.OnReceiveClientDataComplete(System.Guid,System.Byte[],System.Int32)"/> so that inheritors
+            never need to worry about raising this event. This method is only included here in case any custom server
+            implementations need to explicitly raise this event.
+            </remarks>
+        </member>
         <member name="M:TVA.Communication.ServerBase.OnReceiveClientDataComplete(System.Guid,System.Byte[],System.Int32)">
             <summary>
             Raises the <see cref="E:TVA.Communication.ServerBase.ReceiveClientDataComplete"/> event.
@@ -675,14 +721,31 @@
             Occurs when no data is received from a client for the <see cref="P:TVA.Communication.ServerBase.ReceiveTimeout"/> time.
             </summary>
         </member>
+        <member name="E:TVA.Communication.ServerBase.ReceiveClientData">
+            <summary>
+            Occurs when unprocessed data has been received from a client.
+            </summary>
+            <remarks>
+            <para>
+            This event can be used to receive a notification that client data has arrived. The <see cref="M:TVA.Communication.ServerBase.Read(System.Guid,System.Byte[],System.Int32,System.Int32)"/> method can then be used
+            to copy data to an existing buffer. In many cases it will be optimal to use an existing buffer instead of subscribing to the
+            <see cref="E:TVA.Communication.ServerBase.ReceiveClientDataComplete"/> event, however, the data that is available after calling the <see cref="M:TVA.Communication.ServerBase.Read(System.Guid,System.Byte[],System.Int32,System.Int32)"/> method
+            will be the original unprocessed data received by the client, i.e., not optionally decrypted or decompressed data.
+            </para>
+            <para>
+            <see cref="F:TVA.EventArgs`2.Argument1"/> is the ID of the client from which data is received.<br/>
+            <see cref="F:TVA.EventArgs`2.Argument2"/> is the number of bytes received in the buffer from the client.
+            </para>
+            </remarks>
+        </member>
         <member name="E:TVA.Communication.ServerBase.ReceiveClientDataComplete">
             <summary>
-            Occurs when data is received from a client.
+            Occurs when data received from a client has been processed and is ready for consumption.
             </summary>
             <remarks>
             <see cref="F:TVA.EventArgs`3.Argument1"/> is the ID of the client from which data is received.<br/>
-            <see cref="F:TVA.EventArgs`3.Argument2"/> is the buffer containing data received from the client starting at index zero.<br/>
-            <see cref="F:TVA.EventArgs`3.Argument3"/> is the number of bytes received in the buffer from the client.
+            <see cref="F:TVA.EventArgs`3.Argument2"/> is a new buffer containing post-processed data received from the client starting at index zero.<br/>
+            <see cref="F:TVA.EventArgs`3.Argument3"/> is the number of post-processed bytes received in the buffer from the client.
             </remarks>
         </member>
         <member name="E:TVA.Communication.ServerBase.ReceiveClientDataException">
@@ -801,24 +864,6 @@
             Gets or sets the <see cref="T:System.Text.Encoding"/> to be used for the text sent to the connected clients.
             </summary>
         </member>
-        <member name="P:TVA.Communication.ServerBase.ReceiveClientDataHandler">
-            <summary>
-            Gets or sets a <see cref="T:System.Delegate"/> to be invoked instead of the <see cref="E:TVA.Communication.ServerBase.ReceiveClientDataComplete"/> event when data is received from clients.
-            </summary>
-            <remarks>
-            <para>
-            This property only needs to be implemented if you need data from the clients absolutelty as fast as possible, for most uses this will not be necessary.  
-            Setting this property gives the consumer access to the data stream as soon as it's available, but this also bypasses <see cref="P:TVA.Communication.ServerBase.Encryption"/> and 
-            <see cref="P:TVA.Communication.ServerBase.Compression"/> on received data.
-            </para>
-            <para>
-            arg1 in <see cref="P:TVA.Communication.ServerBase.ReceiveClientDataHandler"/> is the ID or the client from which data is received.<br/>
-            arg2 in <see cref="P:TVA.Communication.ServerBase.ReceiveClientDataHandler"/> is the buffer containing data received from the client starting at index zero.<br/>
-            arg3 in <see cref="P:TVA.Communication.ServerBase.ReceiveClientDataHandler"/> is the zero based starting offset into the buffer containing the data received from the server.<br/>
-            arg4 in <see cref="P:TVA.Communication.ServerBase.ReceiveClientDataHandler"/> is the number of bytes received from the client that is stored in the buffer (arg2).
-            </para>
-            </remarks>
-        </member>
         <member name="P:TVA.Communication.ServerBase.CurrentState">
             <summary>
             Gets the current <see cref="T:TVA.Communication.ServerState"/>.
@@ -842,6 +887,11 @@
         <member name="P:TVA.Communication.ServerBase.RunTime">
             <summary>
             Gets the <see cref="T:TVA.Units.Time"/> for which the server has been running.
+            </summary>
+        </member>
+        <member name="P:TVA.Communication.ServerBase.ReadIndicies">
+            <summary>
+            Gets current read indicies for received data buffers incremented at each <see cref="M:TVA.Communication.ServerBase.Read(System.Guid,System.Byte[],System.Int32,System.Int32)"/> call.
             </summary>
         </member>
         <member name="P:TVA.Communication.ServerBase.Name">
@@ -1108,6 +1158,29 @@
             </summary>
             <param name="container"><see cref="T:System.ComponentModel.IContainer"/> object that contains the <see cref="T:TVA.Communication.UdpServer"/>.</param>
         </member>
+        <member name="M:TVA.Communication.UdpServer.Read(System.Guid,System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Reads a number of bytes from the current received data buffer and writes those bytes into a byte array at the specified offset.
+            </summary>
+            <param name="clientID">ID of the client from which data buffer should be read.</param>
+            <param name="buffer">Destination buffer used to hold copied bytes.</param>
+            <param name="startIndex">0-based starting index into destination <paramref name="buffer"/> to begin writing data.</param>
+            <param name="length">The number of bytes to read from current received data buffer and write into <paramref name="buffer"/>.</param>
+            <returns>The number of bytes read.</returns>
+            <remarks>
+            This function should only be called from within the <see cref="E:TVA.Communication.ServerBase.ReceiveClientData"/> event handler. Calling this method
+            outside this event will have unexpected results.
+            </remarks>
+            <exception cref="T:System.InvalidOperationException">
+            No received data buffer has been defined to read -or-
+            Specified <paramref name="clientID"/> does not exist, cannot read buffer.
+            </exception>
+            <exception cref="T:System.ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">
+            <paramref name="startIndex"/> or <paramref name="length"/> is less than 0 -or- 
+            <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
+            </exception>
+        </member>
         <member name="M:TVA.Communication.UdpServer.Stop">
             <summary>
             Stops the <see cref="T:TVA.Communication.UdpServer"/> synchronously and disconnects all connected clients.
@@ -1340,6 +1413,29 @@
             Initializes a new instance of the <see cref="T:TVA.Communication.TcpServer"/> class.
             </summary>
             <param name="container"><see cref="T:System.ComponentModel.IContainer"/> object that contains the <see cref="T:TVA.Communication.TcpServer"/>.</param>
+        </member>
+        <member name="M:TVA.Communication.TcpServer.Read(System.Guid,System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Reads a number of bytes from the current received data buffer and writes those bytes into a byte array at the specified offset.
+            </summary>
+            <param name="clientID">ID of the client from which data buffer should be read.</param>
+            <param name="buffer">Destination buffer used to hold copied bytes.</param>
+            <param name="startIndex">0-based starting index into destination <paramref name="buffer"/> to begin writing data.</param>
+            <param name="length">The number of bytes to read from current received data buffer and write into <paramref name="buffer"/>.</param>
+            <returns>The number of bytes read.</returns>
+            <remarks>
+            This function should only be called from within the <see cref="E:TVA.Communication.ServerBase.ReceiveClientData"/> event handler. Calling this method
+            outside this event will have unexpected results.
+            </remarks>
+            <exception cref="T:System.InvalidOperationException">
+            No received data buffer has been defined to read -or-
+            Specified <paramref name="clientID"/> does not exist, cannot read buffer.
+            </exception>
+            <exception cref="T:System.ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">
+            <paramref name="startIndex"/> or <paramref name="length"/> is less than 0 -or- 
+            <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
+            </exception>
         </member>
         <member name="M:TVA.Communication.TcpServer.SaveSettings">
             <summary>
@@ -1972,6 +2068,19 @@
             <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
             <returns><see cref="T:System.Threading.WaitHandle"/> for the asynchronous operation.</returns>
         </member>
+        <member name="M:TVA.Communication.IClient.Read(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Reads a number of bytes from the current received data buffer and writes those bytes into a byte array at the specified offset.
+            </summary>
+            <param name="buffer">Destination buffer used to hold copied bytes.</param>
+            <param name="startIndex">0-based starting index into destination <paramref name="buffer"/> to begin writing data.</param>
+            <param name="length">The number of bytes to read from current received data buffer and write into <paramref name="buffer"/>.</param>
+            <returns>The number of bytes read.</returns>
+            <remarks>
+            This function should only be called from within the <see cref="E:TVA.Communication.IClient.ReceiveData"/> event handler. Calling this method outside this event
+            will have unexpected results.
+            </remarks>
+        </member>
         <member name="E:TVA.Communication.IClient.ConnectionAttempt">
             <summary>
             Occurs when client is attempting connection to the server.
@@ -2025,13 +2134,29 @@
             Occurs when no data is received from the server for the <see cref="P:TVA.Communication.IClient.ReceiveTimeout"/> time.
             </summary>
         </member>
-        <member name="E:TVA.Communication.IClient.ReceiveDataComplete">
+        <member name="E:TVA.Communication.IClient.ReceiveData">
             <summary>
-            Occurs when the client receives data from the server.
+            Occurs when unprocessed data has been received from the server.
             </summary>
             <remarks>
-            <see cref="F:TVA.EventArgs`2.Argument1"/> is the buffer containing data received from the server starting at index zero.<br/>
-            <see cref="F:TVA.EventArgs`2.Argument2"/> is the number of bytes received in the buffer from the server.
+            <para>
+            This event can be used to receive a notification that server data has arrived. The <see cref="M:TVA.Communication.IClient.Read(System.Byte[],System.Int32,System.Int32)"/> method can then be used
+            to copy data to an existing buffer. In many cases it will be optimal to use an existing buffer instead of subscribing to the
+            <see cref="E:TVA.Communication.IClient.ReceiveDataComplete"/> event, however, the data that is available after calling the <see cref="M:TVA.Communication.IClient.Read(System.Byte[],System.Int32,System.Int32)"/> method
+            will be the original unprocessed data received by the client, i.e., not optionally decrypted or decompressed data.
+            </para>
+            <para>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is the number of bytes received in the buffer from the server.
+            </para>
+            </remarks>
+        </member>
+        <member name="E:TVA.Communication.IClient.ReceiveDataComplete">
+            <summary>
+            Occurs when data received from the server has been processed and is ready for consumption.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`2.Argument1"/> is a new buffer containing post-processed data received from the server starting at index zero.<br/>
+            <see cref="F:TVA.EventArgs`2.Argument2"/> is the number of post-processed bytes received in the buffer from the server.
             </remarks>
         </member>
         <member name="E:TVA.Communication.IClient.ReceiveDataException">
@@ -2096,16 +2221,6 @@
             <summary>
             Gets or sets the <see cref="T:System.Text.Encoding"/> to be used for the text sent to the server.
             </summary>
-        </member>
-        <member name="P:TVA.Communication.IClient.ReceiveDataHandler">
-            <summary>
-            Gets or sets a <see cref="T:System.Delegate"/> to be invoked instead of the <see cref="E:TVA.Communication.IClient.ReceiveDataComplete"/> event when data is received from server.
-            </summary>
-            <remarks>
-            arg1 in <see cref="P:TVA.Communication.IClient.ReceiveDataHandler"/> is the buffer containing the data received from the server.<br/>
-            arg2 in <see cref="P:TVA.Communication.IClient.ReceiveDataHandler"/> is the zero-based starting offset into the buffer containing the data received from the server.<br/>
-            arg3 in <see cref="P:TVA.Communication.IClient.ReceiveDataHandler"/> is the number of bytes received from the server that is stored in the buffer (arg1).
-            </remarks>
         </member>
         <member name="P:TVA.Communication.IClient.ServerID">
             <summary>
@@ -2510,6 +2625,19 @@
             <param name="transportProtocol">One of the <see cref="P:TVA.Communication.ClientBase.TransportProtocol"/> values.</param>
             <param name="connectionString">The data used by the client for connection to a server.</param>
         </member>
+        <member name="M:TVA.Communication.ClientBase.Read(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            When overridden in a derived class, reads a number of bytes from the current received data buffer and writes those bytes into a byte array at the specified offset.
+            </summary>
+            <param name="buffer">Destination buffer used to hold copied bytes.</param>
+            <param name="startIndex">0-based starting index into destination <paramref name="buffer"/> to begin writing data.</param>
+            <param name="length">The number of bytes to read from current received data buffer and write into <paramref name="buffer"/>.</param>
+            <returns>The number of bytes read.</returns>
+            <remarks>
+            This function should only be called from within the <see cref="E:TVA.Communication.ClientBase.ReceiveData"/> event handler. Calling this method outside this event
+            will have unexpected results.
+            </remarks>
+        </member>
         <member name="M:TVA.Communication.ClientBase.Disconnect">
             <summary>
             When overridden in a derived class, disconnects client from the server synchronously.
@@ -2699,6 +2827,17 @@
             Raises the <see cref="E:TVA.Communication.ClientBase.ReceiveDataTimeout"/> event.
             </summary>
         </member>
+        <member name="M:TVA.Communication.ClientBase.OnReceiveData(System.Int32)">
+            <summary>
+            Raises the <see cref="E:TVA.Communication.ClientBase.ReceiveData"/> event.
+            </summary>
+            <param name="size">Number of bytes received from the client.</param>
+            <remarks>
+            This event is automatically raised by call to <see cref="M:TVA.Communication.ClientBase.OnReceiveDataComplete(System.Byte[],System.Int32)"/> so that inheritors
+            never need to worry about raising this event. This method is only included here in case any custom client
+            implementations need to explicitly raise this event.
+            </remarks>
+        </member>
         <member name="M:TVA.Communication.ClientBase.OnReceiveDataComplete(System.Byte[],System.Int32)">
             <summary>
             Raises the <see cref="E:TVA.Communication.ClientBase.ReceiveDataComplete"/> event.
@@ -2786,13 +2925,29 @@
             Occurs when no data is received from the server for the <see cref="P:TVA.Communication.ClientBase.ReceiveTimeout"/> time.
             </summary>
         </member>
-        <member name="E:TVA.Communication.ClientBase.ReceiveDataComplete">
+        <member name="E:TVA.Communication.ClientBase.ReceiveData">
             <summary>
-            Occurs when the client receives data from the server.
+            Occurs when unprocessed data has been received from the server.
             </summary>
             <remarks>
-            <see cref="F:TVA.EventArgs`2.Argument1"/> is the buffer containing data received from the server starting at index zero.<br/>
-            <see cref="F:TVA.EventArgs`2.Argument2"/> is the number of bytes received in the buffer from the server.
+            <para>
+            This event can be used to receive a notification that server data has arrived. The <see cref="M:TVA.Communication.ClientBase.Read(System.Byte[],System.Int32,System.Int32)"/> method can then be used
+            to copy data to an existing buffer. In many cases it will be optimal to use an existing buffer instead of subscribing to the
+            <see cref="E:TVA.Communication.ClientBase.ReceiveDataComplete"/> event, however, the data that is available after calling the <see cref="M:TVA.Communication.ClientBase.Read(System.Byte[],System.Int32,System.Int32)"/> method
+            will be the original unprocessed data received by the client, i.e., not optionally decrypted or decompressed data.
+            </para>
+            <para>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is the number of bytes received in the buffer from the server.
+            </para>
+            </remarks>
+        </member>
+        <member name="E:TVA.Communication.ClientBase.ReceiveDataComplete">
+            <summary>
+            Occurs when data received from the server has been processed and is ready for consumption.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`2.Argument1"/> is a new buffer containing post-processed data received from the server starting at index zero.<br/>
+            <see cref="F:TVA.EventArgs`2.Argument2"/> is the number of post-processed bytes received in the buffer from the server.
             </remarks>
         </member>
         <member name="E:TVA.Communication.ClientBase.ReceiveDataException">
@@ -2913,23 +3068,6 @@
             Gets or sets the <see cref="T:System.Text.Encoding"/> to be used for the text sent to the server.
             </summary>
         </member>
-        <member name="P:TVA.Communication.ClientBase.ReceiveDataHandler">
-            <summary>
-            Gets or sets a <see cref="T:System.Delegate"/> to be invoked instead of the <see cref="E:TVA.Communication.ClientBase.ReceiveDataComplete"/> event when data is received from server.
-            </summary>
-            <remarks>
-            <para>
-            This property only needs to be implemented if you need data from the server absolutelty as fast as possible, for most uses this will not be necessary.  
-            Setting this property gives the consumer access to the data stream as soon as it's available, but this also bypasses <see cref="P:TVA.Communication.ClientBase.Encryption"/> and 
-            <see cref="P:TVA.Communication.ClientBase.Compression"/> on received data.
-            </para>
-            <para>
-            arg1 in <see cref="P:TVA.Communication.ClientBase.ReceiveDataHandler"/> is the buffer containing the data received from the server.<br/>
-            arg2 in <see cref="P:TVA.Communication.ClientBase.ReceiveDataHandler"/> is the zero-based starting offset into the buffer containing the data received from the server.<br/>
-            arg3 in <see cref="P:TVA.Communication.ClientBase.ReceiveDataHandler"/> is the number of bytes received from the server that is stored in the buffer (arg1) starting at index 0.
-            </para>
-            </remarks>
-        </member>
         <member name="P:TVA.Communication.ClientBase.ServerID">
             <summary>
             Gets the server ID.
@@ -2956,6 +3094,11 @@
         <member name="P:TVA.Communication.ClientBase.ConnectionTime">
             <summary>
             Gets the <see cref="T:TVA.Units.Time"/> for which the client has been connected to the server.
+            </summary>
+        </member>
+        <member name="P:TVA.Communication.ClientBase.ReadIndex">
+            <summary>
+            Gets or sets current read index for received data buffer incremented at each <see cref="M:TVA.Communication.ClientBase.Read(System.Byte[],System.Int32,System.Int32)"/> call.
             </summary>
         </member>
         <member name="P:TVA.Communication.ClientBase.Name">
@@ -2989,6 +3132,25 @@
             Initializes a new instance of the <see cref="T:TVA.Communication.SerialClient"/> class.
             </summary>
             <param name="container"><see cref="T:System.ComponentModel.IContainer"/> object that contains the <see cref="T:TVA.Communication.SerialClient"/>.</param>
+        </member>
+        <member name="M:TVA.Communication.SerialClient.Read(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Reads a number of bytes from the current received data buffer and writes those bytes into a byte array at the specified offset.
+            </summary>
+            <param name="buffer">Destination buffer used to hold copied bytes.</param>
+            <param name="startIndex">0-based starting index into destination <paramref name="buffer"/> to begin writing data.</param>
+            <param name="length">The number of bytes to read from current received data buffer and write into <paramref name="buffer"/>.</param>
+            <returns>The number of bytes read.</returns>
+            <remarks>
+            This function should only be called from within the <see cref="E:TVA.Communication.ClientBase.ReceiveData"/> event handler. Calling this method outside
+            this event will have unexpected results.
+            </remarks>
+            <exception cref="T:System.InvalidOperationException">No received data buffer has been defined to read.</exception>
+            <exception cref="T:System.ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">
+            <paramref name="startIndex"/> or <paramref name="length"/> is less than 0 -or- 
+            <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
+            </exception>
         </member>
         <member name="M:TVA.Communication.SerialClient.Disconnect">
             <summary>
@@ -3476,6 +3638,25 @@
             </summary>
             <param name="container"><see cref="T:System.ComponentModel.IContainer"/> object that contains the <see cref="T:TVA.Communication.UdpClient"/>.</param>
         </member>
+        <member name="M:TVA.Communication.UdpClient.Read(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Reads a number of bytes from the current received data buffer and writes those bytes into a byte array at the specified offset.
+            </summary>
+            <param name="buffer">Destination buffer used to hold copied bytes.</param>
+            <param name="startIndex">0-based starting index into destination <paramref name="buffer"/> to begin writing data.</param>
+            <param name="length">The number of bytes to read from current received data buffer and write into <paramref name="buffer"/>.</param>
+            <returns>The number of bytes read.</returns>
+            <remarks>
+            This function should only be called from within the <see cref="E:TVA.Communication.ClientBase.ReceiveData"/> event handler. Calling this method outside
+            this event will have unexpected results.
+            </remarks>
+            <exception cref="T:System.InvalidOperationException">No received data buffer has been defined to read.</exception>
+            <exception cref="T:System.ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">
+            <paramref name="startIndex"/> or <paramref name="length"/> is less than 0 -or- 
+            <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
+            </exception>
+        </member>
         <member name="M:TVA.Communication.UdpClient.Disconnect">
             <summary>
             Disconnects the <see cref="T:TVA.Communication.UdpClient"/> from the connected server synchronously.
@@ -3872,12 +4053,31 @@
             </summary>
             <param name="container"><see cref="T:System.ComponentModel.IContainer"/> object that contains the <see cref="T:TVA.Communication.FileClient"/>.</param>
         </member>
-        <member name="M:TVA.Communication.FileClient.ReceiveData">
+        <member name="M:TVA.Communication.FileClient.Read(System.Byte[],System.Int32,System.Int32)">
             <summary>
-            Receives (reads) data from the <see cref="T:System.IO.FileStream"/>.
+            Reads a number of bytes from the current received data buffer and writes those bytes into a byte array at the specified offset.
             </summary>
-            <exception cref="T:System.InvalidOperationException"><see cref="M:TVA.Communication.FileClient.ReceiveData"/> is called when <see cref="T:TVA.Communication.FileClient"/> is not connected.</exception>
-            <exception cref="T:System.InvalidOperationException"><see cref="M:TVA.Communication.FileClient.ReceiveData"/> is called when <see cref="P:TVA.Communication.FileClient.ReceiveOnDemand"/> is disabled.</exception>
+            <param name="buffer">Destination buffer used to hold copied bytes.</param>
+            <param name="startIndex">0-based starting index into destination <paramref name="buffer"/> to begin writing data.</param>
+            <param name="length">The number of bytes to read from current received data buffer and write into <paramref name="buffer"/>.</param>
+            <returns>The number of bytes read.</returns>
+            <remarks>
+            This function should only be called from within the <see cref="E:TVA.Communication.ClientBase.ReceiveData"/> event handler. Calling this method outside
+            this event will have unexpected results.
+            </remarks>
+            <exception cref="T:System.InvalidOperationException">No received data buffer has been defined to read.</exception>
+            <exception cref="T:System.ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">
+            <paramref name="startIndex"/> or <paramref name="length"/> is less than 0 -or- 
+            <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
+            </exception>
+        </member>
+        <member name="M:TVA.Communication.FileClient.ReadNextBuffer">
+            <summary>
+            Reads next data buffer from the <see cref="T:System.IO.FileStream"/>.
+            </summary>
+            <exception cref="T:System.InvalidOperationException"><see cref="M:TVA.Communication.FileClient.ReadNextBuffer"/> is called when <see cref="T:TVA.Communication.FileClient"/> is not connected.</exception>
+            <exception cref="T:System.InvalidOperationException"><see cref="M:TVA.Communication.FileClient.ReadNextBuffer"/> is called when <see cref="P:TVA.Communication.FileClient.ReceiveOnDemand"/> is disabled.</exception>
         </member>
         <member name="M:TVA.Communication.FileClient.Disconnect">
             <summary>
@@ -3952,7 +4152,7 @@
         </member>
         <member name="P:TVA.Communication.FileClient.ReceiveOnDemand">
             <summary>
-            Gets or sets a boolean value that indicates whether receiving (reading) of data will be initiated manually by calling <see cref="M:TVA.Communication.FileClient.ReceiveData"/>.
+            Gets or sets a boolean value that indicates whether receiving (reading) of data will be initiated manually by calling <see cref="M:TVA.Communication.FileClient.ReadNextBuffer"/>.
             </summary>
             <remarks>
             <see cref="P:TVA.Communication.FileClient.ReceiveInterval"/> will be set to -1 when <see cref="P:TVA.Communication.FileClient.ReceiveOnDemand"/> is enabled.
@@ -4109,6 +4309,25 @@
             Initializes a new instance of the <see cref="T:TVA.Communication.TcpClient"/> class.
             </summary>
             <param name="container"><see cref="T:System.ComponentModel.IContainer"/> object that contains the <see cref="T:TVA.Communication.TcpClient"/>.</param>
+        </member>
+        <member name="M:TVA.Communication.TcpClient.Read(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Reads a number of bytes from the current received data buffer and writes those bytes into a byte array at the specified offset.
+            </summary>
+            <param name="buffer">Destination buffer used to hold copied bytes.</param>
+            <param name="startIndex">0-based starting index into destination <paramref name="buffer"/> to begin writing data.</param>
+            <param name="length">The number of bytes to read from current received data buffer and write into <paramref name="buffer"/>.</param>
+            <returns>The number of bytes read.</returns>
+            <remarks>
+            This function should only be called from within the <see cref="E:TVA.Communication.ClientBase.ReceiveData"/> event handler. Calling this method outside
+            this event will have unexpected results.
+            </remarks>
+            <exception cref="T:System.InvalidOperationException">No received data buffer has been defined to read.</exception>
+            <exception cref="T:System.ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">
+            <paramref name="startIndex"/> or <paramref name="length"/> is less than 0 -or- 
+            <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
+            </exception>
         </member>
         <member name="M:TVA.Communication.TcpClient.SaveSettings">
             <summary>
