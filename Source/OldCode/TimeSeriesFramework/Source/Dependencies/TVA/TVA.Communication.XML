@@ -4074,7 +4074,7 @@
         </member>
         <member name="M:TVA.Communication.FileClient.ReadNextBuffer">
             <summary>
-            Receives (reads) next data buffer from the <see cref="T:System.IO.FileStream"/>.
+            Reads next data buffer from the <see cref="T:System.IO.FileStream"/>.
             </summary>
             <exception cref="T:System.InvalidOperationException"><see cref="M:TVA.Communication.FileClient.ReadNextBuffer"/> is called when <see cref="T:TVA.Communication.FileClient"/> is not connected.</exception>
             <exception cref="T:System.InvalidOperationException"><see cref="M:TVA.Communication.FileClient.ReadNextBuffer"/> is called when <see cref="P:TVA.Communication.FileClient.ReceiveOnDemand"/> is disabled.</exception>
