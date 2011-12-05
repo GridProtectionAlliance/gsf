@@ -276,9 +276,9 @@ namespace TimeSeriesFramework.Transport
                 {
                     // Detach from events on existing data channel reference
                     m_dataChannel.ConnectionException -= m_dataChannel_ConnectionException;
+                    m_dataChannel.ReceiveData -= m_dataChannel_ReceiveData;
                     m_dataChannel.ReceiveDataException -= m_dataChannel_ReceiveDataException;
                     m_dataChannel.ReceiveDataTimeout -= m_dataChannel_ReceiveDataTimeout;
-                    m_dataChannel.ReceiveDataHandler = null;
 
                     if (m_dataChannel != value)
                         m_dataChannel.Dispose();
@@ -291,9 +291,9 @@ namespace TimeSeriesFramework.Transport
                 {
                     // Attach to desired events on new data channel reference
                     m_dataChannel.ConnectionException += m_dataChannel_ConnectionException;
+                    m_dataChannel.ReceiveData += m_dataChannel_ReceiveData;
                     m_dataChannel.ReceiveDataException += m_dataChannel_ReceiveDataException;
                     m_dataChannel.ReceiveDataTimeout += m_dataChannel_ReceiveDataTimeout;
-                    m_dataChannel.ReceiveDataHandler = HandleDataChannelDataReceived;
                 }
             }
         }
@@ -318,10 +318,10 @@ namespace TimeSeriesFramework.Transport
                     m_commandChannel.ConnectionTerminated -= m_commandChannel_ConnectionTerminated;
                     m_commandChannel.HandshakeProcessTimeout -= m_commandChannel_HandshakeProcessTimeout;
                     m_commandChannel.HandshakeProcessUnsuccessful -= m_commandChannel_HandshakeProcessUnsuccessful;
+                    m_commandChannel.ReceiveData -= m_commandChannel_ReceiveData;
                     m_commandChannel.ReceiveDataException -= m_commandChannel_ReceiveDataException;
                     m_commandChannel.ReceiveDataTimeout -= m_commandChannel_ReceiveDataTimeout;
                     m_commandChannel.SendDataException -= m_commandChannel_SendDataException;
-                    m_commandChannel.ReceiveDataHandler = null;
 
                     if (m_commandChannel != value)
                         m_commandChannel.Dispose();
@@ -339,10 +339,10 @@ namespace TimeSeriesFramework.Transport
                     m_commandChannel.ConnectionTerminated += m_commandChannel_ConnectionTerminated;
                     m_commandChannel.HandshakeProcessTimeout += m_commandChannel_HandshakeProcessTimeout;
                     m_commandChannel.HandshakeProcessUnsuccessful += m_commandChannel_HandshakeProcessUnsuccessful;
+                    m_commandChannel.ReceiveData += m_commandChannel_ReceiveData;
                     m_commandChannel.ReceiveDataException += m_commandChannel_ReceiveDataException;
                     m_commandChannel.ReceiveDataTimeout += m_commandChannel_ReceiveDataTimeout;
                     m_commandChannel.SendDataException += m_commandChannel_SendDataException;
-                    m_commandChannel.ReceiveDataHandler = HandleCommandChannelDataReceived;
                 }
             }
         }
@@ -462,7 +462,7 @@ namespace TimeSeriesFramework.Transport
             // Initialize default settings
             commandChannel.ConnectionString = "server=localhost:6165";
             commandChannel.PayloadAware = true;
-            commandChannel.Compression = CompressionStrength.Standard;
+            commandChannel.Compression = CompressionStrength.NoCompression;
             commandChannel.PersistSettings = false;
 
             // Assign command channel client reference and attach to needed events
@@ -1278,14 +1278,6 @@ namespace TimeSeriesFramework.Transport
 
         #region [ Command Channel Event Handlers ]
 
-        // Handles data reception from the command channel
-        private void HandleCommandChannelDataReceived(byte[] buffer, int offset, int length)
-        {
-            m_lastBytesReceived = length;
-            Payload.ProcessReceived(ref buffer, ref offset, ref length, m_commandChannel.Encryption, m_commandChannel.SharedSecret, m_commandChannel.Compression);
-            ProcessServerResponse(buffer, length);
-        }
-
         private void m_commandChannel_ConnectionEstablished(object sender, EventArgs e)
         {
             // Make sure no existing requests are queued for a new publisher connection
@@ -1334,6 +1326,47 @@ namespace TimeSeriesFramework.Transport
                 OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while sending data to publisher connection: " + ex.Message, ex));
         }
 
+        private void m_commandChannel_ReceiveData(object sender, EventArgs<int> e)
+        {
+            try
+            {
+                byte[] buffer;
+                int length = e.Argument;
+                CipherStrength cryptoLevel = m_commandChannel.Encryption;
+                CompressionStrength compressLevel = m_commandChannel.Compression;
+
+                m_lastBytesReceived = length;
+
+                if (cryptoLevel == CipherStrength.None && compressLevel == CompressionStrength.NoCompression)
+                {
+                    buffer = BufferPool.TakeBuffer(length);
+
+                    try
+                    {
+                        m_commandChannel.Read(buffer, 0, length);
+                        ProcessServerResponse(buffer, length);
+                    }
+                    finally
+                    {
+                        if (buffer != null)
+                            BufferPool.ReturnBuffer(buffer);
+                    }
+                }
+                else
+                {
+                    buffer = new byte[length];
+                    int offset = 0;
+                    m_commandChannel.Read(buffer, 0, length);
+                    Payload.ProcessReceived(ref buffer, ref offset, ref length, cryptoLevel, m_commandChannel.SharedSecret, compressLevel);
+                    ProcessServerResponse(buffer, length);
+                }
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(ex);
+            }
+        }
+
         private void m_commandChannel_ReceiveDataTimeout(object sender, EventArgs e)
         {
             OnProcessException(new InvalidOperationException("Data subscriber timed out while receiving data from publisher connection"));
@@ -1361,18 +1394,51 @@ namespace TimeSeriesFramework.Transport
 
         #region [ Data Channel Event Handlers ]
 
-        // Handles data reception from the data channel
-        private void HandleDataChannelDataReceived(byte[] buffer, int offset, int length)
-        {
-            m_lastBytesReceived = length;
-            Payload.ProcessReceived(ref buffer, ref offset, ref length, m_dataChannel.Encryption, m_dataChannel.SharedSecret, m_dataChannel.Compression);
-            ProcessServerResponse(buffer, length);
-        }
-
         private void m_dataChannel_ConnectionException(object sender, EventArgs<Exception> e)
         {
             Exception ex = e.Argument;
             OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while attempting to establish UDP data channel connection: " + ex.Message, ex));
+        }
+
+        private void m_dataChannel_ReceiveData(object sender, EventArgs<int> e)
+        {
+            try
+            {
+                byte[] buffer;
+                int length = e.Argument;
+                CipherStrength cryptoLevel = m_dataChannel.Encryption;
+                CompressionStrength compressLevel = m_dataChannel.Compression;
+
+                m_lastBytesReceived = length;
+
+                if (cryptoLevel == CipherStrength.None && compressLevel == CompressionStrength.NoCompression)
+                {
+                    buffer = BufferPool.TakeBuffer(length);
+
+                    try
+                    {
+                        m_dataChannel.Read(buffer, 0, length);
+                        ProcessServerResponse(buffer, length);
+                    }
+                    finally
+                    {
+                        if (buffer != null)
+                            BufferPool.ReturnBuffer(buffer);
+                    }
+                }
+                else
+                {
+                    buffer = new byte[length];
+                    int offset = 0;
+                    m_dataChannel.Read(buffer, 0, length);
+                    Payload.ProcessReceived(ref buffer, ref offset, ref length, cryptoLevel, m_dataChannel.SharedSecret, compressLevel);
+                    ProcessServerResponse(buffer, length);
+                }
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(ex);
+            }
         }
 
         private void m_dataChannel_ReceiveDataTimeout(object sender, EventArgs e)

@@ -490,7 +490,7 @@ namespace TimeSeriesFramework.Transport
             commandChannel.SettingsCategory = Name.ToLower();
             commandChannel.ConfigurationString = "port=6165";
             commandChannel.PayloadAware = true;
-            commandChannel.Compression = CompressionStrength.Standard;
+            commandChannel.Compression = CompressionStrength.NoCompression;
             commandChannel.PersistSettings = true;
 
             // Assign command channel client reference and attach to needed events
