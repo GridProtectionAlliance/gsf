@@ -648,6 +648,10 @@ namespace TimeSeriesFramework.UI.DataModels
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
+                // Before we delete node, make sure to delete all the devices associated with this node.
+                // All other node related items get deleted by cascade delete.
+                database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Device WHERE NodeID = {0}", "nodeID"), DefaultTimeout, database.Guid(nodeID));
+
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Node WHERE ID = {0}", "nodeID"), DefaultTimeout, database.Guid(nodeID));
 
                 return "Node deleted successfully";
