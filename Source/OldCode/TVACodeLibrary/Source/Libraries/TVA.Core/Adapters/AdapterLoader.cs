@@ -46,6 +46,9 @@
 //       Added Mono implementation exception regions.
 //  11/23/2011 - J. Ritchie Carroll
 //       Modified to support buffer optimized ISupportBinaryImage.
+//  12/06/2011 - Pinal C. Patel
+//       Updated to instantiate a FileSystemWatcher object that watches for adapters only if needed 
+//       to avoid a bug introduced in .NET 4.0 that causes memory leak.
 //
 //*******************************************************************************************************
 
@@ -647,10 +650,6 @@ namespace TVA.Adapters
             m_settingsCategory = this.GetType().Name;
             m_adapters = new ObservableCollection<T>();
             m_adapters.CollectionChanged += Adapters_CollectionChanged;
-            m_adapterWatcher = new FileSystemWatcher();
-            m_adapterWatcher.Created += AdapterWatcher_Events;
-            m_adapterWatcher.Changed += AdapterWatcher_Events;
-            m_adapterWatcher.Deleted += AdapterWatcher_Events;
             m_operationQueue = ProcessQueue<object>.CreateRealTimeQueue(ExecuteOperation);
             m_enabledStates = new Dictionary<Type, bool>();
         }
@@ -909,8 +908,11 @@ namespace TVA.Adapters
                     if (value && !m_enabled)
                     {
                         // Enable - restore previously saved state.
-                        m_adapterWatcher.EnableRaisingEvents = m_enabledStates[m_adapterWatcher.GetType()];
-                        m_operationQueue.Enabled = m_enabledStates[m_operationQueue.GetType()];
+                        if ((object)m_adapterWatcher != null)
+                            m_adapterWatcher.EnableRaisingEvents = m_enabledStates[m_adapterWatcher.GetType()];
+
+                        if (m_operationQueue != null)
+                            m_operationQueue.Enabled = m_enabledStates[m_operationQueue.GetType()];
 
                         bool savedState;
                         lock (m_adapters)
@@ -926,8 +928,12 @@ namespace TVA.Adapters
                     {
                         // Disable - save current state and disable.
                         SaveCurrentState();
-                        m_adapterWatcher.EnableRaisingEvents = false;
-                        m_operationQueue.Enabled = false;
+
+                        if ((object)m_adapterWatcher != null)
+                            m_adapterWatcher.EnableRaisingEvents = false;
+
+                        if (m_operationQueue != null)
+                            m_operationQueue.Enabled = false;
 
                         lock (m_adapters)
                         {
@@ -974,7 +980,7 @@ namespace TVA.Adapters
                 status.Append(m_monitorAdapters ? "Enabled" : "Disabled");
                 status.AppendLine();
                 status.Append("           Dynamic loading: ");
-                status.Append(m_adapterWatcher.EnableRaisingEvents ? "Enabled" : "Disabled");
+                status.Append((object)m_adapterWatcher != null && m_adapterWatcher.EnableRaisingEvents ? "Enabled" : "Disabled");
                 status.AppendLine();
                 status.Append("          Operations queue: ");
                 status.Append(m_operationQueue.Enabled ? "Enabled" : "Disabled");
@@ -1086,8 +1092,14 @@ namespace TVA.Adapters
                 // Watch for adapters.
                 if (m_watchForAdapters)
                 {
+                    // Create watcher only if needed to avoid a bug in .NET 4.0 that causes memory leak.
+                    // http://support.microsoft.com/kb/2628838
+                    m_adapterWatcher = new FileSystemWatcher();
                     m_adapterWatcher.Path = m_adapterDirectory;
                     m_adapterWatcher.EnableRaisingEvents = true;
+                    m_adapterWatcher.Created += AdapterWatcher_Events;
+                    m_adapterWatcher.Changed += AdapterWatcher_Events;
+                    m_adapterWatcher.Deleted += AdapterWatcher_Events;
                 }
 
                 // Save current state.
@@ -1373,6 +1385,7 @@ namespace TVA.Adapters
 
                         if ((object)m_adapterWatcher != null)
                         {
+                            m_adapterWatcher.EnableRaisingEvents = false;
                             m_adapterWatcher.Created -= AdapterWatcher_Events;
                             m_adapterWatcher.Changed -= AdapterWatcher_Events;
                             m_adapterWatcher.Deleted -= AdapterWatcher_Events;
@@ -1529,8 +1542,11 @@ namespace TVA.Adapters
 
         private void SaveCurrentState()
         {
-            m_enabledStates[m_adapterWatcher.GetType()] = m_adapterWatcher.EnableRaisingEvents;
-            m_enabledStates[m_operationQueue.GetType()] = m_operationQueue.Enabled;
+            if ((object)m_adapterWatcher != null)
+                m_enabledStates[m_adapterWatcher.GetType()] = m_adapterWatcher.EnableRaisingEvents;
+
+            if (m_operationQueue != null)
+                m_enabledStates[m_operationQueue.GetType()] = m_operationQueue.Enabled;
 
             lock (m_adapters)
             {

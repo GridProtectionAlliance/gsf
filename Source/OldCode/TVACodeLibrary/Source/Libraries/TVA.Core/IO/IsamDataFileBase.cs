@@ -42,6 +42,9 @@
 //       Removed inheritance from Component class to allow for serialization.
 //  11/23/2011 - J. Ritchie Carroll
 //       Modified to support buffer optimized ISupportBinaryImage.
+//  12/06/2011 - Pinal C. Patel
+//       Updated to instantiate a FileSystemWatcher object that watches for changes to the file content 
+//       only  if needed to avoid a bug introduced in .NET 4.0 that causes memory leak.
 //
 //*******************************************************************************************************
 
@@ -594,8 +597,6 @@ namespace TVA.IO
 
             m_autoSaveTimer = new System.Timers.Timer();
             m_autoSaveTimer.Elapsed += m_autoSaveTimer_Elapsed;
-            m_fileWatcher = new FileSystemWatcher();
-            m_fileWatcher.Changed += m_fileWatcher_Changed;
         }
 
         /// <summary>
@@ -989,7 +990,20 @@ namespace TVA.IO
         {
             if (!m_initialized)
             {
-                LoadSettings();                                 // Load settings from the config file.
+                // Load settings from the config file.
+                LoadSettings();
+
+                // Watch for changes to the file content.
+                if (m_reloadOnModify)
+                {
+                    // Create watcher only if needed to avoid a bug in .NET 4.0 that causes memory leak.
+                    // http://support.microsoft.com/kb/2628838
+                    m_fileWatcher = new FileSystemWatcher();
+                    m_fileWatcher.Path = FilePath.GetDirectoryName(m_fileName);
+                    m_fileWatcher.Filter = FilePath.GetFileName(m_fileName);
+                    m_fileWatcher.Changed += m_fileWatcher_Changed;
+                }
+
                 m_recordBuffer = new byte[GetRecordSize()];     // Create buffer for reading records.
                 m_initialized = true;                           // Initialize only once.
             }
@@ -1074,10 +1088,9 @@ namespace TVA.IO
                 if (m_loadOnOpen)
                     Load();
 
-                // Watch the file for any modifications made to the file on disk.
-                m_fileWatcher.Path = FilePath.GetDirectoryName(m_fileName);
-                m_fileWatcher.Filter = FilePath.GetFileName(m_fileName);
-                m_fileWatcher.EnableRaisingEvents = true;
+                // Watch for changes to the file content on disk.
+                if ((object)m_fileWatcher != null)
+                    m_fileWatcher.EnableRaisingEvents = true;
 
                 if (m_autoSaveInterval > 0)
                 {
@@ -1099,7 +1112,8 @@ namespace TVA.IO
                 m_autoSaveTimer.Stop();
 
                 // Stop monitoring for changes to the file.
-                m_fileWatcher.EnableRaisingEvents = false;
+                if ((object)m_fileWatcher != null)
+                    m_fileWatcher.EnableRaisingEvents = false;
 
                 // Save records back to the file if specified.
                 if (m_saveOnClose)
@@ -1555,7 +1569,7 @@ namespace TVA.IO
                 OnFileModified();
 
                 // Reload records if they have been loaded in memory and reloading is enabled.
-                if (m_fileWatcher.EnableRaisingEvents && ((object)m_fileRecords != null) && m_reloadOnModify)
+                if ((object)m_fileWatcher != null && m_fileWatcher.EnableRaisingEvents && (object)m_fileRecords != null)
                     Load();
             }
             catch
