@@ -272,6 +272,11 @@ namespace TVA.Historian.Files
         public const bool DefaultConserveMemory = true;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="MonitorNewArchiveFiles"/> property.
+        /// </summary>
+        public const bool DefaultMonitorNewArchiveFiles = false;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="PersistSettings"/> property.
         /// </summary>
         public const bool DefaultPersistSettings = false;
@@ -470,6 +475,7 @@ namespace TVA.Historian.Files
         private bool m_discardOutOfSequenceData;
         private bool m_cacheWrites;
         private bool m_conserveMemory;
+        private bool m_monitorNewArchiveFiles;
         private bool m_persistSettings;
         private string m_settingsCategory;
         private ArchiveFileAllocationTable m_fat;
@@ -524,6 +530,7 @@ namespace TVA.Historian.Files
             m_discardOutOfSequenceData = DefaultDiscardOutOfSequenceData;
             m_cacheWrites = DefaultCacheWrites;
             m_conserveMemory = DefaultConserveMemory;
+            m_monitorNewArchiveFiles = DefaultMonitorNewArchiveFiles;
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
 
@@ -543,18 +550,6 @@ namespace TVA.Historian.Files
 
             m_outOfSequenceDataQueue = ProcessQueue<IDataPoint>.CreateRealTimeQueue(InsertInCurrentArchiveFile);
             m_outOfSequenceDataQueue.ProcessException += OutOfSequenceDataQueue_ProcessException;
-
-            m_currentLocationFileWatcher = new FileSystemWatcher();
-            m_currentLocationFileWatcher.IncludeSubdirectories = true;
-            m_currentLocationFileWatcher.Renamed += FileWatcher_Renamed;
-            m_currentLocationFileWatcher.Deleted += FileWatcher_Deleted;
-            m_currentLocationFileWatcher.Created += FileWatcher_Created;
-
-            m_offloadLocationFileWatcher = new FileSystemWatcher();
-            m_offloadLocationFileWatcher.IncludeSubdirectories = true;
-            m_offloadLocationFileWatcher.Renamed += FileWatcher_Renamed;
-            m_offloadLocationFileWatcher.Deleted += FileWatcher_Deleted;
-            m_offloadLocationFileWatcher.Created += FileWatcher_Created;
         }
 
         /// <summary>
@@ -893,6 +888,24 @@ namespace TVA.Historian.Files
             {
                 m_conserveMemory = value;
                 ReOpen();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether to monitor and load newly encountered archive files.
+        /// </summary>
+        [Category("Data"),
+        DefaultValue(DefaultMonitorNewArchiveFiles),
+        Description("Indicates whether to monitor and load newly encountered archive files.")]
+        public bool MonitorNewArchiveFiles
+        {
+            get
+            {
+                return m_monitorNewArchiveFiles;
+            }
+            set
+            {
+                m_monitorNewArchiveFiles = value;
             }
         }
 
@@ -1250,6 +1263,21 @@ namespace TVA.Historian.Files
             {
                 LoadSettings();         // Load settings from the config file.
                 m_initialized = true;   // Initialize only once.
+
+                if (m_monitorNewArchiveFiles)
+                {
+                    m_currentLocationFileWatcher = new FileSystemWatcher();
+                    m_currentLocationFileWatcher.IncludeSubdirectories = true;
+                    m_currentLocationFileWatcher.Renamed += FileWatcher_Renamed;
+                    m_currentLocationFileWatcher.Deleted += FileWatcher_Deleted;
+                    m_currentLocationFileWatcher.Created += FileWatcher_Created;
+
+                    m_offloadLocationFileWatcher = new FileSystemWatcher();
+                    m_offloadLocationFileWatcher.IncludeSubdirectories = true;
+                    m_offloadLocationFileWatcher.Renamed += FileWatcher_Renamed;
+                    m_offloadLocationFileWatcher.Deleted += FileWatcher_Deleted;
+                    m_offloadLocationFileWatcher.Created += FileWatcher_Created;
+                }
             }
         }
         /// <summary>
@@ -1266,8 +1294,11 @@ namespace TVA.Historian.Files
             {
                 try
                 {
-                    m_currentLocationFileWatcher.BeginInit();
-                    m_offloadLocationFileWatcher.BeginInit();
+                    //if (m_currentLocationFileWatcher != null)
+                    //    m_currentLocationFileWatcher.BeginInit();
+
+                    //if (m_offloadLocationFileWatcher != null)
+                    //    m_offloadLocationFileWatcher.BeginInit();
                 }
                 catch (Exception)
                 {
@@ -1291,8 +1322,9 @@ namespace TVA.Historian.Files
                 try
                 {
                     Initialize();
-                    m_currentLocationFileWatcher.EndInit();
-                    m_offloadLocationFileWatcher.EndInit();
+
+                    //m_currentLocationFileWatcher.EndInit();
+                    //m_offloadLocationFileWatcher.EndInit();
                 }
                 catch (Exception)
                 {
@@ -1330,6 +1362,7 @@ namespace TVA.Historian.Files
                 settings["DiscardOutOfSequenceData", true].Update(m_discardOutOfSequenceData);
                 settings["CacheWrites", true].Update(m_cacheWrites);
                 settings["ConserveMemory", true].Update(m_conserveMemory);
+                settings["MonitorNewArchiveFiles", true].Update(m_monitorNewArchiveFiles);
                 config.Save();
             }
         }
@@ -1363,6 +1396,7 @@ namespace TVA.Historian.Files
                 settings.Add("DiscardOutOfSequenceData", m_discardOutOfSequenceData, "True if out-of-sequence data points are to be discarded; otherwise False.");
                 settings.Add("CacheWrites", m_cacheWrites, "True if writes are to be cached for performance; otherwise False.");
                 settings.Add("ConserveMemory", m_conserveMemory, "True if attempts are to be made to conserve memory; otherwise False.");
+                settings.Add("MonitorNewArchiveFiles", m_monitorNewArchiveFiles, "True to monitor and load newly encountered archive files; otherwise False.");
                 FileName = settings["FileName"].ValueAs(m_fileName);
                 FileType = settings["FileType"].ValueAs(m_fileType);
                 FileSize = settings["FileSize"].ValueAs(m_fileSize);
@@ -1459,14 +1493,21 @@ namespace TVA.Historian.Files
                 m_buildHistoricFileListThread.Start();
 
                 // Start file watchers to monitor file system changes.
-                m_currentLocationFileWatcher.Filter = HistoricFilesSearchPattern;
-                m_currentLocationFileWatcher.Path = FilePath.GetDirectoryName(m_fileName);
-                m_currentLocationFileWatcher.EnableRaisingEvents = true;
-                if (Directory.Exists(m_archiveOffloadLocation))
+                if (m_monitorNewArchiveFiles)
                 {
-                    m_offloadLocationFileWatcher.Filter = HistoricFilesSearchPattern;
-                    m_offloadLocationFileWatcher.Path = m_archiveOffloadLocation;
-                    m_offloadLocationFileWatcher.EnableRaisingEvents = true;
+                    if (m_currentLocationFileWatcher != null)
+                    {
+                        m_currentLocationFileWatcher.Filter = HistoricFilesSearchPattern;
+                        m_currentLocationFileWatcher.Path = FilePath.GetDirectoryName(m_fileName);
+                        m_currentLocationFileWatcher.EnableRaisingEvents = true;
+                    }
+
+                    if (Directory.Exists(m_archiveOffloadLocation) && m_offloadLocationFileWatcher != null)
+                    {
+                        m_offloadLocationFileWatcher.Filter = HistoricFilesSearchPattern;
+                        m_offloadLocationFileWatcher.Path = m_archiveOffloadLocation;
+                        m_offloadLocationFileWatcher.EnableRaisingEvents = true;
+                    }
                 }
             }
         }
@@ -1502,8 +1543,11 @@ namespace TVA.Historian.Files
                 }
 
                 // Stop watching for historic archive files.
-                m_currentLocationFileWatcher.EnableRaisingEvents = false;
-                m_offloadLocationFileWatcher.EnableRaisingEvents = false;
+                if (m_currentLocationFileWatcher != null)
+                    m_currentLocationFileWatcher.EnableRaisingEvents = false;
+
+                if (m_offloadLocationFileWatcher != null)
+                    m_offloadLocationFileWatcher.EnableRaisingEvents = false;
 
                 // Clear the list of historic archive files.
                 if (m_historicArchiveFiles != null)
