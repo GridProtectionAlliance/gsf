@@ -999,7 +999,7 @@ namespace TVA.IO
                     // Create watcher only if needed to avoid a bug in .NET 4.0 that causes memory leak.
                     // http://support.microsoft.com/kb/2628838
                     m_fileWatcher = new FileSystemWatcher();
-                    m_fileWatcher.Path = FilePath.GetDirectoryName(m_fileName);
+                    m_fileWatcher.Path = FilePath.GetDirectoryName(FilePath.GetAbsolutePath(m_fileName));
                     m_fileWatcher.Filter = FilePath.GetFileName(m_fileName);
                     m_fileWatcher.Changed += m_fileWatcher_Changed;
                 }
