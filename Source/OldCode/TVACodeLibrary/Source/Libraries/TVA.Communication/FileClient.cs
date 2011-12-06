@@ -756,8 +756,8 @@ namespace TVA.Communication
             m_connectionHandle = (ManualResetEvent)base.ConnectAsync();
 
             m_fileClient.ID = this.ClientID;
-            m_fileClient.Secretkey = this.SharedSecret;
-            m_fileClient.ReceiveBuffer = new byte[ReceiveBufferSize];
+            m_fileClient.SecretKey = this.SharedSecret;
+            m_fileClient.SetReceiveBuffer(ReceiveBufferSize);
 
 #if ThreadTracking
             m_connectionThread = new ManagedThread(OpenFile);
@@ -871,7 +871,7 @@ namespace TVA.Communication
         /// <returns>Cipher secret key.</returns>
         protected override string GetSessionSecret()
         {
-            return m_fileClient.Secretkey;
+            return m_fileClient.SecretKey;
         }
 
         /// <summary>
@@ -889,7 +889,6 @@ namespace TVA.Communication
             handle = m_fileClient.Provider.BeginWrite(data, offset, length, SendDataAsyncCallback, null).AsyncWaitHandle;
 
             // Notify that the send operation has started.
-            m_fileClient.SendBuffer = data;
             m_fileClient.SendBufferOffset = offset;
             m_fileClient.SendBufferLength = length;
             m_fileClient.Statistics.UpdateBytesSent(m_fileClient.SendBufferLength);
@@ -928,10 +927,10 @@ namespace TVA.Communication
                 try
                 {
                     OnConnectionAttempt();
-                    ;
 
                     // Open the file.
                     m_fileClient.Provider = new FileStream(FilePath.GetAbsolutePath(m_connectData["file"]), m_fileOpenMode, m_fileAccessMode, m_fileShareMode);
+
                     // Move to the specified offset.
                     m_fileClient.Provider.Seek(m_startingOffset, SeekOrigin.Begin);
 

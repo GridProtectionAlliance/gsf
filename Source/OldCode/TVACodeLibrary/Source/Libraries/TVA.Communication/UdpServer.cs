@@ -281,7 +281,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Threading;
-using TVA.Parsing;
 
 namespace TVA.Communication
 {
@@ -571,8 +570,7 @@ namespace TVA.Communication
                 // Bind server socket to local end-point
                 m_udpServer = new TransportProvider<Socket>();
                 m_udpServer.ID = this.ServerID;
-                m_udpServer.ReceiveBuffer = new byte[ReceiveBufferSize];
-
+                m_udpServer.SetReceiveBuffer(ReceiveBufferSize);
                 m_udpServer.Provider = Transport.CreateSocket(m_configData["interface"], int.Parse(m_configData["port"]), ProtocolType.Udp, m_ipStack, m_allowDualStackSocket);
 
                 // Notify that the server has been started successfully
@@ -601,9 +599,8 @@ namespace TVA.Communication
                             if (endpoint != Match.Empty)
                             {
                                 TransportProvider<Socket> udpClient = new TransportProvider<Socket>();
-                                udpClient.Secretkey = SharedSecret;
-                                udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
-
+                                udpClient.SecretKey = SharedSecret;
+                                udpClient.SetReceiveBuffer(ReceiveBufferSize);
                                 udpClient.Provider = Transport.CreateSocket(m_configData["interface"], 0, ProtocolType.Udp, m_ipStack, m_allowDualStackSocket);
 
                                 // Disable SocketError.ConnectionReset exception from being thrown when the enpoint is not listening
@@ -640,19 +637,26 @@ namespace TVA.Communication
         public override void DisconnectOne(Guid clientID)
         {
             TransportProvider<Socket> udpClient = Client(clientID);
+
             if (Handshake)
             {
                 // Handshake is enabled so we'll notify the client.
-                udpClient.SendBuffer = new GoodbyeMessage(udpClient.ID).BinaryImage();
-                udpClient.SendBufferOffset = 0;
-                udpClient.SendBufferLength = udpClient.SendBuffer.Length;
-                Payload.ProcessTransmit(ref udpClient.SendBuffer, ref udpClient.SendBufferOffset, ref udpClient.SendBufferLength, Encryption, udpClient.Secretkey, Compression);
+                GoodbyeMessage message = new GoodbyeMessage(udpClient.ID);
 
-                udpClient.Provider.SendTo(udpClient.SendBuffer, udpClient.Provider.RemoteEndPoint);
+                udpClient.SetSendBuffer(message.BinaryLength);
+                message.GenerateBinaryImage(udpClient.SendBuffer, 0);
+
+                udpClient.SendBufferOffset = 0;
+                udpClient.SendBufferLength = message.BinaryLength;
+                udpClient.ProcessTransmit(Encryption, udpClient.SecretKey, Compression);
+
+                udpClient.Provider.SendTo(udpClient.SendBuffer, udpClient.SendBufferLength, SocketFlags.None, udpClient.Provider.RemoteEndPoint);
             }
 
             if (udpClient.Provider != null)
                 udpClient.Provider.Close();
+
+            udpClient.Reset();
         }
 
         /// <summary>
@@ -698,7 +702,7 @@ namespace TVA.Communication
         /// <returns>Cipher secret key of the client with the specified <paramref name="clientID"/>.</returns>
         protected override string GetSessionSecret(Guid clientID)
         {
-            return Client(clientID).Secretkey;
+            return Client(clientID).SecretKey;
         }
 
         /// <summary>
@@ -718,7 +722,6 @@ namespace TVA.Communication
             handle = udpClient.Provider.BeginSendTo(data, offset, length, SocketFlags.None, udpClient.Provider.RemoteEndPoint, SendPayloadAsyncCallback, udpClient).AsyncWaitHandle;
 
             // Notify that the send operation has started.
-            udpClient.SendBuffer = data;
             udpClient.SendBufferOffset = offset;
             udpClient.SendBufferLength = length;
             OnSendClientDataStart(udpClient.ID);
@@ -765,7 +768,7 @@ namespace TVA.Communication
 
             worker.Provider.BeginReceiveFrom(worker.ReceiveBuffer,
                                              worker.ReceiveBufferOffset,
-                                             worker.ReceiveBuffer.Length,
+                                             worker.ReceiveBufferSetSize,
                                              SocketFlags.None,
                                              ref client,
                                              ReceiveHandshakeAsyncCallback,
@@ -789,7 +792,7 @@ namespace TVA.Communication
                 udpServer.ReceiveBufferLength = udpServer.Statistics.LastBytesReceived;
 
                 // Process the received handshake message
-                Payload.ProcessReceived(ref udpServer.ReceiveBuffer, ref udpServer.ReceiveBufferOffset, ref udpServer.ReceiveBufferLength, Encryption, SharedSecret, Compression);
+                udpServer.ProcessReceived(Encryption, SharedSecret, Compression);
 
                 HandshakeMessage handshake = new HandshakeMessage();
                 if (handshake.ParseBinaryImage(udpServer.ReceiveBuffer, udpServer.ReceiveBufferOffset, udpServer.ReceiveBufferLength) != -1)
@@ -799,9 +802,8 @@ namespace TVA.Communication
                     {
                         // Create a random socket and connect it to the client
                         TransportProvider<Socket> udpClient = new TransportProvider<Socket>();
-                        udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
-
-                        udpClient.Secretkey = SharedSecret;
+                        udpClient.SetReceiveBuffer(ReceiveBufferSize);
+                        udpClient.SecretKey = SharedSecret;
                         udpClient.Provider = Transport.CreateSocket(m_configData["interface"], 0, ProtocolType.Udp, m_ipStack, m_allowDualStackSocket);
                         udpClient.Provider.Connect(client);
 
@@ -812,18 +814,19 @@ namespace TVA.Communication
                         if (SecureSession)
                         {
                             // Create a secret key for ciphering client data
-                            udpClient.Secretkey = Guid.NewGuid().ToString();
-                            handshake.Secretkey = udpClient.Secretkey;
+                            udpClient.SecretKey = Guid.NewGuid().ToString();
+                            handshake.Secretkey = udpClient.SecretKey;
                         }
 
                         // Prepare binary image of handshake response to be transmitted
-                        udpClient.SendBuffer = handshake.BinaryImage();
+                        udpClient.SetSendBuffer(handshake.BinaryLength);
+                        handshake.GenerateBinaryImage(udpClient.SendBuffer, 0);
                         udpClient.SendBufferOffset = 0;
-                        udpClient.SendBufferLength = udpClient.SendBuffer.Length;
-                        Payload.ProcessTransmit(ref udpClient.SendBuffer, ref udpClient.SendBufferOffset, ref udpClient.SendBufferLength, Encryption, SharedSecret, Compression);
+                        udpClient.SendBufferLength = handshake.BinaryLength;
+                        udpClient.ProcessTransmit(Encryption, SharedSecret, Compression);
 
                         // Transmit the prepared and processed handshake response message
-                        udpClient.Provider.SendTo(udpClient.SendBuffer, udpClient.Provider.RemoteEndPoint);
+                        udpClient.Provider.SendTo(udpClient.SendBuffer, udpClient.SendBufferLength, SocketFlags.None, udpClient.Provider.RemoteEndPoint);
 
                         // Handshake process is complete and client is considered connected
                         m_udpClients.TryAdd(udpClient.ID, udpClient);
@@ -871,7 +874,7 @@ namespace TVA.Communication
 
             worker.Provider.BeginReceiveFrom(worker.ReceiveBuffer,
                                              worker.ReceiveBufferOffset,
-                                             worker.ReceiveBuffer.Length,
+                                             worker.ReceiveBufferSetSize,
                                              SocketFlags.None,
                                              ref m_udpClientEndPoint,
                                              ReceivePayloadAnyAsyncCallback,
@@ -926,7 +929,7 @@ namespace TVA.Communication
                 // Wait for data indefinitely.
                 worker.Provider.BeginReceiveFrom(worker.ReceiveBuffer,
                                                  worker.ReceiveBufferOffset,
-                                                 worker.ReceiveBuffer.Length,
+                                                 worker.ReceiveBufferSetSize,
                                                  SocketFlags.None,
                                                  ref client,
                                                  ReceivePayloadOneAsyncCallback,
@@ -939,7 +942,7 @@ namespace TVA.Communication
                                  ReceivePayloadOneAsyncCallback,
                                  worker.Provider.BeginReceiveFrom(worker.ReceiveBuffer,
                                                                   worker.ReceiveBufferOffset,
-                                                                  worker.ReceiveBuffer.Length,
+                                                                  worker.ReceiveBufferSetSize,
                                                                   SocketFlags.None,
                                                                   ref client,
                                                                   ReceivePayloadOneAsyncCallback,
@@ -1037,13 +1040,10 @@ namespace TVA.Communication
         private bool DoGoodbyeCheck(TransportProvider<Socket> client)
         {
             // Process data received in the buffer.
-            int offset = client.ReceiveBufferOffset;
-            int length = client.ReceiveBufferLength;
-            byte[] buffer = client.ReceiveBuffer.BlockCopy(0, length);
-            Payload.ProcessReceived(ref buffer, ref offset, ref length, Encryption, client.Secretkey, Compression);
+            client.ProcessReceived(Encryption, client.SecretKey, Compression);
 
             // Check if data is for goodbye message.
-            return (new GoodbyeMessage().ParseBinaryImage(buffer, offset, length) != -1);
+            return (new GoodbyeMessage().ParseBinaryImage(client.ReceiveBuffer, client.ReceiveBufferOffset, client.ReceiveBufferLength) != -1);
         }
 
         /// <summary>

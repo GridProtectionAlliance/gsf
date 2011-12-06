@@ -515,8 +515,8 @@ namespace TVA.Communication
             m_connectionHandle = (ManualResetEvent)base.ConnectAsync();
 
             m_serialClient.ID = this.ClientID;
-            m_serialClient.Secretkey = this.SharedSecret;
-            m_serialClient.ReceiveBuffer = new byte[ReceiveBufferSize];
+            m_serialClient.SecretKey = this.SharedSecret;
+            m_serialClient.SetReceiveBuffer(ReceiveBufferSize);
 
             m_serialClient.Provider = new SerialPort();
 #if !MONO
@@ -608,7 +608,7 @@ namespace TVA.Communication
         /// <returns>Cipher secret key.</returns>
         protected override string GetSessionSecret()
         {
-            return m_serialClient.Secretkey;
+            return m_serialClient.SecretKey;
         }
 
         /// <summary>
@@ -626,7 +626,6 @@ namespace TVA.Communication
             handle = m_serialClient.Provider.BaseStream.BeginWrite(data, offset, length, SendDataAsyncCallback, null).AsyncWaitHandle;
 
             // Notify that the send operation has started.
-            m_serialClient.SendBuffer = data;
             m_serialClient.SendBufferOffset = offset;
             m_serialClient.SendBufferLength = length;
             m_serialClient.Statistics.UpdateBytesSent(m_serialClient.SendBufferLength);

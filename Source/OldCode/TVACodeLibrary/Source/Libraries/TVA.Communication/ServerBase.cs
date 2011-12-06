@@ -1353,6 +1353,8 @@ namespace TVA.Communication
             {
                 // Pre-condition data as needed and then send it.
                 Payload.ProcessTransmit(ref data, ref offset, ref length, m_encryption, GetSessionSecret(clientID), m_compression);
+
+
                 return SendDataToAsync(clientID, data, offset, length);
             }
             else

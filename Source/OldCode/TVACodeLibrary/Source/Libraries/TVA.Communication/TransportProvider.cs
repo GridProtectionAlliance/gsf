@@ -15,6 +15,8 @@
 //       Added error checking to Reset().
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  12/05/2010 - J. Ritchie Carroll
+//       Modified to make use of buffer pool instead of constant dynamic buffer allocations.
 //
 //*******************************************************************************************************
 
@@ -281,12 +283,7 @@ namespace TVA.Communication
         /// <summary>
         /// Key used for the ciphering of data.
         /// </summary>
-        public string Secretkey;
-
-        /// <summary>
-        /// Buffer used for sending data.
-        /// </summary>
-        public byte[] SendBuffer;
+        public string SecretKey;
 
         /// <summary>
         /// Zero-based index of <see cref="SendBuffer"/> from which data is to be sent.
@@ -297,11 +294,6 @@ namespace TVA.Communication
         /// Number of bytes to be sent from <see cref="SendBuffer"/> starting at <see cref="SendBufferOffset"/>.
         /// </summary>
         public int SendBufferLength;
-
-        /// <summary>
-        /// Buffer used for receiving data.
-        /// </summary>
-        public byte[] ReceiveBuffer;
 
         /// <summary>
         /// Zero-based index of <see cref="ReceiveBuffer"/> at which data is to be received.
@@ -318,6 +310,12 @@ namespace TVA.Communication
         /// </summary>
         public TransportStatistics Statistics;
 
+        // Internally managed I/O buffers
+        private byte[] m_sendBuffer;
+        private int m_sendBufferSetSize;
+        private byte[] m_receiveBuffer;
+        private int m_receiveBufferSetSize;
+
         #endregion
 
         #region [ Constructors ]
@@ -333,18 +331,118 @@ namespace TVA.Communication
 
         #endregion
 
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets buffer used for sending data.
+        /// </summary>
+        /// <remarks>
+        /// Use <see cref="SetSendBuffer"/> to reset and/or establish send buffer size.
+        /// </remarks>
+        public byte[] SendBuffer
+        {
+            get
+            {
+                return m_sendBuffer;
+            }
+        }
+
+        /// <summary>
+        /// Gets send buffer requested size.
+        /// </summary>
+        public int SendBufferSetSize
+        {
+            get
+            {
+                return m_sendBufferSetSize;
+            }
+        }
+
+        /// <summary>
+        /// Gets buffer used for receiving data.
+        /// </summary>
+        /// <remarks>
+        /// Use <see cref="SetReceiveBuffer"/> to reset and/or establish receive buffer size.
+        /// </remarks>
+        public byte[] ReceiveBuffer
+        {
+            get
+            {
+                return m_receiveBuffer;
+            }
+        }
+
+        /// <summary>
+        /// Gets receive buffer requested size.
+        /// </summary>
+        public int ReceiveBufferSetSize
+        {
+            get
+            {
+                return m_receiveBufferSetSize;
+            }
+        }
+
+        #endregion
+
         #region [ Methods ]
+
+        /// <summary>
+        /// Establishes (or reestablishes) a send buffer of a given size.
+        /// </summary>
+        /// <param name="size">Desired minimum size of send buffer.</param>
+        /// <returns>New send buffer.</returns>
+        public byte[] SetSendBuffer(int size)
+        {
+            if (m_sendBuffer != null)
+                BufferPool.ReturnBuffer(m_sendBuffer);
+
+            // Take a buffer from the pool of the desired size
+            m_sendBuffer = BufferPool.TakeBuffer(size);
+
+            // The buffer returned may be bigger than the requested size, but only the specified size will be usable
+            m_sendBufferSetSize = size;
+
+            return m_sendBuffer;
+        }
+
+        /// <summary>
+        /// Establishes (or reestablishes) a receive buffer of a given size.
+        /// </summary>
+        /// <param name="size">Desired minimum size of receive buffer.</param>
+        /// <returns>New receive buffer.</returns>
+        public byte[] SetReceiveBuffer(int size)
+        {
+            if (m_receiveBuffer != null)
+                BufferPool.ReturnBuffer(m_receiveBuffer);
+
+            // Take a buffer from the pool of the desired size
+            m_receiveBuffer = BufferPool.TakeBuffer(size);
+
+            // The buffer returned may be bigger than the requested size, but only the specified size will be usable
+            m_receiveBufferSetSize = size;
+
+            return m_receiveBuffer;
+        }
 
         /// <summary>
         /// Resets <see cref="TransportProvider{T}"/>.
         /// </summary>
         public void Reset()
         {
-            Secretkey = string.Empty;
-            SendBuffer = null;
+            SecretKey = string.Empty;
+
+            if (m_sendBuffer != null)
+                BufferPool.ReturnBuffer(m_sendBuffer);
+            m_sendBuffer = null;
+
             SendBufferOffset = 0;
             SendBufferLength = -1;
-            ReceiveBuffer = null;
+
+            if (m_receiveBuffer != null)
+                BufferPool.ReturnBuffer(m_receiveBuffer);
+            m_receiveBuffer = null;
+
             ReceiveBufferOffset = 0;
             ReceiveBufferLength = -1;
 

@@ -334,12 +334,13 @@ namespace TVA.Communication
         /// Determines the length of a payload in a "Payload-Aware" transmission from the payload header information.
         /// </summary>
         /// <param name="buffer">The buffer containg payload header information starting at index zero.</param>
+        /// <param name="length">The length of valid data within in <paramref name="buffer"/>.</param>
         /// <param name="marker">The byte sequence used to mark the beginning of the payload in a "Payload-Aware" transmissions.</param>
         /// <returns>Length of the payload.</returns>
-        public static int ExtractLength(byte[] buffer, byte[] marker)
+        public static int ExtractLength(byte[] buffer, int length, byte[] marker)
         {
             // Check to see if buffer is at least as big as the payload header and has the payload marker
-            if (buffer.Length >= (marker.Length + LengthSegment) && HasHeader(buffer, marker))
+            if (length >= (marker.Length + LengthSegment) && HasHeader(buffer, marker))
                 return BitConverter.ToInt32(buffer, marker.Length);
 
             return -1;
@@ -385,6 +386,46 @@ namespace TVA.Communication
                     Buffer.BlockCopy(temp, offset, buffer, offset, length);
             }
         }
+
+        /// <summary>
+        /// Performs the necessary uncompression and decryption on the data contained in the <paramref name="provider"/>.
+        /// </summary>
+        /// <param name="provider">Source provider to process received buffer.</param>
+        /// <param name="cryptoLevel">One of the <see cref="CipherStrength"/> values.</param>
+        /// <param name="cryptoKey">Shared secret key to use for encryption.</param>
+        /// <param name="compressLevel">One of the <see cref="CompressionStrength"/> values.</param>
+        public static void ProcessReceived<T>(this TransportProvider<T> provider, CipherStrength cryptoLevel, string cryptoKey, CompressionStrength compressLevel)
+        {
+            if (cryptoLevel != CipherStrength.None || compressLevel != CompressionStrength.NoCompression)
+            {
+                // Make a copy of the data to be processed                
+                byte[] temp = provider.ReceiveBuffer.BlockCopy(provider.ReceiveBufferOffset, provider.ReceiveBufferLength);
+
+                if (cryptoLevel != CipherStrength.None)
+                {
+                    // Decrypt the data
+                    temp = temp.Decrypt(cryptoKey, cryptoLevel);
+                    provider.ReceiveBufferOffset = 0;
+                    provider.ReceiveBufferLength = temp.Length;
+                }
+
+                if (compressLevel != CompressionStrength.NoCompression)
+                {
+                    // Uncompress the data
+                    temp = new MemoryStream(temp).Decompress().ToArray();
+                    provider.ReceiveBufferOffset = 0;
+                    provider.ReceiveBufferLength = temp.Length;
+                }
+
+                // If processed data cannot fit in the existing buffer, expand the new buffer
+                if (temp.Length > provider.ReceiveBufferSetSize)
+                    provider.SetReceiveBuffer(temp.Length);
+
+                // Copy processed data into the receive buffer
+                Buffer.BlockCopy(temp, 0, provider.ReceiveBuffer, provider.ReceiveBufferOffset, provider.ReceiveBufferLength);
+            }
+        }
+
         /// <summary>
         /// Performs the necessary uncompression and decryption on the data contained in the <paramref name="socketArgs"/>.
         /// </summary>
@@ -392,7 +433,7 @@ namespace TVA.Communication
         /// <param name="cryptoLevel">One of the <see cref="CipherStrength"/> values.</param>
         /// <param name="cryptoKey">The key to be used for decrypting the data in the <paramref name="socketArgs"/>.</param>
         /// <param name="compressLevel">One of the <see cref="CompressionStrength"/> values.</param>
-        public static void ProcessReceived(SocketAsyncEventArgs socketArgs, CipherStrength cryptoLevel, string cryptoKey, CompressionStrength compressLevel)
+        public static void ProcessReceived(this SocketAsyncEventArgs socketArgs, CipherStrength cryptoLevel, string cryptoKey, CompressionStrength compressLevel)
         {
             if (cryptoLevel != CipherStrength.None || compressLevel != CompressionStrength.NoCompression)
             {
@@ -444,13 +485,51 @@ namespace TVA.Communication
         }
 
         /// <summary>
+        /// Performs the necessary compression and encryption on the data contained in the <paramref name="provider"/>.
+        /// </summary>
+        /// <param name="provider">Source provider to process received buffer.</param>
+        /// <param name="cryptoLevel">One of the <see cref="CipherStrength"/> values.</param>
+        /// <param name="cryptoKey">Shared secret key to use for encryption.</param>
+        /// <param name="compressLevel">One of the <see cref="CompressionStrength"/> values.</param>
+        public static void ProcessTransmit<T>(this TransportProvider<T> provider, CipherStrength cryptoLevel, string cryptoKey, CompressionStrength compressLevel)
+        {
+            byte[] buffer;
+
+            if (compressLevel != CompressionStrength.NoCompression)
+            {
+                // Compress the data
+                buffer = new MemoryStream(provider.SendBuffer, provider.SendBufferOffset, provider.SendBufferLength).Compress(compressLevel).ToArray();
+
+                provider.SetSendBuffer(buffer.Length);
+                provider.SendBufferOffset = 0;
+                provider.SendBufferLength = buffer.Length;
+
+                // Copy processed data into the send buffer
+                Buffer.BlockCopy(buffer, 0, provider.SendBuffer, provider.SendBufferOffset, provider.SendBufferLength);
+            }
+
+            if (cryptoLevel != CipherStrength.None)
+            {
+                // Encrypt the data
+                buffer = provider.SendBuffer.Encrypt(provider.SendBufferOffset, provider.SendBufferLength, cryptoKey, cryptoLevel);
+
+                provider.SetSendBuffer(buffer.Length);
+                provider.SendBufferOffset = 0;
+                provider.SendBufferLength = buffer.Length;
+
+                // Copy processed data into the send buffer
+                Buffer.BlockCopy(buffer, 0, provider.SendBuffer, provider.SendBufferOffset, provider.SendBufferLength);
+            }
+        }
+
+        /// <summary>
         /// Performs the necessary compression and encryption on the data contained in the <paramref name="socketArgs"/>.
         /// </summary>
         /// <param name="socketArgs">Socket's asynchronous event arguments.</param>
         /// <param name="cryptoLevel">One of the <see cref="CipherStrength"/> values.</param>
         /// <param name="cryptoKey">The key to be used for encrypting the data in the <paramref name="socketArgs"/>.</param>
         /// <param name="compressLevel">One of the <see cref="CompressionStrength"/> values.</param>
-        public static void ProcessTransmit(SocketAsyncEventArgs socketArgs, CipherStrength cryptoLevel, string cryptoKey, CompressionStrength compressLevel)
+        public static void ProcessTransmit(this SocketAsyncEventArgs socketArgs, CipherStrength cryptoLevel, string cryptoKey, CompressionStrength compressLevel)
         {
             byte[] buffer;
 

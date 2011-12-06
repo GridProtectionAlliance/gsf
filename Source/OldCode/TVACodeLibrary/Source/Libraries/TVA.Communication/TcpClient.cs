@@ -284,7 +284,6 @@ using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Threading;
 using TVA.Configuration;
-using TVA.Parsing;
 
 namespace TVA.Communication
 {
@@ -733,7 +732,7 @@ namespace TVA.Communication
         /// <returns>Cipher secret key.</returns>
         protected override string GetSessionSecret()
         {
-            return m_tcpClient.Secretkey;
+            return m_tcpClient.SecretKey;
         }
 
         /// <summary>
@@ -755,7 +754,6 @@ namespace TVA.Communication
             handle = m_tcpClient.Provider.BeginSend(data, offset, length, SocketFlags.None, SendPayloadAsyncCallback, m_tcpClient).AsyncWaitHandle;
 
             // Notify that the send operation has started.
-            m_tcpClient.SendBuffer = data;
             m_tcpClient.SendBufferOffset = offset;
             m_tcpClient.SendBufferLength = length;
             OnSendDataStart();
@@ -776,7 +774,7 @@ namespace TVA.Communication
                 m_connectionAttempts++;
                 tcpClient.Provider.EndConnect(asyncResult);
                 tcpClient.ID = this.ClientID;
-                tcpClient.Secretkey = SharedSecret;
+                tcpClient.SecretKey = SharedSecret;
 
 #if !MONO
                 // Send current Windows credentials for authentication.
@@ -810,13 +808,14 @@ namespace TVA.Communication
                     handshake.Secretkey = this.SharedSecret;
 
                     // Prepare binary image of handshake to be transmitted.
-                    tcpClient.SendBuffer = handshake.BinaryImage();
+                    tcpClient.SetSendBuffer(handshake.BinaryLength);
+                    handshake.GenerateBinaryImage(tcpClient.SendBuffer, 0);
                     tcpClient.SendBufferOffset = 0;
-                    tcpClient.SendBufferLength = tcpClient.SendBuffer.Length;
-                    Payload.ProcessTransmit(ref tcpClient.SendBuffer, ref tcpClient.SendBufferOffset, ref tcpClient.SendBufferLength, Encryption, SharedSecret, Compression);
+                    tcpClient.SendBufferLength = handshake.BinaryLength;
+                    tcpClient.ProcessTransmit(Encryption, SharedSecret, Compression);
 
                     // Transmit the prepared and processed handshake message.
-                    m_tcpClient.Provider.BeginSend(tcpClient.SendBuffer, 0, tcpClient.SendBuffer.Length, SocketFlags.None, SendPayloadAsyncCallback, m_tcpClient).AsyncWaitHandle.WaitOne();
+                    m_tcpClient.Provider.BeginSend(tcpClient.SendBuffer, 0, tcpClient.SendBufferLength, SocketFlags.None, SendPayloadAsyncCallback, m_tcpClient).AsyncWaitHandle.WaitOne();
 
                     // Wait for the server's reponse to the handshake message.
                     ReceiveHandshakeAsync(tcpClient);
@@ -886,14 +885,14 @@ namespace TVA.Communication
             // Prepare buffer used for receiving data.
             worker.ReceiveBufferOffset = 0;
             worker.ReceiveBufferLength = -1;
-            worker.ReceiveBuffer = new byte[ReceiveBufferSize];
+            worker.SetReceiveBuffer(ReceiveBufferSize);
 
             // Receive data asynchronously with a timeout.
             worker.WaitAsync(HandshakeTimeout,
                              ReceiveHandshakeAsyncCallback,
                              worker.Provider.BeginReceive(worker.ReceiveBuffer,
                                                           worker.ReceiveBufferOffset,
-                                                          worker.ReceiveBuffer.Length,
+                                                          worker.ReceiveBufferSetSize,
                                                           SocketFlags.None,
                                                           ReceiveHandshakeAsyncCallback,
                                                           worker));
@@ -925,7 +924,7 @@ namespace TVA.Communication
                         throw new SocketException((int)SocketError.Disconnecting);
 
                     // Process the received handshake response message.
-                    Payload.ProcessReceived(ref tcpClient.ReceiveBuffer, ref tcpClient.ReceiveBufferOffset, ref tcpClient.ReceiveBufferLength, Encryption, SharedSecret, Compression);
+                    tcpClient.ProcessReceived(Encryption, SharedSecret, Compression);
 
                     HandshakeMessage handshake = new HandshakeMessage();
 
@@ -933,7 +932,7 @@ namespace TVA.Communication
                     {
                         // Received handshake response message could be parsed.
                         this.ServerID = handshake.ID;
-                        tcpClient.Secretkey = handshake.Secretkey;
+                        tcpClient.SecretKey = handshake.Secretkey;
 
                         // Client is now considered to be connected to the server.
                         m_connectionHandle.Set();
@@ -969,13 +968,13 @@ namespace TVA.Communication
             if (m_payloadAware)
             {
                 // Payload boundaries are to be preserved.
-                worker.ReceiveBuffer = new byte[m_payloadMarker.Length + Payload.LengthSegment];
+                worker.SetReceiveBuffer(m_payloadMarker.Length + Payload.LengthSegment);
                 ReceivePayloadAwareAsync(worker);
             }
             else
             {
                 // Payload boundaries are not to be preserved.
-                worker.ReceiveBuffer = new byte[ReceiveBufferSize];
+                worker.SetReceiveBuffer(ReceiveBufferSize);
                 ReceivePayloadUnawareAsync(worker);
             }
         }
@@ -993,7 +992,7 @@ namespace TVA.Communication
                 // Wait for data indefinitely.
                 worker.Provider.BeginReceive(worker.ReceiveBuffer,
                                              worker.ReceiveBufferOffset,
-                                             worker.ReceiveBuffer.Length - worker.ReceiveBufferOffset,
+                                             worker.ReceiveBufferSetSize - worker.ReceiveBufferOffset,
                                              SocketFlags.None,
                                              ReceivePayloadAwareAsyncCallback,
                                              worker);
@@ -1005,7 +1004,7 @@ namespace TVA.Communication
                                  ReceivePayloadAwareAsyncCallback,
                                  worker.Provider.BeginReceive(worker.ReceiveBuffer,
                                                               worker.ReceiveBufferOffset,
-                                                              worker.ReceiveBuffer.Length - worker.ReceiveBufferOffset,
+                                                              worker.ReceiveBufferSetSize - worker.ReceiveBufferOffset,
                                                               SocketFlags.None,
                                                               ReceivePayloadAwareAsyncCallback,
                                                               worker));
@@ -1041,11 +1040,11 @@ namespace TVA.Communication
                     {
                         // We're waiting on the payload length, so we'll check if the received data has this information.
                         tcpClient.ReceiveBufferOffset = 0;
-                        tcpClient.ReceiveBufferLength = Payload.ExtractLength(tcpClient.ReceiveBuffer, m_payloadMarker);
+                        tcpClient.ReceiveBufferLength = Payload.ExtractLength(tcpClient.ReceiveBuffer, tcpClient.Statistics.LastBytesReceived, m_payloadMarker);
 
                         // We have the payload length, so we'll create a buffer that's big enough to hold the entire payload.
                         if (tcpClient.ReceiveBufferLength != -1)
-                            tcpClient.ReceiveBuffer = new byte[tcpClient.ReceiveBufferLength];
+                            tcpClient.SetReceiveBuffer(tcpClient.ReceiveBufferLength);
 
                         ReceivePayloadAwareAsync(tcpClient);
                     }
@@ -1106,7 +1105,7 @@ namespace TVA.Communication
                 // Wait for data indefinitely.
                 worker.Provider.BeginReceive(worker.ReceiveBuffer,
                                              worker.ReceiveBufferOffset,
-                                             worker.ReceiveBuffer.Length - worker.ReceiveBufferOffset,
+                                             worker.ReceiveBufferSetSize - worker.ReceiveBufferOffset,
                                              SocketFlags.None,
                                              ReceivePayloadUnawareAsyncCallback,
                                              worker);
@@ -1118,7 +1117,7 @@ namespace TVA.Communication
                                  ReceivePayloadUnawareAsyncCallback,
                                  worker.Provider.BeginReceive(worker.ReceiveBuffer,
                                                               worker.ReceiveBufferOffset,
-                                                              worker.ReceiveBuffer.Length - worker.ReceiveBufferOffset,
+                                                              worker.ReceiveBufferSetSize - worker.ReceiveBufferOffset,
                                                               SocketFlags.None,
                                                               ReceivePayloadUnawareAsyncCallback,
                                                               worker));
@@ -1188,6 +1187,7 @@ namespace TVA.Communication
         private void TerminateConnection(TransportProvider<Socket> client, bool raiseEvent)
         {
             client.Reset();
+
             if (raiseEvent)
                 OnConnectionTerminated();
         }
