@@ -39,12 +39,13 @@
 //       search timespan is a sub-second range.
 //  10/11/2010 - Mihir Brahmbhatt
 //       Updated header and license agreement.
+//  11/30/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //******************************************************************************************************
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using TVA.Interop;
@@ -62,6 +63,232 @@ namespace TVA.Historian.Files
     {
         #region [ Members ]
 
+        // Nested Types
+
+        /// <summary>
+        /// Defines the fixed table region of the <see cref="ArchiveFileAllocationTable"/>.
+        /// </summary>
+        private class FixedTableRegion : ISupportBinaryImage
+        {
+            #region [ Members ]
+
+            // Constants
+
+            /// <summary>
+            /// Specifies the number of bytes in the binary image of the <see cref="FixedTableRegion"/>.
+            /// </summary>
+            public const int FixedLength = 32;
+
+            // Fields
+            private ArchiveFileAllocationTable m_parent;
+
+            #endregion
+
+            #region [ Constructors ]
+
+            /// <summary>
+            /// Creates a new instance of the <see cref="FixedTableRegion"/>.
+            /// </summary>
+            /// <param name="parent">Reference to parent <see cref="ArchiveFileAllocationTable"/>.</param>
+            public FixedTableRegion(ArchiveFileAllocationTable parent)
+            {
+                m_parent = parent;
+            }
+
+            #endregion
+
+            #region [ Properties ]
+
+            /// <summary>
+            /// Gets the length of the <see cref="FixedTableRegion"/>.
+            /// </summary>
+            public int BinaryLength
+            {
+                get
+                {
+                    return FixedLength;
+                }
+            }
+
+            #endregion
+
+            #region [ Methods ]
+
+            /// <summary>
+            /// Initializes <see cref="FixedTableRegion"/> by parsing the specified <paramref name="buffer"/> containing a binary image.
+            /// </summary>
+            /// <param name="buffer">Buffer containing binary image to parse.</param>
+            /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start parsing.</param>
+            /// <param name="length">Valid number of bytes within <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+            /// <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed).</returns>
+            /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">
+            /// <paramref name="startIndex"/> or <paramref name="length"/> is less than 0 -or- 
+            /// <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
+            /// </exception>
+            public int ParseBinaryImage(byte[] buffer, int startIndex, int length)
+            {
+                buffer.ValidateParameters(startIndex, length);
+
+                double startTime = EndianOrder.LittleEndian.ToDouble(buffer, startIndex);
+                double stopTime = EndianOrder.LittleEndian.ToDouble(buffer, startIndex + 8);
+
+                // Validate file time tags
+                if (startTime < TimeTag.MinValue.Value || startTime > TimeTag.MaxValue.Value)
+                    startTime = TimeTag.MinValue.Value;
+
+                if (stopTime < TimeTag.MinValue.Value || stopTime > TimeTag.MaxValue.Value)
+                    stopTime = TimeTag.MinValue.Value;
+
+                m_parent.FileStartTime = new TimeTag(startTime);
+                m_parent.FileEndTime = new TimeTag(stopTime);
+                m_parent.DataPointsReceived = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 16);
+                m_parent.DataPointsArchived = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 20);
+                m_parent.DataBlockSize = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 24);
+                m_parent.DataBlockCount = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 28);
+
+                return FixedLength;
+            }
+
+            /// <summary>
+            /// Generates binary image of the <see cref="FixedTableRegion"/> and copies it into the given buffer, for <see cref="BinaryLength"/> bytes.
+            /// </summary>
+            /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+            /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+            /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+            /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">
+            /// <paramref name="startIndex"/> or <see cref="BinaryLength"/> is less than 0 -or- 
+            /// <paramref name="startIndex"/> and <see cref="BinaryLength"/> will exceed <paramref name="buffer"/> length.
+            /// </exception>
+            public int GenerateBinaryImage(byte[] buffer, int startIndex)
+            {
+                int length = BinaryLength;
+
+                buffer.ValidateParameters(startIndex, length);
+
+                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_parent.m_fileStartTime.Value), 0, buffer, startIndex, 8);
+                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_parent.m_fileEndTime.Value), 0, buffer, startIndex + 8, 8);
+                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_parent.m_dataPointsReceived), 0, buffer, startIndex + 16, 4);
+                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_parent.m_dataPointsArchived), 0, buffer, startIndex + 20, 4);
+                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_parent.m_dataBlockSize), 0, buffer, startIndex + 24, 4);
+                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_parent.m_dataBlockCount), 0, buffer, startIndex + 28, 4);
+
+                return length;
+            }
+
+            #endregion
+        }
+
+        /// <summary>
+        /// Defines the variable table region of the <see cref="ArchiveFileAllocationTable"/>.
+        /// </summary>
+        private class VariableTableRegion : ISupportBinaryImage
+        {
+            #region [ Members ]
+
+            // Fields
+            private ArchiveFileAllocationTable m_parent;
+
+            #endregion
+
+            #region [ Constructors ]
+
+            /// <summary>
+            /// Creates a new instance of the <see cref="VariableTableRegion"/>.
+            /// </summary>
+            /// <param name="parent">Reference to parent <see cref="ArchiveFileAllocationTable"/>.</param>
+            public VariableTableRegion(ArchiveFileAllocationTable parent)
+            {
+                m_parent = parent;
+            }
+
+            #endregion
+
+            #region [ Properties ]
+
+            /// <summary>
+            /// Gets the length of the <see cref="VariableTableRegion"/>.
+            /// </summary>
+            public int BinaryLength
+            {
+                get
+                {
+                    // We add the extra bytes for the array descriptor that are required for reading the file from a VB6 style application.
+                    return (ArrayDescriptorLength + (m_parent.m_dataBlockCount * ArchiveDataBlockPointer.FixedLength));
+                }
+            }
+
+            #endregion
+
+            #region [ Methods ]
+
+            /// <summary>
+            /// Initializes <see cref="VariableTableRegion"/> by parsing the specified <paramref name="buffer"/> containing a binary image.
+            /// </summary>
+            /// <param name="buffer">Buffer containing binary image to parse.</param>
+            /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start parsing.</param>
+            /// <param name="length">Valid number of bytes within <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+            /// <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed).</returns>
+            /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">
+            /// <paramref name="startIndex"/> or <paramref name="length"/> is less than 0 -or- 
+            /// <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
+            /// </exception>
+            public int ParseBinaryImage(byte[] buffer, int startIndex, int length)
+            {
+                buffer.ValidateParameters(startIndex, length);
+
+                ArchiveDataBlockPointer blockPointer;
+
+                // Set parsing cursor beyond old-style visual basic array descriptor
+                int index = startIndex + ArrayDescriptorLength;
+
+                for (int i = 0; i < m_parent.m_dataBlockCount; i++)
+                {
+                    blockPointer = new ArchiveDataBlockPointer(m_parent.m_parent, i);
+                    index += blockPointer.ParseBinaryImage(buffer, index, length - (index - startIndex));
+                    m_parent.m_dataBlockPointers.Add(blockPointer);
+                }
+
+                return (index - startIndex);
+            }
+
+            /// <summary>
+            /// Generates binary image of the <see cref="VariableTableRegion"/> and copies it into the given buffer, for <see cref="BinaryLength"/> bytes.
+            /// </summary>
+            /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+            /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+            /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+            /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">
+            /// <paramref name="startIndex"/> or <see cref="BinaryLength"/> is less than 0 -or- 
+            /// <paramref name="startIndex"/> and <see cref="BinaryLength"/> will exceed <paramref name="buffer"/> length.
+            /// </exception>
+            public int GenerateBinaryImage(byte[] buffer, int startIndex)
+            {
+                int length = BinaryLength;
+
+                buffer.ValidateParameters(startIndex, length);
+
+                VBArrayDescriptor arrayDescriptor = VBArrayDescriptor.OneBasedOneDimensionalArray(m_parent.m_dataBlockCount);
+
+                startIndex += arrayDescriptor.GenerateBinaryImage(buffer, startIndex);
+
+                lock (m_parent.m_dataBlockPointers)
+                {
+                    for (int i = 0; i < m_parent.m_dataBlockPointers.Count; i++)
+                    {
+                        startIndex += m_parent.m_dataBlockPointers[i].GenerateBinaryImage(buffer, startIndex);
+                    }
+                }
+
+                return length;
+            }
+
+            #endregion
+        }
+
         // Constants
         private const int ArrayDescriptorLength = 10;
 
@@ -74,6 +301,8 @@ namespace TVA.Historian.Files
         private int m_dataBlockCount;
         private List<ArchiveDataBlockPointer> m_dataBlockPointers;
         private ArchiveFile m_parent;
+        private FixedTableRegion m_fixedTableRegion;
+        private VariableTableRegion m_variableTableRegion;
 
         #endregion
 
@@ -87,6 +316,8 @@ namespace TVA.Historian.Files
         {
             m_parent = parent;
             m_dataBlockPointers = new List<ArchiveDataBlockPointer>();
+            m_fixedTableRegion = new FixedTableRegion(this);
+            m_variableTableRegion = new VariableTableRegion(this);
 
             if (m_parent.FileData.Length == 0)
             {
@@ -103,38 +334,19 @@ namespace TVA.Historian.Files
             }
             else
             {
-                // File was created previously.
-                byte[] fixedFatData = new byte[FixedBinaryLength];
-                m_parent.FileData.Seek(-fixedFatData.Length, SeekOrigin.End);
-                m_parent.FileData.Read(fixedFatData, 0, fixedFatData.Length);
+                // Existing file, read table regions:
 
-                double startTime = EndianOrder.LittleEndian.ToDouble(fixedFatData, 0);
-                double stopTime = EndianOrder.LittleEndian.ToDouble(fixedFatData, 8);
+                // Seek to beginning of fixed table region
+                m_parent.FileData.Seek(-m_fixedTableRegion.BinaryLength, SeekOrigin.End);
 
-                // Validate file time tags
-                if (startTime < TimeTag.MinValue.Value || startTime > TimeTag.MaxValue.Value)
-                    startTime = TimeTag.MinValue.Value;
+                // Parse fixed table region
+                m_fixedTableRegion.ParseBinaryImageFromStream(m_parent.FileData);
 
-                if (stopTime < TimeTag.MinValue.Value || stopTime > TimeTag.MaxValue.Value)
-                    stopTime = TimeTag.MinValue.Value;
+                // Seek to beginning of variable table region (above fixed from bottom of file)
+                m_parent.FileData.Seek(-(m_fixedTableRegion.BinaryLength + m_variableTableRegion.BinaryLength), SeekOrigin.End);
 
-                FileStartTime = new TimeTag(startTime);
-                FileEndTime = new TimeTag(stopTime);
-                DataPointsReceived = EndianOrder.LittleEndian.ToInt32(fixedFatData, 16);
-                DataPointsArchived = EndianOrder.LittleEndian.ToInt32(fixedFatData, 20);
-                DataBlockSize = EndianOrder.LittleEndian.ToInt32(fixedFatData, 24);
-                DataBlockCount = EndianOrder.LittleEndian.ToInt32(fixedFatData, 28);
-
-                int offset;
-                byte[] variableFatData = new byte[m_dataBlockCount * ArchiveDataBlockPointer.ByteCount];
-                m_parent.FileData.Seek(-(variableFatData.Length + FixedBinaryLength), SeekOrigin.End);
-                m_parent.FileData.Read(variableFatData, 0, variableFatData.Length);
-
-                for (int i = 0; i < m_dataBlockCount; i++)
-                {
-                    offset = i * ArchiveDataBlockPointer.ByteCount;
-                    m_dataBlockPointers.Add(new ArchiveDataBlockPointer(m_parent, i, variableFatData, offset, variableFatData.Length - offset));
-                }
+                // Parse variable table region
+                m_variableTableRegion.ParseBinaryImageFromStream(m_parent.FileData);
             }
         }
 
@@ -273,6 +485,7 @@ namespace TVA.Historian.Files
             get
             {
                 ArchiveDataBlock unusedDataBlock = FindDataBlock(-1);
+
                 if (unusedDataBlock != null)
                     return m_dataBlockCount - unusedDataBlock.Index;
                 else
@@ -284,7 +497,7 @@ namespace TVA.Historian.Files
         /// Gets the <see cref="ArchiveDataBlockPointer"/>s to the <see cref="ArchiveDataBlock"/>s in the <see cref="ArchiveFile"/>.
         /// </summary>
         /// <remarks>
-        /// WARNING: <see cref="DataBlockPointers"/> is thread unsafe. Synchronized access is required.
+        /// WARNING: <see cref="DataBlockPointers"/> is not thread safe. Synchronized access is required.
         /// </remarks>
         public IList<ArchiveDataBlockPointer> DataBlockPointers
         {
@@ -295,91 +508,21 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets the length of the <see cref="BinaryImage"/>.
+        /// Gets the length of the <see cref="ArchiveFileAllocationTable"/>.
         /// </summary>
         public int BinaryLength
         {
             get
             {
-                return VariableBinaryLength + FixedBinaryLength;
+                return m_variableTableRegion.BinaryLength + m_fixedTableRegion.BinaryLength;
             }
         }
 
-        /// <summary>
-        /// Gets the binary representation of <see cref="ArchiveFileAllocationTable"/>.
-        /// </summary>
-        public byte[] BinaryImage
-        {
-            get
-            {
-                byte[] image = new byte[BinaryLength];
-
-                Array.Copy(VariableBinaryImage, 0, image, 0, VariableBinaryLength);
-                Array.Copy(FixedBinaryImage, 0, image, VariableBinaryLength, FixedBinaryLength);
-
-                return image;
-            }
-        }
-
-        private long DataBinaryLength
+        private long DataLength
         {
             get
             {
                 return (m_dataBlockCount * (m_dataBlockSize * 1024));
-            }
-        }
-
-        private int FixedBinaryLength
-        {
-            get
-            {
-                return 32;
-            }
-        }
-
-        private int VariableBinaryLength
-        {
-            get
-            {
-                // We add the extra bytes for the array descriptor that required for reading the file from VB.
-                return (ArrayDescriptorLength + (m_dataBlockCount * ArchiveDataBlockPointer.ByteCount));
-            }
-        }
-
-        private byte[] FixedBinaryImage
-        {
-            get
-            {
-                byte[] fixedImage = new byte[FixedBinaryLength];
-
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_fileStartTime.Value), 0, fixedImage, 0, 8);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_fileEndTime.Value), 0, fixedImage, 8, 8);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_dataPointsReceived), 0, fixedImage, 16, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_dataPointsArchived), 0, fixedImage, 20, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_dataBlockSize), 0, fixedImage, 24, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_dataBlockCount), 0, fixedImage, 28, 4);
-
-                return fixedImage;
-            }
-        }
-
-        private byte[] VariableBinaryImage
-        {
-            get
-            {
-                byte[] variableImage = new byte[VariableBinaryLength];
-                VBArrayDescriptor arrayDescriptor = VBArrayDescriptor.OneBasedOneDimensionalArray(m_dataBlockCount);
-
-                Array.Copy(arrayDescriptor.BinaryImage, 0, variableImage, 0, arrayDescriptor.BinaryLength);
-                lock (m_dataBlockPointers)
-                {
-                    for (int i = 0; i < m_dataBlockPointers.Count; i++)
-                    {
-                        Array.Copy(m_dataBlockPointers[i].BinaryImage, 0, variableImage, (i * ArchiveDataBlockPointer.ByteCount) + arrayDescriptor.BinaryLength, ArchiveDataBlockPointer.ByteCount);
-                    }
-                }
-
-                return variableImage;
             }
         }
 
@@ -388,15 +531,30 @@ namespace TVA.Historian.Files
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes <see cref="ArchiveFileAllocationTable"/> from the specified <paramref name="binaryImage"/>.
+        /// Generates binary image of the <see cref="ArchiveFileAllocationTable"/> and copies it into the given buffer, for <see cref="BinaryLength"/> bytes.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="ArchiveFileAllocationTable"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="ArchiveFileAllocationTable"/>.</returns>
-        /// <exception cref="NotSupportedException">Always</exception>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public int Initialize(byte[] binaryImage, int startIndex, int length)
+        /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+        /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <see cref="BinaryLength"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <see cref="BinaryLength"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public int GenerateBinaryImage(byte[] buffer, int startIndex)
+        {
+            int length = BinaryLength;
+
+            buffer.ValidateParameters(startIndex, length);
+
+            startIndex += m_variableTableRegion.GenerateBinaryImage(buffer, startIndex);
+            startIndex += m_fixedTableRegion.GenerateBinaryImage(buffer, startIndex);
+
+            return length;
+        }
+
+        // This method is never used since constructor parses the point allocation table
+        int ISupportBinaryImage.ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
             throw new NotSupportedException();
         }
@@ -409,8 +567,9 @@ namespace TVA.Historian.Files
             // Leave space for data blocks.
             lock (m_parent.FileData)
             {
-                m_parent.FileData.Seek(DataBinaryLength, SeekOrigin.Begin);
-                m_parent.FileData.Write(BinaryImage, 0, BinaryLength);
+                m_parent.FileData.Seek(DataLength, SeekOrigin.Begin);
+                this.CopyBinaryImageToStream(m_parent.FileData);
+
                 if (!m_parent.CacheWrites)
                     m_parent.FileData.Flush();
             }
@@ -657,11 +816,15 @@ namespace TVA.Historian.Files
                 lock (m_parent.FileData)
                 {
                     // We'll write information about the just allocated data block to the file.
-                    m_parent.FileData.Seek(DataBinaryLength + ArrayDescriptorLength + (dataBlockPointer.Index * ArchiveDataBlockPointer.ByteCount), SeekOrigin.Begin);
-                    m_parent.FileData.Write(dataBlockPointer.BinaryImage, 0, ArchiveDataBlockPointer.ByteCount);
+                    m_parent.FileData.Seek(DataLength + ArrayDescriptorLength + (dataBlockPointer.Index * ArchiveDataBlockPointer.FixedLength), SeekOrigin.Begin);
+                    dataBlockPointer.CopyBinaryImageToStream(m_parent.FileData);
+
                     // We'll also write the fixed part of the FAT data that resides at the end.
-                    m_parent.FileData.Seek(-FixedBinaryLength, SeekOrigin.End);
-                    m_parent.FileData.Write(FixedBinaryImage, 0, FixedBinaryLength);
+                    m_parent.FileData.Seek(-m_fixedTableRegion.BinaryLength, SeekOrigin.End);
+
+                    // Copy generated binary image to stream
+                    m_fixedTableRegion.CopyBinaryImageToStream(m_parent.FileData);
+
                     if (!m_parent.CacheWrites)
                         m_parent.FileData.Flush();
                 }

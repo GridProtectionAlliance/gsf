@@ -24,6 +24,8 @@
 //       Added new header and license agreement.
 //  10/11/2010 - Mihir Brahmbhatt
 //       Updated header and license agreement.
+//  11/30/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //******************************************************************************************************
 
@@ -32,6 +34,7 @@ using System.Collections.Generic;
 using TVA.Collections;
 using TVA.Communication;
 using TVA.Historian.Packets;
+using TVA.Parsing;
 
 namespace TVA.Historian.Exporters
 {
@@ -108,7 +111,7 @@ namespace TVA.Historian.Exporters
         #region [ Members ]
 
         // Nested Types
-        
+
         /// <summary>
         /// A class for storing runtime information of an <see cref="Export"/>.
         /// </summary>
@@ -216,7 +219,8 @@ namespace TVA.Historian.Exporters
                 {
                     // Attempt to connect the socket.
                     context.Socket.Connect();
-                    if (context.Socket.CurrentState != ClientState.Connected) return;
+                    if (context.Socket.CurrentState != ClientState.Connected)
+                        return;
                 }
 
                 // Socket is connected, so transmit the export data.
@@ -229,7 +233,7 @@ namespace TVA.Historian.Exporters
         /// </summary>
         private void TransmitPacketType1(ExportContext context, IList<IDataPoint> dataToTransmit)
         {
-            byte[] dataBuffer = new byte[context.DataPerPacket * PacketType1.ByteCount];
+            byte[] dataBuffer = new byte[context.DataPerPacket * PacketType1.FixedLength];
             for (int i = 0; i < dataToTransmit.Count; i += context.DataPerPacket)
             {
                 // Transmit the data at the maximum allowed rate.
@@ -237,11 +241,11 @@ namespace TVA.Historian.Exporters
                 for (int j = i; j < (i + (dataToTransmit.Count - i < context.DataPerPacket ? dataToTransmit.Count - i : context.DataPerPacket)); j++)
                 {
                     // Prepare binary image of the data.
-                    Array.Copy(new PacketType1(dataToTransmit[j]).BinaryImage, 0, dataBuffer, dataCount * PacketType1.ByteCount, PacketType1.ByteCount);
+                    new PacketType1(dataToTransmit[j]).GenerateBinaryImage(dataBuffer, dataCount * PacketType1.FixedLength);
                     dataCount++;
                 }
                 // Transmit the prepared binary image.
-                context.Socket.SendAsync(dataBuffer, 0, dataCount * PacketType1.ByteCount);
+                context.Socket.SendAsync(dataBuffer, 0, dataCount * PacketType1.FixedLength);
             }
         }
 
@@ -255,7 +259,7 @@ namespace TVA.Historian.Exporters
             {
                 // Transmit all the data.
                 packet = new PacketType101(dataToTransmit);
-                context.Socket.SendAsync(packet.BinaryImage, 0, packet.BinaryLength);
+                context.Socket.SendAsync(packet.BinaryImage(), 0, packet.BinaryLength);
             }
             else
             {
@@ -263,7 +267,7 @@ namespace TVA.Historian.Exporters
                 for (int i = 0; i < dataToTransmit.Count; i += context.DataPerPacket)
                 {
                     packet = new PacketType101(dataToTransmit.GetRange(i, dataToTransmit.Count - i < context.DataPerPacket ? dataToTransmit.Count - i : context.DataPerPacket));
-                    context.Socket.SendAsync(packet.BinaryImage, 0, packet.BinaryLength);
+                    context.Socket.SendAsync(packet.BinaryImage(), 0, packet.BinaryLength);
                 }
             }
         }
@@ -294,7 +298,7 @@ namespace TVA.Historian.Exporters
                             context.TransmitHandler = TransmitPacketType1;
                             if (packetSizeSetting != null)
                                 // Custom packet size is specified, so determine the maximum number of data points in a packet.
-                                context.DataPerPacket = Convert.ToInt32(packetSizeSetting.Value) / PacketType1.ByteCount;
+                                context.DataPerPacket = Convert.ToInt32(packetSizeSetting.Value) / PacketType1.FixedLength;
                             else
                                 // Custom packet size is not specified, so used the defaults for the transmission protocol.
                                 context.DataPerPacket = (context.Socket.TransportProtocol == TransportProtocol.Tcp ? 50 : 1400);
@@ -305,7 +309,7 @@ namespace TVA.Historian.Exporters
                             context.TransmitHandler = TransmitPacketType101;
                             if (packetSizeSetting != null)
                                 // Custom packet size is specified, so determine the maximum number of data points in a packet.
-                                context.DataPerPacket = Convert.ToInt32(packetSizeSetting.Value) / PacketType101DataPoint.ByteCount;
+                                context.DataPerPacket = Convert.ToInt32(packetSizeSetting.Value) / PacketType101DataPoint.FixedLength;
                             else
                                 // Custom packet size is not specified, so used the defaults for the transmission protocol.
                                 context.DataPerPacket = (context.Socket.TransportProtocol == TransportProtocol.Tcp ? 1000000 : 2200);

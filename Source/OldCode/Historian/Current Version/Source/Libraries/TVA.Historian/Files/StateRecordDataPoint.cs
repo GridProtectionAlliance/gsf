@@ -22,6 +22,8 @@
 //       Added new header and license agreement.
 //  10/11/2010 - Mihir Brahmbhatt
 //       Updated header and license agreement.
+//  11/30/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //******************************************************************************************************
 
@@ -54,7 +56,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Specifies the number of bytes in the binary image of <see cref="StateRecordDataPoint"/>.
         /// </summary>
-        public new const int ByteCount = 16;
+        public new const int FixedLength = 16;
 
         /// <summary>
         /// Specifies the bit-mask for <see cref="TimeZoneIndex"/> stored in <see cref="ArchiveDataPoint.Flags"/>.
@@ -106,13 +108,13 @@ namespace TVA.Historian.Files
         /// Initializes a new instance of the <see cref="StateRecordDataPoint"/> class.
         /// </summary>
         /// <param name="historianID">Historian identifier of <see cref="StateRecordDataPoint"/>.</param>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="StateRecordDataPoint"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        public StateRecordDataPoint(int historianID, byte[] binaryImage, int startIndex, int length)
+        /// <param name="buffer">Binary image to be used for initializing <see cref="StateRecordDataPoint"/>.</param>
+        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
+        /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        public StateRecordDataPoint(int historianID, byte[] buffer, int startIndex, int length)
             : this(historianID)
         {
-            Initialize(binaryImage, startIndex, length);
+            ParseBinaryImage(buffer, startIndex, length);
         }
 
         #endregion
@@ -172,30 +174,13 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets the length of the <see cref="BinaryImage"/>.
+        /// Gets the length of the <see cref="StateRecordDataPoint"/>.
         /// </summary>
         public override int BinaryLength
         {
             get
             {
-                return ByteCount;
-            }
-        }
-
-        /// <summary>
-        /// Gets the binary representation of <see cref="StateRecordDataPoint"/>.
-        /// </summary>
-        public override byte[] BinaryImage
-        {
-            get
-            {
-                byte[] image = new byte[ByteCount];
-
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(Time.Value), 0, image, 0, 8);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(Flags), 0, image, 8, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(Value), 0, image, 12, 4);
-
-                return image;
+                return FixedLength;
             }
         }
 
@@ -204,28 +189,52 @@ namespace TVA.Historian.Files
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes <see cref="StateRecordDataPoint"/> from the specified <paramref name="binaryImage"/>.
+        /// Initializes <see cref="StateRecordDataPoint"/> from the specified <paramref name="buffer"/>.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="StateRecordDataPoint"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="StateRecordDataPoint"/>.</returns>
-        public override int Initialize(byte[] binaryImage, int startIndex, int length)
+        /// <param name="buffer">Binary image to be used for initializing <see cref="StateRecordDataPoint"/>.</param>
+        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
+        /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        /// <returns>Number of bytes used from the <paramref name="buffer"/> for initializing <see cref="StateRecordDataPoint"/>.</returns>
+        public override int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
-            if (length >= ByteCount)
+            if (length >= FixedLength)
             {
                 // Binary image has sufficient data.
-                Time = new TimeTag(EndianOrder.LittleEndian.ToDouble(binaryImage, startIndex));
-                Flags = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 8);
-                Value = EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex + 12);
+                Time = new TimeTag(EndianOrder.LittleEndian.ToDouble(buffer, startIndex));
+                Flags = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 8);
+                Value = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 12);
 
-                return ByteCount;
+                return FixedLength;
             }
             else
             {
                 // Binary image does not have sufficient data.
                 return 0;
             }
+        }
+
+        /// <summary>
+        /// Generates binary image of the <see cref="StateRecordDataPoint"/> and copies it into the given buffer, for <see cref="BinaryLength"/> bytes.
+        /// </summary>
+        /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+        /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <see cref="BinaryLength"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <see cref="BinaryLength"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public override int GenerateBinaryImage(byte[] buffer, int startIndex)
+        {
+            int length = BinaryLength;
+
+            buffer.ValidateParameters(startIndex, length);
+
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(Time.Value), 0, buffer, startIndex, 8);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(Flags), 0, buffer, startIndex + 8, 4);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(Value), 0, buffer, startIndex + 12, 4);
+
+            return length;
         }
 
         #endregion

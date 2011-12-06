@@ -24,6 +24,8 @@
 //       Added new header and license agreement.
 //  10/11/2010 - Mihir Brahmbhatt
 //       Updated header and license agreement.
+//  11/30/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //******************************************************************************************************
 
@@ -42,12 +44,12 @@ namespace TVA.Historian.Packets
         #region [ Members ]
 
         // Constants
-        
+
         /// <summary>
         /// Specifies the number of bytes in the binary image of the packet.
         /// </summary>
         /// <remarks>A value of -1 indicates that the binary image of the packet is of variable length.</remarks>
-        public const int ByteCount = -1;
+        public const int FixedLength = -1;
 
         // Fields
         private IArchive m_archive;
@@ -73,19 +75,13 @@ namespace TVA.Historian.Packets
 
         #region [ Properties ]
 
-        #region [ Abstract ]
-
         /// <summary>
-        /// When overridden in a derived class, gets the length of the packet's binary representation.
+        /// Gets the length of the packet's binary representation.
         /// </summary>
-        public abstract int BinaryLength { get; }
-
-        /// <summary>
-        /// When overridden in a derived class, gets the binary representation of the packet.
-        /// </summary>
-        public abstract byte[] BinaryImage { get; }
-
-        #endregion
+        public abstract int BinaryLength
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets or sets the current <see cref="IArchive"/>.
@@ -168,24 +164,36 @@ namespace TVA.Historian.Packets
 
         #region [ Methods ]
 
-        #region [ Abstract ]
+        /// <summary>
+        /// Initializes packet by parsing the specified <paramref name="buffer"/> containing a binary image.
+        /// </summary>
+        /// <param name="buffer">Buffer containing binary image to parse.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start parsing.</param>
+        /// <param name="length">Valid number of bytes within <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        /// <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed).</returns>
+        /// <remarks>
+        /// Implementors should validate <paramref name="startIndex"/> and <paramref name="length"/> against <paramref name="buffer"/> length.
+        /// The <see cref="TVA.BufferExtensions.ValidateParameters"/> method can be used to perform this validation.
+        /// </remarks>
+        public abstract int ParseBinaryImage(byte[] buffer, int startIndex, int length);
 
         /// <summary>
-        /// When overridden in a derived class, initializes packet from the specified <paramref name="binaryImage"/>.
+        /// Generates binary image of the packet and copies it into the given buffer, for <see cref="BinaryLength"/> bytes.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing the packet.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing the packet.</returns>
-        public abstract int Initialize(byte[] binaryImage, int startIndex, int length);
+        /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+        /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+        /// <remarks>
+        /// Implementors should validate <paramref name="startIndex"/> and <see cref="BinaryLength"/> against <paramref name="buffer"/> length.
+        /// The <see cref="TVA.BufferExtensions.ValidateParameters"/> method can be used to perform this validation.
+        /// </remarks>
+        public abstract int GenerateBinaryImage(byte[] buffer, int startIndex);
 
         /// <summary>
-        /// When overridden in a derived class, extracts time-series data from the packet.
+        /// Extracts time-series data from the packet.
         /// </summary>
-        /// <returns>An <see cref="IEnumerable{T}"/> object of <see cref="IDataPoint"/>s if the packet contains time-series data; otherwise null.</returns>
+        /// <returns>An <see cref="IEnumerable{T}"/> of <see cref="IDataPoint"/>s if the packet contains time-series data; otherwise null.</returns>
         public abstract IEnumerable<IDataPoint> ExtractTimeSeriesData();
-
-        #endregion
 
         #endregion
     }

@@ -24,6 +24,8 @@
 //       Added new header and license agreement.
 //  10/11/2010 - Mihir Brahmbhatt
 //       Updated header and license agreement.
+//  11/30/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //******************************************************************************************************
 
@@ -90,7 +92,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Specifies the number of bytes in the binary image of <see cref="MetadataRecord"/>.
         /// </summary>
-        public const int ByteCount = 2664;
+        public const int FixedLength = 2664;
 
         // Fields
         private int m_historianID;
@@ -159,13 +161,13 @@ namespace TVA.Historian.Files
         /// Initializes a new instance of the <see cref="MetadataRecord"/> class.
         /// </summary>
         /// <param name="historianID">Historian identifier of <see cref="MetadataRecord"/>.</param>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="MetadataRecord"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        public MetadataRecord(int historianID, byte[] binaryImage, int startIndex, int length)
+        /// <param name="buffer">Binary image to be used for initializing <see cref="MetadataRecord"/>.</param>
+        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
+        /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        public MetadataRecord(int historianID, byte[] buffer, int startIndex, int length)
             : this(historianID)
         {
-            Initialize(binaryImage, startIndex, length);
+            ParseBinaryImage(buffer, startIndex, length);
         }
 
         #endregion
@@ -416,7 +418,7 @@ namespace TVA.Historian.Files
                 m_phoneNumbers = value.TruncateRight(40);
             }
         }
-        
+
         /// <summary>
         /// Gets or sets the name of the plant to which the <see cref="HistorianID"/> is associated.
         /// </summary>
@@ -730,65 +732,13 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets the length of the <see cref="BinaryImage"/>.
+        /// Gets the length of the <see cref="MetadataRecord"/>.
         /// </summary>
         public int BinaryLength
         {
             get
             {
-                return ByteCount;
-            }
-        }
-
-        /// <summary>
-        /// Gets the binary representation of <see cref="MetadataRecord"/>.
-        /// </summary>
-        public byte[] BinaryImage
-        {
-            get
-            {
-                byte[] image = new byte[ByteCount];
-
-                // Construct the binary IP buffer for this event
-                Array.Copy(Encoding.ASCII.GetBytes(m_remarks.PadRight(512)), 0, image, 0, 512);
-                Array.Copy(Encoding.ASCII.GetBytes(m_hardwareInfo.PadRight(512)), 0, image, 512, 512);
-                Array.Copy(Encoding.ASCII.GetBytes(m_emailAddresses.PadRight(512)), 0, image, 1024, 512);
-                Array.Copy(Encoding.ASCII.GetBytes(m_description.PadRight(80)), 0, image, 1536, 80);
-                Array.Copy(Encoding.ASCII.GetBytes(m_currentData.PadRight(80)), 0, image, 1616, 80);
-                Array.Copy(Encoding.ASCII.GetBytes(m_name.PadRight(40)), 0, image, 1696, 40);
-                Array.Copy(Encoding.ASCII.GetBytes(m_synonym1.PadRight(40)), 0, image, 1736, 40);
-                Array.Copy(Encoding.ASCII.GetBytes(m_synonym2.PadRight(40)), 0, image, 1776, 40);
-                Array.Copy(Encoding.ASCII.GetBytes(m_synonym3.PadRight(40)), 0, image, 1816, 40);
-                Array.Copy(Encoding.ASCII.GetBytes(m_pagerNumbers.PadRight(40)), 0, image, 1856, 40);
-                Array.Copy(Encoding.ASCII.GetBytes(m_phoneNumbers.PadRight(40)), 0, image, 1896, 40);
-                Array.Copy(Encoding.ASCII.GetBytes(m_plantCode.PadRight(24)), 0, image, 1936, 24);
-                Array.Copy(Encoding.ASCII.GetBytes(m_system.PadRight(24)), 0, image, 1960, 24);
-                Array.Copy(Encoding.ASCII.GetBytes(m_emailTime.PadRight(40)), 0, image, 1984, 40);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_scanRate), 0, image, 2104, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_unitNumber), 0, image, 2108, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_securityFlags.Value), 0, image, 2112, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_generalFlags.Value), 0, image, 2116, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_alarmFlags.Value), 0, image, 2120, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_compressionMinTime), 0, image, 2124, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_compressionMaxTime), 0, image, 2128, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_sourceID), 0, image, 2132, 4);
-                switch (m_generalFlags.DataType)
-                {
-                    case DataType.Analog:
-                        Array.Copy(m_analogFields.BinaryImage, 0, image, 2152, MetadataRecordAnalogFields.ByteCount);
-                        break;
-                    case DataType.Digital:
-                        Array.Copy(m_digitalFields.BinaryImage, 0, image, 2152, MetadataRecordDigitalFields.ByteCount);
-                        break;
-                    case DataType.Composed:
-                        Array.Copy(m_composedFields.BinaryImage, 0, image, 2152, MetadataRecordComposedFields.ByteCount);
-                        break;
-                    case DataType.Constant:
-                        Array.Copy(m_constantFields.BinaryImage, 0, image, 2152, MetadataRecordConstantFields.ByteCount);
-                        break;
-                }
-
-                return image;
+                return FixedLength;
             }
         }
 
@@ -797,62 +747,121 @@ namespace TVA.Historian.Files
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes <see cref="MetadataRecord"/> from the specified <paramref name="binaryImage"/>.
+        /// Initializes <see cref="MetadataRecord"/> from the specified <paramref name="buffer"/>.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="MetadataRecord"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="MetadataRecord"/>.</returns>
-        public int Initialize(byte[] binaryImage, int startIndex, int length)
+        /// <param name="buffer">Binary image to be used for initializing <see cref="MetadataRecord"/>.</param>
+        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
+        /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        /// <returns>Number of bytes used from the <paramref name="buffer"/> for initializing <see cref="MetadataRecord"/>.</returns>
+        public int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
-            if (length >= ByteCount)
+            if (length >= FixedLength)
             {
                 // Binary image has sufficient data.
-                Remarks = Encoding.ASCII.GetString(binaryImage, startIndex, 512).Trim();
-                HardwareInfo = Encoding.ASCII.GetString(binaryImage, startIndex + 512, 512).Trim();
-                AlarmEmails = Encoding.ASCII.GetString(binaryImage, startIndex + 1024, 512).Trim();
-                Description = Encoding.ASCII.GetString(binaryImage, startIndex + 1536, 80).Trim();
-                CurrentData = Encoding.ASCII.GetString(binaryImage, startIndex + 1616, 80).Trim();
-                Name = Encoding.ASCII.GetString(binaryImage, startIndex + 1696, 40).Trim();
-                Synonym1 = Encoding.ASCII.GetString(binaryImage, startIndex + 1736, 40).Trim();
-                Synonym2 = Encoding.ASCII.GetString(binaryImage, startIndex + 1776, 40).Trim();
-                Synonym3 = Encoding.ASCII.GetString(binaryImage, startIndex + 1816, 40).Trim();
-                AlarmPagers = Encoding.ASCII.GetString(binaryImage, startIndex + 1856, 40).Trim();
-                AlarmPhones = Encoding.ASCII.GetString(binaryImage, startIndex + 1896, 40).Trim();
-                PlantCode = Encoding.ASCII.GetString(binaryImage, startIndex + 1936, 24).Trim();
-                SystemName = Encoding.ASCII.GetString(binaryImage, startIndex + 1960, 24).Trim();
-                EmailTime = Encoding.ASCII.GetString(binaryImage, startIndex + 1984, 40).Trim();
-                ScanRate = EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex + 2104);
-                UnitNumber = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2108);
-                SecurityFlags.Value = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2112);
-                GeneralFlags.Value = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2116);
-                AlarmFlags.Value = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2120);
-                CompressionMinTime = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2124);
-                CompressionMaxTime = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2128);
-                SourceID = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2132);
+                Remarks = Encoding.ASCII.GetString(buffer, startIndex, 512).Trim();
+                HardwareInfo = Encoding.ASCII.GetString(buffer, startIndex + 512, 512).Trim();
+                AlarmEmails = Encoding.ASCII.GetString(buffer, startIndex + 1024, 512).Trim();
+                Description = Encoding.ASCII.GetString(buffer, startIndex + 1536, 80).Trim();
+                CurrentData = Encoding.ASCII.GetString(buffer, startIndex + 1616, 80).Trim();
+                Name = Encoding.ASCII.GetString(buffer, startIndex + 1696, 40).Trim();
+                Synonym1 = Encoding.ASCII.GetString(buffer, startIndex + 1736, 40).Trim();
+                Synonym2 = Encoding.ASCII.GetString(buffer, startIndex + 1776, 40).Trim();
+                Synonym3 = Encoding.ASCII.GetString(buffer, startIndex + 1816, 40).Trim();
+                AlarmPagers = Encoding.ASCII.GetString(buffer, startIndex + 1856, 40).Trim();
+                AlarmPhones = Encoding.ASCII.GetString(buffer, startIndex + 1896, 40).Trim();
+                PlantCode = Encoding.ASCII.GetString(buffer, startIndex + 1936, 24).Trim();
+                SystemName = Encoding.ASCII.GetString(buffer, startIndex + 1960, 24).Trim();
+                EmailTime = Encoding.ASCII.GetString(buffer, startIndex + 1984, 40).Trim();
+                ScanRate = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 2104);
+                UnitNumber = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 2108);
+                SecurityFlags.Value = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 2112);
+                GeneralFlags.Value = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 2116);
+                AlarmFlags.Value = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 2120);
+                CompressionMinTime = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 2124);
+                CompressionMaxTime = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 2128);
+                SourceID = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 2132);
                 switch (GeneralFlags.DataType)
                 {
                     case DataType.Analog:
-                        m_analogFields.Initialize(binaryImage, startIndex + 2152, length - 2152);
+                        m_analogFields.ParseBinaryImage(buffer, startIndex + 2152, length - 2152);
                         break;
                     case DataType.Digital:
-                        m_digitalFields.Initialize(binaryImage, startIndex + 2152, length - 2152);
+                        m_digitalFields.ParseBinaryImage(buffer, startIndex + 2152, length - 2152);
                         break;
                     case DataType.Composed:
-                        m_composedFields.Initialize(binaryImage, startIndex + 2152, length - 2152);
+                        m_composedFields.ParseBinaryImage(buffer, startIndex + 2152, length - 2152);
                         break;
                     case DataType.Constant:
-                        m_constantFields.Initialize(binaryImage, startIndex + 2152, length - 2152);
+                        m_constantFields.ParseBinaryImage(buffer, startIndex + 2152, length - 2152);
                         break;
                 }
 
-                return ByteCount;
+                return FixedLength;
             }
             else
             {
                 // Binary image does not have sufficient data.
                 return 0;
             }
+        }
+
+        /// <summary>
+        /// Generates binary image of the <see cref="MetadataRecord"/> and copies it into the given buffer, for <see cref="BinaryLength"/> bytes.
+        /// </summary>
+        /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+        /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <see cref="BinaryLength"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <see cref="BinaryLength"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public virtual int GenerateBinaryImage(byte[] buffer, int startIndex)
+        {
+            int length = BinaryLength;
+
+            buffer.ValidateParameters(startIndex, length);
+
+            // Construct the binary IP buffer for this event
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_remarks.PadRight(512)), 0, buffer, startIndex, 512);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_hardwareInfo.PadRight(512)), 0, buffer, startIndex + 512, 512);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_emailAddresses.PadRight(512)), 0, buffer, startIndex + 1024, 512);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_description.PadRight(80)), 0, buffer, startIndex + 1536, 80);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_currentData.PadRight(80)), 0, buffer, startIndex + 1616, 80);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_name.PadRight(40)), 0, buffer, startIndex + 1696, 40);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_synonym1.PadRight(40)), 0, buffer, startIndex + 1736, 40);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_synonym2.PadRight(40)), 0, buffer, startIndex + 1776, 40);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_synonym3.PadRight(40)), 0, buffer, startIndex + 1816, 40);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_pagerNumbers.PadRight(40)), 0, buffer, startIndex + 1856, 40);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_phoneNumbers.PadRight(40)), 0, buffer, startIndex + 1896, 40);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_plantCode.PadRight(24)), 0, buffer, startIndex + 1936, 24);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_system.PadRight(24)), 0, buffer, startIndex + 1960, 24);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_emailTime.PadRight(40)), 0, buffer, startIndex + 1984, 40);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_scanRate), 0, buffer, startIndex + 2104, 4);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_unitNumber), 0, buffer, startIndex + 2108, 4);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_securityFlags.Value), 0, buffer, startIndex + 2112, 4);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_generalFlags.Value), 0, buffer, startIndex + 2116, 4);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_alarmFlags.Value), 0, buffer, startIndex + 2120, 4);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_compressionMinTime), 0, buffer, startIndex + 2124, 4);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_compressionMaxTime), 0, buffer, startIndex + 2128, 4);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_sourceID), 0, buffer, startIndex + 2132, 4);
+            switch (m_generalFlags.DataType)
+            {
+                case DataType.Analog:
+                    m_analogFields.GenerateBinaryImage(buffer, startIndex + 2152);
+                    break;
+                case DataType.Digital:
+                    m_digitalFields.GenerateBinaryImage(buffer, startIndex + 2152);
+                    break;
+                case DataType.Composed:
+                    m_composedFields.GenerateBinaryImage(buffer, startIndex + 2152);
+                    break;
+                case DataType.Constant:
+                    m_constantFields.GenerateBinaryImage(buffer, startIndex + 2152);
+                    break;
+            }
+
+            return length;
         }
 
         /// <summary>

@@ -37,6 +37,8 @@
 //       was present in the received packets.
 //  10/11/2010 - Mihir Brahmbhatt
 //       Updated header and license agreement.
+//  11/30/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //******************************************************************************************************
 
@@ -52,6 +54,7 @@ using TVA.Configuration;
 using TVA.Historian.Files;
 using TVA.Historian.Packets;
 using TVA.Units;
+using TVA.Parsing;
 
 namespace TVA.Historian
 {
@@ -408,7 +411,7 @@ namespace TVA.Historian
                 m_connectToServer = value;
             }
         }
-       
+
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the <see cref="Data"/> is to be updated with the latest time-series data.
         /// </summary>
@@ -416,7 +419,7 @@ namespace TVA.Historian
         [Category("Data"),
         DefaultValue(DefaultCacheData),
         Description("Indicates whether the Data is to be updated with the latest time-series data.")]
-        public bool CacheData 
+        public bool CacheData
         {
             get
             {
@@ -803,7 +806,7 @@ namespace TVA.Historian
                         // We'll request current data for all points.
                         PacketType11 request = new PacketType11();
                         request.RequestIDs.Add(-1);
-                        m_dataInitClient.Send(request.BinaryImage);
+                        m_dataInitClient.Send(request.BinaryImage());
 
                         // Wait for the data to be initialized and timeout if it takes too long.
                         if (!m_initializeWaitHandle.WaitOne(m_initializeDataTimeout, false))
@@ -1034,7 +1037,7 @@ namespace TVA.Historian
             if (DataExtracted != null)
                 DataExtracted(this, new EventArgs<IList<IDataPoint>>(data));
         }
-        
+
         /// <summary>
         /// Raises the <see cref="DataChanged"/> event.
         /// </summary>
@@ -1184,9 +1187,9 @@ namespace TVA.Historian
             List<IDataPoint> dataPoints = new List<IDataPoint>();
             foreach (IPacket packet in e.Argument2)
             {
-                    extractedData = packet.ExtractTimeSeriesData();
-                    if (extractedData != null)
-                        dataPoints.AddRange(extractedData);
+                extractedData = packet.ExtractTimeSeriesData();
+                if (extractedData != null)
+                    dataPoints.AddRange(extractedData);
             }
 
             if (dataPoints.Count > 0)

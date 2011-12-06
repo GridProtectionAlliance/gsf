@@ -24,6 +24,8 @@
 //       Added new header and license agreement.
 //  10/11/2010 - Mihir Brahmbhatt
 //       Updated header and license agreement.
+//  11/30/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //******************************************************************************************************
 
@@ -54,7 +56,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Specifies the number of bytes in the binary image of <see cref="MetadataRecordConstantFields"/>.
         /// </summary>
-        public const int ByteCount = 8;
+        public const int FixedLength = 8;
 
         // Fields
         private float m_value;
@@ -106,29 +108,13 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets the length of the <see cref="BinaryImage"/>.
+        /// Gets the length of the <see cref="MetadataRecordConstantFields"/>.
         /// </summary>
         public int BinaryLength
         {
             get
             {
-                return ByteCount;
-            }
-        }
-
-        /// <summary>
-        /// Gets the binary representation of <see cref="MetadataRecordConstantFields"/>.
-        /// </summary>
-        public byte[] BinaryImage
-        {
-            get
-            {
-                byte[] image = new byte[ByteCount];
-
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_value), 0, image, 0, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_displayDigits), 0, image, 4, 4);
-
-                return image;
+                return FixedLength;
             }
         }
 
@@ -137,27 +123,50 @@ namespace TVA.Historian.Files
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes <see cref="MetadataRecordConstantFields"/> from the specified <paramref name="binaryImage"/>.
+        /// Initializes <see cref="MetadataRecordConstantFields"/> from the specified <paramref name="buffer"/>.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="MetadataRecordConstantFields"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="MetadataRecordConstantFields"/>.</returns>
-        public int Initialize(byte[] binaryImage, int startIndex, int length)
+        /// <param name="buffer">Binary image to be used for initializing <see cref="MetadataRecordConstantFields"/>.</param>
+        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
+        /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        /// <returns>Number of bytes used from the <paramref name="buffer"/> for initializing <see cref="MetadataRecordConstantFields"/>.</returns>
+        public int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
-            if (length >= ByteCount)
+            if (length >= FixedLength)
             {
                 // Binary image has sufficient data.
-                Value = EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex);
-                DisplayDigits = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 4);
+                Value = EndianOrder.LittleEndian.ToSingle(buffer, startIndex);
+                DisplayDigits = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 4);
 
-                return ByteCount;
+                return FixedLength;
             }
             else
             {
                 // Binary image does not have sufficient data.
                 return 0;
             }
+        }
+
+        /// <summary>
+        /// Generates binary image of the <see cref="MetadataRecordConstantFields"/> and copies it into the given buffer, for <see cref="BinaryLength"/> bytes.
+        /// </summary>
+        /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+        /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <see cref="BinaryLength"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <see cref="BinaryLength"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public virtual int GenerateBinaryImage(byte[] buffer, int startIndex)
+        {
+            int length = BinaryLength;
+
+            buffer.ValidateParameters(startIndex, length);
+
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_value), 0, buffer, startIndex, 4);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_displayDigits), 0, buffer, startIndex + 4, 4);
+
+            return length;
         }
 
         #endregion

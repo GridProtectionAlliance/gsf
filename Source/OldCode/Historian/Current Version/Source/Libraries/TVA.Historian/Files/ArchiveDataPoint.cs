@@ -32,6 +32,8 @@
 //       Modified formatted time to include milliseconds.
 //  10/11/2010 - Mihir Brahmbhatt
 //       Updated header and license agreement.
+//  11/30/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //******************************************************************************************************
 
@@ -67,7 +69,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Specifies the number of bytes in the binary image of <see cref="ArchiveDataPoint"/>.
         /// </summary>
-        public const int ByteCount = 10;
+        public const int FixedLength = 10;
 
         /// <summary>
         /// Specifies the bit-mask for <see cref="Quality"/> stored in <see cref="Flags"/>.
@@ -117,7 +119,7 @@ namespace TVA.Historian.Files
         /// <param name="measurement">Object that implements the <see cref="IMeasurement"/> interface.</param>
         [CLSCompliant(false)]
         public ArchiveDataPoint(IMeasurement measurement)
-            : this(measurement, measurement.IsDiscarded() ? Quality.DeletedFromProcessing : (measurement.ValueQualityIsGood() ? (measurement.TimestampQualityIsGood() ? Quality.Good : Quality.Old) : Quality.SuspectData))
+            : this(measurement, measurement.HistorianQuality())
         {
         }
 
@@ -154,13 +156,13 @@ namespace TVA.Historian.Files
         /// Initializes a new instance of the <see cref="ArchiveDataPoint"/> class.
         /// </summary>
         /// <param name="historianID">Historian identifier of <see cref="ArchiveDataPoint"/>.</param>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="ArchiveDataPoint"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        public ArchiveDataPoint(int historianID, byte[] binaryImage, int startIndex, int length)
+        /// <param name="buffer">Binary image to be used for initializing <see cref="ArchiveDataPoint"/>.</param>
+        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
+        /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        public ArchiveDataPoint(int historianID, byte[] buffer, int startIndex, int length)
             : this(historianID)
         {
-            Initialize(binaryImage, startIndex, length);
+            ParseBinaryImage(buffer, startIndex, length);
         }
 
         #endregion
@@ -265,30 +267,13 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets the length of the <see cref="BinaryImage"/>.
+        /// Gets the length of the <see cref="ArchiveDataPoint"/>.
         /// </summary>
         public virtual int BinaryLength
         {
             get
             {
-                return ByteCount;
-            }
-        }
-
-        /// <summary>
-        /// Gets the binary representation of <see cref="ArchiveDataPoint"/>.
-        /// </summary>
-        public virtual byte[] BinaryImage
-        {
-            get
-            {
-                byte[] image = new byte[ByteCount];
-
-                Array.Copy(EndianOrder.LittleEndian.GetBytes((int)m_time.Value), 0, image, 0, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes((short)m_flags), 0, image, 4, 2);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_value), 0, image, 6, 4);
-
-                return image;
+                return FixedLength;
             }
         }
 
@@ -312,29 +297,53 @@ namespace TVA.Historian.Files
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes <see cref="ArchiveDataPoint"/> from the specified <paramref name="binaryImage"/>.
+        /// Initializes <see cref="ArchiveDataPoint"/> from the specified <paramref name="buffer"/>.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="ArchiveDataPoint"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="ArchiveDataPoint"/>.</returns>
-        public virtual int Initialize(byte[] binaryImage, int startIndex, int length)
+        /// <param name="buffer">Binary image to be used for initializing <see cref="ArchiveDataPoint"/>.</param>
+        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
+        /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        /// <returns>Number of bytes used from the <paramref name="buffer"/> for initializing <see cref="ArchiveDataPoint"/>.</returns>
+        public virtual int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
-            if (length >= ByteCount)
+            if (length >= FixedLength)
             {
                 // Binary image has sufficient data.
-                Flags = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex + 4);
-                Value = EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex + 6);
-                Time = new TimeTag(EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex) +          // Seconds
-                                      ((double)(m_flags.GetMaskedValue(MillisecondMask) >> 5) / 1000)); // Milliseconds
+                Flags = EndianOrder.LittleEndian.ToInt16(buffer, startIndex + 4);
+                Value = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 6);
+                Time = new TimeTag(EndianOrder.LittleEndian.ToInt32(buffer, startIndex) +   // Seconds
+                        ((double)(m_flags.GetMaskedValue(MillisecondMask) >> 5) / 1000));   // Milliseconds
 
-                return ByteCount;
+                return FixedLength;
             }
             else
             {
                 // Binary image does not have sufficient data.
                 return 0;
             }
+        }
+
+        /// <summary>
+        /// Generates binary image of the <see cref="ArchiveDataPoint"/> and copies it into the given buffer, for <see cref="BinaryLength"/> bytes.
+        /// </summary>
+        /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+        /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <see cref="BinaryLength"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <see cref="BinaryLength"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public virtual int GenerateBinaryImage(byte[] buffer, int startIndex)
+        {
+            int length = BinaryLength;
+
+            buffer.ValidateParameters(startIndex, length);
+
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes((int)m_time.Value), 0, buffer, startIndex, 4);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes((short)m_flags), 0, buffer, startIndex + 4, 2);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_value), 0, buffer, startIndex + 6, 4);
+
+            return length;
         }
 
         /// <summary>

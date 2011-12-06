@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  11/08/2011 - J. Ritchie Carroll
 //       Generated original version of source code.
+//  11/30/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //******************************************************************************************************
 

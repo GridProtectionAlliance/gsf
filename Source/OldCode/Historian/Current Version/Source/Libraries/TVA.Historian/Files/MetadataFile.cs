@@ -33,7 +33,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using TVA.IO;
 
@@ -103,7 +102,7 @@ namespace TVA.Historian.Files
         /// <returns>A 32-bit signed integer.</returns>
         protected override int GetRecordSize()
         {
-            return MetadataRecord.ByteCount;
+            return MetadataRecord.FixedLength;
         }
 
         /// <summary>

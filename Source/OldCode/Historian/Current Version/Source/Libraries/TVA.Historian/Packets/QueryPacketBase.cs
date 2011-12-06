@@ -24,6 +24,8 @@
 //       Added new header and license agreement.
 //  10/11/2010 - Mihir Brahmbhatt
 //       Updated header and license agreement.
+//  11/30/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //******************************************************************************************************
 
@@ -84,7 +86,7 @@ namespace TVA.Historian.Packets
         }
 
         /// <summary>
-        /// Gets the length of the <see cref="BinaryImage"/>.
+        /// Gets the length of the <see cref="QueryPacketBase"/>.
         /// </summary>
         public override int BinaryLength
         {
@@ -94,48 +96,28 @@ namespace TVA.Historian.Packets
             }
         }
 
-        /// <summary>
-        /// Gets the binary representation of the query packet.
-        /// </summary>
-        public override byte[] BinaryImage
-        {
-            get
-            {
-                byte[] image = new byte[BinaryLength];
-
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(TypeID), 0, image, 0, 2);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_requestIDs.Count), 0, image, 2, 4);
-                for (int i = 0; i < m_requestIDs.Count; i++)
-                {
-                    Array.Copy(EndianOrder.LittleEndian.GetBytes(m_requestIDs[i]), 0, image, 6 + (i * 4), 4);
-                }
-
-                return image;
-            }
-        }
-
         #endregion
 
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes the query packet from the specified <paramref name="binaryImage"/>.
+        /// Initializes the query packet from the specified <paramref name="buffer"/>.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing the query packet.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing the query packet.</returns>
-        public override int Initialize(byte[] binaryImage, int startIndex, int length)
+        /// <param name="buffer">Binary image to be used for initializing the query packet.</param>
+        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
+        /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        /// <returns>Number of bytes used from the <paramref name="buffer"/> for initializing the query packet.</returns>
+        public override int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
             if (length >= 6)
             {
                 // Binary image has sufficient data.
-                short packetID = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex);
+                short packetID = EndianOrder.LittleEndian.ToInt16(buffer, startIndex);
                 if (packetID != TypeID)
                     throw new ArgumentException(string.Format("Unexpected packet id '{0}' (expected '{1}')", packetID, TypeID));
 
                 // Ensure that the binary image is complete
-                int requestIDCount = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2);
+                int requestIDCount = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 2);
                 if (length < 6 + requestIDCount * 4)
                     return 0;
 
@@ -143,7 +125,7 @@ namespace TVA.Historian.Packets
                 m_requestIDs.Clear();
                 for (int i = 0; i < requestIDCount; i++)
                 {
-                    m_requestIDs.Add(EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 6 + (i * 4)));
+                    m_requestIDs.Add(EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 6 + (i * 4)));
                 }
 
                 return BinaryLength;
@@ -153,6 +135,33 @@ namespace TVA.Historian.Packets
                 // Binary image does not have sufficient data.
                 return 0;
             }
+        }
+
+        /// <summary>
+        /// Generates binary image of the <see cref="QueryPacketBase"/> and copies it into the given buffer, for <see cref="BinaryLength"/> bytes.
+        /// </summary>
+        /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+        /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <see cref="BinaryLength"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <see cref="BinaryLength"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public override int GenerateBinaryImage(byte[] buffer, int startIndex)
+        {
+            int length = BinaryLength;
+
+            buffer.ValidateParameters(startIndex, length);
+
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(TypeID), 0, buffer, startIndex, 2);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_requestIDs.Count), 0, buffer, startIndex + 2, 4);
+            for (int i = 0; i < m_requestIDs.Count; i++)
+            {
+                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_requestIDs[i]), 0, buffer, startIndex + 6 + (i * 4), 4);
+            }
+
+            return length;
         }
 
         /// <summary>

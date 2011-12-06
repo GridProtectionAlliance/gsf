@@ -29,7 +29,6 @@
 //
 //******************************************************************************************************
 
-using System.ComponentModel;
 using System.Drawing;
 using TVA.IO;
 
@@ -63,7 +62,7 @@ namespace TVA.Historian.Files
         /// <returns>A 32-bit signed integer.</returns>
         protected override int GetRecordSize()
         {
-            return IntercomRecord.ByteCount;
+            return IntercomRecord.FixedLength;
         }
 
         /// <summary>

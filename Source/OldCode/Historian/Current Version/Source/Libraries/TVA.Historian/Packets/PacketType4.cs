@@ -26,11 +26,14 @@
 //       Added new header and license agreement.
 //  10/11/2010 - Mihir Brahmbhatt
 //       Updated header and license agreement.
+//  11/30/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //******************************************************************************************************
 
 using System.Collections.Generic;
 using TVA.Historian.Files;
+using TVA.Parsing;
 
 namespace TVA.Historian.Packets
 {
@@ -53,13 +56,13 @@ namespace TVA.Historian.Packets
         /// <summary>
         /// Initializes a new instance of the <see cref="PacketType4"/> class.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="PacketType4"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        public PacketType4(byte[] binaryImage, int startIndex, int length)
+        /// <param name="buffer">Binary image to be used for initializing <see cref="PacketType4"/>.</param>
+        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
+        /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        public PacketType4(byte[] buffer, int startIndex, int length)
             : this()
         {
-            Initialize(binaryImage, startIndex, length);
+            ParseBinaryImage(buffer, startIndex, length);
         }
 
         #endregion
@@ -98,9 +101,9 @@ namespace TVA.Historian.Packets
                         {
                             // Reset the "changed" field.
                             record.GeneralFlags.Changed = false;
-                            Archive.WriteMetaData(id, record.BinaryImage);
+                            Archive.WriteMetaData(id, record.BinaryImage());
 
-                            yield return record.Summary.BinaryImage;
+                            yield return record.Summary.BinaryImage();
                         }
                     }
                 }
@@ -125,14 +128,14 @@ namespace TVA.Historian.Packets
                         {
                             // Reset the "changed" field.
                             record.GeneralFlags.Changed = false;
-                            Archive.WriteMetaData(id, record.BinaryImage);
+                            Archive.WriteMetaData(id, record.BinaryImage());
 
-                            yield return record.Summary.BinaryImage;
+                            yield return record.Summary.BinaryImage();
                         }
                     }
                 }
             }
-            yield return new MetadataRecord(-1).Summary.BinaryImage;    // To indicate EOT.
+            yield return new MetadataRecord(-1).Summary.BinaryImage();    // To indicate EOT.
         }
         #endregion
     }

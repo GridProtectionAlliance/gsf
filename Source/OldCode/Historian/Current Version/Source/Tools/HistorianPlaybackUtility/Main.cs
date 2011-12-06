@@ -48,6 +48,7 @@ using TVA.Historian;
 using TVA.Historian.Files;
 using TVA.Historian.Packets;
 using TVA.IO;
+using TVA.Parsing;
 using TVA.Reflection;
 using TVA.Windows.Forms;
 
@@ -281,7 +282,7 @@ namespace HistorianPlaybackUtility
                         // Output in binary format.
                         foreach (IDataPoint sample in data)
                         {
-                            m_transmitClient.SendAsync(new PacketType1(sample).BinaryImage, 0, PacketType1.ByteCount);
+                            m_transmitClient.SendAsync(new PacketType1(sample).BinaryImage(), 0, PacketType1.FixedLength);
                             count++;
 
                             // Abort for rollover, when needed

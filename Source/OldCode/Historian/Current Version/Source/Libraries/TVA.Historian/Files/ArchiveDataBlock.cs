@@ -39,6 +39,8 @@
 //  11/18/2010 - J. Ritchie Carroll
 //       Added a exception handler for reading (exposed via DataReadException event) to make sure
 //       bad data or corruption in an archive file does not stop the read process.
+//  11/30/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //******************************************************************************************************
 
@@ -47,6 +49,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using TVA.Parsing;
 
 namespace TVA.Historian.Files
 {
@@ -98,7 +101,7 @@ namespace TVA.Historian.Files
             m_parent = parent;
             m_index = index;
             m_historianID = historianID;
-            m_readBuffer = new byte[ArchiveDataPoint.ByteCount];
+            m_readBuffer = new byte[ArchiveDataPoint.FixedLength];
             m_writeCursor = Location;
             m_lastActivityTime = DateTime.Now;
 
@@ -149,7 +152,7 @@ namespace TVA.Historian.Files
         {
             get
             {
-                return ((m_parent.DataBlockSize * 1024) / ArchiveDataPoint.ByteCount);
+                return ((m_parent.DataBlockSize * 1024) / ArchiveDataPoint.FixedLength);
             }
         }
 
@@ -160,7 +163,7 @@ namespace TVA.Historian.Files
         {
             get
             {
-                return (int)((m_writeCursor - Location) / ArchiveDataPoint.ByteCount);
+                return (int)((m_writeCursor - Location) / ArchiveDataPoint.FixedLength);
             }
         }
 
@@ -254,14 +257,18 @@ namespace TVA.Historian.Files
             {
                 // We have enough space to write the provided point data to the data block.
                 m_lastActivityTime = DateTime.Now;
+
                 lock (m_parent.FileData)
                 {
                     // Write the data.
                     if (m_writeCursor != m_parent.FileData.Position)
                         m_parent.FileData.Seek(m_writeCursor, SeekOrigin.Begin);
-                    m_parent.FileData.Write(dataPoint.BinaryImage, 0, dataPoint.BinaryLength);
+
+                    dataPoint.CopyBinaryImageToStream(m_parent.FileData);
+
                     // Update the write cursor.
                     m_writeCursor = m_parent.FileData.Position;
+
                     // Flush the data if configured.
                     if (!m_parent.CacheWrites)
                         m_parent.FileData.Flush();
@@ -269,7 +276,7 @@ namespace TVA.Historian.Files
             }
             else
             {
-                throw (new InvalidOperationException("No slots available for writing new data."));
+                throw new InvalidOperationException("No slots available for writing new data.");
             }
         }
 

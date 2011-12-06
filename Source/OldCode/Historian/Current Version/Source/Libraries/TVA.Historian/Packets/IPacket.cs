@@ -24,6 +24,8 @@
 //       Added new header and license agreement.
 //  10/11/2010 - Mihir Brahmbhatt
 //       Updated header and license agreement.
+//  11/30/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //******************************************************************************************************
 
@@ -36,14 +38,18 @@ namespace TVA.Historian.Packets
     /// <summary>
     /// Defines a binary packet received by a historian.
     /// </summary>
-    public interface IPacket : ISupportBinaryImage, ISupportFrameImage<short>
+    public interface IPacket : ISupportFrameImage<short>
     {
         #region [ Properties ]
 
         /// <summary>
         /// Gets or sets the current <see cref="IArchive"/>.
         /// </summary>
-        IArchive Archive { get; set; }
+        IArchive Archive
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="Delegate"/> that processes the packet.
@@ -51,7 +57,11 @@ namespace TVA.Historian.Packets
         /// <remarks>
         /// <see cref="Func{TResult}"/> returns an <see cref="IEnumerable{T}"/> object containing the binary data to be sent back to the packet sender.
         /// </remarks>
-        Func<IEnumerable<byte[]>> ProcessHandler { get; set; }
+        Func<IEnumerable<byte[]>> ProcessHandler
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="Delegate"/> that pre-processes the packet.
@@ -59,7 +69,11 @@ namespace TVA.Historian.Packets
         /// <remarks>
         /// <see cref="Func{TResult}"/> returns an <see cref="IEnumerable{T}"/> object containing the binary data to be sent back to the packet sender.
         /// </remarks>
-        Func<IEnumerable<byte[]>> PreProcessHandler { get; set; }
+        Func<IEnumerable<byte[]>> PreProcessHandler
+        {
+            get;
+            set;
+        }
 
         #endregion
 

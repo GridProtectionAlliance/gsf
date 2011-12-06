@@ -24,6 +24,8 @@
 //       Added new header and license agreement.
 //  10/11/2010 - Mihir Brahmbhatt
 //       Updated header and license agreement.
+//  11/30/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //******************************************************************************************************
 
@@ -60,10 +62,14 @@ namespace TVA.Historian.Packets
         /// <param name="buffer">Buffer containing data to parse.</param>
         /// <param name="offset">Offset index into <paramref name="buffer"/> that represents where to start parsing.</param>
         /// <param name="length">Maximum length of valid data from <paramref name="offset"/>.</param>
-        /// <returns>An <see cref="PacketCommonHeader"/> object.</returns>
+        /// <returns>A <see cref="PacketCommonHeader"/> object parsed from the <paramref name="buffer"/>, or <c>null</c> if not enough buffer is available..</returns>
         protected override ICommonHeader<short> ParseCommonHeader(byte[] buffer, int offset, int length)
         {
-            return new PacketCommonHeader(buffer, offset, length);
+            if (length > 1)
+                return new PacketCommonHeader(buffer, offset, length);
+
+            // Return null if there is not enough buffer to parse common header
+            return null;
         }
 
         #endregion

@@ -24,6 +24,8 @@
 //       Added new header and license agreement.
 //  10/11/2010 - Mihir Brahmbhatt
 //       Updated header and license agreement.
+//  11/30/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //******************************************************************************************************
 
@@ -52,7 +54,7 @@ namespace TVA.Historian.Packets
         /// <summary>
         /// Specifies the number of bytes in the binary image of <see cref="PacketType5"/>.
         /// </summary>
-        public new const int ByteCount = 2;
+        public new const int FixedLength = 2;
 
         #endregion
 
@@ -69,41 +71,27 @@ namespace TVA.Historian.Packets
         /// <summary>
         /// Initializes a new instance of the <see cref="PacketType5"/> class.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="PacketType5"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        public PacketType5(byte[] binaryImage, int startIndex, int length)
+        /// <param name="buffer">Binary image to be used for initializing <see cref="PacketType5"/>.</param>
+        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
+        /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        public PacketType5(byte[] buffer, int startIndex, int length)
             : this()
         {
-            Initialize(binaryImage, startIndex, length);
+            ParseBinaryImage(buffer, startIndex, length);
         }
+
         #endregion
 
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the length of the <see cref="BinaryImage"/>.
+        /// Gets the length of the <see cref="PacketType5"/>.
         /// </summary>
         public override int BinaryLength
         {
             get
             {
-                return ByteCount;
-            }
-        }
-
-        /// <summary>
-        /// Gets the binary representation of <see cref="PacketType5"/>.
-        /// </summary>
-        public override byte[] BinaryImage
-        {
-            get
-            {
-                byte[] image = new byte[ByteCount];
-
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(TypeID), 0, image, 0, 2);
-
-                return image;
+                return FixedLength;
             }
         }
 
@@ -112,29 +100,50 @@ namespace TVA.Historian.Packets
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes <see cref="PacketType5"/> from the specified <paramref name="binaryImage"/>.
+        /// Initializes <see cref="PacketType5"/> from the specified <paramref name="buffer"/>.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="PacketType5"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="PacketType5"/>.</returns>
-        public override int Initialize(byte[] binaryImage, int startIndex, int length)
+        /// <param name="buffer">Binary image to be used for initializing <see cref="PacketType5"/>.</param>
+        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
+        /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        /// <returns>Number of bytes used from the <paramref name="buffer"/> for initializing <see cref="PacketType5"/>.</returns>
+        public override int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
-            if (length >= ByteCount)
+            if (length >= FixedLength)
             {
                 // Binary image has sufficient data.
-                short packetID = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex);
+                short packetID = EndianOrder.LittleEndian.ToInt16(buffer, startIndex);
                 if (packetID != TypeID)
                     throw new ArgumentException(string.Format("Unexpected packet id '{0}' (expected '{1}')", packetID, TypeID));
 
                 // We have a binary image with the correct packet id and that all this packet type will contain.
-                return ByteCount;
+                return FixedLength;
             }
             else
             {
                 // Binary image does not have sufficient data.
                 return 0;
             }
+        }
+        /// <summary>
+        /// Generates binary image of the <see cref="PacketType5"/> and copies it into the given buffer, for <see cref="BinaryLength"/> bytes.
+        /// </summary>
+        /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+        /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <see cref="BinaryLength"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <see cref="BinaryLength"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public override int GenerateBinaryImage(byte[] buffer, int startIndex)
+        {
+            int length = BinaryLength;
+
+            buffer.ValidateParameters(startIndex, length);
+
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(TypeID), 0, buffer, startIndex, 2);
+
+            return length;
         }
 
         /// <summary>

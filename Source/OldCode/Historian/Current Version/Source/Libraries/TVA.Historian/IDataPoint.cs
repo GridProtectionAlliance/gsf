@@ -30,6 +30,7 @@
 //******************************************************************************************************
 
 using System;
+using TimeSeriesFramework;
 using TVA.Historian.Files;
 using TVA.Parsing;
 
@@ -164,6 +165,45 @@ namespace TVA.Historian
         Good
     }
 
+    /// <summary>
+    /// Defines extension methods for (and related to) <see cref="Quality"/> enumeration.
+    /// </summary>
+    public static class QualityExtensions
+    {
+        /// <summary>
+        /// Gets a <see cref="MeasurementStateFlags"/> value from a <see cref="Quality"/> value.
+        /// </summary>
+        /// <param name="quality"><see cref="Quality"/> value to interpret.</param>
+        /// <returns><see cref="MeasurementStateFlags"/> value from a <see cref="Quality"/> value.</returns>
+        [CLSCompliant(false)]
+        public static MeasurementStateFlags MeasurementQuality(this Quality quality)
+        {
+            MeasurementStateFlags stateFlags = MeasurementStateFlags.Normal;
+
+            if (quality == Quality.DeletedFromProcessing)
+                stateFlags |= MeasurementStateFlags.DiscardedValue;
+
+            if (quality == Quality.Old)
+                stateFlags |= MeasurementStateFlags.BadTime;
+
+            if (quality == Quality.SuspectData)
+                stateFlags |= MeasurementStateFlags.BadData;
+
+            return stateFlags;
+        }
+
+        /// <summary>
+        /// Gets a <see cref="Quality"/> value from a <see cref="IMeasurement"/> value.
+        /// </summary>
+        /// <param name="measurement"><see cref="IMeasurement"/> value to interpret.</param>
+        /// <returns><see cref="Quality"/> value from a <see cref="IMeasurement"/> value.</returns>
+        [CLSCompliant(false)]
+        public static Quality HistorianQuality(this IMeasurement measurement)
+        {
+            return measurement.IsDiscarded() ? Quality.DeletedFromProcessing : (measurement.ValueQualityIsGood() ? (measurement.TimestampQualityIsGood() ? Quality.Good : Quality.Old) : Quality.SuspectData);
+        }
+    }
+
     #endregion
 
     /// <summary>
@@ -178,27 +218,47 @@ namespace TVA.Historian
         /// <summary>
         /// Gets or sets the historian identifier of the time-series data point.
         /// </summary>
-        int HistorianID { get; set; }
+        int HistorianID
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="TimeTag"/> of the time-series data point.
         /// </summary>
-        TimeTag Time { get; set; }
+        TimeTag Time
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the value of the time-series data point.
         /// </summary>
-        float Value { get; set; }
+        float Value
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="Quality"/> of the time-series data point.
         /// </summary>
-        Quality Quality { get; set; }
+        Quality Quality
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets associated <see cref="MetadataRecord"/> of the time-series data point.
         /// </summary>
-        MetadataRecord Metadata { get; set; }
+        MetadataRecord Metadata
+        {
+            get;
+            set;
+        }
 
         #endregion
     }

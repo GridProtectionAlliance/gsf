@@ -28,6 +28,8 @@
 //       Modified ActiveDataBlockIndex to default to -1 for values that are less than 0.
 //  10/11/2010 - Mihir Brahmbhatt
 //       Updated header and license agreement.
+//  11/30/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //******************************************************************************************************
 
@@ -65,7 +67,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Specifies the number of bytes in the binary image of <see cref="StateRecord"/>.
         /// </summary>
-        public const int ByteCount = 72;
+        public const int FixedLength = 72;
 
         // Fields
         private int m_historianID;
@@ -99,15 +101,15 @@ namespace TVA.Historian.Files
         /// Initializes a new instance of the <see cref="StateRecord"/> class.
         /// </summary>
         /// <param name="historianID">Historian identifier of <see cref="StateRecord"/>.</param>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="StateRecord"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        public StateRecord(int historianID, byte[] binaryImage, int startIndex, int length)
+        /// <param name="buffer">Binary image to be used for initializing <see cref="StateRecord"/>.</param>
+        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
+        /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        public StateRecord(int historianID, byte[] buffer, int startIndex, int length)
             : this(historianID)
         {
-            Initialize(binaryImage, startIndex, length);
+            ParseBinaryImage(buffer, startIndex, length);
         }
-    
+
         #endregion
 
         #region [ Properties ]
@@ -262,34 +264,13 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets the length of the <see cref="BinaryImage"/>.
+        /// Gets the length of the <see cref="StateRecord"/>.
         /// </summary>
         public int BinaryLength
         {
             get
             {
-                return ByteCount;
-            }
-        }
-
-        /// <summary>
-        /// Gets the binary representation of <see cref="StateRecord"/>.
-        /// </summary>
-        public byte[] BinaryImage
-        {
-            get
-            {
-                byte[] image = new byte[ByteCount];
-
-                Array.Copy(m_archivedData.BinaryImage, 0, image, 0, StateRecordDataPoint.ByteCount);
-                Array.Copy(m_previousData.BinaryImage, 0, image, 16, StateRecordDataPoint.ByteCount);
-                Array.Copy(m_currentData.BinaryImage, 0, image, 32, StateRecordDataPoint.ByteCount);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_activeDataBlockIndex), 0, image, 48, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_activeDataBlockSlot), 0, image, 52, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_slope1), 0, image, 56, 8);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_slope2), 0, image, 64, 8);
-
-                return image;
+                return FixedLength;
             }
         }
 
@@ -298,32 +279,60 @@ namespace TVA.Historian.Files
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes <see cref="StateRecord"/> from the specified <paramref name="binaryImage"/>.
+        /// Initializes <see cref="StateRecord"/> from the specified <paramref name="buffer"/>.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="StateRecord"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="StateRecord"/>.</returns>
-        public int Initialize(byte[] binaryImage, int startIndex, int length)
+        /// <param name="buffer">Binary image to be used for initializing <see cref="StateRecord"/>.</param>
+        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
+        /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        /// <returns>Number of bytes used from the <paramref name="buffer"/> for initializing <see cref="StateRecord"/>.</returns>
+        public int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
-            if (length >= ByteCount)
+            if (length >= FixedLength)
             {
                 // Binary image has sufficient data.
-                m_archivedData.Initialize(binaryImage, startIndex, length);
-                m_previousData.Initialize(binaryImage, startIndex + 16, length - 16);
-                m_currentData.Initialize(binaryImage, startIndex + 32, length - 32);
-                ActiveDataBlockIndex = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 48) - 1;
-                ActiveDataBlockSlot = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 52);
-                Slope1 = EndianOrder.LittleEndian.ToDouble(binaryImage, startIndex + 56);
-                Slope2 = EndianOrder.LittleEndian.ToDouble(binaryImage, startIndex + 64);
+                m_archivedData.ParseBinaryImage(buffer, startIndex, length);
+                m_previousData.ParseBinaryImage(buffer, startIndex + 16, length - 16);
+                m_currentData.ParseBinaryImage(buffer, startIndex + 32, length - 32);
+                ActiveDataBlockIndex = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 48) - 1;
+                ActiveDataBlockSlot = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 52);
+                Slope1 = EndianOrder.LittleEndian.ToDouble(buffer, startIndex + 56);
+                Slope2 = EndianOrder.LittleEndian.ToDouble(buffer, startIndex + 64);
 
-                return ByteCount;
+                return FixedLength;
             }
             else
             {
                 // Binary image does not have sufficient data.
                 return 0;
             }
+        }
+
+        /// <summary>
+        /// Generates binary image of the <see cref="StateRecord"/> and copies it into the given buffer, for <see cref="BinaryLength"/> bytes.
+        /// </summary>
+        /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+        /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <see cref="BinaryLength"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <see cref="BinaryLength"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public int GenerateBinaryImage(byte[] buffer, int startIndex)
+        {
+            int length = BinaryLength;
+
+            buffer.ValidateParameters(startIndex, length);
+
+            m_archivedData.GenerateBinaryImage(buffer, startIndex);
+            m_previousData.GenerateBinaryImage(buffer, startIndex + 16);
+            m_currentData.GenerateBinaryImage(buffer, startIndex + 32);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_activeDataBlockIndex), 0, buffer, startIndex + 48, 4);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_activeDataBlockSlot), 0, buffer, startIndex + 52, 4);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_slope1), 0, buffer, startIndex + 56, 8);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_slope2), 0, buffer, startIndex + 64, 8);
+
+            return length;
         }
 
         /// <summary>

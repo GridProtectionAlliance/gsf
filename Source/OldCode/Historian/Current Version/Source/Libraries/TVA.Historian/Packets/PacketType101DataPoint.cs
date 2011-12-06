@@ -24,12 +24,14 @@
 //       Added overloaded constructor that takes in IMeasurement.
 //  10/11/2010 - Mihir Brahmbhatt
 //       Updated header and license agreement.
+//  11/30/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //******************************************************************************************************
 
 using System;
-using TVA.Historian.Files;
 using TimeSeriesFramework;
+using TVA.Historian.Files;
 
 namespace TVA.Historian.Packets
 {
@@ -57,7 +59,7 @@ namespace TVA.Historian.Packets
         /// <summary>
         /// Specifies the number of bytes in the binary image of <see cref="PacketType101DataPoint"/>.
         /// </summary>
-        public new const int ByteCount = 14;
+        public new const int FixedLength = 14;
 
         #endregion
 
@@ -97,11 +99,11 @@ namespace TVA.Historian.Packets
         /// <summary>
         /// Initializes a new instance of the <see cref="PacketType101DataPoint"/> class.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="PacketType101DataPoint"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        public PacketType101DataPoint(byte[] binaryImage, int startIndex, int length)
-            : base(1, binaryImage, startIndex, length)
+        /// <param name="buffer">Binary image to be used for initializing <see cref="PacketType101DataPoint"/>.</param>
+        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
+        /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        public PacketType101DataPoint(byte[] buffer, int startIndex, int length)
+            : base(1, buffer, startIndex, length)
         {
         }
 
@@ -110,59 +112,66 @@ namespace TVA.Historian.Packets
         #region [ Methods ]
 
         /// <summary>
-        /// Gets the length of the <see cref="BinaryImage"/>.
+        /// Gets the length of the <see cref="PacketType101DataPoint"/>.
         /// </summary>
         public override int BinaryLength
         {
             get
             {
-                return ByteCount;
+                return FixedLength;
             }
         }
 
         /// <summary>
-        /// Gets the binary representation of <see cref="PacketType101DataPoint"/>.
+        /// Initializes <see cref="PacketType101DataPoint"/> from the specified <paramref name="buffer"/>.
         /// </summary>
-        public override byte[] BinaryImage
+        /// <param name="buffer">Binary image to be used for initializing <see cref="PacketType101DataPoint"/>.</param>
+        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
+        /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        /// <returns>Number of bytes used from the <paramref name="buffer"/> for initializing <see cref="PacketType101DataPoint"/>.</returns>
+        public override int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
-            get
-            {
-                byte[] image = new byte[ByteCount];
-
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(HistorianID), 0, image, 0, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes((int)Time.Value), 0, image, 4, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes((short)Flags), 0, image, 8, 2);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(Value), 0, image, 10, 4);
-
-                return image;
-            }
-        }
-
-        /// <summary>
-        /// Initializes <see cref="PacketType101DataPoint"/> from the specified <paramref name="binaryImage"/>.
-        /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="PacketType101DataPoint"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="PacketType101DataPoint"/>.</returns>
-        public override int Initialize(byte[] binaryImage, int startIndex, int length)
-        {
-            if (length >= ByteCount)
+            if (length >= FixedLength)
             {
                 // Binary image has sufficient data.
-                HistorianID = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex);
-                Flags = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex + 8);
-                Value = EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex + 10);
-                Time = new TimeTag(EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 4) +  // Seconds
-                                   ((double)(Flags.GetMaskedValue(MillisecondMask) >> 5) / 1000));  // Milliseconds
+                HistorianID = EndianOrder.LittleEndian.ToInt32(buffer, startIndex);
+                Flags = EndianOrder.LittleEndian.ToInt16(buffer, startIndex + 8);
+                Value = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 10);
+                Time = new TimeTag(EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 4) +   // Seconds
+                        ((double)(Flags.GetMaskedValue(MillisecondMask) >> 5) / 1000));         // Milliseconds
 
-                return ByteCount;
+                return FixedLength;
             }
             else
             {
                 // Binary image does not have sufficient data.
                 return 0;
             }
+        }
+
+        /// <summary>
+        /// Generates binary image of the <see cref="PacketType101DataPoint"/> and copies it into the given buffer, for <see cref="BinaryLength"/> bytes.
+        /// </summary>
+        /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+        /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <see cref="BinaryLength"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <see cref="BinaryLength"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public override int GenerateBinaryImage(byte[] buffer, int startIndex)
+        {
+            int length = BinaryLength;
+
+            buffer.ValidateParameters(startIndex, length);
+
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(HistorianID), 0, buffer, startIndex, 4);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes((int)Time.Value), 0, buffer, startIndex + 4, 4);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes((short)Flags), 0, buffer, startIndex + 8, 2);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(Value), 0, buffer, startIndex + 10, 4);
+
+            return length;
         }
 
         #endregion

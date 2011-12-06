@@ -37,6 +37,7 @@ using System;
 using System.Collections.Generic;
 using System.ServiceModel;
 using TVA.Historian.Files;
+using TVA.Parsing;
 
 namespace TVA.Historian.DataServices
 {
@@ -155,7 +156,7 @@ namespace TVA.Historian.DataServices
                 // Write all metadata records to the archive.
                 foreach (SerializableMetadataRecord record in metadata.MetadataRecords)
                 {
-                    Archive.WriteMetaData(record.HistorianID, record.Deflate().BinaryImage);
+                    Archive.WriteMetaData(record.HistorianID, record.Deflate().BinaryImage());
                 }
             }
             catch (Exception ex)

@@ -26,6 +26,8 @@
 //       Edited code comments.
 //  10/11/2010 - Mihir Brahmbhatt
 //       Updated header and license agreement.
+//  11/30/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //******************************************************************************************************
 
@@ -67,7 +69,7 @@ namespace TVA.Historian.Packets
         /// <summary>
         /// Specifies the number of bytes in the binary image of <see cref="PacketType2"/>.
         /// </summary>
-        public new const int ByteCount = 22;
+        public new const int FixedLength = 22;
 
         // Fields
         private int m_historianID;
@@ -98,13 +100,13 @@ namespace TVA.Historian.Packets
         /// <summary>
         /// Initializes a new instance of the <see cref="PacketType2"/> class.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="PacketType2"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        public PacketType2(byte[] binaryImage, int startIndex, int length)
+        /// <param name="buffer">Binary image to be used for initializing <see cref="PacketType2"/>.</param>
+        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
+        /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        public PacketType2(byte[] buffer, int startIndex, int length)
             : this()
         {
-            Initialize(binaryImage, startIndex, length);
+            ParseBinaryImage(buffer, startIndex, length);
         }
 
         #endregion
@@ -309,39 +311,13 @@ namespace TVA.Historian.Packets
         }
 
         /// <summary>
-        /// Gets the length of the <see cref="BinaryImage"/>.
+        /// Gets the length of the <see cref="PacketType2"/>.
         /// </summary>
         public override int BinaryLength
         {
             get
             {
-                return ByteCount;
-            }
-        }
-
-        /// <summary>
-        /// Gets the binary representation of <see cref="PacketType2"/>.
-        /// </summary>
-        public override byte[] BinaryImage
-        {
-            get
-            {
-                byte[] image = new byte[ByteCount];
-
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(TypeID), 0, image, 0, 2);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_historianID), 0, image, 2, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_year), 0, image, 6, 2);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_month), 0, image, 8, 1);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_day), 0, image, 9, 1);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_hour), 0, image, 10, 1);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_minute), 0, image, 11, 1);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_second), 0, image, 12, 1);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes((int)m_quality), 0, image, 13, 1);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_millisecond), 0, image, 14, 2);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_gmtOffset), 0, image, 16, 2);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_value), 0, image, 18, 4);
-
-                return image;
+                return FixedLength;
             }
         }
 
@@ -350,45 +326,78 @@ namespace TVA.Historian.Packets
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes <see cref="PacketType2"/> from the specified <paramref name="binaryImage"/>.
+        /// Initializes <see cref="PacketType2"/> from the specified <paramref name="buffer"/>.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="PacketType2"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="PacketType2"/>.</returns>
-        public override int Initialize(byte[] binaryImage, int startIndex, int length)
+        /// <param name="buffer">Binary image to be used for initializing <see cref="PacketType2"/>.</param>
+        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
+        /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        /// <returns>Number of bytes used from the <paramref name="buffer"/> for initializing <see cref="PacketType2"/>.</returns>
+        public override int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
-            if (length >= ByteCount)
+            if (length >= FixedLength)
             {
                 // Binary image has sufficient data.
-                short packetID = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex);
+                short packetID = EndianOrder.LittleEndian.ToInt16(buffer, startIndex);
                 if (packetID != TypeID)
                     throw new ArgumentException(string.Format("Unexpected packet id '{0}' (expected '{1}')", packetID, TypeID));
 
                 // We have a binary image with the correct packet id.
-                HistorianID = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2);
-                Year = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex + 6);
-                Month = Convert.ToInt16(binaryImage[startIndex + 8]);
-                Day = Convert.ToInt16(binaryImage[startIndex + 9]);
-                Hour = Convert.ToInt16(binaryImage[startIndex + 10]);
-                Minute = Convert.ToInt16(binaryImage[startIndex + 11]);
-                Second = Convert.ToInt16(binaryImage[startIndex + 12]);
-                Quality = (Quality)(binaryImage[startIndex + 13]);
-                Millisecond = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex + 14);
-                GmtOffset = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex + 16);
-                Value = EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex + 18);
+                HistorianID = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 2);
+                Year = EndianOrder.LittleEndian.ToInt16(buffer, startIndex + 6);
+                Month = Convert.ToInt16(buffer[startIndex + 8]);
+                Day = Convert.ToInt16(buffer[startIndex + 9]);
+                Hour = Convert.ToInt16(buffer[startIndex + 10]);
+                Minute = Convert.ToInt16(buffer[startIndex + 11]);
+                Second = Convert.ToInt16(buffer[startIndex + 12]);
+                Quality = (Quality)(buffer[startIndex + 13]);
+                Millisecond = EndianOrder.LittleEndian.ToInt16(buffer, startIndex + 14);
+                GmtOffset = EndianOrder.LittleEndian.ToInt16(buffer, startIndex + 16);
+                Value = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 18);
 
                 // We'll send an "ACK" to the sender if this is the last packet in the transmission.
-                if (length == ByteCount)
+                if (length == FixedLength)
                     PreProcessHandler = PreProcess;
 
-                return ByteCount;
+                return FixedLength;
             }
             else
             {
                 // Binary image does not have sufficient data.
                 return 0;
             }
+        }
+
+        /// <summary>
+        /// Generates binary image of the <see cref="PacketType2"/> and copies it into the given buffer, for <see cref="BinaryLength"/> bytes.
+        /// </summary>
+        /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+        /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <see cref="BinaryLength"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <see cref="BinaryLength"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public override int GenerateBinaryImage(byte[] buffer, int startIndex)
+        {
+            int length = BinaryLength;
+
+            buffer.ValidateParameters(startIndex, length);
+
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(TypeID), 0, buffer, startIndex, 2);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_historianID), 0, buffer, startIndex + 2, 4);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_year), 0, buffer, startIndex + 6, 2);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_month), 0, buffer, startIndex + 8, 1);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_day), 0, buffer, startIndex + 9, 1);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_hour), 0, buffer, startIndex + 10, 1);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_minute), 0, buffer, startIndex + 11, 1);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_second), 0, buffer, startIndex + 12, 1);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes((int)m_quality), 0, buffer, startIndex + 13, 1);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_millisecond), 0, buffer, startIndex + 14, 2);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_gmtOffset), 0, buffer, startIndex + 16, 2);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_value), 0, buffer, startIndex + 18, 4);
+
+            return length;
         }
 
         /// <summary>

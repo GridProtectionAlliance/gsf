@@ -26,6 +26,8 @@
 //       Added new header and license agreement.
 //  10/11/2010 - Mihir Brahmbhatt
 //       Updated header and license agreement.
+//  11/30/2011 - J. Ritchie Carroll
+//       Modified to support buffer optimized ISupportBinaryImage.
 //
 //******************************************************************************************************
 
@@ -66,7 +68,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Specifies the number of bytes in the binary image of <see cref="MetadataRecordAnalogFields"/>.
         /// </summary>
-        public const int ByteCount = 64;
+        public const int FixedLength = 64;
 
         // Fields
         private string m_engineeringUnits;
@@ -270,38 +272,13 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets the length of the <see cref="BinaryImage"/>.
+        /// Gets the length of the <see cref="MetadataRecordAnalogFields"/>.
         /// </summary>
         public int BinaryLength
         {
             get
             {
-                return ByteCount;
-            }
-        }
-
-        /// <summary>
-        /// Gets the binary representation of <see cref="MetadataRecordAnalogFields"/>.
-        /// </summary>
-        public byte[] BinaryImage
-        {
-            get
-            {
-                byte[] image = new byte[ByteCount];
-
-                Array.Copy(Encoding.ASCII.GetBytes(m_engineeringUnits.PadRight(24)), 0, image, 0, 24);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_highAlarm), 0, image, 24, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_lowAlarm), 0, image, 28, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_highRange), 0, image, 32, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_lowRange), 0, image, 36, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_highWarning), 0, image, 40, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_lowWarning), 0, image, 44, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_exceptionLimit), 0, image, 48, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_compressionLimit), 0, image, 52, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_alarmDelay), 0, image, 56, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_displayDigits), 0, image, 60, 4);
-
-                return image;
+                return FixedLength;
             }
         }
 
@@ -310,36 +287,68 @@ namespace TVA.Historian.Files
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes <see cref="MetadataRecordAnalogFields"/> from the specified <paramref name="binaryImage"/>.
+        /// Initializes <see cref="MetadataRecordAnalogFields"/> from the specified <paramref name="buffer"/>.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="MetadataRecordAnalogFields"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="MetadataRecordAnalogFields"/>.</returns>
-        public int Initialize(byte[] binaryImage, int startIndex, int length)
+        /// <param name="buffer">Binary image to be used for initializing <see cref="MetadataRecordAnalogFields"/>.</param>
+        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
+        /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        /// <returns>Number of bytes used from the <paramref name="buffer"/> for initializing <see cref="MetadataRecordAnalogFields"/>.</returns>
+        public int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
-            if (length >= ByteCount)
+            if (length >= FixedLength)
             {
                 // Binary image has sufficient data.
-                EngineeringUnits = Encoding.ASCII.GetString(binaryImage, startIndex, 24).Trim();
-                HighAlarm = EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex + 24);
-                LowAlarm = EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex + 28);
-                HighRange = EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex + 32);
-                LowRange = EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex + 36);
-                HighWarning = EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex + 40);
-                LowWarning = EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex + 44);
-                ExceptionLimit = EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex + 48);
-                CompressionLimit = EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex + 52);
-                AlarmDelay = EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex + 56);
-                DisplayDigits = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 60);
+                EngineeringUnits = Encoding.ASCII.GetString(buffer, startIndex, 24).Trim();
+                HighAlarm = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 24);
+                LowAlarm = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 28);
+                HighRange = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 32);
+                LowRange = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 36);
+                HighWarning = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 40);
+                LowWarning = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 44);
+                ExceptionLimit = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 48);
+                CompressionLimit = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 52);
+                AlarmDelay = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 56);
+                DisplayDigits = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 60);
 
-                return ByteCount;
+                return FixedLength;
             }
             else
             {
                 // Binary image does not have sufficient data.
                 return 0;
             }
+        }
+
+        /// <summary>
+        /// Generates binary image of the <see cref="MetadataRecordAnalogFields"/> and copies it into the given buffer, for <see cref="BinaryLength"/> bytes.
+        /// </summary>
+        /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+        /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <see cref="BinaryLength"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <see cref="BinaryLength"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public virtual int GenerateBinaryImage(byte[] buffer, int startIndex)
+        {
+            int length = BinaryLength;
+
+            buffer.ValidateParameters(startIndex, length);
+
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_engineeringUnits.PadRight(24)), 0, buffer, startIndex, 24);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_highAlarm), 0, buffer, startIndex + 24, 4);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_lowAlarm), 0, buffer, startIndex + 28, 4);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_highRange), 0, buffer, startIndex + 32, 4);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_lowRange), 0, buffer, startIndex + 36, 4);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_highWarning), 0, buffer, startIndex + 40, 4);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_lowWarning), 0, buffer, startIndex + 44, 4);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_exceptionLimit), 0, buffer, startIndex + 48, 4);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_compressionLimit), 0, buffer, startIndex + 52, 4);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_alarmDelay), 0, buffer, startIndex + 56, 4);
+            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_displayDigits), 0, buffer, startIndex + 60, 4);
+
+            return length;
         }
 
         #endregion
