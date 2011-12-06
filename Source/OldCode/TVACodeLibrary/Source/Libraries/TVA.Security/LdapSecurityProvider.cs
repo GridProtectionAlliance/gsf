@@ -600,7 +600,9 @@ namespace TVA.Security
                     userDataCache = UserDataCache.GetCurrentCache(providerID);
                     userDataCache.RetryDelayInterval = m_cacheRetryDelayInterval;
                     userDataCache.MaximumRetryAttempts = m_cacheMaximumRetryAttempts;
-                    userDataCache.ReloadOnChange = true;
+                    // TODO: Reload on change is disabled for now by default to eliminate GC handle leaks, if .NET fixes bug http://support.microsoft.com/kb/2628838
+                    // then this can be safely reenabled. For now this will prevent automatic runtime reloading of user data cached by another application.
+                    userDataCache.ReloadOnChange = false;
                     userDataCache.AutoSave = true;
                     userDataCache.Load();
                 }

@@ -679,7 +679,7 @@ namespace TVA.Security.Cryptography
                 RetryDelayInterval = retryDelayInterval,
                 MaximumRetryAttempts = maximumRetryAttempts,
                 ManagedEncryption = s_managedEncryption,
-                ReloadOnChange = true,
+                ReloadOnChange = false,
                 AutoSave = false
             };
 
@@ -722,7 +722,9 @@ namespace TVA.Security.Cryptography
                     FileName = userCacheFileName,
                     RetryDelayInterval = retryDelayInterval,
                     MaximumRetryAttempts = maximumRetryAttempts,
-                    ReloadOnChange = true,
+                    // TODO: Reload on change is disabled for now by default to eliminate GC handle leaks, if .NET fixes bug http://support.microsoft.com/kb/2628838
+                    // then this can be safely reenabled. For now this will prevent automatic runtime reloading of keys cached by another application.
+                    ReloadOnChange = false,
                     AutoSave = true
                 };
 
