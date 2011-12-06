@@ -5,11 +5,11 @@ using System.Web.Routing;
 namespace $rootnamespace$.App_Start 
 {
     public static class IgnoreRoutes 
-	{
+    {
         public static void PreStart() 
-		{
-			// Ignore routes to content used by the security framework.
-			RouteTable.Routes.IgnoreRoute("{WebResource.axd*}");
+        {
+            // Ignore routes to content used by the security framework.
+            RouteTable.Routes.IgnoreRoute("{WebResource.axd*}");
             RouteTable.Routes.IgnoreRoute("{SecurityPortal.aspx*}");
         }
     }
