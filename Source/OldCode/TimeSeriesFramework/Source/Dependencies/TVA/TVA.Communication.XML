@@ -920,39 +920,29 @@
             Provider for the transportation of data.
             </summary>
         </member>
-        <member name="F:TVA.Communication.TransportProvider`1.Secretkey">
+        <member name="F:TVA.Communication.TransportProvider`1.SecretKey">
             <summary>
             Key used for the ciphering of data.
             </summary>
         </member>
-        <member name="F:TVA.Communication.TransportProvider`1.SendBuffer">
-            <summary>
-            Buffer used for sending data.
-            </summary>
-        </member>
         <member name="F:TVA.Communication.TransportProvider`1.SendBufferOffset">
             <summary>
-            Zero-based index of <see cref="F:TVA.Communication.TransportProvider`1.SendBuffer"/> from which data is to be sent.
+            Zero-based index of <see cref="P:TVA.Communication.TransportProvider`1.SendBuffer"/> from which data is to be sent.
             </summary>
         </member>
         <member name="F:TVA.Communication.TransportProvider`1.SendBufferLength">
             <summary>
-            Number of bytes to be sent from <see cref="F:TVA.Communication.TransportProvider`1.SendBuffer"/> starting at <see cref="F:TVA.Communication.TransportProvider`1.SendBufferOffset"/>.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.TransportProvider`1.ReceiveBuffer">
-            <summary>
-            Buffer used for receiving data.
+            Number of bytes to be sent from <see cref="P:TVA.Communication.TransportProvider`1.SendBuffer"/> starting at <see cref="F:TVA.Communication.TransportProvider`1.SendBufferOffset"/>.
             </summary>
         </member>
         <member name="F:TVA.Communication.TransportProvider`1.ReceiveBufferOffset">
             <summary>
-            Zero-based index of <see cref="F:TVA.Communication.TransportProvider`1.ReceiveBuffer"/> at which data is to be received.
+            Zero-based index of <see cref="P:TVA.Communication.TransportProvider`1.ReceiveBuffer"/> at which data is to be received.
             </summary>
         </member>
         <member name="F:TVA.Communication.TransportProvider`1.ReceiveBufferLength">
             <summary>
-            Number of bytes received in <see cref="F:TVA.Communication.TransportProvider`1.ReceiveBuffer"/> starting at <see cref="F:TVA.Communication.TransportProvider`1.ReceiveBufferOffset"/>.
+            Number of bytes received in <see cref="P:TVA.Communication.TransportProvider`1.ReceiveBuffer"/> starting at <see cref="F:TVA.Communication.TransportProvider`1.ReceiveBufferOffset"/>.
             </summary>
         </member>
         <member name="F:TVA.Communication.TransportProvider`1.Statistics">
@@ -964,6 +954,20 @@
             <summary>
             Initializes a new instance of the <see cref="T:TVA.Communication.TransportProvider`1"/> class.
             </summary>
+        </member>
+        <member name="M:TVA.Communication.TransportProvider`1.SetSendBuffer(System.Int32)">
+            <summary>
+            Establishes (or reestablishes) a send buffer of a given size.
+            </summary>
+            <param name="size">Desired minimum size of send buffer.</param>
+            <returns>New send buffer.</returns>
+        </member>
+        <member name="M:TVA.Communication.TransportProvider`1.SetReceiveBuffer(System.Int32)">
+            <summary>
+            Establishes (or reestablishes) a receive buffer of a given size.
+            </summary>
+            <param name="size">Desired minimum size of receive buffer.</param>
+            <returns>New receive buffer.</returns>
         </member>
         <member name="M:TVA.Communication.TransportProvider`1.Reset">
             <summary>
@@ -978,6 +982,32 @@
             <param name="timeout">The number of milliseconds to wait for the asynchronous operation to complete.</param>
             <param name="asyncCallback">The <see cref="T:System.AsyncCallback"/> of the asynchronous operation being monitored.</param>
             <param name="asyncResult">The <see cref="T:System.IAsyncResult"/> of the asynchronous operation being monitored.</param>
+        </member>
+        <member name="P:TVA.Communication.TransportProvider`1.SendBuffer">
+            <summary>
+            Gets buffer used for sending data.
+            </summary>
+            <remarks>
+            Use <see cref="M:TVA.Communication.TransportProvider`1.SetSendBuffer(System.Int32)"/> to reset and/or establish send buffer size.
+            </remarks>
+        </member>
+        <member name="P:TVA.Communication.TransportProvider`1.SendBufferSetSize">
+            <summary>
+            Gets send buffer requested size.
+            </summary>
+        </member>
+        <member name="P:TVA.Communication.TransportProvider`1.ReceiveBuffer">
+            <summary>
+            Gets buffer used for receiving data.
+            </summary>
+            <remarks>
+            Use <see cref="M:TVA.Communication.TransportProvider`1.SetReceiveBuffer(System.Int32)"/> to reset and/or establish receive buffer size.
+            </remarks>
+        </member>
+        <member name="P:TVA.Communication.TransportProvider`1.ReceiveBufferSetSize">
+            <summary>
+            Gets receive buffer requested size.
+            </summary>
         </member>
         <member name="T:TVA.Communication.HandshakeMessage">
             <summary>
@@ -1610,11 +1640,12 @@
             <param name="marker">The byte sequence used to mark the beginning of the payload in a "Payload-Aware" transmissions.</param>
             <returns>true if the buffer contains "Payload-Aware" transmission header; otherwise false.</returns>
         </member>
-        <member name="M:TVA.Communication.Payload.ExtractLength(System.Byte[],System.Byte[])">
+        <member name="M:TVA.Communication.Payload.ExtractLength(System.Byte[],System.Int32,System.Byte[])">
             <summary>
             Determines the length of a payload in a "Payload-Aware" transmission from the payload header information.
             </summary>
             <param name="buffer">The buffer containg payload header information starting at index zero.</param>
+            <param name="length">The length of valid data within in <paramref name="buffer"/>.</param>
             <param name="marker">The byte sequence used to mark the beginning of the payload in a "Payload-Aware" transmissions.</param>
             <returns>Length of the payload.</returns>
         </member>
@@ -1627,6 +1658,15 @@
             <param name="length">The length of data in <paramref name="buffer"/> starting at the <paramref name="offset"/>.</param>
             <param name="cryptoLevel">One of the <see cref="T:TVA.Security.Cryptography.CipherStrength"/> values.</param>
             <param name="cryptoKey">The key to be used for decrypting the data in the <paramref name="buffer"/>.</param>
+            <param name="compressLevel">One of the <see cref="T:TVA.IO.Compression.CompressionStrength"/> values.</param>
+        </member>
+        <member name="M:TVA.Communication.Payload.ProcessReceived``1(TVA.Communication.TransportProvider{``0},TVA.Security.Cryptography.CipherStrength,System.String,TVA.IO.Compression.CompressionStrength)">
+            <summary>
+            Performs the necessary uncompression and decryption on the data contained in the <paramref name="provider"/>.
+            </summary>
+            <param name="provider">Source provider to process received buffer.</param>
+            <param name="cryptoLevel">One of the <see cref="T:TVA.Security.Cryptography.CipherStrength"/> values.</param>
+            <param name="cryptoKey">Shared secret key to use for encryption.</param>
             <param name="compressLevel">One of the <see cref="T:TVA.IO.Compression.CompressionStrength"/> values.</param>
         </member>
         <member name="M:TVA.Communication.Payload.ProcessReceived(System.Net.Sockets.SocketAsyncEventArgs,TVA.Security.Cryptography.CipherStrength,System.String,TVA.IO.Compression.CompressionStrength)">
@@ -1647,6 +1687,15 @@
             <param name="length">The length of data in <paramref name="buffer"/> starting at the <paramref name="offset"/>.</param>
             <param name="cryptoLevel">One of the <see cref="T:TVA.Security.Cryptography.CipherStrength"/> values.</param>
             <param name="cryptoKey">The key to be used for encrypting the data in the <paramref name="buffer"/>.</param>
+            <param name="compressLevel">One of the <see cref="T:TVA.IO.Compression.CompressionStrength"/> values.</param>
+        </member>
+        <member name="M:TVA.Communication.Payload.ProcessTransmit``1(TVA.Communication.TransportProvider{``0},TVA.Security.Cryptography.CipherStrength,System.String,TVA.IO.Compression.CompressionStrength)">
+            <summary>
+            Performs the necessary compression and encryption on the data contained in the <paramref name="provider"/>.
+            </summary>
+            <param name="provider">Source provider to process received buffer.</param>
+            <param name="cryptoLevel">One of the <see cref="T:TVA.Security.Cryptography.CipherStrength"/> values.</param>
+            <param name="cryptoKey">Shared secret key to use for encryption.</param>
             <param name="compressLevel">One of the <see cref="T:TVA.IO.Compression.CompressionStrength"/> values.</param>
         </member>
         <member name="M:TVA.Communication.Payload.ProcessTransmit(System.Net.Sockets.SocketAsyncEventArgs,TVA.Security.Cryptography.CipherStrength,System.String,TVA.IO.Compression.CompressionStrength)">
