@@ -672,7 +672,7 @@ namespace TVA.Communication
                 }
                 catch (ThreadAbortException)
                 {
-                    throw;
+                    break;
                 }
                 catch (Exception ex)
                 {
