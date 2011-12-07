@@ -299,6 +299,15 @@
         <Setter Property="VerticalScrollBarVisibility" Value="Auto" />        
     </Style>
     
+    <Style TargetType="sdk:DataGridCell">
+        <Style.Triggers>
+            <Trigger Property="sdk:DataGridCell.IsSelected" Value="True">
+                <Setter Property="Background" Value="#FFBEC7DF"/>
+                <Setter Property="BorderBrush" Value="#FFBEC7DF"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+        
     <Style TargetType="Button">
         <Setter Property="Cursor" Value="Hand" />   
         <Setter Property="Width" Value="{StaticResource XSmallItemSize}" />
