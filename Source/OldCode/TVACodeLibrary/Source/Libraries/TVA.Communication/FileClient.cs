@@ -722,11 +722,13 @@ namespace TVA.Communication
             {
                 if (CurrentState == ClientState.Connected)
                     ReadData();
-
-                throw new InvalidOperationException("Client is currently not connected");
+                else
+                    throw new InvalidOperationException("Client is currently not connected");
             }
-
-            throw new InvalidOperationException("ReadNextBuffer() cannot be used when ReceiveOnDemand is disabled");
+            else
+            {
+                throw new InvalidOperationException("ReadNextBuffer() cannot be used when ReceiveOnDemand is disabled");
+            }
         }
 
         /// <summary>
