@@ -161,6 +161,16 @@
     <Resource Include="Images\BackGray.png" />
     <Resource Include="Images\ForwardGray.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\ArrowLeftBlue.png" />
+    <Resource Include="Images\ArrowRightBlue.png" />
+    <Resource Include="Images\CabinetOpen.png" />
+    <Resource Include="Images\ChartLine.png" />
+    <Resource Include="Images\FitToSize.png" />
+    <Resource Include="Images\TableEdit.png" />
+    <Resource Include="Images\ZoomIn.png" />
+    <Resource Include="Images\ZoomOut.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
