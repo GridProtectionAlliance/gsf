@@ -25,8 +25,8 @@
 //
 //******************************************************************************************************
 
-using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
@@ -201,6 +201,40 @@ namespace TimeSeriesFramework.UI.DataModels
         #endregion
 
         #region [ Static ]
+
+        public static ObservableCollection<Protocol> Load(AdoDataConnection database)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+                ObservableCollection<Protocol> protocolList = new ObservableCollection<Protocol>();
+                DataTable protocolTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM Protocol ORDER BY LoadOrder");
+
+                foreach (DataRow row in protocolTable.Rows)
+                {
+                    protocolList.Add(new Protocol()
+                    {
+                        ID = row.ConvertField<int>("ID"),
+                        Acronym = row.Field<string>("Acronym"),
+                        Name = row.Field<string>("Name"),
+                        Type = row.Field<string>("Type"),
+                        Category = row.Field<string>("Category"),
+                        AssemblyName = row.Field<string>("AssemblyName"),
+                        TypeName = row.Field<string>("TypeName"),
+                        LoadOrder = row.ConvertField<int>("LoadOrder")
+                    });
+                }
+
+                return protocolList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
 
         /// <summary>
         /// Gets a <see cref="Dictionary{T1,T2}"/> style list of <see cref="Protocol"/> information.

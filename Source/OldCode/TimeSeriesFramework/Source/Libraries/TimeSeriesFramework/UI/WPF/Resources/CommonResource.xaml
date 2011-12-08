@@ -113,7 +113,13 @@
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>
-        </Setter>        
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="sdk:DataGridCell.IsSelected" Value="True">
+                <Setter Property="Background" Value="#FF9EA7BF"/>
+                <Setter Property="BorderBrush" Value="#FF9EA7BF"/>
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
     <Style TargetType="Grid">
@@ -302,8 +308,8 @@
     <Style TargetType="sdk:DataGridCell">
         <Style.Triggers>
             <Trigger Property="sdk:DataGridCell.IsSelected" Value="True">
-                <Setter Property="Background" Value="#FFBEC7DF"/>
-                <Setter Property="BorderBrush" Value="#FFBEC7DF"/>
+                <Setter Property="Background" Value="#FF9EA7BF"/>
+                <Setter Property="BorderBrush" Value="#FF9EA7BF"/>
             </Trigger>
         </Style.Triggers>
     </Style>
