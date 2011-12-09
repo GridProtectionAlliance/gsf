@@ -94,6 +94,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using TVA.Collections;
 using TVA.Configuration;
 using TVA.IO;
@@ -1689,6 +1690,14 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
+        /// Requests a resynchronization of the state file.
+        /// </summary>
+        public void SynchronizeStateFile()
+        {
+            Task.Factory.StartNew(SyncStateFile);
+        }
+
+        /// <summary>
         /// Writes the specified <paramref name="dataPoint"/> to the <see cref="ArchiveFile"/>.
         /// </summary>
         /// <param name="dataPoint"><see cref="IDataPoint"/> to be written.</param>
@@ -2363,21 +2372,24 @@ namespace TVA.Historian.Files
 
         private void SyncStateFile()
         {
-            if (m_stateFile.IsOpen && m_metadataFile.IsOpen &&
-                m_stateFile.FileAccessMode != FileAccess.Read &&
-                m_metadataFile.RecordsOnDisk > m_stateFile.RecordsOnDisk)
+            lock (this)
             {
-                // Since we have more number of records in the Metadata File than in the State File we'll synchronize
-                // the number of records in both the files (very important) by writting a new records to the State
-                // File with an ID same as the number of records on disk for Metadata File. Doing so will cause the
-                // State File to grow in-memory or on-disk depending on how it's configured.
-                m_stateFile.Write(m_metadataFile.RecordsOnDisk, new StateRecord(m_metadataFile.RecordsOnDisk));
-                m_stateFile.Save();
-
-                // We synchronize the block list with the number of state records physically present on the disk.
-                lock (m_dataBlocks)
+                if (m_stateFile.IsOpen && m_metadataFile.IsOpen &&
+                    m_stateFile.FileAccessMode != FileAccess.Read &&
+                    m_metadataFile.RecordsOnDisk > m_stateFile.RecordsOnDisk)
                 {
-                    m_dataBlocks.AddRange(new ArchiveDataBlock[m_stateFile.RecordsOnDisk - m_dataBlocks.Count]);
+                    // Since we have more number of records in the Metadata File than in the State File we'll synchronize
+                    // the number of records in both the files (very important) by writting a new records to the State
+                    // File with an ID same as the number of records on disk for Metadata File. Doing so will cause the
+                    // State File to grow in-memory or on-disk depending on how it's configured.
+                    m_stateFile.Write(m_metadataFile.RecordsOnDisk, new StateRecord(m_metadataFile.RecordsOnDisk));
+                    m_stateFile.Save();
+
+                    // We synchronize the block list with the number of state records physically present on the disk.
+                    lock (m_dataBlocks)
+                    {
+                        m_dataBlocks.AddRange(new ArchiveDataBlock[m_stateFile.RecordsOnDisk - m_dataBlocks.Count]);
+                    }
                 }
             }
         }
