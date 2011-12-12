@@ -648,8 +648,9 @@ namespace TVA.Communication
             }
             catch (Exception ex)
             {
-                // Send operation failed to complete.
-                OnSendDataException(ex);
+                // Send operation failed to complete - don't raised exceptions for a closed port
+                if (!m_disposed && m_serialClient.Provider != null && m_serialClient.Provider.IsOpen)
+                    OnSendDataException(ex);
             }
         }
 
@@ -706,7 +707,9 @@ namespace TVA.Communication
             }
             catch (Exception ex)
             {
-                OnReceiveDataException(ex);
+                // Don't raised exceptions for a closed port
+                if (!m_disposed && m_serialClient.Provider != null && m_serialClient.Provider.IsOpen)
+                    OnReceiveDataException(ex);
             }
         }
 
