@@ -43,6 +43,9 @@
 //  04/07/2011 - J. Ritchie Carroll
 //       Added a Reload() method to reload the configuration file settings and a
 //       RestoreDefaultUserSettings() method to restore the default user settings.
+//  12/12/2011 - J. Ritchie Carroll
+//       Added synchronization to save methods such that saves from multiple threads will not
+//       cause issues when lots of new settings are being added.
 //
 //*******************************************************************************************************
 
@@ -282,11 +285,13 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Configuration;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Web.Configuration;
 using System.Web.Hosting;
 using System.Xml;
@@ -391,6 +396,8 @@ namespace TVA.Configuration
     /// <seealso cref="CategorizedSettingsSection"/>
     /// <seealso cref="CategorizedSettingsElement"/>
     /// <seealso cref="CategorizedSettingsElementCollection"/>
+    // Since each instance of this class is statically cached for the process lifetime, IDisposable is not implemented so that
+    // the instance will not be inadvertently disposed
     public class ConfigurationFile
     {
         #region [ Members ]
@@ -490,6 +497,8 @@ namespace TVA.Configuration
         private CultureInfo m_culture;
         private System.Configuration.Configuration m_configuration;
         private UserConfigurationFile m_userConfiguration;
+        private object m_queuedConfigurationSavePending;
+        private AutoResetEvent m_configurationSaveComplete;
 
         #endregion
 
@@ -501,7 +510,11 @@ namespace TVA.Configuration
         internal ConfigurationFile(string configFilePath)
         {
             m_culture = CultureInfo.InvariantCulture;
+            m_queuedConfigurationSavePending = new object();
+            m_configurationSaveComplete = new AutoResetEvent(true);
+
             m_configuration = GetConfiguration(configFilePath);
+
             if (m_configuration.HasFile)
                 ValidateConfigurationFile(m_configuration.FilePath);
             else
@@ -587,8 +600,44 @@ namespace TVA.Configuration
         /// <param name="saveMode">One of the <see cref="ConfigurationSaveMode"/> values.</param>
         public void Save(ConfigurationSaveMode saveMode)
         {
-            m_configuration.Save(saveMode);
-            m_userConfiguration.Save(saveMode == ConfigurationSaveMode.Full);
+            // Since the static open method always returns the same instance for the same configuration files,
+            // synchronizing the instance will sync all saves.
+            Task.Factory.StartNew(QueueConfigurationSave, saveMode);
+        }
+
+        private void QueueConfigurationSave(object state)
+        {
+            // Queue up a configuration save unless another thread has already requested one
+            if (Monitor.TryEnter(m_queuedConfigurationSavePending))
+            {
+                try
+                {
+                    // Queue new configuration save after waiting for any prior save to complete
+                    if (m_configurationSaveComplete.WaitOne())
+                        Task.Factory.StartNew(ExecuteConfigurationSave, state);
+                }
+                finally
+                {
+                    Monitor.Exit(m_queuedConfigurationSavePending);
+                }
+            }
+        }
+
+        private void ExecuteConfigurationSave(object state)
+        {
+            try
+            {
+                // Perform configuration save
+                ConfigurationSaveMode saveMode = (ConfigurationSaveMode)state;
+                m_configuration.Save(saveMode);
+                m_userConfiguration.Save(saveMode == ConfigurationSaveMode.Full);
+            }
+            finally
+            {
+                // Release waiting thread
+                if (m_configurationSaveComplete != null)
+                    m_configurationSaveComplete.Set();
+            }
         }
 
         /// <summary>
@@ -756,13 +805,13 @@ namespace TVA.Configuration
         #region [ Static ]
 
         // Static Fields
-        private static Dictionary<string, ConfigurationFile> s_configFiles;
+        private static ConcurrentDictionary<string, ConfigurationFile> s_configFiles;
 
         // Static Constructor
 
         static ConfigurationFile()
         {
-            s_configFiles = new Dictionary<string, ConfigurationFile>(StringComparer.CurrentCultureIgnoreCase);
+            s_configFiles = new ConcurrentDictionary<string, ConfigurationFile>(StringComparer.CurrentCultureIgnoreCase);
         }
 
         // Static Properties
@@ -787,15 +836,8 @@ namespace TVA.Configuration
         /// <returns>An <see cref="ConfigurationFile"/> object.</returns>
         public static ConfigurationFile Open(string configFilePath)
         {
-            ConfigurationFile configFile;
-            lock (s_configFiles)
-            {
-                // Retrieve config file from cache if present or else add it for subsequent uses.
-                if (!s_configFiles.TryGetValue(configFilePath, out configFile))
-                    s_configFiles.Add(configFilePath, configFile = new ConfigurationFile(configFilePath));
-            }
-
-            return configFile;
+            // Retrieve config file from cache if present or else add it for subsequent uses.
+            return s_configFiles.GetOrAdd(configFilePath, path => new ConfigurationFile(path));
         }
 
         #endregion
