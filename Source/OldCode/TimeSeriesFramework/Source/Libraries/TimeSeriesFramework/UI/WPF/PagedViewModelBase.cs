@@ -97,7 +97,8 @@ namespace TimeSeriesFramework.UI
         private bool m_autoSave;
         private bool m_hideMessages;
         private DispatcherTimer m_timer;
-        private TextBlock m_status;
+        private TextBlock m_statusTextBlock;
+        private TsfPopup m_statusPopup;
 
         #endregion
 
@@ -121,7 +122,8 @@ namespace TimeSeriesFramework.UI
             m_timer.Interval = TimeSpan.FromSeconds(5);
             m_timer.Tick += new EventHandler(m_timer_Tick);
 
-            m_status = (TextBlock)Application.Current.MainWindow.FindName("TextBlockResult");
+            m_statusTextBlock = (TextBlock)Application.Current.MainWindow.FindName("TextBlockResult");
+            m_statusPopup = (TsfPopup)Application.Current.MainWindow.FindName("PopupStatus");
         }
 
         #endregion
@@ -542,15 +544,15 @@ namespace TimeSeriesFramework.UI
         /// <param name="e"></param>
         protected virtual void m_timer_Tick(object sender, EventArgs e)
         {
-            if (m_status != null)
+            if (m_statusPopup != null)
             {
-                if (m_status.Visibility == Visibility.Collapsed)
+                if (!m_statusPopup.IsOpen)
                 {
-                    m_status.Visibility = Visibility.Visible;
+                    m_statusPopup.IsOpen = true;
                 }
                 else
                 {
-                    m_status.Visibility = Visibility.Collapsed;
+                    m_statusPopup.IsOpen = false;
                     m_timer.Stop();
                 }
             }
@@ -575,10 +577,10 @@ namespace TimeSeriesFramework.UI
         /// <returns>Boolean flag indicating success.</returns>
         public virtual bool DisplayStatusMessage(string statusText)
         {
-            if (m_status != null)
+            if (m_statusTextBlock != null && m_statusPopup != null)
             {
-                m_status.Text = statusText;
-                m_status.Visibility = Visibility.Visible;
+                m_statusTextBlock.Text = statusText;
+                m_statusPopup.IsOpen = true;
                 m_timer.Start();
                 return true;
             }
@@ -639,7 +641,7 @@ namespace TimeSeriesFramework.UI
 
                     if (!m_hideMessages)
                     {
-                        if (m_status != null)
+                        if (m_statusTextBlock != null)
                         {
                             DisplayStatusMessage(result);
                         }
@@ -685,7 +687,7 @@ namespace TimeSeriesFramework.UI
 
                     Load();
 
-                    if (m_status != null)
+                    if (m_statusTextBlock != null)
                     {
                         DisplayStatusMessage(result);
                     }

@@ -224,7 +224,8 @@ namespace TimeSeriesFramework.UI.ViewModels
             {
                 string searchText = paramter.ToString().ToLower();
                 ItemsSource = new ObservableCollection<DataModels.Measurement>
-                    (m_measurements.Where(m => m.PointTag.ToLower().Contains(searchText) ||
+                    (m_measurements.Where(m => m.ID.ToLower().Contains(searchText) ||
+                                            m.PointTag.ToLower().Contains(searchText) ||
                                             m.SignalReference.ToLower().Contains(searchText) ||
                                             m.Description.ToNonNullString().ToLower().Contains(searchText) ||
                                             m.DeviceAcronym.ToNonNullString().ToLower().Contains(searchText) ||

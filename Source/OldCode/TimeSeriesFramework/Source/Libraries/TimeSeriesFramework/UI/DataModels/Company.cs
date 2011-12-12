@@ -292,7 +292,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 if (isOptional)
                     companyList.Add(0, "Select Company");
 
-                DataTable companyTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM Company ORDER BY LoadOrder");
+                DataTable companyTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM Company ORDER BY Name");
 
                 foreach (DataRow row in companyTable.Rows)
                     companyList[row.ConvertField<int>("ID")] = row.Field<string>("Name");

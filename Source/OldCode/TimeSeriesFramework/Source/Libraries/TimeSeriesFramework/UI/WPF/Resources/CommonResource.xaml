@@ -302,7 +302,7 @@
         <Setter Property="CanUserAddRows" Value="False" />
         <Setter Property="CanUserDeleteRows" Value="True"/>
         <Setter Property="HorizontalScrollBarVisibility" Value="Hidden" />
-        <Setter Property="VerticalScrollBarVisibility" Value="Auto" />        
+        <Setter Property="VerticalScrollBarVisibility" Value="Auto" />               
     </Style>
     
     <Style TargetType="sdk:DataGridCell">
@@ -317,7 +317,8 @@
     <Style TargetType="Button">
         <Setter Property="Cursor" Value="Hand" />   
         <Setter Property="Width" Value="{StaticResource XSmallItemSize}" />
-        <Setter Property="Height" Value="28"/>        
+        <Setter Property="Height" Value="Auto"/>        
+        <Setter Property="Padding" Value="0,-2,0,-2"/>
         <Setter Property="Margin" Value="2"/>
     </Style>
     
@@ -397,7 +398,7 @@
     
     <ControlTemplate x:Key="HyperlinkStyleButtonTemplate" TargetType="Button">
         <TextBlock Text="{TemplateBinding Content}" TextDecorations="Underline" Cursor="Hand" 
-                   HorizontalAlignment="Center" Width="Auto" Height="Auto" Foreground="#FF3366FF"/>
+                   HorizontalAlignment="Center" Width="Auto" Height="Auto" Foreground="{TemplateBinding Foreground}"/>
     </ControlTemplate>
     
     <ControlTemplate x:Key="ImageButtonTemplate" TargetType="Button">
@@ -405,6 +406,13 @@
             <Image Source="{TemplateBinding Content}" Width="16" Height="16" />
             <TextBlock Text="{TemplateBinding Tag}" />
         </StackPanel>
+    </ControlTemplate>
+    
+    <ControlTemplate x:Key="RoundButtonTemplate" TargetType="Button">
+        <Grid>
+            <Ellipse HorizontalAlignment="Center" VerticalAlignment="Center" Width="{TemplateBinding Width}" Height="{TemplateBinding Height}" Fill="{TemplateBinding Background}"/>
+            <TextBlock Text="{TemplateBinding Content}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{TemplateBinding FontSize}" FontWeight="{TemplateBinding FontWeight}" Foreground="{TemplateBinding Foreground}" />
+        </Grid>
     </ControlTemplate>
 
     <ControlTemplate x:Key="LargeImageButtonTemplate" TargetType="Button">

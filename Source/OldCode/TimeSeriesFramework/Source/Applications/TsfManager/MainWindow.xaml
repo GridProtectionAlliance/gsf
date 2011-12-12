@@ -19,8 +19,9 @@
             <ScaleTransform ScaleX="1" ScaleY="1"/>
         </Canvas.RenderTransform>
 
+        
+        
         <StackPanel Orientation="Vertical">
-
             <StackPanel.Resources>
                 <ResourceDictionary>
                     <ResourceDictionary.MergedDictionaries>
@@ -28,6 +29,12 @@
                     </ResourceDictionary.MergedDictionaries>
                 </ResourceDictionary>
             </StackPanel.Resources>
+
+            <tsf:TsfPopup x:Name="PopupStatus" Topmost="False" Placement="Relative" PlacementTarget="{Binding ElementName=GroupBoxMain}" HorizontalOffset="250">
+                <Border CornerRadius="5" BorderThickness="2" Background="White" BorderBrush="Blue">
+                    <TextBlock x:Name="TextBlockResult" FontSize="{StaticResource LargeTextSize}" Height="Auto"/>
+                </Border>
+            </tsf:TsfPopup>
 
             <Grid Margin="0,5,0,0">
                 <Grid.ColumnDefinitions>
@@ -75,7 +82,7 @@
                 
             </Grid>            
 
-            <TextBlock x:Name="TextBlockResult" Visibility="Collapsed" Foreground="#FFFFFFFF" FontWeight="Bold" VerticalAlignment="Center" Height="Auto" Margin="0,5,5,0" Padding="0"/>
+            <!--<TextBlock x:Name="TextBlockResult" Visibility="Collapsed" Foreground="#FFFFFFFF" FontWeight="Bold" VerticalAlignment="Center" Height="Auto" Margin="0,5,5,0" Padding="0"/>-->
             
             <GroupBox x:Name="GroupBoxMain" Margin="2,-5,2,2">
                 <Border Padding="2" BorderThickness="1" Background="{StaticResource MenuBackgroundBrush}" CornerRadius="5">

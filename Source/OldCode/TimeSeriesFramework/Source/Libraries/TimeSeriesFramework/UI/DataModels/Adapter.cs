@@ -472,7 +472,7 @@ namespace TimeSeriesFramework.UI.DataModels
                     database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("UPDATE " + tableName + " SET NodeID = {0}, AdapterName = {1}, AssemblyName = {2}, " +
                         "TypeName = {3}, ConnectionString = {4}, LoadOrder = {5}, Enabled = {6}, UpdatedBy = {7}, " +
                         "UpdatedOn = {8} WHERE ID = {9}", "nodeID", "adapterName", "assemblyName", "typeName", "connectionString",
-                        "loadOrder", "enabled", "updatedBy", "updatedOn", "id"), DefaultTimeout, adapter.NodeID, adapter.AdapterName, adapter.AssemblyName,
+                        "loadOrder", "enabled", "updatedBy", "updatedOn", "id"), DefaultTimeout, database.Guid(adapter.NodeID), adapter.AdapterName, adapter.AssemblyName,
                         adapter.TypeName, adapter.ConnectionString.ToNotNull(), adapter.LoadOrder, database.Bool(adapter.Enabled), CommonFunctions.CurrentUser,
                         database.UtcNow(), adapter.ID);
 
