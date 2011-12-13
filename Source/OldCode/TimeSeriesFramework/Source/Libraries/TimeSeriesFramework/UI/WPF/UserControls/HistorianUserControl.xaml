@@ -71,7 +71,7 @@
                 <TextBlock Text="Reporting Interval" Style="{StaticResource RequiredLabel}" />
                 <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
-            <TextBox Grid.Row="4" Grid.Column="3" Text="{tsfBinding:Column Path=MeasurementReportingInterval}" Width="{StaticResource XXSmallItemSize}"/>
+            <TextBox Grid.Row="4" Grid.Column="3" Text="{tsfBinding:Column Path=MeasurementReportingInterval}" Width="{StaticResource XSmallItemSize}"/>
             <TextBlock Text="Runtime ID" Grid.Row="5" Grid.Column="0" />
             <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="1">
                 <TextBlock Text="{tsfBinding:Column Path=DataContext.RuntimeID, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}}" />
