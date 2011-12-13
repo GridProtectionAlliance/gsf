@@ -173,8 +173,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Alternate Tag.
-        /// </summary>
-        [StringLength(200, ErrorMessage = "Measurement alternate tag cannot exceed 200 characters.")]
+        /// </summary>        
         public string AlternateTag
         {
             get
@@ -183,10 +182,7 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set
             {
-                if (value != null && value.Length > 200)
-                    m_alternateTag = value.Substring(0, 200);
-                else
-                    m_alternateTag = value;
+                m_alternateTag = value;
                 OnPropertyChanged("AlternateTag");
             }
         }
