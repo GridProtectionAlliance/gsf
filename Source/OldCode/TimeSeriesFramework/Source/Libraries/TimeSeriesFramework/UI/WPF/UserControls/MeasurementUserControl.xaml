@@ -52,7 +52,7 @@
             </StackPanel>
             <TextBox Grid.Row="0" Grid.Column="1" Text="{tsfBinding:Column Path=PointTag}" CharacterCasing="Upper"/>
             <TextBlock Grid.Row="0" Grid.Column="2" Text="Device ID"/>
-            <TextBox Grid.Row="0" Grid.Column="3" Text="{tsfBinding:Column Path=DeviceID}" />
+            <TextBox Grid.Row="0" Grid.Column="3" Text="{tsfBinding:Column Path=DeviceID}" Width="{StaticResource XXSmallItemSize}" />
             
             <!--Second Row-->
             <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right">

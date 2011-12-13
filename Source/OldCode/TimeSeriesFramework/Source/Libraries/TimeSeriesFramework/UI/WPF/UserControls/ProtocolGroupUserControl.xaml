@@ -46,7 +46,7 @@
             <TextBlock Grid.Row="1" Grid.Column="0" Text="Type"/>
             <TextBox Grid.Row="1" Grid.Column="1" Text="{tsfBinding:Column Path=Type}"/>
             <TextBlock Grid.Row="1" Grid.Column="2" Text="Load Order"/>
-            <TextBox Grid.Row="1" Grid.Column="3" Text="{tsfBinding:Column Path=LoadOrder}"/>
+            <TextBox Grid.Row="1" Grid.Column="3" Text="{tsfBinding:Column Path=LoadOrder}" Width="35"/>
             
             <!--Third Row-->
             <TextBlock Grid.Row="2" Grid.Column="0" Text="Category"/>

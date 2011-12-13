@@ -66,12 +66,12 @@
                 <TextBlock Text="Load Order" Style="{StaticResource RequiredLabel}" />
                 <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
-            <TextBox Grid.Row="4" Grid.Column="1" Text="{tsfBinding:Column Path=LoadOrder}" />
+            <TextBox Grid.Row="4" Grid.Column="1" Text="{tsfBinding:Column Path=LoadOrder}"  Width="35"/>
             <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="2" HorizontalAlignment="Right" Height="32" VerticalAlignment="Top">
                 <TextBlock Text="Reporting Interval" Style="{StaticResource RequiredLabel}" />
                 <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
-            <TextBox Grid.Row="4" Grid.Column="3" Text="{tsfBinding:Column Path=MeasurementReportingInterval}" />
+            <TextBox Grid.Row="4" Grid.Column="3" Text="{tsfBinding:Column Path=MeasurementReportingInterval}" Width="{StaticResource XXSmallItemSize}"/>
             <TextBlock Text="Runtime ID" Grid.Row="5" Grid.Column="0" />
             <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="1">
                 <TextBlock Text="{tsfBinding:Column Path=DataContext.RuntimeID, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}}" />

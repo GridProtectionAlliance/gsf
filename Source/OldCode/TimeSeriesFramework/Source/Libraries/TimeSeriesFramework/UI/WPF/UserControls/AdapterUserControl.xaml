@@ -62,7 +62,7 @@
                 <TextBlock Text="Load Order" Style="{StaticResource RequiredLabel}" />
                 <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>            
-            <TextBox Grid.Row="1" Grid.Column="3" Text="{tsfBinding:Column Path=LoadOrder}" />
+            <TextBox Grid.Row="1" Grid.Column="3" Text="{tsfBinding:Column Path=LoadOrder}" Width="35" />
             <GroupBox Grid.Row="2" Grid.ColumnSpan="4" Header="Adapter Type">
                 <Grid>
                     <Grid.ColumnDefinitions>

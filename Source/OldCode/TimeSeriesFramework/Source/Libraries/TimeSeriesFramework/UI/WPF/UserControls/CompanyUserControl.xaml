@@ -55,7 +55,7 @@
                 <TextBlock Text="Load Order" Style="{StaticResource RequiredLabel}" />
                 <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
-            <TextBox Grid.Row="1" Grid.Column="3" Text="{tsfBinding:Column Path=LoadOrder}" />
+            <TextBox Grid.Row="1" Grid.Column="3" Text="{tsfBinding:Column Path=LoadOrder}" Width="35"/>
             <TextBlock Grid.Row="2" Grid.Column="0" Text="URL" />
             <TextBox Grid.Row="2" Grid.Column="1" Text="{tsfBinding:Column Path=URL}" />
             

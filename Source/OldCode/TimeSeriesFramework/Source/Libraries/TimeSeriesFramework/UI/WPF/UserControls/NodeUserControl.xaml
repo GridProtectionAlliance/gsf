@@ -72,7 +72,7 @@
                 <TextBlock Text="Load Order" Style="{StaticResource RequiredLabel}" />
                 <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
-            <TextBox Grid.Row="7" Grid.Column="1" Text="{tsfBinding:Column Path=LoadOrder}" />
+            <TextBox Grid.Row="7" Grid.Column="1" Text="{tsfBinding:Column Path=LoadOrder}" Width="35" />
             <CheckBox Content="Master" Grid.Row="7" Grid.Column="2" IsChecked="{tsfBinding:Column Path=Master}"/>
             <CheckBox Content="Enabled" Grid.Row="7" Grid.Column="3" IsChecked="{tsfBinding:Column Path=Enabled}"/>
         </Grid>
