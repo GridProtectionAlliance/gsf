@@ -136,7 +136,8 @@
         <Setter Property="HorizontalAlignment" Value="Left" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="Width" Value="{StaticResource LargerItemSize}" />
-        <Setter Property="Margin" Value="5" />        
+        <Setter Property="Margin" Value="5" />  
+        <Setter Property="MinHeight" Value="22"/>
         <Setter Property="Validation.ErrorTemplate">
             <Setter.Value>
                 <ControlTemplate>
@@ -159,6 +160,7 @@
     <Style TargetType="{x:Type ComboBox}">
         <Setter Property="Width" Value="{StaticResource LargerItemSize}"/>
         <Setter Property="Height" Value="Auto"/>
+        <Setter Property="MinHeight" Value="22"/>
         <Setter Property="Margin" Value="2"/>
         <Setter Property="Padding" Value="0"/>
         <Setter Property="VerticalAlignment" Value="Center" />

@@ -163,7 +163,10 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set
             {
-                m_pointTag = value;
+                if (value != null && value.Length > 200)
+                    m_pointTag = value.Substring(0, 200);
+                else
+                    m_pointTag = value;
                 OnPropertyChanged("PointTag");
             }
         }
@@ -180,7 +183,10 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set
             {
-                m_alternateTag = value;
+                if (value != null && value.Length > 200)
+                    m_alternateTag = value.Substring(0, 200);
+                else
+                    m_alternateTag = value;
                 OnPropertyChanged("AlternateTag");
             }
         }
