@@ -406,6 +406,8 @@ namespace TimeSeriesFramework
         private FrameQueue m_frameQueue;                    // Queue of frames to be published
         private Thread m_publicationThread;                 // Thread that handles frame publication
         private AutoResetEvent m_publicationWaitHandle;     // Interframe publication wait handle
+        private AutoResetEvent[] m_externalEventHandles;    // External event wait handles
+        private int m_externalEventTimeout;                 // External event timeout
         private bool m_usePrecisionTimer;                   // Flag that enables use of precision timer (over just simple thread sleep)
         private bool m_attachedToFrameRateTimer;            // Flag that tracks if instance is attached to a frame rate timer
         private System.Timers.Timer m_monitorTimer;         // Sample monitor - tracks total number of unpublished frames
@@ -882,6 +884,47 @@ namespace TimeSeriesFramework
             set
             {
                 m_maximumPublicationTimeout = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets collection of <see cref="AutoResetEvent"/> wait handles used to synchronize concentration publication with external events.
+        /// </summary>
+        protected AutoResetEvent[] ExternalEventHandles
+        {
+            get
+            {
+                return m_externalEventHandles;
+            }
+            set
+            {
+                if (value != null && value.Length > 0)
+                {
+                    m_externalEventHandles = value;
+
+                    // Assign default external event timeout if none is defined
+                    if (m_externalEventTimeout == 0)
+                        m_externalEventTimeout = (int)(m_ticksPerFrame / Ticks.PerMillisecond);
+                }
+                else
+                {
+                    m_externalEventHandles = null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets maximum to time to wait, in milliseconds, for external events before publishing proceeds.
+        /// </summary>
+        protected int ExternalEventTimeout
+        {
+            get
+            {
+                return m_externalEventTimeout;
+            }
+            set
+            {
+                m_externalEventTimeout = value;
             }
         }
 
@@ -1501,6 +1544,13 @@ namespace TimeSeriesFramework
                 status.AppendLine();
                 status.AppendFormat("       Downsampling method: {0}", m_downsamplingMethod);
                 status.AppendLine();
+                status.AppendFormat("    External event handles: {0}", m_externalEventHandles == null ? "None defined" : m_externalEventHandles.Length + " defined");
+                status.AppendLine();
+                if (m_externalEventHandles != null)
+                {
+                    status.AppendFormat("    External event timeout: {0} milliseconds", m_externalEventTimeout);
+                    status.AppendLine();
+                }
                 status.AppendFormat("    Local clock time (UTC): {0}", currentTime.ToString("dd-MMM-yyyy HH:mm:ss.fff"));
                 status.AppendLine();
                 status.AppendFormat("  Using clock as real-time: {0}", m_useLocalClockAsRealTime);
@@ -1662,7 +1712,7 @@ namespace TimeSeriesFramework
                             AutoResetEvent publicationWaitHandle = m_publicationWaitHandle;
                             m_publicationWaitHandle = null;
                             publicationWaitHandle.Set();
-                            publicationWaitHandle.Close();
+                            publicationWaitHandle.Dispose();
                         }
 
                         if (m_frameQueue != null)
@@ -2192,6 +2242,10 @@ namespace TimeSeriesFramework
                                     Interlocked.Increment(ref m_framesAheadOfSchedule);
                                 }
                             }
+
+                            // Handle any needed external synchronization, if defined
+                            if (m_externalEventHandles != null)
+                                WaitHandle.WaitAll(m_externalEventHandles, m_externalEventTimeout);
 
                             // Mark start time for publication
 #if UseHighResolutionTime

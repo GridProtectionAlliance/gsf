@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -96,6 +97,7 @@ namespace TimeSeriesFramework.Adapters
         private string[] m_outputSourceIDs;
         private MeasurementKey[] m_requestedInputMeasurementKeys;
         private MeasurementKey[] m_requestedOutputMeasurementKeys;
+        private ConcurrentDictionary<string, AutoResetEvent> m_waitHandles;
         private Ticks m_lastProcessTime;
         private Time m_totalProcessTime;
         private long m_processedMeasurements;
@@ -122,6 +124,7 @@ namespace TimeSeriesFramework.Adapters
             m_stopTimeConstraint = DateTime.MaxValue;
             m_processingInterval = -1;
             m_initializationTimeout = AdapterBase.DefaultInitializationTimeout;
+            m_waitHandles = new ConcurrentDictionary<string, AutoResetEvent>(StringComparer.InvariantCultureIgnoreCase);
             m_autoStart = true;
 
             m_monitorTimer = new System.Timers.Timer();
@@ -773,6 +776,15 @@ namespace TimeSeriesFramework.Adapters
                         m_monitorTimer = null;
 
                         Clear();        // This disposes all items in collection...
+
+                        foreach (AutoResetEvent waitHandle in m_waitHandles.Values)
+                        {
+                            if (waitHandle != null)
+                                waitHandle.Dispose();
+                        }
+
+                        m_waitHandles.Clear();
+                        m_waitHandles = null;
                     }
                 }
                 finally
@@ -836,6 +848,16 @@ namespace TimeSeriesFramework.Adapters
                 else
                     throw new InvalidOperationException(string.Format("Data set member \"{0}\" was not found in data source, check ConfigurationEntity. Failed to initialize {1}.", DataMember, Name));
             }
+        }
+
+        /// <summary>
+        /// Gets a common wait handle for inter-adapter synchronization.
+        /// </summary>
+        /// <param name="name">Case-insensitive wait handle name.</param>
+        /// <returns>A <see cref="AutoResetEvent"/> based wait handle associated with the given <paramref name="name"/>.</returns>
+        public virtual AutoResetEvent GetExternalEventHandle(string name)
+        {
+            return m_waitHandles.GetOrAdd(name, key => new AutoResetEvent(false));
         }
 
         /// <summary>

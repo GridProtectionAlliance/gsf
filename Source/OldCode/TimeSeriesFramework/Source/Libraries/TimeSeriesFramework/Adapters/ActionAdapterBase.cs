@@ -806,8 +806,19 @@ namespace TimeSeriesFramework.Adapters
                 SetTemporalConstraint(startTime, stopTime, parameters);
             }
 
-            if (settings.TryGetValue("processingInterval", out setting))
-                ProcessingInterval = int.Parse(setting);
+            int processingInterval;
+
+            if (settings.TryGetValue("processingInterval", out setting) && !string.IsNullOrWhiteSpace(setting) && int.TryParse(setting, out processingInterval))
+                ProcessingInterval = processingInterval;
+
+            // Establish any defined external event wait handles needed for inter-adapter synchronization
+            if (settings.TryGetValue("waitHandleNames", out setting) && !string.IsNullOrWhiteSpace(setting))
+                ExternalEventHandles = setting.Split(',').Select(name => GetExternalEventHandle(name)).ToArray();
+
+            int waitHandleTimeout;
+
+            if (settings.TryGetValue("waitHandleTimeout", out setting) && !string.IsNullOrWhiteSpace(setting) && int.TryParse(setting, out waitHandleTimeout))
+                ExternalEventTimeout = waitHandleTimeout;
         }
 
         /// <summary>
@@ -857,6 +868,16 @@ namespace TimeSeriesFramework.Adapters
         void IAdapter.AssignParentCollection(IAdapterCollection parent)
         {
             AssignParentCollection(parent);
+        }
+
+        /// <summary>
+        /// Gets a common wait handle for inter-adapter synchronization.
+        /// </summary>
+        /// <param name="name">Case-insensitive wait handle name.</param>
+        /// <returns>A <see cref="AutoResetEvent"/> based wait handle associated with the given <paramref name="name"/>.</returns>
+        public virtual AutoResetEvent GetExternalEventHandle(string name)
+        {
+            return m_parent.GetExternalEventHandle(name);
         }
 
         /// <summary>

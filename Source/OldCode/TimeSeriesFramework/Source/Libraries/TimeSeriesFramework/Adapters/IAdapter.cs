@@ -270,6 +270,13 @@ namespace TimeSeriesFramework.Adapters
         bool WaitForInitialize(int timeout);
 
         /// <summary>
+        /// Gets a common wait handle for inter-adapter synchronization.
+        /// </summary>
+        /// <param name="name">Case-insensitive wait handle name.</param>
+        /// <returns>A <see cref="AutoResetEvent"/> based wait handle associated with the given <paramref name="name"/>.</returns>
+        AutoResetEvent GetExternalEventHandle(string name);
+
+        /// <summary>
         /// Defines a temporal processing constraint for the adapter.
         /// </summary>
         /// <param name="startTime">Defines a relative or exact start time for the temporal constraint.</param>

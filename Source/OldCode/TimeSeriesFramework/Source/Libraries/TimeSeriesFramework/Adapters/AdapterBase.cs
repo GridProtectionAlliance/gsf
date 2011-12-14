@@ -99,6 +99,8 @@ namespace TimeSeriesFramework.Adapters
         private bool m_autoStart;
         private bool m_processMeasurementFilter;
         private ManualResetEvent m_initializeWaitHandle;
+        private AutoResetEvent[] m_externalEventHandles;
+        private int m_externalEventTimeout;
         private MeasurementKey[] m_inputMeasurementKeys;
         private IMeasurement[] m_outputMeasurements;
         private List<MeasurementKey> m_inputMeasurementKeysHash;
@@ -608,6 +610,8 @@ namespace TimeSeriesFramework.Adapters
                 status.AppendLine();
                 status.AppendFormat("    Total adapter run time: {0}", RunTime.ToString());
                 status.AppendLine();
+                status.AppendFormat("    External event handles: {0}", m_externalEventHandles == null ? "None defined" : m_externalEventHandles.Length + " defined");
+                status.AppendLine();
                 status.AppendFormat("       Temporal processing: {0}", SupportsTemporalProcessing ? "Supported" : "Unsupported");
                 status.AppendLine();
                 if (SupportsTemporalProcessing)
@@ -692,6 +696,42 @@ namespace TimeSeriesFramework.Adapters
             }
         }
 
+        /// <summary>
+        /// Gets or sets collection of <see cref="AutoResetEvent"/> wait handles used to synchronize activity with external events.
+        /// </summary>
+        /// <remarks>
+        /// Each defined external event in the collection should be acquired via <see cref="GetExternalEventHandle"/>.
+        /// </remarks>
+        protected AutoResetEvent[] ExternalEventHandles
+        {
+            get
+            {
+                return m_externalEventHandles;
+            }
+            set
+            {
+                if (value != null && value.Length > 0)
+                    m_externalEventHandles = value;
+                else
+                    m_externalEventHandles = null;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets maximum to time to wait, in milliseconds, for external events before proceeding.
+        /// </summary>
+        protected int ExternalEventTimeout
+        {
+            get
+            {
+                return m_externalEventTimeout;
+            }
+            set
+            {
+                m_externalEventTimeout = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -770,8 +810,21 @@ namespace TimeSeriesFramework.Adapters
                 SetTemporalConstraint(startTime, stopTime, parameters);
             }
 
-            if (settings.TryGetValue("processingInterval", out setting))
-                ProcessingInterval = int.Parse(setting);
+            int processingInterval;
+
+            if (settings.TryGetValue("processingInterval", out setting) && !string.IsNullOrWhiteSpace(setting) && int.TryParse(setting, out processingInterval))
+                ProcessingInterval = processingInterval;
+
+            // Establish any defined external event wait handles needed for inter-adapter synchronization
+            if (settings.TryGetValue("waitHandleNames", out setting) && !string.IsNullOrWhiteSpace(setting))
+                m_externalEventHandles = setting.Split(',').Select(name => GetExternalEventHandle(name)).ToArray();
+
+            int waitHandleTimeout;
+
+            if (settings.TryGetValue("waitHandleTimeout", out setting) && !string.IsNullOrWhiteSpace(setting) && int.TryParse(setting, out waitHandleTimeout))
+                m_externalEventTimeout = waitHandleTimeout;
+            else
+                m_externalEventTimeout = 33;
         }
 
         /// <summary>
@@ -818,6 +871,34 @@ namespace TimeSeriesFramework.Adapters
         void IAdapter.AssignParentCollection(IAdapterCollection parent)
         {
             AssignParentCollection(parent);
+        }
+
+        /// <summary>
+        /// Gets a common wait handle for inter-adapter synchronization.
+        /// </summary>
+        /// <param name="name">Case-insensitive wait handle name.</param>
+        /// <returns>A <see cref="AutoResetEvent"/> based wait handle associated with the given <paramref name="name"/>.</returns>
+        public virtual AutoResetEvent GetExternalEventHandle(string name)
+        {
+            return m_parent.GetExternalEventHandle(name);
+        }
+
+        /// <summary>
+        /// Waits for all external events to fire; no wait will happen if no external events are defined.
+        /// </summary>
+        /// <param name="timeout">Maximum to time to wait, in milliseconds, for external events before proceeding - value defaults to <see cref="ExternalEventTimeout"/>.</param>
+        /// <returns><c>true</c> when every all <see cref="ExternalEventHandles"/> have received a signal or there are no external events defined; otherwise, <c>false</c>.</returns>
+        protected virtual bool WaitForExternalEvents(int timeout = 0)
+        {
+            if (m_externalEventHandles != null)
+            {
+                if (timeout == 0)
+                    timeout = m_externalEventTimeout;
+
+                return WaitHandle.WaitAll(m_externalEventHandles, timeout);
+            }
+
+            return true;
         }
 
         /// <summary>
