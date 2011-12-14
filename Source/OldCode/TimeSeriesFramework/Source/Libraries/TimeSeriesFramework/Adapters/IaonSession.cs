@@ -121,6 +121,7 @@ namespace TimeSeriesFramework.Adapters
         private OutputAdapterCollection m_outputAdapters;
         private ConcurrentDictionary<string, AutoResetEvent> m_waitHandles;
         private ConcurrentDictionary<object, string> m_derivedNameCache;
+        private MeasurementKey[] m_lastInputMeasurementKeysRestriction;
         private bool m_useMeasurementRouting;
         private int m_measurementWarningThreshold;
         private int m_measurementDumpingThreshold;
@@ -167,6 +168,7 @@ namespace TimeSeriesFramework.Adapters
 
             // Create a new set of routing tables
             m_routingTables = new RoutingTables();
+            m_routingTables.ProcessException += m_routingTables_ProcessException;
 
             // Create a collection to manage all input, action and output adapter collections as a unit
             m_allAdapters = new AllAdaptersCollection(m_waitHandles);
@@ -507,8 +509,10 @@ namespace TimeSeriesFramework.Adapters
 
                         // Dispose of routing tables
                         if (m_routingTables != null)
+                        {
+                            m_routingTables.ProcessException -= m_routingTables_ProcessException;
                             m_routingTables.Dispose();
-
+                        }
                         m_routingTables = null;
 
                         // Dispose of wait handle dictionary
@@ -553,7 +557,7 @@ namespace TimeSeriesFramework.Adapters
                 m_allAdapters.Start();
 
                 // Spawn routing table calculation
-                RecalculateRoutingTables();
+                RecalculateRoutingTables(null);
             }
         }
 
@@ -609,10 +613,16 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Recalculates routing tables as long as all adapters have been initialized.
         /// </summary>
-        public virtual void RecalculateRoutingTables()
+        /// <param name="inputMeasurementKeysRestriction">Input measurement key restrictions.</param>
+        /// <remarks>
+        /// Set the <paramref name="inputMeasurementKeysRestriction"/> to null to use full adapter routing demands.
+        /// </remarks>
+        public virtual void RecalculateRoutingTables(MeasurementKey[] inputMeasurementKeysRestriction = null)
         {
+            m_lastInputMeasurementKeysRestriction = inputMeasurementKeysRestriction;
+
             if (m_useMeasurementRouting && m_routingTables != null && m_allAdapters != null && m_allAdapters.Initialized)
-                m_routingTables.CalculateRoutingTables();
+                m_routingTables.CalculateRoutingTables(inputMeasurementKeysRestriction);
         }
 
         /// <summary>
@@ -756,7 +766,7 @@ namespace TimeSeriesFramework.Adapters
         public virtual void InputMeasurementKeysUpdatedHandler(object sender, EventArgs e)
         {
             // When adapter measurement keys are dynamically updated, routing tables need to be updated
-            RecalculateRoutingTables();
+            RecalculateRoutingTables(m_lastInputMeasurementKeysRestriction);
 
             // Bubble message up to any event subscribers
             OnInputMeasurementKeysUpdated(sender);
@@ -770,7 +780,7 @@ namespace TimeSeriesFramework.Adapters
         public virtual void OutputMeasurementsUpdatedHandler(object sender, EventArgs e)
         {
             // When adapter measurement keys are dynamically updated, routing tables need to be updated
-            RecalculateRoutingTables();
+            RecalculateRoutingTables(m_lastInputMeasurementKeysRestriction);
 
             // Bubble message up to any event subscribers
             OnOutputMeasurementsUpdated(sender);
@@ -871,6 +881,12 @@ namespace TimeSeriesFramework.Adapters
 
             // Bubble message up to any event subscribers
             OnDisposed(sender);
+        }
+
+        // Bubble routing table exceptions out through Iaon session
+        private void m_routingTables_ProcessException(object sender, EventArgs<Exception> e)
+        {
+            ProcessExceptionHandler(sender, e);
         }
 
         #endregion

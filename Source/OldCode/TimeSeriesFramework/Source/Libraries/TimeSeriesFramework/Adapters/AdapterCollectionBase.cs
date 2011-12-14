@@ -346,15 +346,26 @@ namespace TimeSeriesFramework.Adapters
                 if (m_inputMeasurementKeys != null)
                     return m_inputMeasurementKeys;
 
+                List<MeasurementKey> keys = new List<MeasurementKey>();
+
                 // Otherwise return cumulative results of all child adapters
                 lock (this)
                 {
-                    // If any of the children expects all measurements (i.e., null InputMeasurementKeys) then the parent collection must expect all measurements
-                    if (this.Any<IAdapter>(item => item.InputMeasurementKeys == null))
-                        return null;
+                    foreach (T adapter in this)
+                    {
+                        if (adapter != null)
+                        {
+                            // If any of the children expects all measurements (i.e., null InputMeasurementKeys)
+                            // then the parent collection must expect all measurements
+                            if (adapter.InputMeasurementKeys == null)
+                                return null;
 
-                    return this.SelectMany<IAdapter, MeasurementKey>(item => item.InputMeasurementKeys).Distinct().ToArray();
+                            keys.AddRange(adapter.InputMeasurementKeys);
+                        }
+                    }
                 }
+
+                return keys.Distinct().ToArray();
             }
             set
             {
@@ -375,10 +386,22 @@ namespace TimeSeriesFramework.Adapters
                     return m_outputMeasurements;
 
                 // Otherwise return cumulative results of all child adapters
+                List<IMeasurement> measurements = new List<IMeasurement>();
+
+                // Otherwise return cumulative results of all child adapters
                 lock (this)
                 {
-                    return this.Where<IAdapter>(item => item.OutputMeasurements != null).SelectMany<IAdapter, IMeasurement>(item => item.OutputMeasurements).Distinct().ToArray();
+                    foreach (T adapter in this)
+                    {
+                        if (adapter != null)
+                        {
+                            if (adapter.OutputMeasurements != null)
+                                measurements.AddRange(adapter.OutputMeasurements);
+                        }
+                    }
                 }
+
+                return measurements.Distinct().ToArray();
             }
             set
             {

@@ -210,7 +210,7 @@ namespace TimeSeriesFramework.Transport
 
             // Recalculate routing tables to accomodate addtion of proxy adapter
             // and possible changes due to assignment of temporal constraints
-            session.RecalculateRoutingTables();
+            session.RecalculateRoutingTables(inputMeasurementKeys);
 
             return session;
         }

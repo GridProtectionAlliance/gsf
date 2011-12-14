@@ -39,6 +39,16 @@ namespace TimeSeriesFramework.Adapters
     {
         #region [ Members ]
 
+        // Events
+
+        /// <summary>
+        /// Event is raised when there is an exception encountered while processing.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the exception that was thrown.
+        /// </remarks>
+        public event EventHandler<EventArgs<Exception>> ProcessException;
+
         // Fields
         private InputAdapterCollection m_inputAdapters;
         private ActionAdapterCollection m_actionAdapters;
@@ -177,9 +187,13 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Spawn routing tables recalculation.
         /// </summary>
-        public virtual void CalculateRoutingTables()
+        /// <param name="inputMeasurementKeysRestriction">Input measurement key restrictions.</param>
+        /// <remarks>
+        /// Set the <paramref name="inputMeasurementKeysRestriction"/> to null to use full adapter routing demands.
+        /// </remarks>
+        public virtual void CalculateRoutingTables(MeasurementKey[] inputMeasurementKeysRestriction)
         {
-            ThreadPool.QueueUserWorkItem(QueueRoutingTableCalculation);
+            ThreadPool.QueueUserWorkItem(QueueRoutingTableCalculation, inputMeasurementKeysRestriction);
         }
 
         private void QueueRoutingTableCalculation(object state)
@@ -191,7 +205,7 @@ namespace TimeSeriesFramework.Adapters
                 {
                     // Queue new routing table calculation after waiting for any prior calculation to complete
                     if (m_calculationComplete.WaitOne())
-                        ThreadPool.QueueUserWorkItem(CalculateRoutingTables);
+                        ThreadPool.QueueUserWorkItem(CalculateRoutingTables, state);
                 }
                 finally
                 {
@@ -295,7 +309,11 @@ namespace TimeSeriesFramework.Adapters
                 }
 
                 // Start or stop any connect on demand adapters
-                HandleConnectOnDemandAdapters();
+                HandleConnectOnDemandAdapters((MeasurementKey[])state);
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException("Routing tables calculation error: " + ex.Message, ex));
             }
             finally
             {
@@ -430,31 +448,53 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
+        /// Raises <see cref="ProcessException"/> event.
+        /// </summary>
+        /// <param name="ex">Processing <see cref="Exception"/>.</param>
+        protected virtual void OnProcessException(Exception ex)
+        {
+            if (ProcessException != null)
+                ProcessException(this, new EventArgs<Exception>(ex));
+        }
+
+        /// <summary>
         /// Starts or stops connect on demand adapters based on current state of demanded input or output measurements.
         /// </summary>
-        protected virtual void HandleConnectOnDemandAdapters()
+        /// <param name="inputMeasurementKeysRestriction">Input measurement key restrictions.</param>
+        /// <remarks>
+        /// Set the <paramref name="inputMeasurementKeysRestriction"/> to null to use full adapter routing demands.
+        /// </remarks>
+        protected virtual void HandleConnectOnDemandAdapters(MeasurementKey[] inputMeasurementKeysRestriction)
         {
             IEnumerable<MeasurementKey> outputMeasurementKeys = null;
             IEnumerable<MeasurementKey> inputMeasurementKeys = null;
             MeasurementKey[] requestedOutputMeasurementKeys, requestedInputMeasurementKeys, emptyKeys = new MeasurementKey[0];
 
-            // Get the full list of output measurements that can be provided in this Iaon session
-            if (m_inputAdapters != null)
-                outputMeasurementKeys = m_inputAdapters.OutputMeasurements.Select(m => m.Key);
-
-            if (m_actionAdapters != null)
+            if (inputMeasurementKeysRestriction == null)
             {
-                if (outputMeasurementKeys == null || outputMeasurementKeys.Count() == 0)
-                {
-                    outputMeasurementKeys = m_actionAdapters.OutputMeasurements.Select(m => m.Key);
-                }
-                else
-                {
-                    IEnumerable<MeasurementKey> actionAdapterOutputMeasurementKeys = m_actionAdapters.OutputMeasurements.Select(m => m.Key);
+                // Get the full list of output measurements keys that can be provided in this Iaon session
+                if (m_inputAdapters != null)
+                    outputMeasurementKeys = m_inputAdapters.OutputMeasurements.Select(m => m.Key);
 
-                    if (actionAdapterOutputMeasurementKeys != null && actionAdapterOutputMeasurementKeys.Count() > 0)
-                        outputMeasurementKeys = outputMeasurementKeys.Concat(actionAdapterOutputMeasurementKeys).Distinct();
+                if (m_actionAdapters != null)
+                {
+                    if (outputMeasurementKeys == null || outputMeasurementKeys.Count() == 0)
+                    {
+                        outputMeasurementKeys = m_actionAdapters.OutputMeasurements.Select(m => m.Key);
+                    }
+                    else
+                    {
+                        IEnumerable<MeasurementKey> actionAdapterOutputMeasurementKeys = m_actionAdapters.OutputMeasurements.Select(m => m.Key);
+
+                        if (actionAdapterOutputMeasurementKeys != null && actionAdapterOutputMeasurementKeys.Count() > 0)
+                            outputMeasurementKeys = outputMeasurementKeys.Concat(actionAdapterOutputMeasurementKeys).Distinct();
+                    }
                 }
+            }
+            else
+            {
+                // Calculate the output measurement keys by walking the depdency chain of the specified input measurement key restrictions
+                outputMeasurementKeys = FindOutputMeasurementKeyDependencyChain(inputMeasurementKeysRestriction);
             }
 
             // Handle connect on demand action adapters and output adapters based on currently provisioned output measurements
@@ -535,23 +575,31 @@ namespace TimeSeriesFramework.Adapters
                 }
             }
 
-            // Get the full list of input measurements that can be demanded in this Iaon session
-            if (m_outputAdapters != null)
-                inputMeasurementKeys = m_outputAdapters.InputMeasurementKeys;
-
-            if (m_actionAdapters != null)
+            if (inputMeasurementKeysRestriction == null)
             {
-                if (inputMeasurementKeys == null || inputMeasurementKeys.Count() == 0)
-                {
-                    inputMeasurementKeys = m_actionAdapters.InputMeasurementKeys;
-                }
-                else
-                {
-                    MeasurementKey[] actionAdapterInputMeasurementKeys = m_actionAdapters.InputMeasurementKeys;
+                // Get the full list of input measurements that can be demanded in this Iaon session
+                if (m_outputAdapters != null)
+                    inputMeasurementKeys = m_outputAdapters.InputMeasurementKeys;
 
-                    if (actionAdapterInputMeasurementKeys != null && actionAdapterInputMeasurementKeys.Length > 0)
-                        inputMeasurementKeys = inputMeasurementKeys.Concat(actionAdapterInputMeasurementKeys).Distinct();
+                if (m_actionAdapters != null)
+                {
+                    if (inputMeasurementKeys == null || inputMeasurementKeys.Count() == 0)
+                    {
+                        inputMeasurementKeys = m_actionAdapters.InputMeasurementKeys;
+                    }
+                    else
+                    {
+                        MeasurementKey[] actionAdapterInputMeasurementKeys = m_actionAdapters.InputMeasurementKeys;
+
+                        if (actionAdapterInputMeasurementKeys != null && actionAdapterInputMeasurementKeys.Length > 0)
+                            inputMeasurementKeys = inputMeasurementKeys.Concat(actionAdapterInputMeasurementKeys).Distinct();
+                    }
                 }
+            }
+            else
+            {
+                // Use the specified input measurement key restriction
+                inputMeasurementKeys = inputMeasurementKeysRestriction;
             }
 
             // Handle connect on demand action adapters and input adapters based on currently demanded input measurements
@@ -640,6 +688,125 @@ namespace TimeSeriesFramework.Adapters
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Find the output measurement key dependency chain based on a set of input measurement key restrictions.
+        /// </summary>
+        /// <param name="inputMeasurementKeysRestriction">Input measurement key restrictions.</param>
+        /// <returns>Output measurement key dependency chain based on a set of input measurement key restrictions.</returns>
+        protected virtual IEnumerable<MeasurementKey> FindOutputMeasurementKeyDependencyChain(MeasurementKey[] inputMeasurementKeysRestriction)
+        {
+            IEnumerable<MeasurementKey> outputMeasurementKeys = null;
+            List<MeasurementKey> inputMeasurementKeys = new List<MeasurementKey>(inputMeasurementKeysRestriction);
+
+            // We keep lists sorted so we can use binary searches for faster tests for existance
+            inputMeasurementKeys.Sort();
+
+            List<IActionAdapter> actionAdapters = new List<IActionAdapter>();
+            IEnumerable<IActionAdapter> newActionAdapters = null;
+
+            do
+            {
+                if (newActionAdapters != null)
+                {
+                    actionAdapters.AddRange(newActionAdapters);
+                    actionAdapters.Sort();
+
+                    inputMeasurementKeys = inputMeasurementKeys.Concat(GetInputMeasurementKeys(actionAdapters)).Distinct().ToList();
+                    inputMeasurementKeys.Sort();
+                }
+
+                newActionAdapters = FindDistinctActionAdapters(inputMeasurementKeys, actionAdapters);
+            }
+            while (newActionAdapters != null);
+
+            if (actionAdapters.Count > 0)
+                outputMeasurementKeys = GetOutputMeasurementKeys(actionAdapters);
+
+            List<IInputAdapter> inputAdapters = new List<IInputAdapter>();
+            IEnumerable<IInputAdapter> newInputAdapters = null;
+
+            do
+            {
+                if (newInputAdapters != null)
+                {
+                    inputAdapters.AddRange(newInputAdapters);
+                    inputAdapters.Sort();
+
+                    inputMeasurementKeys = inputMeasurementKeys.Concat(GetInputMeasurementKeys(inputAdapters)).Distinct().ToList();
+                    inputMeasurementKeys.Sort();
+                }
+
+                newInputAdapters = FindDistinctInputAdapters(inputMeasurementKeys, inputAdapters);
+            }
+            while (newInputAdapters != null);
+
+            if (inputAdapters.Count > 0)
+            {
+                if (outputMeasurementKeys == null)
+                    outputMeasurementKeys = GetOutputMeasurementKeys(inputAdapters);
+                else
+                    outputMeasurementKeys = outputMeasurementKeys.Concat(GetOutputMeasurementKeys(inputAdapters)).Distinct();
+            }
+
+            return outputMeasurementKeys;
+        }
+
+        private IEnumerable<IInputAdapter> FindDistinctInputAdapters(List<MeasurementKey> inputMeasurementKeysRestriction, List<IInputAdapter> existingList)
+        {
+            IEnumerable<IInputAdapter> inputAdapters = null;
+
+            if (m_inputAdapters != null)
+            {
+                lock (m_inputAdapters)
+                {
+                    inputAdapters = m_inputAdapters.Where<IInputAdapter>(adapter => existingList.BinarySearch(adapter) < 0 && adapter.OutputMeasurements.Select(m => m.Key).Any(key => inputMeasurementKeysRestriction.BinarySearch(key) > -1));
+                }
+
+                if (inputAdapters.Count() == 0)
+                    inputAdapters = null;
+            }
+
+            return inputAdapters;
+        }
+
+        private IEnumerable<IActionAdapter> FindDistinctActionAdapters(List<MeasurementKey> inputMeasurementKeysRestriction, List<IActionAdapter> existingList)
+        {
+            IEnumerable<IActionAdapter> actionAdapters = null;
+
+            if (m_actionAdapters != null)
+            {
+                lock (m_actionAdapters)
+                {
+                    actionAdapters = m_actionAdapters.Where<IActionAdapter>(adapter => existingList.BinarySearch(adapter) < 0 && adapter.OutputMeasurements.Select(m => m.Key).Any(key => inputMeasurementKeysRestriction.BinarySearch(key) > -1));
+                }
+
+                if (actionAdapters.Count() == 0)
+                    actionAdapters = null;
+            }
+
+            return actionAdapters;
+        }
+
+        private IEnumerable<MeasurementKey> GetInputMeasurementKeys(IEnumerable<IInputAdapter> inputAdapters)
+        {
+            return inputAdapters.SelectMany(adapter => adapter.InputMeasurementKeys).Distinct();
+        }
+
+        private IEnumerable<MeasurementKey> GetInputMeasurementKeys(IEnumerable<IActionAdapter> actionAdapters)
+        {
+            return actionAdapters.SelectMany(adapter => adapter.InputMeasurementKeys).Distinct();
+        }
+
+        private IEnumerable<MeasurementKey> GetOutputMeasurementKeys(IEnumerable<IInputAdapter> inputAdapters)
+        {
+            return inputAdapters.SelectMany(adapter => adapter.OutputMeasurements.Select(m => m.Key)).Distinct();
+        }
+
+        private IEnumerable<MeasurementKey> GetOutputMeasurementKeys(IEnumerable<IActionAdapter> actionAdapters)
+        {
+            return actionAdapters.SelectMany(adapter => adapter.OutputMeasurements.Select(m => m.Key)).Distinct();
         }
 
         #endregion

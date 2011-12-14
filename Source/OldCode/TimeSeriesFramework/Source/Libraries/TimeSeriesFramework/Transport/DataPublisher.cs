@@ -294,6 +294,7 @@ namespace TimeSeriesFramework.Transport
             {
                 ActionAdapters = this
             };
+            m_routingTables.ProcessException += m_routingTables_ProcessException;
         }
 
         /// <summary>
@@ -464,8 +465,10 @@ namespace TimeSeriesFramework.Transport
                         m_clientConnections = null;
 
                         if (m_routingTables != null)
+                        {
+                            m_routingTables.ProcessException -= m_routingTables_ProcessException;
                             m_routingTables.Dispose();
-
+                        }
                         m_routingTables = null;
                     }
                 }
@@ -927,6 +930,12 @@ namespace TimeSeriesFramework.Transport
             return result;
         }
 
+        // Make sure to expose any routing table exceptions
+        private void m_routingTables_ProcessException(object sender, EventArgs<Exception> e)
+        {
+            OnProcessException(e.Argument);
+        }
+
         #region [ Server Command Request Handlers ]
 
         // Handles authentication request
@@ -1195,7 +1204,7 @@ namespace TimeSeriesFramework.Transport
                         }
 
                         // Spawn routing table recalculation
-                        m_routingTables.CalculateRoutingTables();
+                        m_routingTables.CalculateRoutingTables(null);
 
                         // Make sure adapter is started
                         subscription.Start();

@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Threading;
@@ -104,9 +105,17 @@ namespace TimeSeriesFramework.Adapters
         /// </summary>
         public void UpdateCollectionConfigurations()
         {
+            List<IAdapterCollection> adapters;
+
+            // Create a local synchronized copy of the items to iterate to avoid nested locks
             lock (this)
             {
-                foreach (IAdapterCollection adapterCollection in this)
+                adapters = new List<IAdapterCollection>(this);
+            }
+
+            foreach (IAdapterCollection adapterCollection in adapters)
+            {
+                lock (adapterCollection)
                 {
                     string dataMember = adapterCollection.DataMember;
 
