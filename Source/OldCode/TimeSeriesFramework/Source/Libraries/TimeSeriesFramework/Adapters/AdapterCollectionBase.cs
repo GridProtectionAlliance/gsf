@@ -777,13 +777,16 @@ namespace TimeSeriesFramework.Adapters
 
                         Clear();        // This disposes all items in collection...
 
-                        foreach (AutoResetEvent waitHandle in m_waitHandles.Values)
+                        if (m_waitHandles != null)
                         {
-                            if (waitHandle != null)
-                                waitHandle.Dispose();
-                        }
+                            foreach (AutoResetEvent waitHandle in m_waitHandles.Values)
+                            {
+                                if (waitHandle != null)
+                                    waitHandle.Dispose();
+                            }
 
-                        m_waitHandles.Clear();
+                            m_waitHandles.Clear();
+                        }
                         m_waitHandles = null;
                     }
                 }
