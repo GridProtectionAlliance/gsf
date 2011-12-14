@@ -22,8 +22,10 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Data;
+using System.Threading;
 using TVA;
 
 namespace TimeSeriesFramework.Adapters
@@ -41,7 +43,9 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Constructs a new instance of the <see cref="AllAdaptersCollection"/>.
         /// </summary>
-        public AllAdaptersCollection()
+        /// <param name="waitHandles">Wait handle dictionary.</param>
+        public AllAdaptersCollection(ConcurrentDictionary<string, AutoResetEvent> waitHandles)
+            : base(waitHandles)
         {
             base.Name = "All Adapters Collection";
         }

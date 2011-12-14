@@ -259,6 +259,7 @@ namespace TimeSeriesFramework.Transport
         private ConcurrentDictionary<Guid, IServer> m_clientPublicationChannels;
         private ConcurrentDictionary<MeasurementKey, Guid> m_signalIDCache;
         private RoutingTables m_routingTables;
+        private IAdapterCollection m_parent;
         private string m_metadataTables;
         private bool m_requireAuthentication;
         private bool m_disposed;
@@ -271,6 +272,17 @@ namespace TimeSeriesFramework.Transport
         /// Creates a new <see cref="DataPublisher"/>.
         /// </summary>
         public DataPublisher()
+            : this(null)
+        {
+            // When this collection is spawned as an adapter, it needs a parameterless constructor
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="DataPublisher"/>.
+        /// </summary>
+        /// <param name="waitHandles">Wait handle dictionary.</param>
+        public DataPublisher(ConcurrentDictionary<string, AutoResetEvent> waitHandles)
+            : base(waitHandles)
         {
             base.Name = "Data Publisher Collection";
             base.DataMember = "[internal]";
@@ -537,6 +549,34 @@ namespace TimeSeriesFramework.Transport
 
             if (m_commandChannel != null)
                 m_commandChannel.Stop();
+        }
+
+        /// <summary>
+        /// Assigns the reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="DataPublisher"/>, if any.
+        /// </summary>
+        /// <param name="parent">Parent adapter collection.</param>
+        protected override void AssignParentCollection(IAdapterCollection parent)
+        {
+            // Get a local reference to the parent collection
+            m_parent = parent;
+
+            // Pass reference along to base class
+            base.AssignParentCollection(parent);
+        }
+
+        /// <summary>
+        /// Gets a common wait handle for inter-adapter synchronization.
+        /// </summary>
+        /// <param name="name">Case-insensitive wait handle name.</param>
+        /// <returns>A <see cref="AutoResetEvent"/> based wait handle associated with the given <paramref name="name"/>.</returns>
+        public override AutoResetEvent GetExternalEventHandle(string name)
+        {
+            // Since this collection can act as an adapter, proxy event handle request to its parent collection when defined
+            if (m_parent != null)
+                return m_parent.GetExternalEventHandle(name);
+
+            // Otherwise just handle the request normally
+            return base.GetExternalEventHandle(name);
         }
 
         /// <summary>

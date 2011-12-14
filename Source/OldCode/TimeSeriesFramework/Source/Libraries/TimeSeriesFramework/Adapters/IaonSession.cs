@@ -22,10 +22,11 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Data;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using TVA;
 using TVA.Collections;
 using TVA.Configuration;
@@ -118,11 +119,12 @@ namespace TimeSeriesFramework.Adapters
         private InputAdapterCollection m_inputAdapters;
         private ActionAdapterCollection m_actionAdapters;
         private OutputAdapterCollection m_outputAdapters;
+        private ConcurrentDictionary<string, AutoResetEvent> m_waitHandles;
+        private ConcurrentDictionary<object, string> m_derivedNameCache;
         private bool m_useMeasurementRouting;
         private int m_measurementWarningThreshold;
         private int m_measurementDumpingThreshold;
         private int m_defaultSampleSizeWarningThreshold;
-        private Dictionary<object, string> m_derivedNameCache;
         private string m_name;
         private bool m_disposed;
 
@@ -157,14 +159,17 @@ namespace TimeSeriesFramework.Adapters
             m_measurementDumpingThreshold = thresholdSettings["MeasurementDumpingThreshold"].ValueAsInt32();
             m_defaultSampleSizeWarningThreshold = thresholdSettings["DefaultSampleSizeWarningThreshold"].ValueAsInt32();
 
+            // Create a common wait handle dictionary for all adapters in this session
+            m_waitHandles = new ConcurrentDictionary<string, AutoResetEvent>();
+
             // Create a cache for derived adapter names
-            m_derivedNameCache = new Dictionary<object, string>();
+            m_derivedNameCache = new ConcurrentDictionary<object, string>();
 
             // Create a new set of routing tables
             m_routingTables = new RoutingTables();
 
             // Create a collection to manage all input, action and output adapter collections as a unit
-            m_allAdapters = new AllAdaptersCollection();
+            m_allAdapters = new AllAdaptersCollection(m_waitHandles);
 
             // Attach to common adapter events
             m_allAdapters.StatusMessage += StatusMessageHandler;
@@ -174,7 +179,7 @@ namespace TimeSeriesFramework.Adapters
             m_allAdapters.Disposed += DisposedHandler;
 
             // Create input adapters collection
-            m_inputAdapters = new InputAdapterCollection();
+            m_inputAdapters = new InputAdapterCollection(m_waitHandles);
 
             if (m_useMeasurementRouting)
                 m_inputAdapters.NewMeasurements += m_routingTables.RoutedMeasurementsHandler;
@@ -185,7 +190,7 @@ namespace TimeSeriesFramework.Adapters
             m_inputAdapters.ProcessingComplete += ProcessingCompleteHandler;
 
             // Create action adapters collection
-            m_actionAdapters = new ActionAdapterCollection();
+            m_actionAdapters = new ActionAdapterCollection(m_waitHandles);
 
             if (m_useMeasurementRouting)
                 m_actionAdapters.NewMeasurements += m_routingTables.RoutedMeasurementsHandler;
@@ -196,7 +201,7 @@ namespace TimeSeriesFramework.Adapters
             m_actionAdapters.UnpublishedSamples += UnpublishedSamplesHandler;
 
             // Create output adapters collection
-            m_outputAdapters = new OutputAdapterCollection();
+            m_outputAdapters = new OutputAdapterCollection(m_waitHandles);
             m_outputAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
             m_outputAdapters.UnprocessedMeasurements += UnprocessedMeasurementsHandler;
 
@@ -505,6 +510,19 @@ namespace TimeSeriesFramework.Adapters
                             m_routingTables.Dispose();
 
                         m_routingTables = null;
+
+                        // Dispose of wait handle dictionary
+                        if (m_waitHandles != null)
+                        {
+                            foreach (AutoResetEvent waitHandle in m_waitHandles.Values)
+                            {
+                                if (waitHandle != null)
+                                    waitHandle.Dispose();
+                            }
+
+                            m_waitHandles.Clear();
+                        }
+                        m_waitHandles = null;
                     }
                 }
                 finally
@@ -568,26 +586,24 @@ namespace TimeSeriesFramework.Adapters
         /// <returns>Derived name of specified object.</returns>
         public virtual string GetDerivedName(object sender)
         {
-            string name;
-
-            if (!m_derivedNameCache.TryGetValue(sender, out name))
+            return m_derivedNameCache.GetOrAdd(sender, key =>
             {
-                IProvideStatus statusProvider = sender as IProvideStatus;
+                string name = null;
+                IProvideStatus statusProvider = key as IProvideStatus;
 
                 if (statusProvider != null)
-                    name = statusProvider.Name.NotEmpty(sender.GetType().Name);
-                else if (sender != null && sender is string)
-                    name = (string)sender;
-                else
-                    name = sender.GetType().Name;
+                    name = statusProvider.Name;
+                else if (key != null && key is string)
+                    name = (string)key;
+
+                if (string.IsNullOrWhiteSpace(name))
+                    name = key.GetType().Name;
 
                 if (!string.IsNullOrWhiteSpace(m_name))
                     name += "#" + m_name;
 
-                m_derivedNameCache.Add(sender, name);
-            }
-
-            return name;
+                return name;
+            });
         }
 
         /// <summary>

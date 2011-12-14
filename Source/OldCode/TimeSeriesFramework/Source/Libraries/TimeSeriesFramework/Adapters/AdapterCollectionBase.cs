@@ -116,7 +116,8 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Constructs a new instance of the <see cref="AdapterCollectionBase{T}"/>.
         /// </summary>
-        protected AdapterCollectionBase()
+        /// <param name="waitHandles">Wait handle dictionary.</param>
+        protected AdapterCollectionBase(ConcurrentDictionary<string, AutoResetEvent> waitHandles)
         {
             m_name = this.GetType().Name;
             m_settings = new Dictionary<string, string>();
@@ -124,7 +125,7 @@ namespace TimeSeriesFramework.Adapters
             m_stopTimeConstraint = DateTime.MaxValue;
             m_processingInterval = -1;
             m_initializationTimeout = AdapterBase.DefaultInitializationTimeout;
-            m_waitHandles = new ConcurrentDictionary<string, AutoResetEvent>(StringComparer.InvariantCultureIgnoreCase);
+            m_waitHandles = waitHandles;
             m_autoStart = true;
 
             m_monitorTimer = new System.Timers.Timer();
@@ -777,16 +778,6 @@ namespace TimeSeriesFramework.Adapters
 
                         Clear();        // This disposes all items in collection...
 
-                        if (m_waitHandles != null)
-                        {
-                            foreach (AutoResetEvent waitHandle in m_waitHandles.Values)
-                            {
-                                if (waitHandle != null)
-                                    waitHandle.Dispose();
-                            }
-
-                            m_waitHandles.Clear();
-                        }
                         m_waitHandles = null;
                     }
                 }
@@ -860,7 +851,10 @@ namespace TimeSeriesFramework.Adapters
         /// <returns>A <see cref="AutoResetEvent"/> based wait handle associated with the given <paramref name="name"/>.</returns>
         public virtual AutoResetEvent GetExternalEventHandle(string name)
         {
-            return m_waitHandles.GetOrAdd(name, key => new AutoResetEvent(false));
+            if (m_waitHandles != null)
+                return m_waitHandles.GetOrAdd(name, key => new AutoResetEvent(false));
+
+            return null;
         }
 
         /// <summary>
@@ -1152,10 +1146,18 @@ namespace TimeSeriesFramework.Adapters
             m_monitorTimer.Stop();
         }
 
-        // Assigns the reference to the parent adapter collection that will contain this adapter collection, if any.
-        void IAdapter.AssignParentCollection(IAdapterCollection parent)
+        /// <summary>
+        /// Assigns the reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="AdapterCollectionBase{T}"/>, if any.
+        /// </summary>
+        /// <param name="parent">Parent adapter collection.</param>
+        protected virtual void AssignParentCollection(IAdapterCollection parent)
         {
             m_parent = parent;
+        }
+
+        void IAdapter.AssignParentCollection(IAdapterCollection parent)
+        {
+            AssignParentCollection(parent);
         }
 
         /// <summary>

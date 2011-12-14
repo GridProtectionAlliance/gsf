@@ -22,7 +22,9 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using TVA;
 
 namespace TimeSeriesFramework.Adapters
@@ -60,7 +62,9 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Creates a new <see cref="InputAdapterCollection"/>.
         /// </summary>
-        public InputAdapterCollection()
+        /// <param name="waitHandles">Wait handle dictionary.</param>
+        public InputAdapterCollection(ConcurrentDictionary<string, AutoResetEvent> waitHandles)
+            : base(waitHandles)
         {
             base.Name = "Input Adapter Collection";
             base.DataMember = "InputAdapters";
