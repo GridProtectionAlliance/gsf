@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using TimeSeriesFramework.Adapters;
 using TVA;
 using TVA.Parsing;
@@ -399,22 +400,26 @@ namespace TimeSeriesFramework.Transport
                         }
 
                         // Publish latest data values...
-                        ProcessMeasurements(currentMeasurements);
+                        Task.Factory.StartNew(ProcessMeasurements, currentMeasurements);
                     }
                 }
                 else
                 {
                     // Publish unsynchronized on data receipt otherwise...
-                    ProcessMeasurements(measurements);
+                    Task.Factory.StartNew(ProcessMeasurements, measurements);
                 }
             }
         }
 
-        private void ProcessMeasurements(IEnumerable<IMeasurement> measurements)
+        private void ProcessMeasurements(object state)
         {
+            IEnumerable<IMeasurement> measurements = state as IEnumerable<IMeasurement>;
             List<ISupportBinaryImage> packet = new List<ISupportBinaryImage>();
             bool useCompactMeasurementFormat = m_useCompactMeasurementFormat;
             int packetSize = 5;
+
+            // Wait for any external events, if needed
+            WaitForExternalEvents();
 
             foreach (IMeasurement measurement in measurements)
             {

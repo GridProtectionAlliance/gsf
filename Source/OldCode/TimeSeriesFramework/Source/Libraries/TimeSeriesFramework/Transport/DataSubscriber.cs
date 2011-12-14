@@ -542,6 +542,8 @@ namespace TimeSeriesFramework.Transport
         /// <param name="stopTime">Defines a relative or exact stop time for the temporal constraint to use for historical playback.</param>
         /// <param name="constraintParameters">Defines any temporal parameters related to the constraint to use for historical playback.</param>
         /// <param name="processingInterval">Defines the desired processing interval milliseconds, i.e., historical play back speed, to use when temporal constraints are defined.</param>
+        /// <param name="waitHandleNames">Comma separated list of wait handle names used to establish external event wait handles needed for inter-adapter synchronization.</param>
+        /// <param name="waitHandleTimeout">Maximum wait time for external events, in milliseconds, before proceeding.</param>
         /// <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// <para>
@@ -589,7 +591,7 @@ namespace TimeSeriesFramework.Transport
         /// </list>
         /// </para>
         /// </remarks>
-        public virtual bool SynchronizedSubscribe(bool compactFormat, int framesPerSecond, double lagTime, double leadTime, string filterExpression, string dataChannel = null, bool useLocalClockAsRealTime = false, bool ignoreBadTimestamps = false, bool allowSortsByArrival = true, long timeResolution = Ticks.PerMillisecond, bool allowPreemptivePublishing = true, DownsamplingMethod downsamplingMethod = DownsamplingMethod.LastReceived, string startTime = null, string stopTime = null, string constraintParameters = null, int processingInterval = -1)
+        public virtual bool SynchronizedSubscribe(bool compactFormat, int framesPerSecond, double lagTime, double leadTime, string filterExpression, string dataChannel = null, bool useLocalClockAsRealTime = false, bool ignoreBadTimestamps = false, bool allowSortsByArrival = true, long timeResolution = Ticks.PerMillisecond, bool allowPreemptivePublishing = true, DownsamplingMethod downsamplingMethod = DownsamplingMethod.LastReceived, string startTime = null, string stopTime = null, string constraintParameters = null, int processingInterval = -1, string waitHandleNames = null, int waitHandleTimeout = 0)
         {
             StringBuilder connectionString = new StringBuilder();
 
@@ -610,6 +612,12 @@ namespace TimeSeriesFramework.Transport
             connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
             connectionString.AppendFormat("processingInterval={0}", processingInterval);
 
+            if (!string.IsNullOrWhiteSpace(waitHandleNames))
+            {
+                connectionString.AppendFormat("; waitHandleNames={0}", waitHandleNames);
+                connectionString.AppendFormat("; waitHandleTimeout={0}", waitHandleTimeout);
+            }
+
             return Subscribe(true, compactFormat, connectionString.ToString());
         }
 
@@ -628,6 +636,8 @@ namespace TimeSeriesFramework.Transport
         /// <param name="stopTime">Defines a relative or exact stop time for the temporal constraint to use for historical playback.</param>
         /// <param name="constraintParameters">Defines any temporal parameters related to the constraint to use for historical playback.</param>
         /// <param name="processingInterval">Defines the desired processing interval milliseconds, i.e., historical play back speed, to use when temporal constraints are defined.</param>
+        /// <param name="waitHandleNames">Comma separated list of wait handle names used to establish external event wait handles needed for inter-adapter synchronization.</param>
+        /// <param name="waitHandleTimeout">Maximum wait time for external events, in milliseconds, before proceeding.</param>
         /// <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// <para>
@@ -675,7 +685,7 @@ namespace TimeSeriesFramework.Transport
         /// </list>
         /// </para>
         /// </remarks>
-        public virtual bool UnsynchronizedSubscribe(bool compactFormat, bool throttled, string filterExpression, string dataChannel = null, bool includeTime = true, double lagTime = 10.0D, double leadTime = 5.0D, bool useLocalClockAsRealTime = false, string startTime = null, string stopTime = null, string constraintParameters = null, int processingInterval = -1)
+        public virtual bool UnsynchronizedSubscribe(bool compactFormat, bool throttled, string filterExpression, string dataChannel = null, bool includeTime = true, double lagTime = 10.0D, double leadTime = 5.0D, bool useLocalClockAsRealTime = false, string startTime = null, string stopTime = null, string constraintParameters = null, int processingInterval = -1, string waitHandleNames = null, int waitHandleTimeout = 0)
         {
             StringBuilder connectionString = new StringBuilder();
 
@@ -690,6 +700,12 @@ namespace TimeSeriesFramework.Transport
             connectionString.AppendFormat("stopTimeConstraint={0}; ", stopTime.ToNonNullString());
             connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
             connectionString.AppendFormat("processingInterval={0}", processingInterval);
+
+            if (!string.IsNullOrWhiteSpace(waitHandleNames))
+            {
+                connectionString.AppendFormat("; waitHandleNames={0}", waitHandleNames);
+                connectionString.AppendFormat("; waitHandleTimeout={0}", waitHandleTimeout);
+            }
 
             return Subscribe(false, compactFormat, connectionString.ToString());
         }
