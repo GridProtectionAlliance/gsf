@@ -612,6 +612,11 @@ namespace TimeSeriesFramework.Adapters
                 status.AppendLine();
                 status.AppendFormat("    External event handles: {0}", m_externalEventHandles == null ? "None defined" : m_externalEventHandles.Length + " defined");
                 status.AppendLine();
+                if (m_externalEventHandles != null)
+                {
+                    status.AppendFormat("    External event timeout: {0} milliseconds", m_externalEventTimeout);
+                    status.AppendLine();
+                }
                 status.AppendFormat("       Temporal processing: {0}", SupportsTemporalProcessing ? "Supported" : "Unsupported");
                 status.AppendLine();
                 if (SupportsTemporalProcessing)
