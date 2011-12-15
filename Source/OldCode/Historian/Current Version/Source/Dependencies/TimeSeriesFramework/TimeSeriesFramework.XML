@@ -3695,6 +3695,11 @@
             Gets the descriptive status of this <see cref="T:TimeSeriesFramework.Adapters.AdapterCollectionBase`1"/>.
             </summary>
         </member>
+        <member name="M:TimeSeriesFramework.Adapters.ActionAdapterCollection.#ctor">
+            <summary>
+            Creates a new <see cref="T:TimeSeriesFramework.Adapters.ActionAdapterCollection"/>.
+            </summary>
+        </member>
         <member name="M:TimeSeriesFramework.Adapters.ActionAdapterCollection.#ctor(System.Collections.Concurrent.ConcurrentDictionary{System.String,System.Threading.AutoResetEvent})">
             <summary>
             Constructs a new instance of the <see cref="T:TimeSeriesFramework.Adapters.ActionAdapterCollection"/>.
@@ -4316,6 +4321,11 @@
             This collection allows all <see cref="T:TimeSeriesFramework.Adapters.IAdapterCollection"/> implementations to be managed as a group.
             </remarks>
         </member>
+        <member name="M:TimeSeriesFramework.Adapters.AllAdaptersCollection.#ctor">
+            <summary>
+            Creates a new <see cref="T:TimeSeriesFramework.Adapters.AllAdaptersCollection"/>.
+            </summary>
+        </member>
         <member name="M:TimeSeriesFramework.Adapters.AllAdaptersCollection.#ctor(System.Collections.Concurrent.ConcurrentDictionary{System.String,System.Threading.AutoResetEvent})">
             <summary>
             Constructs a new instance of the <see cref="T:TimeSeriesFramework.Adapters.AllAdaptersCollection"/>.
@@ -4751,6 +4761,11 @@
             Represents a collection of <see cref="T:TimeSeriesFramework.Adapters.IInputAdapter"/> implementations.
             </summary>
         </member>
+        <member name="M:TimeSeriesFramework.Adapters.InputAdapterCollection.#ctor">
+            <summary>
+            Creates a new <see cref="T:TimeSeriesFramework.Adapters.InputAdapterCollection"/>.
+            </summary>
+        </member>
         <member name="M:TimeSeriesFramework.Adapters.InputAdapterCollection.#ctor(System.Collections.Concurrent.ConcurrentDictionary{System.String,System.Threading.AutoResetEvent})">
             <summary>
             Creates a new <see cref="T:TimeSeriesFramework.Adapters.InputAdapterCollection"/>.
@@ -5116,9 +5131,14 @@
             Represents a collection of <see cref="T:TimeSeriesFramework.Adapters.IOutputAdapter"/> implementations.
             </summary>
         </member>
+        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterCollection.#ctor">
+            <summary>
+            Creates a new <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterCollection"/>.
+            </summary>
+        </member>
         <member name="M:TimeSeriesFramework.Adapters.OutputAdapterCollection.#ctor(System.Collections.Concurrent.ConcurrentDictionary{System.String,System.Threading.AutoResetEvent})">
             <summary>
-            Creates a new <see cref="T:TimeSeriesFramework.Adapters.InputAdapterCollection"/>.
+            Creates a new <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterCollection"/>.
             </summary>
             <param name="waitHandles">Wait handle dictionary.</param>
         </member>
