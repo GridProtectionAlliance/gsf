@@ -563,9 +563,8 @@ namespace TimeSeriesFramework.Adapters
             // Initialize all adapters
             m_allAdapters.Initialize();
 
-            // TODO: Remove if not needed
-            //// Initialize temporal support tables
-            //DataSource = DataSource;
+            // Initialize temporal support tables
+            DataSource = DataSource;
 
             if (autoStart)
             {
