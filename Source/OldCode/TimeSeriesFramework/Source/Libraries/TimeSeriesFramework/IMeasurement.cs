@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using TVA;
 
 namespace TimeSeriesFramework
@@ -346,6 +347,16 @@ namespace TimeSeriesFramework
                 return measurement.Key.SignalID;
 
             return measurement.ID;
+        }
+
+        /// <summary>
+        /// Returns the <see cref="MeasurementKey"/> values of a <see cref="IMeasurement"/> enumeration.
+        /// </summary>
+        /// <param name="measurements"><see cref="IMeasurement"/> enumeration to convert.</param>
+        /// <returns><see cref="MeasurementKey"/> values of the <see cref="IMeasurement"/> enumeration.</returns>
+        public static IEnumerable<MeasurementKey> MeasurementKeys(this IEnumerable<IMeasurement> measurements)
+        {
+            return measurements.Select(m => m.Key);
         }
     }
 }

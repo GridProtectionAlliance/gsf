@@ -1492,7 +1492,7 @@ namespace TimeSeriesFramework.Adapters
         /// <returns>User selected output measurements.</returns>
         public static MeasurementKey[] ParseOutputMeasurementKeys(DataSet dataSource, string value, string measurementTable = "ActiveMeasurements")
         {
-            return ParseOutputMeasurements(dataSource, value, measurementTable).Select(m => m.Key).ToArray();
+            return ParseOutputMeasurements(dataSource, value, measurementTable).MeasurementKeys().ToArray();
         }
 
         /// <summary>

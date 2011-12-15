@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
+using System.Linq;
 using System.Threading;
 using TVA;
 
@@ -343,6 +344,38 @@ namespace TimeSeriesFramework.Adapters
         public static bool TemporalConstraintIsDefined(this IAdapter adapter)
         {
             return (adapter.StartTimeConstraint != DateTime.MinValue || adapter.StopTimeConstraint != DateTime.MaxValue);
+        }
+
+        /// <summary>
+        /// Returns the <see cref="MeasurementKey"/> values of the <see cref="IAdapter"/> output measurements.
+        /// </summary>
+        /// <param name="adapter"><see cref="IAdapter"/> instance output measurements to convert.</param>
+        /// <returns><see cref="MeasurementKey"/> values of the <see cref="IAdapter"/> output measurements.</returns>
+        public static IEnumerable<MeasurementKey> OutputMeasurementKeys(this IAdapter adapter)
+        {
+            return adapter.OutputMeasurements.MeasurementKeys();
+        }
+
+        /// <summary>
+        /// Gets a distinct list of input measurement keys for all of the provided adapters.
+        /// </summary>
+        /// <typeparam name="T">Type of <see cref="IAdapter"/>.</typeparam>
+        /// <param name="adapters">Source <see cref="IAdapter"/> enumeration.</param>
+        /// <returns>Distinct list of input measurement keys for all of the provided adapters.</returns>
+        public static IEnumerable<MeasurementKey> InputMeasurementKeys<T>(this IEnumerable<T> adapters) where T : IAdapter
+        {
+            return adapters.SelectMany(adapter => adapter.InputMeasurementKeys).Distinct();
+        }
+
+        /// <summary>
+        /// Gets a distinct list of output measurement keys for all of the provided adapters.
+        /// </summary>
+        /// <typeparam name="T">Type of <see cref="IAdapter"/>.</typeparam>
+        /// <param name="adapters">Source <see cref="IAdapter"/> enumeration.</param>
+        /// <returns>Distinct list of output measurement keys for all of the provided adapters.</returns>
+        public static IEnumerable<MeasurementKey> OutputMeasurementKeys<T>(this IEnumerable<T> adapters) where T : IAdapter
+        {
+            return adapters.SelectMany(adapter => adapter.OutputMeasurementKeys()).Distinct();
         }
     }
 }

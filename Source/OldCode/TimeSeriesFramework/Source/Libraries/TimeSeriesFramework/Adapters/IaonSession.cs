@@ -121,7 +121,7 @@ namespace TimeSeriesFramework.Adapters
         private OutputAdapterCollection m_outputAdapters;
         private ConcurrentDictionary<string, AutoResetEvent> m_waitHandles;
         private ConcurrentDictionary<object, string> m_derivedNameCache;
-        private MeasurementKey[] m_lastInputMeasurementKeysRestriction;
+        private MeasurementKey[] m_inputMeasurementKeysRestriction;
         private bool m_useMeasurementRouting;
         private int m_measurementWarningThreshold;
         private int m_measurementDumpingThreshold;
@@ -326,6 +326,21 @@ namespace TimeSeriesFramework.Adapters
             get
             {
                 return m_routingTables;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a routing table restriction for a collection of input measurement keys.
+        /// </summary>
+        public virtual MeasurementKey[] InputMeasurementKeysRestriction
+        {
+            get
+            {
+                return m_inputMeasurementKeysRestriction;
+            }
+            set
+            {
+                m_inputMeasurementKeysRestriction = value;
             }
         }
 
@@ -548,8 +563,9 @@ namespace TimeSeriesFramework.Adapters
             // Initialize all adapters
             m_allAdapters.Initialize();
 
-            // Initialize temporal support tables
-            DataSource = DataSource;
+            // TODO: Remove if not needed
+            //// Initialize temporal support tables
+            //DataSource = DataSource;
 
             if (autoStart)
             {
@@ -557,7 +573,7 @@ namespace TimeSeriesFramework.Adapters
                 m_allAdapters.Start();
 
                 // Spawn routing table calculation
-                RecalculateRoutingTables(null);
+                RecalculateRoutingTables();
             }
         }
 
@@ -613,16 +629,10 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Recalculates routing tables as long as all adapters have been initialized.
         /// </summary>
-        /// <param name="inputMeasurementKeysRestriction">Input measurement key restrictions.</param>
-        /// <remarks>
-        /// Set the <paramref name="inputMeasurementKeysRestriction"/> to null to use full adapter routing demands.
-        /// </remarks>
-        public virtual void RecalculateRoutingTables(MeasurementKey[] inputMeasurementKeysRestriction = null)
+        public virtual void RecalculateRoutingTables()
         {
-            m_lastInputMeasurementKeysRestriction = inputMeasurementKeysRestriction;
-
             if (m_useMeasurementRouting && m_routingTables != null && m_allAdapters != null && m_allAdapters.Initialized)
-                m_routingTables.CalculateRoutingTables(inputMeasurementKeysRestriction);
+                m_routingTables.CalculateRoutingTables(m_inputMeasurementKeysRestriction);
         }
 
         /// <summary>
@@ -766,7 +776,7 @@ namespace TimeSeriesFramework.Adapters
         public virtual void InputMeasurementKeysUpdatedHandler(object sender, EventArgs e)
         {
             // When adapter measurement keys are dynamically updated, routing tables need to be updated
-            RecalculateRoutingTables(m_lastInputMeasurementKeysRestriction);
+            RecalculateRoutingTables();
 
             // Bubble message up to any event subscribers
             OnInputMeasurementKeysUpdated(sender);
@@ -780,7 +790,7 @@ namespace TimeSeriesFramework.Adapters
         public virtual void OutputMeasurementsUpdatedHandler(object sender, EventArgs e)
         {
             // When adapter measurement keys are dynamically updated, routing tables need to be updated
-            RecalculateRoutingTables(m_lastInputMeasurementKeysRestriction);
+            RecalculateRoutingTables();
 
             // Bubble message up to any event subscribers
             OnOutputMeasurementsUpdated(sender);

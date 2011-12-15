@@ -169,8 +169,11 @@ namespace TimeSeriesFramework.Transport
                     clientSubscription.ProcessingInterval == -1 ? "at the default rate" : "at " + clientSubscription.ProcessingInterval + "ms intervals"),
                 UpdateType.Information));
 
-            // Duplicate current run-time session configuration that has temporal support
+            // Duplicate current real-time session configuration for adapters that have temporal support
             session.DataSource = IaonSession.ExtractTemporalConfiguration(clientSubscription.DataSource);
+
+            // Assign requested input measurement keys as a routing restriction
+            session.InputMeasurementKeysRestriction = inputMeasurementKeys;
 
             // Initialize temporal session adapters without starting them
             session.Initialize(false);
@@ -208,9 +211,9 @@ namespace TimeSeriesFramework.Transport
             // Start temporal session adapters
             session.AllAdapters.Start();
 
-            // Recalculate routing tables to accomodate addtion of proxy adapter
-            // and possible changes due to assignment of temporal constraints
-            session.RecalculateRoutingTables(inputMeasurementKeys);
+            // Recalculate routing tables to accomodate addtion of proxy adapter and handle
+            // input measurement keys restriction
+            session.RecalculateRoutingTables();
 
             return session;
         }
