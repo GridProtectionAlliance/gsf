@@ -27,6 +27,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using TVA;
 using TVA.Collections;
 using TVA.Configuration;
@@ -358,27 +359,7 @@ namespace TimeSeriesFramework.Adapters
                 m_allAdapters.DataSource = value;
 
                 if (value != null)
-                {
-                    // Create a new temporal support identification table
-                    DataTable temporalSupport = new DataTable("TemporalSupport");
-
-                    temporalSupport.Columns.Add("Source", typeof(string));
-                    temporalSupport.Columns.Add("ID", typeof(uint));
-
-                    // Add rows for each Iaon adapter collection to identify which adapters support temporal processing
-                    foreach (IAdapterCollection collection in m_allAdapters)
-                    {
-                        foreach (IAdapter adapter in collection.Where(adapter => adapter.SupportsTemporalProcessing))
-                        {
-                            temporalSupport.Rows.Add(collection.DataMember, adapter.ID);
-                        }
-                    }
-
-                    if (m_allAdapters.DataSource.Tables.Contains("TemporalSupport"))
-                        m_allAdapters.DataSource.Tables.Remove("TemporalSupport");
-
-                    m_allAdapters.DataSource.Tables.Add(temporalSupport.Copy());
-                }
+                    DetermineTemporalSupport();
             }
         }
 
@@ -563,8 +544,8 @@ namespace TimeSeriesFramework.Adapters
             // Initialize all adapters
             m_allAdapters.Initialize();
 
-            // Initialize temporal support tables
-            DataSource = DataSource;
+            // Spawn a task to establish temporal support after the adapters have initialized
+            Task.Factory.StartNew(EstablishTemporalSupport);
 
             if (autoStart)
             {
@@ -573,6 +554,50 @@ namespace TimeSeriesFramework.Adapters
 
                 // Spawn routing table calculation
                 RecalculateRoutingTables();
+            }
+        }
+
+        private void EstablishTemporalSupport()
+        {
+            int count = 0;
+
+            // Wait for all adapters to initialize (up to one second)
+            while (!m_allAdapters.SelectMany<IAdapterCollection, bool>(col => col.Select(adapter => adapter.Initialized)).All(b => b) && count < 10)
+            {
+                Thread.Sleep(100);
+                count++;
+            }
+
+            // Initialize temporal support tables
+            DetermineTemporalSupport();
+        }
+
+        /// <summary>
+        /// Determines which adapters in the <see cref="IaonSession"/> support temporal processing.
+        /// </summary>
+        protected virtual void DetermineTemporalSupport()
+        {
+            // Create a new temporal support identification table
+            DataTable temporalSupport = new DataTable("TemporalSupport");
+
+            temporalSupport.Columns.Add("Source", typeof(string));
+            temporalSupport.Columns.Add("ID", typeof(uint));
+
+            // Add rows for each Iaon adapter collection to identify which adapters support temporal processing
+            lock (m_allAdapters)
+            {
+                foreach (IAdapterCollection collection in m_allAdapters)
+                {
+                    foreach (IAdapter adapter in collection.Where(adapter => adapter.SupportsTemporalProcessing))
+                    {
+                        temporalSupport.Rows.Add(collection.DataMember, adapter.ID);
+                    }
+                }
+
+                if (m_allAdapters.DataSource.Tables.Contains("TemporalSupport"))
+                    m_allAdapters.DataSource.Tables.Remove("TemporalSupport");
+
+                m_allAdapters.DataSource.Tables.Add(temporalSupport.Copy());
             }
         }
 

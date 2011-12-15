@@ -356,6 +356,9 @@ namespace TimeSeriesFramework
         /// <returns><see cref="MeasurementKey"/> values of the <see cref="IMeasurement"/> enumeration.</returns>
         public static IEnumerable<MeasurementKey> MeasurementKeys(this IEnumerable<IMeasurement> measurements)
         {
+            if (measurements == null)
+                return new MeasurementKey[0];
+
             return measurements.Select(m => m.Key);
         }
     }

@@ -185,9 +185,29 @@ namespace TimeSeriesFramework.Adapters
         {
             get
             {
+                const int MaxMeasurementsToShow = 10;
+
                 StringBuilder status = new StringBuilder();
 
                 status.Append(base.Status);
+
+                if (RequestedOutputMeasurementKeys != null && RequestedOutputMeasurementKeys.Length > 0)
+                {
+                    status.AppendFormat("     Requested output keys: {0} defined measurements", RequestedOutputMeasurementKeys.Length);
+                    status.AppendLine();
+                    status.AppendLine();
+
+                    for (int i = 0; i < Common.Min(RequestedOutputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
+                    {
+                        status.AppendLine(RequestedOutputMeasurementKeys[i].ToString().TruncateRight(25).CenterText(50));
+                    }
+
+                    if (RequestedOutputMeasurementKeys.Length > MaxMeasurementsToShow)
+                        status.AppendLine("...".CenterText(50));
+
+                    status.AppendLine();
+                }
+
                 status.AppendFormat("    Connection established: {0}", IsConnected);
                 status.AppendLine();
                 status.AppendFormat("   Asynchronous connection: {0}", UseAsyncConnect);

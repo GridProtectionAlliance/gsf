@@ -73,6 +73,8 @@ namespace TimeSeriesFramework.Adapters
         private List<string> m_outputSourceIDs;
         private MeasurementKey[] m_requestedInputMeasurementKeys;
         private MeasurementKey[] m_requestedOutputMeasurementKeys;
+        private bool m_respectInputDemands;
+        private bool m_respectOutputDemands;
         private int m_framesPerSecond;                              // Defined frames per second, if defined
         private bool m_trackLatestMeasurements;                     // Determines whether or not to track latest measurements
         private ImmediateMeasurements m_latestMeasurements;         // Absolute latest received measurement values
@@ -213,6 +215,46 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
+        /// Gets or sets flag indicating if action adapter should respect auto-start requests based on input demands.
+        /// </summary>
+        /// <remarks>
+        /// Action adapters are in the curious position of being able to both consume and produce points, as such the user needs to be able to control how their
+        /// adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start input demands,
+        /// as an example, this would be <c>false</c> for an action adapter that calculated measurement, but <c>true</c> for an action adapter used to archive inputs.
+        /// </remarks>
+        public virtual bool RespectInputDemands
+        {
+            get
+            {
+                return m_respectInputDemands;
+            }
+            set
+            {
+                m_respectInputDemands = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag indicating if action adapter should respect auto-start requests based on output demands.
+        /// </summary>
+        /// <remarks>
+        /// Action adapters are in the curious position of being able to both consume and produce points, as such the user needs to be able to control how their
+        /// adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start output demands,
+        /// as an example, this would be <c>true</c> for an action adapter that calculated measurement, but <c>false</c> for an action adapter used to archive inputs.
+        /// </remarks>
+        public virtual bool RespectOutputDemands
+        {
+            get
+            {
+                return m_respectOutputDemands;
+            }
+            set
+            {
+                m_respectOutputDemands = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the frames per second to be used by the <see cref="FacileActionAdapterBase"/>.
         /// </summary>
         /// <remarks>
@@ -318,6 +360,10 @@ namespace TimeSeriesFramework.Adapters
                 status.AppendLine();
                 status.AppendFormat("      Measurement tracking: {0}", m_trackLatestMeasurements ? "Enabled" : "Disabled");
                 status.AppendLine();
+                status.AppendFormat("  Respecting input demands: {0}", RespectInputDemands);
+                status.AppendLine();
+                status.AppendFormat(" Respecting output demands: {0}", RespectOutputDemands);
+                status.AppendLine();
 
                 return status.ToString();
             }
@@ -358,6 +404,16 @@ namespace TimeSeriesFramework.Adapters
                 else
                     LatestMeasurements.LeadTime = 5.0;
             }
+
+            if (settings.TryGetValue("respectInputDemands", out setting))
+                RespectInputDemands = setting.ParseBoolean();
+            else
+                RespectInputDemands = false;
+
+            if (settings.TryGetValue("respectOutputDemands", out setting))
+                RespectOutputDemands = setting.ParseBoolean();
+            else
+                RespectOutputDemands = true;
         }
 
         /// <summary>

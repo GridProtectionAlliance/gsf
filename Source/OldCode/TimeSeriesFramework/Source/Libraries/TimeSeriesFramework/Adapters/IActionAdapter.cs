@@ -57,6 +57,34 @@ namespace TimeSeriesFramework.Adapters
         event EventHandler<EventArgs<IEnumerable<IMeasurement>>> DiscardingMeasurements;
 
         /// <summary>
+        /// Gets or sets flag indicating if action adapter should respect auto-start requests based on input demands.
+        /// </summary>
+        /// <remarks>
+        /// Action adapters are in the curious position of being able to both consume and produce points, as such the user needs to be able to control how their
+        /// adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start input demands,
+        /// as an example, this would be <c>false</c> for an action adapter that calculated measurement, but <c>true</c> for an action adapter used to archive inputs.
+        /// </remarks>
+        bool RespectInputDemands
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets flag indicating if action adapter should respect auto-start requests based on output demands.
+        /// </summary>
+        /// <remarks>
+        /// Action adapters are in the curious position of being able to both consume and produce points, as such the user needs to be able to control how their
+        /// adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start output demands,
+        /// as an example, this would be <c>true</c> for an action adapter that calculated measurement, but <c>false</c> for an action adapter used to archive inputs.
+        /// </remarks>
+        bool RespectOutputDemands
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter input measurement keys.
         /// </summary>
         /// <remarks>

@@ -346,7 +346,7 @@ namespace TimeSeriesFramework.Adapters
                 if (m_inputMeasurementKeys != null)
                     return m_inputMeasurementKeys;
 
-                List<MeasurementKey> keys = new List<MeasurementKey>();
+                List<MeasurementKey> cumulativeKeys = new List<MeasurementKey>();
 
                 // Otherwise return cumulative results of all child adapters
                 lock (this)
@@ -355,17 +355,20 @@ namespace TimeSeriesFramework.Adapters
                     {
                         if (adapter != null)
                         {
+                            MeasurementKey[] inputMeasurementKeys = adapter.InputMeasurementKeys;
+
                             // If any of the children expects all measurements (i.e., null InputMeasurementKeys)
                             // then the parent collection must expect all measurements
-                            if (adapter.InputMeasurementKeys == null)
+                            if (inputMeasurementKeys == null)
                                 return null;
 
-                            keys.AddRange(adapter.InputMeasurementKeys);
+                            if (inputMeasurementKeys.Length > 0)
+                                cumulativeKeys.AddRange(inputMeasurementKeys);
                         }
                     }
                 }
 
-                return keys.Distinct().ToArray();
+                return cumulativeKeys.Distinct().ToArray();
             }
             set
             {
@@ -386,7 +389,7 @@ namespace TimeSeriesFramework.Adapters
                     return m_outputMeasurements;
 
                 // Otherwise return cumulative results of all child adapters
-                List<IMeasurement> measurements = new List<IMeasurement>();
+                List<IMeasurement> cumulativeMeasurements = new List<IMeasurement>();
 
                 // Otherwise return cumulative results of all child adapters
                 lock (this)
@@ -395,13 +398,15 @@ namespace TimeSeriesFramework.Adapters
                     {
                         if (adapter != null)
                         {
-                            if (adapter.OutputMeasurements != null)
-                                measurements.AddRange(adapter.OutputMeasurements);
+                            IMeasurement[] outputMeasurements = adapter.OutputMeasurements;
+
+                            if (outputMeasurements != null && outputMeasurements.Length > 0)
+                                cumulativeMeasurements.AddRange(outputMeasurements);
                         }
                     }
                 }
 
-                return measurements.Distinct().ToArray();
+                return cumulativeMeasurements.Distinct().ToArray();
             }
             set
             {

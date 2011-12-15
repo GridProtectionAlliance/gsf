@@ -39,6 +39,7 @@ using System.Runtime;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.Win32;
 using TimeSeriesFramework.Adapters;
@@ -291,6 +292,9 @@ namespace TimeSeriesFramework
             m_iaonSession = new IaonSession();
             m_iaonSession.StatusMessage += m_iaonSession_StatusMessage;
             m_iaonSession.ProcessException += m_iaonSession_ProcessException;
+
+            // Create a handler for unobserved task exceptions
+            TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
             // Make sure default service settings exist
             ConfigurationFile configFile = ConfigurationFile.Current;
@@ -567,6 +571,9 @@ namespace TimeSeriesFramework
                 m_serviceHelper.ErrorLogger.ErrorLog.Flush();
                 m_serviceHelper.ErrorLogger.ErrorLog.LogException -= LogExceptionHandler;
             }
+
+            // Unattach from handler for unobserved task exceptions
+            TaskScheduler.UnobservedTaskException -= TaskScheduler_UnobservedTaskException;
         }
 
         // Generation zero garbage collection handler
@@ -902,6 +909,17 @@ namespace TimeSeriesFramework
         private void m_iaonSession_ProcessException(object sender, EventArgs<Exception> e)
         {
             m_serviceHelper.ErrorLogger.Log(e.Argument, false);
+        }
+
+        // Handle task scheduler exceptions
+        private void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
+        {
+            foreach (Exception ex in e.Exception.Flatten().InnerExceptions)
+            {
+                m_serviceHelper.ErrorLogger.Log(ex, false);
+            }
+
+            e.SetObserved();
         }
 
         /// <summary>

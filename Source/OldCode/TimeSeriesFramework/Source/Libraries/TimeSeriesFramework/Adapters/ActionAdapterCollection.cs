@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using TVA;
 
@@ -62,6 +63,10 @@ namespace TimeSeriesFramework.Adapters
         /// </remarks>
         public event EventHandler<EventArgs<IEnumerable<IMeasurement>>> DiscardingMeasurements;
 
+        // Fields
+        private bool m_respectInputDemands;
+        private bool m_respectOutputDemands;
+
         #endregion
 
         #region [ Constructors ]
@@ -88,7 +93,91 @@ namespace TimeSeriesFramework.Adapters
 
         #endregion
 
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets flag indicating if action adapter should respect auto-start requests based on input demands.
+        /// </summary>
+        /// <remarks>
+        /// Action adapters are in the curious position of being able to both consume and produce points, as such the user needs to be able to control how their
+        /// adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start input demands,
+        /// as an example, this would be <c>false</c> for an action adapter that calculated measurement, but <c>true</c> for an action adapter used to archive inputs.
+        /// </remarks>
+        public virtual bool RespectInputDemands
+        {
+            get
+            {
+                return m_respectInputDemands;
+            }
+            set
+            {
+                m_respectInputDemands = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag indicating if action adapter should respect auto-start requests based on output demands.
+        /// </summary>
+        /// <remarks>
+        /// Action adapters are in the curious position of being able to both consume and produce points, as such the user needs to be able to control how their
+        /// adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start output demands,
+        /// as an example, this would be <c>true</c> for an action adapter that calculated measurement, but <c>false</c> for an action adapter used to archive inputs.
+        /// </remarks>
+        public virtual bool RespectOutputDemands
+        {
+            get
+            {
+                return m_respectOutputDemands;
+            }
+            set
+            {
+                m_respectOutputDemands = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the descriptive status of this <see cref="ActionAdapterCollection"/>.
+        /// </summary>
+        public override string Status
+        {
+            get
+            {
+                StringBuilder status = new StringBuilder();
+
+                status.Append(base.Status);
+                status.AppendFormat("  Respecting input demands: {0}", RespectInputDemands);
+                status.AppendLine();
+                status.AppendFormat(" Respecting output demands: {0}", RespectOutputDemands);
+                status.AppendLine();
+
+                return status.ToString();
+            }
+        }
+
+        #endregion
+
         #region [ Methods ]
+
+        /// <summary>
+        /// Initializes the <see cref="ActionAdapterCollection"/>.
+        /// </summary>
+        public override void Initialize()
+        {
+            base.Initialize();
+
+            Dictionary<string, string> settings = Settings;
+            string setting;
+
+            if (settings.TryGetValue("respectInputDemands", out setting))
+                RespectInputDemands = setting.ParseBoolean();
+            else
+                RespectInputDemands = false;
+
+            if (settings.TryGetValue("respectOutputDemands", out setting))
+                RespectOutputDemands = setting.ParseBoolean();
+            else
+                RespectOutputDemands = true;
+        }
 
         /// <summary>
         /// Queues a collection of measurements for processing to each <see cref="IActionAdapter"/> implementation in

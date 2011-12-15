@@ -83,6 +83,8 @@ namespace TimeSeriesFramework.Adapters
         private DataSet m_dataSource;
         private int m_initializationTimeout;
         private bool m_autoStart;
+        private bool m_respectInputDemands;
+        private bool m_respectOutputDemands;
         private bool m_processMeasurementFilter;
         private MeasurementKey[] m_inputMeasurementKeys;
         private List<MeasurementKey> m_inputMeasurementKeysHash;
@@ -261,6 +263,46 @@ namespace TimeSeriesFramework.Adapters
             set
             {
                 m_autoStart = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag indicating if action adapter should respect auto-start requests based on input demands.
+        /// </summary>
+        /// <remarks>
+        /// Action adapters are in the curious position of being able to both consume and produce points, as such the user needs to be able to control how their
+        /// adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start input demands,
+        /// as an example, this would be <c>false</c> for an action adapter that calculated measurement, but <c>true</c> for an action adapter used to archive inputs.
+        /// </remarks>
+        public virtual bool RespectInputDemands
+        {
+            get
+            {
+                return m_respectInputDemands;
+            }
+            set
+            {
+                m_respectInputDemands = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag indicating if action adapter should respect auto-start requests based on output demands.
+        /// </summary>
+        /// <remarks>
+        /// Action adapters are in the curious position of being able to both consume and produce points, as such the user needs to be able to control how their
+        /// adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start output demands,
+        /// as an example, this would be <c>true</c> for an action adapter that calculated measurement, but <c>false</c> for an action adapter used to archive inputs.
+        /// </remarks>
+        public virtual bool RespectOutputDemands
+        {
+            get
+            {
+                return m_respectOutputDemands;
+            }
+            set
+            {
+                m_respectOutputDemands = value;
             }
         }
 
@@ -582,6 +624,10 @@ namespace TimeSeriesFramework.Adapters
                 status.AppendLine();
                 status.AppendFormat("         Connect on demand: {0}", !AutoStart);
                 status.AppendLine();
+                status.AppendFormat("  Respecting input demands: {0}", RespectInputDemands);
+                status.AppendLine();
+                status.AppendFormat(" Respecting output demands: {0}", RespectOutputDemands);
+                status.AppendLine();
                 status.AppendFormat("    Processed measurements: {0}", ProcessedMeasurements);
                 status.AppendLine();
                 status.AppendFormat("    Total adapter run time: {0}", RunTime.ToString());
@@ -659,6 +705,40 @@ namespace TimeSeriesFramework.Adapters
                     }
 
                     if (InputMeasurementKeys.Length > MaxMeasurementsToShow)
+                        status.AppendLine("...".CenterText(50));
+
+                    status.AppendLine();
+                }
+
+                if (RequestedInputMeasurementKeys != null && RequestedInputMeasurementKeys.Length > 0)
+                {
+                    status.AppendFormat("      Requested input keys: {0} defined measurements", RequestedInputMeasurementKeys.Length);
+                    status.AppendLine();
+                    status.AppendLine();
+
+                    for (int i = 0; i < Common.Min(RequestedInputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
+                    {
+                        status.AppendLine(RequestedInputMeasurementKeys[i].ToString().TruncateRight(25).CenterText(50));
+                    }
+
+                    if (RequestedInputMeasurementKeys.Length > MaxMeasurementsToShow)
+                        status.AppendLine("...".CenterText(50));
+
+                    status.AppendLine();
+                }
+
+                if (RequestedOutputMeasurementKeys != null && RequestedOutputMeasurementKeys.Length > 0)
+                {
+                    status.AppendFormat("     Requested output keys: {0} defined measurements", RequestedOutputMeasurementKeys.Length);
+                    status.AppendLine();
+                    status.AppendLine();
+
+                    for (int i = 0; i < Common.Min(RequestedOutputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
+                    {
+                        status.AppendLine(RequestedOutputMeasurementKeys[i].ToString().TruncateRight(25).CenterText(50));
+                    }
+
+                    if (RequestedOutputMeasurementKeys.Length > MaxMeasurementsToShow)
                         status.AppendLine("...".CenterText(50));
 
                     status.AppendLine();
@@ -794,6 +874,16 @@ namespace TimeSeriesFramework.Adapters
                 AutoStart = !setting.ParseBoolean();
             else
                 AutoStart = true;
+
+            if (settings.TryGetValue("respectInputDemands", out setting))
+                RespectInputDemands = setting.ParseBoolean();
+            else
+                RespectInputDemands = false;
+
+            if (settings.TryGetValue("respectOutputDemands", out setting))
+                RespectOutputDemands = setting.ParseBoolean();
+            else
+                RespectOutputDemands = true;
 
             string startTime, stopTime, parameters;
 

@@ -364,7 +364,17 @@ namespace TimeSeriesFramework.Adapters
         /// <returns>Distinct list of input measurement keys for all of the provided adapters.</returns>
         public static IEnumerable<MeasurementKey> InputMeasurementKeys<T>(this IEnumerable<T> adapters) where T : IAdapter
         {
-            return adapters.SelectMany(adapter => adapter.InputMeasurementKeys).Distinct();
+            List<MeasurementKey> inputMeasurementKeys = new List<MeasurementKey>();
+
+            foreach (T adapter in adapters)
+            {
+                MeasurementKey[] adapterInputMeasurementKeys = adapter.InputMeasurementKeys;
+
+                if (adapterInputMeasurementKeys != null && adapterInputMeasurementKeys.Length > 0)
+                    inputMeasurementKeys.AddRange(adapterInputMeasurementKeys);
+            }
+
+            return inputMeasurementKeys.Distinct();
         }
 
         /// <summary>
@@ -375,7 +385,17 @@ namespace TimeSeriesFramework.Adapters
         /// <returns>Distinct list of output measurement keys for all of the provided adapters.</returns>
         public static IEnumerable<MeasurementKey> OutputMeasurementKeys<T>(this IEnumerable<T> adapters) where T : IAdapter
         {
-            return adapters.SelectMany(adapter => adapter.OutputMeasurementKeys()).Distinct();
+            List<MeasurementKey> outputMeasurementKeys = new List<MeasurementKey>();
+
+            foreach (T adapter in adapters)
+            {
+                IEnumerable<MeasurementKey> adapterOutputMeasurementKeys = adapter.OutputMeasurementKeys();
+
+                if (adapterOutputMeasurementKeys != null && adapterOutputMeasurementKeys.Count() > 0)
+                    outputMeasurementKeys.AddRange(adapterOutputMeasurementKeys);
+            }
+
+            return outputMeasurementKeys.Distinct();
         }
     }
 }

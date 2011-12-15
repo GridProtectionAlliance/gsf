@@ -36,6 +36,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using TimeSeriesFramework.Adapters;
@@ -862,9 +863,9 @@ namespace TimeSeriesFramework.Transport
                 {
                     // This happens when there is still data to be sent to a disconnected client - we can safely ignore this exception
                 }
-                catch (System.Net.Sockets.SocketException ex)
+                catch (SocketException ex)
                 {
-                    if (ex.ErrorCode != 10054)
+                    if (ex.ErrorCode != 10053 && ex.ErrorCode != 10054)
                         OnProcessException(new InvalidOperationException("Failed to send response packet to client due to exception: " + ex.Message, ex));
                 }
                 catch (Exception ex)
@@ -1487,7 +1488,7 @@ namespace TimeSeriesFramework.Transport
         {
             Exception ex = e.Argument2;
 
-            if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException) && !(ex is System.Net.Sockets.SocketException && ((System.Net.Sockets.SocketException)ex).ErrorCode == 10054))
+            if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException) && !(ex is System.Net.Sockets.SocketException && (((System.Net.Sockets.SocketException)ex).ErrorCode == 10053 || ((System.Net.Sockets.SocketException)ex).ErrorCode == 10054)))
                 OnProcessException(new InvalidOperationException("Data publisher encountered an exception while sending data to client connection: " + ex.Message, ex));
         }
 
@@ -1495,7 +1496,7 @@ namespace TimeSeriesFramework.Transport
         {
             Exception ex = e.Argument2;
 
-            if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException) && !(ex is System.Net.Sockets.SocketException && ((System.Net.Sockets.SocketException)ex).ErrorCode == 10054))
+            if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException) && !(ex is System.Net.Sockets.SocketException && (((System.Net.Sockets.SocketException)ex).ErrorCode == 10053 || ((System.Net.Sockets.SocketException)ex).ErrorCode == 10054)))
                 OnProcessException(new InvalidOperationException("Data publisher encountered an exception while receiving data from client connection: " + ex.Message, ex));
         }
 

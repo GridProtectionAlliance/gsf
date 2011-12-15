@@ -304,9 +304,29 @@ namespace TimeSeriesFramework.Adapters
         {
             get
             {
+                const int MaxMeasurementsToShow = 10;
+
                 StringBuilder status = new StringBuilder();
 
                 status.Append(base.Status);
+
+                if (RequestedInputMeasurementKeys != null && RequestedInputMeasurementKeys.Length > 0)
+                {
+                    status.AppendFormat("      Requested input keys: {0} defined measurements", RequestedInputMeasurementKeys.Length);
+                    status.AppendLine();
+                    status.AppendLine();
+
+                    for (int i = 0; i < Common.Min(RequestedInputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
+                    {
+                        status.AppendLine(RequestedInputMeasurementKeys[i].ToString().TruncateRight(25).CenterText(50));
+                    }
+
+                    if (RequestedInputMeasurementKeys.Length > MaxMeasurementsToShow)
+                        status.AppendLine("...".CenterText(50));
+
+                    status.AppendLine();
+                }
+
                 status.AppendFormat("     Source ID filter list: {0}", (m_inputSourceIDs == null ? "[No filter applied]" : m_inputSourceIDs.ToDelimitedString(',')));
                 status.AppendLine();
                 status.AppendFormat("   Asynchronous connection: {0}", UseAsyncConnect);
