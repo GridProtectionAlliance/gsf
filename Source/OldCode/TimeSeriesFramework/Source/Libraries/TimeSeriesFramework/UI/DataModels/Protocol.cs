@@ -202,6 +202,11 @@ namespace TimeSeriesFramework.UI.DataModels
 
         #region [ Static ]
 
+        /// <summary>
+        /// Loads protocol list from database.
+        /// </summary>
+        /// <param name="database">ADO database connection.</param>
+        /// <returns>List of protocols.</returns>
         public static ObservableCollection<Protocol> Load(AdoDataConnection database)
         {
             bool createdConnection = false;
