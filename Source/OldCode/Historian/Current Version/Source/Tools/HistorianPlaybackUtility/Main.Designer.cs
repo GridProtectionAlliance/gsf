@@ -771,7 +771,7 @@
             // StopProcessing
             // 
             this.StopProcessing.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.StopProcessing.Location = new System.Drawing.Point(595, 135);
+            this.StopProcessing.Location = new System.Drawing.Point(595, 177);
             this.StopProcessing.Name = "StopProcessing";
             this.StopProcessing.Size = new System.Drawing.Size(75, 23);
             this.StopProcessing.TabIndex = 22;

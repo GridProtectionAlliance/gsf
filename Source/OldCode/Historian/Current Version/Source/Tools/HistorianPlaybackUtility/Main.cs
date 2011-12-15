@@ -390,6 +390,39 @@ namespace HistorianPlaybackUtility
             }
         }
 
+        private bool ValidateOutputFormat()
+        {
+            bool valid = false;
+            try
+            {
+                byte[] buffer = null;
+                object[] args = new object[OutputPlainTextDataFormat.Text.Split('{').Where(value => !string.IsNullOrWhiteSpace(value)).Select(value => int.Parse(value.Split(':')[0])).Max() + 1];
+                ArchiveDataPoint sample = new ArchiveDataPoint(1);
+
+                for (int i = 0; i < args.Length; i++)
+                {
+                    args[i] = sample;
+                }
+
+                buffer = Encoding.ASCII.GetBytes(string.Format(OutputPlainTextDataFormat.Text, args));
+
+                valid = true;
+            }
+            catch (Exception ex)
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("Invalid Data Output Format: ");
+                sb.AppendLine(ex.Message);
+                sb.AppendLine();
+                sb.AppendLine("A valid format, for example, is:");
+                sb.AppendLine("{0:Source}:{1:ID},{2:Name},{3:Synonym1},{4:Time},{5:UnixTime},{6:Value},{7:Quality},{8:Description}");
+                MessageBox.Show(sb.ToString(), "Invalid Output Data Format", MessageBoxButtons.OK);
+                OutputPlainTextDataFormat.Focus();
+            }
+
+            return valid;
+        }
+
         #region [ Handlers ]
 
         private void Main_Load(object sender, EventArgs e)
@@ -575,6 +608,9 @@ namespace HistorianPlaybackUtility
                 ShowUpdateMessage("No points selected for processing.");
                 return;
             }
+
+            if (!ValidateOutputFormat())
+                return;
 
             // Capture selection.
             DateTime startTime = DateTime.Parse(StartTimeInput.Text, CultureInfo.InvariantCulture.DateTimeFormat);
