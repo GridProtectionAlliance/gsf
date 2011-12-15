@@ -64,7 +64,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         {
             m_deviceID = deviceID;
             ItemsPerPage = itemsPerPage;
-            m_historianLookupList = Historian.GetLookupList(null);
+            m_historianLookupList = Historian.GetLookupList(null, isOptional: true);
             m_signalTypeLookupList = SignalType.GetLookupList(null);
             Load();
         }
@@ -177,7 +177,10 @@ namespace TimeSeriesFramework.UI.ViewModels
         public override void Clear()
         {
             base.Clear();
-            if (m_historianLookupList.Count > 0)
+
+            if (m_historianLookupList.Count > 1)
+                CurrentItem.HistorianID = m_historianLookupList.Skip(1).First().Key;
+            else if (m_historianLookupList.Count > 0)
                 CurrentItem.HistorianID = m_historianLookupList.First().Key;
 
             if (m_signalTypeLookupList.Count > 0)
