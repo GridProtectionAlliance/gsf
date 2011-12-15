@@ -46,6 +46,11 @@
             </summary>
             <param name="autoStart">Sets flag that determines if adapters should be automatically started.</param>
         </member>
+        <member name="M:TimeSeriesFramework.Adapters.IaonSession.DetermineTemporalSupport">
+            <summary>
+            Determines which adapters in the <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/> support temporal processing.
+            </summary>
+        </member>
         <member name="M:TimeSeriesFramework.Adapters.IaonSession.TemporalProcessingSupportExists(System.String)">
             <summary>
             Gets flag that determines if temporal processing is supported in this <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/>.
@@ -2736,6 +2741,26 @@
             <see cref="F:TVA.EventArgs`1.Argument"/> is the enumeration of <see cref="T:TimeSeriesFramework.IMeasurement"/> values that are being discarded during the sorting process.
             </remarks>
         </member>
+        <member name="P:TimeSeriesFramework.Adapters.IActionAdapter.RespectInputDemands">
+            <summary>
+            Gets or sets flag indicating if action adapter should respect auto-start requests based on input demands.
+            </summary>
+            <remarks>
+            Action adapters are in the curious position of being able to both consume and produce points, as such the user needs to be able to control how their
+            adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start input demands,
+            as an example, this would be <c>false</c> for an action adapter that calculated measurement, but <c>true</c> for an action adapter used to archive inputs.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.IActionAdapter.RespectOutputDemands">
+            <summary>
+            Gets or sets flag indicating if action adapter should respect auto-start requests based on output demands.
+            </summary>
+            <remarks>
+            Action adapters are in the curious position of being able to both consume and produce points, as such the user needs to be able to control how their
+            adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start output demands,
+            as an example, this would be <c>true</c> for an action adapter that calculated measurement, but <c>false</c> for an action adapter used to archive inputs.
+            </remarks>
+        </member>
         <member name="P:TimeSeriesFramework.Adapters.IActionAdapter.InputSourceIDs">
             <summary>
             Gets or sets <see cref="P:TimeSeriesFramework.MeasurementKey.Source"/> values used to filter input measurement keys.
@@ -3074,6 +3099,26 @@
             <summary>
             Gets or sets flag indicating if adapter should automatically start or otherwise connect on demand.
             </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.RespectInputDemands">
+            <summary>
+            Gets or sets flag indicating if action adapter should respect auto-start requests based on input demands.
+            </summary>
+            <remarks>
+            Action adapters are in the curious position of being able to both consume and produce points, as such the user needs to be able to control how their
+            adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start input demands,
+            as an example, this would be <c>false</c> for an action adapter that calculated measurement, but <c>true</c> for an action adapter used to archive inputs.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.RespectOutputDemands">
+            <summary>
+            Gets or sets flag indicating if action adapter should respect auto-start requests based on output demands.
+            </summary>
+            <remarks>
+            Action adapters are in the curious position of being able to both consume and produce points, as such the user needs to be able to control how their
+            adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start output demands,
+            as an example, this would be <c>true</c> for an action adapter that calculated measurement, but <c>false</c> for an action adapter used to archive inputs.
+            </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.ProcessMeasurementFilter">
             <summary>
@@ -3706,6 +3751,11 @@
             </summary>
             <param name="waitHandles">Wait handle dictionary.</param>
         </member>
+        <member name="M:TimeSeriesFramework.Adapters.ActionAdapterCollection.Initialize">
+            <summary>
+            Initializes the <see cref="T:TimeSeriesFramework.Adapters.ActionAdapterCollection"/>.
+            </summary>
+        </member>
         <member name="M:TimeSeriesFramework.Adapters.ActionAdapterCollection.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
             <summary>
             Queues a collection of measurements for processing to each <see cref="T:TimeSeriesFramework.Adapters.IActionAdapter"/> implementation in
@@ -3766,6 +3816,31 @@
             <remarks>
             <see cref="F:TVA.EventArgs`1.Argument"/> is the enumeration of <see cref="T:TimeSeriesFramework.IMeasurement"/> values that are being discarded during the sorting process.
             </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.ActionAdapterCollection.RespectInputDemands">
+            <summary>
+            Gets or sets flag indicating if action adapter should respect auto-start requests based on input demands.
+            </summary>
+            <remarks>
+            Action adapters are in the curious position of being able to both consume and produce points, as such the user needs to be able to control how their
+            adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start input demands,
+            as an example, this would be <c>false</c> for an action adapter that calculated measurement, but <c>true</c> for an action adapter used to archive inputs.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.ActionAdapterCollection.RespectOutputDemands">
+            <summary>
+            Gets or sets flag indicating if action adapter should respect auto-start requests based on output demands.
+            </summary>
+            <remarks>
+            Action adapters are in the curious position of being able to both consume and produce points, as such the user needs to be able to control how their
+            adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start output demands,
+            as an example, this would be <c>true</c> for an action adapter that calculated measurement, but <c>false</c> for an action adapter used to archive inputs.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.ActionAdapterCollection.Status">
+            <summary>
+            Gets the descriptive status of this <see cref="T:TimeSeriesFramework.Adapters.ActionAdapterCollection"/>.
+            </summary>
         </member>
         <member name="T:TimeSeriesFramework.Adapters.AdapterBase">
             <summary>
@@ -4501,6 +4576,26 @@
             <summary>
             Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
             </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.FacileActionAdapterBase.RespectInputDemands">
+            <summary>
+            Gets or sets flag indicating if action adapter should respect auto-start requests based on input demands.
+            </summary>
+            <remarks>
+            Action adapters are in the curious position of being able to both consume and produce points, as such the user needs to be able to control how their
+            adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start input demands,
+            as an example, this would be <c>false</c> for an action adapter that calculated measurement, but <c>true</c> for an action adapter used to archive inputs.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.FacileActionAdapterBase.RespectOutputDemands">
+            <summary>
+            Gets or sets flag indicating if action adapter should respect auto-start requests based on output demands.
+            </summary>
+            <remarks>
+            Action adapters are in the curious position of being able to both consume and produce points, as such the user needs to be able to control how their
+            adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start output demands,
+            as an example, this would be <c>true</c> for an action adapter that calculated measurement, but <c>false</c> for an action adapter used to archive inputs.
+            </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.FacileActionAdapterBase.FramesPerSecond">
             <summary>
