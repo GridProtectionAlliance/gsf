@@ -42,6 +42,15 @@ namespace TimeSeriesFramework.Adapters
         #region [ Constructors ]
 
         /// <summary>
+        /// Creates a new <see cref="AllAdaptersCollection"/>.
+        /// </summary>
+        public AllAdaptersCollection()
+            : this(null)
+        {
+            // When collection is spawned as an adapter, it needs a parameterless constructor
+        }
+
+        /// <summary>
         /// Constructs a new instance of the <see cref="AllAdaptersCollection"/>.
         /// </summary>
         /// <param name="waitHandles">Wait handle dictionary.</param>

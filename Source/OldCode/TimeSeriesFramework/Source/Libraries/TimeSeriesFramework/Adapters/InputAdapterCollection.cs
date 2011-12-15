@@ -62,6 +62,15 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Creates a new <see cref="InputAdapterCollection"/>.
         /// </summary>
+        public InputAdapterCollection()
+            : this(null)
+        {
+            // When collection is spawned as an adapter, it needs a parameterless constructor
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="InputAdapterCollection"/>.
+        /// </summary>
         /// <param name="waitHandles">Wait handle dictionary.</param>
         public InputAdapterCollection(ConcurrentDictionary<string, AutoResetEvent> waitHandles)
             : base(waitHandles)

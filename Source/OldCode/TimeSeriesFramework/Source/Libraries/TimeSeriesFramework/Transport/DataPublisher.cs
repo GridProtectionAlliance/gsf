@@ -274,7 +274,7 @@ namespace TimeSeriesFramework.Transport
         public DataPublisher()
             : this(null)
         {
-            // When this collection is spawned as an adapter, it needs a parameterless constructor
+            // When collection is spawned as an adapter, it needs a parameterless constructor
         }
 
         /// <summary>
