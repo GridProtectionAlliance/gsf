@@ -134,7 +134,7 @@
                         </StackPanel.Resources>
                         
                         <TextBox Name="ParameterValueTextBox" Height="{StaticResource XSmallItemSize}" Text="{tsfBinding:Column Path=Value}" TextWrapping="Wrap"
-                                 Visibility="{Binding Path=IsOther, Converter={StaticResource ObjectToVisibilityConverter}}" />
+                                 Visibility="{Binding Path=IsOther, Converter={StaticResource ObjectToVisibilityConverter}}" VerticalScrollBarVisibility="Auto"/>
                         
                         <StackPanel>
                             <StackPanel.Style>
