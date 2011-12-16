@@ -78,7 +78,7 @@
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Search Directory" />
                     <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
                         <TextBox DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}, Path=DataContext}"
-                                 Name="SearchDirectoryTextBox" Text="{tsfBinding:Column Path=SearchDirectory}" Width="{StaticResource XXLargeItemSize}"/>
+                                 Name="SearchDirectoryTextBox" Text="{tsfBinding:Column Path=SearchDirectory}" Width="395"/>
                         <Button Click="Browse_Click" Width="Auto" ToolTip="Browse">
                             <Button.Template>
                                 <ControlTemplate>
@@ -88,7 +88,7 @@
                         </Button>
                     </StackPanel>
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Type" />
-                    <ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" ItemsSource="{Binding Source={StaticResource AdapterTypeList}}" DisplayMemberPath="Value" HorizontalContentAlignment="Left" Width="400"
+                    <ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" ItemsSource="{Binding Source={StaticResource AdapterTypeList}}" DisplayMemberPath="Value" HorizontalContentAlignment="Left" Width="430"
                               SelectedItem="{tsfBinding:Column Path=TypeName, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource AdapterTypeList}}" />
                 </Grid>
             </GroupBox>
@@ -161,7 +161,7 @@
                     </StackPanel>
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Connection String" VerticalAlignment="Top" />
                     <TextBox Grid.Row="1" Grid.Column="1"  Grid.ColumnSpan="3" Width="450" Height="{StaticResource XSmallItemSize}"
-                             Text="{tsfBinding:Column Path=ConnectionString}" TextWrapping="Wrap" />
+                             Text="{tsfBinding:Column Path=ConnectionString}" TextWrapping="Wrap" ScrollViewer.VerticalScrollBarVisibility="Visible" />
                 </Grid>
             </GroupBox>
             <TextBlock Text="Runtime ID" Grid.Row="4" Grid.Column="0" />
