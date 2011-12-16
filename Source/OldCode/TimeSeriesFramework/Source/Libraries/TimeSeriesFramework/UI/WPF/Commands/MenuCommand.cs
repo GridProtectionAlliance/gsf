@@ -25,7 +25,6 @@
 
 using System;
 using System.Reflection;
-using System.Threading;
 using System.Windows.Controls;
 using System.Windows.Input;
 using TVA.IO;
@@ -134,7 +133,7 @@ namespace TimeSeriesFramework.UI.Commands
             if (string.IsNullOrEmpty(Roles) || Roles == "*")
                 canExecute = true;
             else
-                canExecute = Thread.CurrentPrincipal.IsInRole(Roles);
+                canExecute = CommonFunctions.CurrentPrincipal.IsInRole(Roles);
 
             //OnCanExecuteChanged();
 

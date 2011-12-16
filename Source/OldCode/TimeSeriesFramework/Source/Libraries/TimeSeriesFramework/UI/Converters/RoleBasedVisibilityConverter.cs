@@ -22,7 +22,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Threading;
 using System.Windows;
 using System.Windows.Data;
 
@@ -47,7 +46,7 @@ namespace TimeSeriesFramework.UI.Converters
         /// <returns>One of the visibility enummeration</returns>
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            if (value == null || string.IsNullOrEmpty(value.ToString()) || value.ToString() == "*" || Thread.CurrentPrincipal.IsInRole(value.ToString()))
+            if (value == null || string.IsNullOrEmpty(value.ToString()) || value.ToString() == "*" || CommonFunctions.CurrentPrincipal.IsInRole(value.ToString()))
                 return Visibility.Visible;
             else
                 return Visibility.Collapsed;
@@ -69,6 +68,6 @@ namespace TimeSeriesFramework.UI.Converters
         #endregion
 
         #endregion
-        
+
     }
 }

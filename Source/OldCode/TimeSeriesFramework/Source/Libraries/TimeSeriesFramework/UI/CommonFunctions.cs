@@ -33,6 +33,7 @@ using System.Windows.Media;
 using TimeSeriesFramework.UI.DataModels;
 using TVA;
 using TVA.Data;
+using TVA.Security;
 
 namespace TimeSeriesFramework.UI
 {
@@ -67,10 +68,13 @@ namespace TimeSeriesFramework.UI
 
         // Static Properties
 
+
+        public static SecurityPrincipal CurrentPrincipal = Thread.CurrentPrincipal as SecurityPrincipal;
+
         /// <summary>
         /// Defines the current user name as defined in the Thread.CurrentPrincipal.Identity.
         /// </summary>
-        public static readonly string CurrentUser = Thread.CurrentPrincipal.Identity.Name;
+        public static string CurrentUser = Thread.CurrentPrincipal.Identity.Name;
 
         // Events
 

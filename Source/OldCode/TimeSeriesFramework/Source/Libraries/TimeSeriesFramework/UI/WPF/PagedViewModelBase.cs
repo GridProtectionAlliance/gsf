@@ -32,7 +32,6 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -483,7 +482,7 @@ namespace TimeSeriesFramework.UI
                 if (CurrentItem == null)
                     return false;
                 else
-                    return (CurrentItem.IsValid && Thread.CurrentPrincipal.IsInRole("Administrator, Editor"));
+                    return (CurrentItem.IsValid && CommonFunctions.CurrentPrincipal.IsInRole("Administrator, Editor"));
             }
         }
 
@@ -498,7 +497,7 @@ namespace TimeSeriesFramework.UI
                 if (CurrentItem == null)
                     return false;
                 else
-                    return (!IsNewRecord && Thread.CurrentPrincipal.IsInRole("Administrator, Editor"));
+                    return (!IsNewRecord && CommonFunctions.CurrentPrincipal.IsInRole("Administrator, Editor"));
             }
         }
 
