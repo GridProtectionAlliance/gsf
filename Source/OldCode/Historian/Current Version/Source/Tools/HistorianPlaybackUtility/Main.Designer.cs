@@ -90,6 +90,7 @@
             this.StartProcessing = new System.Windows.Forms.Button();
             this.StopProcessing = new System.Windows.Forms.Button();
             this.SaveFile = new System.Windows.Forms.SaveFileDialog();
+            this.AppendToExisting = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.SplitContainerFull)).BeginInit();
             this.SplitContainerFull.Panel1.SuspendLayout();
             this.SplitContainerFull.Panel2.SuspendLayout();
@@ -150,8 +151,8 @@
             // 
             // InputSelectionContainer
             // 
-            this.InputSelectionContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.InputSelectionContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.InputSelectionContainer.Controls.Add(this.SearchPhraseClear);
             this.InputSelectionContainer.Controls.Add(this.SearchPhraseFind);
             this.InputSelectionContainer.Controls.Add(this.ArchiveLocationBrowse);
@@ -218,8 +219,8 @@
             // 
             // SearchPhraseInput
             // 
-            this.SearchPhraseInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.SearchPhraseInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.SearchPhraseInput.Location = new System.Drawing.Point(6, 75);
             this.SearchPhraseInput.Name = "SearchPhraseInput";
             this.SearchPhraseInput.Size = new System.Drawing.Size(311, 21);
@@ -240,8 +241,8 @@
             // 
             // ArchiveLocationInput
             // 
-            this.ArchiveLocationInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.ArchiveLocationInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.ArchiveLocationInput.Location = new System.Drawing.Point(6, 33);
             this.ArchiveLocationInput.Name = "ArchiveLocationInput";
             this.ArchiveLocationInput.Size = new System.Drawing.Size(311, 21);
@@ -287,8 +288,8 @@
             // 
             // IDInput
             // 
-            this.IDInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.IDInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.IDInput.CheckOnClick = true;
             this.IDInput.FormattingEnabled = true;
             this.IDInput.HorizontalScrollbar = true;
@@ -299,8 +300,8 @@
             // 
             // OutputSelectionContainer
             // 
-            this.OutputSelectionContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.OutputSelectionContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.OutputSelectionContainer.Controls.Add(this.OutputChannelTabs);
             this.OutputSelectionContainer.Controls.Add(this.ProcessingSpeedContainer);
             this.OutputSelectionContainer.Controls.Add(this.RepeatDataProcessing);
@@ -316,8 +317,8 @@
             // 
             // OutputChannelTabs
             // 
-            this.OutputChannelTabs.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.OutputChannelTabs.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.OutputChannelTabs.Controls.Add(this.TCPSettingsTab);
             this.OutputChannelTabs.Controls.Add(this.UDPSettingsTab);
             this.OutputChannelTabs.Controls.Add(this.FileSettingsTab);
@@ -337,7 +338,7 @@
             this.TCPSettingsTab.Location = new System.Drawing.Point(4, 22);
             this.TCPSettingsTab.Name = "TCPSettingsTab";
             this.TCPSettingsTab.Padding = new System.Windows.Forms.Padding(3);
-            this.TCPSettingsTab.Size = new System.Drawing.Size(355, 83);
+            this.TCPSettingsTab.Size = new System.Drawing.Size(306, 83);
             this.TCPSettingsTab.TabIndex = 0;
             this.TCPSettingsTab.Text = "TCP";
             this.TCPSettingsTab.UseVisualStyleBackColor = true;
@@ -385,7 +386,7 @@
             this.UDPSettingsTab.Location = new System.Drawing.Point(4, 22);
             this.UDPSettingsTab.Name = "UDPSettingsTab";
             this.UDPSettingsTab.Padding = new System.Windows.Forms.Padding(3);
-            this.UDPSettingsTab.Size = new System.Drawing.Size(355, 83);
+            this.UDPSettingsTab.Size = new System.Drawing.Size(306, 83);
             this.UDPSettingsTab.TabIndex = 1;
             this.UDPSettingsTab.Text = "UDP";
             this.UDPSettingsTab.UseVisualStyleBackColor = true;
@@ -426,6 +427,7 @@
             // 
             // FileSettingsTab
             // 
+            this.FileSettingsTab.Controls.Add(this.AppendToExisting);
             this.FileSettingsTab.Controls.Add(this.FileNameBrowse);
             this.FileSettingsTab.Controls.Add(this.FileNameInput);
             this.FileSettingsTab.Controls.Add(this.FileNameLabel);
@@ -479,7 +481,7 @@
             this.SerialSettingsTab.Controls.Add(this.SerialPortLabel);
             this.SerialSettingsTab.Location = new System.Drawing.Point(4, 22);
             this.SerialSettingsTab.Name = "SerialSettingsTab";
-            this.SerialSettingsTab.Size = new System.Drawing.Size(355, 83);
+            this.SerialSettingsTab.Size = new System.Drawing.Size(306, 83);
             this.SerialSettingsTab.TabIndex = 3;
             this.SerialSettingsTab.Text = "Serial";
             this.SerialSettingsTab.UseVisualStyleBackColor = true;
@@ -489,7 +491,7 @@
             this.SerialRtsEnable.AutoSize = true;
             this.SerialRtsEnable.Location = new System.Drawing.Point(264, 60);
             this.SerialRtsEnable.Name = "SerialRtsEnable";
-            this.SerialRtsEnable.Size = new System.Drawing.Size(45, 17);
+            this.SerialRtsEnable.Size = new System.Drawing.Size(48, 17);
             this.SerialRtsEnable.TabIndex = 30;
             this.SerialRtsEnable.Text = "RTS";
             this.SerialRtsEnable.UseVisualStyleBackColor = true;
@@ -499,7 +501,7 @@
             this.SerialDtrEnable.AutoSize = true;
             this.SerialDtrEnable.Location = new System.Drawing.Point(222, 60);
             this.SerialDtrEnable.Name = "SerialDtrEnable";
-            this.SerialDtrEnable.Size = new System.Drawing.Size(46, 17);
+            this.SerialDtrEnable.Size = new System.Drawing.Size(49, 17);
             this.SerialDtrEnable.TabIndex = 29;
             this.SerialDtrEnable.Text = "DTR";
             this.SerialDtrEnable.UseVisualStyleBackColor = true;
@@ -657,7 +659,7 @@
             this.RepeatDataProcessing.AutoSize = true;
             this.RepeatDataProcessing.Location = new System.Drawing.Point(8, 313);
             this.RepeatDataProcessing.Name = "RepeatDataProcessing";
-            this.RepeatDataProcessing.Size = new System.Drawing.Size(218, 17);
+            this.RepeatDataProcessing.Size = new System.Drawing.Size(214, 17);
             this.RepeatDataProcessing.TabIndex = 21;
             this.RepeatDataProcessing.Text = "Repeat processing of data until stopped";
             this.RepeatDataProcessing.UseVisualStyleBackColor = true;
@@ -669,15 +671,15 @@
             this.ProcessDataInParallel.CheckState = System.Windows.Forms.CheckState.Checked;
             this.ProcessDataInParallel.Location = new System.Drawing.Point(8, 294);
             this.ProcessDataInParallel.Name = "ProcessDataInParallel";
-            this.ProcessDataInParallel.Size = new System.Drawing.Size(260, 17);
+            this.ProcessDataInParallel.Size = new System.Drawing.Size(254, 17);
             this.ProcessDataInParallel.TabIndex = 20;
             this.ProcessDataInParallel.Text = "Process selected data points in time sorted order";
             this.ProcessDataInParallel.UseVisualStyleBackColor = true;
             // 
             // OutputFormatContainer
             // 
-            this.OutputFormatContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.OutputFormatContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.OutputFormatContainer.Controls.Add(this.OutputPlainTextDataFormat);
             this.OutputFormatContainer.Controls.Add(this.OutputPlainTextData);
             this.OutputFormatContainer.Controls.Add(this.OutputBinaryData);
@@ -688,8 +690,8 @@
             // 
             // OutputPlainTextDataFormat
             // 
-            this.OutputPlainTextDataFormat.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.OutputPlainTextDataFormat.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.OutputPlainTextDataFormat.Location = new System.Drawing.Point(21, 40);
             this.OutputPlainTextDataFormat.Name = "OutputPlainTextDataFormat";
             this.OutputPlainTextDataFormat.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
@@ -732,9 +734,9 @@
             // 
             // MessagesContainer
             // 
-            this.MessagesContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.MessagesContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.MessagesContainer.Controls.Add(this.MessagesOutput);
             this.MessagesContainer.Location = new System.Drawing.Point(12, 3);
             this.MessagesContainer.Name = "MessagesContainer";
@@ -749,12 +751,12 @@
             this.MessagesOutput.Dock = System.Windows.Forms.DockStyle.Fill;
             this.MessagesOutput.Font = new System.Drawing.Font("Lucida Console", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.MessagesOutput.ForeColor = System.Drawing.SystemColors.Window;
-            this.MessagesOutput.Location = new System.Drawing.Point(3, 17);
+            this.MessagesOutput.Location = new System.Drawing.Point(3, 16);
             this.MessagesOutput.Multiline = true;
             this.MessagesOutput.Name = "MessagesOutput";
             this.MessagesOutput.ReadOnly = true;
             this.MessagesOutput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.MessagesOutput.Size = new System.Drawing.Size(655, 148);
+            this.MessagesOutput.Size = new System.Drawing.Size(655, 149);
             this.MessagesOutput.TabIndex = 0;
             // 
             // StartProcessing
@@ -786,6 +788,16 @@
             this.SaveFile.Filter = "CSV Files (*.csv)|*.csv|All Files (*.*)|*.*";
             this.SaveFile.OverwritePrompt = false;
             this.SaveFile.Title = "Save / Append to Text File";
+            // 
+            // AppendToExisting
+            // 
+            this.AppendToExisting.AutoSize = true;
+            this.AppendToExisting.Location = new System.Drawing.Point(6, 38);
+            this.AppendToExisting.Name = "AppendToExisting";
+            this.AppendToExisting.Size = new System.Drawing.Size(284, 17);
+            this.AppendToExisting.TabIndex = 22;
+            this.AppendToExisting.Text = "Append export to existing file (uncheck for overwrite)";
+            this.AppendToExisting.UseVisualStyleBackColor = true;
             // 
             // Main
             // 
@@ -895,6 +907,7 @@
         private System.Windows.Forms.ComboBox SerialBaudRateInput;
         private System.Windows.Forms.Label SerialBaudRateLabel;
         private System.Windows.Forms.SaveFileDialog SaveFile;
+        private System.Windows.Forms.CheckBox AppendToExisting;
     }
 }
 

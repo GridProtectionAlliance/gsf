@@ -18,6 +18,9 @@
 //  ----------------------------------------------------------------------------------------------------
 //  08/10/2010 - Stephen C. Wills
 //       Generated original version of source code.
+//  12/18/2011 - J. Ritchie Carroll
+//       Set likely default archive locations on initial startup and removed disabled points from the
+//       display list.
 //
 //******************************************************************************************************
 
@@ -32,14 +35,11 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Xml;
 using Microsoft.Win32;
-using TVA;
 using TVA.Collections;
 using TVA.Configuration;
 using TVA.Historian;
 using TVA.Historian.Files;
 using TVA.IO;
-using System.Threading;
-using System.Globalization;
 
 namespace HistorianView
 {
@@ -73,13 +73,21 @@ namespace HistorianView
             /// Determines whether the measurement represented by this metadata record
             /// should be exported to CSV by the Historian Data Viewer.
             /// </summary>
-            public bool Export { get; set; }
+            public bool Export
+            {
+                get;
+                set;
+            }
 
             /// <summary>
             /// Determines whether the measurement represented by this metadata record
             /// should be displayed on the Historian Data Viewer graph.
             /// </summary>
-            public bool Display { get; set; }
+            public bool Display
+            {
+                get;
+                set;
+            }
 
             /// <summary>
             /// Gets the point number of the measurement.
@@ -245,10 +253,28 @@ namespace HistorianView
             EndTime = TimeTag.Parse("*").ToDateTime();
             m_currentTimeCheckBox.IsChecked = true;
 
-            string lastArchiveLocations = ConfigurationFile.Current.Settings.General["ArchiveLocations", true].ValueAs("");
+            string[] lastArchiveLocations = ConfigurationFile.Current.Settings.General["ArchiveLocations", true].ValueAs("").Split('|').Where(archiveLocation => !string.IsNullOrWhiteSpace(archiveLocation) && File.Exists(archiveLocation)).ToArray();
 
-            if (!string.IsNullOrWhiteSpace(lastArchiveLocations) && File.Exists(lastArchiveLocations))
-                OpenArchives(lastArchiveLocations.Split('|'));
+            if (lastArchiveLocations == null || lastArchiveLocations.Length == 0)
+            {
+                // See if a local archive folder exists with a valid archive
+                string defaultArchiveLocation = FilePath.GetAbsolutePath("Archive");
+
+                if (Directory.Exists(defaultArchiveLocation))
+                    lastArchiveLocations = Directory.GetFiles(defaultArchiveLocation, "*_archive.d");
+
+                if (lastArchiveLocations == null || lastArchiveLocations.Length == 0)
+                {
+                    // See if a local statistics folder exists with a valid archive
+                    defaultArchiveLocation = FilePath.GetAbsolutePath("Statistics");
+
+                    if (Directory.Exists(defaultArchiveLocation))
+                        lastArchiveLocations = Directory.GetFiles(defaultArchiveLocation, "*_archive.d");
+                }
+            }
+
+            if (lastArchiveLocations != null && lastArchiveLocations.Length > 0)
+                OpenArchives(lastArchiveLocations);
         }
 
         #endregion
@@ -366,12 +392,18 @@ namespace HistorianView
             ClearArchives();
 
             foreach (string fileName in fileNames)
-                m_archiveFiles.Add(OpenArchiveFile(fileName));
+            {
+                if (File.Exists(fileName))
+                    m_archiveFiles.Add(OpenArchiveFile(fileName));
+            }
 
             foreach (ArchiveFile file in m_archiveFiles)
             {
                 foreach (MetadataRecord record in file.MetadataFile.Read())
-                    m_metadata.Add(new MetadataWrapper(record));
+                {
+                    if (record.GeneralFlags.Enabled)
+                        m_metadata.Add(new MetadataWrapper(record));
+                }
             }
 
             ArchiveIsOpen = true;

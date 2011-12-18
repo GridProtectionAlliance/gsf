@@ -28,6 +28,9 @@
 //       Fixed a bug that was preventing all of the exported data from being written to output file.
 //  11/08/2011 - J. Ritchie Carroll
 //       Added enhanced export formatting and time-sorted outputs.
+//  12/18/2011 - J. Ritchie Carroll
+//       Set likely default archive locations on initial startup and added check box to allow append to
+//       or overwrite modes on file based exports.
 //
 //******************************************************************************************************
 
@@ -157,6 +160,23 @@ namespace HistorianPlaybackUtility
             m_rolloverWatcher.Start();
             m_rolloverWaitHandle = new ManualResetEvent(true);
             m_lastSelectedArchiveLocation = ConfigurationFile.Current.Settings.General["ArchiveLocation", true].ValueAs("");
+
+            // If last selected archive is not defined, try to a few default selections
+            if (string.IsNullOrWhiteSpace(m_lastSelectedArchiveLocation) || !Directory.Exists(m_lastSelectedArchiveLocation))
+            {
+                // See if a local archive folder exists with a valid archive
+                m_lastSelectedArchiveLocation = FilePath.GetAbsolutePath("Archive");
+
+                if (!Directory.Exists(m_lastSelectedArchiveLocation) || Directory.GetFiles(m_lastSelectedArchiveLocation, "*_archive.d").Length == 0)
+                {
+                    // See if a local statistics folder exists with a valid archive
+                    m_lastSelectedArchiveLocation = FilePath.GetAbsolutePath("Statistics");
+
+                    // If neither of these folders exist, just leave setting blank
+                    if (!Directory.Exists(m_lastSelectedArchiveLocation) || Directory.GetFiles(m_lastSelectedArchiveLocation, "*_archive.d").Length == 0)
+                        m_lastSelectedArchiveLocation = "";
+                }
+            }
 
             // Update archive location text box to contain the archive location from the configuration file.
             ArchiveLocationInput.Text = m_lastSelectedArchiveLocation;
@@ -649,6 +669,8 @@ namespace HistorianPlaybackUtility
                         break;
                     case 2: // File
                         m_transmitClient = ClientBase.Create(string.Format("Protocol=File;File={0}", FileNameInput.Text));
+                        if (!AppendToExisting.Checked)
+                            (m_transmitClient as FileClient).FileOpenMode = FileMode.Create;
                         break;
                     case 3: // Serial
                         m_transmitClient = ClientBase.Create(string.Format("Protocol=Serial;Port={0};BaudRate={1};Parity={2};StopBits={3};DataBits={4};DtrEnable={5};RtsEnable={6}", SerialPortInput.Text, SerialBaudRateInput.Text, SerialParityInput.Text, SerialStopBitsInput.Text, SerialDataBitsInput.Text, SerialDtrEnable.Checked, SerialRtsEnable.Checked));

@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Security.Permissions;
 
 // Assembly identity attributes.
-[assembly: AssemblyVersion("1.1.117.0")]
+[assembly: AssemblyVersion("1.1.112.0")]
 
 // Informational attributes.
-[assembly: AssemblyCompany("TVA")]
-[assembly: AssemblyCopyright("No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.")]
-[assembly: AssemblyProduct("Historian Playback Utility")]
+[assembly: AssemblyTitle("HistorianPlaybackUtility")]
+[assembly: AssemblyDescription("Utility for playing back and/or exporting data from historian data files.")]
+[assembly: AssemblyCompany("Grid Protection Alliance")]
+[assembly: AssemblyCopyright("Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.")]
+[assembly: AssemblyProduct("openHistorian")]
 
 // Assembly manifest attributes.
 #if DEBUG
@@ -18,8 +19,6 @@ using System.Security.Permissions;
 [assembly: AssemblyConfiguration("Release Build")]
 #endif
 [assembly: AssemblyDefaultAlias("HistorianPlaybackUtility")]
-[assembly: AssemblyDescription("Utility for playing back data from historian data files.")]
-[assembly: AssemblyTitle("HistorianPlaybackUtility")]
 
 // Other configuration attributes.
 [assembly: CLSCompliant(true)]

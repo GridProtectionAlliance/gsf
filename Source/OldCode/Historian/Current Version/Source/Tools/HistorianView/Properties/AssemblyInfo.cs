@@ -1,6 +1,4 @@
 ﻿using System.Reflection;
-using System.Resources;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows;
 
@@ -8,13 +6,17 @@ using System.Windows;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("HistorianView")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("GPA")]
-[assembly: AssemblyProduct("HistorianView")]
-[assembly: AssemblyCopyright("Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
+[assembly: AssemblyDescription("Utility for trending and exporting data from historian data files.")]
+[assembly: AssemblyCompany("Grid Protection Alliance")]
+[assembly: AssemblyProduct("openHistorian")]
+[assembly: AssemblyCopyright("Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.")]
+
+#if DEBUG
+[assembly: AssemblyConfiguration("Debug Build")]
+#else
+[assembly: AssemblyConfiguration("Release Build")]
+#endif
+[assembly: AssemblyDefaultAlias("HistorianView")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 
@@ -50,6 +52,6 @@ using System.Windows;
 //
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
-// [assembly: AssemblyVersion("1.1.117.0")]
-[assembly: AssemblyVersion("1.1.117.0")]
+// [assembly: AssemblyVersion("1.1.112.0")]
+[assembly: AssemblyVersion("1.1.112.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
