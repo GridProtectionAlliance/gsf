@@ -523,6 +523,8 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Historian WHERE ID = {0}", "historianID"), DefaultTimeout, historianID);
 
+                TimeSeriesFramework.UI.CommonFunctions.SendCommandToService("ReloadConfig");
+
                 return "Historian deleted successfully";
             }
             finally

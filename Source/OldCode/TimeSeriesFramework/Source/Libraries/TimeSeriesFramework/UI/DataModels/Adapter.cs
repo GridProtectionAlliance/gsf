@@ -515,6 +515,8 @@ namespace TimeSeriesFramework.UI.DataModels
                 string query = database.ParameterizedQueryString("DELETE FROM " + tableName + " WHERE ID = {0}", "adapterID");
                 database.Connection.ExecuteNonQuery(query, DefaultTimeout, adapterID);
 
+                TimeSeriesFramework.UI.CommonFunctions.SendCommandToService("ReloadConfig");
+
                 return "Adapter deleted successfully";
             }
             finally
