@@ -278,11 +278,15 @@ namespace TimeSeriesFramework.Adapters
         {
             get
             {
-                return m_connectionTimer.Interval;
+                if (m_connectionTimer != null)
+                    return m_connectionTimer.Interval;
+
+                return 2000.0D;
             }
             set
             {
-                m_connectionTimer.Interval = value;
+                if (m_connectionTimer != null)
+                    m_connectionTimer.Interval = value;
             }
         }
 
@@ -404,7 +408,8 @@ namespace TimeSeriesFramework.Adapters
                 InputSourceIDs = null;
 
             // Start data monitor...
-            m_monitorTimer.Start();
+            if (m_monitorTimer != null)
+                m_monitorTimer.Start();
         }
 
         /// <summary>
@@ -432,7 +437,12 @@ namespace TimeSeriesFramework.Adapters
             base.Start();
 
             // Start the connection cycle
-            m_connectionTimer.Enabled = true;
+            if (m_connectionTimer != null)
+                m_connectionTimer.Enabled = true;
+
+            // Make sure data monitor is started...
+            if (m_monitorTimer != null && !m_monitorTimer.Enabled)
+                m_monitorTimer.Start();
         }
 
         /// <summary>
@@ -469,7 +479,8 @@ namespace TimeSeriesFramework.Adapters
                 bool performedDisconnect = Enabled;
 
                 // Stop the connection cycle
-                m_connectionTimer.Enabled = false;
+                if (m_connectionTimer != null)
+                    m_connectionTimer.Enabled = false;
 
                 base.Stop();
 

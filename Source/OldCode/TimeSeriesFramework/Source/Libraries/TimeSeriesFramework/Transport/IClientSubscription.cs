@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using TimeSeriesFramework.Adapters;
 using TVA;
@@ -110,9 +111,9 @@ namespace TimeSeriesFramework.Transport
     public static class IClientSubscriptionExtensions
     {
         // Define cache of dyanmically defined event handlers associated with each client subscription
-        private static Dictionary<IClientSubscription, EventHandler<EventArgs<string, UpdateType>>> s_statusMessageHandlers = new Dictionary<IClientSubscription, EventHandler<EventArgs<string, UpdateType>>>();
-        private static Dictionary<IClientSubscription, EventHandler<EventArgs<Exception>>> s_processExceptionHandlers = new Dictionary<IClientSubscription, EventHandler<EventArgs<Exception>>>();
-        private static Dictionary<IClientSubscription, EventHandler> s_processingCompletedHandlers = new Dictionary<IClientSubscription, EventHandler>();
+        private static ConcurrentDictionary<IClientSubscription, EventHandler<EventArgs<string, UpdateType>>> s_statusMessageHandlers = new ConcurrentDictionary<IClientSubscription, EventHandler<EventArgs<string, UpdateType>>>();
+        private static ConcurrentDictionary<IClientSubscription, EventHandler<EventArgs<Exception>>> s_processExceptionHandlers = new ConcurrentDictionary<IClientSubscription, EventHandler<EventArgs<Exception>>>();
+        private static ConcurrentDictionary<IClientSubscription, EventHandler> s_processingCompletedHandlers = new ConcurrentDictionary<IClientSubscription, EventHandler>();
 
         /// <summary>
         /// Returns a new temporal <see cref="IaonSession"/> for a <see cref="IClientSubscription"/>.
@@ -231,24 +232,15 @@ namespace TimeSeriesFramework.Transport
                 EventHandler<EventArgs<Exception>> processExceptionFunction;
                 EventHandler processingCompletedFunction;
 
-                // Lookup event handlers, detach and remove
-                if (s_statusMessageHandlers.TryGetValue(adapter, out statusMessageFunction))
-                {
+                // Remove and detatch from event handlers
+                if (s_statusMessageHandlers.TryRemove(adapter, out statusMessageFunction))
                     session.StatusMessage -= statusMessageFunction;
-                    s_statusMessageHandlers.Remove(adapter);
-                }
 
-                if (s_processExceptionHandlers.TryGetValue(adapter, out processExceptionFunction))
-                {
+                if (s_processExceptionHandlers.TryRemove(adapter, out processExceptionFunction))
                     session.ProcessException -= processExceptionFunction;
-                    s_processExceptionHandlers.Remove(adapter);
-                }
 
-                if (s_processingCompletedHandlers.TryGetValue(adapter, out processingCompletedFunction))
-                {
+                if (s_processingCompletedHandlers.TryRemove(adapter, out processingCompletedFunction))
                     session.ProcessingComplete -= processingCompletedFunction;
-                    s_processingCompletedHandlers.Remove(adapter);
-                }
 
                 session.Dispose();
             }

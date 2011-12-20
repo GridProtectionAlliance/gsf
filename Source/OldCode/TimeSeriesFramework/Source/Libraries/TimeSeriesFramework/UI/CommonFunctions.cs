@@ -83,7 +83,9 @@ namespace TimeSeriesFramework.UI
         /// <summary>
         /// Used to notify main window that connection to service has changed.
         /// </summary>
-        public static event EventHandler ServiceConntectionRefreshed = delegate { };
+        public static event EventHandler ServiceConntectionRefreshed = delegate
+        {
+        };
 
         // Static Methods
 
