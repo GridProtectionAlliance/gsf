@@ -78,7 +78,7 @@ namespace TimeSeriesFramework.Adapters
         public event EventHandler OutputMeasurementsUpdated;
 
         /// <summary>
-        /// This event is raised every second allowing consumer to track current number of unpublished seconds of data in the queue.
+        /// Event is raised every five seconds allowing consumer to track current number of unpublished seconds of data in the queue.
         /// </summary>
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is the total number of unpublished seconds of data.
@@ -86,7 +86,7 @@ namespace TimeSeriesFramework.Adapters
         public event EventHandler<EventArgs<int>> UnpublishedSamples;
 
         /// <summary>
-        /// Event is raised every second allowing host to track total number of unprocessed measurements.
+        /// Event is raised every five seconds allowing host to track total number of unprocessed measurements.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -827,18 +827,28 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="e">Event arguments containing number of samples, in seconds of data, of unpublished data in the source adapter.</param>
         /// <remarks>
         /// Time-series framework uses this handler to monitor the number of unpublished samples, in seconds of data, in action adapters.<br/>
-        /// This method is typically called once per second.
+        /// This method is typically called once every five seconds.
         /// </remarks>
         public virtual void UnpublishedSamplesHandler(object sender, EventArgs<int> e)
         {
             int secondsOfData = e.Argument;
             int threshold = m_defaultSampleSizeWarningThreshold;
+            int processingInterval = -1;
             ConcentratorBase concentrator = sender as ConcentratorBase;
+            IAdapter adapter = sender as IAdapter;
 
             // Most action adapters will be based on a concentrator, if so we monitor the unpublished sample queue size compared to the defined
             // lag time - if the queue size is over twice the lag size, the action adapter could be falling behind
-            if (concentrator != null)
+            if ((object)concentrator != null)
                 threshold = (int)(2 * Math.Ceiling(concentrator.LagTime));
+
+            // Get processing interval for adapter
+            if ((object)adapter != null)
+                processingInterval = adapter.ProcessingInterval;
+
+            // Allow much more time before warning for when a fast processing interval has been defined
+            if (processingInterval > -1 && processingInterval < 100)
+                threshold *= 4;
 
             if (secondsOfData > threshold)
                 OnStatusMessage(sender, "[{0}] There are {1} seconds of unpublished data in the action adapter concentration queue.", UpdateType.Warning, GetDerivedName(sender), secondsOfData);
@@ -854,7 +864,7 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="e">Event arguments containing number of queued (i.e., unprocessed) measurements in the source adapter.</param>
         /// <remarks>
         /// Time-series framework uses this handler to monitor the number of unprocessed measurements in output adapters.<br/>
-        /// This method is typically called once per second.
+        /// This method is typically called once every five seconds.
         /// </remarks>
         public virtual void UnprocessedMeasurementsHandler(object sender, EventArgs<int> e)
         {

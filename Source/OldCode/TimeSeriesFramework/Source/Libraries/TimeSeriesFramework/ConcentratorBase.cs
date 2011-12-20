@@ -359,7 +359,7 @@ namespace TimeSeriesFramework
         // Events
 
         /// <summary>
-        /// This event is raised every second allowing consumer to track current number of unpublished seconds of data in the queue.
+        /// This event is raised every 5 seconds allowing consumer to track current number of unpublished seconds of data in the queue.
         /// </summary>
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is the total number of unpublished seconds of data.
@@ -487,11 +487,11 @@ namespace TimeSeriesFramework
             m_publicationThread.Priority = ThreadPriority.Highest;
             m_publicationThread.Start();
 
-            // This timer monitors the total number of unpublished samples every second. This is a useful statistic
+            // This timer monitors the total number of unpublished samples every 5 seconds. This is a useful statistic
             // to monitor: if total number of unpublished samples exceed lag time, measurement concentration could
             // be falling behind.
             m_monitorTimer = new System.Timers.Timer();
-            m_monitorTimer.Interval = 1000;
+            m_monitorTimer.Interval = 5000;
             m_monitorTimer.AutoReset = true;
             m_monitorTimer.Elapsed += MonitorUnpublishedSamples;
         }

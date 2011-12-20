@@ -48,7 +48,7 @@ namespace TimeSeriesFramework.Adapters
         public event EventHandler<EventArgs<ICollection<IMeasurement>>> NewMeasurements;
 
         /// <summary>
-        /// This event is raised every second allowing consumer to track current number of unpublished seconds of data in the queue.
+        /// This event is raised every five seconds allowing consumer to track current number of unpublished seconds of data in the queue.
         /// </summary>
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is the total number of unpublished seconds of data.

@@ -46,7 +46,7 @@ namespace TimeSeriesFramework.Adapters
         // Events
 
         /// <summary>
-        /// Event is raised every second allowing host to track total number of unprocessed measurements.
+        /// Event is raised every five seconds allowing host to track total number of unprocessed measurements.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -89,9 +89,9 @@ namespace TimeSeriesFramework.Adapters
             m_monitorTimer = new System.Timers.Timer();
             m_monitorTimer.Elapsed += m_monitorTimer_Elapsed;
 
-            // We monitor total number of unarchived measurements every second - this is a useful statistic to monitor, if
+            // We monitor total number of unarchived measurements every 5 seconds - this is a useful statistic to monitor, if
             // total number of unarchived measurements gets very large, measurement archival could be falling behind
-            m_monitorTimer.Interval = 1000;
+            m_monitorTimer.Interval = 5000;
             m_monitorTimer.AutoReset = true;
             m_monitorTimer.Enabled = false;
         }

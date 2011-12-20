@@ -98,6 +98,7 @@ namespace TimeSeriesFramework
         private const int DefaultMinThreadPoolSize = 25;
         private const int DefaultMaxThreadPoolSize = 2048;
         private const int DefaultGCGenZeroInterval = 500;
+        private const int DefaultConfigurationBackups = 5;
 
         // Fields
         private IaonSession m_iaonSession;
@@ -106,6 +107,7 @@ namespace TimeSeriesFramework
         private string m_connectionString;
         private string m_dataProviderString;
         private string m_cachedConfigurationFile;
+        private int m_configurationBackups;
         private bool m_uniqueAdapterIDs;
         private bool m_allowRemoteRestart;
         private System.Timers.Timer m_gcGenZeroTimer;
@@ -315,6 +317,7 @@ namespace TimeSeriesFramework
             systemSettings.Add("MinThreadPoolIOPortThreads", DefaultMinThreadPoolSize, "Defines the minimum number of allowed thread pool I/O completion port threads (used by socket layer).");
             systemSettings.Add("MaxThreadPoolIOPortThreads", DefaultMaxThreadPoolSize, "Defines the maximum number of allowed thread pool I/O completion port threads (used by socket layer).");
             systemSettings.Add("GCGenZeroInterval", DefaultGCGenZeroInterval, "Defines the interval, in milliseconds, over which to force a generation zero garbage collection. Set to -1 to disable.");
+            systemSettings.Add("ConfigurationBackups", DefaultConfigurationBackups, "Defines the total number of older backup configurations to maintain.");
 
             // Example connection settings
             CategorizedSettingsElementCollection exampleSettings = configFile.Settings["exampleConnectionSettings"];
@@ -353,6 +356,7 @@ namespace TimeSeriesFramework
             m_connectionString = systemSettings["ConnectionString"].Value;
             m_dataProviderString = systemSettings["DataProviderString"].Value;
             m_cachedConfigurationFile = FilePath.AddPathSuffix(cachePath) + systemSettings["CachedConfigurationFile"].Value;
+            m_configurationBackups = systemSettings["ConfigurationBackups"].ValueAs<int>(DefaultConfigurationBackups);
             m_uniqueAdapterIDs = systemSettings["UniqueAdaptersIDs"].ValueAsBoolean(true);
             m_allowRemoteRestart = systemSettings["AllowRemoteRestart"].ValueAsBoolean(true);
 
@@ -851,7 +855,31 @@ namespace TimeSeriesFramework
         {
             try
             {
-                // Back up existing configuration file, if any
+                // Create multiple backup configurations, if requested
+                for (int i = m_configurationBackups; i > 0; i--)
+                {
+                    string origConfigFile = m_cachedConfigurationFile + ".backup" + (i == 1 ? "" : (i - 1).ToString());
+
+                    if (File.Exists(origConfigFile))
+                    {
+                        string nextConfigFile = m_cachedConfigurationFile + ".backup" + i;
+
+                        if (File.Exists(nextConfigFile))
+                            File.Delete(nextConfigFile);
+
+                        File.Move(origConfigFile, nextConfigFile);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                DisplayStatusMessage("Failed to create extra backup configurations due to exception: {0}", UpdateType.Warning, ex.Message);
+                m_serviceHelper.ErrorLogger.Log(ex);
+            }
+
+            try
+            {
+                // Back up current configuration file, if any
                 if (File.Exists(m_cachedConfigurationFile))
                 {
                     string backupConfigFile = m_cachedConfigurationFile + ".backup";

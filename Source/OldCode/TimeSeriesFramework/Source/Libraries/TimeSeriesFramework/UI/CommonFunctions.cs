@@ -68,7 +68,9 @@ namespace TimeSeriesFramework.UI
 
         // Static Properties
 
-
+        /// <summary>
+        /// Defines the current principal for the thread owning the common functions.
+        /// </summary>
         public static SecurityPrincipal CurrentPrincipal = Thread.CurrentPrincipal as SecurityPrincipal;
 
         /// <summary>

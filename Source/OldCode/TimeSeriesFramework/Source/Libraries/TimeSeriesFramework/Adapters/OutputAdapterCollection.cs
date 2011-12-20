@@ -39,7 +39,7 @@ namespace TimeSeriesFramework.Adapters
         // Events
 
         /// <summary>
-        /// Event is raised every second allowing host to track total number of unprocessed measurements.
+        /// Event is raised every five seconds allowing host to track total number of unprocessed measurements.
         /// </summary>
         /// <remarks>
         /// <para>
