@@ -172,7 +172,7 @@
             <param name="e">Event arguments containing number of samples, in seconds of data, of unpublished data in the source adapter.</param>
             <remarks>
             Time-series framework uses this handler to monitor the number of unpublished samples, in seconds of data, in action adapters.<br/>
-            This method is typically called once per second.
+            This method is typically called once every five seconds.
             </remarks>
         </member>
         <member name="M:TimeSeriesFramework.Adapters.IaonSession.UnprocessedMeasurementsHandler(System.Object,TVA.EventArgs{System.Int32})">
@@ -183,7 +183,7 @@
             <param name="e">Event arguments containing number of queued (i.e., unprocessed) measurements in the source adapter.</param>
             <remarks>
             Time-series framework uses this handler to monitor the number of unprocessed measurements in output adapters.<br/>
-            This method is typically called once per second.
+            This method is typically called once every five seconds.
             </remarks>
         </member>
         <member name="M:TimeSeriesFramework.Adapters.IaonSession.ProcessingCompleteHandler(System.Object,System.EventArgs)">
@@ -236,7 +236,7 @@
         </member>
         <member name="E:TimeSeriesFramework.Adapters.IaonSession.UnpublishedSamples">
             <summary>
-            This event is raised every second allowing consumer to track current number of unpublished seconds of data in the queue.
+            Event is raised every five seconds allowing consumer to track current number of unpublished seconds of data in the queue.
             </summary>
             <remarks>
             <see cref="F:TVA.EventArgs`1.Argument"/> is the total number of unpublished seconds of data.
@@ -244,7 +244,7 @@
         </member>
         <member name="E:TimeSeriesFramework.Adapters.IaonSession.UnprocessedMeasurements">
             <summary>
-            Event is raised every second allowing host to track total number of unprocessed measurements.
+            Event is raised every five seconds allowing host to track total number of unprocessed measurements.
             </summary>
             <remarks>
             <para>
@@ -654,7 +654,7 @@
         </member>
         <member name="E:TimeSeriesFramework.ConcentratorBase.UnpublishedSamples">
             <summary>
-            This event is raised every second allowing consumer to track current number of unpublished seconds of data in the queue.
+            This event is raised every 5 seconds allowing consumer to track current number of unpublished seconds of data in the queue.
             </summary>
             <remarks>
             <see cref="F:TVA.EventArgs`1.Argument"/> is the total number of unpublished seconds of data.
@@ -2727,7 +2727,7 @@
         </member>
         <member name="E:TimeSeriesFramework.Adapters.IActionAdapter.UnpublishedSamples">
             <summary>
-            This event is raised every second allowing consumer to track current number of unpublished seconds of data in the queue.
+            This event is raised every five seconds allowing consumer to track current number of unpublished seconds of data in the queue.
             </summary>
             <remarks>
             <see cref="F:TVA.EventArgs`1.Argument"/> is the total number of unpublished seconds of data.
@@ -3803,7 +3803,7 @@
         </member>
         <member name="E:TimeSeriesFramework.Adapters.ActionAdapterCollection.UnpublishedSamples">
             <summary>
-            This event is raised every second allowing consumer to track current number of unpublished seconds of data in the queue.
+            This event is raised every five seconds allowing consumer to track current number of unpublished seconds of data in the queue.
             </summary>
             <remarks>
             <see cref="F:TVA.EventArgs`1.Argument"/> is the total number of unpublished seconds of data.
@@ -4929,7 +4929,7 @@
         </member>
         <member name="E:TimeSeriesFramework.Adapters.IOutputAdapter.UnprocessedMeasurements">
             <summary>
-            Event is raised every second allowing host to track total number of unprocessed measurements.
+            Event is raised every five seconds allowing host to track total number of unprocessed measurements.
             </summary>
             <remarks>
             <para>
@@ -5134,7 +5134,7 @@
         </member>
         <member name="E:TimeSeriesFramework.Adapters.OutputAdapterBase.UnprocessedMeasurements">
             <summary>
-            Event is raised every second allowing host to track total number of unprocessed measurements.
+            Event is raised every five seconds allowing host to track total number of unprocessed measurements.
             </summary>
             <remarks>
             <para>
@@ -5276,7 +5276,7 @@
         </member>
         <member name="E:TimeSeriesFramework.Adapters.OutputAdapterCollection.UnprocessedMeasurements">
             <summary>
-            Event is raised every second allowing host to track total number of unprocessed measurements.
+            Event is raised every five seconds allowing host to track total number of unprocessed measurements.
             </summary>
             <remarks>
             <para>
