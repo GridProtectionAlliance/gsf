@@ -255,6 +255,7 @@
 
 using System;
 using System.IO;
+
 namespace TVA.Parsing
 {
     /// <summary>
