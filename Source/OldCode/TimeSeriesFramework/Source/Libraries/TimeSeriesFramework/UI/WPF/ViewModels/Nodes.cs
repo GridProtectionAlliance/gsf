@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Windows;
 using TimeSeriesFramework.UI.DataModels;
 
 namespace TimeSeriesFramework.UI.ViewModels
@@ -112,6 +113,24 @@ namespace TimeSeriesFramework.UI.ViewModels
         public override void Delete()
         {
             base.Delete();
+            try
+            {
+                CommonFunctions.SendCommandToService("ReloadConfig");
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException != null)
+                {
+                    Popup(ex.Message + Environment.NewLine + "Inner Exception: " + ex.InnerException.Message, "Delete " + DataModelName + " Exception:", MessageBoxImage.Error);
+                    CommonFunctions.LogException(null, "Delete " + DataModelName, ex.InnerException);
+                }
+                else
+                {
+                    Popup(ex.Message, "Delete " + DataModelName + " Exception:", MessageBoxImage.Error);
+                    CommonFunctions.LogException(null, "Delete " + DataModelName, ex);
+                }
+            }
+
             CommonFunctions.ConnectWindowsServiceClient(true);
         }
 

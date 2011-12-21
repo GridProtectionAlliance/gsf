@@ -654,6 +654,8 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Node WHERE ID = {0}", "nodeID"), DefaultTimeout, database.Guid(nodeID));
 
+
+
                 return "Node deleted successfully";
             }
             finally

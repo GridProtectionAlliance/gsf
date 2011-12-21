@@ -86,7 +86,7 @@ namespace TimeSeriesFramework.UI
         public event EventHandler Deleted;
 
         // Fields
-        private int m_pageCount, m_currentPageNumber, m_itemsPerPage;
+        private int m_pageCount, m_currentPageNumber, m_itemsPerPage, m_currentSelectedIndex;
         private ObservableCollection<TDataModel> m_currentPage, m_itemsSource;
         private ObservableCollection<ObservableCollection<TDataModel>> m_pages;
         private ICommand m_firstCommand, m_previousCommand, m_nextCommand, m_lastCommand;
@@ -128,6 +128,23 @@ namespace TimeSeriesFramework.UI
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets current selected index on the UI data grid.
+        /// </summary>
+        public int CurrentSelectedIndex
+        {
+            get
+            {
+                return m_currentSelectedIndex;
+            }
+            set
+            {
+                if (value != -1)
+                    m_currentSelectedIndex = value;
+                OnPropertyChanged("CurrentSelectedIndex");
+            }
+        }
 
         /// <summary>
         /// Gets or sets flag that determines if current item property has changed.
@@ -275,7 +292,12 @@ namespace TimeSeriesFramework.UI
                     m_currentPage.CollectionChanged += new NotifyCollectionChangedEventHandler(m_currentPage_CollectionChanged);
 
                     if (m_currentPage.Count > 0)
-                        CurrentItem = m_currentPage[0];
+                    {
+                        if (CurrentSelectedIndex < 0 || CurrentSelectedIndex >= m_currentPage.Count)
+                            CurrentSelectedIndex = 0;
+
+                        CurrentItem = m_currentPage[CurrentSelectedIndex];
+                    }
                 }
             }
         }
@@ -291,6 +313,9 @@ namespace TimeSeriesFramework.UI
             }
             set
             {
+                if (m_currentPageNumber != value)
+                    CurrentSelectedIndex = 0;
+
                 m_currentPageNumber = value;
                 OnPropertyChanged("CurrentPageNumber");
             }

@@ -91,6 +91,9 @@
     <Reference Include="TVA.Core">
       <HintPath>..\..\Dependencies\TVA\TVA.Core.dll</HintPath>
     </Reference>
+    <Reference Include="TVA.Security, Version=4.0.3.33, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\TVA\TVA.Security.dll</HintPath>
+    </Reference>
     <Reference Include="TVA.ServiceProcess">
       <HintPath>..\..\Dependencies\TVA\TVA.ServiceProcess.dll</HintPath>
     </Reference>

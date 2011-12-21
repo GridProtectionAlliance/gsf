@@ -105,7 +105,7 @@
         </StackPanel>
         
         <sdk:DataGrid x:Name="DataGridList" ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" PreviewKeyDown="DataGrid_PreviewKeyDown"
-                      Sorting="DataGrid_Sorting">
+                      Sorting="DataGrid_Sorting" SelectedIndex="{tsfBinding:Column Path=CurrentSelectedIndex}">
             <sdk:DataGrid.Columns>
                 <sdk:DataGridTextColumn Header="ID" Width="*" Binding="{Binding Path=ID}" ToolTipService.ToolTip="{Binding Path=PointTag}" CellStyle="{StaticResource CenterAlignCellStyle}" IsReadOnly="True"/>
                 <!--<sdk:DataGridTextColumn Header="Point Tag" Width="2*" Binding="{tsfBinding:Column Path=PointTag}" CellStyle="{StaticResource CenterAlignCellStyle}" />-->                

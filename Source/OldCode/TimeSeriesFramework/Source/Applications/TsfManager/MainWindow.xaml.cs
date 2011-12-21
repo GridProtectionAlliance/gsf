@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -34,6 +35,7 @@ using TimeSeriesFramework.UI;
 using TimeSeriesFramework.UI.DataModels;
 using TVA.IO;
 using TVA.Reflection;
+using TVA.Security;
 
 namespace TsfManager
 {
@@ -77,6 +79,9 @@ namespace TsfManager
             this.Unloaded += new RoutedEventHandler(MainWindow_Unloaded);
             Title = ((App)Application.Current).Title;
             TextBoxTitle.Text = AssemblyInfo.EntryAssembly.Title;
+
+            CommonFunctions.CurrentUser = Thread.CurrentPrincipal.Identity.Name;
+            CommonFunctions.CurrentPrincipal = Thread.CurrentPrincipal as SecurityPrincipal;
 
             if (!string.IsNullOrEmpty(CommonFunctions.CurrentUser))
                 Title += " Current User: " + CommonFunctions.CurrentUser;
@@ -254,7 +259,7 @@ namespace TsfManager
                 forwardEnabled.Visibility = Visibility.Collapsed;
                 forwardDisabled.Visibility = Visibility.Visible;
             }
-            
+
         }
 
         private void ButtonBack_Click(object sender, RoutedEventArgs e)

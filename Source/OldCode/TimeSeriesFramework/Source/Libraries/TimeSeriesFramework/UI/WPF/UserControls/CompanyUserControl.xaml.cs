@@ -50,6 +50,7 @@ namespace TimeSeriesFramework.UI.UserControls
             this.Unloaded += new RoutedEventHandler(CompanyUserControl_Unloaded);
             m_dataContext = new Companies(25, false);
             this.DataContext = m_dataContext;
+
         }
 
         #endregion
