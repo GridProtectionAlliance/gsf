@@ -10,6 +10,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  12/01/2011 - Pinal C. Patel
 //       Generated original version of source code.
+//  12/28/2011 - Pinal C. Patel
+//       Modified to use TcpClient for both receiving and transmitting the data.
 //
 //*******************************************************************************************************
 
@@ -230,14 +232,25 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.ServiceProcess;
 using TVA;
+using TVA.Communication;
+using TVA.Configuration;
 
 namespace TCPRebroadcaster
 {
     public partial class ServiceHost : ServiceBase
     {
+        #region [ Members ]
+
+        private bool m_shutdown;
+        private TcpClient m_source;
+        private List<TcpClient> m_targets;
+
+        #endregion
+
         #region [ Constructors ]
 
         public ServiceHost()
@@ -263,80 +276,128 @@ namespace TCPRebroadcaster
 
         private void ServiceHelper_ServiceStarted(object sender, EventArgs e)
         {
-            // Register components.
-            m_serviceHelper.ServiceComponents.Add(m_tcpServer);
-            m_serviceHelper.ServiceComponents.Add(m_tcpClient);
+            // Initialize config.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings["SystemSettings"];
 
-            // Start the TCP server.
-            m_tcpServer.ClientConnected += TcpServer_ClientConnected;
-            m_tcpServer.ClientDisconnected += TcpServer_ClientDisconnected;
-            m_tcpServer.SendClientDataException += TcpServer_SendClientDataException;
-            m_tcpServer.Start();
+            // Connect to source.
+            m_source = new TcpClient();
+            m_source.ConnectionString = string.Format("Server={0}", settings["Source"].Value);
+            m_source.ConnectionAttempt += SourceClient_ConnectionAttempt;
+            m_source.ConnectionEstablished += SourceClient_ConnectionEstablished;
+            m_source.ConnectionTerminated += SourceClient_ConnectionTerminated;
+            m_source.ReceiveDataComplete += SourceClient_ReceiveDataComplete;
+            m_source.ConnectAsync();
 
-            // Connect the TCP client.
-            m_tcpClient.ConnectionAttempt += TcpClient_ConnectionAttempt;
-            m_tcpClient.ConnectionEstablished += TcpClient_ConnectionEstablished;
-            m_tcpClient.ConnectionTerminated += TcpClient_ConnectionTerminated;
-            m_tcpClient.ReceiveDataComplete += TcpClient_ReceiveDataComplete;
-            m_tcpClient.ConnectAsync();
+            // Connect to target.
+            m_targets = new List<TcpClient>();
+            foreach (string item in settings["Target"].Value.Replace(',', ';').Split(';'))
+            {
+                TcpClient target = new TcpClient();
+                target.ConnectionString = string.Format("Server={0}", item.Trim());
+                target.ConnectionAttempt += TargetClient_ConnectionAttempt;
+                target.ConnectionEstablished += TargetClient_ConnectionEstablished;
+                target.ConnectionTerminated += TargetClient_ConnectionTerminated;
+                target.ConnectAsync();
+            }
         }
 
         private void ServiceHelper_ServiceStopping(object sender, EventArgs e)
         {
-            // Unregister event handlers.
-            m_tcpServer.ClientConnected -= TcpServer_ClientConnected;
-            m_tcpServer.ClientDisconnected -= TcpServer_ClientDisconnected;
-            m_tcpServer.SendClientDataException -= TcpServer_SendClientDataException;
-            m_tcpClient.ConnectionAttempt -= TcpClient_ConnectionAttempt;
-            m_tcpClient.ConnectionEstablished -= TcpClient_ConnectionEstablished;
-            m_tcpClient.ConnectionTerminated -= TcpClient_ConnectionTerminated;
-            m_tcpClient.ReceiveDataComplete -= TcpClient_ReceiveDataComplete;
-        }
+            // Indicate shutdown.
+            m_shutdown = true;
 
-        private void TcpServer_ClientConnected(object sender, EventArgs<Guid> e)
-        {
-            m_serviceHelper.UpdateStatus(UpdateType.Information, "[SERVER] Client connected\r\n\r\n");
-        }
+            // Disconnect from source.
+            m_source.ConnectionAttempt -= SourceClient_ConnectionAttempt;
+            m_source.ConnectionEstablished -= SourceClient_ConnectionEstablished;
+            m_source.ConnectionTerminated -= SourceClient_ConnectionTerminated;
+            m_source.ReceiveDataComplete -= SourceClient_ReceiveDataComplete;
+            m_source.Dispose();
 
-        private void TcpServer_ClientDisconnected(object sender, EventArgs<Guid> e)
-        {
-            m_serviceHelper.UpdateStatus(UpdateType.Information, "[SERVER] Client disconnected\r\n\r\n");
-        }
-
-        private void TcpServer_SendClientDataException(object sender, EventArgs<Guid, Exception> e)
-        {
-            m_serviceHelper.ErrorLogger.Log(e.Argument2);
-            m_serviceHelper.UpdateStatus(UpdateType.Information, "[SERVER] Error rebroadcasting data - {0}\r\n\r\n", e.Argument2.Message);
-        }
-
-        private void TcpClient_ConnectionAttempt(object sender, EventArgs e)
-        {
-            m_serviceHelper.UpdateStatus(UpdateType.Information, "[CLIENT] Attempting connection to {0}\r\n\r\n", m_tcpClient.ServerUri);
-        }
-
-        private void TcpClient_ConnectionEstablished(object sender, EventArgs e)
-        {
-            m_serviceHelper.UpdateStatus(UpdateType.Information, "[CLIENT] Connection established\r\n\r\n");
-        }
-
-        private void TcpClient_ConnectionTerminated(object sender, EventArgs e)
-        {
-            m_tcpClient.ConnectAsync();
-            m_serviceHelper.UpdateStatus(UpdateType.Information, "[CLIENT] Connection terminated\r\n\r\n");
-        }
-
-        private void TcpClient_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
-        {
-            try
+            // Disconnect from target.
+            List<TcpClient> targets;
+            lock (m_targets)
             {
-                // Rebroadcast received data to all clients.
-                m_tcpServer.MulticastAsync(e.Argument1, 0, e.Argument2);
+                targets = new List<TcpClient>(m_targets);
             }
-            catch (Exception ex)
+
+            foreach (TcpClient target in targets)
             {
-                m_serviceHelper.ErrorLogger.Log(ex);
-                m_serviceHelper.UpdateStatus(UpdateType.Warning, "[CLIENT] Error rebroadcasting data - {0}\r\n\r\n", ex.Message);
+                target.ConnectionAttempt -= TargetClient_ConnectionAttempt;
+                target.ConnectionEstablished -= TargetClient_ConnectionEstablished;
+                target.ConnectionTerminated -= TargetClient_ConnectionTerminated;
+                target.Dispose();
             }
+        }
+
+        private void SourceClient_ConnectionAttempt(object sender, EventArgs e)
+        {
+            m_serviceHelper.UpdateStatus(UpdateType.Information, "[SOURCE] Attempting connection to {0}\r\n\r\n", m_source.ServerUri);
+        }
+
+        private void SourceClient_ConnectionEstablished(object sender, EventArgs e)
+        {
+            m_serviceHelper.UpdateStatus(UpdateType.Information, "[SOURCE] Connection to {0} established\r\n\r\n", m_source.ServerUri);
+        }
+
+        private void SourceClient_ConnectionTerminated(object sender, EventArgs e)
+        {
+            m_serviceHelper.UpdateStatus(UpdateType.Information, "[SOURCE] Connection to {0} terminated\r\n\r\n", m_source.ServerUri);
+            m_source.ConnectAsync();
+        }
+
+        private void SourceClient_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
+        {
+            lock (m_targets)
+            {
+                foreach (TcpClient target in m_targets)
+                {
+                    try
+                    {
+                        target.SendAsync(e.Argument1, 0, e.Argument2);
+                    }
+                    catch (Exception ex)
+                    {
+                        m_serviceHelper.ErrorLogger.Log(ex);
+                        m_serviceHelper.UpdateStatus(UpdateType.Warning, "[SOURCE] Error sending data to {0} - {1}\r\n\r\n", target.ServerUri, ex.Message);
+                    }
+                }
+            }
+        }
+
+        private void TargetClient_ConnectionAttempt(object sender, EventArgs e)
+        {
+            // Stop connection attempts for non-connected endpoints.
+            TcpClient endpoint = (TcpClient)sender;
+            if (m_shutdown)
+                endpoint.Disconnect();
+
+            m_serviceHelper.UpdateStatus(UpdateType.Information, "[TARGET] Attempting connection to {0}\r\n\r\n", endpoint.ServerUri);
+        }
+
+        private void TargetClient_ConnectionEstablished(object sender, EventArgs e)
+        {
+            // Add endpoint to the distribution list.
+            TcpClient endpoint = (TcpClient)sender;
+            lock (m_targets)
+            {
+                m_targets.Add(endpoint);
+            }
+
+            m_serviceHelper.UpdateStatus(UpdateType.Information, "[TARGET] Connection to {0} established\r\n\r\n", endpoint.ServerUri);
+        }
+
+        private void TargetClient_ConnectionTerminated(object sender, EventArgs e)
+        {
+            // Remove endpoint from the distribution list.
+            TcpClient endpoint = (TcpClient)sender;
+            lock (m_targets)
+            {
+                m_targets.Remove(endpoint);
+            }
+
+            m_serviceHelper.UpdateStatus(UpdateType.Information, "[TARGET] Connection to {0} terminated\r\n\r\n", endpoint.ServerUri);
+            endpoint.ConnectAsync();
         }
 
         #endregion

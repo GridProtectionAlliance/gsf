@@ -70,12 +70,8 @@
             this.components = new System.ComponentModel.Container();
             this.m_serviceHelper = new TVA.ServiceProcess.ServiceHelper(this.components);
             this.m_remotingServer = new TVA.Communication.TcpServer(this.components);
-            this.m_tcpServer = new TVA.Communication.TcpServer(this.components);
-            this.m_tcpClient = new TVA.Communication.TcpClient(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_remotingServer)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_tcpServer)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_tcpClient)).BeginInit();
             // 
             // m_serviceHelper
             // 
@@ -113,25 +109,11 @@
             this.m_remotingServer.PersistSettings = true;
             this.m_remotingServer.SettingsCategory = "RemotingServer";
             // 
-            // m_tcpServer
-            // 
-            this.m_tcpServer.ConfigurationString = "Port=3060";
-            this.m_tcpServer.PersistSettings = true;
-            this.m_tcpServer.SettingsCategory = "TcpServer";
-            // 
-            // m_tcpClient
-            // 
-            this.m_tcpClient.ConnectionString = "Server=localhost:3050";
-            this.m_tcpClient.PersistSettings = true;
-            this.m_tcpClient.SettingsCategory = "TcpClient";
-            // 
             // ServiceHost
             // 
             this.ServiceName = "TCPRebroadcaster";
             ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_remotingServer)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_tcpServer)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_tcpClient)).EndInit();
 
         }
 
@@ -139,7 +121,5 @@
 
         private TVA.ServiceProcess.ServiceHelper m_serviceHelper;
         private TVA.Communication.TcpServer m_remotingServer;
-        private TVA.Communication.TcpServer m_tcpServer;
-        private TVA.Communication.TcpClient m_tcpClient;
     }
 }
