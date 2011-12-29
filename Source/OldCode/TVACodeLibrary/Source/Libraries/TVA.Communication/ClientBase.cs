@@ -42,6 +42,8 @@
 //  12/02/2011 - J. Ritchie Carroll
 //       Updated event data publication to provide "copy" of resuable buffer instead of original
 //       buffer since you cannot assume how user will use the buffer (they may cache it).
+//  12/29/2011 - J. Ritchie Carrol
+//       Updated Status property to show ConnectionString information.
 //
 //*******************************************************************************************************
 
@@ -1018,6 +1020,9 @@ namespace TVA.Communication
                 status.AppendLine();
                 status.Append("           Connection time: ");
                 status.Append(ConnectionTime.ToString());
+                status.AppendLine();
+                status.Append("         Connection string: ");
+                status.Append(m_connectionString);
                 status.AppendLine();
                 status.Append("            Receive buffer: ");
                 status.Append(m_receiveBufferSize.ToString());

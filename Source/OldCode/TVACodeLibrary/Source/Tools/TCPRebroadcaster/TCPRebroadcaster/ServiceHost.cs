@@ -288,6 +288,7 @@ namespace TCPRebroadcaster
             m_source.ConnectionTerminated += SourceClient_ConnectionTerminated;
             m_source.ReceiveDataComplete += SourceClient_ReceiveDataComplete;
             m_source.ConnectAsync();
+            m_serviceHelper.ServiceComponents.Add(m_source);
 
             // Connect to target.
             m_targets = new List<TcpClient>();
@@ -299,6 +300,7 @@ namespace TCPRebroadcaster
                 target.ConnectionEstablished += TargetClient_ConnectionEstablished;
                 target.ConnectionTerminated += TargetClient_ConnectionTerminated;
                 target.ConnectAsync();
+                m_serviceHelper.ServiceComponents.Add(target);
             }
         }
 
