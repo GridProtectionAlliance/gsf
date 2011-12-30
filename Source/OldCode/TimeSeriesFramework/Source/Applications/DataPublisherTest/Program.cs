@@ -33,13 +33,13 @@ namespace DataPublisherTest
     class Program
     {
         static DataPublisher publisher = new DataPublisher();
+        static object displayLock = new object();
 
         static void Main(string[] args)
         {
             // Attach to publisher events
             publisher.StatusMessage += publisher_StatusMessage;
             publisher.ProcessException += publisher_ProcessException;
-            //publisher.SharedSecret = "TimeSeriesLibraryTest";
 
             // Initialize publisher
             publisher.Initialize();
@@ -59,14 +59,20 @@ namespace DataPublisherTest
 
         static void publisher_ProcessException(object sender, EventArgs<Exception> e)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("EXCEPTION: " + e.Argument.Message);
-            Console.ResetColor();
+            lock (displayLock)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("EXCEPTION: " + e.Argument.Message);
+                Console.ResetColor();
+            }
         }
 
         static void publisher_StatusMessage(object sender, EventArgs<string> e)
         {
-            Console.WriteLine(e.Argument);
+            lock (displayLock)
+            {
+                Console.WriteLine(e.Argument);
+            }
         }
 
         static void ProcessMeasurements(object state)

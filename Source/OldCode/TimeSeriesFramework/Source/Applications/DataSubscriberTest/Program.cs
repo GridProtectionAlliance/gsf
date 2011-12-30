@@ -34,6 +34,7 @@ namespace DataSubscriberTest
         static DataSubscriber subscriber = new DataSubscriber();
         static long dataCount = 0;
         static System.Timers.Timer timer = new System.Timers.Timer(10000);
+        static object displayLock = new object();
 
         static void Main(string[] args)
         {
@@ -74,19 +75,28 @@ namespace DataSubscriberTest
             {
                 if (TVA.Security.Cryptography.Random.Boolean)
                 {
-                    Console.WriteLine("Initiating synchronized subscription...");
+                    lock (displayLock)
+                    {
+                        Console.WriteLine("Initiating synchronized subscription...");
+                    }
                     subscriber.SynchronizedSubscribe(true, 30, 0.5D, 1.0D, "DEVARCHIVE:1;DEVARCHIVE:2");
                 }
                 else
                 {
                     if (TVA.Security.Cryptography.Random.Boolean)
                     {
-                        Console.WriteLine("Initiating on-change unsynchronized subscription...");
+                        lock (displayLock)
+                        {
+                            Console.WriteLine("Initiating on-change unsynchronized subscription...");
+                        }
                         subscriber.UnsynchronizedSubscribe(true, false, "DEVARCHIVE:1;DEVARCHIVE:2");
                     }
                     else
                     {
-                        Console.WriteLine("Initiating throttled unsynchronized subscription...");
+                        lock (displayLock)
+                        {
+                            Console.WriteLine("Initiating throttled unsynchronized subscription...");
+                        }
                         subscriber.UnsynchronizedSubscribe(true, true, "DEVARCHIVE:1;DEVARCHIVE:2", null, true, 5.0D, 1.0D, false);
                     }
                 }
@@ -104,7 +114,12 @@ namespace DataSubscriberTest
             dataCount += e.Argument.Count;
 
             if (showMessage)
-                Console.WriteLine(string.Format("{0:N0} measurements have been processed so far...", dataCount));
+            {
+                lock (displayLock)
+                {
+                    Console.WriteLine(string.Format("{0:N0} measurements have been processed so far...", dataCount));
+                }
+            }
         }
 
         static void subscriber_ConnectionEstablished(object sender, EventArgs e)
@@ -116,20 +131,30 @@ namespace DataSubscriberTest
 
         static void subscriber_ConnectionTerminated(object sender, EventArgs e)
         {
-            Console.WriteLine("Connection to publisher was terminated, restarting connection cycle...");
             subscriber.Start();
+
+            lock (displayLock)
+            {
+                Console.WriteLine("Connection to publisher was terminated, restarting connection cycle...");
+            }
         }
 
         static void subscriber_ProcessException(object sender, TVA.EventArgs<Exception> e)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("EXCEPTION: " + e.Argument.Message);
-            Console.ResetColor();
+            lock (displayLock)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("EXCEPTION: " + e.Argument.Message);
+                Console.ResetColor();
+            }
         }
 
         static void subscriber_StatusMessage(object sender, TVA.EventArgs<string> e)
         {
-            Console.WriteLine(e.Argument);
+            lock (displayLock)
+            {
+                Console.WriteLine(e.Argument);
+            }
         }
     }
 }

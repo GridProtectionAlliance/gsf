@@ -81,6 +81,7 @@ namespace TimeSeriesFramework.Transport
         // Fields
         private TcpClient m_commandChannel;
         private UdpClient m_dataChannel;
+        private long m_connectionAttempts;
         private volatile SignalIndexCache m_remoteSignalIndexCache;
         private volatile SignalIndexCache m_signalIndexCache;
         private volatile long[] m_baseTimeOffsets;
@@ -866,6 +867,7 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         protected override void AttemptConnection()
         {
+            m_connectionAttempts = 0;
             m_commandChannel.ConnectAsync();
             m_authenticated = false;
             m_subscribed = false;
@@ -1321,6 +1323,9 @@ namespace TimeSeriesFramework.Transport
             OnConnectionTerminated();
             OnStatusMessage("Data subscriber connection to publisher was terminated.");
             DataChannel = null;
+
+            if (m_autoConnect && Enabled)
+                Start();
         }
 
         private void m_commandChannel_ConnectionException(object sender, EventArgs<Exception> e)
@@ -1331,7 +1336,12 @@ namespace TimeSeriesFramework.Transport
 
         private void m_commandChannel_ConnectionAttempt(object sender, EventArgs e)
         {
+            // Inject a short delay between multiple connection attempts
+            if (m_connectionAttempts > 0)
+                Thread.Sleep(2000);
+
             OnStatusMessage("Data subscriber attempting connection to publisher...");
+            m_connectionAttempts++;
         }
 
         private void m_commandChannel_SendDataException(object sender, EventArgs<Exception> e)

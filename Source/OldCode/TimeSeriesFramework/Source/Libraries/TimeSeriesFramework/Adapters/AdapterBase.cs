@@ -1415,18 +1415,22 @@ namespace TimeSeriesFramework.Adapters
             List<MeasurementKey> keys = new List<MeasurementKey>();
             MeasurementKey key;
             Guid id;
-            Match filterMatch;
+            Match filterMatch = null;
+            bool dataSourceAvailable = (object)dataSource != null;
 
             value = value.Trim();
 
             if (!string.IsNullOrWhiteSpace(value))
             {
-                lock (s_filterExpression)
+                if (dataSourceAvailable)
                 {
-                    filterMatch = s_filterExpression.Match(value);
+                    lock (s_filterExpression)
+                    {
+                        filterMatch = s_filterExpression.Match(value);
+                    }
                 }
 
-                if (filterMatch.Success)
+                if (dataSourceAvailable && filterMatch.Success)
                 {
                     string tableName = filterMatch.Result("${TableName}").Trim();
                     string expression = filterMatch.Result("${Expression}").Trim();
@@ -1448,7 +1452,7 @@ namespace TimeSeriesFramework.Adapters
                             if (MeasurementKey.TryParse(item, Guid.Empty, out key))
                             {
                                 // Attempt to update empty signal ID if available
-                                if (key.SignalID == Guid.Empty)
+                                if (dataSourceAvailable && key.SignalID == Guid.Empty)
                                 {
                                     if (dataSource.Tables.Contains(measurementTable))
                                     {
@@ -1463,7 +1467,7 @@ namespace TimeSeriesFramework.Adapters
                             }
                             else if (Guid.TryParse(item, out id))
                             {
-                                if (dataSource.Tables.Contains(measurementTable))
+                                if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
                                 {
                                     DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("SignalID = '{0}'", id));
 
@@ -1507,19 +1511,23 @@ namespace TimeSeriesFramework.Adapters
             List<IMeasurement> measurements = new List<IMeasurement>();
             Measurement measurement;
             MeasurementKey key;
-            Match filterMatch;
+            Match filterMatch = null;
             Guid id;
+            bool dataSourceAvailable = (object)dataSource != null;
 
             value = value.Trim();
 
             if (!string.IsNullOrWhiteSpace(value))
             {
-                lock (s_filterExpression)
+                if (dataSourceAvailable)
                 {
-                    filterMatch = s_filterExpression.Match(value);
+                    lock (s_filterExpression)
+                    {
+                        filterMatch = s_filterExpression.Match(value);
+                    }
                 }
 
-                if (filterMatch.Success)
+                if (dataSourceAvailable && filterMatch.Success)
                 {
                     string tableName = filterMatch.Result("${TableName}").Trim();
                     string expression = filterMatch.Result("${Expression}").Trim();
@@ -1556,7 +1564,7 @@ namespace TimeSeriesFramework.Adapters
                             {
                                 if (Guid.TryParse(item, out id))
                                 {
-                                    if (dataSource.Tables.Contains(measurementTable))
+                                    if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
                                     {
                                         DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("SignalID = '{0}'", id));
 
@@ -1602,7 +1610,7 @@ namespace TimeSeriesFramework.Adapters
                             // Attempt to lookup other associated measurement meta-data from default measurement table, if defined
                             try
                             {
-                                if (dataSource.Tables.Contains(measurementTable))
+                                if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
                                 {
                                     DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("ID = '{0}'", key.ToString()));
 
