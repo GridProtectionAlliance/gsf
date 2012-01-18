@@ -1205,7 +1205,6 @@ namespace TVA.Adapters
                     // Adapter isolation is enabled.
                     AppDomain domain = AppDomain.CreateDomain(Guid.NewGuid().ToString());
                     deserializer = (Deserializer)domain.CreateInstanceAndUnwrap(typeof(Deserializer).Assembly.FullName, typeof(Deserializer).FullName);
-
                 }
                 else
                 {

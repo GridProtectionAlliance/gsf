@@ -31,6 +31,9 @@
 //       Modified OnStatusUpdate() method to allow for parameterized arguments.
 //  09/21/2011 - J. Ritchie Carroll
 //       Added Mono implementation exception regions.
+//  01/18/2012 - Pinal C. Patel
+//       Added DataContract attribute to prevent serialization of events when serializing using 
+//       DataContractSerializer.
 //
 //*******************************************************************************************************
 
@@ -272,6 +275,7 @@
 using System;
 using System.ComponentModel;
 using System.Configuration;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Xml.Serialization;
 using TVA.IO;
@@ -283,7 +287,7 @@ namespace TVA.Adapters
     /// </summary>
     /// <seealso cref="IAdapter"/>
     /// <seealso cref="AdapterLoader{T}"/>
-    [Serializable()]
+    [Serializable(), DataContract(Namespace = "")]
     public class Adapter : MarshalByRefObject, IAdapter
     {
         #region [ Members ]
