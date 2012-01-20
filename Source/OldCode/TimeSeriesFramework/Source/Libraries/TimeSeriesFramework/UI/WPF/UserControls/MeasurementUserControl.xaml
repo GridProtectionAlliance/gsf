@@ -82,7 +82,7 @@
                 <TextBlock Text="Adder" Style="{StaticResource RequiredLabel}"/>
                 <TextBlock Style="{StaticResource RequiredMarker}"/>
             </StackPanel>
-            <TextBox Grid.Row="4" Grid.Column="1" Text="{tsfBinding:Column Path=Adder}" Width="{StaticResource SmallItemSize}"/>
+            <TextBox Grid.Row="4" Grid.Column="1" Text="{tsfBinding:Column Path=Adder}" Width="{StaticResource XSmallItemSize}"/>
             <CheckBox Content="Enabled" Grid.Row="4" Grid.Column="3" IsChecked="{tsfBinding:Column Path=Enabled}"/>
             
             <!--Sixth Row-->
@@ -90,7 +90,7 @@
                 <TextBlock Text="Multiplier" Style="{StaticResource RequiredLabel}"/>
                 <TextBlock Style="{StaticResource RequiredMarker}"/>
             </StackPanel>
-            <TextBox Grid.Row="5" Grid.Column="1" Text="{tsfBinding:Column Path=Multiplier}" Width="{StaticResource SmallItemSize}"/>
+            <TextBox Grid.Row="5" Grid.Column="1" Text="{tsfBinding:Column Path=Multiplier}" Width="{StaticResource XSmallItemSize}"/>
             <TextBlock Grid.Row="5" Grid.Column="2" Text="Measurement GUID"/>
             <TextBlock Grid.Row="5" Grid.Column="3" Text="{tsfBinding:Column Path=SignalID}" Width="{StaticResource XLargeItemSize}" TextAlignment="Left"/>
         </Grid>
@@ -105,7 +105,7 @@
         </StackPanel>
         
         <sdk:DataGrid x:Name="DataGridList" ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" PreviewKeyDown="DataGrid_PreviewKeyDown"
-                      Sorting="DataGrid_Sorting" SelectedIndex="{tsfBinding:Column Path=CurrentSelectedIndex}">
+                      Sorting="DataGrid_Sorting">
             <sdk:DataGrid.Columns>
                 <sdk:DataGridTextColumn Header="ID" Width="*" Binding="{Binding Path=ID}" ToolTipService.ToolTip="{Binding Path=PointTag}" CellStyle="{StaticResource CenterAlignCellStyle}" IsReadOnly="True"/>
                 <!--<sdk:DataGridTextColumn Header="Point Tag" Width="2*" Binding="{tsfBinding:Column Path=PointTag}" CellStyle="{StaticResource CenterAlignCellStyle}" />-->                
