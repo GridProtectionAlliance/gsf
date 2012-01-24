@@ -49,6 +49,9 @@
 //       Modified Dispose to fix potential concurrency issues.
 //  11/23/2011 - J. Ritchie Carroll
 //       Modified to support buffer optimized ISupportBinaryImage.
+//  01/24/2012 - Pinal C. Patel
+//       Modified ProcessTimerThreadProc() method to perform null reference check to avoid an exception
+//       when the object is being disposed..
 //
 //*******************************************************************************************************
 
@@ -1833,12 +1836,15 @@ namespace TVA.Collections
                 ProcessNextItems();
             }
 
-            // Stop the process timer if there is no more data to process.
-            lock (m_processTimer)
+            if ((object)m_processTimer != null)
             {
-                // Enabled flag changes are always in a critical section to ensure all items will be processed
-                if (m_processQueue.Count == 0)
-                    m_processTimer.Enabled = false;
+                // Stop the process timer if there is no more data to process.
+                lock (m_processTimer)
+                {
+                    // Enabled flag changes are always in a critical section to ensure all items will be processed
+                    if (m_processQueue.Count == 0)
+                        m_processTimer.Enabled = false;
+                }
             }
         }
 
