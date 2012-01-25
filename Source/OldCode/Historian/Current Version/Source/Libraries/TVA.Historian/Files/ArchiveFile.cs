@@ -1639,7 +1639,7 @@ namespace TVA.Historian.Files
                     try
                     {
                         FilePath.WaitForWriteLock(m_fileName, 60);  // Wait for an exclusive lock on the file.
-                        File.Move(m_fileName, historyFileName);     // Make the active archive file historic.
+                        MoveFile(m_fileName, historyFileName);      // Make the active archive file historic.
 
                         if (File.Exists(standbyFileName))
                         {
@@ -1648,7 +1648,7 @@ namespace TVA.Historian.Files
                             // insufficient disk space during the "rollover preparation stage". If that's the case,
                             // Open() below will try to create a new archive file, but will only succeed if there
                             // is enough disk space.
-                            File.Move(standbyFileName, m_fileName); // Make the standby archive file active.
+                            MoveFile(standbyFileName, m_fileName); // Make the standby archive file active.
                         }
                     }
                     catch (Exception)
@@ -1679,7 +1679,7 @@ namespace TVA.Historian.Files
                 catch (Exception)
                 {
                     CloseStream(); // Close the file if we fail to open it.
-                    File.Delete(m_fileName);
+                    DeleteFile(m_fileName);
                     throw; // Rethrow the exception so that the exception event can be raised.
                 }
             }
@@ -2354,6 +2354,10 @@ namespace TVA.Historian.Files
                 m_fileStream = new FileStream(m_fileName, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
                 m_fat = new ArchiveFileAllocationTable(this);
                 m_fat.Save();
+
+                // Manually call file monitoring event if file watchers are not enabled
+                if (!m_monitorNewArchiveFiles)
+                    FileWatcher_Created(this, new FileSystemEventArgs(WatcherChangeTypes.Created, FilePath.GetAbsolutePath(m_fileName), FilePath.GetFileName(m_fileName)));
             }
         }
 
@@ -2479,10 +2483,7 @@ namespace TVA.Historian.Files
                     // partially (might happen if there isn't enough disk space or thread is aborted). This is to
                     // ensure that this preparation processes is kicked off again until a valid "standby" archive
                     // file is successfully created.
-                    if (File.Exists(standbyFileName))
-                    {
-                        File.Delete(standbyFileName);
-                    }
+                    DeleteFile(standbyFileName);
 
                     throw; // Rethrow the exception so the appropriate action is taken.
                 }
@@ -2536,13 +2537,9 @@ namespace TVA.Historian.Files
                     for (int i = 0; i < offloadProgress.Total; i++)
                     {
                         string destinationFileName = FilePath.AddPathSuffix(m_archiveOffloadLocation) + FilePath.GetFileName(newHistoricFiles[i].FileName);
-                        if (File.Exists(destinationFileName))
-                        {
-                            // Delete the destination file if it already exists.
-                            File.Delete(destinationFileName);
-                        }
+                        DeleteFile(destinationFileName);
 
-                        File.Move(newHistoricFiles[i].FileName, destinationFileName);
+                        MoveFile(newHistoricFiles[i].FileName, destinationFileName);
 
                         offloadProgress.Complete++;
                         offloadProgress.ProgressMessage = FilePath.GetFileName(newHistoricFiles[i].FileName);
@@ -3148,6 +3145,37 @@ namespace TVA.Historian.Files
             OnDataWriteException(e.Argument);
         }
 
+        // File.Delete proxy function that will manually invoke file watcher handlers when file watchers are disabled
+        private void DeleteFile(string fileName)
+        {
+            if (File.Exists(fileName))
+                File.Delete(fileName);
+
+            // Manually call file monitoring events if file watchers are not enabled
+            if (!m_monitorNewArchiveFiles)
+                FileWatcher_Deleted(this, new FileSystemEventArgs(WatcherChangeTypes.Deleted, FilePath.GetAbsolutePath(fileName), FilePath.GetFileName(fileName)));
+        }
+
+        // File.Move proxy function that will manually invoke file watcher handlers when file watchers are disabled
+        private void MoveFile(string sourceFileName, string destinationFileName)
+        {
+            File.Move(sourceFileName, destinationFileName);
+
+            // Manually call file monitoring events if file watchers are not enabled
+            if (!m_monitorNewArchiveFiles)
+            {
+                if (string.Compare(FilePath.GetAbsolutePath(sourceFileName).Trim(), FilePath.GetAbsolutePath(destinationFileName).Trim(), true) == 0)
+                {
+                    FileWatcher_Renamed(this, new RenamedEventArgs(WatcherChangeTypes.Renamed, FilePath.GetAbsolutePath(sourceFileName), FilePath.GetFileName(sourceFileName), FilePath.GetFileName(destinationFileName)));
+                }
+                else
+                {
+                    FileWatcher_Deleted(this, new FileSystemEventArgs(WatcherChangeTypes.Deleted, FilePath.GetAbsolutePath(sourceFileName), FilePath.GetFileName(sourceFileName)));
+                    FileWatcher_Created(this, new FileSystemEventArgs(WatcherChangeTypes.Created, FilePath.GetAbsolutePath(destinationFileName), FilePath.GetFileName(destinationFileName)));
+                }
+            }
+        }
+
         private void FileWatcher_Created(object sender, FileSystemEventArgs e)
         {
             if (m_historicArchiveFiles != null)
@@ -3255,8 +3283,7 @@ namespace TVA.Historian.Files
                         {
                             try
                             {
-                                if (File.Exists(allHistoricFiles[0].FileName))
-                                    File.Delete(allHistoricFiles[0].FileName);
+                                DeleteFile(allHistoricFiles[0].FileName);
                             }
                             catch
                             {
