@@ -11,6 +11,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  10/27/2011 - J. Ritchie Carroll
 //       Initial version of source generated.
+//  01/25/2012 - Stephen C. Wills
+//       Removed 64-bit compression routine, added 32-bit decompression routine.
 //
 //*******************************************************************************************************
 
@@ -259,20 +261,30 @@ namespace TVA.IO.Compression
     public static class PatternCompressor
     {
         /// <summary>
+        /// Given the size of a compressed buffer, provides the maximum possible size of the decompressed data.
+        /// </summary>
+        /// <param name="compressedLength">Size of the compressed buffer.</param>
+        /// <returns>The maximum possible size of the data after decompression.</returns>
+        public static int MaximumSizeDecompressed(int compressedLength)
+        {
+            return 4 * compressedLength;
+        }
+
+        /// <summary>
         /// Compress a byte array containing a sequential list of 32-bit structures (e.g., floating point numbers, integers or unsigned integers) using a patterned compression method.
         /// </summary>
         /// <param name="source">The <see cref="Byte"/> array containing 32-bit values to compress. Compression will happen inline on this buffer.</param>
         /// <param name="startIndex">An <see cref="Int32"/> representing the start index of the byte array.</param>
         /// <param name="dataLength">The number of bytes in the buffer that represents actual data.</param>
         /// <param name="bufferLength">The number of bytes available for use in the buffer; actual buffer length must be at least one byte larger than <paramref name="dataLength"/> since it's possible that data cannot be compressed. This extra byte will be used indicate an uncompressed buffer.</param>
-        /// <param name="compressionStrength">Specifies compression strength (0 to 15). Smaller numbers will run faster, larger numbers will yield better compression.</param>
+        /// <param name="compressionStrength">Specifies compression strength (0 to 31). Smaller numbers will run faster, larger numbers will yield better compression.</param>
         /// <returns>The new length of the buffer after compression.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="source"/> buffer cannot be null.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="dataLength"/> must be greater than or equal to zero.</exception>
         /// <exception cref="ArgumentException"><paramref name="dataLength"/> must be an even multiple of 4.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="bufferLength"/> must be at least one byte larger than <paramref name="dataLength"/> in case data cannot be compressed.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Actual length of <paramref name="source"/> buffer is less than specified <paramref name="bufferLength"/>.</exception>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="compressionStrength"/> must be 0 to 15.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="compressionStrength"/> must be 0 to 31.</exception>
         /// <remarks>
         /// As an optimization this function is using pointers to native structures, as such the endian order decoding and encoding of the values will always be in the native endian order of the operating system.
         /// </remarks>
@@ -280,14 +292,14 @@ namespace TVA.IO.Compression
         {
             const int SizeOf32Bits = sizeof(uint);
 
-            // Queue length of 16 forces reservation of 4 bits on single byte decompression key to allow for back track indicies of 0 to 15, this
+            // Queue length of 32 forces reservation of 3 bits on single byte decompression key to allow for back track indicies of 0 to 31, this
             // means minimal compression size of 4 total bytes would be 1 byte (i.e., 1 byte for decompression key), or max of 75% compression.
             // Compression algorithm is best suited for data that differs fractionally over time (e.g., 60.05, 60.08, 60.09, 60.11...)
 
             if (source == null)
                 throw new ArgumentNullException("source");
 
-            if (dataLength <= 0)
+            if (dataLength < 0)
                 throw new ArgumentOutOfRangeException("dataLength", "Data length must be greater than or equal to zero");
 
             if (dataLength % SizeOf32Bits != 0)
@@ -299,8 +311,16 @@ namespace TVA.IO.Compression
             if (source.Length < bufferLength)
                 throw new ArgumentOutOfRangeException("source", "Actual length of source buffer is less than specified buffer length");
 
-            if (compressionStrength > 15)
-                throw new ArgumentOutOfRangeException("compressionStrength", "Compression strength must be 0 to 15");
+            if (compressionStrength > 31)
+                throw new ArgumentOutOfRangeException("compressionStrength", "Compression strength must be 0 to 31");
+
+            // Special case when there is not enough data to be able to compress
+            if (dataLength <= 4)
+            {
+                Buffer.BlockCopy(source, startIndex, source, startIndex + 1, dataLength);
+                source[0] = (byte)(0x80 | compressionStrength);
+                return dataLength + 1;
+            }
 
             byte[] buffer = null;
             int maxQueueLength = compressionStrength + 1;
@@ -321,8 +341,8 @@ namespace TVA.IO.Compression
                     byte* bufferIndex = pBuffer;
                     uint* values = (uint*)pSource;
 
-                    // Reserve initial byte for compression buffer flags
-                    *bufferIndex = 0;
+                    // Reserve initial byte for compression header
+                    *bufferIndex = compressionStrength;
                     bufferIndex++;
 
                     // Always add first value to the buffer as-is
@@ -343,12 +363,11 @@ namespace TVA.IO.Compression
                     for (int index = 1; index < count; index++)
                     {
                         uint test, current = *values;
-                        uint bestResult = 0;
                         byte backReferenceIndex = 0;
                         int smallestDifference = SizeOf32Bits;
                         int queueIndex = queueStartIndex;
 
-                        // Test each each item in back reference queue for best compression
+                        // Test each item in back reference queue for best compression
                         for (int i = 0; i < (index < queueLength ? index : queueLength); i++)
                         {
                             int difference;
@@ -359,13 +378,13 @@ namespace TVA.IO.Compression
                             // Xor current value and queue value (interpreted as integers) for total byte differences
                             uint result = current ^ test;
 
-                            if ((result & 0xffffffff) != result)
+                            if ((result & 0xffffff) != result)
                                 difference = 4; // Value differs by 4 bytes
-                            else if ((result & 0xffffff) != result)
-                                difference = 3; // Value differs by 3 bytes
                             else if ((result & 0xffff) != result)
-                                difference = 2; // Value differs by 2 bytes
+                                difference = 3; // Value differs by 3 bytes
                             else if ((result & 0xff) != result)
+                                difference = 2; // Value differs by 2 bytes
+                            else if (result != 0)
                                 difference = 1; // Value differs by 1 bytes
                             else
                                 difference = 0; // Value differs by 0 bytes
@@ -375,7 +394,6 @@ namespace TVA.IO.Compression
                             {
                                 smallestDifference = difference;
                                 backReferenceIndex = (byte)queueIndex;
-                                bestResult = result;
 
                                 // No need to check further if we've found a full match on all possible bytes
                                 if (smallestDifference == 0)
@@ -388,29 +406,29 @@ namespace TVA.IO.Compression
                                 queueIndex = 0;
                         }
 
-                        // Calculate key that will be needed for proper decompression, that is: all the bytes that are the same
-                        // referenced as bits in the high nibble and the back reference xor value index in the low nibble
-                        byte decompressionKey = (byte)((byte)((((uint)1 << smallestDifference) - 1) << 4) | backReferenceIndex);
+                        // Calculate key that will be needed for proper decompression, that is: byte difference
+                        // in bits 5 through 7 and the back reference xor value index in bits 0 through 4
+                        byte decompressionKey = (byte)((byte)(smallestDifference << 5) | backReferenceIndex);
 
                         // Add decompression key to output buffer
                         *bufferIndex = decompressionKey;
                         bufferIndex++;
 
                         // Get a pointer to the best compression result
-                        byte* pResult = (byte*)&bestResult;
+                        byte* pValues = (byte*)values;
 
                         // If desired bytes are in big endian order, then they are right most in memory so skip ahead
                         if (!BitConverter.IsLittleEndian)
-                            pResult += (SizeOf32Bits - smallestDifference - 1);
+                            pValues += SizeOf32Bits - smallestDifference;
 
                         // Add only needed bytes to the output buffer (maybe none!)
-                        for (int j = 0; j < smallestDifference; j++, bufferIndex++, pResult++)
+                        for (int j = 0; j < smallestDifference; j++, bufferIndex++, pValues++)
                         {
-                            *bufferIndex = *pResult;
+                            *bufferIndex = *pValues;
                         }
 
                         // After initial queue values, add newest item to the queue, replacing the old one
-                        if (index > queueLength - 1)
+                        if (index >= queueLength)
                         {
                             queue[queueStartIndex] = current;
 
@@ -425,14 +443,14 @@ namespace TVA.IO.Compression
                         values++;
                     }
 
-                    usedLength = (int)bufferIndex - (int)pBuffer + 1;
+                    usedLength = (int)(bufferIndex - pBuffer);
 
                     // Check to see if we failed to compress data (hopefully rare)
                     if (usedLength > dataLength)
                     {
                         // Set compression buffer flags to uncompressed
-                        *pBuffer = (byte)0xff;
-                        Buffer.BlockCopy(source, 0, buffer, 1, dataLength);
+                        *pBuffer |= (byte)0x80;
+                        Buffer.BlockCopy(source, startIndex, buffer, 1, dataLength);
                         usedLength = dataLength + 1;
                     }
 
@@ -451,187 +469,150 @@ namespace TVA.IO.Compression
         }
 
         /// <summary>
-        /// Compress a byte array containing a sequential list of 64-bit structures (e.g., double precision floating point numbers, long integers or unsigned long integers) using a patterned compression method.
+        /// Decompress a byte array containing a sequential list of compressed 32-bit structures (e.g., floating point numbers, integers or unsigned integers) using a patterned compression method.
         /// </summary>
-        /// <param name="source">The <see cref="Byte"/> array containing 64-bit values to compress. Compression will happen inline on this buffer.</param>
+        /// <param name="source">The <see cref="Byte"/> array containing compressed 32-bit values to be decompressed. Decompression will happen inline on this buffer.</param>
         /// <param name="startIndex">An <see cref="Int32"/> representing the start index of the byte array.</param>
         /// <param name="dataLength">The number of bytes in the buffer that represents actual data.</param>
         /// <param name="bufferLength">The number of bytes available for use in the buffer; actual buffer length must be at least one byte larger than <paramref name="dataLength"/> since it's possible that data cannot be compressed. This extra byte will be used indicate an uncompressed buffer.</param>
-        /// <param name="compressionStrength">Specifies compression strength (0 to 255). Smaller numbers will run faster, larger numbers will yield better compression.</param>
-        /// <returns>The new length of the buffer after compression.</returns>
+        /// <param name="compressionStrength">Specifies compression strength (0 to 31). Smaller numbers will run faster, larger numbers will yield better compression.</param>
+        /// <returns>The new length of the buffer after compression, unless the data cannot be compressed. If the data cannot be compressed, the buffer will remain unchanged and zero will be returned.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="source"/> buffer cannot be null.</exception>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="dataLength"/> must be greater than or equal to zero.</exception>
-        /// <exception cref="ArgumentException"><paramref name="dataLength"/> must be an even multiple of 8.</exception>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="bufferLength"/> must be at least one byte larger than <paramref name="dataLength"/> in case data cannot be compressed.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="dataLength"/> must be greater than or equal to one.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="bufferLength"/> must be at least as large as <paramref name="dataLength"/>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="bufferLength"/> must be at least as large as is necessary to fit the maximum possible size of the decompressed data.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Actual length of <paramref name="source"/> buffer is less than specified <paramref name="bufferLength"/>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="compressionStrength"/> must be 0 to 31.</exception>
         /// <remarks>
-        /// As an optimization this function is using pointers to native structures, as such the endian order decoding and encoding of the values will always be in the native endian order of the operating system.
+        /// <para>
+        /// Decompression is performed inline. The source buffer must be large enough
+        /// to contain the maximum possible size of the decompressed buffer. This
+        /// maximum size can be obtained by using the <see cref="MaximumSizeDecompressed"/>
+        /// method.
+        /// </para>
+        /// 
+        /// <para>
+        /// As an optimization this function is using pointers to native structures,
+        /// as such the endian order decoding and encoding of the values will always
+        /// be in the native endian order of the operating system.
+        /// </para>
         /// </remarks>
-        public unsafe static int Compress64bitEnumeration(this byte[] source, int startIndex, int dataLength, int bufferLength, byte compressionStrength = 5)
+        public unsafe static int Decompress32bitEnumeration(this byte[] source, int startIndex, int dataLength, int bufferLength)
         {
-            const int SizeOf64Bits = sizeof(ulong);
+            const int SizeOf32Bits = sizeof(uint);
+            const int BackReferenceMask = 0x1F;
+            int maxSize = MaximumSizeDecompressed(dataLength);
+            byte compressionStrength = 5;
 
-            // Algorithm uses all 8-bits of decompression key plus 1 full byte for back track indicies, 256 maximum, to yield 75% maximum compression.
-            // Compression algorithm is best suited for data that differs fractionally over time (e.g., 60.05, 60.08, 60.09, 60.11...)
             if (source == null)
                 throw new ArgumentNullException("source");
 
-            if (dataLength <= 0)
-                throw new ArgumentOutOfRangeException("dataLength", "Data length must be greater than or equal to zero");
+            if (dataLength < 1)
+                throw new ArgumentOutOfRangeException("dataLength", "Data length must be greater than or equal to one");
 
-            if (dataLength % SizeOf64Bits != 0)
-                throw new ArgumentException("Data length must be a multiple of 8", "dataLength");
+            if (bufferLength < dataLength)
+                throw new ArgumentOutOfRangeException("bufferLength", "Buffer length must be at least as large as original data length");
 
-            if (bufferLength < dataLength + 1)
-                throw new ArgumentOutOfRangeException("bufferLength", "Buffer length must be at least one byte larger than original data length in case data cannot be compressed");
+            if (bufferLength < maxSize)
+                throw new ArgumentOutOfRangeException("bufferLength", "Buffer length must be at least as large as is necessary to fit the maximum possible size of the decompressed data");
 
             if (source.Length < bufferLength)
                 throw new ArgumentOutOfRangeException("source", "Actual length of source buffer is less than specified buffer length");
 
+            if (source[0] < 0x80)
+            {
+                // Data is compressed. Get the compression strength
+                compressionStrength = (byte)(source[0] & BackReferenceMask);
+            }
+            else
+            {
+                // Data is uncompressed. Remove the header and return
+                Buffer.BlockCopy(source, startIndex + 1, source, startIndex, dataLength - 1);
+                return dataLength - 1;
+            }
+
             byte[] buffer = null;
             int maxQueueLength = compressionStrength + 1;
-            ulong* queue = stackalloc ulong[maxQueueLength];
+            uint* queue = stackalloc uint[maxQueueLength];
             int queueLength = 0;
             int usedLength = 0;
-            int count = dataLength / SizeOf64Bits;
             int queueStartIndex = 0;
 
             try
             {
-                // Grab a working buffer from the pool, note that maximum zero compression size would be size of all original values plus two bytes for each value
-                buffer = BufferPool.TakeBuffer(dataLength + 2 * count);
+                // Grab a working buffer from the pool large enough to fit maximum possible decompressed size
+                buffer = BufferPool.TakeBuffer(maxSize);
 
                 // Pin buffers to be navigated so that .NET doesn't move them around
                 fixed (byte* pSource = source, pBuffer = buffer)
                 {
+                    byte* sourceIndex = pSource + 1;
                     byte* bufferIndex = pBuffer;
-                    ulong* values = (ulong*)pSource;
 
-                    // Reserve initial byte for compression buffer flags
-                    *bufferIndex = 0;
-                    bufferIndex++;
+                    uint firstValue = *(uint*)sourceIndex;
 
-                    // Always add first value to the buffer as-is
-                    *(ulong*)bufferIndex = *values;
-                    bufferIndex += SizeOf64Bits;
+                    // Always add first value to the buffer and the back buffer as-is
+                    *(uint*)bufferIndex = firstValue;
+                    queue[0] = firstValue;
+                    queueLength++;
 
-                    // Initialize first set of queue values for back reference
-                    for (int i = 0; i < (count < maxQueueLength ? count : maxQueueLength); i++, values++, queueLength++)
+                    // Advance pointers
+                    bufferIndex += SizeOf32Bits;
+                    sourceIndex += SizeOf32Bits;
+
+                    // Starting with second item, begin decompression sequence
+                    while((int)(sourceIndex - pSource) < dataLength)
                     {
-                        queue[i] = *values;
-                    }
-
-                    // Reset values collection pointer starting at second item
-                    values = (ulong*)pSource;
-                    values++;
-
-                    // Starting with second item, begin compression sequence
-                    for (int index = 1; index < count; index++)
-                    {
-                        ulong test, current = *values;
-                        ulong bestResult = 0;
+                        byte* workingIndex = bufferIndex;
+                        byte decompressionKey = 0;
                         byte backReferenceIndex = 0;
-                        int smallestDifference = SizeOf64Bits;
-                        int queueIndex = queueStartIndex;
+                        int smallestDifference = 0;
 
-                        // Test each each item in back reference queue for best compression
-                        for (int i = 0; i < (index < queueLength ? index : queueLength); i++)
-                        {
-                            int difference;
+                        // Get decompression key for the next value
+                        decompressionKey = *sourceIndex;
+                        sourceIndex++;
 
-                            // Get first item from queue
-                            test = queue[queueIndex];
+                        // Obtain smallest difference from bits 5 through 7 and back reference index from bits 0 through 4
+                        smallestDifference = decompressionKey >> 5;
+                        backReferenceIndex = (byte)(decompressionKey & BackReferenceMask);
 
-                            // Xor current value and queue value (interpreted as integers) for total byte differences
-                            ulong result = current ^ test;
+                        // Ensure that we have enough remaining data in the source buffer to decompress the next value
+                        if ((int)(sourceIndex - pSource) + smallestDifference > dataLength)
+                            throw new IndexOutOfRangeException("Source buffer does not end on a value boundary");
 
-                            if ((result & 0xffffffffffffffff) != result)
-                                difference = 8; // Value differs by 8 bytes
-                            else if ((result & 0xffffffffffffff) != result)
-                                difference = 7; // Value differs by 7 bytes
-                            else if ((result & 0xffffffffffff) != result)
-                                difference = 6; // Value differs by 6 bytes
-                            else if ((result & 0xffffffffff) != result)
-                                difference = 5; // Value differs by 5 bytes
-                            else if ((result & 0xffffffff) != result)
-                                difference = 4; // Value differs by 4 bytes
-                            else if ((result & 0xffffff) != result)
-                                difference = 3; // Value differs by 3 bytes
-                            else if ((result & 0xffff) != result)
-                                difference = 2; // Value differs by 2 bytes
-                            else if ((result & 0xff) != result)
-                                difference = 1; // Value differs by 1 bytes
-                            else
-                                difference = 0; // Value differs by 0 bytes
+                        // Copy value from back buffer
+                        *(uint*)workingIndex = queue[backReferenceIndex];
 
-                            // Item with the smallest difference in the back reference queue wins
-                            if (difference < smallestDifference)
-                            {
-                                smallestDifference = difference;
-                                backReferenceIndex = (byte)queueIndex;
-                                bestResult = result;
-
-                                // No need to check further if we've found a full match on all possible bytes
-                                if (smallestDifference == 0)
-                                    break;
-                            }
-
-                            queueIndex++;
-
-                            if (queueIndex >= queueLength)
-                                queueIndex = 0;
-                        }
-
-                        // Calculate key that will be needed for proper decompression
-                        byte decompressionKey = (byte)(((uint)1 << smallestDifference) - 1);
-
-                        // Add decompression key to output buffer
-                        *bufferIndex = decompressionKey;
-                        bufferIndex++;
-
-                        // Add queue index to the output buffer
-                        *bufferIndex = backReferenceIndex;
-                        bufferIndex++;
-
-                        // Get a pointer to the best compression result
-                        byte* pResult = (byte*)&bestResult;
-
-                        // If desired bytes are in big endian order, then they are right most in memory so skip ahead
+                        // If bytes are in big endian order, then low order bytes are right most in memory so skip ahead
                         if (!BitConverter.IsLittleEndian)
-                            pResult += (SizeOf64Bits - smallestDifference - 1);
+                            workingIndex += SizeOf32Bits - smallestDifference;
 
-                        // Add only needed bytes to the output buffer
-                        for (int j = 0; j < smallestDifference; j++, bufferIndex++, pResult++)
+                        // Add only needed bytes to the output buffer (maybe none!)
+                        for (int j = 0; j < smallestDifference; j++, workingIndex++, sourceIndex++)
                         {
-                            *bufferIndex = *pResult;
+                            *workingIndex = *sourceIndex;
                         }
 
-                        // After initial queue values, add newest item to the queue, replacing the old one
-                        if (index > queueLength - 1)
+                        // Place decompressed value into the queue
+                        if (queueLength < maxQueueLength)
                         {
-                            queue[queueStartIndex] = current;
-
-                            // Track oldest item in the queue as the starting location
+                            queue[queueLength] = *(uint*)bufferIndex;
+                            queueLength++;
+                        }
+                        else
+                        {
+                            queue[queueStartIndex] = *(uint*)bufferIndex;
                             queueStartIndex++;
 
                             if (queueStartIndex >= queueLength)
                                 queueStartIndex = 0;
                         }
 
-                        // Setup to compress the next value
-                        values++;
+                        // Setup to decompress the next value
+                        bufferIndex += SizeOf32Bits;
                     }
 
-                    usedLength = (int)bufferIndex - (int)pBuffer + 1;
-
-                    // Check to see if we failed to compress data (hopefully rare)
-                    if (usedLength > dataLength)
-                    {
-                        // Set compression buffer flags to uncompressed
-                        *pBuffer = (byte)0xff;
-                        Buffer.BlockCopy(source, 0, buffer, 1, dataLength);
-                        usedLength = dataLength + 1;
-                    }
+                    usedLength = (int)(bufferIndex - pBuffer);
 
                     // Overwrite source buffer with new compressed buffer
                     Buffer.BlockCopy(buffer, 0, source, startIndex, usedLength);
@@ -646,6 +627,194 @@ namespace TVA.IO.Compression
 
             return usedLength;
         }
+
+        ///// <summary>
+        ///// Compress a byte array containing a sequential list of 64-bit structures (e.g., double precision floating point numbers, long integers or unsigned long integers) using a patterned compression method.
+        ///// </summary>
+        ///// <param name="source">The <see cref="Byte"/> array containing 64-bit values to compress. Compression will happen inline on this buffer.</param>
+        ///// <param name="startIndex">An <see cref="Int32"/> representing the start index of the byte array.</param>
+        ///// <param name="dataLength">The number of bytes in the buffer that represents actual data.</param>
+        ///// <param name="bufferLength">The number of bytes available for use in the buffer; actual buffer length must be at least as large as <paramref name="dataLength"/>.</param>
+        ///// <param name="compressionStrength">Specifies compression strength (0 to 255). Smaller numbers will run faster, larger numbers will yield better compression.</param>
+        ///// <returns>The new length of the buffer after compression.</returns>
+        ///// <exception cref="ArgumentNullException"><paramref name="source"/> buffer cannot be null.</exception>
+        ///// <exception cref="ArgumentOutOfRangeException"><paramref name="dataLength"/> must be greater than or equal to zero.</exception>
+        ///// <exception cref="ArgumentException"><paramref name="dataLength"/> must be an even multiple of 8.</exception>
+        ///// <exception cref="ArgumentOutOfRangeException"><paramref name="bufferLength"/> must be at least as large as <paramref name="dataLength"/>.</exception>
+        ///// <exception cref="ArgumentOutOfRangeException">Actual length of <paramref name="source"/> buffer is less than specified <paramref name="bufferLength"/>.</exception>
+        ///// <remarks>
+        ///// As an optimization this function is using pointers to native structures, as such the endian order decoding and encoding of the values will always be in the native endian order of the operating system.
+        ///// </remarks>
+        //public unsafe static int Compress64bitEnumeration(this byte[] source, int startIndex, int dataLength, int bufferLength, byte compressionStrength = 5)
+        //{
+        //    const int SizeOf64Bits = sizeof(ulong);
+
+        //    // Algorithm uses all 8-bits of decompression key plus 1 full byte for back track indicies, 256 maximum, to yield 75% maximum compression.
+        //    // Compression algorithm is best suited for data that differs fractionally over time (e.g., 60.05, 60.08, 60.09, 60.11...)
+        //    if (source == null)
+        //        throw new ArgumentNullException("source");
+
+        //    if (dataLength < 0)
+        //        throw new ArgumentOutOfRangeException("dataLength", "Data length must be greater than or equal to zero");
+
+        //    if (dataLength % SizeOf64Bits != 0)
+        //        throw new ArgumentException("Data length must be a multiple of 8", "dataLength");
+
+        //    if (bufferLength < dataLength)
+        //        throw new ArgumentOutOfRangeException("bufferLength", "Buffer length must be at least as large as original data length");
+
+        //    if (source.Length < bufferLength)
+        //        throw new ArgumentOutOfRangeException("source", "Actual length of source buffer is less than specified buffer length");
+
+        //    byte[] buffer = null;
+        //    int maxQueueLength = compressionStrength + 1;
+        //    ulong* queue = stackalloc ulong[maxQueueLength];
+        //    int queueLength = 0;
+        //    int usedLength = 0;
+        //    int count = dataLength / SizeOf64Bits;
+        //    int queueStartIndex = 0;
+
+        //    try
+        //    {
+        //        // Grab a working buffer from the pool, note that maximum zero compression size would be size of all original values plus two bytes for each value
+        //        buffer = BufferPool.TakeBuffer(dataLength + 2 * count);
+
+        //        // Pin buffers to be navigated so that .NET doesn't move them around
+        //        fixed (byte* pSource = source, pBuffer = buffer)
+        //        {
+        //            byte* bufferIndex = pBuffer;
+        //            ulong* values = (ulong*)pSource;
+
+        //            // Always add first value to the buffer as-is
+        //            *(ulong*)bufferIndex = *values;
+        //            bufferIndex += SizeOf64Bits;
+
+        //            // Initialize first set of queue values for back reference
+        //            for (int i = 0; i < (count < maxQueueLength ? count : maxQueueLength); i++, values++, queueLength++)
+        //            {
+        //                queue[i] = *values;
+        //            }
+
+        //            // Reset values collection pointer starting at second item
+        //            values = (ulong*)pSource;
+        //            values++;
+
+        //            // Starting with second item, begin compression sequence
+        //            for (int index = 1; index < count; index++)
+        //            {
+        //                ulong test, current = *values;
+        //                ulong bestResult = 0;
+        //                byte backReferenceIndex = 0;
+        //                int smallestDifference = SizeOf64Bits;
+        //                int queueIndex = queueStartIndex;
+
+        //                // Test each item in back reference queue for best compression
+        //                for (int i = 0; i < (index < queueLength ? index : queueLength); i++)
+        //                {
+        //                    int difference;
+
+        //                    // Get first item from queue
+        //                    test = queue[queueIndex];
+
+        //                    // Xor current value and queue value (interpreted as integers) for total byte differences
+        //                    ulong result = current ^ test;
+
+        //                    if ((result & 0xffffffffffffff) != result)
+        //                        difference = 8; // Value differs by 8 bytes
+        //                    else if ((result & 0xffffffffffff) != result)
+        //                        difference = 7; // Value differs by 7 bytes
+        //                    else if ((result & 0xffffffffff) != result)
+        //                        difference = 6; // Value differs by 6 bytes
+        //                    else if ((result & 0xffffffff) != result)
+        //                        difference = 5; // Value differs by 5 bytes
+        //                    else if ((result & 0xffffff) != result)
+        //                        difference = 4; // Value differs by 4 bytes
+        //                    else if ((result & 0xffff) != result)
+        //                        difference = 3; // Value differs by 3 bytes
+        //                    else if ((result & 0xff) != result)
+        //                        difference = 2; // Value differs by 2 bytes
+        //                    else if (result != 0)
+        //                        difference = 1; // Value differs by 1 bytes
+        //                    else
+        //                        difference = 0; // Value differs by 0 bytes
+
+        //                    // Item with the smallest difference in the back reference queue wins
+        //                    if (difference < smallestDifference)
+        //                    {
+        //                        smallestDifference = difference;
+        //                        backReferenceIndex = (byte)queueIndex;
+        //                        bestResult = result;
+
+        //                        // No need to check further if we've found a full match on all possible bytes
+        //                        if (smallestDifference == 0)
+        //                            break;
+        //                    }
+
+        //                    queueIndex++;
+
+        //                    if (queueIndex >= queueLength)
+        //                        queueIndex = 0;
+        //                }
+
+        //                //// Calculate key that will be needed for proper decompression
+        //                //byte decompressionKey = (byte)(((uint)1 << smallestDifference) - 1);
+
+        //                // Add decompression key to output buffer
+        //                *bufferIndex = (byte)smallestDifference;
+        //                bufferIndex++;
+
+        //                // Add queue index to the output buffer
+        //                *bufferIndex = backReferenceIndex;
+        //                bufferIndex++;
+
+        //                // Get a pointer to the best compression result
+        //                byte* pResult = (byte*)&bestResult;
+
+        //                // If desired bytes are in big endian order, then they are right most in memory so skip ahead
+        //                if (!BitConverter.IsLittleEndian)
+        //                    pResult += SizeOf64Bits - smallestDifference;
+
+        //                // Add only needed bytes to the output buffer
+        //                for (int j = 0; j < smallestDifference; j++, bufferIndex++, pResult++)
+        //                {
+        //                    *bufferIndex = *pResult;
+        //                }
+
+        //                // After initial queue values, add newest item to the queue, replacing the old one
+        //                if (index >= queueLength)
+        //                {
+        //                    queue[queueStartIndex] = current;
+
+        //                    // Track oldest item in the queue as the starting location
+        //                    queueStartIndex++;
+
+        //                    if (queueStartIndex >= queueLength)
+        //                        queueStartIndex = 0;
+        //                }
+
+        //                // Setup to compress the next value
+        //                values++;
+        //            }
+
+        //            usedLength = (int)(bufferIndex - pBuffer);
+
+        //            // Check to see if we failed to compress data (hopefully rare)
+        //            if (usedLength > dataLength)
+        //                return 0;
+
+        //            // Overwrite source buffer with new compressed buffer
+        //            Buffer.BlockCopy(buffer, 0, source, startIndex, usedLength);
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        // Return buffer to queue so it can be reused
+        //        if (buffer != null)
+        //            BufferPool.ReturnBuffer(buffer);
+        //    }
+
+        //    return usedLength;
+        //}
 
         ///// <summary>
         ///// 
