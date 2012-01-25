@@ -3153,7 +3153,7 @@ namespace TVA.Historian.Files
 
             // Manually call file monitoring events if file watchers are not enabled
             if (!m_monitorNewArchiveFiles)
-                FileWatcher_Deleted(this, new FileSystemEventArgs(WatcherChangeTypes.Deleted, FilePath.GetAbsolutePath(fileName), FilePath.GetFileName(fileName)));
+                FileWatcher_Deleted(this, new FileSystemEventArgs(WatcherChangeTypes.Deleted, FilePath.GetDirectoryName(FilePath.GetAbsolutePath(fileName)), FilePath.GetFileName(fileName)));
         }
 
         // File.Move proxy function that will manually invoke file watcher handlers when file watchers are disabled
@@ -3164,14 +3164,14 @@ namespace TVA.Historian.Files
             // Manually call file monitoring events if file watchers are not enabled
             if (!m_monitorNewArchiveFiles)
             {
-                if (string.Compare(FilePath.GetAbsolutePath(sourceFileName).Trim(), FilePath.GetAbsolutePath(destinationFileName).Trim(), true) == 0)
+                if (string.Compare(FilePath.GetDirectoryName(FilePath.GetAbsolutePath(sourceFileName)).Trim(), FilePath.GetDirectoryName(FilePath.GetAbsolutePath(destinationFileName)).Trim(), true) == 0)
                 {
-                    FileWatcher_Renamed(this, new RenamedEventArgs(WatcherChangeTypes.Renamed, FilePath.GetAbsolutePath(sourceFileName), FilePath.GetFileName(sourceFileName), FilePath.GetFileName(destinationFileName)));
+                    FileWatcher_Renamed(this, new RenamedEventArgs(WatcherChangeTypes.Renamed, FilePath.GetDirectoryName(FilePath.GetAbsolutePath(sourceFileName)), FilePath.GetFileName(sourceFileName), FilePath.GetFileName(destinationFileName)));
                 }
                 else
                 {
-                    FileWatcher_Deleted(this, new FileSystemEventArgs(WatcherChangeTypes.Deleted, FilePath.GetAbsolutePath(sourceFileName), FilePath.GetFileName(sourceFileName)));
-                    FileWatcher_Created(this, new FileSystemEventArgs(WatcherChangeTypes.Created, FilePath.GetAbsolutePath(destinationFileName), FilePath.GetFileName(destinationFileName)));
+                    FileWatcher_Deleted(this, new FileSystemEventArgs(WatcherChangeTypes.Deleted, FilePath.GetDirectoryName(FilePath.GetAbsolutePath(sourceFileName)), FilePath.GetFileName(sourceFileName)));
+                    FileWatcher_Created(this, new FileSystemEventArgs(WatcherChangeTypes.Created, FilePath.GetDirectoryName(FilePath.GetAbsolutePath(destinationFileName)), FilePath.GetFileName(destinationFileName)));
                 }
             }
         }
