@@ -80,7 +80,7 @@ namespace TVA.Core.Tests
                 buffer.Write(BitConverter.GetBytes(i), 0, 4);
 
             data = buffer.ToArray();
-            compressedLen = data.Compress32bitEnumeration(0, data.Length - 4, data.Length, 5);
+            compressedLen = PatternCompressor.Compress32bitEnumeration(data, 0, data.Length - 4, data.Length, 5);
 
             Assert.AreEqual(14, compressedLen);
             // ------------------
@@ -92,7 +92,7 @@ namespace TVA.Core.Tests
                 buffer.Write(BitConverter.GetBytes(i), 0, 4);
 
             data = buffer.ToArray();
-            compressedLen = data.Compress32bitEnumeration(0, data.Length - 4, data.Length, 5);
+            compressedLen = PatternCompressor.Compress32bitEnumeration(data, 0, data.Length - 4, data.Length, 5);
 
             Assert.AreEqual(23, compressedLen);
             // ------------------
@@ -104,7 +104,7 @@ namespace TVA.Core.Tests
                 buffer.Write(BitConverter.GetBytes(i), 0, 4);
 
             data = buffer.ToArray();
-            compressedLen = data.Compress32bitEnumeration(0, data.Length - 4, data.Length, 5);
+            compressedLen = PatternCompressor.Compress32bitEnumeration(data, 0, data.Length - 4, data.Length, 5);
 
             Assert.AreEqual(32, compressedLen);
             // ------------------
@@ -116,7 +116,7 @@ namespace TVA.Core.Tests
                 buffer.Write(BitConverter.GetBytes(i), 0, 4);
 
             data = buffer.ToArray();
-            compressedLen = data.Compress32bitEnumeration(0, data.Length - 4, data.Length, 5);
+            compressedLen = PatternCompressor.Compress32bitEnumeration(data, 0, data.Length - 4, data.Length, 5);
 
             Assert.AreEqual(41, compressedLen);
             // ------------------
@@ -128,10 +128,102 @@ namespace TVA.Core.Tests
                 buffer.Write(BitConverter.GetBytes(i), 0, 4);
 
             data = buffer.ToArray();
-            compressedLen = data.Compress32bitEnumeration(0, data.Length - 4, data.Length, 5);
+            compressedLen = PatternCompressor.Compress32bitEnumeration(data, 0, data.Length - 4, data.Length, 5);
 
             Assert.AreEqual(41, compressedLen);
             // ------------------
+        }
+
+        [TestMethod]
+        public void TestStreamCompression()
+        {
+            const int compressionStrength = 31;
+
+            MemoryStream buffer = new MemoryStream();
+            Random rnd = new Random();
+
+            PatternCompressor compressor = new PatternCompressor()
+            {
+                CompressedBuffer = new byte[4 * TotalTestSampleSize],
+                CompressionStrength = compressionStrength
+            };
+
+            byte[] arrayOfInts;
+            int bufferLength;
+            int dataLength;
+            int compressedLen;
+
+            bool match = true;
+
+            for (int i = 0; i < TotalTestSampleSize; i++)
+            {
+                uint value = (uint)(rnd.NextDouble() * 100000);
+                buffer.Write(BitConverter.GetBytes(value), 0, 4);
+                compressor.Compress(value);
+            }
+
+            // Add one byte of extra space to accomodate compression algorithm
+            buffer.WriteByte(0xFF);
+
+            arrayOfInts = buffer.ToArray();
+            bufferLength = arrayOfInts.Length;
+            dataLength = bufferLength - 1;
+            compressedLen = PatternCompressor.Compress32bitEnumeration(arrayOfInts, 0, dataLength, bufferLength, compressionStrength);
+
+            // Compressed arrays do not match. This is because the streaming compression
+            // searches the back buffer queue starting from index 0, regardless of the
+            // index of the start of the queue. The static method searches from the start
+            // of the queue and wraps around in a circular fashion. This discrepancy does
+            // not affect decompression.
+            //
+            //match = compressedLen == compressor.CompressedBufferLength;
+            //for (int i = 0; match && i < compressedLen; i++)
+            //{
+            //    match = arrayOfInts[i] == compressor.CompressedBuffer[i];
+            //}
+
+            Assert.AreEqual(compressedLen, compressor.CompressedBufferLength);
+            Assert.IsTrue(match);
+        }
+
+        [TestMethod]
+        public void TestDecompressionOfStreamCompression()
+        {
+            MemoryStream memStream = new MemoryStream();
+            Random rnd = new Random();
+
+            byte[] original;
+            byte[] decompressed;
+            int decompressedLen;
+
+            bool match = true;
+
+            PatternCompressor compressor = new PatternCompressor()
+            {
+                CompressedBuffer = new byte[4 * TotalTestSampleSize],
+                CompressionStrength = 31
+            };
+
+            for (int i = 0; i < TotalTestSampleSize; i++)
+            {
+                uint value = (uint)(rnd.NextDouble() * 100000);
+                memStream.Write(BitConverter.GetBytes(value), 0, 4);
+                compressor.Compress(value);
+            }
+
+            original = memStream.ToArray();
+            decompressed = new byte[PatternCompressor.MaximumSizeDecompressed(compressor.CompressedBufferLength)];
+            Buffer.BlockCopy(compressor.CompressedBuffer, 0, decompressed, 0, compressor.CompressedBufferLength);
+            decompressedLen = PatternCompressor.Decompress32bitEnumeration(decompressed, 0, compressor.CompressedBufferLength, decompressed.Length);
+
+            match = decompressedLen == original.Length;
+            for (int i = 0; match && i < decompressedLen; i++)
+            {
+                match = decompressed[i] == original[i];
+            }
+
+            Assert.AreEqual(original.Length, decompressedLen);
+            Assert.IsTrue(match);
         }
 
         [TestMethod]
@@ -184,36 +276,27 @@ namespace TVA.Core.Tests
             results.AppendFormat("Buffer Pool cached take time: {0}\r\n\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
             startTime = PrecisionTimer.UtcNow.Ticks;
-            compressedLen = arrayOfFloats.Compress32bitEnumeration(0, dataLen, bufferLen, 0);
+            compressedLen = PatternCompressor.Compress32bitEnumeration(arrayOfFloats, 0, dataLen, bufferLen, 0);
             stopTime = PrecisionTimer.UtcNow.Ticks;
             compressTime = stopTime - startTime;
 
-            if (compressedLen == 0)
+            maxDecompressedLen = PatternCompressor.MaximumSizeDecompressed(compressedLen);
+            if (arrayOfFloats.Length < maxDecompressedLen)
             {
-                compressedLen = dataLen;
-                decompressedLen = dataLen;
-                decompressTime = 0L;
+                byte[] temp = new byte[maxDecompressedLen];
+                Buffer.BlockCopy(arrayOfFloats, 0, temp, 0, compressedLen);
+                arrayOfFloats = temp;
             }
-            else
+
+            startTime = PrecisionTimer.UtcNow.Ticks;
+            decompressedLen = PatternCompressor.Decompress32bitEnumeration(arrayOfFloats, 0, compressedLen, maxDecompressedLen);
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+            decompressTime = stopTime - startTime;
+
+            lossless = decompressedLen == dataLen;
+            for (int i = 0; lossless && i < Math.Min(decompressedLen, dataLen); i++)
             {
-                maxDecompressedLen = PatternCompressor.MaximumSizeDecompressed(compressedLen);
-                if (arrayOfFloats.Length < maxDecompressedLen)
-                {
-                    byte[] temp = BufferPool.TakeBuffer(maxDecompressedLen);
-                    Buffer.BlockCopy(arrayOfFloats, 0, temp, 0, compressedLen);
-                    arrayOfFloats = temp;
-                }
-
-                startTime = PrecisionTimer.UtcNow.Ticks;
-                decompressedLen = arrayOfFloats.Decompress32bitEnumeration(0, compressedLen, maxDecompressedLen);
-                stopTime = PrecisionTimer.UtcNow.Ticks;
-                decompressTime = stopTime - startTime;
-
-                lossless = decompressedLen == dataLen;
-                for (int i = 0; lossless && i < Math.Min(decompressedLen, dataLen); i++)
-                {
-                    lossless = arrayOfFloats[i] == copy[i];
-                }
+                lossless = arrayOfFloats[i] == copy[i];
             }
 
             // Publish results to debug window
@@ -285,36 +368,27 @@ namespace TVA.Core.Tests
             results.AppendFormat("Buffer Pool cached take time: {0}\r\n\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
             startTime = PrecisionTimer.UtcNow.Ticks;
-            compressedLen = arrayOfInts.Compress32bitEnumeration(0, dataLen, bufferLen, 0);
+            compressedLen = PatternCompressor.Compress32bitEnumeration(arrayOfInts, 0, dataLen, bufferLen, 0);
             stopTime = PrecisionTimer.UtcNow.Ticks;
             compressTime = stopTime - startTime;
 
-            if (compressedLen == 0)
+            maxDecompressedLen = PatternCompressor.MaximumSizeDecompressed(compressedLen);
+            if (arrayOfInts.Length < maxDecompressedLen)
             {
-                compressedLen = dataLen;
-                decompressedLen = dataLen;
-                decompressTime = 0L;
+                byte[] temp = new byte[maxDecompressedLen];
+                Buffer.BlockCopy(arrayOfInts, 0, temp, 0, compressedLen);
+                arrayOfInts = temp;
             }
-            else
+
+            startTime = PrecisionTimer.UtcNow.Ticks;
+            decompressedLen = PatternCompressor.Decompress32bitEnumeration(arrayOfInts, 0, compressedLen, maxDecompressedLen);
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+            decompressTime = stopTime - startTime;
+
+            lossless = decompressedLen == dataLen;
+            for (int i = 0; lossless && i < Math.Min(decompressedLen, dataLen); i++)
             {
-                maxDecompressedLen = PatternCompressor.MaximumSizeDecompressed(compressedLen);
-                if (arrayOfInts.Length < maxDecompressedLen)
-                {
-                    byte[] temp = BufferPool.TakeBuffer(maxDecompressedLen);
-                    Buffer.BlockCopy(arrayOfInts, 0, temp, 0, compressedLen);
-                    arrayOfInts = temp;
-                }
-
-                startTime = PrecisionTimer.UtcNow.Ticks;
-                decompressedLen = arrayOfInts.Decompress32bitEnumeration(0, compressedLen, maxDecompressedLen);
-                stopTime = PrecisionTimer.UtcNow.Ticks;
-                decompressTime = stopTime - startTime;
-
-                lossless = decompressedLen == dataLen;
-                for (int i = 0; lossless && i < Math.Min(decompressedLen, dataLen); i++)
-                {
-                    lossless = arrayOfInts[i] == copy[i];
-                }
+                lossless = arrayOfInts[i] == copy[i];
             }
 
             // Publish results to debug window
@@ -379,36 +453,27 @@ namespace TVA.Core.Tests
             results.AppendFormat("Buffer Pool cached take time: {0}\r\n\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
             startTime = PrecisionTimer.UtcNow.Ticks;
-            compressedLen = arrayOfFloats.Compress32bitEnumeration(0, dataLen, bufferLen, 31);
+            compressedLen = PatternCompressor.Compress32bitEnumeration(arrayOfFloats, 0, dataLen, bufferLen, 31);
             stopTime = PrecisionTimer.UtcNow.Ticks;
             compressTime = stopTime - startTime;
 
-            if (compressedLen == 0)
+            maxDecompressedLen = PatternCompressor.MaximumSizeDecompressed(compressedLen);
+            if (arrayOfFloats.Length < maxDecompressedLen)
             {
-                compressedLen = dataLen;
-                decompressedLen = dataLen;
-                decompressTime = 0L;
+                byte[] temp = new byte[maxDecompressedLen];
+                Buffer.BlockCopy(arrayOfFloats, 0, temp, 0, compressedLen);
+                arrayOfFloats = temp;
             }
-            else
+
+            startTime = PrecisionTimer.UtcNow.Ticks;
+            decompressedLen = PatternCompressor.Decompress32bitEnumeration(arrayOfFloats, 0, compressedLen, maxDecompressedLen);
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+            decompressTime = stopTime - startTime;
+
+            lossless = decompressedLen == dataLen;
+            for (int i = 0; lossless && i < Math.Min(decompressedLen, dataLen); i++)
             {
-                maxDecompressedLen = PatternCompressor.MaximumSizeDecompressed(compressedLen);
-                if (arrayOfFloats.Length < maxDecompressedLen)
-                {
-                    byte[] temp = BufferPool.TakeBuffer(maxDecompressedLen);
-                    Buffer.BlockCopy(arrayOfFloats, 0, temp, 0, compressedLen);
-                    arrayOfFloats = temp;
-                }
-
-                startTime = PrecisionTimer.UtcNow.Ticks;
-                decompressedLen = arrayOfFloats.Decompress32bitEnumeration(0, compressedLen, maxDecompressedLen);
-                stopTime = PrecisionTimer.UtcNow.Ticks;
-                decompressTime = stopTime - startTime;
-
-                lossless = decompressedLen == dataLen;
-                for (int i = 0; lossless && i < Math.Min(decompressedLen, dataLen); i++)
-                {
-                    lossless = arrayOfFloats[i] == copy[i];
-                }
+                lossless = arrayOfFloats[i] == copy[i];
             }
 
             // Publish results to debug window
@@ -473,36 +538,27 @@ namespace TVA.Core.Tests
             results.AppendFormat("Buffer Pool cached take time: {0}\r\n\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
             startTime = PrecisionTimer.UtcNow.Ticks;
-            compressedLen = arrayOfInts.Compress32bitEnumeration(0, dataLen, bufferLen, 31);
+            compressedLen = PatternCompressor.Compress32bitEnumeration(arrayOfInts, 0, dataLen, bufferLen, 31);
             stopTime = PrecisionTimer.UtcNow.Ticks;
             compressTime = stopTime - startTime;
 
-            if (compressedLen == 0)
+            maxDecompressedLen = PatternCompressor.MaximumSizeDecompressed(compressedLen);
+            if (arrayOfInts.Length < maxDecompressedLen)
             {
-                compressedLen = dataLen;
-                decompressedLen = dataLen;
-                decompressTime = 0L;
+                byte[] temp = new byte[maxDecompressedLen];
+                Buffer.BlockCopy(arrayOfInts, 0, temp, 0, compressedLen);
+                arrayOfInts = temp;
             }
-            else
+
+            startTime = PrecisionTimer.UtcNow.Ticks;
+            decompressedLen = PatternCompressor.Decompress32bitEnumeration(arrayOfInts, 0, compressedLen, maxDecompressedLen);
+            stopTime = PrecisionTimer.UtcNow.Ticks;
+            decompressTime = stopTime - startTime;
+
+            lossless = decompressedLen == dataLen;
+            for (int i = 0; lossless && i < Math.Min(decompressedLen, dataLen); i++)
             {
-                maxDecompressedLen = PatternCompressor.MaximumSizeDecompressed(compressedLen);
-                if (arrayOfInts.Length < maxDecompressedLen)
-                {
-                    byte[] temp = BufferPool.TakeBuffer(maxDecompressedLen);
-                    Buffer.BlockCopy(arrayOfInts, 0, temp, 0, compressedLen);
-                    arrayOfInts = temp;
-                }
-
-                startTime = PrecisionTimer.UtcNow.Ticks;
-                decompressedLen = arrayOfInts.Decompress32bitEnumeration(0, compressedLen, maxDecompressedLen);
-                stopTime = PrecisionTimer.UtcNow.Ticks;
-                decompressTime = stopTime - startTime;
-
-                lossless = decompressedLen == dataLen;
-                for (int i = 0; lossless && i < Math.Min(decompressedLen, dataLen); i++)
-                {
-                    lossless = arrayOfInts[i] == copy[i];
-                }
+                lossless = arrayOfInts[i] == copy[i];
             }
 
             // Publish results to debug window

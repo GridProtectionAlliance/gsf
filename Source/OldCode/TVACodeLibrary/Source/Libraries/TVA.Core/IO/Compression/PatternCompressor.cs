@@ -13,6 +13,9 @@
 //       Initial version of source generated.
 //  01/25/2012 - Stephen C. Wills
 //       Removed 64-bit compression routine, added 32-bit decompression routine.
+//  01/26/2012 - Stephen C. Wills
+//       Changed class to non-static so that compressor instances
+//       can be created to handle stream compression.
 //
 //*******************************************************************************************************
 
@@ -258,8 +261,325 @@ namespace TVA.IO.Compression
     /// <summary>
     /// Defines functions used for high-speed pattern compression against native types.
     /// </summary>
-    public static class PatternCompressor
+    public class PatternCompressor
     {
+        #region [ Members ]
+
+        // Fields
+        private byte[] m_compressedBuffer;
+        private int m_compressedBufferLength;
+
+        private uint[] m_backBuffer;
+        private int m_backBufferStart;
+        private int m_backBufferLength;
+
+        private byte m_compressionStrength;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new instance of the PatternCompressor.
+        /// </summary>
+        public PatternCompressor()
+        {
+            CompressionStrength = 5;
+        }
+
+        /// <summary>
+        /// Creates a new instance of the PatternCompressor with the given compression strength.
+        /// </summary>
+        /// <param name="compressionStrength">The compression strength of the PatternCompressor.</param>
+        public PatternCompressor(byte compressionStrength)
+        {
+            CompressionStrength = compressionStrength;
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the buffer into which compressed values are written.
+        /// </summary>
+        /// <remarks>
+        /// When setting the compressed buffer, the new buffer is assumed to be empty
+        /// (<see cref="CompressedBufferLength"/> is set to zero).
+        /// </remarks>
+        public byte[] CompressedBuffer
+        {
+            get
+            {
+                return m_compressedBuffer;
+            }
+            set
+            {
+                m_compressedBuffer = value;
+                m_compressedBufferLength = 0;
+            }
+        }
+
+        /// <summary>
+        /// Gets the amount of compressed data in the compressed buffer.
+        /// </summary>
+        public int CompressedBufferLength
+        {
+            get
+            {
+                return m_compressedBufferLength;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the compression strength of the PatternCompressor.
+        /// </summary>
+        /// <remarks>
+        /// When setting the compression strength, the PatternCompressor
+        /// is automatically reset (the back buffer is emptied).
+        /// </remarks>
+        public byte CompressionStrength
+        {
+            get
+            {
+                return m_compressionStrength;
+            }
+            set
+            {
+                if (value > 31)
+                    throw new ArgumentOutOfRangeException("value", "Compression strength must be 0 to 31");
+
+                if (m_backBuffer == null || m_backBuffer.Length < value + 1)
+                    m_backBuffer = new uint[value + 1];
+
+                m_backBufferStart = 0;
+                m_backBufferLength = 0;
+
+                m_compressionStrength = value;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Compresses the given value and places it in the compressed buffer.
+        /// </summary>
+        /// <param name="value">The value to be compressed.</param>
+        public unsafe void Compress(double value)
+        {
+            uint* pItem = (uint*)&value;
+            Compress((byte*)pItem);
+            Compress((byte*)(pItem + 1));
+        }
+
+        /// <summary>
+        /// Compresses the given value and places it in the compressed buffer.
+        /// </summary>
+        /// <param name="value">The value to be compressed.</param>
+        public unsafe void Compress(float value)
+        {
+            Compress((byte*)&value);
+        }
+
+        /// <summary>
+        /// Compresses the given value and places it in the compressed buffer.
+        /// </summary>
+        /// <param name="value">The value to be compressed.</param>
+        public unsafe void Compress(long value)
+        {
+            uint* pItem = (uint*)&value;
+            Compress((byte*)pItem);
+            Compress((byte*)(pItem + 1));
+        }
+
+        /// <summary>
+        /// Compresses the given value and places it in the compressed buffer.
+        /// </summary>
+        /// <param name="value">The value to be compressed.</param>
+        [CLSCompliant(false)]
+        public unsafe void Compress(ulong value)
+        {
+            uint* pItem = (uint*)&value;
+            Compress((byte*)pItem);
+            Compress((byte*)(pItem + 1));
+        }
+
+        /// <summary>
+        /// Compresses the given value and places it in the compressed buffer.
+        /// </summary>
+        /// <param name="value">The value to be compressed.</param>
+        public unsafe void Compress(int value)
+        {
+            Compress((byte*)&value);
+        }
+
+        /// <summary>
+        /// Compresses the given value and places it in the compressed buffer.
+        /// </summary>
+        /// <param name="value">The value to be compressed.</param>
+        [CLSCompliant(false)]
+        public unsafe void Compress(uint value)
+        {
+            Compress((byte*)&value);
+        }
+
+        /// <summary>
+        /// Sets <see cref="CompressedBufferLength"/> to zero and allows the
+        /// compressor to write over the values in the compressed buffer.
+        /// </summary>
+        public void EmptyCompressedBuffer()
+        {
+            m_compressedBufferLength = 0;
+        }
+
+        /// <summary>
+        /// Resets the compressor by flushing the back buffer. Subsequent calls
+        /// to the Compress methods will not be compressed using previously
+        /// compressed values.
+        /// </summary>
+        public void Reset()
+        {
+            m_backBufferStart = 0;
+            m_backBufferLength = 0;
+        }
+
+        // Helper method to compress a generic set of four
+        // bytes, given a pointer to the first byte.
+        private unsafe void Compress(byte* pValue)
+        {
+            uint value = *(uint*)pValue;
+
+            if (m_compressedBuffer == null)
+                throw new InvalidOperationException("Cannot write compressed value to a null buffer");
+
+            if (m_backBufferLength == 0)
+                InsertFirstValue(value);
+            else
+                InsertCompressedValue(value);
+
+            InsertIntoBackBuffer(value);
+        }
+
+        // Inserts the given value into the compressed buffer as the first,
+        // uncompressed value in the stream. This is called when the back
+        // buffer is empty.
+        private unsafe void InsertFirstValue(uint value)
+        {
+            // Size of the first value includes the 1-byte stream header
+            const int FirstValueSize = 1 + sizeof(uint);
+
+            // Ensure that the value will fit in the compressed buffer
+            if (m_compressedBuffer.Length - m_compressedBufferLength < FirstValueSize)
+                throw new InvalidOperationException("Value cannot fit in compressed buffer. Empty compressed buffer.");
+
+            // Insert value into compressed buffer
+            fixed (byte* pCompressedBuffer = m_compressedBuffer)
+            {
+                byte* compressedBufferEnd = pCompressedBuffer + m_compressedBufferLength;
+                *compressedBufferEnd = (byte)(0xE0 | m_compressionStrength);
+                *(uint*)(compressedBufferEnd + 1) = value;
+                m_compressedBufferLength += FirstValueSize;
+            }
+        }
+
+        // Compresses the given value and inserts it into the compressed buffer.
+        private unsafe void InsertCompressedValue(uint value)
+        {
+            byte* compressedBufferEnd;
+
+            byte* pValue = (byte*)&value;
+            byte decompressionKey = GetDecompressionKey(value);
+            byte difference = (byte)(decompressionKey >> 5);
+
+            fixed (byte* pCompressedBuffer = m_compressedBuffer)
+            {
+                compressedBufferEnd = pCompressedBuffer + m_compressedBufferLength;
+                *compressedBufferEnd = decompressionKey;
+                compressedBufferEnd++;
+
+                if (!BitConverter.IsLittleEndian)
+                    pValue += sizeof(uint) - difference;
+
+                for (int i = 0; i < difference; i++, compressedBufferEnd++, pValue++)
+                    *compressedBufferEnd = *pValue;
+
+                m_compressedBufferLength += 1 + difference;
+            }
+        }
+
+        // Inserts the value into the back buffer.
+        private void InsertIntoBackBuffer(uint value)
+        {
+            if (m_backBufferLength < CompressionStrength + 1)
+            {
+                m_backBuffer[m_backBufferLength] = value;
+                m_backBufferLength++;
+            }
+            else
+            {
+                m_backBuffer[m_backBufferStart] = value;
+                m_backBufferStart++;
+
+                if (m_backBufferStart >= m_backBufferLength)
+                    m_backBufferStart = 0;
+            }
+        }
+
+        // Gets the 8-bit decompression key for the given value
+        // based on the values that are in the back buffer.
+        private unsafe byte GetDecompressionKey(uint value)
+        {
+            uint* backBufferIterator;
+
+            uint result;
+            byte difference;
+
+            byte smallestDifference = 5;
+            int backBufferIndex = 0;
+
+            // Pin back buffer to navigate using pointer
+            fixed (uint* pBackBuffer = m_backBuffer)
+            {
+                backBufferIterator = pBackBuffer;
+
+                // Compare item with each value in the back buffer to find the smallest difference
+                for (int i = 0; i < m_backBufferLength; i++, backBufferIterator++)
+                {
+                    result = value ^ *backBufferIterator;
+
+                    if (result > 0xFFFFFFu)
+                        difference = 4;
+                    else if (result > 0xFFFFu)
+                        difference = 3;
+                    else if (result > 0xFFu)
+                        difference = 2;
+                    else if (result > 0u)
+                        difference = 1;
+                    else
+                        difference = 0;
+
+                    if (difference < smallestDifference)
+                    {
+                        smallestDifference = difference;
+                        backBufferIndex = i;
+                    }
+                }
+            }
+
+            // Return decompression key:
+            //  backBufferIndex in bits 0 through 4
+            //  smallestDifference in bits 5 through 7
+            return (byte)((smallestDifference << 5) | backBufferIndex);
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
         /// <summary>
         /// Given the size of a compressed buffer, provides the maximum possible size of the decompressed data.
         /// </summary>
@@ -288,7 +608,7 @@ namespace TVA.IO.Compression
         /// <remarks>
         /// As an optimization this function is using pointers to native structures, as such the endian order decoding and encoding of the values will always be in the native endian order of the operating system.
         /// </remarks>
-        public unsafe static int Compress32bitEnumeration(this byte[] source, int startIndex, int dataLength, int bufferLength, byte compressionStrength = 5)
+        public unsafe static int Compress32bitEnumeration(byte[] source, int startIndex, int dataLength, int bufferLength, byte compressionStrength = 5)
         {
             const int SizeOf32Bits = sizeof(uint);
 
@@ -318,7 +638,7 @@ namespace TVA.IO.Compression
             if (dataLength <= 4)
             {
                 Buffer.BlockCopy(source, startIndex, source, startIndex + 1, dataLength);
-                source[0] = (byte)(0x80 | compressionStrength);
+                source[0] = (byte)(0xE0 | compressionStrength);
                 return dataLength + 1;
             }
 
@@ -449,7 +769,7 @@ namespace TVA.IO.Compression
                     if (usedLength > dataLength)
                     {
                         // Set compression buffer flags to uncompressed
-                        *pBuffer |= (byte)0x80;
+                        *pBuffer |= (byte)0xE0;
                         Buffer.BlockCopy(source, startIndex, buffer, 1, dataLength);
                         usedLength = dataLength + 1;
                     }
@@ -475,14 +795,12 @@ namespace TVA.IO.Compression
         /// <param name="startIndex">An <see cref="Int32"/> representing the start index of the byte array.</param>
         /// <param name="dataLength">The number of bytes in the buffer that represents actual data.</param>
         /// <param name="bufferLength">The number of bytes available for use in the buffer; actual buffer length must be at least one byte larger than <paramref name="dataLength"/> since it's possible that data cannot be compressed. This extra byte will be used indicate an uncompressed buffer.</param>
-        /// <param name="compressionStrength">Specifies compression strength (0 to 31). Smaller numbers will run faster, larger numbers will yield better compression.</param>
         /// <returns>The new length of the buffer after compression, unless the data cannot be compressed. If the data cannot be compressed, the buffer will remain unchanged and zero will be returned.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="source"/> buffer cannot be null.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="dataLength"/> must be greater than or equal to one.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="bufferLength"/> must be at least as large as <paramref name="dataLength"/>.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="bufferLength"/> must be at least as large as is necessary to fit the maximum possible size of the decompressed data.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Actual length of <paramref name="source"/> buffer is less than specified <paramref name="bufferLength"/>.</exception>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="compressionStrength"/> must be 0 to 31.</exception>
         /// <remarks>
         /// <para>
         /// Decompression is performed inline. The source buffer must be large enough
@@ -497,7 +815,7 @@ namespace TVA.IO.Compression
         /// be in the native endian order of the operating system.
         /// </para>
         /// </remarks>
-        public unsafe static int Decompress32bitEnumeration(this byte[] source, int startIndex, int dataLength, int bufferLength)
+        public unsafe static int Decompress32bitEnumeration(byte[] source, int startIndex, int dataLength, int bufferLength)
         {
             const int SizeOf32Bits = sizeof(uint);
             const int BackReferenceMask = 0x1F;
@@ -519,7 +837,7 @@ namespace TVA.IO.Compression
             if (source.Length < bufferLength)
                 throw new ArgumentOutOfRangeException("source", "Actual length of source buffer is less than specified buffer length");
 
-            if (source[0] < 0x80)
+            if (source[0] < 0xE0)
             {
                 // Data is compressed. Get the compression strength
                 compressionStrength = (byte)(source[0] & BackReferenceMask);
@@ -561,7 +879,7 @@ namespace TVA.IO.Compression
                     sourceIndex += SizeOf32Bits;
 
                     // Starting with second item, begin decompression sequence
-                    while((int)(sourceIndex - pSource) < dataLength)
+                    while ((int)(sourceIndex - pSource) < dataLength)
                     {
                         byte* workingIndex = bufferIndex;
                         byte decompressionKey = 0;
@@ -627,6 +945,8 @@ namespace TVA.IO.Compression
 
             return usedLength;
         }
+
+        #endregion
 
         ///// <summary>
         ///// Compress a byte array containing a sequential list of 64-bit structures (e.g., double precision floating point numbers, long integers or unsigned long integers) using a patterned compression method.
