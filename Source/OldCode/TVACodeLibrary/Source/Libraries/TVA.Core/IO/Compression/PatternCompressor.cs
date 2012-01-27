@@ -387,11 +387,14 @@ namespace TVA.IO.Compression
         /// Compresses the given value and places it in the compressed buffer.
         /// </summary>
         /// <param name="value">The value to be compressed.</param>
+        /// <returns>The size, in bytes, of the compressed value.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="value"/> cannot be null.</exception>
-        public unsafe void Compress(ISupportBinaryImage value)
+        public unsafe int Compress(ISupportBinaryImage value)
         {
             byte[] buffer;
             int bufferLength;
+
+            int compressedSize = 0;
             byte* iter, end;
 
             if (value == null)
@@ -406,19 +409,22 @@ namespace TVA.IO.Compression
                 end = start + bufferLength;
 
                 for (iter = start; iter < end; iter += 4)
-                    Compress(iter);
+                    compressedSize += Compress(iter);
             }
+
+            return compressedSize;
         }
 
         /// <summary>
         /// Compresses all of the data in the given <paramref name="buffer"/>.
         /// </summary>
         /// <param name="buffer">The buffer to be compressed.</param>
+        /// <returns>The size, in bytes, of the compressed value.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="buffer"/> cannot be null.</exception>
         /// <exception cref="ArgumentException"><paramref name="buffer"/> length must be a multiple of four.</exception>
-        public void Compress(byte[] buffer)
+        public int Compress(byte[] buffer)
         {
-            Compress(buffer, 0, buffer.Length);
+            return Compress(buffer, 0, buffer.Length);
         }
 
         /// <summary>
@@ -426,13 +432,14 @@ namespace TVA.IO.Compression
         /// </summary>
         /// <param name="buffer">The buffer to be compressed.</param>
         /// <param name="length">The amount of data to be compressed. Must be a multiple of four.</param>
+        /// <returns>The size, in bytes, of the compressed value.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="buffer"/> cannot be null.</exception>
         /// <exception cref="ArgumentException"><paramref name="length"/> must be a multiple of four.</exception>]
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="length"/> must be greater than or equal to zero.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="length"/> exceeds <paramref name="buffer"/> array boundaries</exception>
-        public void Compress(byte[] buffer, int length)
+        public int Compress(byte[] buffer, int length)
         {
-            Compress(buffer, 0, length);
+            return Compress(buffer, 0, length);
         }
 
         /// <summary>
@@ -441,14 +448,16 @@ namespace TVA.IO.Compression
         /// <param name="buffer">The buffer to be compressed.</param>
         /// <param name="offset">The amount of data to ignore at the start of the buffer.</param>
         /// <param name="length">The amount of data to be compressed. Must be a multiple of four.</param>
+        /// <returns>The size, in bytes, of the compressed value.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="buffer"/> cannot be null.</exception>
         /// <exception cref="ArgumentException"><paramref name="length"/> must be a multiple of four.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="offset"/> must be greater than or equal to zero.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="length"/> must be greater than or equal to zero.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="length"/> exceeds <paramref name="buffer"/> array boundaries</exception>
-        public unsafe void Compress(byte[] buffer, int offset, int length)
+        public unsafe int Compress(byte[] buffer, int offset, int length)
         {
             const int SizeOf32Bits = sizeof(uint);
+            int compressedSize = 0;
             byte* start, iter, end;
 
             if (buffer == null)
@@ -472,98 +481,121 @@ namespace TVA.IO.Compression
                 end = start + length;
 
                 for (iter = start; iter < end; iter += 4)
-                    Compress(iter);
+                    compressedSize += Compress(iter);
             }
+
+            return compressedSize;
         }
 
         /// <summary>
         /// Compresses the given value and places it in the compressed buffer.
         /// </summary>
         /// <param name="value">The value to be compressed.</param>
-        public unsafe void Compress(double value)
+        /// <returns>The size, in bytes, of the compressed value.</returns>
+        public unsafe int Compress(double value)
         {
             uint* pItem = (uint*)&value;
-            Compress((byte*)pItem);
-            Compress((byte*)(pItem + 1));
+            int compressedSize = 0;
+
+            compressedSize += Compress((byte*)pItem);
+            compressedSize += Compress((byte*)(pItem + 1));
+
+            return compressedSize;
         }
 
         /// <summary>
         /// Compresses the given value and places it in the compressed buffer.
         /// </summary>
         /// <param name="value">The value to be compressed.</param>
-        public unsafe void Compress(float value)
+        /// <returns>The size, in bytes, of the compressed value.</returns>
+        public unsafe int Compress(float value)
         {
-            Compress((byte*)&value);
+            return Compress((byte*)&value);
         }
 
         /// <summary>
         /// Compresses the given value and places it in the compressed buffer.
         /// </summary>
         /// <param name="value">The value to be compressed.</param>
-        public unsafe void Compress(long value)
-        {
-            uint* pItem = (uint*)&value;
-            Compress((byte*)pItem);
-            Compress((byte*)(pItem + 1));
-        }
-
-        /// <summary>
-        /// Compresses the given value and places it in the compressed buffer.
-        /// </summary>
-        /// <param name="value">The value to be compressed.</param>
-        [CLSCompliant(false)]
-        public unsafe void Compress(ulong value)
+        /// <returns>The size, in bytes, of the compressed value.</returns>
+        public unsafe int Compress(long value)
         {
             uint* pItem = (uint*)&value;
-            Compress((byte*)pItem);
-            Compress((byte*)(pItem + 1));
+            int compressedSize = 0;
+
+            compressedSize += Compress((byte*)pItem);
+            compressedSize += Compress((byte*)(pItem + 1));
+
+            return compressedSize;
         }
 
         /// <summary>
         /// Compresses the given value and places it in the compressed buffer.
         /// </summary>
         /// <param name="value">The value to be compressed.</param>
-        public unsafe void Compress(int value)
-        {
-            Compress((byte*)&value);
-        }
-
-        /// <summary>
-        /// Compresses the given value and places it in the compressed buffer.
-        /// </summary>
-        /// <param name="value">The value to be compressed.</param>
+        /// <returns>The size, in bytes, of the compressed value.</returns>
         [CLSCompliant(false)]
-        public unsafe void Compress(uint value)
+        public unsafe int Compress(ulong value)
         {
-            Compress((byte*)&value);
+            uint* pItem = (uint*)&value;
+            int compressedSize = 0;
+
+            compressedSize += Compress((byte*)pItem);
+            compressedSize += Compress((byte*)(pItem + 1));
+
+            return compressedSize;
         }
 
         /// <summary>
         /// Compresses the given value and places it in the compressed buffer.
         /// </summary>
         /// <param name="value">The value to be compressed.</param>
-        public void Compress(short value)
+        /// <returns>The size, in bytes, of the compressed value.</returns>
+        public unsafe int Compress(int value)
         {
-            Compress((int)value);
+            return Compress((byte*)&value);
         }
 
         /// <summary>
         /// Compresses the given value and places it in the compressed buffer.
         /// </summary>
         /// <param name="value">The value to be compressed.</param>
+        /// <returns>The size, in bytes, of the compressed value.</returns>
         [CLSCompliant(false)]
-        public void Compress(ushort value)
+        public unsafe int Compress(uint value)
         {
-            Compress((uint)value);
+            return Compress((byte*)&value);
         }
 
         /// <summary>
         /// Compresses the given value and places it in the compressed buffer.
         /// </summary>
         /// <param name="value">The value to be compressed.</param>
-        public void Compress(byte value)
+        /// <returns>The size, in bytes, of the compressed value.</returns>
+        public int Compress(short value)
         {
-            Compress((uint)value);
+            return Compress((int)value);
+        }
+
+        /// <summary>
+        /// Compresses the given value and places it in the compressed buffer.
+        /// </summary>
+        /// <param name="value">The value to be compressed.</param>
+        /// <returns>The size, in bytes, of the compressed value.</returns>
+        [CLSCompliant(false)]
+        public int Compress(ushort value)
+        {
+            return Compress((uint)value);
+        }
+
+        /// <summary>
+        /// Compresses the given value and places it in the compressed buffer.
+        /// </summary>
+        /// <param name="value">The value to be compressed.</param>
+        /// <returns>The size, in bytes, of the compressed value.</returns>
+        public int Compress(byte value)
+        {
+            return Compress((uint)value);
         }
 
         /// <summary>
@@ -588,25 +620,27 @@ namespace TVA.IO.Compression
 
         // Helper method to compress a generic set of four
         // bytes, given a pointer to the first byte.
-        private unsafe void Compress(byte* pValue)
+        private unsafe int Compress(byte* pValue)
         {
             uint value = *(uint*)pValue;
+            int compressedSize;
 
             if (m_compressedBuffer == null)
                 throw new InvalidOperationException("Cannot write compressed value to a null buffer");
 
             if (m_backBufferLength == 0)
-                InsertFirstValue(value);
+                compressedSize = InsertFirstValue(value);
             else
-                InsertCompressedValue(value);
+                compressedSize = InsertCompressedValue(value);
 
             InsertIntoBackBuffer(value);
+            return compressedSize;
         }
 
         // Inserts the given value into the compressed buffer as the first,
         // uncompressed value in the stream. This is called when the back
         // buffer is empty.
-        private unsafe void InsertFirstValue(uint value)
+        private unsafe int InsertFirstValue(uint value)
         {
             // Size of the first value includes the 1-byte stream header
             const int FirstValueSize = 1 + sizeof(uint);
@@ -623,10 +657,12 @@ namespace TVA.IO.Compression
                 *(uint*)(compressedBufferEnd + 1) = value;
                 m_compressedBufferLength += FirstValueSize;
             }
+
+            return FirstValueSize;
         }
 
         // Compresses the given value and inserts it into the compressed buffer.
-        private unsafe void InsertCompressedValue(uint value)
+        private unsafe int InsertCompressedValue(uint value)
         {
             byte* compressedBufferEnd;
 
@@ -634,7 +670,9 @@ namespace TVA.IO.Compression
             byte decompressionKey = GetDecompressionKey(value);
             byte difference = (byte)(decompressionKey >> 5);
 
-            if (MaxCompressedBufferLength - m_compressedBufferLength < 1 + difference)
+            int compressedSize = 1 + difference;
+
+            if (MaxCompressedBufferLength - m_compressedBufferLength < compressedSize)
                 throw new InvalidOperationException("Value cannot fit in compressed buffer. Empty compressed buffer.");
 
             fixed (byte* pCompressedBuffer = m_compressedBuffer)
@@ -649,8 +687,10 @@ namespace TVA.IO.Compression
                 for (int i = 0; i < difference; i++, compressedBufferEnd++, pValue++)
                     *compressedBufferEnd = *pValue;
 
-                m_compressedBufferLength += 1 + difference;
+                m_compressedBufferLength += compressedSize;
             }
+
+            return compressedSize;
         }
 
         // Inserts the value into the back buffer.
