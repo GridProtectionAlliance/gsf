@@ -201,6 +201,7 @@
     <Compile Include="IO\Compression\FileCompressor.cs" />
     <Compile Include="IO\Compression\NamespaceDoc.cs" />
     <Compile Include="IO\Compression\PatternCompressor.cs" />
+    <Compile Include="IO\Compression\PatternDecompressor.cs" />
     <Compile Include="IO\ExportDestination.cs" />
     <Compile Include="IO\FilePath.cs" />
     <Compile Include="IO\InterprocessCache.cs" />
