@@ -85,61 +85,61 @@ namespace TimeSeriesFramework.UI
         /// <param name="overWriteExisting">Boolean flag indicating if existing values should be reset to default value.</param>
         public static void InitializeStorageForInputStatusMonitor(bool overWriteExisting)
         {
-            if (!s_userStoreForAssembly.FileExists("ForceIPv4") || overWriteExisting)
+            if (!s_userStoreForAssembly.FileExists("ForceIPv4") || overWriteExisting || ReadFromIsolatedStorage("ForceIPv4") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("ForceIPv4").ToString()))
                 WriteToIsolatedStorage("ForceIPv4", "true");
 
             if (!s_userStoreForAssembly.FileExists("InputMonitoringPoints") || overWriteExisting)
                 WriteToIsolatedStorage("InputMonitoringPoints", string.Empty);
 
-            if (!s_userStoreForAssembly.FileExists("NumberOfDataPointsToPlot") || overWriteExisting)
+            if (!s_userStoreForAssembly.FileExists("NumberOfDataPointsToPlot") || overWriteExisting || ReadFromIsolatedStorage("NumberOfDataPointsToPlot") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("NumberOfDataPointsToPlot").ToString()))
                 WriteToIsolatedStorage("NumberOfDataPointsToPlot", 150);
 
-            if (!s_userStoreForAssembly.FileExists("DataResolution") || overWriteExisting)
+            if (!s_userStoreForAssembly.FileExists("DataResolution") || overWriteExisting || ReadFromIsolatedStorage("DataResolution") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("DataResolution").ToString()))
                 WriteToIsolatedStorage("DataResolution", 30);
 
-            if (!s_userStoreForAssembly.FileExists("LagTime") || overWriteExisting)
+            if (!s_userStoreForAssembly.FileExists("LagTime") || overWriteExisting || ReadFromIsolatedStorage("LagTime") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("LagTime").ToString()))
                 WriteToIsolatedStorage("LagTime", 3);
 
-            if (!s_userStoreForAssembly.FileExists("LeadTime") || overWriteExisting)
+            if (!s_userStoreForAssembly.FileExists("LeadTime") || overWriteExisting || ReadFromIsolatedStorage("LeadTime") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("LeadTime").ToString()))
                 WriteToIsolatedStorage("LeadTime", 1);
 
-            if (!s_userStoreForAssembly.FileExists("UseLocalClockAsRealtime") || overWriteExisting)
+            if (!s_userStoreForAssembly.FileExists("UseLocalClockAsRealtime") || overWriteExisting || ReadFromIsolatedStorage("UseLocalClockAsRealtime") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("UseLocalClockAsRealtime").ToString()))
                 WriteToIsolatedStorage("UseLocalClockAsRealtime", "false");
 
-            if (!s_userStoreForAssembly.FileExists("IgnoreBadTimestamps") || overWriteExisting)
+            if (!s_userStoreForAssembly.FileExists("IgnoreBadTimestamps") || overWriteExisting || ReadFromIsolatedStorage("IgnoreBadTimestamps") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("IgnoreBadTimestamps").ToString()))
                 WriteToIsolatedStorage("IgnoreBadTimestamps", "false");
 
-            if (!s_userStoreForAssembly.FileExists("ChartRefreshInterval") || overWriteExisting)
+            if (!s_userStoreForAssembly.FileExists("ChartRefreshInterval") || overWriteExisting || ReadFromIsolatedStorage("ChartRefreshInterval") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("ChartRefreshInterval").ToString()))
                 WriteToIsolatedStorage("ChartRefreshInterval", 250);
 
-            if (!s_userStoreForAssembly.FileExists("StatisticsDataRefreshInterval") || overWriteExisting)
+            if (!s_userStoreForAssembly.FileExists("StatisticsDataRefreshInterval") || overWriteExisting || ReadFromIsolatedStorage("StatisticsDataRefreshInterval") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("StatisticsDataRefreshInterval").ToString()))
                 WriteToIsolatedStorage("StatisticsDataRefreshInterval", 10);
 
-            if (!s_userStoreForAssembly.FileExists("MeasurementsDataRefreshInterval") || overWriteExisting)
+            if (!s_userStoreForAssembly.FileExists("MeasurementsDataRefreshInterval") || overWriteExisting || ReadFromIsolatedStorage("MeasurementsDataRefreshInterval") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("MeasurementsDataRefreshInterval").ToString()))
                 WriteToIsolatedStorage("MeasurementsDataRefreshInterval", 10);
 
-            if (!s_userStoreForAssembly.FileExists("DisplayXAxis") || overWriteExisting)
+            if (!s_userStoreForAssembly.FileExists("DisplayXAxis") || overWriteExisting || ReadFromIsolatedStorage("DisplayXAxis") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("DisplayXAxis").ToString()))
                 WriteToIsolatedStorage("DisplayXAxis", "false");
 
-            if (!s_userStoreForAssembly.FileExists("DisplayFrequencyYAxis") || overWriteExisting)
+            if (!s_userStoreForAssembly.FileExists("DisplayFrequencyYAxis") || overWriteExisting || ReadFromIsolatedStorage("DisplayFrequencyYAxis") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("DisplayFrequencyYAxis").ToString()))
                 WriteToIsolatedStorage("DisplayFrequencyYAxis", "true");
 
-            if (!s_userStoreForAssembly.FileExists("DisplayPhaseAngleYAxis") || overWriteExisting)
+            if (!s_userStoreForAssembly.FileExists("DisplayPhaseAngleYAxis") || overWriteExisting || ReadFromIsolatedStorage("DisplayPhaseAngleYAxis") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("DisplayPhaseAngleYAxis").ToString()))
                 WriteToIsolatedStorage("DisplayPhaseAngleYAxis", "false");
 
-            if (!s_userStoreForAssembly.FileExists("DisplayVoltageYAxis") || overWriteExisting)
+            if (!s_userStoreForAssembly.FileExists("DisplayVoltageYAxis") || overWriteExisting || ReadFromIsolatedStorage("DisplayVoltageYAxis") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("DisplayVoltageYAxis").ToString()))
                 WriteToIsolatedStorage("DisplayVoltageYAxis", "false");
 
-            if (!s_userStoreForAssembly.FileExists("DisplayCurrentYAxis") || overWriteExisting)
+            if (!s_userStoreForAssembly.FileExists("DisplayCurrentYAxis") || overWriteExisting || ReadFromIsolatedStorage("DisplayCurrentYAxis") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("DisplayCurrentYAxis").ToString()))
                 WriteToIsolatedStorage("DisplayCurrentYAxis", "false");
 
-            if (!s_userStoreForAssembly.FileExists("FrequencyRangeMin") || overWriteExisting)
+            if (!s_userStoreForAssembly.FileExists("FrequencyRangeMin") || overWriteExisting || ReadFromIsolatedStorage("FrequencyRangeMin") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("FrequencyRangeMin").ToString()))
                 WriteToIsolatedStorage("FrequencyRangeMin", 59.95);
 
-            if (!s_userStoreForAssembly.FileExists("FrequencyRangeMax") || overWriteExisting)
+            if (!s_userStoreForAssembly.FileExists("FrequencyRangeMax") || overWriteExisting || ReadFromIsolatedStorage("FrequencyRangeMax") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("FrequencyRangeMax").ToString()))
                 WriteToIsolatedStorage("FrequencyRangeMax", 60.05);
 
-            if (!s_userStoreForAssembly.FileExists("DisplayLegend") || overWriteExisting)
+            if (!s_userStoreForAssembly.FileExists("DisplayLegend") || overWriteExisting || ReadFromIsolatedStorage("DisplayLegend") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("DisplayLegend").ToString()))
                 WriteToIsolatedStorage("DisplayLegend", "true");
         }
 
