@@ -24,6 +24,8 @@
       <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Core.xml" />
       <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Security.dll" />
       <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Security.xml" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.ServiceBus.dll" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.ServiceBus.xml" />
       <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.ServiceModel.dll" />
       <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.ServiceModel.xml" />
       <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.ServiceProcess.dll" />
