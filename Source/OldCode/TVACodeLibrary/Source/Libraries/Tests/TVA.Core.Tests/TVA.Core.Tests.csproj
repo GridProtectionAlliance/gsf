@@ -87,6 +87,21 @@
     <Compile Include="PatternCompressorTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StringExtensionsTest.cs" />
+    <Compile Include="TVA.Adapters\AdapterTest.cs" />
+    <Compile Include="TVA.Units\AngleTest.cs" />
+    <Compile Include="TVA.Units\ChargeTest.cs" />
+    <Compile Include="TVA.Units\CurrentTest.cs" />
+    <Compile Include="TVA.Units\EnergyTest.cs" />
+    <Compile Include="TVA.Units\LengthTest.cs" />
+    <Compile Include="TVA.Units\MassTest.cs" />
+    <Compile Include="TVA.Units\PowerTest.cs" />
+    <Compile Include="TVA.Units\SI2Test.cs" />
+    <Compile Include="TVA.Units\SITest.cs" />
+    <Compile Include="TVA.Units\SpeedTest.cs" />
+    <Compile Include="TVA.Units\TemperatureTest.cs" />
+    <Compile Include="TVA.Units\TimeTest.cs" />
+    <Compile Include="TVA.Units\VoltageTest.cs" />
+    <Compile Include="TVA.Units\VolumeTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\TVA.Core\TVA.Core.csproj">
