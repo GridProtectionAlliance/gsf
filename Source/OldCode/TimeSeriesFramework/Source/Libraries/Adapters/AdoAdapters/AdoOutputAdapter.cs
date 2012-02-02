@@ -184,7 +184,7 @@ namespace AdoAdapters
 
             Dictionary<string, string> settings = Settings;
             Type measurementType = typeof(IMeasurement);
-            IEnumerable<string> measurementProperties = measurementType.GetProperties().Select(property => property.Name);
+            IEnumerable<string> measurementProperties = GetAllProperties(measurementType).Select(property => property.Name);
             StringComparison ignoreCase = StringComparison.CurrentCultureIgnoreCase;
 
             // Parse database field names from the connection string.
@@ -373,6 +373,29 @@ namespace AdoAdapters
                     base.Dispose(disposing);    // Call base class Dispose().
                 }
             }
+        }
+
+        private PropertyInfo[] GetAllProperties(Type type)
+        {
+            List<Type> typeList = new List<Type>();
+            typeList.Add(type);
+
+            if (type.IsInterface)
+            {
+                typeList.AddRange(type.GetInterfaces());
+            }
+
+            List<PropertyInfo> propertyList = new List<PropertyInfo>();
+
+            foreach (Type interfaceType in typeList)
+            {
+                foreach (PropertyInfo property in interfaceType.GetProperties())
+                {
+                    propertyList.Add(property);
+                }
+            }
+
+            return propertyList.ToArray();
         }
 
         #endregion
