@@ -879,7 +879,7 @@ namespace TimeSeriesFramework.Adapters
                     // If an output adapter queue size exceeds the defined measurement dumping threshold,
                     // then the queue will be truncated before system runs out of memory
                     outputAdpater.RemoveMeasurements(m_measurementDumpingThreshold);
-                    OnStatusMessage(sender, "[{0}] System exercised evasive action to convserve memory and dumped {1} unprocessed measurements from the output queue :(", UpdateType.Alarm, outputAdpater.Name, m_measurementDumpingThreshold);
+                    OnStatusMessage(sender, "[{0}] System exercised evasive action to conserve memory and dumped {1} unprocessed measurements from the output queue :(", UpdateType.Alarm, outputAdpater.Name, m_measurementDumpingThreshold);
                     OnStatusMessage(sender, "[{0}] NOTICE: Please adjust measurement threshold settings and/or increase amount of available system memory.", UpdateType.Warning, outputAdpater.Name);
                 }
                 else
