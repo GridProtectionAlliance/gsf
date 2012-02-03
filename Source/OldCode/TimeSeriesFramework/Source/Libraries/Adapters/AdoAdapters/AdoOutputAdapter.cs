@@ -47,6 +47,7 @@ namespace AdoAdapters
 
         // Fields
         private Dictionary<string, string> m_fieldNames;
+        private List<string> m_fieldList;
         private string m_dbTableName;
         private string m_dbConnectionString;
         private string m_dataProviderString;
@@ -68,6 +69,7 @@ namespace AdoAdapters
         public AdoOutputAdapter()
         {
             m_fieldNames = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
+            m_fieldList = new List<string>();
         }
 
         #endregion
@@ -198,9 +200,14 @@ namespace AdoAdapters
                     string fieldName = settings[key];
 
                     if (propertyName != null)
+                    {
                         m_fieldNames[fieldName] = propertyName;
+                        m_fieldList.Add(fieldName);
+                    }
                     else
+                    {
                         OnProcessException(new ArgumentException(string.Format("Measurement property not found: {0}", subKey)));
+                    }
                 }
             }
 
@@ -279,70 +286,107 @@ namespace AdoAdapters
         protected override void ProcessMeasurements(IMeasurement[] measurements)
         {
             Type measurementType = typeof(IMeasurement);
-            string commandString = "INSERT INTO {0}({1}) VALUES ({2})";
+
+            IDbCommand command = null;
+            StringBuilder commandBuilder = new StringBuilder();
+            string insertFormat = "INSERT INTO {0} ({1}) ";
+            string selectFormat = "SELECT {0} ";
+            string unionFormat = "UNION ALL ";
+
+            StringBuilder valuesBuilder;
+            string fields = m_fieldList.Aggregate((field1, field2) => field1 + "," + field2);
+            string values;
+
+            IDbDataParameter parameter;
             char paramChar = m_isOracle ? ':' : '@';
+            int paramCount = 0;
 
-            foreach (IMeasurement measurement in measurements)
+            try
             {
-                IDbCommand command = m_connection.CreateCommand();
-                StringBuilder fieldList = new StringBuilder();
-                StringBuilder valueList = new StringBuilder();
+                command = m_connection.CreateCommand();
+                commandBuilder.Append(string.Format(insertFormat, m_dbTableName, fields));
 
-                // Build the field list and value list.
-                foreach (string fieldName in m_fieldNames.Keys)
+                foreach (IMeasurement measurement in measurements)
                 {
-                    IDbDataParameter parameter = command.CreateParameter();
-                    string propertyName = m_fieldNames[fieldName];
-                    object value = GetAllProperties(measurementType).FirstOrDefault(prop => prop.Name == propertyName).GetValue(measurement, null);
+                    valuesBuilder = new StringBuilder();
 
-                    if (fieldList.Length > 0)
-                        fieldList.Append(',');
-                    fieldList.Append(fieldName);
-
-                    if (valueList.Length > 0)
-                        valueList.Append(',');
-                    valueList.Append(paramChar);
-                    valueList.Append(fieldName);
-
-                    parameter.ParameterName = paramChar + fieldName;
-                    parameter.Direction = ParameterDirection.Input;
-
-                    switch (propertyName.ToLower())
+                    // Build the values list.
+                    foreach (string fieldName in m_fieldList)
                     {
-                        case "id":
-                            parameter.Value = m_isJetEngine ? "{" + value + "}" : value;
-                            break;
-                        case "timestamp":
-                        case "publishedtimestamp":
-                        case "receivedtimestamp":
-                            Ticks timestamp = (Ticks)value;
+                        string propertyName = m_fieldNames[fieldName];
+                        object value = GetAllProperties(measurementType).FirstOrDefault(prop => prop.Name == propertyName).GetValue(measurement, null);
 
-                            // If the value is a timestamp, use the timestamp format
-                            // specified by the user when inserting the timestamp.
-                            if (m_timestampFormat == null)
-                                parameter.Value = (long)timestamp;
-                            else
-                                parameter.Value = timestamp.ToString(m_timestampFormat);
-                            break;
-                        case "stateflags":
-                            // IMeasurement.StateFlags field is an uint, cast this back to a
-                            // signed integer to work with most database field types
-                            parameter.Value = Convert.ToInt32(value);
-                            break;
-                        default:
-                            parameter.Value = value;
-                            break;
+                        if (valuesBuilder.Length > 0)
+                            valuesBuilder.Append(',');
+
+                        if (value == null)
+                        {
+                            valuesBuilder.Append("NULL");
+                            continue;
+                        }
+
+                        valuesBuilder.Append(paramChar);
+                        valuesBuilder.Append('p');
+                        valuesBuilder.Append(paramCount);
+
+                        parameter = command.CreateParameter();
+                        parameter.ParameterName = paramChar + "p" + paramCount;
+                        parameter.Direction = ParameterDirection.Input;
+
+                        switch (propertyName.ToLower())
+                        {
+                            case "id":
+                                parameter.Value = m_isJetEngine ? "{" + value + "}" : value;
+                                OnStatusMessage(value.GetType().Name);
+                                break;
+                            case "key":
+                                parameter.Value = value.ToString();
+                                break;
+                            case "timestamp":
+                            case "publishedtimestamp":
+                            case "receivedtimestamp":
+                                Ticks timestamp = (Ticks)value;
+
+                                // If the value is a timestamp, use the timestamp format
+                                // specified by the user when inserting the timestamp.
+                                if (m_timestampFormat == null)
+                                    parameter.Value = (long)timestamp;
+                                else
+                                    parameter.Value = timestamp.ToString(m_timestampFormat);
+                                break;
+                            case "stateflags":
+                                // IMeasurement.StateFlags field is an uint, cast this back to a
+                                // signed integer to work with most database field types
+                                parameter.Value = Convert.ToInt32(value);
+                                break;
+                            default:
+                                parameter.Value = value;
+                                break;
+                        }
+
+                        command.Parameters.Add(parameter);
+                        paramCount++;
                     }
 
-                    command.Parameters.Add(parameter);
+                    values = valuesBuilder.ToString();
+                    commandBuilder.Append(string.Format(selectFormat, values));
+                    commandBuilder.Append(unionFormat);
                 }
 
-                // Set the command text and execute the command.
-                command.CommandText = string.Format(commandString, m_dbTableName, fieldList, valueList);
-                command.ExecuteNonQuery();
-            }
+                // Remove "UNION ALL " from the end of the command text.
+                commandBuilder.Remove(commandBuilder.Length - unionFormat.Length, unionFormat.Length);
 
-            m_measurementCount += measurements.Length;
+                // Set the command text and execute the command.
+                command.CommandText = commandBuilder.ToString();
+                command.ExecuteNonQuery();
+
+                m_measurementCount += measurements.Length;
+            }
+            finally
+            {
+                if ((object)command != null)
+                    command.Dispose();
+            }
         }
 
         /// <summary>
