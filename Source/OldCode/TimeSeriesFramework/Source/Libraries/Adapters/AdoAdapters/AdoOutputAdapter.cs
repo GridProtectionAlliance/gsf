@@ -194,7 +194,7 @@ namespace AdoAdapters
                 {
                     int fieldNameIndex = key.LastIndexOf("FieldName", ignoreCase);
                     string subKey = key.Substring(0, fieldNameIndex);
-                    string propertyName = measurementProperties.SingleOrDefault(name => name.Equals(subKey, ignoreCase));
+                    string propertyName = measurementProperties.FirstOrDefault(name => name.Equals(subKey, ignoreCase));
                     string fieldName = settings[key];
 
                     if (propertyName != null)
@@ -293,7 +293,7 @@ namespace AdoAdapters
                 {
                     IDbDataParameter parameter = command.CreateParameter();
                     string propertyName = m_fieldNames[fieldName];
-                    object value = measurementType.GetProperty(propertyName).GetValue(measurement, null);
+                    object value = GetAllProperties(measurementType).FirstOrDefault(prop => prop.Name == propertyName).GetValue(measurement, null);
 
                     if (fieldList.Length > 0)
                         fieldList.Append(',');
@@ -310,11 +310,6 @@ namespace AdoAdapters
                     switch (propertyName.ToLower())
                     {
                         case "id":
-                            // IMeasurement.ID field is an uint, cast this back to a
-                            // signed integer to work with most database field types
-                            parameter.Value = Convert.ToInt32(value);
-                            break;
-                        case "signalid":
                             parameter.Value = m_isJetEngine ? "{" + value + "}" : value;
                             break;
                         case "timestamp":
@@ -329,9 +324,10 @@ namespace AdoAdapters
                             else
                                 parameter.Value = timestamp.ToString(m_timestampFormat);
                             break;
-                        case "timestampqualityisgood":
-                        case "valuequalityisgood":
-                            parameter.Value = Convert.ToBoolean(value) ? 1 : 0;
+                        case "stateflags":
+                            // IMeasurement.StateFlags field is an uint, cast this back to a
+                            // signed integer to work with most database field types
+                            parameter.Value = Convert.ToInt32(value);
                             break;
                         default:
                             parameter.Value = value;
