@@ -596,6 +596,7 @@ namespace TimeSeriesFramework.Transport
         {
             StringBuilder connectionString = new StringBuilder();
 
+            connectionString.Append("usePrecisionTimer=false; ");
             connectionString.AppendFormat("framesPerSecond={0}; ", framesPerSecond);
             connectionString.AppendFormat("lagTime={0}; ", lagTime);
             connectionString.AppendFormat("leadTime={0}; ", leadTime);

@@ -42,6 +42,7 @@ namespace DataPublisherTest
             publisher.ProcessException += publisher_ProcessException;
 
             // Initialize publisher
+            publisher.Name = "dataPublisher";
             publisher.Initialize();
 
             // Start publisher

@@ -46,7 +46,7 @@ namespace DataSubscriberTest
             subscriber.NewMeasurements += subscriber_NewMeasurements;
 
             // Initialize subscriber
-            subscriber.ConnectionString = "server=localhost:6165";
+            subscriber.ConnectionString = "server=localhost:6177";
             subscriber.Initialize();
 
             // Start subscriber connection cycle
