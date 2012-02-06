@@ -2455,11 +2455,15 @@ namespace TVA.Historian.Files
             try
             {
                 DriveInfo archiveDrive = new DriveInfo(Path.GetPathRoot(m_fileName));
+
                 if (archiveDrive.AvailableFreeSpace < archiveDrive.TotalSize * (1 - ((double)m_archiveOffloadThreshold / 100)))
                 {
                     // We'll start offloading historic files if we've reached the offload threshold.
                     OffloadHistoricFiles();
                 }
+
+                // Maintain maximum number of historic files, if configured to do so
+                MaintainMaximumNumberOfHistoricFiles();
 
                 OnRolloverPreparationStart();
 
@@ -2471,6 +2475,7 @@ namespace TVA.Historian.Files
                 standbyArchiveFile.StateFile = m_stateFile;
                 standbyArchiveFile.IntercomFile = m_intercomFile;
                 standbyArchiveFile.MetadataFile = m_metadataFile;
+
                 try
                 {
                     standbyArchiveFile.Open();
@@ -2555,6 +2560,42 @@ namespace TVA.Historian.Files
                 catch (Exception ex)
                 {
                     OnOffloadException(ex);
+                }
+            }
+        }
+
+        private void MaintainMaximumNumberOfHistoricFiles()
+        {
+            if (m_maxHistoricArchiveFiles >= 1)
+            {
+                // Get a local copy of all the historic archive files.
+                List<Info> allHistoricFiles = null;
+
+                lock (m_historicArchiveFiles)
+                {
+                    allHistoricFiles = new List<Info>(m_historicArchiveFiles);
+                }
+
+                // Start deleting historic files from oldest to newest.
+                if (allHistoricFiles.Count > m_maxHistoricArchiveFiles)
+                {
+                    allHistoricFiles.Sort();
+
+                    while (allHistoricFiles.Count > m_maxHistoricArchiveFiles)
+                    {
+                        try
+                        {
+                            DeleteFile(allHistoricFiles[0].FileName);
+                        }
+                        catch
+                        {
+                            // Just keep going if we fail to delete file at this time...
+                        }
+                        finally
+                        {
+                            allHistoricFiles.RemoveAt(0);
+                        }
+                    }
                 }
             }
         }
@@ -3263,36 +3304,6 @@ namespace TVA.Historian.Files
                     {
                         // Ignore any exception we might encounter if a historic archive file is being renamed to
                         // something else. This might happen if someone is renaming files manually.
-                    }
-                }
-
-                if (m_maxHistoricArchiveFiles >= 1)
-                {
-                    // Get a local copy of all the historic archive files.
-                    List<Info> allHistoricFiles = null;
-                    lock (m_historicArchiveFiles)
-                    {
-                        allHistoricFiles = new List<Info>(m_historicArchiveFiles);
-                    }
-
-                    // Start deleting historic files from oldest to newest.
-                    if (allHistoricFiles.Count > m_maxHistoricArchiveFiles)
-                    {
-                        allHistoricFiles.Sort();
-                        while (allHistoricFiles.Count > m_maxHistoricArchiveFiles)
-                        {
-                            try
-                            {
-                                DeleteFile(allHistoricFiles[0].FileName);
-                            }
-                            catch
-                            {
-                            }
-                            finally
-                            {
-                                allHistoricFiles.RemoveAt(0);
-                            }
-                        }
                     }
                 }
             }
