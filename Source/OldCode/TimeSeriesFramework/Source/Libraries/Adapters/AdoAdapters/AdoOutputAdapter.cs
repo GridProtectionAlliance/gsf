@@ -337,7 +337,6 @@ namespace AdoAdapters
                         {
                             case "id":
                                 parameter.Value = m_isJetEngine ? "{" + value + "}" : value;
-                                OnStatusMessage(value.GetType().Name);
                                 break;
                             case "key":
                                 parameter.Value = value.ToString();
