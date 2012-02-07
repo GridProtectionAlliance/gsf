@@ -23,6 +23,7 @@
 
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Threading;
@@ -33,6 +34,10 @@ using TVA.Data;
 
 namespace DataQualityMonitoring
 {
+    /// <summary>
+    /// Action adapter that generates alarm measurements based on alarm definitions from the database.
+    /// </summary>
+    [Description("Alarm: Generates alarm events for alarms defined in the database.")]
     public class AlarmAdapter : FacileActionAdapterBase
     {
         #region [ Members ]
@@ -52,6 +57,9 @@ namespace DataQualityMonitoring
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the flag indicating if this adapter supports temporal processing."),
+        DefaultValue(false)]
         public override bool SupportsTemporalProcessing
         {
             get

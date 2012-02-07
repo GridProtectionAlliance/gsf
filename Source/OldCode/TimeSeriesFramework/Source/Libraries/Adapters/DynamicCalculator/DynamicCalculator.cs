@@ -187,7 +187,7 @@ namespace DynamicCalculator
         }
 
         /// <summary>
-        /// Gets or sets the flag indicating if this adapter supports temporal processing.
+        /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
         [ConnectionStringParameter,
         Description("Define the flag indicating if this adapter supports temporal processing."),
