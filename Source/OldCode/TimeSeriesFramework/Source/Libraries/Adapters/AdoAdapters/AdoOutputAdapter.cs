@@ -52,6 +52,7 @@ namespace AdoAdapters
         private string m_dbConnectionString;
         private string m_dataProviderString;
         private string m_timestampFormat;
+        private int m_bulkInsertLimit;
         private bool m_isJetEngine;
         private bool m_isOracle;
 
@@ -150,6 +151,24 @@ namespace AdoAdapters
         }
 
         /// <summary>
+        /// Gets or sets the maximum number of measurements to be collated into one insert statement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the maximum number of measurements to be collated into one insert statement."),
+        DefaultValue("1024")]
+        public int BulkInsertLimit
+        {
+            get
+            {
+                return m_bulkInsertLimit;
+            }
+            set
+            {
+                m_bulkInsertLimit = value;
+            }
+        }
+
+        /// <summary>
         /// Returns a flag that determines if measurements sent to this
         /// <see cref="AdoOutputAdapter"/> are destined for archival.
         /// </summary>
@@ -188,6 +207,7 @@ namespace AdoAdapters
             Type measurementType = typeof(IMeasurement);
             IEnumerable<string> measurementProperties = GetAllProperties(measurementType).Select(property => property.Name);
             StringComparison ignoreCase = StringComparison.CurrentCultureIgnoreCase;
+            string setting;
 
             // Parse database field names from the connection string.
             foreach (string key in settings.Keys)
@@ -243,6 +263,12 @@ namespace AdoAdapters
                     m_timestampFormat = null;
             }
 
+            // Get bulk insert limit
+            if(settings.TryGetValue("bulkInsertLimit", out setting))
+                m_bulkInsertLimit = int.Parse(setting);
+            else
+                m_bulkInsertLimit = 1024;
+
             // Create a new database connection object.
             Dictionary<string, string> dataProviderSettings = m_dataProviderString.ParseKeyValuePairs();
             Assembly assm = Assembly.Load(dataProviderSettings["AssemblyName"]);
@@ -284,6 +310,63 @@ namespace AdoAdapters
         /// </summary>
         /// <param name="measurements">Measurements to be archived.</param>
         protected override void ProcessMeasurements(IMeasurement[] measurements)
+        {
+            for (int i = 0; i < measurements.Length; i += m_bulkInsertLimit)
+            {
+                BulkInsert(measurements.Skip(i).Take(m_bulkInsertLimit));
+            }
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="AdoOutputAdapter"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        if (m_connection != null)
+                            m_connection.Dispose();
+
+                        m_connection = null;
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
+                }
+            }
+        }
+
+        private PropertyInfo[] GetAllProperties(Type type)
+        {
+            List<Type> typeList = new List<Type>();
+            typeList.Add(type);
+
+            if (type.IsInterface)
+            {
+                typeList.AddRange(type.GetInterfaces());
+            }
+
+            List<PropertyInfo> propertyList = new List<PropertyInfo>();
+
+            foreach (Type interfaceType in typeList)
+            {
+                foreach (PropertyInfo property in interfaceType.GetProperties())
+                {
+                    propertyList.Add(property);
+                }
+            }
+
+            return propertyList.ToArray();
+        }
+
+        private void BulkInsert(IEnumerable<IMeasurement> measurements)
         {
             Type measurementType = typeof(IMeasurement);
 
@@ -379,62 +462,13 @@ namespace AdoAdapters
                 command.CommandText = commandBuilder.ToString();
                 command.ExecuteNonQuery();
 
-                m_measurementCount += measurements.Length;
+                m_measurementCount += measurements.Count();
             }
             finally
             {
                 if ((object)command != null)
                     command.Dispose();
             }
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="AdoOutputAdapter"/> object and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        if (m_connection != null)
-                            m_connection.Dispose();
-
-                        m_connection = null;
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
-                }
-            }
-        }
-
-        private PropertyInfo[] GetAllProperties(Type type)
-        {
-            List<Type> typeList = new List<Type>();
-            typeList.Add(type);
-
-            if (type.IsInterface)
-            {
-                typeList.AddRange(type.GetInterfaces());
-            }
-
-            List<PropertyInfo> propertyList = new List<PropertyInfo>();
-
-            foreach (Type interfaceType in typeList)
-            {
-                foreach (PropertyInfo property in interfaceType.GetProperties())
-                {
-                    propertyList.Add(property);
-                }
-            }
-
-            return propertyList.ToArray();
         }
 
         #endregion
