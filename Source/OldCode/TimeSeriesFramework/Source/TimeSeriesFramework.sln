@@ -98,9 +98,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FLEE", "FLEE", "{C78E58AC-B
 		Dependencies\FLEE\Ciloci.Flee.xml = Dependencies\FLEE\Ciloci.Flee.xml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicCalculator", "Libraries\Adapters\DynamicCalculator\DynamicCalculator.csproj", "{374F5805-28DB-4BCA-8062-BF802793BD4F}"
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 17
+		SccNumberOfProjects = 18
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs07
 		SccLocalPath0 = .
@@ -168,6 +170,10 @@ Global
 		SccProjectTopLevelParentUniqueName16 = TimeSeriesFramework.sln
 		SccProjectName16 = Libraries/Adapters/CSampleAdapters
 		SccLocalPath16 = Libraries\\Adapters\\CSampleAdapters
+		SccProjectUniqueName17 = Libraries\\Adapters\\DynamicCalculator\\DynamicCalculator.csproj
+		SccProjectTopLevelParentUniqueName17 = TimeSeriesFramework.sln
+		SccProjectName17 = Libraries/Adapters/DynamicCalculator
+		SccLocalPath17 = Libraries\\Adapters\\DynamicCalculator
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -402,6 +408,18 @@ Global
 		{BB0CAA29-229E-4648-80A0-1474B3A0FACF}.Release|Win32.ActiveCfg = Release|Win32
 		{BB0CAA29-229E-4648-80A0-1474B3A0FACF}.Release|Win32.Build.0 = Release|Win32
 		{BB0CAA29-229E-4648-80A0-1474B3A0FACF}.Release|x86.ActiveCfg = Release|Win32
+		{374F5805-28DB-4BCA-8062-BF802793BD4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{374F5805-28DB-4BCA-8062-BF802793BD4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{374F5805-28DB-4BCA-8062-BF802793BD4F}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{374F5805-28DB-4BCA-8062-BF802793BD4F}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{374F5805-28DB-4BCA-8062-BF802793BD4F}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{374F5805-28DB-4BCA-8062-BF802793BD4F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{374F5805-28DB-4BCA-8062-BF802793BD4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{374F5805-28DB-4BCA-8062-BF802793BD4F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{374F5805-28DB-4BCA-8062-BF802793BD4F}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{374F5805-28DB-4BCA-8062-BF802793BD4F}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{374F5805-28DB-4BCA-8062-BF802793BD4F}.Release|Win32.ActiveCfg = Release|Any CPU
+		{374F5805-28DB-4BCA-8062-BF802793BD4F}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -430,6 +448,7 @@ Global
 		{1FEC4033-C80F-4CF1-835C-BBEE0E7F6803} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
 		{69846364-E3F5-4086-B9FE-D447BB7E56C3} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
 		{BB0CAA29-229E-4648-80A0-1474B3A0FACF} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
+		{374F5805-28DB-4BCA-8062-BF802793BD4F} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
 		{D78C3B1B-F673-45EB-86CB-93DCB4572905} = {7877F254-782B-4221-83B4-DB31D9107A43}
 		{5E75D20E-228E-4ACC-B73D-E9471D9E0852} = {7877F254-782B-4221-83B4-DB31D9107A43}
 	EndGlobalSection
