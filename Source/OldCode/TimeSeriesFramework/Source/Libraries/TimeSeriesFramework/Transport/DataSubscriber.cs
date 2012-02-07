@@ -18,6 +18,9 @@
 //  ----------------------------------------------------------------------------------------------------
 //  08/20/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
+//  02/07/2012 - Mehulbhai Thakkar
+//       Modified SynchronizeMetadata to filter devices by original source and modified insert query
+//       to populate OriginalSource value. Added to flag to optionally avoid metadata synchronization.
 //
 //******************************************************************************************************
 
@@ -100,6 +103,7 @@ namespace TimeSeriesFramework.Transport
         private string m_authenticationID;
         private bool m_includeTime;
         private bool m_disposed;
+        private bool m_synchronizeMetadata;
 
         #endregion
 
@@ -400,6 +404,12 @@ namespace TimeSeriesFramework.Transport
                 if (!settings.TryGetValue("authenticationID", out m_authenticationID) && !string.IsNullOrWhiteSpace(m_authenticationID))
                     throw new ArgumentException("The \"authenticationID\" setting must defined when authentication is required.");
             }
+
+            // Check if synchronize metadata is disabled.
+            if (settings.TryGetValue("synchronizeMetadata", out setting))
+                m_synchronizeMetadata = setting.ParseBoolean();
+            else
+                m_synchronizeMetadata = true;   // by default, we will always perform this.
 
             // Define auto connect setting
             if (settings.TryGetValue("autoConnect", out setting))
@@ -1146,22 +1156,26 @@ namespace TimeSeriesFramework.Transport
                         foreach (DataRow row in metadata.Tables["DeviceDetail"].Rows)
                         {
                             Guid uniqueID = adoDatabase.Guid(row, "UniqueID"); // row.Field<Guid>("UniqueID");
-                            query = adoDatabase.ParameterizedQueryString("SELECT COUNT(*) FROM Device WHERE UniqueID = {0}", "deviceGuid");
-
-                            if (Convert.ToInt32(connection.ExecuteScalar(query, uniqueID)) == 0)
+                            // We will synchronize metadata only if the source owns this device. Otherwise skip it.
+                            if (row.Field<object>("OriginalSource") == null)
                             {
-                                query = adoDatabase.ParameterizedQueryString("INSERT INTO Device(NodeID, ParentID, UniqueID, Acronym, " +
-                                    "Name, IsConcentrator, Enabled) VALUES ( {0}, {1}, {2}, {3}, {4}, 0, 1)",
-                                    "nodeID", "parentID", "uniqueID", "acronym", "name");
+                                query = adoDatabase.ParameterizedQueryString("SELECT COUNT(*) FROM Device WHERE UniqueID = {0}", "deviceGuid");
 
-                                connection.ExecuteNonQuery(query, m_nodeID, parentID, uniqueID, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"));
-                            }
-                            else
-                            {
-                                query = adoDatabase.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1} WHERE UniqueID = {2}", "acronym", "name", "uniqueID");
-                                connection.ExecuteNonQuery(query, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), uniqueID);
-                            }
+                                if (Convert.ToInt32(connection.ExecuteScalar(query, uniqueID)) == 0)
+                                {
+                                    query = adoDatabase.ParameterizedQueryString("INSERT INTO Device(NodeID, ParentID, UniqueID, Acronym, " +
+                                        "Name, IsConcentrator, Enabled, OriginalSource) VALUES ( {0}, {1}, {2}, {3}, {4}, 0, 1, {5})",
+                                        "nodeID", "parentID", "uniqueID", "acronym", "name", "originalSource");
 
+                                    connection.ExecuteNonQuery(query, m_nodeID, parentID, uniqueID, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"),
+                                        string.IsNullOrEmpty(row.Field<string>("ParentAcronym")) ? sourcePrefix + row.Field<string>("Acronym") : sourcePrefix + row.Field<string>("ParentAcronym"));
+                                }
+                                else
+                                {
+                                    query = adoDatabase.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1} WHERE UniqueID = {2}", "acronym", "name", "uniqueID");
+                                    connection.ExecuteNonQuery(query, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), uniqueID);
+                                }
+                            }
                             // Capture new device ID for measurement association
                             query = adoDatabase.ParameterizedQueryString("SELECT ID FROM Device WHERE UniqueID = {0}", "deviceGuid");
                             deviceIDs[row.Field<string>("Acronym")] = Convert.ToInt32(connection.ExecuteScalar(query, uniqueID));
@@ -1212,7 +1226,9 @@ namespace TimeSeriesFramework.Transport
                     }
 
                     // New signals may have been defined, take original remote signal index cache and apply changes
-                    m_signalIndexCache = new SignalIndexCache(DataSource, m_remoteSignalIndexCache);
+                    if (m_remoteSignalIndexCache != null)
+                        m_signalIndexCache = new SignalIndexCache(DataSource, m_remoteSignalIndexCache);
+
                 }
             }
             catch (Exception ex)
@@ -1232,7 +1248,8 @@ namespace TimeSeriesFramework.Transport
         private void DataSubscriber_MetaDataReceived(object sender, EventArgs<DataSet> e)
         {
             // We handle synchronization on a seperate thread since this process may be lengthy
-            ThreadPool.QueueUserWorkItem(SynchronizeMetadata, e.Argument);
+            if (m_synchronizeMetadata)
+                ThreadPool.QueueUserWorkItem(SynchronizeMetadata, e.Argument);
         }
 
         /// <summary>

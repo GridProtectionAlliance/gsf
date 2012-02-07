@@ -26,6 +26,8 @@
 //       synchronization method (e.g., going from unsynchronized to synchronized)
 //  05/26/2011 - J. Ritchie Carroll
 //       Implemented subscriber authentication model.
+//  02/07/2012 - Mehulbhai Thakkar
+//       Modified m_metadataTables to include filter expression and made the list ";" seperated.
 //
 //******************************************************************************************************
 
@@ -290,7 +292,7 @@ namespace TimeSeriesFramework.Transport
             m_clientConnections = new ConcurrentDictionary<Guid, ClientConnection>();
             m_clientPublicationChannels = new ConcurrentDictionary<Guid, IServer>();
             m_signalIDCache = new ConcurrentDictionary<MeasurementKey, Guid>();
-            m_metadataTables = "DeviceDetail,MeasurementDetail";
+            m_metadataTables = "DeviceDetail WHERE OriginalSource IS NULL;MeasurementDetail";
             m_routingTables = new RoutingTables()
             {
                 ActionAdapters = this
@@ -1290,7 +1292,7 @@ namespace TimeSeriesFramework.Transport
                 DataTable table;
 
                 // Copy key meta-data tables
-                foreach (string tableName in m_metadataTables.Split(','))
+                foreach (string tableName in m_metadataTables.Split(';'))
                 {
                     if (!string.IsNullOrWhiteSpace(tableName))
                     {
