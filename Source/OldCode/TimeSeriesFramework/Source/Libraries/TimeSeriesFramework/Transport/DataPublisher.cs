@@ -292,7 +292,7 @@ namespace TimeSeriesFramework.Transport
             m_clientConnections = new ConcurrentDictionary<Guid, ClientConnection>();
             m_clientPublicationChannels = new ConcurrentDictionary<Guid, IServer>();
             m_signalIDCache = new ConcurrentDictionary<MeasurementKey, Guid>();
-            m_metadataTables = "DeviceDetail WHERE OriginalSource IS NULL;MeasurementDetail";
+            m_metadataTables = "DeviceDetail WHERE OriginalSource IS NULL AND IsConcentrator <> 1;MeasurementDetail WHERE Internal <> 0";
             m_routingTables = new RoutingTables()
             {
                 ActionAdapters = this
@@ -1297,7 +1297,7 @@ namespace TimeSeriesFramework.Transport
                     if (!string.IsNullOrWhiteSpace(tableName))
                     {
                         table = dbConnection.RetrieveData(adoDatabase.AdapterType, string.Format("SELECT * FROM {0}", tableName));
-                        table.TableName = tableName;
+                        table.TableName = tableName.Split(' ')[0];
                         metadata.Tables.Add(table.Copy());
                     }
                 }

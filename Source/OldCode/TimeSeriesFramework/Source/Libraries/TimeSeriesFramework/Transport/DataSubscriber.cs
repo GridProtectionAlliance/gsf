@@ -1157,7 +1157,7 @@ namespace TimeSeriesFramework.Transport
                         {
                             Guid uniqueID = adoDatabase.Guid(row, "UniqueID"); // row.Field<Guid>("UniqueID");
                             // We will synchronize metadata only if the source owns this device. Otherwise skip it.
-                            if (row.Field<object>("OriginalSource") == null)
+                            if (row.Field<object>("OriginalSource") == null && !row["IsConcentrator"].ToNonNullString("0").ParseBoolean())
                             {
                                 query = adoDatabase.ParameterizedQueryString("SELECT COUNT(*) FROM Device WHERE UniqueID = {0}", "deviceGuid");
 
@@ -1198,28 +1198,31 @@ namespace TimeSeriesFramework.Transport
 
                         foreach (DataRow row in metadata.Tables["MeasurementDetail"].Rows)
                         {
-                            deviceAcronym = row.Field<string>("DeviceAcronym") ?? string.Empty;
-                            signalTypeAcronym = row.Field<string>("SignalAcronym") ?? string.Empty;
-
-                            if (!string.IsNullOrWhiteSpace(deviceAcronym) && deviceIDs.ContainsKey(deviceAcronym) && !string.IsNullOrWhiteSpace(signalTypeAcronym) && signalTypeIDs.ContainsKey(signalTypeAcronym))
+                            if (row["Internal"].ToNonNullString("1").ParseBoolean())
                             {
-                                string pointTag = sourcePrefix + row.Field<string>("PointTag") ?? string.Empty;
-                                Guid signalID = adoDatabase.Guid(row, "SignalID");  // row.Field<Guid>("SignalID");
+                                deviceAcronym = row.Field<string>("DeviceAcronym") ?? string.Empty;
+                                signalTypeAcronym = row.Field<string>("SignalAcronym") ?? string.Empty;
 
-                                query = adoDatabase.ParameterizedQueryString("SELECT COUNT(*) FROM Measurement WHERE SignalID = {0}", "signalID");
-
-                                if (Convert.ToInt32(connection.ExecuteScalar(query, signalID)) == 0)
+                                if (!string.IsNullOrWhiteSpace(deviceAcronym) && deviceIDs.ContainsKey(deviceAcronym) && !string.IsNullOrWhiteSpace(signalTypeAcronym) && signalTypeIDs.ContainsKey(signalTypeAcronym))
                                 {
-                                    string insert = adoDatabase.ParameterizedQueryString("INSERT INTO Measurement (DeviceID, PointTag, SignalTypeID, SignalReference, Description, Internal, Enabled ) VALUES ( {0}, {1}, {2}, {3}, {4}, 0 , 1 )", "deviceID", "pointTag", "signalTypeID", "signalReference", "description");
-                                    string update = adoDatabase.ParameterizedQueryString("UPDATE Measurement SET SignalID = {0} WHERE PointTag = {1}", "signalID", "pointTag");
+                                    string pointTag = sourcePrefix + row.Field<string>("PointTag") ?? string.Empty;
+                                    Guid signalID = adoDatabase.Guid(row, "SignalID");  // row.Field<Guid>("SignalID");
 
-                                    connection.ExecuteNonQuery(insert, 30, deviceIDs[deviceAcronym], pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty);
-                                    connection.ExecuteNonQuery(update, signalID, pointTag);
-                                }
-                                else
-                                {
-                                    query = adoDatabase.ParameterizedQueryString("UPDATE Measurement SET PointTag = {0}, SignalTypeID = {1}, SignalReference = {2}, Description = {3} WHERE SignalID = {4}", "pointTag", "signalTypeID", "signalReference", "description", "signalID");
-                                    connection.ExecuteNonQuery(query, pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, signalID);
+                                    query = adoDatabase.ParameterizedQueryString("SELECT COUNT(*) FROM Measurement WHERE SignalID = {0}", "signalID");
+
+                                    if (Convert.ToInt32(connection.ExecuteScalar(query, signalID)) == 0)
+                                    {
+                                        string insert = adoDatabase.ParameterizedQueryString("INSERT INTO Measurement (DeviceID, PointTag, SignalTypeID, SignalReference, Description, Internal, Enabled ) VALUES ( {0}, {1}, {2}, {3}, {4}, 0 , 1 )", "deviceID", "pointTag", "signalTypeID", "signalReference", "description");
+                                        string update = adoDatabase.ParameterizedQueryString("UPDATE Measurement SET SignalID = {0} WHERE PointTag = {1}", "signalID", "pointTag");
+
+                                        connection.ExecuteNonQuery(insert, 30, deviceIDs[deviceAcronym], pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty);
+                                        connection.ExecuteNonQuery(update, signalID, pointTag);
+                                    }
+                                    else
+                                    {
+                                        query = adoDatabase.ParameterizedQueryString("UPDATE Measurement SET PointTag = {0}, SignalTypeID = {1}, SignalReference = {2}, Description = {3} WHERE SignalID = {4}", "pointTag", "signalTypeID", "signalReference", "description", "signalID");
+                                        connection.ExecuteNonQuery(query, pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, signalID);
+                                    }
                                 }
                             }
                         }
