@@ -16,4 +16,4 @@
 ::*******************************************************************************************************
 
 @ECHO OFF
-C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe TVACodeLibrary.buildproj /l:FileLogger,Microsoft.Build.Engine;logfile=TVACodeLibrary.output
+C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe TVACodeLibrary.buildproj /p:NugetApiKey=%1 /l:FileLogger,Microsoft.Build.Engine;logfile=TVACodeLibrary.output

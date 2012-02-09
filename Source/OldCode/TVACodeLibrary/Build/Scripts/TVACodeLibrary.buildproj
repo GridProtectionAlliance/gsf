@@ -51,6 +51,9 @@
 **       property to allow NuGet package creation to be skipped even when versioning is performed.
 **  12/01/2011 - Pinal C. Patel
 **       Updated to version and build setup packages.
+**  02/08/2012 - Pinal C. Patel
+**       Updated to support creation of pre-release NuGet packages and publishing NuGet packages to
+**       the official NuGet.org packages feed.
 **
 *******************************************************************************************************
 -->
@@ -72,6 +75,7 @@
       <!--Project specific settings.-->
       <ProjectSolution>$(LocalFolder)\Source\$(ProjectName).sln</ProjectSolution>
       <VersionRevisionChange>Increment</VersionRevisionChange>
+      <PreRelease Condition="'$(PreRelease)' == ''">true</PreRelease>
       <BuildDeployFolder Condition="'$(BuildDeployFolder)' == ''">\\rgocopgfs1\Applications\$(ProjectName)\Beta</BuildDeployFolder>
       <NugetPackagesFolder Condition="'$(NugetPackagesFolder)' == ''">\\rgocopgfs1\Applications\NugetPackages</NugetPackagesFolder>
     </PropertyGroup>
@@ -111,7 +115,7 @@
   <Target Name="BeforeExecuteUnitTests">
     <ItemGroup>
       <!--List of unit test assemblies.-->
-      <UnitTestAssemblies Include="$(BuildOutputFolder)\**\*.Tests.dll"/>
+      <!--<UnitTestAssemblies Include="$(BuildOutputFolder)\**\*.Tests.dll"/>-->
     </ItemGroup>
   </Target>
 
@@ -135,20 +139,29 @@
     <!-- Delete existing nuget packages. -->
     <Message Text="Deleting nuget packages..."/>
     <ItemGroup>
-      <NugetPackages Include="$(NugetPackagesFolder)\TVACodeLibrary.*.$(Major).$(Minor).$(Build).*.nupkg"/>
+      <NugetPackages Include="$(NugetPackagesFolder)\TVACodeLibrary.*.$(Major).$(Minor).$(Build)*.nupkg"/>
     </ItemGroup>
     <Delete Files="@(NugetPackages)"/>
-    <!-- Create and deploy nuget packages. -->
+    <!-- Create nuget packages. -->
     <Message Text="Creating nuget library packages..."/>
     <ItemGroup>
       <NugetLibraries Include="$(LocalFolder)\Source\Libraries\**\*.csproj" Exclude="$(LocalFolder)\Source\Libraries\Tests\**\*.csproj"/>
     </ItemGroup>
-    <Exec Command="NuGet.exe pack %22%(NugetLibraries.FullPath)%22 /Symbols /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NugetPackagesFolder)%22"/>
-    <Message Text="Creating nuget sample packages..."/>
+    <Exec Command="NuGet.exe pack %22%(NugetLibraries.FullPath)%22 /Version $(Major).$(Minor).$(Build) /Symbols /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' != 'true'"/>
+    <Exec Command="NuGet.exe pack %22%(NugetLibraries.FullPath)%22 /Version $(Major).$(Minor).$(Build)-beta$(Revision) /Symbols /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' == 'true'"/>
+    <Message Text="Creating nuget samples packages..."/>
     <ItemGroup>
       <NugetSamples Include="$(LocalFolder)\Build\Scripts\**\*.nuspec"/>
     </ItemGroup>
-    <Exec Command="NuGet.exe pack %22%(NugetSamples.FullPath)%22 /Version $(Major).$(Minor).$(Build).$(Revision) /OutputDirectory %22$(NugetPackagesFolder)%22"/>
+    <Exec Command="NuGet.exe pack %22%(NugetSamples.FullPath)%22 /Version $(Major).$(Minor).$(Build) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' != 'true'"/>
+    <Exec Command="NuGet.exe pack %22%(NugetSamples.FullPath)%22 /Version $(Major).$(Minor).$(Build)-beta$(Revision) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' == 'true'"/>
+    <!-- Publish nuget packages. -->
+    <Message Text="Publishing nuget packages to NuGet.org..."/>
+    <ItemGroup>
+      <NugetPackages Remove="*"/>
+      <NugetPackages Include="$(NugetPackagesFolder)\TVACodeLibrary.*.$(Major).$(Minor).$(Build)*.nupkg" Exclude="$(NugetPackagesFolder)\TVACodeLibrary.*.$(Major).$(Minor).$(Build)*.symbols.nupkg"/>
+    </ItemGroup>
+    <Exec Command="NuGet.exe push %22%(NugetPackages.FullPath)%22 $(NugetApiKey)" Condition="'@(NugetPackages)' != '' And '$(NugetApiKey)' != ''"/>
   </Target>
 
 </Project>
