@@ -22,24 +22,137 @@
 //******************************************************************************************************
 
 using System;
-using Ciloci.Flee;
 using TimeSeriesFramework;
 using TVA;
 
 namespace DataQualityMonitoring
 {
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Represents the two states that an alarm can be in: raised or cleared.
+    /// </summary>
+    public enum AlarmState : int
+    {
+        /// <summary>
+        /// Indicates that an alarm is cleared.
+        /// </summary>
+        Cleared = 0,
+
+        /// <summary>
+        /// Indicates that an alarm has been raised.
+        /// </summary>
+        Raised = 1
+    }
+
+    /// <summary>
+    /// Represents the severity of alarms.
+    /// </summary>
+    public enum AlarmSeverity : int
+    {
+        /// <summary>
+        /// Indicates that an alarm is of no importance.
+        /// </summary>
+        None = 0,
+
+        /// <summary>
+        /// Indicates that an alarm is informative, but not dangerous.
+        /// </summary>
+        Information = 50,
+
+        /// <summary>
+        /// Indicates that an alarm is not very important.
+        /// </summary>
+        Low = 150,
+
+        /// <summary>
+        /// Indicates that an alarm is somewhat important.
+        /// </summary>
+        MediumLow = 300,
+
+        /// <summary>
+        /// Indicates that an alarm is moderately importance.
+        /// </summary>
+        Medium = 500,
+
+        /// <summary>
+        /// Indicates that an alarm is important.
+        /// </summary>
+        MediumHigh = 700,
+
+        /// <summary>
+        /// Indicates that an alarm is very important.
+        /// </summary>
+        High = 850,
+
+        /// <summary>
+        /// Indicates than an alarm signifies a dangerous situation.
+        /// </summary>
+        Critical = 950,
+
+        /// <summary>
+        /// Indicates that an alarm reports bad data.
+        /// </summary>
+        Error = 1000
+    }
+
+    /// <summary>
+    /// Represents the operation to be performed
+    /// when testing values from an incoming signal.
+    /// </summary>
+    public enum AlarmOperation : int
+    {
+        /// <summary>
+        /// Internal range test
+        /// </summary>
+        Equal = 1,
+
+        /// <summary>
+        /// External range test
+        /// </summary>
+        NotEqual = 2,
+
+        /// <summary>
+        /// Upper bound
+        /// </summary>
+        GreaterOrEqual = 11,
+
+        /// <summary>
+        /// Lower bound
+        /// </summary>
+        LessOrEqual = 21,
+
+        /// <summary>
+        /// Upper limit
+        /// </summary>
+        GreaterThan = 12,
+
+        /// <summary>
+        /// Lower limit
+        /// </summary>
+        LessThan = 22,
+
+        /// <summary>
+        /// Latched value
+        /// </summary>
+        Flatline = 3
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Represents an alarm that tests the values of
+    /// an incoming signal to determine the state of alarm.
+    /// </summary>
     public class Alarm
     {
         #region [ Members ]
 
         // Fields
-        private string m_expressionText;
-        private ExpressionContext m_expressionContext;
-        private IGenericExpression<bool> m_expression;
+        private Ticks m_lastNegative;
 
         private double m_lastValue;
-        private long m_lastChanged;
-        private long m_latestTimestamp;
+        private Ticks m_lastChanged;
 
         #endregion
 
@@ -50,31 +163,12 @@ namespace DataQualityMonitoring
         /// </summary>
         public Alarm()
         {
-            m_expressionContext = new ExpressionContext(this);
-            m_expressionContext.Imports.AddType(typeof(Math));
+            State = 0;
         }
 
         #endregion
 
         #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets the expression text which determines
-        /// the condition on which an alarm event occurs.
-        /// </summary>
-        public string ExpressionText
-        {
-            get
-            {
-                return m_expressionText;
-            }
-            set
-            {
-                m_expressionContext.Variables["value"] = 0.0;
-                m_expression = m_expressionContext.CompileGeneric<bool>(value);
-                m_expressionText = value;
-            }
-        }
         
         /// <summary>
         /// Gets or sets the identification number of the alarm.
@@ -87,43 +181,233 @@ namespace DataQualityMonitoring
         /// </summary>
         public Guid SignalID { get; set; }
 
+        /// <summary>
+        /// Gets or sets the description of the alarm.
+        /// </summary>
+        public string Description { get; set; }
+
+        /// <summary>
+        /// Gets or sets the severity of the alarm.
+        /// </summary>
+        public AlarmSeverity Severity { get; set; }
+
+        /// <summary>
+        /// Gets or sets the operation to be performed
+        /// when testing values from the incoming signal.
+        /// </summary>
+        public AlarmOperation Operation { get; set; }
+
+        /// <summary>
+        /// Gets or sets the amount of time that the
+        /// signal must be exhibiting alarming behavior
+        /// before the alarm is raised.
+        /// </summary>
+        public double Delay { get; set; }
+
+        /// <summary>
+        /// Gets or sets the value to be compared against
+        /// the signal to determine whether to raise the
+        /// alarm. This value is irrelevant for the
+        /// <see cref="AlarmOperation.Flatline"/> operation.
+        /// </summary>
+        public double? SetPoint { get; set; }
+
+        /// <summary>
+        /// Gets or sets a tolerance window around the
+        /// <see cref="SetPoint"/> to use when comparing
+        /// against the value of the signal. This value
+        /// is only relevant for the <see cref="AlarmOperation.Equal"/>
+        /// and <see cref="AlarmOperation.NotEqual"/> operations.
+        /// </summary>
+        /// <remarks>
+        /// <para>The equal and not equal operations are actually
+        /// internal and external range tests based on the setpoint
+        /// and the tolerance. The two tests are performed as follows.</para>
+        /// 
+        /// <list type="bullet">
+        /// <item>Equal: <c>(value &gt;= SetPoint - Tolerance) &amp;&amp; (value &lt;= SetPoint + Tolerance)</c></item>
+        /// <item>Not equal: <c>(value &lt; SetPoint - Tolerance) || (value &gt; SetPoint + Tolerance)</c></item>
+        /// </list>
+        /// </remarks>
+        public double? Tolerance { get; set; }
+
+        /// <summary>
+        /// Gets or sets the hysteresis used when clearing
+        /// alarms. This value is only relevant in greater
+        /// than (or equal) and less than (or equal) operations.
+        /// </summary>
+        /// <remarks>
+        /// <para>The hysteresis is an offset that provides padding between
+        /// the point at which the alarm is raised and the point at
+        /// which the alarm is cleared. For example, in the case of the
+        /// <see cref="AlarmOperation.GreaterOrEqual"/> operation:</para>
+        /// 
+        /// <list type="bullet">
+        /// <item>Raised: <c>value &gt;= SetPoint</c></item>
+        /// <item>Cleared: <c>value &lt; SetPoint - Hysteresis</c></item>
+        /// </list>
+        /// 
+        /// <para>The direction of the offset depends on whether the
+        /// operation is greater than (or equal) or less than (or equal).
+        /// The hysteresis must be greater than zero.</para>
+        /// </remarks>
+        public double? Hysteresis { get; set; }
+
+        /// <summary>
+        /// Gets or sets the state of the alarm (raised or cleared).
+        /// </summary>
+        public AlarmState State { get; set; }
+
+        /// <summary>
+        /// Gets or sets the most recent measurement
+        /// that caused the alarm to be raised.
+        /// </summary>
+        public IMeasurement Cause { get; set; }
+
         #endregion
 
         #region [ Methods ]
 
         /// <summary>
-        /// Tests the given measurement to determine
-        /// whether its value triggers an alarm event.
+        /// Tests the value of the given signal to determine
+        /// whether the alarm should be raised or cleared.
         /// </summary>
-        /// <param name="signal">The signal whose value is to be checked.</param>
-        /// <returns>True if the event is triggers; false otherwise.</returns>
-        public bool Condition(IMeasurement signal)
+        /// <param name="signal">The signal whose value is to be tested.</param>
+        /// <returns>true if the alarm's state changed; false otherwise</returns>
+        public bool Test(IMeasurement signal)
         {
-            long signalTimestamp = signal.Timestamp;
+            AlarmState previousState = State;
 
-            // Keep track of the last time the value changed
-            if (signal.Value != m_lastValue)
+            if (State == AlarmState.Raised && ClearsAlarm(signal))
+                State = AlarmState.Cleared;
+            else if (State == AlarmState.Cleared && RaisesAlarm(signal))
             {
-                m_lastValue = signal.Value;
-                m_lastChanged = signalTimestamp;
+                State = AlarmState.Raised;
+                Cause = signal;
             }
 
-            // Keep track of the latest timestamp
-            m_latestTimestamp = signalTimestamp;
-
-            // Set the value of the expression variable
-            m_expressionContext.Variables["value"] = signal.AdjustedValue;
-
-            // Evaluate the expression
-            return m_expression.Evaluate();
+            return State != previousState;
         }
 
-        // Determines whether the value has
-        // flatlined over the given time interval
-        private bool Flatlined(double seconds)
+        // Tests the given measurement to determine whether
+        // its value triggers an alarm raised event.
+        private bool RaisesAlarm(IMeasurement signal)
         {
-            long dist = Ticks.FromSeconds(seconds);
-            long diff = m_latestTimestamp - m_lastChanged;
+            if (Operation != AlarmOperation.Flatline)
+                return CheckRange(signal);
+            else
+                return CheckFlatline(signal);
+        }
+
+        // Tests the given measurement to determine whether
+        // its value indicates that the signal has been in
+        // the alarming range for the configured delay time.
+        private bool CheckRange(IMeasurement signal)
+        {
+            bool result = GetTestResult(signal);
+            Ticks dist;
+
+            if (!result)
+            {
+                // Keep track of the last time
+                // the signal was in range
+                m_lastNegative = signal.Timestamp;
+            }
+            else
+            {
+                // Get the amount of time since the
+                // last time the value was in range
+                dist = signal.Timestamp - m_lastNegative;
+
+                // If the amount of time is larger than
+                // the delay threshold, raise the alarm
+                if (dist >= Ticks.FromSeconds(Delay))
+                    return true;
+            }
+
+            return false;
+        }
+
+        // Tests the signal to determine whether its
+        // value is within the configured alarming range.
+        private bool GetTestResult(IMeasurement signal)
+        {
+            double value = signal.Value;
+
+            switch (Operation)
+            {
+                case AlarmOperation.Equal:
+                    return (value <= SetPoint + Tolerance) && (value >= SetPoint - Tolerance);
+
+                case AlarmOperation.NotEqual:
+                    return (value < SetPoint - Tolerance) || (value > SetPoint + Tolerance);
+
+                case AlarmOperation.GreaterOrEqual:
+                    return value >= SetPoint;
+
+                case AlarmOperation.LessOrEqual:
+                    return value <= SetPoint;
+
+                case AlarmOperation.GreaterThan:
+                    return value > SetPoint;
+
+                case AlarmOperation.LessThan:
+                    return value < SetPoint;
+            }
+
+            return false;
+        }
+
+        // Tests the given measurement to determine whether
+        // its value triggers an alarm cleared event.
+        private bool ClearsAlarm(IMeasurement signal)
+        {
+            if (Operation != AlarmOperation.Flatline)
+                return CheckRangeClear(signal);
+            else
+                return !CheckFlatline(signal);
+        }
+
+        // Tests the given measurement to determine whether its value
+        // indicates that the signal has left the alarming range.
+        private bool CheckRangeClear(IMeasurement signal)
+        {
+            double value = signal.Value;
+
+            switch (Operation)
+            {
+                case AlarmOperation.GreaterOrEqual:
+                    return (value < SetPoint - Hysteresis);
+
+                case AlarmOperation.LessOrEqual:
+                    return (value > SetPoint + Hysteresis);
+
+                case AlarmOperation.GreaterThan:
+                    return (value <= SetPoint - Hysteresis);
+
+                case AlarmOperation.LessThan:
+                    return (value >= SetPoint + Hysteresis);
+
+                default:
+                    return !GetTestResult(signal);
+            }
+        }
+
+        // Determines whether the given value has
+        // flatlined over the configured delay interval.
+        private bool CheckFlatline(IMeasurement signal)
+        {
+            long dist, diff;
+
+            if (signal.Value != m_lastValue)
+            {
+                m_lastChanged = signal.Timestamp;
+                m_lastValue = signal.Value;
+            }
+
+            dist = Ticks.FromSeconds(Delay);
+            diff = signal.Timestamp - m_lastChanged;
+
             return diff >= dist;
         }
 

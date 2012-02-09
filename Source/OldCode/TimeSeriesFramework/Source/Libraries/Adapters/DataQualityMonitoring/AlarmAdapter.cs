@@ -21,12 +21,14 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Threading;
+using DataQualityMonitoring.Services;
 using TimeSeriesFramework;
 using TimeSeriesFramework.Adapters;
 using TVA;
@@ -44,11 +46,16 @@ namespace DataQualityMonitoring
 
         // Fields
         private List<Alarm> m_alarms;
+        private AlarmService m_alarmService;
+
         private ConcurrentQueue<IMeasurement> m_measurementQueue;
         private Thread m_processThread;
         private Semaphore m_processSemaphore;
+
         private long m_eventCount;
         private bool m_supportsTemporalProcessing;
+
+        private bool m_disposed;
 
         #endregion
 
@@ -105,6 +112,12 @@ namespace DataQualityMonitoring
 
             // Set input measurement keys for measurement routing
             InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, filterExpression);
+
+            // Set up alarm service
+            m_alarmService = new AlarmService(this);
+            m_alarmService.SettingsCategory = base.Name + m_alarmService.SettingsCategory;
+            m_alarmService.ServiceProcessException += AlarmService_ServiceProcessException;
+            m_alarmService.Initialize();
         }
 
         /// <summary>
@@ -143,6 +156,33 @@ namespace DataQualityMonitoring
         }
 
         /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="AlarmAdapter"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        if (m_alarmService != null)
+                        {
+                            m_alarmService.ServiceProcessException -= AlarmService_ServiceProcessException;
+                            m_alarmService.Dispose();
+                        }
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
+                }
+            }
+        }
+
+        /// <summary>
         /// Queues a collection of measurements for processing.
         /// </summary>
         /// <param name="measurements">Measurements to queue for processing.</param>
@@ -167,37 +207,65 @@ namespace DataQualityMonitoring
             return string.Format("{0} events processed since last start", m_eventCount).CenterText(maxLength);
         }
 
+        /// <summary>
+        /// Gets a collection containing all the raised alarms in the system.
+        /// </summary>
+        /// <returns>A collection containing all the raised alarms.</returns>
+        public ICollection<Alarm> GetRaisedAlarms()
+        {
+            lock (m_alarms)
+            {
+                return m_alarms.Where(alarm => alarm.State == AlarmState.Raised)
+                    .ToList();
+            }
+        }
+
         // Creates an alarm using data defined in the database.
         private Alarm CreateAlarm(DataRow row)
         {
             return new Alarm()
             {
-                ExpressionText = row["ExpressionText"].ToString(),
-                ID = System.Guid.Parse(row.Field<object>("ID").ToString()),
-                SignalID = System.Guid.Parse(row.Field<object>("SignalID").ToString())
+                ID = Guid.Parse(row.Field<object>("ID").ToString()),
+                SignalID = Guid.Parse(row.Field<object>("SignalID").ToString()),
+                Description = row.Field<object>("Description").ToString(),
+                Severity = row.ConvertField<AlarmSeverity>("Severity"),
+                Operation = row.ConvertField<AlarmOperation>("Operation"),
+                Delay = row.ConvertField<double>("Delay"),
+                SetPoint = row.ConvertNullableField<double>("SetPoint"),
+                Tolerance = row.ConvertNullableField<double>("Tolerance"),
+                Hysteresis = row.ConvertNullableField<double>("Hysteresis")
             };
         }
 
         // Processes measurements in the queue.
         private void ProcessMeasurements()
         {
-            IMeasurement measurement, clone;
-            IEnumerable<Alarm> events;
+            IMeasurement measurement, alarmEvent;
+            List<Alarm> events;
 
             while (Enabled)
             {
                 if (m_processSemaphore.WaitOne() && m_measurementQueue.TryDequeue(out measurement))
                 {
-                    // Get alarms that triggered events
-                    events = m_alarms.Where(a => a.SignalID == measurement.ID)
-                        .Where(a => a.Condition(measurement));
+                    lock (m_alarms)
+                    {
+                        // Get alarms that triggered events
+                        events = m_alarms.Where(a => a.SignalID == measurement.ID)
+                            .Where(a => a.Test(measurement))
+                            .ToList();
+                    }
 
                     // Create event measurements and send them into the system
                     foreach (Alarm a in events)
                     {
-                        clone = Measurement.Clone(measurement);
-                        clone.ID = a.ID;
-                        OnNewMeasurement(clone);
+                        alarmEvent = new Measurement()
+                        {
+                            ID = a.ID,
+                            Timestamp = measurement.Timestamp,
+                            Value = (int)a.State
+                        };
+
+                        OnNewMeasurement(alarmEvent);
                         m_eventCount++;
                     }
                 }
@@ -209,6 +277,12 @@ namespace DataQualityMonitoring
         private void OnNewMeasurement(IMeasurement measurement)
         {
             OnNewMeasurements(new IMeasurement[] { measurement });
+        }
+
+        // Processes excpetions thrown by the alarm service.
+        private void AlarmService_ServiceProcessException(object sender, EventArgs<Exception> e)
+        {
+            OnProcessException(e.Argument);
         }
 
         #endregion
