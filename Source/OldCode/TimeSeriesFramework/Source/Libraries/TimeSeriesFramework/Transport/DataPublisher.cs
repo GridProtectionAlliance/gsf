@@ -652,7 +652,7 @@ namespace TimeSeriesFramework.Transport
             try
             {
                 // Lookup explicitly defined individual measurements
-                DataRow[] explicitMeasurement = DataSource.Tables["SubscriberMeasurements"].Select(string.Format("Subscriber='{0}' AND SignalID='{1}'", subscriberID, signalID));
+                DataRow[] explicitMeasurement = DataSource.Tables["SubscriberMeasurements"].Select(string.Format("SubscriberID='{0}' AND SignalID='{1}'", subscriberID, signalID));
 
                 if (explicitMeasurement.Length > 0)
                     return explicitMeasurement[0]["Allowed"].ToNonNullString("0").ParseBoolean();
@@ -660,7 +660,7 @@ namespace TimeSeriesFramework.Transport
                 // Lookup implicitly defined group based measurements
                 DataRow[] implicitMeasurements;
 
-                foreach (DataRow subscriberMeasurementGroup in DataSource.Tables["SubscriberMeasurementGroups"].Select(string.Format("Subscriber='{0}'", subscriberID)))
+                foreach (DataRow subscriberMeasurementGroup in DataSource.Tables["SubscriberMeasurementGroups"].Select(string.Format("SubscriberID='{0}'", subscriberID)))
                 {
                     implicitMeasurements = DataSource.Tables["MeasurementGroupMeasurements"].Select(string.Format("SignalID='{0}' AND MeasurementGroupID={1}", signalID, int.Parse(subscriberMeasurementGroup["MeasurementGroupID"].ToNonNullString("0"))));
 
@@ -958,12 +958,26 @@ namespace TimeSeriesFramework.Transport
                 // Subscriber connection is first referenced by its IP
                 foreach (DataRow row in DataSource.Tables["Subscribers"].Select("Enabled <> 0"))
                 {
-                    if (row["ValidIPAddresses"].ToNonNullString().Split(';', ',').Where(ip => !string.IsNullOrWhiteSpace(ip)).Select(ip => IPAddress.Parse(ip.Trim())).Contains(connection.IPAddress))
+                    IEnumerable<IPAddress> ipAddresses = row["ValidIPAddresses"].ToNonNullString().Split(';', ',').Where(ip => !string.IsNullOrWhiteSpace(ip)).Select(ip => IPAddress.Parse(ip.Trim()));
+                    foreach (IPAddress ipAddress in ipAddresses)
                     {
-                        // Found registered subscriber record for the connected IP
-                        subscriber = row;
-                        break;
+                        if (connection.IPAddress.ToString().Contains(ipAddress.ToString()))
+                        {
+                            subscriber = row;
+                            break;
+                        }
+
                     }
+
+                    if (subscriber != null)
+                        break;
+
+                    //if (row["ValidIPAddresses"].ToNonNullString().Split(';', ',').Where(ip => !string.IsNullOrWhiteSpace(ip)).Select(ip => IPAddress.Parse(ip.Trim())).Contains(connection.IPAddress))
+                    //{
+                    //    // Found registered subscriber record for the connected IP
+                    //    subscriber = row;
+                    //    break;
+                    //}
                 }
 
                 if (subscriber == null)
@@ -1216,8 +1230,8 @@ namespace TimeSeriesFramework.Transport
                         SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, Serialization.Serialize(subscription.SignalIndexCache, TVA.SerializationFormat.Binary));
 
                         // Send new or updated cipher keys
-                        if (connection.Authenticated)
-                            connection.RotateCipherKeys();
+                        //if (connection.Authenticated)
+                        //    connection.RotateCipherKeys();
 
                         // Send success response
                         if (subscription.TemporalConstraintIsDefined())

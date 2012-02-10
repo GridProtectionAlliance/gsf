@@ -193,11 +193,15 @@ namespace TimeSeriesFramework.Transport
             {
                 lock (this)
                 {
-                    base.InputMeasurementKeys = value;
-
                     // Update signal index cache unless "detaching" from real-time
                     if (value != null && !(value.Length == 1 && value[0] == MeasurementKey.Undefined))
                         m_parent.UpdateSignalIndexCache(m_clientID, m_signalIndexCache, value);
+
+                    if (m_signalIndexCache != null)
+                        value = AdapterBase.ParseInputMeasurementKeys(DataSource, string.Join("; ", m_signalIndexCache.AuthorizedKeys));
+
+                    base.InputMeasurementKeys = value;
+
                 }
             }
         }
