@@ -114,6 +114,7 @@
     <Compile Include="Converters\StringToStatusColorConverter.cs" />
     <Compile Include="DataModelBase.cs" />
     <Compile Include="DataModels\Adapter.cs" />
+    <Compile Include="DataModels\Alarm.cs" />
     <Compile Include="DataModels\ApplicationRole.cs" />
     <Compile Include="DataModels\Company.cs" />
     <Compile Include="DataModels\ErrorLog.cs" />

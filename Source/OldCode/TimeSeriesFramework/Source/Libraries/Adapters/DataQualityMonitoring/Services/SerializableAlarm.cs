@@ -24,6 +24,7 @@
 using System;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
+using TimeSeriesFramework;
 
 namespace DataQualityMonitoring.Services
 {
@@ -33,7 +34,6 @@ namespace DataQualityMonitoring.Services
     [XmlType("Alarm"), DataContract(Name = "Alarm", Namespace = "")]
     public class SerializableAlarm
     {
-
         #region [ Constructors ]
 
         /// <summary>
@@ -42,9 +42,6 @@ namespace DataQualityMonitoring.Services
         public SerializableAlarm()
         {
             Description = string.Empty;
-            SetPoint = default(double);
-            Tolerance = default(double);
-            Hysteresis = default(double);
         }
 
         /// <summary>
@@ -53,18 +50,19 @@ namespace DataQualityMonitoring.Services
         /// <param name="sourceAlarm"><see cref="Alarm"/> from which <see cref="SerializableAlarm"/> is to be initialized.</param>
         public SerializableAlarm(Alarm sourceAlarm)
         {
-            ID = sourceAlarm.ID.ToString();
-            SignalID = sourceAlarm.SignalID.ToString();
-            Description = sourceAlarm.Description;
+            ID = sourceAlarm.ID;
+            TagName = sourceAlarm.TagName;
             Severity = sourceAlarm.Severity;
-            Operation = sourceAlarm.Operation;
-            Delay = sourceAlarm.Delay;
-            SetPoint = sourceAlarm.SetPoint ?? default(double);
-            Tolerance = sourceAlarm.Tolerance ?? default(double);
-            Hysteresis = sourceAlarm.Hysteresis ?? default(double);
             State = sourceAlarm.State;
+            SignalID = sourceAlarm.SignalID.ToString();
             TimeRaised = ((DateTime)sourceAlarm.Cause.Timestamp).ToString("yyyy-MM-dd HH:mm:ss.fff");
             ValueAtTimeRaised = sourceAlarm.Cause.AdjustedValue;
+            Description = sourceAlarm.Description;
+            Operation = sourceAlarm.Operation;
+            SetPoint = sourceAlarm.SetPoint ?? default(double);
+            Tolerance = sourceAlarm.Tolerance ?? default(double);
+            Delay = sourceAlarm.Delay ?? default(double);
+            Hysteresis = sourceAlarm.Hysteresis ?? default(double);
         }
 
         #endregion
@@ -75,84 +73,89 @@ namespace DataQualityMonitoring.Services
         /// Gets or sets the identification number of the alarm.
         /// </summary>
         [XmlAttribute(), DataMember(Order = 0)]
-        public string ID { get; set; }
+        public int ID { get; set; }
+
+        /// <summary>
+        /// Gets or sets the tag name of the alarm.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 1)]
+        public string TagName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the severity of the alarm.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 2)]
+        public AlarmSeverity Severity { get; set; }
+
+        /// <summary>
+        /// Gets or sets the state of the alarm (raised or cleared).
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 3)]
+        public AlarmState State { get; set; }
 
         /// <summary>
         /// Gets or sets the identification number of the
         /// signal whose value is monitored by the alarm.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 1)]
-        public string SignalID { get; set; }
-
-        /// <summary>
-        /// Gets or sets the description of the alarm.
-        /// </summary>
-        [XmlAttribute(), DataMember(Order = 2)]
-        public string Description { get; set; }
-
-        /// <summary>
-        /// Gets or sets the severity of the alarm.
-        /// </summary>
-        [XmlAttribute(), DataMember(Order = 3)]
-        public AlarmSeverity Severity { get; set; }
-
-        /// <summary>
-        /// Gets or sets the operation to be performed
-        /// when testing values from the incoming signal.
-        /// </summary>
         [XmlAttribute(), DataMember(Order = 4)]
-        public AlarmOperation Operation { get; set; }
-
-        /// <summary>
-        /// Gets or sets the amount of time that the
-        /// signal must be exhibiting alarming behavior
-        /// before the alarm is raised.
-        /// </summary>
-        [XmlAttribute(), DataMember(Order = 5)]
-        public double Delay { get; set; }
-
-        /// <summary>
-        /// Gets or sets the value to be compared against
-        /// the signal to determine whether to raise the
-        /// alarm.
-        /// </summary>
-        [XmlAttribute(), DataMember(Order = 6)]
-        public double? SetPoint { get; set; }
-
-        /// <summary>
-        /// Gets or sets a tolerance window around the
-        /// <see cref="SetPoint"/> to use when comparing
-        /// against the value of the signal.
-        /// </summary>
-        [XmlAttribute(), DataMember(Order = 7)]
-        public double? Tolerance { get; set; }
-
-        /// <summary>
-        /// Gets or sets the hysteresis used when clearing alarms.
-        /// </summary>
-        [XmlAttribute(), DataMember(Order = 8)]
-        public double? Hysteresis { get; set; }
-
-        /// <summary>
-        /// Gets or sets the state of the alarm (raised or cleared).
-        /// </summary>
-        [XmlAttribute(), DataMember(Order = 9)]
-        public AlarmState State { get; set; }
+        public string SignalID { get; set; }
 
         /// <summary>
         /// Gets or sets the time at which the alarm was raised.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 10)]
+        [XmlAttribute(), DataMember(Order = 5)]
         public string TimeRaised { get; set; }
 
         /// <summary>
         /// Gets or sets the value of the signal
         /// at the time that the alarm was raised.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 11)]
+        [XmlAttribute(), DataMember(Order = 6)]
         public double ValueAtTimeRaised { get; set; }
 
+        /// <summary>
+        /// Gets or sets the description of the alarm.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 7)]
+        public string Description { get; set; }
+
+        /// <summary>
+        /// Gets or sets the operation to be performed
+        /// when testing values from the incoming signal.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 8)]
+        public AlarmOperation Operation { get; set; }
+
+        /// <summary>
+        /// Gets or sets the value to be compared against
+        /// the signal to determine whether to raise the
+        /// alarm.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 9)]
+        public double SetPoint { get; set; }
+
+        /// <summary>
+        /// Gets or sets a tolerance window around the
+        /// <see cref="SetPoint"/> to use when comparing
+        /// against the value of the signal.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 10)]
+        public double Tolerance { get; set; }
+
+        /// <summary>
+        /// Gets or sets the amount of time that the
+        /// signal must be exhibiting alarming behavior
+        /// before the alarm is raised.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 11)]
+        public double Delay { get; set; }
+
+        /// <summary>
+        /// Gets or sets the hysteresis used when clearing alarms.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 12)]
+        public double Hysteresis { get; set; }
+
         #endregion
-        
     }
 }

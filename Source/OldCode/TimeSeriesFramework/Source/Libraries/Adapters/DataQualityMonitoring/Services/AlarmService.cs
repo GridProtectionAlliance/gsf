@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
+using TimeSeriesFramework;
 using TVA.ServiceModel;
 
 namespace DataQualityMonitoring.Services
@@ -49,8 +50,12 @@ namespace DataQualityMonitoring.Services
         /// </summary>
         /// <param name="adapter">The adapter whose alarms are served by this service.</param>
         public AlarmService(AlarmAdapter adapter)
+            : base()
         {
             AlarmAdapter = adapter;
+            PublishMetadata = true;
+            PersistSettings = true;
+            Endpoints = "http.rest://localhost:6000/alarmservices";
         }
 
         #endregion
@@ -135,7 +140,7 @@ namespace DataQualityMonitoring.Services
             foreach (Guid signal in signals)
             {
                 filteredAlarms = alarms.Where(a => a.SignalID == signal);
-                highestSeverity = filteredAlarms.Select(a => a.Severity).Distinct().Max();
+                highestSeverity = filteredAlarms.Select(a => a.Severity).Max();
                 highestSeverityAlarms = highestSeverityAlarms.Concat(filteredAlarms.Where(a => a.Severity == highestSeverity));
             }
 

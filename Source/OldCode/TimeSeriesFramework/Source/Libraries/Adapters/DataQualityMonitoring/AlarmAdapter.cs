@@ -100,7 +100,7 @@ namespace DataQualityMonitoring
 
             // Create alarms using definitions from the database
             m_alarms = DataSource.Tables["Alarms"].Rows.Cast<DataRow>()
-                .Where(row => row.ConvertField<uint>("AdapterID") == ID)
+                .Where(row => row.ConvertField<bool>("Enabled"))
                 .Select(row => CreateAlarm(row))
                 .ToList();
 
@@ -223,16 +223,20 @@ namespace DataQualityMonitoring
         // Creates an alarm using data defined in the database.
         private Alarm CreateAlarm(DataRow row)
         {
+            object associatedMeasurementId = row.Field<object>("AssociatedMeasurementID");
+
             return new Alarm()
             {
-                ID = Guid.Parse(row.Field<object>("ID").ToString()),
+                ID = row.ConvertField<int>("ID"),
+                TagName = row.Field<object>("TagName").ToString(),
                 SignalID = Guid.Parse(row.Field<object>("SignalID").ToString()),
+                AssociatedMeasurementID = ((object)associatedMeasurementId != null) ? Guid.Parse(associatedMeasurementId.ToString()) : (Guid?)null,
                 Description = row.Field<object>("Description").ToString(),
                 Severity = row.ConvertField<AlarmSeverity>("Severity"),
                 Operation = row.ConvertField<AlarmOperation>("Operation"),
-                Delay = row.ConvertField<double>("Delay"),
                 SetPoint = row.ConvertNullableField<double>("SetPoint"),
                 Tolerance = row.ConvertNullableField<double>("Tolerance"),
+                Delay = row.ConvertNullableField<double>("Delay"),
                 Hysteresis = row.ConvertNullableField<double>("Hysteresis")
             };
         }
@@ -256,14 +260,16 @@ namespace DataQualityMonitoring
                     }
 
                     // Create event measurements and send them into the system
-                    foreach (Alarm a in events)
+                    foreach (Alarm alarm in events)
                     {
                         alarmEvent = new Measurement()
                         {
-                            ID = a.ID,
                             Timestamp = measurement.Timestamp,
-                            Value = (int)a.State
+                            Value = (int)alarm.State
                         };
+
+                        if ((object)alarm.AssociatedMeasurementID != null)
+                            alarmEvent.ID = alarm.AssociatedMeasurementID.Value;
 
                         OnNewMeasurement(alarmEvent);
                         m_eventCount++;

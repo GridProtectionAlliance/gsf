@@ -25,11 +25,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
+using TimeSeriesFramework;
 
 namespace DataQualityMonitoring.Services
 {
     /// <summary>
-    /// Represents a container for <see cref="SerializableFlatlinedMeasurement"/>s that can be serialized using <see cref="XmlSerializer"/> or <see cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>.
+    /// Represents a container for <see cref="SerializableAlarm"/>s that can be serialized using <see cref="XmlSerializer"/> or <see cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>.
     /// </summary>
     [XmlRoot("RaisedAlarms"), DataContract(Name = "RaisedAlarms", Namespace = "")]
     public class SerializableAlarmCollection

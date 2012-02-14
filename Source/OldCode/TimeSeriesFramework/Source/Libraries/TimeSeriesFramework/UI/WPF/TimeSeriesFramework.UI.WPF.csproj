@@ -74,6 +74,7 @@
     <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
     <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
   </PropertyGroup>
+  <PropertyGroup />
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -135,6 +136,9 @@
     <Compile Include="UserControls\AdapterUserControl.xaml.cs">
       <DependentUpon>AdapterUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\AlarmUserControl.xaml.cs">
+      <DependentUpon>AlarmUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\CompanyUserControl.xaml.cs">
       <DependentUpon>CompanyUserControl.xaml</DependentUpon>
     </Compile>
@@ -188,6 +192,7 @@
     </Compile>
     <Compile Include="ViewModelBase.cs" />
     <Compile Include="ViewModels\AdapterConnectionStringParameter.cs" />
+    <Compile Include="ViewModels\Alarms.cs" />
     <Compile Include="ViewModels\ApplicationRoles.cs" />
     <Compile Include="ViewModels\Adapters.cs" />
     <Compile Include="ViewModels\Companies.cs" />
@@ -225,6 +230,10 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="UserControls\AdapterUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\AlarmUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

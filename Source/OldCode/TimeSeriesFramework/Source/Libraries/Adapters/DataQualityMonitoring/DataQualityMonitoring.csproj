@@ -90,7 +90,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Alarm.cs" />
     <Compile Include="AlarmAdapter.cs" />
     <Compile Include="FlatlineTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

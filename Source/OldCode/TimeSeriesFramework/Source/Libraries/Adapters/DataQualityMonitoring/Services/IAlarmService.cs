@@ -76,6 +76,5 @@ namespace DataQualityMonitoring.Services
         SerializableAlarmCollection ReadHighestSeverityAlarmsAsJson();
 
         #endregion
-        
     }
 }

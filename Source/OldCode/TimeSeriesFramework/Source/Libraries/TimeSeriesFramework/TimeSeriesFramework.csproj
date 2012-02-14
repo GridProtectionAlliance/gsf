@@ -97,6 +97,7 @@
     <Compile Include="Adapters\ConnectionStringParameterAttribute.cs" />
     <Compile Include="Adapters\IaonSession.cs" />
     <Compile Include="Adapters\RoutingTables.cs" />
+    <Compile Include="Alarm.cs" />
     <Compile Include="ConcentratorBase.cs" />
     <Compile Include="Frame.cs" />
     <Compile Include="FrameQueue.cs" />
@@ -127,6 +128,7 @@
     <Compile Include="Adapters\NamespaceDoc.cs" />
     <Compile Include="Adapters\OutputAdapterBase.cs" />
     <Compile Include="Adapters\OutputAdapterCollection.cs" />
+    <Compile Include="TimeSeriesStartupOperations.cs" />
     <Compile Include="Transport\ClientConnection.cs" />
     <Compile Include="Transport\Common.cs" />
     <Compile Include="Transport\DataPublisher.cs" />

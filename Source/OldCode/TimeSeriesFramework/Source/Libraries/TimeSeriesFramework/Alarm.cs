@@ -18,14 +18,15 @@
 //  ----------------------------------------------------------------------------------------------------
 //  01/31/2012 - Stephen C. Wills
 //       Generated original version of source code.
+//  02/10/2012 - Stephen C. Wills
+//       Moved to TimeSeriesFramework project.
 //
 //******************************************************************************************************
 
 using System;
-using TimeSeriesFramework;
 using TVA;
 
-namespace DataQualityMonitoring
+namespace TimeSeriesFramework
 {
     #region [ Enumerations ]
 
@@ -173,13 +174,24 @@ namespace DataQualityMonitoring
         /// <summary>
         /// Gets or sets the identification number of the alarm.
         /// </summary>
-        public Guid ID { get; set; }
+        public int ID { get; set; }
+
+        /// <summary>
+        /// Gets or sets the tag name of the alarm.
+        /// </summary>
+        public string TagName { get; set; }
 
         /// <summary>
         /// Gets or sets the identification number of the
         /// signal whose value is monitored by the alarm.
         /// </summary>
         public Guid SignalID { get; set; }
+
+        /// <summary>
+        /// Gets or sets the identification number of
+        /// the measurements generated for alarm events.
+        /// </summary>
+        public Guid? AssociatedMeasurementID { get; set; }
 
         /// <summary>
         /// Gets or sets the description of the alarm.
@@ -196,13 +208,6 @@ namespace DataQualityMonitoring
         /// when testing values from the incoming signal.
         /// </summary>
         public AlarmOperation Operation { get; set; }
-
-        /// <summary>
-        /// Gets or sets the amount of time that the
-        /// signal must be exhibiting alarming behavior
-        /// before the alarm is raised.
-        /// </summary>
-        public double Delay { get; set; }
 
         /// <summary>
         /// Gets or sets the value to be compared against
@@ -230,6 +235,13 @@ namespace DataQualityMonitoring
         /// </list>
         /// </remarks>
         public double? Tolerance { get; set; }
+
+        /// <summary>
+        /// Gets or sets the amount of time that the
+        /// signal must be exhibiting alarming behavior
+        /// before the alarm is raised.
+        /// </summary>
+        public double? Delay { get; set; }
 
         /// <summary>
         /// Gets or sets the hysteresis used when clearing
@@ -321,7 +333,7 @@ namespace DataQualityMonitoring
 
                 // If the amount of time is larger than
                 // the delay threshold, raise the alarm
-                if (dist >= Ticks.FromSeconds(Delay))
+                if (dist >= Ticks.FromSeconds(Delay.Value))
                     return true;
             }
 
@@ -405,7 +417,7 @@ namespace DataQualityMonitoring
                 m_lastValue = signal.Value;
             }
 
-            dist = Ticks.FromSeconds(Delay);
+            dist = Ticks.FromSeconds(Delay.Value);
             diff = signal.Timestamp - m_lastChanged;
 
             return diff >= dist;
