@@ -73,7 +73,6 @@ namespace TimeSeriesFramework.UI.ViewModels
         public VendorDevices(int itemsPerPage, bool autoSave = true)
             : base(itemsPerPage, autoSave)
         {
-            m_vendorLookupList = Vendor.GetLookupList(null);
         }
 
         #endregion
@@ -96,6 +95,15 @@ namespace TimeSeriesFramework.UI.ViewModels
         public override string GetCurrentItemName()
         {
             return CurrentItem.Name;
+        }
+
+        /// <summary>
+        /// Initialization to be done before the initial call to <see cref="PagedViewModelBase{T1,T2}.Load"/>.
+        /// </summary>
+        public override void Initialize()
+        {
+            base.Initialize();
+            m_vendorLookupList = Vendor.GetLookupList(null);
         }
 
         #endregion

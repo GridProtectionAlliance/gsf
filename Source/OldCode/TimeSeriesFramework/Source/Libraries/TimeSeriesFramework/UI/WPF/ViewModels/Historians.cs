@@ -87,7 +87,7 @@ namespace TimeSeriesFramework.UI.ViewModels
             get
             {
                 if (m_initializeCommand == null)
-                    m_initializeCommand = new RelayCommand(Initialize, () => CanSave);
+                    m_initializeCommand = new RelayCommand(InitializeHistorian, () => CanSave);
 
                 return m_initializeCommand;
             }
@@ -105,7 +105,6 @@ namespace TimeSeriesFramework.UI.ViewModels
         public Historians(int itemsPerPage, bool autoSave = true)
             : base(itemsPerPage, autoSave)
         {
-            m_nodeLookupList = Node.GetLookupList(null);
         }
 
         #endregion
@@ -140,6 +139,15 @@ namespace TimeSeriesFramework.UI.ViewModels
                 CurrentItem.NodeID = m_nodeLookupList.First().Key;
         }
 
+        /// <summary>
+        /// Initialization to be done before the initial call to <see cref="PagedViewModelBase{T1,T2}.Load"/>.
+        /// </summary>
+        public override void Initialize()
+        {
+            base.Initialize();
+            m_nodeLookupList = Node.GetLookupList(null);
+        }
+
         protected override void OnPropertyChanged(string propertyName)
         {
             base.OnPropertyChanged(propertyName);
@@ -153,7 +161,7 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
-        private void Initialize()
+        private void InitializeHistorian()
         {
             try
             {

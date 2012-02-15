@@ -202,7 +202,7 @@ namespace TimeSeriesFramework.UI.ViewModels
             get
             {
                 if (m_initializeCommand == null)
-                    m_initializeCommand = new RelayCommand(Initialize, () => CanSave);
+                    m_initializeCommand = new RelayCommand(InitializeAdapter, () => CanSave);
 
                 return m_initializeCommand;
             }
@@ -437,7 +437,7 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
-        private void Initialize()
+        private void InitializeAdapter()
         {
             try
             {

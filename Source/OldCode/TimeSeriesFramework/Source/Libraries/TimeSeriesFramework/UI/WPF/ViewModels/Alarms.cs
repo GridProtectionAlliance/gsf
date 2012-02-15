@@ -40,7 +40,6 @@ namespace TimeSeriesFramework.UI.ViewModels
         // Fields
         private Dictionary<Guid, string> m_nodeLookupList;
         private Dictionary<Guid, string> m_measurementLookupList;
-        private Dictionary<Guid, string> m_optionalMeasurementLookupList;
         private Dictionary<int, string> m_operationList;
         private Dictionary<int, string> m_severityList;
 
@@ -54,15 +53,8 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// <param name="itemsPerPage">Integer value to determine number of items per page.</param>
         /// <param name="autoSave">Boolean value to determine is user changes should be saved automatically.</param>
         public Alarms(int itemsPerPage, bool autoSave = true)
-            : base(0, autoSave)
+            : base(itemsPerPage, autoSave)
         {
-            m_nodeLookupList = DataModels.Node.GetLookupList(null);
-            m_measurementLookupList = DataModels.Measurement.GetLookupList(null);
-            m_optionalMeasurementLookupList = DataModels.Measurement.GetLookupList(null, true);
-            m_operationList = CreateOperationList();
-            m_severityList = CreateSeverityList();
-            ItemsPerPage = itemsPerPage;
-            Load();
         }
 
         #endregion
@@ -103,17 +95,6 @@ namespace TimeSeriesFramework.UI.ViewModels
         }
 
         /// <summary>
-        /// Gets the list of measurements in the system with an additional default value.
-        /// </summary>
-        public Dictionary<Guid, string> OptionalMeasurementLookupList
-        {
-            get
-            {
-                return m_optionalMeasurementLookupList;
-            }
-        }
-
-        /// <summary>
         /// Gets a list of operations that can be performed to trigger an alarm.
         /// </summary>
         public Dictionary<int, string> OperationList
@@ -138,6 +119,19 @@ namespace TimeSeriesFramework.UI.ViewModels
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Initialization to be done before the initial call to <see cref="Load"/>.
+        /// </summary>
+        public override void Initialize()
+        {
+            base.Initialize();
+
+            m_nodeLookupList = DataModels.Node.GetLookupList(null);
+            m_measurementLookupList = DataModels.Measurement.GetLookupList(null);
+            m_operationList = CreateOperationList();
+            m_severityList = CreateSeverityList();
+        }
 
         /// <summary>
         /// Loads collection of <see cref="DataModels.Alarm"/> defined in the database.

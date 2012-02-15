@@ -112,10 +112,11 @@ namespace TimeSeriesFramework.UI
         {
             m_itemsPerPage = itemsPerPage;
             m_autoSave = autoSave;
-            if (itemsPerPage > 0)   // i.e. User wants to display list along with input form so we call Load() method.
+
+            Initialize();
+
+            if (itemsPerPage > 0)
                 Load();
-            else                    // otherwise, user does not want to display list and just dealing with form alone.
-                ItemsSource = null;
 
             m_timer = new DispatcherTimer();
             m_timer.Interval = TimeSpan.FromSeconds(5);
@@ -612,6 +613,17 @@ namespace TimeSeriesFramework.UI
         }
 
         /// <summary>
+        /// Initialization to be done before the initial call to <see cref="Load"/>.
+        /// </summary>
+        public virtual void Initialize()
+        {
+            PageCount = 0;
+            CurrentPage = new ObservableCollection<TDataModel>();
+            CurrentItem = new TDataModel();
+            CurrentPageNumber = 0;
+        }
+
+        /// <summary>
         /// Loads the records for the associated <see cref="IDataModel"/>.
         /// </summary>
         public virtual void Load()
@@ -930,8 +942,8 @@ namespace TimeSeriesFramework.UI
             {
                 PageCount = 0;
                 CurrentPage = new ObservableCollection<TDataModel>();
-                CurrentItem = new TDataModel();
                 CurrentPageNumber = 0;
+                Clear();
             }
         }
 

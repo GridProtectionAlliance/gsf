@@ -70,7 +70,6 @@ namespace TimeSeriesFramework.UI.ViewModels
         public Nodes(int itemsPerPage, bool autoSave = true)
             : base(itemsPerPage, autoSave)
         {
-            m_companyLookupList = Company.GetLookupList(null, true);
         }
 
         #endregion
@@ -93,6 +92,15 @@ namespace TimeSeriesFramework.UI.ViewModels
         public override string GetCurrentItemName()
         {
             return CurrentItem.Name;
+        }
+
+        /// <summary>
+        /// Initialization to be done before the initial call to <see cref="PagedViewModelBase{T1,T2}.Load"/>.
+        /// </summary>
+        public override void Initialize()
+        {
+            base.Initialize();
+            m_companyLookupList = Company.GetLookupList(null, true);
         }
 
         /// <summary>
