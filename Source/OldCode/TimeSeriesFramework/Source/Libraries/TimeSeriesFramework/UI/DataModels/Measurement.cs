@@ -550,6 +550,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="deviceID">ID of the Device to filter data.</param>
         /// <param name="filterByInternalFlag">boolean flag to indicate if only non internal data requested.</param>
+        /// <param name="includeInternal">boolean flag to indicate if internal measurements are included.</param>
         /// <returns>Collection of <see cref="Measurement"/>.</returns>
         public static ObservableCollection<Measurement> Load(AdoDataConnection database, int deviceID = 0, bool filterByInternalFlag = false, bool includeInternal = false)
         {
