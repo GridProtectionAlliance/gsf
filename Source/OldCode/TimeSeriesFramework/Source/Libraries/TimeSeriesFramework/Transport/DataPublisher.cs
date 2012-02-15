@@ -265,7 +265,6 @@ namespace TimeSeriesFramework.Transport
         private IAdapterCollection m_parent;
         private string m_metadataTables;
         private bool m_requireAuthentication;
-        private Guid m_nodeID;
         private bool m_disposed;
 
         #endregion
@@ -293,7 +292,7 @@ namespace TimeSeriesFramework.Transport
             m_clientConnections = new ConcurrentDictionary<Guid, ClientConnection>();
             m_clientPublicationChannels = new ConcurrentDictionary<Guid, IServer>();
             m_signalIDCache = new ConcurrentDictionary<MeasurementKey, Guid>();
-            m_metadataTables = "DeviceDetail WHERE OriginalSource IS NULL AND IsConcentrator <> 1 AND NodeID = {1};MeasurementDetail WHERE Internal <> 0 AND NodeID = {1}";
+            m_metadataTables = "DeviceDetail WHERE OriginalSource IS NULL AND IsConcentrator <> 1;MeasurementDetail WHERE Internal <> 0";
             m_routingTables = new RoutingTables()
             {
                 ActionAdapters = this
@@ -1307,15 +1306,21 @@ namespace TimeSeriesFramework.Transport
                 DataTable table;
 
                 // Initialize active node ID
-                if (m_nodeID == Guid.Empty)
-                    m_nodeID = Guid.Parse(dbConnection.ExecuteScalar(string.Format("SELECT NodeID FROM IaonActionAdapter WHERE ID = {0};", ID)).ToString());
+                Guid m_nodeID = Guid.Parse(dbConnection.ExecuteScalar(string.Format("SELECT NodeID FROM IaonActionAdapter WHERE ID = {0};", ID)).ToString());
+
+                string nodeIDQueryString = m_nodeID.ToString();
+                if (adoDatabase.IsJetEngine)
+                    nodeIDQueryString = "{" + nodeIDQueryString + "}";
+                else
+                    nodeIDQueryString = "'" + nodeIDQueryString + "'";
+
 
                 // Copy key meta-data tables
                 foreach (string tableName in m_metadataTables.Split(';'))
                 {
                     if (!string.IsNullOrWhiteSpace(tableName))
                     {
-                        table = dbConnection.RetrieveData(adoDatabase.AdapterType, string.Format("SELECT * FROM {0}", tableName, m_nodeID));
+                        table = dbConnection.RetrieveData(adoDatabase.AdapterType, string.Format("SELECT * FROM {0}", tableName) + " AND NodeID = " + nodeIDQueryString);
                         table.TableName = tableName.Split(' ')[0];
                         metadata.Tables.Add(table.Copy());
                     }

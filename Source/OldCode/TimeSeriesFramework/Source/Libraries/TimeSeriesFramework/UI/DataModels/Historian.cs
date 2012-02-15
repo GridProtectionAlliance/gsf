@@ -427,8 +427,8 @@ namespace TimeSeriesFramework.UI.DataModels
                 if (isOptional)
                     historianList.Add(0, "Select Historian");
 
-                string query = database.ParameterizedQueryString("SELECT ID, Acronym FROM Historian WHERE Enabled = {0} ORDER BY LoadOrder", "enabled");
-                DataTable historianTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Bool(true));
+                string query = database.ParameterizedQueryString("SELECT ID, Acronym FROM Historian WHERE Enabled = {0} AND NodeID = {1} ORDER BY LoadOrder", "enabled", "nodeID");
+                DataTable historianTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Bool(true), database.CurrentNodeID());
 
                 foreach (DataRow row in historianTable.Rows)
                 {
