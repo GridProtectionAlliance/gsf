@@ -3902,7 +3902,7 @@
             Gets the flag indicating if this adapter collection supports temporal processing.
             </summary>
             <remarks>
-            For collections this defaults to <c>true</c>.
+            For collections this defaults to <c>false</c>.
             </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.StartTimeConstraint">
