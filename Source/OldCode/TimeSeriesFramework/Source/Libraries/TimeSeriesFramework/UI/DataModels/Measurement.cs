@@ -551,7 +551,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <param name="deviceID">ID of the Device to filter data.</param>
         /// <param name="filterByInternalFlag">boolean flag to indicate if only non internal data requested.</param>
         /// <returns>Collection of <see cref="Measurement"/>.</returns>
-        public static ObservableCollection<Measurement> Load(AdoDataConnection database, int deviceID = 0, bool filterByInternalFlag = false)
+        public static ObservableCollection<Measurement> Load(AdoDataConnection database, int deviceID = 0, bool filterByInternalFlag = false, bool includeInternal = false)
         {
             bool createdConnection = false;
 
@@ -567,19 +567,41 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     if (deviceID > 0)
                     {
-                        query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE DeviceID = {0} AND Internal = {1} AND " +
-                            "Subscribed = {2} ORDER BY PointID", "deviceID", "internal", "subscribed");
+                        if (!includeInternal)
+                        {
+                            query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE DeviceID = {0} AND Internal = {1} AND " +
+                                "Subscribed = {2} ORDER BY PointID", "deviceID", "internal", "subscribed");
 
-                        measurementTable = database.Connection.RetrieveData(database.AdapterType, query,
-                            DefaultTimeout, deviceID, database.Bool(false), database.Bool(false));
+                            measurementTable = database.Connection.RetrieveData(database.AdapterType, query,
+                                DefaultTimeout, deviceID, database.Bool(false), database.Bool(false));
+                        }
+                        else
+                        {
+                            query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE DeviceID = {0} AND " +
+                                "Subscribed = {1} ORDER BY PointID", "deviceID", "subscribed");
+
+                            measurementTable = database.Connection.RetrieveData(database.AdapterType, query,
+                                DefaultTimeout, deviceID, database.Bool(false));
+                        }
                     }
                     else
                     {
-                        query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE NodeID = {0} AND Internal = {1} AND " +
-                            "Subscribed = {2} ORDER BY PointTag", "nodeID", "internal", "subscribed");
+                        if (!includeInternal)
+                        {
+                            query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE NodeID = {0} AND Internal = {1} AND " +
+                                "Subscribed = {2} ORDER BY PointTag", "nodeID", "internal", "subscribed");
 
-                        measurementTable = database.Connection.RetrieveData(database.AdapterType, query,
-                            DefaultTimeout, database.CurrentNodeID(), database.Bool(false), database.Bool(false));
+                            measurementTable = database.Connection.RetrieveData(database.AdapterType, query,
+                                DefaultTimeout, database.CurrentNodeID(), database.Bool(false), database.Bool(false));
+                        }
+                        else
+                        {
+                            query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE NodeID = {0} AND " +
+                                "Subscribed = {1} ORDER BY PointTag", "nodeID", "subscribed");
+
+                            measurementTable = database.Connection.RetrieveData(database.AdapterType, query,
+                                DefaultTimeout, database.CurrentNodeID(), database.Bool(false));
+                        }
                     }
                 }
                 else
