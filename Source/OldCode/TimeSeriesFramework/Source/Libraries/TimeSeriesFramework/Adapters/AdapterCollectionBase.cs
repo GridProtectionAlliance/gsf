@@ -511,13 +511,13 @@ namespace TimeSeriesFramework.Adapters
         /// Gets the flag indicating if this adapter collection supports temporal processing.
         /// </summary>
         /// <remarks>
-        /// For collections this defaults to <c>true</c>.
+        /// For collections this defaults to <c>false</c>.
         /// </remarks>
         public virtual bool SupportsTemporalProcessing
         {
             get
             {
-                return true;
+                return false;
             }
         }
 
