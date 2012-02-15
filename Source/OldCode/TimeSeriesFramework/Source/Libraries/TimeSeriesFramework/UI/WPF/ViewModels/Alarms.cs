@@ -144,10 +144,11 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// </summary>
         public override void Load()
         {
-            ObservableCollection<DataModels.Alarm> alarms = DataModels.Alarm.Load(null);
+            ObservableCollection<DataModels.Alarm> alarms;
 
             try
             {
+                alarms = DataModels.Alarm.Load(null);
                 alarms.ToList().ForEach(alarm => alarm.OperationDescription = GetOperationDescription(alarm));
                 ItemsSource = alarms;
             }
