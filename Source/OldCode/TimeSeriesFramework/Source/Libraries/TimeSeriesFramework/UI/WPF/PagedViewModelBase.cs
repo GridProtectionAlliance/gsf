@@ -930,8 +930,12 @@ namespace TimeSeriesFramework.UI
             {
                 PageCount = 0;
                 CurrentPage = new ObservableCollection<TDataModel>();
-                CurrentItem = new TDataModel();
                 CurrentPageNumber = 0;
+
+                if (ItemsSource == null)
+                    CurrentItem = new TDataModel();
+                else
+                    Clear();
             }
         }
 
