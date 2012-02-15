@@ -435,6 +435,236 @@
             Gets or sets the active <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterCollection"/>.
             </summary>
         </member>
+        <member name="T:TimeSeriesFramework.AlarmState">
+            <summary>
+            Represents the two states that an alarm can be in: raised or cleared.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.AlarmState.Cleared">
+            <summary>
+            Indicates that an alarm is cleared.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.AlarmState.Raised">
+            <summary>
+            Indicates that an alarm has been raised.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.AlarmSeverity">
+            <summary>
+            Represents the severity of alarms.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.AlarmSeverity.None">
+            <summary>
+            Indicates that an alarm is of no importance.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.AlarmSeverity.Information">
+            <summary>
+            Indicates that an alarm is informative, but not dangerous.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.AlarmSeverity.Low">
+            <summary>
+            Indicates that an alarm is not very important.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.AlarmSeverity.MediumLow">
+            <summary>
+            Indicates that an alarm is somewhat important.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.AlarmSeverity.Medium">
+            <summary>
+            Indicates that an alarm is moderately importance.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.AlarmSeverity.MediumHigh">
+            <summary>
+            Indicates that an alarm is important.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.AlarmSeverity.High">
+            <summary>
+            Indicates that an alarm is very important.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.AlarmSeverity.Critical">
+            <summary>
+            Indicates than an alarm signifies a dangerous situation.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.AlarmSeverity.Error">
+            <summary>
+            Indicates that an alarm reports bad data.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.AlarmOperation">
+            <summary>
+            Represents the operation to be performed
+            when testing values from an incoming signal.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.AlarmOperation.Equal">
+            <summary>
+            Internal range test
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.AlarmOperation.NotEqual">
+            <summary>
+            External range test
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.AlarmOperation.GreaterOrEqual">
+            <summary>
+            Upper bound
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.AlarmOperation.LessOrEqual">
+            <summary>
+            Lower bound
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.AlarmOperation.GreaterThan">
+            <summary>
+            Upper limit
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.AlarmOperation.LessThan">
+            <summary>
+            Lower limit
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.AlarmOperation.Flatline">
+            <summary>
+            Latched value
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.Alarm">
+            <summary>
+            Represents an alarm that tests the values of
+            an incoming signal to determine the state of alarm.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Alarm.#ctor">
+            <summary>
+            Creates a new instance of the <see cref="T:TimeSeriesFramework.Alarm"/> class.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Alarm.Test(TimeSeriesFramework.IMeasurement)">
+            <summary>
+            Tests the value of the given signal to determine
+            whether the alarm should be raised or cleared.
+            </summary>
+            <param name="signal">The signal whose value is to be tested.</param>
+            <returns>true if the alarm's state changed; false otherwise</returns>
+        </member>
+        <member name="P:TimeSeriesFramework.Alarm.ID">
+            <summary>
+            Gets or sets the identification number of the alarm.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Alarm.TagName">
+            <summary>
+            Gets or sets the tag name of the alarm.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Alarm.SignalID">
+            <summary>
+            Gets or sets the identification number of the
+            signal whose value is monitored by the alarm.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Alarm.AssociatedMeasurementID">
+            <summary>
+            Gets or sets the identification number of
+            the measurements generated for alarm events.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Alarm.Description">
+            <summary>
+            Gets or sets the description of the alarm.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Alarm.Severity">
+            <summary>
+            Gets or sets the severity of the alarm.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Alarm.Operation">
+            <summary>
+            Gets or sets the operation to be performed
+            when testing values from the incoming signal.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Alarm.SetPoint">
+            <summary>
+            Gets or sets the value to be compared against
+            the signal to determine whether to raise the
+            alarm. This value is irrelevant for the
+            <see cref="F:TimeSeriesFramework.AlarmOperation.Flatline"/> operation.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Alarm.Tolerance">
+            <summary>
+            Gets or sets a tolerance window around the
+            <see cref="P:TimeSeriesFramework.Alarm.SetPoint"/> to use when comparing
+            against the value of the signal. This value
+            is only relevant for the <see cref="F:TimeSeriesFramework.AlarmOperation.Equal"/>
+            and <see cref="F:TimeSeriesFramework.AlarmOperation.NotEqual"/> operations.
+            </summary>
+            <remarks>
+            <para>The equal and not equal operations are actually
+            internal and external range tests based on the setpoint
+            and the tolerance. The two tests are performed as follows.</para>
+            
+            <list type="bullet">
+            <item>Equal: <c>(value &gt;= SetPoint - Tolerance) &amp;&amp; (value &lt;= SetPoint + Tolerance)</c></item>
+            <item>Not equal: <c>(value &lt; SetPoint - Tolerance) || (value &gt; SetPoint + Tolerance)</c></item>
+            </list>
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Alarm.Delay">
+            <summary>
+            Gets or sets the amount of time that the
+            signal must be exhibiting alarming behavior
+            before the alarm is raised.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Alarm.Hysteresis">
+            <summary>
+            Gets or sets the hysteresis used when clearing
+            alarms. This value is only relevant in greater
+            than (or equal) and less than (or equal) operations.
+            </summary>
+            <remarks>
+            <para>The hysteresis is an offset that provides padding between
+            the point at which the alarm is raised and the point at
+            which the alarm is cleared. For example, in the case of the
+            <see cref="F:TimeSeriesFramework.AlarmOperation.GreaterOrEqual"/> operation:</para>
+            
+            <list type="bullet">
+            <item>Raised: <c>value &gt;= SetPoint</c></item>
+            <item>Cleared: <c>value &lt; SetPoint - Hysteresis</c></item>
+            </list>
+            
+            <para>The direction of the offset depends on whether the
+            operation is greater than (or equal) or less than (or equal).
+            The hysteresis must be greater than zero.</para>
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Alarm.State">
+            <summary>
+            Gets or sets the state of the alarm (raised or cleared).
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Alarm.Cause">
+            <summary>
+            Gets or sets the most recent measurement
+            that caused the alarm to be raised.
+            </summary>
+        </member>
         <member name="T:TimeSeriesFramework.DownsamplingMethod">
             <summary>
             Downsampling method enumeration.
@@ -5298,6 +5528,22 @@
             <summary>
             Returns a flag that determines if all measurements sent to this <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterCollection"/> are
             destined for archival.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.TimeSeriesStartupOperations">
+            <summary>
+            Defines a data operations to be performed at startup.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.TimeSeriesStartupOperations.PerformTimeSeriesStartupOperations(System.Data.IDbConnection,System.Type,System.String,System.Action{System.Object,TVA.EventArgs{System.String}},System.Action{System.Object,TVA.EventArgs{System.Exception}})">
+            <summary>
+            Delegates control to the data operations that are to be performed at startup.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.TimeSeriesStartupOperations.ValidateAlarming(System.Data.IDbConnection,System.String)">
+            <summary>
+            Data operation to validate and ensure that certain records
+            that are required for alarming exist in the database.
             </summary>
         </member>
         <member name="T:TimeSeriesFramework.Transport.ClientConnection">
