@@ -53,9 +53,9 @@ namespace DataQualityMonitoring.Services
             : base()
         {
             AlarmAdapter = adapter;
-            PublishMetadata = true;
-            PersistSettings = true;
-            Endpoints = "http.rest://localhost:6000/alarmservices";
+
+            Singleton = true;
+            PersistSettings = false;
         }
 
         #endregion

@@ -50,15 +50,17 @@ namespace TimeSeriesFramework
             s_processException = processException;
 
             // Run data operations
-            ValidateDatabase(connection, nodeIDQueryString);
+            ValidateAlarming(connection, nodeIDQueryString);
         }
 
         /// <summary>
-        /// Data operation to validate and ensure that certain required records exist in the database.
+        /// Data operation to validate and ensure that certain records
+        /// that are required for alarming exist in the database.
         /// </summary>
-        private static void ValidateDatabase(IDbConnection connection, string nodeIDQueryString)
+        private static void ValidateAlarming(IDbConnection connection, string nodeIDQueryString)
         {
             // SELECT queries
+            const string AlarmCountFormat = "SELECT COUNT(*) FROM Alarm";
             const string AlarmAdapterCountFormat = "SELECT COUNT(*) FROM IaonActionAdapter WHERE AdapterName = 'ALARM!SERVICES' AND NodeID = {0}";
             const string AlarmConfigEntityCountFormat = "SELECT COUNT(*) FROM ConfigurationEntity WHERE SourceName = 'Alarm'";
             const string AlarmSignalTypeCountFormat = "SELECT COUNT(*) FROM SignalType WHERE Name = 'Alarm'";
@@ -68,27 +70,43 @@ namespace TimeSeriesFramework
             const string AlarmConfigEntityInsertFormat = "INSERT INTO ConfigurationEntity(SourceName, RuntimeName, Description, LoadOrder, Enabled) VALUES('Alarm', 'Alarms', 'Defines alarms that monitor the values of measurements', 17, 1)";
             const string AlarmSignalTypeInsertFormat = "INSERT INTO SignalType(Name, Acronym, Suffix, Abbreviation, Source, EngineeringUnits) VALUES('Alarm', 'ALRM', 'AL', 'AL', 'Any', '')";
 
+            bool alarmTableExists;
             int alarmAdapterCount;
             int alarmConfigEntityCount;
             int alarmSignalTypeCount;
 
-            // Ensure that the alarm adapter is defined.
-            alarmAdapterCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(AlarmAdapterCountFormat, nodeIDQueryString)));
+            try
+            {
+                // Determine whether the alarm table exists
+                // before inserting records related to alarming
+                connection.ExecuteScalar(AlarmCountFormat);
+                alarmTableExists = true;
+            }
+            catch
+            {
+                alarmTableExists = false;
+            }
 
-            if (alarmAdapterCount == 0)
-                connection.ExecuteNonQuery(string.Format(AlarmAdapterInsertFormat, nodeIDQueryString));
+            if (alarmTableExists)
+            {
+                // Ensure that the alarm adapter is defined.
+                alarmAdapterCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(AlarmAdapterCountFormat, nodeIDQueryString)));
 
-            // Ensure that the alarm record is defined in the ConfigurationEntity table.
-            alarmConfigEntityCount = Convert.ToInt32(connection.ExecuteScalar(AlarmConfigEntityCountFormat));
+                if (alarmAdapterCount == 0)
+                    connection.ExecuteNonQuery(string.Format(AlarmAdapterInsertFormat, nodeIDQueryString));
 
-            if (alarmConfigEntityCount == 0)
-                connection.ExecuteNonQuery(AlarmConfigEntityInsertFormat);
+                // Ensure that the alarm record is defined in the ConfigurationEntity table.
+                alarmConfigEntityCount = Convert.ToInt32(connection.ExecuteScalar(AlarmConfigEntityCountFormat));
 
-            // Ensure that the alarm record is defined in the SignalType table.
-            alarmSignalTypeCount = Convert.ToInt32(connection.ExecuteScalar(AlarmSignalTypeCountFormat));
+                if (alarmConfigEntityCount == 0)
+                    connection.ExecuteNonQuery(AlarmConfigEntityInsertFormat);
 
-            if (alarmSignalTypeCount == 0)
-                connection.ExecuteNonQuery(AlarmSignalTypeInsertFormat);
+                // Ensure that the alarm record is defined in the SignalType table.
+                alarmSignalTypeCount = Convert.ToInt32(connection.ExecuteScalar(AlarmSignalTypeCountFormat));
+
+                if (alarmSignalTypeCount == 0)
+                    connection.ExecuteNonQuery(AlarmSignalTypeInsertFormat);
+            }
         }
     }
 }

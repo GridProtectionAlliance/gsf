@@ -33,6 +33,7 @@ using TimeSeriesFramework;
 using TimeSeriesFramework.Adapters;
 using TVA;
 using TVA.Data;
+using System.Text;
 
 namespace DataQualityMonitoring
 {
@@ -44,6 +45,10 @@ namespace DataQualityMonitoring
     {
         #region [ Members ]
 
+        // Constants
+        private const string DefaultServiceEndpoints = "http.rest://localhost:5018/alarmservices";
+        private const string DefaultServiceSecurityPolicy = "";
+
         // Fields
         private List<Alarm> m_alarms;
         private AlarmService m_alarmService;
@@ -51,9 +56,12 @@ namespace DataQualityMonitoring
         private ConcurrentQueue<IMeasurement> m_measurementQueue;
         private Thread m_processThread;
         private Semaphore m_processSemaphore;
-
         private long m_eventCount;
+
         private bool m_supportsTemporalProcessing;
+        private bool m_servicePublishMetadata;
+        private string m_serviceEndpoints;
+        private string m_serviceSecurityPolicy;
 
         private bool m_disposed;
 
@@ -75,6 +83,76 @@ namespace DataQualityMonitoring
             }
         }
 
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether web service
+        /// metadata is to made available at all web service endpoints.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the flag indicating whether the web service metadata is to be made available at all web service endpoints."),
+        DefaultValue(true)]
+        public bool ServicePublishMetadata
+        {
+            get
+            {
+                return m_servicePublishMetadata;
+            }
+            set
+            {
+                m_servicePublishMetadata = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a semicolon delimited list of
+        /// URIs where the web service can be accessed.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define a semicolon delimited list of URIs where the web service can be accessed."),
+        DefaultValue(DefaultServiceEndpoints)]
+        public string ServiceEndpoints
+        {
+            get
+            {
+                return m_serviceEndpoints;
+            }
+            set
+            {
+                m_serviceEndpoints = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="System.Type.FullName"/> of System.IdentityModel.Policy.IAuthorizationPolicy
+        /// to be used for securing all web service <see cref="TVA.ServiceModel.SelfHostingService.Endpoints"/>.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the full name of the authorization policy to be used for securing all web service endpoints."),
+        DefaultValue(DefaultServiceSecurityPolicy)]
+        public string ServiceSecurityPolicy
+        {
+            get
+            {
+                return m_serviceSecurityPolicy;
+            }
+            set
+            {
+                m_serviceSecurityPolicy = value;
+            }
+        }
+
+        /// <summary>
+        /// Returns the detailed status of the data input source.
+        /// </summary>
+        public override string Status
+        {
+            get
+            {
+                StringBuilder statusBuilder = new StringBuilder(base.Status);
+                statusBuilder.Append(m_alarmService.Status);
+                return statusBuilder.ToString();
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -84,19 +162,31 @@ namespace DataQualityMonitoring
         /// </summary>
         public override void Initialize()
         {
+            Dictionary<string, string> settings;
+            string setting;
+
             string filterExpression;
 
             // Run base class initialization
             base.Initialize();
+            settings = Settings;
 
-            Dictionary<string, string> settings = Settings;
-            string setting;
-
-            // Load optional parameter
+            // Load optional parameters
             if (settings.TryGetValue("supportsTemporalProcessing", out setting))
                 m_supportsTemporalProcessing = setting.ParseBoolean();
             else
                 m_supportsTemporalProcessing = false;
+
+            if (settings.TryGetValue("servicePublishMetadata", out setting))
+                m_servicePublishMetadata = setting.ParseBoolean();
+            else
+                m_servicePublishMetadata = true;
+
+            if (!settings.TryGetValue("serviceEndpoints", out m_serviceEndpoints))
+                m_serviceEndpoints = DefaultServiceEndpoints;
+
+            if (!settings.TryGetValue("serviceSecurityPolicy", out m_serviceSecurityPolicy))
+                m_serviceSecurityPolicy = DefaultServiceSecurityPolicy;
 
             // Create alarms using definitions from the database
             m_alarms = DataSource.Tables["Alarms"].Rows.Cast<DataRow>()
@@ -104,18 +194,24 @@ namespace DataQualityMonitoring
                 .Select(row => CreateAlarm(row))
                 .ToList();
 
-            // Generate filter expression for input measurements
-            filterExpression = m_alarms.Select(a => a.SignalID)
-                .Distinct()
-                .Select(id => id.ToString())
-                .Aggregate((list, id) => list + ";" + id);
+            if (m_alarms.Count > 0)
+            {
+                // Generate filter expression for input measurements
+                filterExpression = m_alarms.Select(a => a.SignalID)
+                    .Distinct()
+                    .Select(id => id.ToString())
+                    .Aggregate((list, id) => list + ";" + id);
 
-            // Set input measurement keys for measurement routing
-            InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, filterExpression);
+                // Set input measurement keys for measurement routing
+                InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, filterExpression);
+            }
 
             // Set up alarm service
             m_alarmService = new AlarmService(this);
-            m_alarmService.SettingsCategory = base.Name + m_alarmService.SettingsCategory;
+            m_alarmService.SettingsCategory = base.Name.Replace("!", "") + m_alarmService.SettingsCategory;
+            m_alarmService.PublishMetadata = m_servicePublishMetadata;
+            m_alarmService.Endpoints = m_serviceEndpoints;
+            m_alarmService.SecurityPolicy = m_serviceSecurityPolicy;
             m_alarmService.ServiceProcessException += AlarmService_ServiceProcessException;
             m_alarmService.Initialize();
         }

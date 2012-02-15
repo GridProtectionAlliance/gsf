@@ -150,11 +150,6 @@ namespace TimeSeriesFramework.UI.ViewModels
             {
                 alarms.ToList().ForEach(alarm => alarm.OperationDescription = GetOperationDescription(alarm));
                 ItemsSource = alarms;
-
-                CurrentItem.NodeID = m_nodeLookupList.First().Key;
-                CurrentItem.SignalID = m_measurementLookupList.First().Key;
-                CurrentItem.Operation = m_operationList.First().Key;
-                CurrentItem.Severity = m_severityList.First().Key;
             }
             catch (Exception ex)
             {
