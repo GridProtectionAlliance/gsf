@@ -48,6 +48,7 @@ namespace DataQualityMonitoring
         // Constants
         private const string DefaultServiceEndpoints = "http.rest://localhost:5018/alarmservices";
         private const string DefaultServiceSecurityPolicy = "";
+        private const int WaitTimeout = 1000;
 
         // Fields
         private List<Alarm> m_alarms;
@@ -345,7 +346,7 @@ namespace DataQualityMonitoring
 
             while (Enabled)
             {
-                if (m_processSemaphore.WaitOne() && m_measurementQueue.TryDequeue(out measurement))
+                if ((object)m_processSemaphore != null && m_processSemaphore.WaitOne(WaitTimeout) && m_measurementQueue.TryDequeue(out measurement))
                 {
                     lock (m_alarms)
                     {

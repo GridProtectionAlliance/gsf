@@ -61,7 +61,7 @@ namespace TimeSeriesFramework
         {
             // SELECT queries
             const string AlarmCountFormat = "SELECT COUNT(*) FROM Alarm";
-            const string AlarmAdapterCountFormat = "SELECT COUNT(*) FROM IaonActionAdapter WHERE AdapterName = 'ALARM!SERVICES' AND NodeID = {0}";
+            const string AlarmAdapterCountFormat = "SELECT COUNT(*) FROM CustomActionAdapter WHERE AdapterName = 'ALARM!SERVICES' AND NodeID = {0}";
             const string AlarmConfigEntityCountFormat = "SELECT COUNT(*) FROM ConfigurationEntity WHERE SourceName = 'Alarm'";
             const string AlarmSignalTypeCountFormat = "SELECT COUNT(*) FROM SignalType WHERE Name = 'Alarm'";
 
