@@ -104,6 +104,7 @@ namespace TimeSeriesFramework.Transport
         private bool m_includeTime;
         private bool m_disposed;
         private bool m_synchronizeMetadata;
+        private bool m_markInternal;
 
         #endregion
 
@@ -410,6 +411,11 @@ namespace TimeSeriesFramework.Transport
                 m_synchronizeMetadata = setting.ParseBoolean();
             else
                 m_synchronizeMetadata = true;   // by default, we will always perform this.
+
+            if (settings.TryGetValue("internal", out setting))
+                m_markInternal = setting.ParseBoolean();
+            else
+                m_markInternal = false;
 
             // Define auto connect setting
             if (settings.TryGetValue("autoConnect", out setting))
@@ -1168,12 +1174,20 @@ namespace TimeSeriesFramework.Transport
                                         "nodeID", "parentID", "uniqueID", "acronym", "name", "originalSource");
 
                                     connection.ExecuteNonQuery(query, m_nodeID, parentID, uniqueID, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"),
-                                        string.IsNullOrEmpty(row.Field<string>("ParentAcronym")) ? sourcePrefix + row.Field<string>("Acronym") : sourcePrefix + row.Field<string>("ParentAcronym"));
+                                        m_markInternal == true ? (object)DBNull.Value : string.IsNullOrEmpty(row.Field<string>("ParentAcronym")) ? sourcePrefix + row.Field<string>("Acronym") : sourcePrefix + row.Field<string>("ParentAcronym"));
                                 }
                                 else
                                 {
-                                    query = adoDatabase.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1} WHERE UniqueID = {2}", "acronym", "name", "uniqueID");
-                                    connection.ExecuteNonQuery(query, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), uniqueID);
+                                    if (m_markInternal)
+                                    {
+                                        query = adoDatabase.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1}, OriginalSource = {2} WHERE UniqueID = {3}", "acronym", "name", "originalSource", "uniqueID");
+                                        connection.ExecuteNonQuery(query, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), (object)DBNull.Value, uniqueID);
+                                    }
+                                    else
+                                    {
+                                        query = adoDatabase.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1} WHERE UniqueID = {2}", "acronym", "name", "uniqueID");
+                                        connection.ExecuteNonQuery(query, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), uniqueID);
+                                    }
                                 }
                             }
                             // Capture new device ID for measurement association
@@ -1212,16 +1226,16 @@ namespace TimeSeriesFramework.Transport
 
                                     if (Convert.ToInt32(connection.ExecuteScalar(query, signalID)) == 0)
                                     {
-                                        string insert = adoDatabase.ParameterizedQueryString("INSERT INTO Measurement (DeviceID, PointTag, SignalTypeID, SignalReference, Description, Internal, Enabled ) VALUES ( {0}, {1}, {2}, {3}, {4}, 0 , 1 )", "deviceID", "pointTag", "signalTypeID", "signalReference", "description");
+                                        string insert = adoDatabase.ParameterizedQueryString("INSERT INTO Measurement (DeviceID, PointTag, SignalTypeID, SignalReference, Description, Internal, Enabled ) VALUES ( {0}, {1}, {2}, {3}, {4}, {5} , 1 )", "deviceID", "pointTag", "signalTypeID", "signalReference", "description", "internal");
                                         string update = adoDatabase.ParameterizedQueryString("UPDATE Measurement SET SignalID = {0} WHERE PointTag = {1}", "signalID", "pointTag");
 
-                                        connection.ExecuteNonQuery(insert, 30, deviceIDs[deviceAcronym], pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty);
+                                        connection.ExecuteNonQuery(insert, 30, deviceIDs[deviceAcronym], pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, adoDatabase.Bool(m_markInternal));
                                         connection.ExecuteNonQuery(update, signalID, pointTag);
                                     }
                                     else
                                     {
-                                        query = adoDatabase.ParameterizedQueryString("UPDATE Measurement SET PointTag = {0}, SignalTypeID = {1}, SignalReference = {2}, Description = {3} WHERE SignalID = {4}", "pointTag", "signalTypeID", "signalReference", "description", "signalID");
-                                        connection.ExecuteNonQuery(query, pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, signalID);
+                                        query = adoDatabase.ParameterizedQueryString("UPDATE Measurement SET PointTag = {0}, SignalTypeID = {1}, SignalReference = {2}, Description = {3}, Internal = {4} WHERE SignalID = {5}", "pointTag", "signalTypeID", "signalReference", "description", "internal", "signalID");
+                                        connection.ExecuteNonQuery(query, pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, adoDatabase.Bool(m_markInternal), signalID);
                                     }
                                 }
                             }
