@@ -78,7 +78,7 @@ namespace TimeSeriesFramework.UI.DataModels
         private string m_id;
         private string m_companyAcronym;
         private string m_companyName;
-        private bool m_selected;  //This is added for the SelectMeasurement user control to provide check boxes.
+        private bool m_selected;  //This is added for the SelectMeasurement user control to provide check boxes.       
 
         #endregion
 
@@ -568,15 +568,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     if (deviceID > 0)
                     {
-                        if (!includeInternal)
-                        {
-                            query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE DeviceID = {0} AND Internal = {1} AND " +
-                                "Subscribed = {2} ORDER BY PointID", "deviceID", "internal", "subscribed");
-
-                            measurementTable = database.Connection.RetrieveData(database.AdapterType, query,
-                                DefaultTimeout, deviceID, database.Bool(false), database.Bool(false));
-                        }
-                        else
+                        if (includeInternal)
                         {
                             query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE DeviceID = {0} AND " +
                                 "Subscribed = {1} ORDER BY PointID", "deviceID", "subscribed");
@@ -584,24 +576,32 @@ namespace TimeSeriesFramework.UI.DataModels
                             measurementTable = database.Connection.RetrieveData(database.AdapterType, query,
                                 DefaultTimeout, deviceID, database.Bool(false));
                         }
+                        else
+                        {
+                            query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE DeviceID = {0} AND Internal = {1} AND " +
+                                "Subscribed = {2} ORDER BY PointID", "deviceID", "internal", "subscribed");
+
+                            measurementTable = database.Connection.RetrieveData(database.AdapterType, query,
+                                DefaultTimeout, deviceID, database.Bool(false), database.Bool(false));
+                        }
                     }
                     else
                     {
-                        if (!includeInternal)
+                        if (includeInternal)
                         {
-                            query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE NodeID = {0} AND Internal = {1} AND " +
-                                "Subscribed = {2} ORDER BY PointTag", "nodeID", "internal", "subscribed");
+                            query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE " +
+                                "Subscribed = {0} ORDER BY PointTag", "subscribed");
 
                             measurementTable = database.Connection.RetrieveData(database.AdapterType, query,
-                                DefaultTimeout, database.CurrentNodeID(), database.Bool(false), database.Bool(false));
+                                DefaultTimeout, database.Bool(false));
                         }
                         else
                         {
-                            query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE NodeID = {0} AND " +
-                                "Subscribed = {1} ORDER BY PointTag", "nodeID", "subscribed");
+                            query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE Internal = {0} AND " +
+                                "Subscribed = {1} ORDER BY PointTag", "internal", "subscribed");
 
                             measurementTable = database.Connection.RetrieveData(database.AdapterType, query,
-                                DefaultTimeout, database.CurrentNodeID(), database.Bool(false));
+                                DefaultTimeout, database.Bool(false), database.Bool(false));
                         }
                     }
                 }
@@ -614,8 +614,8 @@ namespace TimeSeriesFramework.UI.DataModels
                     }
                     else
                     {
-                        query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE NodeID = {0} ORDER BY PointTag", "nodeID");
-                        measurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+                        query = "SELECT * FROM MeasurementDetail ORDER BY PointTag";
+                        measurementTable = database.Connection.RetrieveData(database.AdapterType, query);
                     }
                 }
 

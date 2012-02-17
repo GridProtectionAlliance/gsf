@@ -75,7 +75,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         [Required(ErrorMessage = "SignalType acronym is a required field, please provide value.")]
         [StringLength(4, ErrorMessage = "SignalType Acronym cannot exceed 4 characters.")]
-        [RegularExpression("^[A-Z0-9-'!'_]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-' and '_' are allowed.")]
+        [RegularExpression("^[A-Z0-9-'!'_'@#\\$]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' and '$' are allowed.")]
         public string Acronym
         {
             get
