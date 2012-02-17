@@ -49,6 +49,8 @@
 //       Removed config file setting for FIPS compliance. Checks the registry instead.
 //  07/13/2011 - Stephen C. Wills
 //       Modified check for FIPS compliance to work with Windows XP and Windows Server 2003.
+//  02/17/2012 - Stephen C. Wills
+//       Added public method to manually reload the key cache.
 //
 //*******************************************************************************************************
 
@@ -764,6 +766,54 @@ namespace TVA.Security.Cryptography
         public static void FlushCache(int millisecondsTimeout = Timeout.Infinite)
         {
             s_keyIVCache.WaitForSave(millisecondsTimeout);
+        }
+
+        /// <summary>
+        /// Manually loads keys into the local system key cache.
+        /// </summary>
+        public static void ReloadCache()
+        {
+            ConfigurationFile config;
+            CategorizedSettingsElementCollection settings;
+
+            string commonCacheFileName = string.Empty;
+            double retryDelayInterval = 0.0;
+            int maximumRetryAttempts = 0;
+
+            KeyIVCache commonKeyIVCache;
+
+            // Load the system key cache
+            s_keyIVCache.Load();
+
+            // Load cryptographic settings
+            config = ConfigurationFile.Current;
+            settings = config.Settings[CryptoServicesSettingsCategory];
+            commonCacheFileName = FilePath.GetAbsolutePath(settings["CryptoCache"].ValueAs(commonCacheFileName));
+
+            if (commonCacheFileName != s_keyIVCache.FileName)
+            {
+                // System key cache is not loaded from common cache folder.
+                // We need to merge the common key cache with the system key cache.
+                retryDelayInterval = settings["CacheRetryDelayInterval"].ValueAs(retryDelayInterval);
+                maximumRetryAttempts = settings["CacheMaximumRetryAttempts"].ValueAs(maximumRetryAttempts);
+
+                // Initialize local cryptographic key and initialization vector cache (application may only have read-only access to this cache)
+                commonKeyIVCache = new KeyIVCache()
+                {
+                    FileName = commonCacheFileName,
+                    RetryDelayInterval = retryDelayInterval,
+                    MaximumRetryAttempts = maximumRetryAttempts,
+                    ManagedEncryption = s_managedEncryption,
+                    ReloadOnChange = false,
+                    AutoSave = false
+                };
+
+                // Load initial keys
+                commonKeyIVCache.Load();
+
+                // Merge new or updated keys, common cache folder keys taking precendence
+                s_keyIVCache.MergeRight(commonKeyIVCache);
+            }
         }
 
         /// <summary>

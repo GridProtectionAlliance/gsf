@@ -232,7 +232,10 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
+using TVA.Security.Cryptography;
 
 namespace ConfigCrypter
 {
@@ -244,9 +247,58 @@ namespace ConfigCrypter
         [STAThread]
         static void Main()
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Main());
+            string password;
+            int? keySize;
+            string keyIVText;
+
+            GetCryptoArgs(out password, out keySize, out keyIVText);
+
+            if ((object)password != null && (object)keySize != null)
+            {
+                try
+                {
+                    if ((object)keyIVText == null)
+                        Cipher.ExportKeyIV(password, keySize.Value);
+                    else
+                        Cipher.ImportKeyIV(password, keySize.Value, keyIVText);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Failed to update crypto cache: " + ex.Message);
+                    Environment.ExitCode = 1;
+                }
+            }
+            else
+            {
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.Run(new Main());
+            }
+        }
+
+        private static void GetCryptoArgs(out string password, out int? keySize, out string keyIVText)
+        {
+            List<string> args = Environment.GetCommandLineArgs().ToList();
+            int passwordIndex = args.IndexOf("-password");
+            int keySizeIndex = args.IndexOf("-keySize");
+            int keyIVTextIndex = args.IndexOf("-keyIVText");
+            int tempKeySize;
+
+            password = null;
+            keySize = null;
+            keyIVText = null;
+
+            if (passwordIndex >= 0 && passwordIndex < args.Count - 1)
+                password = args[passwordIndex + 1];
+
+            if (keySizeIndex >= 0 && keySizeIndex < args.Count - 1)
+            {
+                if (int.TryParse(args[keySizeIndex + 1], out tempKeySize))
+                    keySize = tempKeySize;
+            }
+
+            if (passwordIndex >= 0 && passwordIndex < args.Count - 1)
+                password = args[passwordIndex + 1];
         }
     }
 }

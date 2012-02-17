@@ -72,6 +72,8 @@
 //       Updated to use new serialization methods in TVA.Serialization class.
 //  09/22/2011 - J. Ritchie Carroll
 //       Added Mono implementation exception regions.
+//  02/17/2012 - Stephen C. Wills
+//       Added ReloadCryptoCache service command.
 //
 //*******************************************************************************************************
 
@@ -330,6 +332,7 @@ using TVA.IO;
 using TVA.Reflection;
 using TVA.Scheduling;
 using TVA.Security;
+using TVA.Security.Cryptography;
 
 namespace TVA.ServiceProcess
 {
@@ -1351,6 +1354,7 @@ namespace TVA.ServiceProcess
                 m_clientRequestHandlers.Add(new ClientRequestHandler("Status", "Displays the current service status", ShowServiceStatus));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("Start", "Start a service or system process", StartProcess));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("Abort", "Aborts a service or system process", AbortProcess));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("ReloadCryptoCache", "Reloads local cryptography cache", ReloadCryptoCache));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("UpdateSettings", "Updates service setting in the config file", UpdateSettings));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("ReloadSettings", "Reloads services settings from the config file", ReloadSettings));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("Reschedule", "Reschedules a process defined in the service", RescheduleProcess));
@@ -2892,6 +2896,36 @@ namespace TVA.ServiceProcess
                 // Also allow consumers to directly consume message via event in response to a status request
                 if (requestInfo.Request.Arguments.Exists("actionable"))
                     SendActionableResponse(requestInfo, true, null, message);
+            }
+        }
+
+        private void ReloadCryptoCache(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Reloads the local system cryptography cache with data from the common cryptography cache.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       ReloadCryptoCache -options");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
+            }
+            else
+            {
+                Cipher.ReloadCache();
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Crypto cache successfully reloaded.\r\n\r\n");
             }
         }
 
