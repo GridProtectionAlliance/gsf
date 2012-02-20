@@ -2391,7 +2391,132 @@
             Defines functions used for high-speed pattern compression against native types.
             </summary>
         </member>
-        <member name="M:TVA.IO.Compression.PatternCompressor.Compress32bitEnumeration(System.Byte[],System.Int32,System.Int32,System.Int32,System.Byte)">
+        <member name="M:TVA.IO.Compression.PatternCompressor.#ctor(System.Byte)">
+            <summary>
+            Creates a new instance of the PatternCompressor with the given compression strength.
+            </summary>
+            <param name="compressionStrength">The compression strength of the PatternCompressor.</param>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternCompressor.Compress(TVA.Parsing.ISupportBinaryImage)">
+            <summary>
+            Compresses the given value and places it in the compressed buffer.
+            </summary>
+            <param name="value">The value to be compressed.</param>
+            <returns>The size, in bytes, of the compressed value.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="value"/> cannot be null.</exception>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternCompressor.Compress(System.Byte[])">
+            <summary>
+            Compresses all of the data in the given <paramref name="buffer"/>.
+            </summary>
+            <param name="buffer">The buffer to be compressed.</param>
+            <returns>The size, in bytes, of the compressed value.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="buffer"/> cannot be null.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="buffer"/> length must be a multiple of four.</exception>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternCompressor.Compress(System.Byte[],System.Int32)">
+            <summary>
+            Compresses <paramref name="length"/> bytes of data in the given <paramref name="buffer"/>.
+            </summary>
+            <param name="buffer">The buffer to be compressed.</param>
+            <param name="length">The amount of data to be compressed. Must be a multiple of four.</param>
+            <returns>The size, in bytes, of the compressed value.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="buffer"/> cannot be null.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="length"/> must be a multiple of four.</exception>]
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> must be greater than or equal to zero.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> exceeds <paramref name="buffer"/> array boundaries</exception>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternCompressor.Compress(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Compresses <paramref name="length"/> bytes of data in the given <paramref name="buffer"/>, starting at <paramref name="offset"/>.
+            </summary>
+            <param name="buffer">The buffer to be compressed.</param>
+            <param name="offset">The amount of data to ignore at the start of the buffer.</param>
+            <param name="length">The amount of data to be compressed. Must be a multiple of four.</param>
+            <returns>The size, in bytes, of the compressed value.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="buffer"/> cannot be null.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="length"/> must be a multiple of four.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="offset"/> must be greater than or equal to zero.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> must be greater than or equal to zero.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> exceeds <paramref name="buffer"/> array boundaries</exception>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternCompressor.Compress(System.Double)">
+            <summary>
+            Compresses the given value and places it in the compressed buffer.
+            </summary>
+            <param name="value">The value to be compressed.</param>
+            <returns>The size, in bytes, of the compressed value.</returns>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternCompressor.Compress(System.Single)">
+            <summary>
+            Compresses the given value and places it in the compressed buffer.
+            </summary>
+            <param name="value">The value to be compressed.</param>
+            <returns>The size, in bytes, of the compressed value.</returns>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternCompressor.Compress(System.Int64)">
+            <summary>
+            Compresses the given value and places it in the compressed buffer.
+            </summary>
+            <param name="value">The value to be compressed.</param>
+            <returns>The size, in bytes, of the compressed value.</returns>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternCompressor.Compress(System.UInt64)">
+            <summary>
+            Compresses the given value and places it in the compressed buffer.
+            </summary>
+            <param name="value">The value to be compressed.</param>
+            <returns>The size, in bytes, of the compressed value.</returns>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternCompressor.Compress(System.Int32)">
+            <summary>
+            Compresses the given value and places it in the compressed buffer.
+            </summary>
+            <param name="value">The value to be compressed.</param>
+            <returns>The size, in bytes, of the compressed value.</returns>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternCompressor.Compress(System.UInt32)">
+            <summary>
+            Compresses the given value and places it in the compressed buffer.
+            </summary>
+            <param name="value">The value to be compressed.</param>
+            <returns>The size, in bytes, of the compressed value.</returns>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternCompressor.Compress(System.Int16)">
+            <summary>
+            Compresses the given value and places it in the compressed buffer.
+            </summary>
+            <param name="value">The value to be compressed.</param>
+            <returns>The size, in bytes, of the compressed value.</returns>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternCompressor.Compress(System.UInt16)">
+            <summary>
+            Compresses the given value and places it in the compressed buffer.
+            </summary>
+            <param name="value">The value to be compressed.</param>
+            <returns>The size, in bytes, of the compressed value.</returns>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternCompressor.Compress(System.Byte)">
+            <summary>
+            Compresses the given value and places it in the compressed buffer.
+            </summary>
+            <param name="value">The value to be compressed.</param>
+            <returns>The size, in bytes, of the compressed value.</returns>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternCompressor.EmptyCompressedBuffer">
+            <summary>
+            Sets <see cref="P:TVA.IO.Compression.PatternCompressor.CompressedBufferLength"/> to zero and allows the
+            compressor to write over the values in the compressed buffer.
+            </summary>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternCompressor.Reset">
+            <summary>
+            Resets the compressor by flushing the back buffer. Subsequent calls
+            to the Compress methods will not be compressed using previously
+            compressed values.
+            </summary>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternCompressor.CompressBuffer(System.Byte[],System.Int32,System.Int32,System.Int32,System.Byte)">
             <summary>
             Compress a byte array containing a sequential list of 32-bit structures (e.g., floating point numbers, integers or unsigned integers) using a patterned compression method.
             </summary>
@@ -2399,35 +2524,49 @@
             <param name="startIndex">An <see cref="T:System.Int32"/> representing the start index of the byte array.</param>
             <param name="dataLength">The number of bytes in the buffer that represents actual data.</param>
             <param name="bufferLength">The number of bytes available for use in the buffer; actual buffer length must be at least one byte larger than <paramref name="dataLength"/> since it's possible that data cannot be compressed. This extra byte will be used indicate an uncompressed buffer.</param>
-            <param name="compressionStrength">Specifies compression strength (0 to 15). Smaller numbers will run faster, larger numbers will yield better compression.</param>
+            <param name="compressionStrength">Specifies compression strength (0 to 31). Smaller numbers will run faster, larger numbers will yield better compression.</param>
             <returns>The new length of the buffer after compression.</returns>
             <exception cref="T:System.ArgumentNullException"><paramref name="source"/> buffer cannot be null.</exception>
             <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="dataLength"/> must be greater than or equal to zero.</exception>
             <exception cref="T:System.ArgumentException"><paramref name="dataLength"/> must be an even multiple of 4.</exception>
             <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="bufferLength"/> must be at least one byte larger than <paramref name="dataLength"/> in case data cannot be compressed.</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">Actual length of <paramref name="source"/> buffer is less than specified <paramref name="bufferLength"/>.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="compressionStrength"/> must be 0 to 15.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="compressionStrength"/> must be 0 to 31.</exception>
             <remarks>
             As an optimization this function is using pointers to native structures, as such the endian order decoding and encoding of the values will always be in the native endian order of the operating system.
             </remarks>
         </member>
-        <member name="M:TVA.IO.Compression.PatternCompressor.Compress64bitEnumeration(System.Byte[],System.Int32,System.Int32,System.Int32,System.Byte)">
+        <member name="P:TVA.IO.Compression.PatternCompressor.CompressedBuffer">
             <summary>
-            Compress a byte array containing a sequential list of 64-bit structures (e.g., double precision floating point numbers, long integers or unsigned long integers) using a patterned compression method.
+            Gets or sets the buffer into which compressed values are written.
             </summary>
-            <param name="source">The <see cref="T:System.Byte"/> array containing 64-bit values to compress. Compression will happen inline on this buffer.</param>
-            <param name="startIndex">An <see cref="T:System.Int32"/> representing the start index of the byte array.</param>
-            <param name="dataLength">The number of bytes in the buffer that represents actual data.</param>
-            <param name="bufferLength">The number of bytes available for use in the buffer; actual buffer length must be at least one byte larger than <paramref name="dataLength"/> since it's possible that data cannot be compressed. This extra byte will be used indicate an uncompressed buffer.</param>
-            <param name="compressionStrength">Specifies compression strength (0 to 255). Smaller numbers will run faster, larger numbers will yield better compression.</param>
-            <returns>The new length of the buffer after compression.</returns>
-            <exception cref="T:System.ArgumentNullException"><paramref name="source"/> buffer cannot be null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="dataLength"/> must be greater than or equal to zero.</exception>
-            <exception cref="T:System.ArgumentException"><paramref name="dataLength"/> must be an even multiple of 8.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="bufferLength"/> must be at least one byte larger than <paramref name="dataLength"/> in case data cannot be compressed.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Actual length of <paramref name="source"/> buffer is less than specified <paramref name="bufferLength"/>.</exception>
             <remarks>
-            As an optimization this function is using pointers to native structures, as such the endian order decoding and encoding of the values will always be in the native endian order of the operating system.
+            When setting the compressed buffer, the new buffer is assumed to be empty
+            (<see cref="P:TVA.IO.Compression.PatternCompressor.CompressedBufferLength"/> is set to zero).
+            </remarks>
+        </member>
+        <member name="P:TVA.IO.Compression.PatternCompressor.CompressedBufferLength">
+            <summary>
+            Gets the amount of compressed data in the compressed buffer.
+            </summary>
+        </member>
+        <member name="P:TVA.IO.Compression.PatternCompressor.MaxCompressedBufferLength">
+            <summary>
+            Gets or sets the maximum compressed buffer length.
+            </summary>
+            <remarks>
+            The compressor will not write beyond the MaxCompressedBufferLength.
+            Defaults to the full length of the compressed buffer.
+            Set to -1 to return to the default.
+            </remarks>
+        </member>
+        <member name="P:TVA.IO.Compression.PatternCompressor.CompressionStrength">
+            <summary>
+            Gets or sets the compression strength of the PatternCompressor.
+            </summary>
+            <remarks>
+            When setting the compression strength, the PatternCompressor
+            is automatically reset (the back buffer is emptied).
             </remarks>
         </member>
         <member name="T:TVA.Diagnostics.NamespaceDoc">
@@ -19925,6 +20064,182 @@
             <param name="source">The <see cref="T:System.IO.Stream"/> to be converted to <see cref="T:System.Byte"/> array.</param>
             <returns>An array of <see cref="T:System.Byte"/>.</returns>
         </member>
+        <member name="T:TVA.IO.Compression.PatternDecompressor">
+            <summary>
+            Defines functions for decompression of data compressed by the PatternCompressor.
+            </summary>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternDecompressor.AugmentBuffer(System.Byte[])">
+            <summary>
+            Inserts the given data into the data buffer for decompression.
+            </summary>
+            <param name="data">The data to be inserted into the data buffer.</param>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternDecompressor.AugmentBuffer(System.Byte[],System.Int32)">
+            <summary>
+            Inserts the given data into the data buffer for decompression.
+            </summary>
+            <param name="data">The data to be inserted into the data buffer.</param>
+            <param name="dataLength">The amount of data to be taken from the given buffer and placed in the data buffer.</param>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternDecompressor.AugmentBuffer(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Inserts the given data into the data buffer for decompression.
+            </summary>
+            <param name="data">The data to be inserted into the data buffer.</param>
+            <param name="offset">The amount of data to be ignored at the beginning of the buffer.</param>
+            <param name="dataLength">The amount of data to be taken from the given buffer and placed in the data buffer.</param>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternDecompressor.Decompress(System.Byte[])">
+            <summary>
+            Decompresses enough bytes of data to fill up the <paramref name="buffer"/>.
+            </summary>
+            <param name="buffer">The buffer that holds the data.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="buffer"/> cannot be null.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="buffer"/> length must be a multiple of four.</exception>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternDecompressor.Decompress(System.Byte[],System.Int32)">
+            <summary>
+            Decompresses <paramref name="length"/> bytes of data and places it in the <paramref name="buffer"/>.
+            </summary>
+            <param name="buffer">The buffer that holds the data.</param>
+            <param name="length">The amount of data to be decompressed and written to the buffer. The value of this parameter must be a multiple of four.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="buffer"/> cannot be null.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="length"/> must be a multiple of four.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> must be greater than or equal to zero.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> exceeds <paramref name="buffer"/> array boundaries.</exception>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternDecompressor.Decompress(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Decompresses <paramref name="length"/> bytes of data and places it in the <paramref name="buffer"/> starting at <paramref name="offset"/>.
+            </summary>
+            <param name="buffer">The buffer that holds the data.</param>
+            <param name="offset">The amount of data at the beginning of the buffer that will not be overwritten.</param>
+            <param name="length">The amount of data to be decompressed and written to the buffer. The value of this parameter must be a multiple of four.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="buffer"/> cannot be null.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="length"/> must be a multiple of four.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="offset"/> must be greater than or equal to zero.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> must be greater than or equal to zero.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> exceeds <paramref name="buffer"/> array boundaries.</exception>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternDecompressor.Decompress(System.Double@)">
+            <summary>
+            Decompresses eight bytes of data and writes the data into a 64-bit floating point number.
+            </summary>
+            <param name="value">The 64-bit floating point number that the data is to be written to.</param>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternDecompressor.Decompress(System.Single@)">
+            <summary>
+            Decompresses four bytes of data and writes the data into a 32-bit floating point number.
+            </summary>
+            <param name="value">The 32-bit floating point number that the data is to be written to.</param>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternDecompressor.Decompress(System.Int64@)">
+            <summary>
+            Decompresses eight bytes of data and writes the data into a 64-bit signed integer.
+            </summary>
+            <param name="value">The 64-bit integer that the data is to be written to.</param>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternDecompressor.Decompress(System.UInt64@)">
+            <summary>
+            Decompresses eight bytes of data and writes the data into a 64-bit unsigned integer.
+            </summary>
+            <param name="value">The 64-bit integer that the data is to be written to.</param>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternDecompressor.Decompress(System.Int32@)">
+            <summary>
+            Decompresses four bytes of data and writes the data into a 32-bit signed integer.
+            </summary>
+            <param name="value">The 32-bit integer that the data is to be written to.</param>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternDecompressor.Decompress(System.UInt32@)">
+            <summary>
+            Decompresses four bytes of data and writes the data into a 32-bit unsigned integer.
+            </summary>
+            <param name="value">The 32-bit integer that the data is to be written to.</param>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternDecompressor.Decompress(System.Int16@)">
+            <summary>
+            Decompresses four bytes of data and writes the data into a 16-bit signed integer. The high-order bytes are discarded.
+            </summary>
+            <param name="value">The 16-bit integer that the data is to be written to.</param>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternDecompressor.Decompress(System.UInt16@)">
+            <summary>
+            Decompresses four bytes of data and writes the data into a 16-bit unsigned integer. The high-order bytes are discarded.
+            </summary>
+            <param name="value">The 16-bit integer that the data is to be written to.</param>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternDecompressor.Decompress(System.Byte@)">
+            <summary>
+            Decompresses four bytes of data and writes the data into an 8-bit integer. The high-order bytes are discarded.
+            </summary>
+            <param name="value">The 8-bit integer that the data is to be written to.</param>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternDecompressor.Reset">
+            <summary>
+            Resets the decompressor by flushing the back buffer. Subsequent calls
+            to the Decompress methods will not be decompressed using previously
+            decompressed values.
+            </summary>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternDecompressor.EmptyBuffer">
+            <summary>
+            Clears out the data buffer so that subsequent calls to the Decompress
+            methods do not use the data that was previously in the data buffer.
+            </summary>
+            <remarks>
+            This method should not be called during normal operation, as data will
+            be lost and the compressed stream will likely be corrupted. Only call
+            this method if the stream has already been corrupted.
+            </remarks>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternDecompressor.MaximumSizeDecompressed(System.Int32)">
+            <summary>
+            Given the size of a compressed buffer, provides the maximum possible size of the decompressed data.
+            </summary>
+            <param name="compressedLength">Size of the compressed buffer.</param>
+            <returns>The maximum possible size of the data after decompression.</returns>
+        </member>
+        <member name="M:TVA.IO.Compression.PatternDecompressor.DecompressBuffer(System.Byte[],System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Decompress a byte array containing a sequential list of compressed 32-bit structures (e.g., floating point numbers, integers or unsigned integers) using a patterned compression method.
+            </summary>
+            <param name="source">The <see cref="T:System.Byte"/> array containing compressed 32-bit values to be decompressed. Decompression will happen inline on this buffer.</param>
+            <param name="startIndex">An <see cref="T:System.Int32"/> representing the start index of the byte array.</param>
+            <param name="dataLength">The number of bytes in the buffer that represents actual data.</param>
+            <param name="bufferLength">The number of bytes available for use in the buffer; actual buffer length must be at least large enough to fit the maximum size of the decompressed data. See <see cref="M:TVA.IO.Compression.PatternDecompressor.MaximumSizeDecompressed(System.Int32)"/>.</param>
+            <returns>The new length of the buffer after compression, unless the data cannot be compressed. If the data cannot be compressed, the buffer will remain unchanged and zero will be returned.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="source"/> buffer cannot be null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="dataLength"/> must be greater than or equal to one.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="bufferLength"/> must be at least as large as <paramref name="dataLength"/>.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="bufferLength"/> must be at least as large as is necessary to fit the maximum possible size of the decompressed data.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Actual length of <paramref name="source"/> buffer is less than specified <paramref name="bufferLength"/>.</exception>
+            <remarks>
+            <para>
+            Decompression is performed inline. The source buffer must be large enough
+            to contain the maximum possible size of the decompressed buffer. This
+            maximum size can be obtained by using the <see cref="M:TVA.IO.Compression.PatternDecompressor.MaximumSizeDecompressed(System.Int32)"/>
+            method.
+            </para>
+            
+            <para>
+            As an optimization this function is using pointers to native structures,
+            as such the endian order decoding and encoding of the values will always
+            be in the native endian order of the operating system.
+            </para>
+            </remarks>
+        </member>
+        <member name="P:TVA.IO.Compression.PatternDecompressor.CompressionStrength">
+            <summary>
+            Gets the compression strength defined by the compressed stream.
+            </summary>
+        </member>
+        <member name="P:TVA.IO.Compression.PatternDecompressor.DataBufferLength">
+            <summary>
+            Gets the length of the data left in the buffer.
+            </summary>
+        </member>
         <member name="T:TVA.IO.Checksums.ChecksumType">
             <summary>
             Indicates type of CRC-16 calculation performed.
@@ -28136,6 +28451,11 @@
             </list>
             </para>
             </remarks>
+        </member>
+        <member name="M:TVA.Security.Cryptography.Cipher.ReloadCache">
+            <summary>
+            Manually loads keys into the local system key cache.
+            </summary>
         </member>
         <member name="M:TVA.Security.Cryptography.Cipher.KeyIVExists(System.String,System.Int32)">
             <summary>
