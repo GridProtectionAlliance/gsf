@@ -261,6 +261,8 @@ namespace ConfigCrypter
                         Cipher.ExportKeyIV(password, keySize.Value);
                     else
                         Cipher.ImportKeyIV(password, keySize.Value, keyIVText);
+
+                    Cipher.FlushCache();
                 }
                 catch (Exception ex)
                 {
@@ -297,8 +299,8 @@ namespace ConfigCrypter
                     keySize = tempKeySize;
             }
 
-            if (passwordIndex >= 0 && passwordIndex < args.Count - 1)
-                password = args[passwordIndex + 1];
+            if (keyIVTextIndex >= 0 && keyIVTextIndex < args.Count - 1)
+                keyIVText = args[keyIVTextIndex + 1];
         }
     }
 }
