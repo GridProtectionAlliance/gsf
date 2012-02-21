@@ -208,7 +208,7 @@ namespace TimeSeriesFramework.Transport
                     }
                 }
 
-                if (index == ushort.MaxValue)
+                if (index != ushort.MaxValue)
                     m_signalIDCache.TryAdd(signalID, index);
             }
 
