@@ -29,6 +29,9 @@ using TVA;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
+    /// <summary>
+    /// Represents a record of <see cref="RaisedAlarm"/> information as defined in the database.
+    /// </summary>
     public class RaisedAlarm : DataModelBase
     {
         #region [ Members ]
