@@ -141,7 +141,7 @@ namespace DataQualityMonitoring.Services
             {
                 filteredAlarms = alarms.Where(a => a.SignalID == signal);
                 highestSeverity = filteredAlarms.Select(a => a.Severity).Max();
-                highestSeverityAlarms = highestSeverityAlarms.Concat(filteredAlarms.Where(a => a.Severity == highestSeverity));
+                highestSeverityAlarms = highestSeverityAlarms.Concat(filteredAlarms.Where(a => a.Severity == highestSeverity)).ToList();
             }
 
             return new SerializableAlarmCollection(highestSeverityAlarms.ToList());

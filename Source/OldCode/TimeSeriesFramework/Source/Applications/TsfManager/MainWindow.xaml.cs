@@ -51,6 +51,7 @@ namespace TsfManager
         private WindowsServiceClient m_windowsServiceClient;
         private LinkedList<TextBlock> m_navigationList;
         private LinkedListNode<TextBlock> m_currentNode;
+        private AlarmMonitor m_alarmMonitor;
         private bool m_navigationProcessed;
 
         #endregion
@@ -139,6 +140,10 @@ namespace TsfManager
             if (ComboboxNode.Items.Count > 0)
                 ComboboxNode.SelectedIndex = 0;
 
+            // Create alarm monitor as singleton
+            m_alarmMonitor = new AlarmMonitor(true);
+            m_alarmMonitor.Start();
+
             IsolatedStorageManager.InitializeIsolatedStorage(false);
         }
 
@@ -150,6 +155,7 @@ namespace TsfManager
         private void MainWindow_Unloaded(object sender, RoutedEventArgs e)
         {
             CommonFunctions.SetRetryServiceConnection(false);
+            m_alarmMonitor.Dispose();
         }
 
         /// <summary>

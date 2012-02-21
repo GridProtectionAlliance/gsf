@@ -22,7 +22,6 @@
         <StackPanel.Resources>
             <CollectionViewSource Source="{Binding Path=NodeLookupList}" x:Key="NodeLookupList"/>
             <CollectionViewSource Source="{Binding Path=MeasurementLookupList}" x:Key="MeasurementLookupList"/>
-            <CollectionViewSource Source="{Binding Path=OptionalMeasurementLookupList}" x:Key="OptionalMeasurementLookupList"/>
             <CollectionViewSource Source="{Binding Path=SeverityList}" x:Key="SeverityList"/>
             <CollectionViewSource Source="{Binding Path=OperationList}" x:Key="OperationList"/>
         </StackPanel.Resources>

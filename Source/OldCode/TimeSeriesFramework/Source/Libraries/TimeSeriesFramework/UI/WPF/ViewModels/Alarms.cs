@@ -33,7 +33,7 @@ namespace TimeSeriesFramework.UI.ViewModels
     /// <summary>
     /// Class to hold bindable <see cref="DataModels.Alarm"/> collection and current selection information for UI.
     /// </summary>
-    public class Alarms : PagedViewModelBase<DataModels.Alarm, int>
+    internal class Alarms : PagedViewModelBase<DataModels.Alarm, int>
     {
         #region [ Members ]
 
@@ -186,10 +186,17 @@ namespace TimeSeriesFramework.UI.ViewModels
         {
             base.Clear();
 
-            CurrentItem.NodeID = m_nodeLookupList.First().Key;
-            CurrentItem.SignalID = m_measurementLookupList.First().Key;
-            CurrentItem.Operation = m_operationList.First().Key;
-            CurrentItem.Severity = m_severityList.First().Key;
+            if (m_nodeLookupList.Count > 0)
+                CurrentItem.NodeID = m_nodeLookupList.First().Key;
+
+            if (m_measurementLookupList.Count > 0)
+                CurrentItem.SignalID = m_measurementLookupList.First().Key;
+
+            if (m_operationList.Count > 0)
+                CurrentItem.Operation = m_operationList.First().Key;
+
+            if (m_severityList.Count > 0)
+                CurrentItem.Severity = m_severityList.First().Key;
         }
 
         /// <summary>

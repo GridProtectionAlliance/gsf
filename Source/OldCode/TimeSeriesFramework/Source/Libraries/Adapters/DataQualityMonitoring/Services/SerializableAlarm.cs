@@ -52,13 +52,13 @@ namespace DataQualityMonitoring.Services
         {
             ID = sourceAlarm.ID;
             TagName = sourceAlarm.TagName;
-            Severity = sourceAlarm.Severity;
+            Severity = (int)sourceAlarm.Severity;
             State = sourceAlarm.State;
             SignalID = sourceAlarm.SignalID.ToString();
-            TimeRaised = ((DateTime)sourceAlarm.Cause.Timestamp).ToString("yyyy-MM-dd HH:mm:ss.fff");
+            TimeRaised = ((DateTime)sourceAlarm.Cause.Timestamp).ToString("MM/dd/yyyy HH:mm:ss");
             ValueAtTimeRaised = sourceAlarm.Cause.AdjustedValue;
             Description = sourceAlarm.Description;
-            Operation = sourceAlarm.Operation;
+            Operation = (int)sourceAlarm.Operation;
             SetPoint = sourceAlarm.SetPoint ?? default(double);
             Tolerance = sourceAlarm.Tolerance ?? default(double);
             Delay = sourceAlarm.Delay ?? default(double);
@@ -85,7 +85,7 @@ namespace DataQualityMonitoring.Services
         /// Gets or sets the severity of the alarm.
         /// </summary>
         [XmlAttribute(), DataMember(Order = 2)]
-        public AlarmSeverity Severity { get; set; }
+        public int Severity { get; set; }
 
         /// <summary>
         /// Gets or sets the state of the alarm (raised or cleared).
@@ -124,7 +124,7 @@ namespace DataQualityMonitoring.Services
         /// when testing values from the incoming signal.
         /// </summary>
         [XmlAttribute(), DataMember(Order = 8)]
-        public AlarmOperation Operation { get; set; }
+        public int Operation { get; set; }
 
         /// <summary>
         /// Gets or sets the value to be compared against

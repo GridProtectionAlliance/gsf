@@ -136,6 +136,9 @@
     <Compile Include="UserControls\AdapterUserControl.xaml.cs">
       <DependentUpon>AdapterUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\AlarmStatusUserControl.xaml.cs">
+      <DependentUpon>AlarmStatusUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\AlarmUserControl.xaml.cs">
       <DependentUpon>AlarmUserControl.xaml</DependentUpon>
     </Compile>
@@ -201,6 +204,7 @@
     <Compile Include="ViewModels\Measurements.cs" />
     <Compile Include="ViewModels\Nodes.cs" />
     <Compile Include="ViewModels\Protocols.cs" />
+    <Compile Include="ViewModels\RaisedAlarms.cs" />
     <Compile Include="ViewModels\SecurityGroups.cs" />
     <Compile Include="ViewModels\UserAccounts.cs" />
     <Compile Include="ViewModels\VendorDevices.cs" />
@@ -230,6 +234,10 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="UserControls\AdapterUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\AlarmStatusUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
