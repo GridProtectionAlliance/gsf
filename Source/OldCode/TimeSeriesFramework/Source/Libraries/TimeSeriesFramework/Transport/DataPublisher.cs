@@ -365,7 +365,7 @@ namespace TimeSeriesFramework.Transport
                 base.Name = value.ToUpper();
 
                 if (m_commandChannel != null)
-                    m_commandChannel.SettingsCategory = value;
+                    m_commandChannel.SettingsCategory = value.Replace("!", "").ToLower();
             }
         }
 
@@ -505,7 +505,7 @@ namespace TimeSeriesFramework.Transport
             TcpServer commandChannel = new TcpServer();
 
             // Initialize default settings
-            commandChannel.SettingsCategory = Name.ToLower();
+            commandChannel.SettingsCategory = Name.Replace("!", "").ToLower();
             commandChannel.ConfigurationString = "port=6165";
             commandChannel.PayloadAware = true;
             commandChannel.Compression = CompressionStrength.NoCompression;
