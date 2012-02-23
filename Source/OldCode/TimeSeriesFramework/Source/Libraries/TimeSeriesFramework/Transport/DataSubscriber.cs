@@ -1234,8 +1234,8 @@ namespace TimeSeriesFramework.Transport
                                     }
                                     else
                                     {
-                                        query = adoDatabase.ParameterizedQueryString("UPDATE Measurement SET PointTag = {0}, SignalTypeID = {1}, SignalReference = {2}, Description = {3}, Internal = {4} WHERE SignalID = {5}", "pointTag", "signalTypeID", "signalReference", "description", "internal", "signalID");
-                                        connection.ExecuteNonQuery(query, pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, adoDatabase.Bool(m_markInternal), signalID);
+                                        query = adoDatabase.ParameterizedQueryString("UPDATE Measurement SET PointTag = {0}, SignalTypeID = {1}, SignalReference = {2}, Description = {3}, Internal = {4}, Subscribed = {5} WHERE SignalID = {6}", "pointTag", "signalTypeID", "signalReference", "description", "internal", "subscribed", "signalID");
+                                        connection.ExecuteNonQuery(query, pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, adoDatabase.Bool(m_markInternal), adoDatabase.Bool(!m_markInternal), signalID);
                                     }
                                 }
                             }
