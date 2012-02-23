@@ -29,6 +29,7 @@ using System.Security.Cryptography;
 using System.Text;
 using TVA;
 using TVA.Communication;
+using TVA.IO.Compression;
 using TVA.Security.Cryptography;
 
 namespace TimeSeriesFramework.Transport
@@ -62,7 +63,11 @@ namespace TimeSeriesFramework.Transport
         private IPAddress m_ipAddress;
         private TcpServer m_commandChannel;
         private UdpServer m_dataChannel;
+        private CompressionStrength m_compression;
+        private string m_configurationString;
+        private bool m_connectionEstablished;
         private System.Timers.Timer m_pingTimer;
+        private System.Timers.Timer m_reconnectTimer;
         private bool m_disposed;
 
         #endregion
@@ -84,11 +89,18 @@ namespace TimeSeriesFramework.Transport
             m_keyIVs = null;
             m_cipherIndex = 0;
 
+            // Setup ping timer
             m_pingTimer = new System.Timers.Timer();
             m_pingTimer.Interval = 5000.0D;
             m_pingTimer.AutoReset = true;
             m_pingTimer.Elapsed += m_pingTimer_Elapsed;
             m_pingTimer.Start();
+
+            // Setup reconnect timer
+            m_reconnectTimer = new System.Timers.Timer();
+            m_reconnectTimer.Interval = 1000.0D;
+            m_reconnectTimer.AutoReset = false;
+            m_reconnectTimer.Elapsed += m_reconnectTimer_Elapsed;
 
             // Attempt to lookup remote connection identification for logging purposes
             try
@@ -178,6 +190,8 @@ namespace TimeSeriesFramework.Transport
             }
             set
             {
+                m_connectionEstablished = (value != null);
+
                 if (m_dataChannel != null)
                 {
                     // Detach from events on existing data channel reference
@@ -194,6 +208,10 @@ namespace TimeSeriesFramework.Transport
 
                 if (m_dataChannel != null)
                 {
+                    // Save UDP settings so channel can be reestablished if needed
+                    m_configurationString = m_dataChannel.ConfigurationString;
+                    m_compression = m_dataChannel.Compression;
+
                     // Attach to events on new data channel reference
                     m_dataChannel.SendClientDataException += m_dataChannel_SendClientDataException;
                     m_dataChannel.ServerStarted += m_dataChannel_ServerStarted;
@@ -451,6 +469,13 @@ namespace TimeSeriesFramework.Transport
                         }
                         m_pingTimer = null;
 
+                        if (m_reconnectTimer != null)
+                        {
+                            m_reconnectTimer.Elapsed -= m_reconnectTimer_Elapsed;
+                            m_reconnectTimer.Dispose();
+                        }
+                        m_reconnectTimer = null;
+
                         DataChannel = null;
                         m_commandChannel = null;
                         m_ipAddress = null;
@@ -551,7 +576,38 @@ namespace TimeSeriesFramework.Transport
 
         private void m_dataChannel_ServerStopped(object sender, EventArgs e)
         {
-            m_parent.OnStatusMessage("Data channel stopped.");
+            if (m_connectionEstablished)
+            {
+                m_parent.OnStatusMessage("Data channel stopped unexpectedly, restarting data channel...");
+
+                if (m_reconnectTimer != null)
+                    m_reconnectTimer.Start();
+            }
+            else
+            {
+                m_parent.OnStatusMessage("Data channel stopped.");
+            }
+        }
+
+        private void m_reconnectTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            try
+            {
+                m_parent.OnStatusMessage("Attempting to restart data channel...");
+                this.DataChannel = null;
+
+                UdpServer dataChannel = new UdpServer(m_configurationString);
+                dataChannel.Compression = m_compression;
+                dataChannel.Start();
+
+                this.DataChannel = dataChannel;
+                m_parent.OnStatusMessage("Data channel successfully restarted.");
+            }
+            catch (Exception ex)
+            {
+                m_parent.OnStatusMessage("Failed to restart data channel due to exception: {0}", ex.Message);
+                m_reconnectTimer.Start();
+            }
         }
 
         #endregion
