@@ -38,6 +38,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         // Fields
         private AlarmMonitor m_monitor;
         private Dispatcher m_dispatcher;
+        private string m_currentSortMemberPath;
 
         #endregion
 
@@ -130,7 +131,7 @@ namespace TimeSeriesFramework.UI.ViewModels
             if ((object)item != null)
             {
                 if (item.Severity >= (int)AlarmSeverity.Error)
-                    row.Background = Brushes.Gray;
+                    row.Background = Brushes.LightGray;
                 else if (item.Severity >= (int)AlarmSeverity.Critical)
                     row.Background = Brushes.Red;
                 else if (item.Severity >= (int)AlarmSeverity.High)
@@ -179,6 +180,8 @@ namespace TimeSeriesFramework.UI.ViewModels
         {
             List<DataModels.RaisedAlarm> itemsSource;
 
+            m_currentSortMemberPath = sortMemberPath;
+
             if (sortMemberPath != "Severity")
             {
                 base.SortData(sortMemberPath);
@@ -213,6 +216,9 @@ namespace TimeSeriesFramework.UI.ViewModels
                 key = GetCurrentItemKey();
                 ItemsSource = m_monitor.GetAlarmList();
                 newCurrentItem = ItemsSource.SingleOrDefault(alarm => alarm.ID == key);
+
+                if ((object)m_currentSortMemberPath != null)
+                    SortData(m_currentSortMemberPath);
 
                 if ((object)newCurrentItem != null)
                 {

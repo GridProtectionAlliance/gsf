@@ -62,10 +62,10 @@ namespace TimeSeriesFramework.UI.UserControls
         {
             int refreshInterval;
 
-            if ((object)AlarmMonitor.Singleton == null)
+            if ((object)AlarmMonitor.Default == null)
                 m_monitor = new AlarmMonitor();
 
-            m_dataContext.Monitor = AlarmMonitor.Singleton ?? m_monitor;
+            m_dataContext.Monitor = AlarmMonitor.Default ?? m_monitor;
 
             refreshInterval = m_dataContext.Monitor.RefreshInterval;
             TextBlockAlarmRefreshInterval.Text = refreshInterval.ToString();

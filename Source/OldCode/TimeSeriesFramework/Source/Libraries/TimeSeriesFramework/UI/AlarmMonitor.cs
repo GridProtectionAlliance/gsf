@@ -87,7 +87,7 @@ namespace TimeSeriesFramework.UI
             m_refreshTimer.Elapsed += RefreshTimer_Elapsed;
 
             if (singleton)
-                Singleton = this;
+                Default = this;
         }
 
         #endregion
@@ -354,7 +354,7 @@ namespace TimeSeriesFramework.UI
         /// Gets or sets the global reference to a singleton
         /// of the <see cref="AlarmMonitor"/> class.
         /// </summary>
-        public static AlarmMonitor Singleton { get; set; }
+        public static AlarmMonitor Default { get; set; }
 
         #endregion
     }
