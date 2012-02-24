@@ -3207,7 +3207,8 @@ namespace TVA.Historian.Files
             {
                 if (string.Compare(FilePath.GetDirectoryName(FilePath.GetAbsolutePath(sourceFileName)).Trim(), FilePath.GetDirectoryName(FilePath.GetAbsolutePath(destinationFileName)).Trim(), true) == 0)
                 {
-                    FileWatcher_Renamed(this, new RenamedEventArgs(WatcherChangeTypes.Renamed, FilePath.GetDirectoryName(FilePath.GetAbsolutePath(sourceFileName)), FilePath.GetFileName(sourceFileName), FilePath.GetFileName(destinationFileName)));
+                    //FileWatcher_Renamed(this, new RenamedEventArgs(WatcherChangeTypes.Renamed, FilePath.GetDirectoryName(FilePath.GetAbsolutePath(sourceFileName)), FilePath.GetFileName(sourceFileName), FilePath.GetFileName(destinationFileName)));
+                    FileWatcher_Renamed(this, new RenamedEventArgs(WatcherChangeTypes.Renamed, FilePath.GetDirectoryName(FilePath.GetAbsolutePath(destinationFileName)), FilePath.GetFileName(destinationFileName), FilePath.GetFileName(sourceFileName)));
                 }
                 else
                 {
