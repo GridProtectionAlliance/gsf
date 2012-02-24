@@ -5937,6 +5937,17 @@
             <param name="maxLength">Maximum number of available characters for display.</param>
             <returns>A short one-line summary of the current status of the <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/>.</returns>
         </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.EnumerateClients">
+            <summary>
+            Enumerates connected clients.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.RotateCipherKeys(System.Int32)">
+            <summary>
+            Rotates cipher keys for specified client connection.
+            </summary>
+            <param name="clientIndex">Enumerated index for client connection.</param>
+        </member>
         <member name="M:TimeSeriesFramework.Transport.DataPublisher.UpdateSignalIndexCache(System.Guid,TimeSeriesFramework.Transport.SignalIndexCache,TimeSeriesFramework.MeasurementKey[])">
             <summary>
             Updates signal index cache based on input measurement keys.
