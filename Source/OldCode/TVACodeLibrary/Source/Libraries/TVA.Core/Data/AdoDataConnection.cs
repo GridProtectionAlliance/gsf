@@ -681,7 +681,7 @@ namespace TVA.Data
                 return "{" + guid.ToString() + "}";
 
             if (IsOracle || IsSqlite)
-                return guid.ToString();
+                return guid.ToString().ToLower();
 
             //return "P" + guid.ToString();
 
