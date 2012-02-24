@@ -4,10 +4,135 @@
         <name>TVA.ServiceModel</name>
     </assembly>
     <members>
+        <member name="T:TVA.ServiceModel.Activation.SecureServiceHostFactory">
+            <summary>
+            A service host factory for WCF Services that enables role-based security using <see cref="T:TVA.ServiceModel.SecurityPolicy"/>.
+            </summary>
+            <see cref="T:TVA.ServiceModel.SecurityPolicy"/>
+        </member>
+        <member name="M:TVA.ServiceModel.Activation.SecureServiceHostFactory.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.ServiceModel.Activation.SecureServiceHostFactory"/> class.
+            </summary>
+        </member>
+        <member name="M:TVA.ServiceModel.Activation.SecureServiceHostFactory.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.ServiceModel.Activation.SecureServiceHostFactory"/> class.
+            </summary>
+            <param name="protocol">Protocol used by the service.</param>
+        </member>
+        <member name="M:TVA.ServiceModel.Activation.SecureServiceHostFactory.#ctor(System.String,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.ServiceModel.Activation.SecureServiceHostFactory"/> class.
+            </summary>
+            <param name="protocol">Protocol used by the service.</param>
+            <param name="address">Address of the service.</param>
+        </member>
+        <member name="M:TVA.ServiceModel.Activation.SecureServiceHostFactory.CreateServiceHost(System.Type,System.Uri[])">
+            <summary>
+            Creates a new <see cref="T:System.ServiceModel.ServiceHost"/> from the URI.
+            </summary>
+            <param name="serviceType">Specifies the type of WCF service to host.</param>
+            <param name="baseAddresses">An array of base addresses for the service.</param>
+            <returns>New <see cref="T:System.ServiceModel.ServiceHost"/>.</returns>
+        </member>
+        <member name="P:TVA.ServiceModel.Activation.SecureServiceHostFactory.PublishMetadata">
+            <summary>
+            Gets or sets a boolean value that indicates whether service metadata is to be published.
+            </summary>
+        </member>
+        <member name="P:TVA.ServiceModel.Activation.SecureServiceHostFactory.DisableSecurity">
+            <summary>
+            Gets or sets a boolean value that indicates whether security on the service is to be disabled. 
+            </summary>
+        </member>
         <member name="T:TVA.ServiceModel.NamespaceDoc">
             <summary>
             Contains classes and interfaces that provide the basic infrastructure for writting web services.
             </summary>
+        </member>
+        <member name="T:TVA.ServiceModel.Service">
+            <summary>
+            Defines helper methods related to WCF-based web services.
+            </summary>
+        </member>
+        <member name="M:TVA.ServiceModel.Service.CreateServiceBinding(System.String@,System.Boolean)">
+            <summary>
+            Creates a <see cref="T:System.ServiceModel.Channels.Binding"/> based on the specified <paramref name="address"/>.
+            </summary>
+            <param name="address">The URI that is used to determine the type of <see cref="T:System.ServiceModel.Channels.Binding"/> to be created.</param>
+            <param name="enableSecurity">A boolean value that indicated whether security is to be enabled on the <see cref="T:System.ServiceModel.Channels.Binding"/>.</param>
+            <returns>An <see cref="T:System.ServiceModel.Channels.Binding"/> object if a valid <paramref name="address"/> is specified; otherwise null.</returns>
+            <remarks>
+            This list shows all valid address schemes that can be specified in the <paramref name="address"/>:
+            <list type="table">
+                <listheader>
+                    <term>Address Scheme</term>
+                    <description>Usage</description>
+                </listheader>
+                <item>
+                    <term><b>http://</b> or <b>http.soap11://</b></term>
+                    <description>An <paramref name="address"/> of <b>http.soap11://localhost:2929</b> will create an <see cref="T:System.ServiceModel.BasicHttpBinding"/> and update the <paramref name="address"/> to <b>http://localhost:2929</b>.</description>
+                </item>
+                <item>
+                    <term><b>http.soap12://</b></term>
+                    <description>An <paramref name="address"/> of <b>http.soap12://localhost:2929</b> will create an <see cref="T:System.ServiceModel.WSHttpBinding"/> and update the <paramref name="address"/> to <b>http://localhost:2929</b>.</description>
+                </item>
+                <item>
+                    <term><b>http.duplex://</b></term>
+                    <description>An <paramref name="address"/> of <b>http.duplex://localhost:2929</b> will create an <see cref="T:System.ServiceModel.WSDualHttpBinding"/> and update the <paramref name="address"/> to <b>http://localhost:2929</b>.</description>
+                </item>
+                <item>
+                    <term><b>http.rest://</b></term>
+                    <description>An <paramref name="address"/> of <b>http.rest://localhost:2929</b> will create an <see cref="T:System.ServiceModel.WebHttpBinding"/> and update the <paramref name="address"/> to <b>http://localhost:2929</b>.</description>
+                </item>
+                <item>
+                    <term><b>net.tcp://</b></term>
+                    <description>An <paramref name="address"/> of <b>net.tcp://localhost:2929</b> will create an <see cref="T:System.ServiceModel.NetTcpBinding"/> and leave the <paramref name="address"/> unchanged.</description>
+                </item>
+                <item>
+                    <term><b>net.p2p://</b></term>
+                    <description>An <paramref name="address"/> of <b>net.p2p://localhost:2929</b> will create an <see cref="T:System.ServiceModel.NetPeerTcpBinding"/> and leave the <paramref name="address"/> unchanged.</description>
+                </item>
+                <item>
+                    <term><b>net.pipe://</b></term>
+                    <description>An <paramref name="address"/> of <b>net.pipe://localhost:2929</b> will create an <see cref="T:System.ServiceModel.NetNamedPipeBinding"/> and leave the <paramref name="address"/> unchanged.</description>
+                </item>
+                <item>
+                    <term><b>net.msmq://</b></term>
+                    <description>An <paramref name="address"/> of <b>net.msmq://localhost:2929</b> will create an <see cref="T:System.ServiceModel.NetMsmqBinding"/> and leave the <paramref name="address"/> unchanged.</description>
+                </item>
+            </list>
+            <para>
+            The <paramref name="enableSecurity"/> parameter value is ignored Mono deployments since security bindings are not implemented.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:TVA.ServiceModel.Service.GetAuthenticationSchemes(System.Uri)">
+            <summary>
+            Gets the security setting of the hosting environment (For example: IIS web site or virtual directory).
+            </summary>
+        </member>
+        <member name="M:TVA.ServiceModel.Service.GetServiceContract(System.Type)">
+            <summary>
+            Gets the contract that the service implements.
+            </summary>
+            <param name="serviceType"><see cref="T:System.Type"/> of the service.</param>
+            <returns><see cref="T:System.Type"/> of the service contract if found, otherwise null.</returns>
+        </member>
+        <member name="T:TVA.ServiceModel.Activation.SecureDataServiceHostFactory">
+            <summary>
+            A service host factory for WCF Data Services that enables role-based security using <see cref="T:TVA.ServiceModel.SecurityPolicy"/>.
+            </summary>
+            <see cref="T:TVA.ServiceModel.SecurityPolicy"/>
+        </member>
+        <member name="M:TVA.ServiceModel.Activation.SecureDataServiceHostFactory.CreateServiceHost(System.Type,System.Uri[])">
+            <summary>
+            Creates a new <see cref="T:System.Data.Services.DataServiceHost"/> from the URI.
+            </summary>
+            <param name="serviceType">Specifies the type of WCF service to host.</param>
+            <param name="baseAddresses">An array of base addresses for the service.</param>
+            <returns>New <see cref="T:System.Data.Services.DataServiceHost"/>.</returns>
         </member>
         <member name="T:TVA.ServiceModel.SelfHostingService">
             <summary>
@@ -293,131 +418,6 @@
             By default, the <see cref="P:TVA.ServiceModel.SelfHostingService.ServiceHost"/> only has <see cref="T:System.ServiceModel.WebHttpBinding"/> endpoint at the <see cref="P:TVA.ServiceModel.SelfHostingService.Endpoints"/>. 
             Additional endpoints can be added to the <see cref="P:TVA.ServiceModel.SelfHostingService.ServiceHost"/> when <see cref="E:TVA.ServiceModel.SelfHostingService.ServiceHostCreated"/> event is fired.
             </remarks>
-        </member>
-        <member name="T:TVA.ServiceModel.Activation.SecureServiceHostFactory">
-            <summary>
-            A service host factory for WCF Services that enables role-based security using <see cref="T:TVA.ServiceModel.SecurityPolicy"/>.
-            </summary>
-            <see cref="T:TVA.ServiceModel.SecurityPolicy"/>
-        </member>
-        <member name="M:TVA.ServiceModel.Activation.SecureServiceHostFactory.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.ServiceModel.Activation.SecureServiceHostFactory"/> class.
-            </summary>
-        </member>
-        <member name="M:TVA.ServiceModel.Activation.SecureServiceHostFactory.#ctor(System.String)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.ServiceModel.Activation.SecureServiceHostFactory"/> class.
-            </summary>
-            <param name="protocol">Protocol used by the service.</param>
-        </member>
-        <member name="M:TVA.ServiceModel.Activation.SecureServiceHostFactory.#ctor(System.String,System.String)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.ServiceModel.Activation.SecureServiceHostFactory"/> class.
-            </summary>
-            <param name="protocol">Protocol used by the service.</param>
-            <param name="address">Address of the service.</param>
-        </member>
-        <member name="M:TVA.ServiceModel.Activation.SecureServiceHostFactory.CreateServiceHost(System.Type,System.Uri[])">
-            <summary>
-            Creates a new <see cref="T:System.ServiceModel.ServiceHost"/> from the URI.
-            </summary>
-            <param name="serviceType">Specifies the type of WCF service to host.</param>
-            <param name="baseAddresses">An array of base addresses for the service.</param>
-            <returns>New <see cref="T:System.ServiceModel.ServiceHost"/>.</returns>
-        </member>
-        <member name="P:TVA.ServiceModel.Activation.SecureServiceHostFactory.PublishMetadata">
-            <summary>
-            Gets or sets a boolean value that indicates whether service metadata is to be published.
-            </summary>
-        </member>
-        <member name="P:TVA.ServiceModel.Activation.SecureServiceHostFactory.DisableSecurity">
-            <summary>
-            Gets or sets a boolean value that indicates whether security on the service is to be disabled. 
-            </summary>
-        </member>
-        <member name="T:TVA.ServiceModel.Activation.SecureDataServiceHostFactory">
-            <summary>
-            A service host factory for WCF Data Services that enables role-based security using <see cref="T:TVA.ServiceModel.SecurityPolicy"/>.
-            </summary>
-            <see cref="T:TVA.ServiceModel.SecurityPolicy"/>
-        </member>
-        <member name="M:TVA.ServiceModel.Activation.SecureDataServiceHostFactory.CreateServiceHost(System.Type,System.Uri[])">
-            <summary>
-            Creates a new <see cref="T:System.Data.Services.DataServiceHost"/> from the URI.
-            </summary>
-            <param name="serviceType">Specifies the type of WCF service to host.</param>
-            <param name="baseAddresses">An array of base addresses for the service.</param>
-            <returns>New <see cref="T:System.Data.Services.DataServiceHost"/>.</returns>
-        </member>
-        <member name="T:TVA.ServiceModel.Service">
-            <summary>
-            Defines helper methods related to WCF-based web services.
-            </summary>
-        </member>
-        <member name="M:TVA.ServiceModel.Service.CreateServiceBinding(System.String@,System.Boolean)">
-            <summary>
-            Creates a <see cref="T:System.ServiceModel.Channels.Binding"/> based on the specified <paramref name="address"/>.
-            </summary>
-            <param name="address">The URI that is used to determine the type of <see cref="T:System.ServiceModel.Channels.Binding"/> to be created.</param>
-            <param name="enableSecurity">A boolean value that indicated whether security is to be enabled on the <see cref="T:System.ServiceModel.Channels.Binding"/>.</param>
-            <returns>An <see cref="T:System.ServiceModel.Channels.Binding"/> object if a valid <paramref name="address"/> is specified; otherwise null.</returns>
-            <remarks>
-            This list shows all valid address schemes that can be specified in the <paramref name="address"/>:
-            <list type="table">
-                <listheader>
-                    <term>Address Scheme</term>
-                    <description>Usage</description>
-                </listheader>
-                <item>
-                    <term><b>http://</b> or <b>http.soap11://</b></term>
-                    <description>An <paramref name="address"/> of <b>http.soap11://localhost:2929</b> will create an <see cref="T:System.ServiceModel.BasicHttpBinding"/> and update the <paramref name="address"/> to <b>http://localhost:2929</b>.</description>
-                </item>
-                <item>
-                    <term><b>http.soap12://</b></term>
-                    <description>An <paramref name="address"/> of <b>http.soap12://localhost:2929</b> will create an <see cref="T:System.ServiceModel.WSHttpBinding"/> and update the <paramref name="address"/> to <b>http://localhost:2929</b>.</description>
-                </item>
-                <item>
-                    <term><b>http.duplex://</b></term>
-                    <description>An <paramref name="address"/> of <b>http.duplex://localhost:2929</b> will create an <see cref="T:System.ServiceModel.WSDualHttpBinding"/> and update the <paramref name="address"/> to <b>http://localhost:2929</b>.</description>
-                </item>
-                <item>
-                    <term><b>http.rest://</b></term>
-                    <description>An <paramref name="address"/> of <b>http.rest://localhost:2929</b> will create an <see cref="T:System.ServiceModel.WebHttpBinding"/> and update the <paramref name="address"/> to <b>http://localhost:2929</b>.</description>
-                </item>
-                <item>
-                    <term><b>net.tcp://</b></term>
-                    <description>An <paramref name="address"/> of <b>net.tcp://localhost:2929</b> will create an <see cref="T:System.ServiceModel.NetTcpBinding"/> and leave the <paramref name="address"/> unchanged.</description>
-                </item>
-                <item>
-                    <term><b>net.p2p://</b></term>
-                    <description>An <paramref name="address"/> of <b>net.p2p://localhost:2929</b> will create an <see cref="T:System.ServiceModel.NetPeerTcpBinding"/> and leave the <paramref name="address"/> unchanged.</description>
-                </item>
-                <item>
-                    <term><b>net.pipe://</b></term>
-                    <description>An <paramref name="address"/> of <b>net.pipe://localhost:2929</b> will create an <see cref="T:System.ServiceModel.NetNamedPipeBinding"/> and leave the <paramref name="address"/> unchanged.</description>
-                </item>
-                <item>
-                    <term><b>net.msmq://</b></term>
-                    <description>An <paramref name="address"/> of <b>net.msmq://localhost:2929</b> will create an <see cref="T:System.ServiceModel.NetMsmqBinding"/> and leave the <paramref name="address"/> unchanged.</description>
-                </item>
-            </list>
-            <para>
-            The <paramref name="enableSecurity"/> parameter value is ignored Mono deployments since security bindings are not implemented.
-            </para>
-            </remarks>
-        </member>
-        <member name="M:TVA.ServiceModel.Service.GetAuthenticationSchemes(System.Uri)">
-            <summary>
-            Gets the security setting of the hosting environment (For example: IIS web site or virtual directory).
-            </summary>
-        </member>
-        <member name="M:TVA.ServiceModel.Service.GetServiceContract(System.Type)">
-            <summary>
-            Gets the contract that the service implements.
-            </summary>
-            <param name="serviceType"><see cref="T:System.Type"/> of the service.</param>
-            <returns><see cref="T:System.Type"/> of the service contract if found, otherwise null.</returns>
         </member>
         <member name="T:TVA.ServiceModel.SecurityPolicy">
             <summary>
