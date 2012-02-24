@@ -265,6 +265,7 @@ namespace TimeSeriesFramework.Transport
         private IAdapterCollection m_parent;
         private string m_metadataTables;
         private bool m_requireAuthentication;
+        private bool m_encryptPayload;
         private bool m_disposed;
 
         #endregion
@@ -501,6 +502,10 @@ namespace TimeSeriesFramework.Transport
             if (settings.TryGetValue("requireAuthentication", out setting))
                 m_requireAuthentication = setting.ParseBoolean();
 
+            // Check flag that will determine if subsciber payloads should be encrypted by default
+            if (settings.TryGetValue("encryptPayload", out setting))
+                m_encryptPayload = setting.ParseBoolean();
+
             // Create a new TCP server
             TcpServer commandChannel = new TcpServer();
 
@@ -596,6 +601,67 @@ namespace TimeSeriesFramework.Transport
                 return string.Format("Publishing data to {0} clients.", m_commandChannel.ClientIDs.Length).CenterText(maxLength);
 
             return "Currently not connected".CenterText(maxLength);
+        }
+
+        /// <summary>
+        /// Enumerates connected clients.
+        /// </summary>
+        [AdapterCommand("Enumerates connected clients.")]
+        public virtual void EnumerateClients()
+        {
+            StringBuilder clientEnumeration = new StringBuilder();
+            Guid[] clientIDs = (Guid[])m_commandChannel.ClientIDs.Clone();
+            ClientConnection connection;
+
+            clientEnumeration.AppendFormat("\r\nIndices for {0} connected clients:\r\n\r\n", clientIDs.Length);
+
+            for (int i = 0; i < clientIDs.Length; i++)
+            {
+                if (m_clientConnections.TryGetValue(clientIDs[i], out connection))
+                    clientEnumeration.AppendFormat("  {0} - {1}\r\n", i.ToString().PadLeft(3), connection.ConnectionID);
+            }
+
+            clientEnumeration.AppendLine();
+
+            //                                 1         2         3         4         5         6         7         8
+            //                        12345678901234567890123456789012345678901234567890123456789012345678901234567890
+            clientEnumeration.Append("You can now call a function (e.g., RotateCipherKeys) with these indices. Note");
+            clientEnumeration.Append("that if any client connects or disconnects these indices will become invalid.");
+            clientEnumeration.AppendLine();
+
+            // Display enumeration
+            OnStatusMessage(clientEnumeration.ToString());
+        }
+
+        /// <summary>
+        /// Rotates cipher keys for specified client connection.
+        /// </summary>
+        /// <param name="clientIndex">Enumerated index for client connection.</param>
+        [AdapterCommand("Rotates cipher keys for client connection using its enumerated index.")]
+        public virtual void RotateCipherKeys(int clientIndex)
+        {
+            Guid clientID = Guid.Empty;
+            bool success = true;
+
+            try
+            {
+                clientID = m_commandChannel.ClientIDs[clientIndex];
+            }
+            catch
+            {
+                success = false;
+                OnStatusMessage("ERROR: Failed to find connected client with enumerated index " + clientIndex);
+            }
+
+            if (success)
+            {
+                ClientConnection connection;
+
+                if (m_clientConnections.TryGetValue(clientID, out connection))
+                    HandleRotateCipherKeys(connection);
+                else
+                    OnStatusMessage("ERROR: Failed to find connected client " + clientID);
+            }
         }
 
         /// <summary>
@@ -1229,9 +1295,10 @@ namespace TimeSeriesFramework.Transport
                         // Send updated signal index cache to client with validated rights of the selected input measurement keys
                         SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, Serialization.Serialize(subscription.SignalIndexCache, TVA.SerializationFormat.Binary));
 
+                        // TODO: Add a flag to the database to allow payload encryption to be subsciber specific instead of global...
                         // Send new or updated cipher keys
-                        //if (connection.Authenticated)
-                        //    connection.RotateCipherKeys();
+                        if (connection.Authenticated && m_encryptPayload)
+                            connection.RotateCipherKeys();
 
                         // Send success response
                         if (subscription.TemporalConstraintIsDefined())
@@ -1477,11 +1544,11 @@ namespace TimeSeriesFramework.Transport
                             HandleUnsubscribeRequest(connection);
                             break;
                         case ServerCommand.MetaDataRefresh:
-                            // Handle meta data refresh
+                            // Handle meta data refresh (per subscriber request)
                             HandleMetadataRefresh(connection);
                             break;
                         case ServerCommand.RotateCipherKeys:
-                            // Handle rotation of cipher keys
+                            // Handle rotation of cipher keys (per subscriber request)
                             HandleRotateCipherKeys(connection);
                             break;
                         case ServerCommand.UpdateProcessingInterval:

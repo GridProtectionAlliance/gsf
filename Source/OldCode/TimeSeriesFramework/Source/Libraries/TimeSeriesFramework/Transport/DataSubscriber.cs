@@ -102,9 +102,9 @@ namespace TimeSeriesFramework.Transport
         private string m_sharedSecret;
         private string m_authenticationID;
         private bool m_includeTime;
-        private bool m_disposed;
         private bool m_synchronizeMetadata;
-        private bool m_markInternal;
+        private bool m_internal;
+        private bool m_disposed;
 
         #endregion
 
@@ -412,10 +412,9 @@ namespace TimeSeriesFramework.Transport
             else
                 m_synchronizeMetadata = true;   // by default, we will always perform this.
 
+            // Check if measurements for this connection should be marked as "internal" - i.e., owned and allowed for proxy
             if (settings.TryGetValue("internal", out setting))
-                m_markInternal = setting.ParseBoolean();
-            else
-                m_markInternal = false;
+                m_internal = setting.ParseBoolean();
 
             // Define auto connect setting
             if (settings.TryGetValue("autoConnect", out setting))
@@ -1174,11 +1173,11 @@ namespace TimeSeriesFramework.Transport
                                         "nodeID", "parentID", "uniqueID", "acronym", "name", "originalSource");
 
                                     connection.ExecuteNonQuery(query, m_nodeID, parentID, uniqueID, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"),
-                                        m_markInternal == true ? (object)DBNull.Value : string.IsNullOrEmpty(row.Field<string>("ParentAcronym")) ? sourcePrefix + row.Field<string>("Acronym") : sourcePrefix + row.Field<string>("ParentAcronym"));
+                                        m_internal == true ? (object)DBNull.Value : string.IsNullOrEmpty(row.Field<string>("ParentAcronym")) ? sourcePrefix + row.Field<string>("Acronym") : sourcePrefix + row.Field<string>("ParentAcronym"));
                                 }
                                 else
                                 {
-                                    if (m_markInternal)
+                                    if (m_internal)
                                     {
                                         query = adoDatabase.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1}, OriginalSource = {2} WHERE UniqueID = {3}", "acronym", "name", "originalSource", "uniqueID");
                                         connection.ExecuteNonQuery(query, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), (object)DBNull.Value, uniqueID);
@@ -1229,13 +1228,13 @@ namespace TimeSeriesFramework.Transport
                                         string insert = adoDatabase.ParameterizedQueryString("INSERT INTO Measurement (DeviceID, PointTag, SignalTypeID, SignalReference, Description, Internal, Enabled ) VALUES ( {0}, {1}, {2}, {3}, {4}, {5} , 1 )", "deviceID", "pointTag", "signalTypeID", "signalReference", "description", "internal");
                                         string update = adoDatabase.ParameterizedQueryString("UPDATE Measurement SET SignalID = {0} WHERE PointTag = {1}", "signalID", "pointTag");
 
-                                        connection.ExecuteNonQuery(insert, 30, deviceIDs[deviceAcronym], pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, adoDatabase.Bool(m_markInternal));
+                                        connection.ExecuteNonQuery(insert, 30, deviceIDs[deviceAcronym], pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, adoDatabase.Bool(m_internal));
                                         connection.ExecuteNonQuery(update, signalID, pointTag);
                                     }
                                     else
                                     {
                                         query = adoDatabase.ParameterizedQueryString("UPDATE Measurement SET PointTag = {0}, SignalTypeID = {1}, SignalReference = {2}, Description = {3}, Internal = {4}, Subscribed = {5} WHERE SignalID = {6}", "pointTag", "signalTypeID", "signalReference", "description", "internal", "subscribed", "signalID");
-                                        connection.ExecuteNonQuery(query, pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, adoDatabase.Bool(m_markInternal), adoDatabase.Bool(!m_markInternal), signalID);
+                                        connection.ExecuteNonQuery(query, pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, adoDatabase.Bool(m_internal), adoDatabase.Bool(!m_internal), signalID);
                                     }
                                 }
                             }
