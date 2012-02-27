@@ -260,7 +260,10 @@ namespace ConfigCrypter
                     if ((object)keyIVText == null)
                         Cipher.ExportKeyIV(password, keySize.Value);
                     else
+                    {
+                        Cipher.ExportKeyIV(password, keySize.Value);
                         Cipher.ImportKeyIV(password, keySize.Value, keyIVText);
+                    }
 
                     Cipher.FlushCache();
                 }
