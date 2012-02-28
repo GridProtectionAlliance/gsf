@@ -1166,13 +1166,13 @@ namespace TimeSeriesFramework.Transport
                             {
                                 query = adoDatabase.ParameterizedQueryString("SELECT COUNT(*) FROM Device WHERE UniqueID = {0}", "deviceGuid");
 
-                                if (Convert.ToInt32(connection.ExecuteScalar(query, uniqueID)) == 0)
+                                if (Convert.ToInt32(connection.ExecuteScalar(query, adoDatabase.Guid(uniqueID))) == 0)
                                 {
                                     query = adoDatabase.ParameterizedQueryString("INSERT INTO Device(NodeID, ParentID, UniqueID, Acronym, " +
                                         "Name, IsConcentrator, Enabled, OriginalSource) VALUES ( {0}, {1}, {2}, {3}, {4}, 0, 1, {5})",
                                         "nodeID", "parentID", "uniqueID", "acronym", "name", "originalSource");
 
-                                    connection.ExecuteNonQuery(query, m_nodeID, parentID, uniqueID, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"),
+                                    connection.ExecuteNonQuery(query, adoDatabase.Guid(m_nodeID), parentID, adoDatabase.Guid(uniqueID), sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"),
                                         m_internal == true ? (object)DBNull.Value : string.IsNullOrEmpty(row.Field<string>("ParentAcronym")) ? sourcePrefix + row.Field<string>("Acronym") : sourcePrefix + row.Field<string>("ParentAcronym"));
                                 }
                                 else
@@ -1180,18 +1180,18 @@ namespace TimeSeriesFramework.Transport
                                     if (m_internal)
                                     {
                                         query = adoDatabase.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1}, OriginalSource = {2} WHERE UniqueID = {3}", "acronym", "name", "originalSource", "uniqueID");
-                                        connection.ExecuteNonQuery(query, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), (object)DBNull.Value, uniqueID);
+                                        connection.ExecuteNonQuery(query, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), (object)DBNull.Value, adoDatabase.Guid(uniqueID));
                                     }
                                     else
                                     {
                                         query = adoDatabase.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1} WHERE UniqueID = {2}", "acronym", "name", "uniqueID");
-                                        connection.ExecuteNonQuery(query, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), uniqueID);
+                                        connection.ExecuteNonQuery(query, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), adoDatabase.Guid(uniqueID));
                                     }
                                 }
                             }
                             // Capture new device ID for measurement association
                             query = adoDatabase.ParameterizedQueryString("SELECT ID FROM Device WHERE UniqueID = {0}", "deviceGuid");
-                            deviceIDs[row.Field<string>("Acronym")] = Convert.ToInt32(connection.ExecuteScalar(query, uniqueID));
+                            deviceIDs[row.Field<string>("Acronym")] = Convert.ToInt32(connection.ExecuteScalar(query, adoDatabase.Guid(uniqueID)));
                         }
                     }
 
@@ -1223,18 +1223,18 @@ namespace TimeSeriesFramework.Transport
 
                                     query = adoDatabase.ParameterizedQueryString("SELECT COUNT(*) FROM Measurement WHERE SignalID = {0}", "signalID");
 
-                                    if (Convert.ToInt32(connection.ExecuteScalar(query, signalID)) == 0)
+                                    if (Convert.ToInt32(connection.ExecuteScalar(query, adoDatabase.Guid(signalID))) == 0)
                                     {
                                         string insert = adoDatabase.ParameterizedQueryString("INSERT INTO Measurement (DeviceID, PointTag, SignalTypeID, SignalReference, Description, Internal, Enabled ) VALUES ( {0}, {1}, {2}, {3}, {4}, {5} , 1 )", "deviceID", "pointTag", "signalTypeID", "signalReference", "description", "internal");
                                         string update = adoDatabase.ParameterizedQueryString("UPDATE Measurement SET SignalID = {0} WHERE PointTag = {1}", "signalID", "pointTag");
 
                                         connection.ExecuteNonQuery(insert, 30, deviceIDs[deviceAcronym], pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, adoDatabase.Bool(m_internal));
-                                        connection.ExecuteNonQuery(update, signalID, pointTag);
+                                        connection.ExecuteNonQuery(update, adoDatabase.Guid(signalID), pointTag);
                                     }
                                     else
                                     {
                                         query = adoDatabase.ParameterizedQueryString("UPDATE Measurement SET PointTag = {0}, SignalTypeID = {1}, SignalReference = {2}, Description = {3}, Internal = {4}, Subscribed = {5} WHERE SignalID = {6}", "pointTag", "signalTypeID", "signalReference", "description", "internal", "subscribed", "signalID");
-                                        connection.ExecuteNonQuery(query, pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, adoDatabase.Bool(m_internal), adoDatabase.Bool(!m_internal), signalID);
+                                        connection.ExecuteNonQuery(query, pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, adoDatabase.Bool(m_internal), adoDatabase.Bool(!m_internal), adoDatabase.Guid(signalID));
                                     }
                                 }
                             }
