@@ -5530,6 +5530,194 @@
             destined for archival.
             </summary>
         </member>
+        <member name="T:TimeSeriesFramework.Statistics.StatisticCalculationFunction">
+            <summary>
+            Method signature for function used to calculate a statistic for a given object.
+            </summary>
+            <param name="source">Source object.</param>
+            <param name="arguments">Any needed arguments for statistic calculation.</param>
+            <returns>Actual calculated statistic.</returns>
+        </member>
+        <member name="T:TimeSeriesFramework.Statistics.Statistic">
+            <summary>
+            Represents a statistic calculation.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Statistics.Statistic.Method">
+            <summary>
+            The method to be called to calculate the statistic.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Statistics.Statistic.Source">
+            <summary>
+            The name of the source of the statistic.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Statistics.Statistic.Index">
+            <summary>
+            The index of the signal associated with the statistic.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Statistics.Statistic.Arguments">
+            <summary>
+            The arguments to be passed into the statistic calculation function.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.Statistics.StatisticsEngine">
+            <summary>
+            Represents the engine that computes statistics within applications of the TimeSeriesFramework.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.#ctor">
+            <summary>
+            Creates a new instance of the <see cref="T:TimeSeriesFramework.Statistics.StatisticsEngine"/> class.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.Initialize">
+            <summary>
+            Initializes <see cref="T:TimeSeriesFramework.Statistics.StatisticsEngine"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.Start">
+            <summary>
+            Starts the <see cref="T:TimeSeriesFramework.Statistics.StatisticsEngine"/> or restarts it if it is already running.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.Stop">
+            <summary>
+            Stops the <see cref="T:TimeSeriesFramework.Statistics.StatisticsEngine"/>.
+            </summary>		
+        </member>
+        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.ReloadStatistics">
+            <summary>
+            Loads or reloads system statistics.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.MapMeasurement(TimeSeriesFramework.IMeasurement,System.String)">
+            <summary>
+            Maps the given measurement to the given source name.
+            </summary>
+            <param name="measurement">The measurement to be mapped.</param>
+            <param name="source">The name of the source of the measurement.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.AddSource(System.String,System.Object)">
+            <summary>
+            Adds the given source under the source collection with the given source name.
+            </summary>
+            <param name="sourceName">The name of the source.</param>
+            <param name="source">The source to be added.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.GetShortStatus(System.Int32)">
+            <summary>
+            Gets a short one-line status of this <see cref="T:TimeSeriesFramework.Statistics.StatisticsEngine"/>.
+            </summary>
+            <param name="maxLength">Maximum number of available characters for display.</param>
+            <returns>A short one-line summary of the current status of this <see cref="T:TimeSeriesFramework.Statistics.StatisticsEngine"/>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.Statistics.StatisticsEngine"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.#cctor">
+            <summary>
+            Static initialization of <see cref="T:TimeSeriesFramework.Statistics.StatisticsEngine"/> class.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.WaitForDefaultInstance(System.Int32)">
+            <summary>
+            Waits for the default instance to be created.
+            </summary>
+            <param name="timeout">The amount of time to wait before giving up.</param>
+            <returns>Boolean to indicate whether the default instance was created or not.</returns>
+        </member>
+        <member name="E:TimeSeriesFramework.Statistics.StatisticsEngine.Loaded">
+            <summary>
+            Event is raised when statistics are loaded from the database.
+            </summary>
+        </member>
+        <member name="E:TimeSeriesFramework.Statistics.StatisticsEngine.BeforeCalculate">
+            <summary>
+            Event is raised before statistics calculation.
+            </summary>
+        </member>
+        <member name="E:TimeSeriesFramework.Statistics.StatisticsEngine.Calculated">
+            <summary>
+            Event is raised after statistics calculation.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Statistics.StatisticsEngine.DefinedMeasurements">
+            <summary>
+            Returns the collection of statistics measurements defined in the system.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Statistics.StatisticsEngine.SupportsTemporalProcessing">
+            <summary>
+            Gets the flag indicating if this adapter supports temporal processing.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Statistics.StatisticsEngine.Default">
+            <summary>
+            Gets the <see cref="T:TimeSeriesFramework.Statistics.StatisticsEngine"/> singleton instance.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.Statistics.StatisticsEngine.UnmappedMeasurementsEventArgs">
+            <summary>
+            Represents arguments to an event that needs to pass a read-only
+            collection of unmapped measurements to its subscribers.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.UnmappedMeasurementsEventArgs.#ctor(System.Collections.ObjectModel.ReadOnlyCollection{TimeSeriesFramework.IMeasurement})">
+            <summary>
+            Creates a new instance of the <see cref="T:TimeSeriesFramework.Statistics.StatisticsEngine.UnmappedMeasurementsEventArgs"/> class.
+            </summary>
+            <param name="undefinedMeasurements">The undefined measurements.</param>
+        </member>
+        <member name="P:TimeSeriesFramework.Statistics.StatisticsEngine.UnmappedMeasurementsEventArgs.UnmappedMeasurements">
+            <summary>
+            Gets the collection of undefined measurements.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.Statistics.StatisticValueState">
+            <summary>
+            Represents an object that can track the current and previous
+            state of a statistic and get the difference between them.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Statistics.StatisticValueState.#ctor(System.String)">
+            <summary>
+            Creates a new <see cref="T:TimeSeriesFramework.Statistics.StatisticValueState"/>.
+            </summary>
+            <param name="name">Name of statistic.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Statistics.StatisticValueState.GetDifference">
+            <summary>
+            Gets the statistical difference between current and previous statistic value.
+            </summary>
+            <returns>Difference from last cached statistic value.</returns>
+        </member>
+        <member name="T:TimeSeriesFramework.Statistics.StatisticValueStateCache">
+            <summary>
+            Caches statistic values to provide the difference between the
+            current and previous values of any statistic given that
+            statistic's source, name, and current value.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Statistics.StatisticValueStateCache.#ctor">
+            <summary>
+            Creates a new instance of the <see cref="T:TimeSeriesFramework.Statistics.StatisticValueStateCache"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Statistics.StatisticValueStateCache.GetDifference(System.Object,System.Double,System.String)">
+            <summary>
+            Gets the statistical difference between current and previous statistic value.
+            </summary>
+            <param name="source">Source Device.</param>
+            <param name="statistic">Current statistic value.</param>
+            <param name="name">Name of statistic calculation.</param>
+            <returns>Difference from last cached statistic value.</returns>
+        </member>
         <member name="T:TimeSeriesFramework.TimeSeriesStartupOperations">
             <summary>
             Defines a data operations to be performed at startup.
@@ -5540,11 +5728,38 @@
             Delegates control to the data operations that are to be performed at startup.
             </summary>
         </member>
+        <member name="M:TimeSeriesFramework.TimeSeriesStartupOperations.ValidateDefaultNode(System.Data.IDbConnection,System.String)">
+            <summary>
+            Data operation to validate and ensure there is a node in the database.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.TimeSeriesStartupOperations.ValidateActiveMeasurements(System.Data.IDbConnection,System.String)">
+            <summary>
+            Data operation to validate and ensure there is a record
+            in the ConfigurationEntity table for ActiveMeasurements.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.TimeSeriesStartupOperations.ValidateStatistics(System.Data.IDbConnection,System.String)">
+            <summary>
+            Data operation to validate and ensure that certain records that
+            are required for statistics calculations exist in the database.
+            </summary>
+        </member>
         <member name="M:TimeSeriesFramework.TimeSeriesStartupOperations.ValidateAlarming(System.Data.IDbConnection,System.String)">
             <summary>
             Data operation to validate and ensure that certain records
             that are required for alarming exist in the database.
             </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.TimeSeriesStartupOperations.ParameterizedQueryString(System.Type,System.String,System.String[])">
+            <summary>
+            Creates a parameterized query string for the underlying database type 
+            based on the given format string and the parameter names.
+            </summary>
+            <param name="connectionType">The adapter type used to determine the underlying database type.</param>
+            <param name="format">A composite format string.</param>
+            <param name="parameterNames">A string array that contains zero or more parameter names to format.</param>
+            <returns>A parameterized query string based on the given format and parameter names.</returns>
         </member>
         <member name="T:TimeSeriesFramework.Transport.ClientConnection">
             <summary>
