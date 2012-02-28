@@ -1160,7 +1160,7 @@ namespace TimeSeriesFramework.Transport
                     {
                         foreach (DataRow row in metadata.Tables["DeviceDetail"].Rows)
                         {
-                            Guid uniqueID = adoDatabase.Guid(row, "UniqueID"); // row.Field<Guid>("UniqueID");
+                            Guid uniqueID = Guid.Parse(row.Field<object>("UniqueID").ToString()); // adoDatabase.Guid(row, "UniqueID"); // row.Field<Guid>("UniqueID");
                             // We will synchronize metadata only if the source owns this device. Otherwise skip it.
                             if (row.Field<object>("OriginalSource") == null && !row["IsConcentrator"].ToNonNullString("0").ParseBoolean())
                             {
@@ -1219,7 +1219,7 @@ namespace TimeSeriesFramework.Transport
                                 if (!string.IsNullOrWhiteSpace(deviceAcronym) && deviceIDs.ContainsKey(deviceAcronym) && !string.IsNullOrWhiteSpace(signalTypeAcronym) && signalTypeIDs.ContainsKey(signalTypeAcronym))
                                 {
                                     string pointTag = sourcePrefix + row.Field<string>("PointTag") ?? string.Empty;
-                                    Guid signalID = adoDatabase.Guid(row, "SignalID");  // row.Field<Guid>("SignalID");
+                                    Guid signalID = Guid.Parse(row.Field<object>("SignalID").ToString()); // adoDatabase.Guid(row, "SignalID");  // row.Field<Guid>("SignalID");
 
                                     query = adoDatabase.ParameterizedQueryString("SELECT COUNT(*) FROM Measurement WHERE SignalID = {0}", "signalID");
 
