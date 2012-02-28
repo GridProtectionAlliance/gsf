@@ -128,6 +128,11 @@
     <Compile Include="Adapters\NamespaceDoc.cs" />
     <Compile Include="Adapters\OutputAdapterBase.cs" />
     <Compile Include="Adapters\OutputAdapterCollection.cs" />
+    <Compile Include="Statistics\PerformanceStatistics.cs" />
+    <Compile Include="Statistics\Statistic.cs" />
+    <Compile Include="Statistics\StatisticsEngine.cs" />
+    <Compile Include="Statistics\StatisticValueState.cs" />
+    <Compile Include="Statistics\StatisticValueStateCache.cs" />
     <Compile Include="TimeSeriesStartupOperations.cs" />
     <Compile Include="Transport\ClientConnection.cs" />
     <Compile Include="Transport\Common.cs" />
