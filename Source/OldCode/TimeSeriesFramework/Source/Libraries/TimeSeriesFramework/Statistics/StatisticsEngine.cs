@@ -346,7 +346,7 @@ namespace TimeSeriesFramework.Statistics
 
                                 // Add measurement to definition list keyed by signal reference
                                 m_definedMeasurements.Add(definedMeasurement);
-                                m_measurementSignalReferenceMap.Add(definedMeasurement.Key, signalReference);
+                                m_measurementSignalReferenceMap[definedMeasurement.Key] = signalReference;
 
                                 // Map system measurements to System source
                                 if (signalReference.StartsWith("SYSTEM-ST"))
