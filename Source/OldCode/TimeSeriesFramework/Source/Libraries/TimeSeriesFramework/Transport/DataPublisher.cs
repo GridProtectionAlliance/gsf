@@ -257,6 +257,7 @@ namespace TimeSeriesFramework.Transport
         internal const int CipherSaltLength = 8;
 
         // Fields
+        private ManualResetEvent m_initializeWaitHandle;
         private TcpServer m_commandChannel;
         private ConcurrentDictionary<Guid, ClientConnection> m_clientConnections;
         private ConcurrentDictionary<Guid, IServer> m_clientPublicationChannels;
@@ -290,6 +291,7 @@ namespace TimeSeriesFramework.Transport
         {
             base.Name = "Data Publisher Collection";
             base.DataMember = "[internal]";
+            m_initializeWaitHandle = new ManualResetEvent(false);
             m_clientConnections = new ConcurrentDictionary<Guid, ClientConnection>();
             m_clientPublicationChannels = new ConcurrentDictionary<Guid, IServer>();
             m_signalIDCache = new ConcurrentDictionary<MeasurementKey, Guid>();
@@ -445,6 +447,26 @@ namespace TimeSeriesFramework.Transport
             }
         }
 
+        public override bool Initialized
+        {
+            get
+            {
+                return base.Initialized;
+            }
+            set
+            {
+                base.Initialized = value;
+
+                if ((object)m_initializeWaitHandle != null)
+                {
+                    if (value)
+                        m_initializeWaitHandle.Set();
+                    else
+                        m_initializeWaitHandle.Reset();
+                }
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -474,6 +496,14 @@ namespace TimeSeriesFramework.Transport
                             m_routingTables.Dispose();
                         }
                         m_routingTables = null;
+
+                        if (m_initializeWaitHandle != null)
+                        {
+                            m_initializeWaitHandle.Close();
+                            m_initializeWaitHandle.Dispose();
+                        }
+
+                        m_initializeWaitHandle = null;
                     }
                 }
                 finally
@@ -542,6 +572,12 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         public override void Start()
         {
+            if (!WaitForInitialize(InitializationTimeout))
+            {
+                OnProcessException(new TimeoutException("Failed to start adapter due to timeout waiting for initialization."));
+                return;
+            }
+
             if (!Enabled)
             {
                 base.Start();
@@ -588,6 +624,19 @@ namespace TimeSeriesFramework.Transport
 
             // Otherwise just handle the request normally
             return base.GetExternalEventHandle(name);
+        }
+
+        /// <summary>
+        /// Blocks the <see cref="Thread.CurrentThread"/> until the adapter is <see cref="Initialized"/>.
+        /// </summary>
+        /// <param name="timeout">The number of milliseconds to wait.</param>
+        /// <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
+        public override bool WaitForInitialize(int timeout)
+        {
+            if ((object)m_initializeWaitHandle != null)
+                return m_initializeWaitHandle.WaitOne(timeout);
+
+            return false;
         }
 
         /// <summary>
