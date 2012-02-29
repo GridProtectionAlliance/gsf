@@ -61,7 +61,7 @@ namespace TimeSeriesFramework
         private static void ValidateDefaultNode(IDbConnection connection, string nodeIDQueryString)
         {
             // Queries
-            const string NodeCountFormat = "SELECT COUNT(*) FROM Node WHERE ID = {0}";
+            const string NodeCountFormat = "SELECT COUNT(*) FROM Node";
 
             const string NodeInsertFormat = "INSERT INTO Node(Name, CompanyID, Description, Settings, MenuType, MenuData, Master, LoadOrder, Enabled) " +
                 "VALUES('Default', NULL, 'Default node', 'RemoteStatusServerConnectionString={server=localhost:8500};datapublisherport=6165;RealTimeStatisticServiceUrl=http://localhost:6052/historian', " +
