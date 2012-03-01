@@ -1225,7 +1225,7 @@ namespace TimeSeriesFramework.Transport
 
                                     if (Convert.ToInt32(connection.ExecuteScalar(query, adoDatabase.Guid(signalID))) == 0)
                                     {
-                                        string insert = adoDatabase.ParameterizedQueryString("INSERT INTO Measurement (DeviceID, PointTag, SignalTypeID, SignalReference, Description, Internal, Enabled ) VALUES ( {0}, {1}, {2}, {3}, {4}, {5} , 1 )", "deviceID", "pointTag", "signalTypeID", "signalReference", "description", "internal");
+                                        string insert = adoDatabase.ParameterizedQueryString("INSERT INTO Measurement (DeviceID, PointTag, SignalTypeID, SignalReference, Description, Internal, Subscribed, Enabled ) VALUES ( {0}, {1}, {2}, {3}, {4}, {5}, 0, 1 )", "deviceID", "pointTag", "signalTypeID", "signalReference", "description", "internal");
                                         string update = adoDatabase.ParameterizedQueryString("UPDATE Measurement SET SignalID = {0} WHERE PointTag = {1}", "signalID", "pointTag");
 
                                         connection.ExecuteNonQuery(insert, 30, deviceIDs[deviceAcronym], pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, adoDatabase.Bool(m_internal));
