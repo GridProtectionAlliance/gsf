@@ -3359,6 +3359,9 @@
             <summary>
             Gets or sets primary keys of input measurements the action adapter expects.
             </summary>
+            <remarks>
+            If your adapter needs to receive all measurements, you must explicitly set InputMeasurementKeys to null.
+            </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.OutputMeasurements">
             <summary>
@@ -4491,6 +4494,9 @@
             <summary>
             Gets or sets primary keys of input measurements the <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/> expects, if any.
             </summary>
+            <remarks>
+            If your adapter needs to receive all measurements, you must explicitly set InputMeasurementKeys to null.
+            </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.AdapterBase.OutputMeasurements">
             <summary>
@@ -6144,6 +6150,13 @@
             </summary>
             <param name="name">Case-insensitive wait handle name.</param>
             <returns>A <see cref="T:System.Threading.AutoResetEvent"/> based wait handle associated with the given <paramref name="name"/>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.WaitForInitialize(System.Int32)">
+            <summary>
+            Blocks the <see cref="P:System.Threading.Thread.CurrentThread"/> until the adapter is <see cref="P:TimeSeriesFramework.Transport.DataPublisher.Initialized"/>.
+            </summary>
+            <param name="timeout">The number of milliseconds to wait.</param>
+            <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
         </member>
         <member name="M:TimeSeriesFramework.Transport.DataPublisher.GetShortStatus(System.Int32)">
             <summary>
