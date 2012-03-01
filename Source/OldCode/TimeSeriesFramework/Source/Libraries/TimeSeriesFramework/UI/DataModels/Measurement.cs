@@ -855,10 +855,10 @@ namespace TimeSeriesFramework.UI.DataModels
                 DataTable measurementTable;
                 string query;
 
-                query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE NodeID = {0} AND " +
-                    "Internal = {1} AND Subscribed = {2} ORDER BY PointTag", "nodeID", "internal", "subscribed");
+                query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE " +
+                    "Subscribed = {0} ORDER BY PointTag", "subscribed");
 
-                measurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID(), database.Bool(false), database.Bool(true));
+                measurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Bool(true));
 
                 foreach (DataRow row in measurementTable.Rows)
                 {
