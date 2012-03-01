@@ -332,6 +332,9 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Gets or sets primary keys of input measurements the <see cref="AdapterBase"/> expects, if any.
         /// </summary>
+        /// <remarks>
+        /// If your adapter needs to receive all measurements, you must explicitly set InputMeasurementKeys to null.
+        /// </remarks>
         public virtual MeasurementKey[] InputMeasurementKeys
         {
             get
@@ -790,6 +793,8 @@ namespace TimeSeriesFramework.Adapters
 
             if (settings.TryGetValue("inputMeasurementKeys", out setting))
                 InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, setting);
+            else
+                InputMeasurementKeys = new MeasurementKey[0];
 
             if (settings.TryGetValue("outputMeasurements", out setting))
                 OutputMeasurements = AdapterBase.ParseOutputMeasurements(DataSource, setting);

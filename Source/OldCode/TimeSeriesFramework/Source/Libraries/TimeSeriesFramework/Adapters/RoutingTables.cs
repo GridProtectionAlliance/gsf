@@ -537,9 +537,9 @@ namespace TimeSeriesFramework.Adapters
                             if (actionAdapter.RequestedInputMeasurementKeys.CompareTo(requestedInputMeasurementKeys) != 0)
                                 actionAdapter.RequestedInputMeasurementKeys = requestedInputMeasurementKeys;
 
-                            // Start adapter, action adapter should only be stopped if it also has no requested output measurements keys, which will be determined later
-                            if (actionAdapter.RequestedInputMeasurementKeys != null && actionAdapter.RequestedInputMeasurementKeys.Length > 0)
-                                actionAdapter.Enabled = true;
+                            // Do not start or stop adapter
+                            // Adapter will be stopped or started later
+                            // after calculating requested output measurements
                         }
                     }
                 }
@@ -576,6 +576,10 @@ namespace TimeSeriesFramework.Adapters
                     {
                         if (!actionAdapter.AutoStart && actionAdapter.RequestedInputMeasurementKeys != null && actionAdapter.RespectInputDemands)
                             actionAdapter.RequestedInputMeasurementKeys = null;
+
+                        // Do not start or stop adapter
+                        // Adapter will be stopped or started later
+                        // after calculating requested output measurements
                     }
                 }
 
@@ -603,23 +607,26 @@ namespace TimeSeriesFramework.Adapters
                     // Start or stop connect on demand action adapters based on need, i.e., they provide any of the currently demanded input measurements
                     foreach (IActionAdapter actionAdapter in m_actionAdapters)
                     {
-                        if (!actionAdapter.AutoStart && actionAdapter.RespectOutputDemands)
+                        if (!actionAdapter.AutoStart)
                         {
-                            // Create an intersection between the measurements the adapter can provide and those that are demanded throughout this Iaon session
-                            if (actionAdapter.OutputMeasurements != null && actionAdapter.OutputMeasurements.Length > 0)
-                                requestedOutputMeasurementKeys = actionAdapter.OutputMeasurementKeys().Intersect(inputMeasurementKeys).ToArray();
-                            else
-                                requestedOutputMeasurementKeys = emptyKeys;
+                            if (actionAdapter.RespectOutputDemands)
+                            {
+                                // Create an intersection between the measurements the adapter can provide and those that are demanded throughout this Iaon session
+                                if (actionAdapter.OutputMeasurements != null && actionAdapter.OutputMeasurements.Length > 0)
+                                    requestedOutputMeasurementKeys = actionAdapter.OutputMeasurementKeys().Intersect(inputMeasurementKeys).ToArray();
+                                else
+                                    requestedOutputMeasurementKeys = emptyKeys;
 
-                            // Only update requested output keys if they have changed since adapters may use this as a notification to resubscribe to needed data
-                            if (actionAdapter.RequestedOutputMeasurementKeys.CompareTo(requestedOutputMeasurementKeys) != 0)
-                                actionAdapter.RequestedOutputMeasurementKeys = requestedOutputMeasurementKeys;
+                                // Only update requested output keys if they have changed since adapters may use this as a notification to resubscribe to needed data
+                                if (actionAdapter.RequestedOutputMeasurementKeys.CompareTo(requestedOutputMeasurementKeys) != 0)
+                                    actionAdapter.RequestedOutputMeasurementKeys = requestedOutputMeasurementKeys;
+                            }
 
                             // Start or stop adapter, action adapter should only be stopped if it also has no requested input measurements keys, as determined prior
-                            if (actionAdapter.RequestedOutputMeasurementKeys != null && actionAdapter.RequestedOutputMeasurementKeys.Length > 0)
+                            if (actionAdapter.RespectOutputDemands && actionAdapter.RequestedOutputMeasurementKeys != null && actionAdapter.RequestedOutputMeasurementKeys.Length > 0)
                                 actionAdapter.Enabled = true;
                             else
-                                actionAdapter.Enabled = (actionAdapter.RequestedInputMeasurementKeys != null && actionAdapter.RequestedInputMeasurementKeys.Length > 0);
+                                actionAdapter.Enabled = (actionAdapter.RespectInputDemands && actionAdapter.RequestedInputMeasurementKeys != null && actionAdapter.RequestedInputMeasurementKeys.Length > 0);
                         }
                     }
                 }
@@ -654,13 +661,16 @@ namespace TimeSeriesFramework.Adapters
                 {
                     foreach (IActionAdapter actionAdapter in m_actionAdapters)
                     {
-                        if (!actionAdapter.AutoStart && actionAdapter.RespectOutputDemands)
+                        if (!actionAdapter.AutoStart)
                         {
-                            if (actionAdapter.RequestedOutputMeasurementKeys != null)
-                                actionAdapter.RequestedOutputMeasurementKeys = null;
+                            if (actionAdapter.RespectOutputDemands)
+                            {
+                                if (actionAdapter.RequestedOutputMeasurementKeys != null)
+                                    actionAdapter.RequestedOutputMeasurementKeys = null;
+                            }
 
                             // Action adapter should be stopped if it has no requested input measurements keys, as determined prior
-                            if (!(actionAdapter.RequestedInputMeasurementKeys != null && actionAdapter.RequestedInputMeasurementKeys.Length > 0))
+                            if (!(actionAdapter.RespectInputDemands && actionAdapter.RequestedInputMeasurementKeys != null && actionAdapter.RequestedInputMeasurementKeys.Length > 0))
                                 actionAdapter.Enabled = false;
                         }
                     }
