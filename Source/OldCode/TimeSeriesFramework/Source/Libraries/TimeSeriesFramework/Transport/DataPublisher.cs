@@ -447,6 +447,9 @@ namespace TimeSeriesFramework.Transport
             }
         }
 
+        /// <summary>
+        /// Gets or sets flag indicating if the adapter has been initialized successfully.
+        /// </summary>
         public override bool Initialized
         {
             get
