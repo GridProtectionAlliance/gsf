@@ -1037,7 +1037,7 @@ namespace TimeSeriesFramework.Transport
                                 {
                                     // Deserialize compact measurement format
                                     CompactMeasurement measurement = new CompactMeasurement(m_signalIndexCache, m_includeTime, m_baseTimeOffsets);
-                                    responseIndex += measurement.ParseBinaryImage(buffer, responseIndex, length - responseIndex);
+                                    responseIndex += measurement.ParseBinaryImage(buffer, responseIndex, responseLength - responseIndex);
 
                                     // Apply timestamp from frame if not included in transmission
                                     if (!measurement.IncludeTime)
@@ -1049,7 +1049,7 @@ namespace TimeSeriesFramework.Transport
                                 {
                                     // Deserialize full measurement format
                                     SerializableMeasurement measurement = new SerializableMeasurement();
-                                    responseIndex += measurement.ParseBinaryImage(buffer, responseIndex, length - responseIndex);
+                                    responseIndex += measurement.ParseBinaryImage(buffer, responseIndex, responseLength - responseIndex);
                                     measurements.Add(measurement);
                                 }
                             }
