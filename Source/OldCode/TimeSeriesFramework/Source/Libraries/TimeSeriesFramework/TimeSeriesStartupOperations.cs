@@ -164,7 +164,7 @@ namespace TimeSeriesFramework
             int statMeasurementCount;
 
             // Statistic measurement info for inserting statistic measurements
-            string companyAcronym;
+            string nodeName;
             string pointTag;
             string signalReference;
             string measurementDescription;
@@ -201,7 +201,11 @@ namespace TimeSeriesFramework
             // Ensure that system statistic measurements exist
             statHistorianID = Convert.ToInt32(connection.ExecuteScalar(string.Format(StatHistorianIDFormat, nodeIDQueryString)));
             statSignalTypeID = Convert.ToInt32(connection.ExecuteScalar(StatSignalTypeIDFormat));
-            companyAcronym = GetCompanyAcronym(connection, nodeIDQueryString);
+            nodeName = GetNodeName(connection, nodeIDQueryString);
+
+            // Modify node name so that it can be applied in a measurement point tag
+            nodeName = nodeName.RemoveCharacters(c => !char.IsLetterOrDigit(c));
+            nodeName = nodeName.Replace(' ', '_').ToUpper();
 
             for (int i = 0; i < StatNames.Length; i++)
             {
@@ -211,7 +215,7 @@ namespace TimeSeriesFramework
 
                 if (statMeasurementCount == 0)
                 {
-                    pointTag = string.Format("{0}_SYSTEM:ST{1}", companyAcronym, signalIndex);
+                    pointTag = string.Format("{0}:ST{1}", nodeName, signalIndex);
                     measurementDescription = string.Format("System Statistic for {0}", StatDescriptions[i]);
                     connection.ExecuteNonQuery(statMeasurementInsertQuery, (object)statHistorianID, pointTag, statSignalTypeID, signalReference, measurementDescription);
                 }
@@ -274,24 +278,11 @@ namespace TimeSeriesFramework
             }
         }
 
-        // Attempts to get company acronym from database and, failing
-        // that, attempts to get it from the configuration file.
-        private static string GetCompanyAcronym(IDbConnection connection, string nodeIDQueryString)
+        // Gets the name of the node identified by the given node ID query string.
+        private static string GetNodeName(IDbConnection connection, string nodeIDQueryString)
         {
-            const string NodeCompanyIDFormat = "SELECT CompanyID FROM Node WHERE ID = {0}";
-            const string CompanyAcronymFormat = "SELECT MapAcronym FROM Company WHERE ID = {0}";
-
-            int nodeCompanyID;
-            string companyAcronym;
-
-            nodeCompanyID = int.Parse(connection.ExecuteScalar(string.Format(NodeCompanyIDFormat, nodeIDQueryString)).ToNonNullString("0"));
-
-            if (nodeCompanyID > 0)
-                companyAcronym = connection.ExecuteScalar(string.Format(CompanyAcronymFormat, nodeCompanyID)).ToNonNullString();
-            else
-                companyAcronym = ConfigurationFile.Current.Settings["systemSettings"]["CompanyAcronym"].Value.TruncateRight(3);
-
-            return companyAcronym;
+            const string NodeNameFormat = "SELECT Name FROM Node WHERE ID = {0}";
+            return connection.ExecuteScalar(string.Format(NodeNameFormat, nodeIDQueryString)).ToString();
         }
 
         /// <summary>
