@@ -6300,6 +6300,11 @@
             Gets or sets reference to <see cref="T:TVA.Communication.TcpServer"/> command channel, attaching and/or detaching to events as needed.
             </summary>
         </member>
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.Initialized">
+            <summary>
+            Gets or sets flag indicating if the adapter has been initialized successfully.
+            </summary>
+        </member>
         <member name="T:TimeSeriesFramework.Transport.DataSubscriber">
             <summary>
             Represents a data subscribing client that will connect to a data publisher for a data subscription.
