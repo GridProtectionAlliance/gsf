@@ -198,7 +198,7 @@ namespace TimeSeriesFramework.Transport
                         m_parent.UpdateSignalIndexCache(m_clientID, m_signalIndexCache, value);
 
                     if (m_signalIndexCache != null)
-                        value = AdapterBase.ParseInputMeasurementKeys(DataSource, string.Join("; ", m_signalIndexCache.AuthorizedKeys));
+                        value = AdapterBase.ParseInputMeasurementKeys(DataSource, string.Join("; ", m_signalIndexCache.AuthorizedSignalIDs));
 
                     base.InputMeasurementKeys = value;
 

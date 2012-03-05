@@ -753,7 +753,7 @@ namespace TimeSeriesFramework.Transport
             }
 
             signalIndexCache.Reference = reference;
-            signalIndexCache.UnauthorizedKeys = unauthorizedKeys.ToArray();
+            signalIndexCache.UnauthorizedSignalIDs = unauthorizedKeys.ToArray();
 
             // Send client updated signal index cache
             SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, Serialization.Serialize(signalIndexCache, TVA.SerializationFormat.Binary));

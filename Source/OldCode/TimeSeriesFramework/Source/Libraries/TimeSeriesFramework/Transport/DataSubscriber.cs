@@ -826,6 +826,30 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
+        /// Returns the measurements signal IDs that were authorized after the last successful subscription request.
+        /// </summary>
+        [AdapterCommand("Gets authorized signal IDs from last subscription request.")]
+        public virtual Guid[] GetAuthorizedSignalIDs()
+        {
+            if (m_signalIndexCache != null)
+                return m_signalIndexCache.AuthorizedSignalIDs;
+
+            return new Guid[0];
+        }
+
+        /// <summary>
+        /// Returns the measurements signal IDs that were unauthorized after the last successful subscription request.
+        /// </summary>
+        [AdapterCommand("Gets unauthorized signal IDs from last subscription request.")]
+        public virtual Guid[] GetUnauthorizedSignalIDs()
+        {
+            if (m_signalIndexCache != null)
+                return m_signalIndexCache.UnauthorizedSignalIDs;
+
+            return new Guid[0];
+        }
+
+        /// <summary>
         /// Sends a server command to the publisher connection.
         /// </summary>
         /// <param name="commandCode"><see cref="ServerCommand"/> to send.</param>
@@ -1161,6 +1185,7 @@ namespace TimeSeriesFramework.Transport
                         foreach (DataRow row in metadata.Tables["DeviceDetail"].Rows)
                         {
                             Guid uniqueID = Guid.Parse(row.Field<object>("UniqueID").ToString()); // adoDatabase.Guid(row, "UniqueID"); // row.Field<Guid>("UniqueID");
+
                             // We will synchronize metadata only if the source owns this device. Otherwise skip it.
                             if (row.Field<object>("OriginalSource") == null && !row["IsConcentrator"].ToNonNullString("0").ParseBoolean())
                             {
@@ -1189,6 +1214,7 @@ namespace TimeSeriesFramework.Transport
                                     }
                                 }
                             }
+
                             // Capture new device ID for measurement association
                             query = adoDatabase.ParameterizedQueryString("SELECT ID FROM Device WHERE UniqueID = {0}", "deviceGuid");
                             deviceIDs[row.Field<string>("Acronym")] = Convert.ToInt32(connection.ExecuteScalar(query, adoDatabase.Guid(uniqueID)));

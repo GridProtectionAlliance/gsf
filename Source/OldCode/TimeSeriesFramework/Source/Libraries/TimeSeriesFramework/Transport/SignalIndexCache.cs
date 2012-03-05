@@ -53,9 +53,9 @@ namespace TimeSeriesFramework.Transport
         // can be different between two parties exchanging data, the raw measurement key elements are
         // cached and exchanged instead of actual measurement key values
         private ConcurrentDictionary<ushort, Tuple<Guid, string, uint>> m_reference;
-        private Guid[] m_unauthorizedKeys;
+        private Guid[] m_unauthorizedSignalIDs;
 
-        [NonSerialized] // SignalID reverse lookup runtime cache
+        [NonSerialized] // SignalID reverse lookup runtime cache (used to speed deserialization)
         private ConcurrentDictionary<Guid, ushort> m_signalIDCache;
 
         #endregion
@@ -99,13 +99,13 @@ namespace TimeSeriesFramework.Transport
                     }
                 }
 
-                m_unauthorizedKeys = remoteCache.UnauthorizedKeys;
+                m_unauthorizedSignalIDs = remoteCache.UnauthorizedSignalIDs;
             }
             else
             {
                 // Just use remote signal index cache as-is if no local configuration exists
                 m_reference = remoteCache.Reference;
-                m_unauthorizedKeys = remoteCache.UnauthorizedKeys;
+                m_unauthorizedSignalIDs = remoteCache.UnauthorizedSignalIDs;
             }
         }
 
@@ -145,9 +145,9 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
-        /// Gets reference to array of requested input measurement keys that were authorized.
+        /// Gets reference to array of requested input measurement signal IDs that were authorized.
         /// </summary>
-        public Guid[] AuthorizedKeys
+        public Guid[] AuthorizedSignalIDs
         {
             get
             {
@@ -156,17 +156,17 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
-        /// Gets or sets reference to array of requested input measurement keys that were unauthorized.
+        /// Gets or sets reference to array of requested input measurement signal IDs that were unauthorized.
         /// </summary>
-        public Guid[] UnauthorizedKeys
+        public Guid[] UnauthorizedSignalIDs
         {
             get
             {
-                return m_unauthorizedKeys;
+                return m_unauthorizedSignalIDs;
             }
             set
             {
-                m_unauthorizedKeys = value;
+                m_unauthorizedSignalIDs = value;
             }
         }
 
