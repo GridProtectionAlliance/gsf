@@ -432,7 +432,7 @@ namespace TimeSeriesFramework.Transport
                     try
                     {
                         // Filter to points associated with this subscriber that have been requested for subscription, are enabled and not owned locally
-                        DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select("Internal = 0 AND Subscribed <> 0 AND DeviceID = " + ID.ToString());
+                        DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select("Subscribed <> 0 AND DeviceID = " + ID.ToString());
                         List<IMeasurement> subscribedMeasurements = new List<IMeasurement>();
 
                         foreach (DataRow row in filteredRows)
