@@ -1147,14 +1147,14 @@ namespace TimeSeriesFramework.Transport
                 {
                     AdoDataConnection adoDatabase = new AdoDataConnection("systemSettings");
                     IDbConnection connection = adoDatabase.Connection;
-                    int parentID = Convert.ToInt32(connection.ExecuteScalar(string.Format("SELECT SourceID FROM Runtime WHERE ID = {0} AND SourceTable='Device';", ID)));
+                    int parentID = Convert.ToInt32(connection.ExecuteScalar(string.Format("SELECT SourceID FROM Runtime WHERE ID = {0} AND SourceTable='Device'", ID)));
                     string sourcePrefix = Name + "!";
                     Dictionary<string, int> deviceIDs = new Dictionary<string, int>(StringComparer.InvariantCultureIgnoreCase);
                     string query;
 
                     // Initialize active node ID
                     if (m_nodeID == Guid.Empty)
-                        m_nodeID = Guid.Parse(connection.ExecuteScalar(string.Format("SELECT NodeID FROM IaonInputAdapter WHERE ID = {0};", ID)).ToString());
+                        m_nodeID = Guid.Parse(connection.ExecuteScalar(string.Format("SELECT NodeID FROM IaonInputAdapter WHERE ID = {0}", ID)).ToString());
 
                     if (metadata.Tables.Contains("DeviceDetail"))
                     {
