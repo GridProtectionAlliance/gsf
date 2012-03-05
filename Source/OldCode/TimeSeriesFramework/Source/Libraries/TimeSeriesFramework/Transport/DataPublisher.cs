@@ -1425,7 +1425,7 @@ namespace TimeSeriesFramework.Transport
                 DataTable table;
 
                 // Initialize active node ID
-                Guid m_nodeID = Guid.Parse(dbConnection.ExecuteScalar(string.Format("SELECT NodeID FROM IaonActionAdapter WHERE ID = {0};", ID)).ToString());
+                Guid m_nodeID = Guid.Parse(dbConnection.ExecuteScalar(string.Format("SELECT NodeID FROM IaonActionAdapter WHERE ID = {0}", ID)).ToString());
 
                 string nodeIDQueryString = m_nodeID.ToString();
                 if (adoDatabase.IsJetEngine)
