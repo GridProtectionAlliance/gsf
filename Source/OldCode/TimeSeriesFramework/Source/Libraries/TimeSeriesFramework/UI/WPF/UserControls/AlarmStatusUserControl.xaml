@@ -24,6 +24,42 @@
                     </Trigger>
                 </Style.Triggers>
             </Style>
+
+            <Style x:Key="CenterAlignAlarmCellStyle" TargetType="sdk:DataGridCell">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type DataGridCell}">
+                            <Grid Background="{TemplateBinding Background}">
+                                <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center" />
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <Trigger Property="sdk:DataGridCell.IsSelected" Value="True">
+                        <Setter Property="Background" Value="#22000000"/>
+                        <Setter Property="BorderBrush" Value="#FF9EA7BF"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style x:Key="RightAlignAlarmCellStyle" TargetType="sdk:DataGridCell">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type DataGridCell}">
+                            <Grid Background="{TemplateBinding Background}">
+                                <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Right" />
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <Trigger Property="sdk:DataGridCell.IsSelected" Value="True">
+                        <Setter Property="Background" Value="#22000000"/>
+                        <Setter Property="BorderBrush" Value="#FF9EA7BF"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -64,11 +100,11 @@
         <sdk:DataGrid x:Name="DataGridList" ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" SelectedIndex="{tsfBinding:Column Path=CurrentSelectedIndex}"
                       Height="Auto" Sorting="DataGrid_Sorting" LoadingRow="DataGrid_LoadingRow" SelectionMode="Single" CellStyle="{StaticResource ResourceKey=AlarmCellStyle}">
             <sdk:DataGrid.Columns>
-                <sdk:DataGridTextColumn Header="Severity" Width="*" Binding="{tsfBinding:Column Path=Severity}" IsReadOnly="True" />
-                <sdk:DataGridTextColumn Header="Time Raised" Width="2*" Binding="{tsfBinding:Column Path=TimeRaised}" IsReadOnly="True" />
-                <sdk:DataGridTextColumn Header="Tag Name" Width="*" Binding="{tsfBinding:Column Path=TagName}" IsReadOnly="True" />
+                <sdk:DataGridTextColumn Header="Severity" Width="*" Binding="{tsfBinding:Column Path=Severity}" CellStyle="{StaticResource CenterAlignAlarmCellStyle}" IsReadOnly="True" />
+                <sdk:DataGridTextColumn Header="Time Raised" Width="2*" Binding="{tsfBinding:Column Path=TimeRaised}" CellStyle="{StaticResource CenterAlignAlarmCellStyle}" IsReadOnly="True" />
+                <sdk:DataGridTextColumn Header="Tag Name" Width="*" Binding="{tsfBinding:Column Path=TagName}" CellStyle="{StaticResource CenterAlignAlarmCellStyle}" IsReadOnly="True" />
                 <sdk:DataGridTextColumn Header="Description" Width="3*" Binding="{tsfBinding:Column Path=Description}" IsReadOnly="True" />
-                <sdk:DataGridTextColumn Header="Value" Width="*" Binding="{tsfBinding:Column Path=Value}" IsReadOnly="True" />
+                <sdk:DataGridTextColumn Header="Value" Width="*" Binding="{tsfBinding:Column Path=Value}" CellStyle="{StaticResource RightAlignAlarmCellStyle}" IsReadOnly="True" />
             </sdk:DataGrid.Columns>
         </sdk:DataGrid>
 

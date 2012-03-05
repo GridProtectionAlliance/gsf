@@ -67,6 +67,18 @@ namespace TimeSeriesFramework.UI.DataModels
 
         #endregion
 
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="Alarm"/> class.
+        /// </summary>
+        public Alarm()
+        {
+            CreateAssociatedMeasurement = true;
+        }
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>
@@ -665,6 +677,15 @@ namespace TimeSeriesFramework.UI.DataModels
                     database.Connection.ExecuteNonQuery(updateQuery, DefaultTimeout, DBNull.Value, createdAlarm.ID);
                     DeleteAlarmMeasurement(database, createdAlarm.AssociatedMeasurementID.Value);
                     alarm.AssociatedMeasurementID = null;
+                }
+
+                try
+                {
+                    CommonFunctions.SendCommandToService("INITIALIZE /a ALARM!SERVICES");
+                }
+                catch (Exception ex)
+                {
+                    CommonFunctions.LogException(database, "Alarm Save", ex);
                 }
 
                 return successMessage;
