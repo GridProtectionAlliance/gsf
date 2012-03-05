@@ -6485,6 +6485,16 @@
             </summary>
             <returns><c>true</c> if unsubscribe transmission was successful; otherwise <c>false</c>.</returns>
         </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.GetAuthorizedSignalIDs">
+            <summary>
+            Returns the measurements signal IDs that were authorized after the last successful subscription request.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.GetUnauthorizedSignalIDs">
+            <summary>
+            Returns the measurements signal IDs that were unauthorized after the last successful subscription request.
+            </summary>
+        </member>
         <member name="M:TimeSeriesFramework.Transport.DataSubscriber.SendServerCommand(TimeSeriesFramework.Transport.ServerCommand,System.Byte[])">
             <summary>
             Sends a server command to the publisher connection.
@@ -7596,14 +7606,14 @@
             Gets or sets integer signal index cross reference dictionary.
             </summary>
         </member>
-        <member name="P:TimeSeriesFramework.Transport.SignalIndexCache.AuthorizedKeys">
+        <member name="P:TimeSeriesFramework.Transport.SignalIndexCache.AuthorizedSignalIDs">
             <summary>
-            Gets reference to array of requested input measurement keys that were authorized.
+            Gets reference to array of requested input measurement signal IDs that were authorized.
             </summary>
         </member>
-        <member name="P:TimeSeriesFramework.Transport.SignalIndexCache.UnauthorizedKeys">
+        <member name="P:TimeSeriesFramework.Transport.SignalIndexCache.UnauthorizedSignalIDs">
             <summary>
-            Gets or sets reference to array of requested input measurement keys that were unauthorized.
+            Gets or sets reference to array of requested input measurement signal IDs that were unauthorized.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.SignalIndexCache.MaximumIndex">
