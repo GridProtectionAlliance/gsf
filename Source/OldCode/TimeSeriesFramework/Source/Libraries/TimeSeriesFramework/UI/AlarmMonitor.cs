@@ -300,7 +300,7 @@ namespace TimeSeriesFramework.UI
         // adapter's connection string in the database.
         private void RefreshUrl()
         {
-            const string queryFormat = "SELECT Settings FROM Node WHERE NodeID = '{0}'";
+            const string queryFormat = "SELECT Settings FROM Node WHERE ID = '{0}'";
 
             AdoDataConnection database = null;
             object nodeSettingsConnectionString;
