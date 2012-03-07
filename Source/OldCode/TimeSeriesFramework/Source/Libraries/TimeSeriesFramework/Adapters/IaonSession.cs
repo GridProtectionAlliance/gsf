@@ -162,7 +162,7 @@ namespace TimeSeriesFramework.Adapters
             m_defaultSampleSizeWarningThreshold = thresholdSettings["DefaultSampleSizeWarningThreshold"].ValueAsInt32();
 
             // Create a common wait handle dictionary for all adapters in this session
-            m_waitHandles = new ConcurrentDictionary<string, AutoResetEvent>();
+            m_waitHandles = new ConcurrentDictionary<string, AutoResetEvent>(StringComparer.InvariantCultureIgnoreCase);
 
             // Create a cache for derived adapter names
             m_derivedNameCache = new ConcurrentDictionary<object, string>();
