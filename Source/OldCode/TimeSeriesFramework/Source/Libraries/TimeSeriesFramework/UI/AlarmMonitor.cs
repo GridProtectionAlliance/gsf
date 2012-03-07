@@ -300,40 +300,29 @@ namespace TimeSeriesFramework.UI
         // adapter's connection string in the database.
         private void RefreshUrl()
         {
-            const string queryFormat = "SELECT ConnectionString FROM IaonActionAdapter WHERE AdapterName = 'ALARM!SERVICES' AND NodeID = '{0}'";
+            const string queryFormat = "SELECT Settings FROM Node WHERE NodeID = '{0}'";
 
             AdoDataConnection database = null;
-            IDbCommand command = null;
-            object connectionString;
-
-            Dictionary<string, string> connectionStringSettings;
-            string endpoints;
+            object nodeSettingsConnectionString;
+            Dictionary<string, string> nodeSettings;
 
             try
             {
-                // Create database connection and get the ALARM!SERVICES connection string
+                // Create database connection and get the node settings
                 database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                connectionString = database.Connection.ExecuteScalar(string.Format(queryFormat, m_currentNodeID));
+                nodeSettingsConnectionString = database.Connection.ExecuteScalar(string.Format(queryFormat, m_currentNodeID));
 
-                if ((object)connectionString != null)
-                {
-                    // Parse the connection string
-                    connectionStringSettings = connectionString.ToNonNullString().ParseKeyValuePairs();
+                // Parse the connection string
+                nodeSettings = nodeSettingsConnectionString.ToNonNullString().ParseKeyValuePairs();
 
-                    // Get the service endpoints
-                    if (!connectionStringSettings.TryGetValue("serviceEndpoints", out endpoints))
-                        endpoints = DefaultUrl;
+                // Get the service endpoints
+                if (!nodeSettings.TryGetValue("AlarmServiceUrl", out m_url))
+                    m_url = DefaultUrl;
 
-                    // Pick one endpoint and build the URL
-                    m_url = endpoints.Split(';')[0].Replace("http.rest://", "http://");
-                    m_url += "/raisedalarms/severe/xml";
-                }
+                m_url += "/raisedalarms/severe/xml";
             }
             finally
             {
-                if ((object)command != null)
-                    command.Dispose();
-
                 if ((object)database != null)
                     database.Dispose();
             }
