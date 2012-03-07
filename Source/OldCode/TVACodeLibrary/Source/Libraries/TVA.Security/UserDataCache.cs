@@ -285,6 +285,7 @@ namespace TVA.Security
 
         // Fields
         private Dictionary<string, UserData> m_userDataTable;   // Internal dictionary of serialized user data
+        private object m_userDataTableLock;                     // Lock object
         private int m_providerID;                               // Unique provider ID used to distinguish cached user data that may be different based on provider
 
         #endregion
@@ -308,6 +309,7 @@ namespace TVA.Security
         {
             m_providerID = providerID;
             m_userDataTable = new Dictionary<string, UserData>();
+            m_userDataTableLock = new object();
         }
 
         #region [ Properties ]
@@ -365,7 +367,7 @@ namespace TVA.Security
             WaitForDataReady();
 
             // Wait for thread level lock on user data table
-            lock (m_userDataTable)
+            lock (m_userDataTableLock)
             {
                 // Attempt to lookup persisted user data based on hash of login ID
                 result = m_userDataTable.TryGetValue(hash, out userData);
@@ -392,8 +394,11 @@ namespace TVA.Security
         {
             string hash = HashLoginID(loginID);
 
+            // We wait until the cache is loaded before attempting to access it
+            WaitForDataReady();
+
             // Wait for thread level lock on user data table
-            lock (m_userDataTable)
+            lock (m_userDataTableLock)
             {
                 // Assign new user information to user data table
                 m_userDataTable[hash] = userData;
@@ -411,7 +416,7 @@ namespace TVA.Security
             byte[] serializedUserDataTable;
 
             // Wait for thread level lock on key table
-            lock (m_userDataTable)
+            lock (m_userDataTableLock)
             {
                 serializedUserDataTable = Serialization.Serialize(m_userDataTable, SerializationFormat.Binary);
             }
@@ -449,7 +454,7 @@ namespace TVA.Security
             Dictionary<string, UserData> userDataTable = Serialization.Deserialize<Dictionary<string, UserData>>(serializedUserDataTable, SerializationFormat.Binary);
 
             // Wait for thread level lock on user data table
-            lock (m_userDataTable)
+            lock (m_userDataTableLock)
             {
                 // Merge new and existing key tables since new user information may have been queued for serialization, but not saved yet
                 m_userDataTable = userDataTable.Merge(m_userDataTable);

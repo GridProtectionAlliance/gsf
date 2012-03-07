@@ -355,6 +355,7 @@ namespace TVA.Security.Cryptography
 
             // Internal key and initialization vector table
             private Dictionary<string, byte[][]> m_keyIVTable = new Dictionary<string, byte[][]>();
+            private object m_keyIVTableLock = new object();
 
             // Flag to choose between AesManaged and AesCryptoServiceProvider for encryption
             private bool m_managedEncryption;
@@ -376,7 +377,7 @@ namespace TVA.Security.Cryptography
                     WaitForDataReady();
 
                     // Wait for thread level lock on key table
-                    lock (m_keyIVTable)
+                    lock (m_keyIVTableLock)
                     {
                         // Make a copy of the keyIV table for external use
                         keyIVTable = new Dictionary<string, byte[][]>(m_keyIVTable);
@@ -423,7 +424,7 @@ namespace TVA.Security.Cryptography
                 WaitForDataReady();
 
                 // Wait for thread level lock on key table
-                lock (m_keyIVTable)
+                lock (m_keyIVTableLock)
                 {
                     // Lookup crypto key based on password hash in persisted key table
                     if (!m_keyIVTable.TryGetValue(hash, out keyIV))
@@ -476,7 +477,7 @@ namespace TVA.Security.Cryptography
                 WaitForDataReady();
 
                 // Wait for thread level lock on key table
-                lock (m_keyIVTable)
+                lock (m_keyIVTableLock)
                 {
                     // Lookup crypto key based on password hash in persisted key table
                     return m_keyIVTable.ContainsKey(hash);
@@ -496,8 +497,11 @@ namespace TVA.Security.Cryptography
             {
                 string hash = GetPasswordHash(password, keySize);
 
+                // We wait until the key and IV cache is loaded before attempting to access it
+                WaitForDataReady();
+
                 // Wait for thread level lock on key table
-                lock (m_keyIVTable)
+                lock (m_keyIVTableLock)
                 {
                     string[] keyIV = keyIVText.Split('|');
                     byte[] key = Convert.FromBase64String(keyIV[KeyIndex]);
@@ -536,7 +540,7 @@ namespace TVA.Security.Cryptography
                 Dictionary<string, byte[][]> mergedKeyIVTable = KeyIVTable.Merge(other.KeyIVTable);
 
                 // Wait for thread level lock on key table
-                lock (m_keyIVTable)
+                lock (m_keyIVTableLock)
                 {
                     // Replace local key IV table with merged items
                     m_keyIVTable = mergedKeyIVTable;
@@ -556,7 +560,7 @@ namespace TVA.Security.Cryptography
                 Dictionary<string, byte[][]> mergedKeyIVTable = other.KeyIVTable.Merge(KeyIVTable);
 
                 // Wait for thread level lock on key table
-                lock (m_keyIVTable)
+                lock (m_keyIVTableLock)
                 {
                     // Replace local key IV table with merged items
                     m_keyIVTable = mergedKeyIVTable;
@@ -574,7 +578,7 @@ namespace TVA.Security.Cryptography
                 byte[] serializedKeyIVTable;
 
                 // Wait for thread level lock on key table
-                lock (m_keyIVTable)
+                lock (m_keyIVTableLock)
                 {
                     serializedKeyIVTable = Serialization.Serialize(m_keyIVTable, SerializationFormat.Binary);
                 }
@@ -612,7 +616,7 @@ namespace TVA.Security.Cryptography
                 Dictionary<string, byte[][]> keyIVTable = Serialization.Deserialize<Dictionary<string, byte[][]>>(serializedKeyIVTable, SerializationFormat.Binary);
 
                 // Wait for thread level lock on key table
-                lock (m_keyIVTable)
+                lock (m_keyIVTableLock)
                 {
                     // Merge new and existing key tables since new keys may have been queued for serialization, but not saved yet
                     m_keyIVTable = keyIVTable.Merge(m_keyIVTable);

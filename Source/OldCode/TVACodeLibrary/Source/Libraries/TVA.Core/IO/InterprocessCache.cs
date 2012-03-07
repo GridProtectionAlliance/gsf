@@ -594,6 +594,9 @@ namespace TVA.IO
         /// <summary>
         /// Initiates interprocess synchronized cache file save.
         /// </summary>
+        /// <remarks>
+        /// Subclasses should always call <see cref="WaitForLoad()"/> before calling this method.
+        /// </remarks>
         public virtual void Save()
         {
             if ((object)m_fileName == null)
@@ -609,6 +612,9 @@ namespace TVA.IO
         /// <summary>
         /// Initiates interprocess synchronized cache file load.
         /// </summary>
+        /// <remarks>
+        /// Subclasses should always call <see cref="WaitForLoad()"/> before calling this method.
+        /// </remarks>
         public virtual void Load()
         {
             if ((object)m_fileName == null)
@@ -719,6 +725,10 @@ namespace TVA.IO
                                         m_fileWatcher.EnableRaisingEvents = true;
                                 }
                             }
+                            else
+                            {
+                                RetrySynchronizedEvent(new TimeoutException("Timeout waiting to acquire read lock for local cache"), WriteEvent);
+                            }
                         }
                         catch (IOException ex)
                         {
@@ -781,6 +791,10 @@ namespace TVA.IO
 
                                     // Release any threads waiting for file data
                                     m_loadIsReady.Set();
+                                }
+                                else
+                                {
+                                    RetrySynchronizedEvent(new TimeoutException("Timeout waiting to acquire write lock for local cache"), ReadEvent);
                                 }
                             }
                             catch (IOException ex)
