@@ -430,16 +430,24 @@ namespace TimeSeriesFramework.UI
         /// </summary>
         /// <param name="sourceTable">Table where object has been defined.</param>
         /// <param name="sourceID">ID of an object in source table.</param>
+        /// <param name="database">Existing database connection, if available.</param>
         /// <returns>string, id of an object in Runtime table.</returns>
-        public static string GetRuntimeID(string sourceTable, int sourceID)
+        public static string GetRuntimeID(string sourceTable, int sourceID, AdoDataConnection database = null)
         {
             string runtimeID = string.Empty;
-            AdoDataConnection database = null;
+            bool createdConnection = false;
+
             try
             {
-                database = new AdoDataConnection(DefaultSettingsCategory);
+                if ((object)database == null)
+                {
+                    database = new AdoDataConnection(DefaultSettingsCategory);
+                    createdConnection = true;
+                }
+
                 string query = database.ParameterizedQueryString("SELECT ID FROM Runtime WHERE SourceTable = {0} AND SourceID = {1}", "sourceTable", "sourceID");
                 object id = database.Connection.ExecuteScalar(query, sourceTable, sourceID);
+
                 if (id != null)
                     runtimeID = id.ToString();
 
@@ -447,7 +455,7 @@ namespace TimeSeriesFramework.UI
             }
             finally
             {
-                if (database != null)
+                if (createdConnection && (object)database != null)
                     database.Dispose();
             }
         }

@@ -434,16 +434,19 @@ namespace TimeSeriesFramework.Transport
                         // Filter to points associated with this subscriber that have been requested for subscription, are enabled and not owned locally
                         DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select("Subscribed <> 0 AND DeviceID = " + ID.ToString());
                         List<IMeasurement> subscribedMeasurements = new List<IMeasurement>();
+                        Guid signalID;
 
                         foreach (DataRow row in filteredRows)
                         {
+                            signalID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
+
                             // Create a new measurement for the provided field level information
                             Measurement measurement = new Measurement()
                             {
-                                Key = MeasurementKey.Parse(row["ID"].ToNonNullString("_:0"), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>())
+                                Key = MeasurementKey.Parse(row["ID"].ToNonNullString(MeasurementKey.Undefined.ToString()), signalID)
                             };
 
-                            measurement.ID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
+                            measurement.ID = signalID;
                             measurement.TagName = row["PointTag"].ToNonNullString();
 
                             // Attempt to update empty signal ID if available

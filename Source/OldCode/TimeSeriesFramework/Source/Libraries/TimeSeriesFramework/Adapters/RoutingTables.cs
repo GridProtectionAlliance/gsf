@@ -172,7 +172,11 @@ namespace TimeSeriesFramework.Adapters
                         m_adapterRoutesCacheLock = null;
 
                         if (m_calculationComplete != null)
+                        {
+                            // Release any waiting threads before disposing wait handle
+                            m_calculationComplete.Set();
                             m_calculationComplete.Dispose();
+                        }
 
                         m_calculationComplete = null;
                     }
@@ -317,7 +321,8 @@ namespace TimeSeriesFramework.Adapters
             }
             finally
             {
-                m_calculationComplete.Set();
+                if ((object)m_calculationComplete != null)
+                    m_calculationComplete.Set();
             }
         }
 

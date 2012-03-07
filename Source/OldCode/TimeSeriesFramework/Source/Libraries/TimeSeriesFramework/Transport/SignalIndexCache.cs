@@ -94,7 +94,7 @@ namespace TimeSeriesFramework.Transport
                     if (filteredRows.Length > 0)
                     {
                         DataRow row = filteredRows[0];
-                        MeasurementKey key = MeasurementKey.Parse(row["ID"].ToNonNullString("_:0"), signalID);
+                        MeasurementKey key = MeasurementKey.Parse(row["ID"].ToNonNullString(MeasurementKey.Undefined.ToString()), signalID);
                         m_reference.TryAdd(signalIndex.Key, new Tuple<Guid, string, uint>(signalID, key.Source, key.ID));
                     }
                 }

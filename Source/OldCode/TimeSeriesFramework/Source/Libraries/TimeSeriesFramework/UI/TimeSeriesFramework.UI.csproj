@@ -103,6 +103,7 @@
   <ItemGroup>
     <Compile Include="AlarmMonitor.cs" />
     <Compile Include="AuthenticationRequest.cs" />
+    <Compile Include="AuthorizedMeasurementsQuery.cs" />
     <Compile Include="Binding\Column.cs" />
     <Compile Include="Binding\DataOperation.cs" />
     <Compile Include="Binding\GridButtonCommand.cs" />
