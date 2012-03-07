@@ -235,14 +235,10 @@ namespace TimeSeriesFramework.UI
 
                             if (deviceID.HasValue)
                             {
-                                // Get runtime ID for device
-                                string runtimeIDValue = CommonFunctions.GetRuntimeID("Device", deviceID.Value, database);
-                                int runtimeID;
-
-                                // Parse runtime ID and validate that it's unique (not trusting all databases will handle DISTINCT properly)
-                                if (!string.IsNullOrWhiteSpace(runtimeIDValue) && int.TryParse(runtimeIDValue, out runtimeID) && deviceIDs.BinarySearch(runtimeID) < 0)
+                                // Validate that device ID is unique (not trusting all databases will handle DISTINCT properly)
+                                if (deviceIDs.BinarySearch(deviceID.Value) < 0)
                                 {
-                                    deviceIDs.Add(runtimeID);
+                                    deviceIDs.Add(deviceID.Value);
                                     deviceIDs.Sort();
                                 }
                             }
