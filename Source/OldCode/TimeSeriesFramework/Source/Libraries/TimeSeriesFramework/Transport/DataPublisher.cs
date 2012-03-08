@@ -1438,8 +1438,10 @@ namespace TimeSeriesFramework.Transport
                 {
                     if (!string.IsNullOrWhiteSpace(tableExpression))
                     {
+                        string queryFormat = tableExpression.Contains("WHERE") ? "SELECT * FROM {0} AND NodeID = {1}" : "SELECT * FROM {0} WHERE NodeID = {1}";
+
                         // Query the table or view information from the database
-                        table = dbConnection.RetrieveData(adoDatabase.AdapterType, string.Format("SELECT * FROM {0} AND NodeID = {1}", tableExpression, nodeIDQueryString));
+                        table = dbConnection.RetrieveData(adoDatabase.AdapterType, string.Format(queryFormat, tableExpression, nodeIDQueryString));
 
                         // Remove any expression from table name
                         table.TableName = tableExpression.Split(' ')[0];
