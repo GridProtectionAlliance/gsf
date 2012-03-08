@@ -1438,7 +1438,7 @@ namespace TimeSeriesFramework.Transport
                 {
                     if (!string.IsNullOrWhiteSpace(tableExpression))
                     {
-                        string queryFormat = tableExpression.Contains("WHERE") ? "SELECT * FROM {0} AND NodeID = {1}" : "SELECT * FROM {0} WHERE NodeID = {1}";
+                        string queryFormat = tableExpression.IndexOf(" WHERE ", StringComparison.InvariantCultureIgnoreCase) >= 0 ? "SELECT * FROM {0} AND NodeID = {1}" : "SELECT * FROM {0} WHERE NodeID = {1}";
 
                         // Query the table or view information from the database
                         table = dbConnection.RetrieveData(adoDatabase.AdapterType, string.Format(queryFormat, tableExpression, nodeIDQueryString));
