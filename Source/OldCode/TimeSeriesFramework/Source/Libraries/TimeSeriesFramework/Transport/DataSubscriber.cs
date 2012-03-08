@@ -1225,7 +1225,7 @@ namespace TimeSeriesFramework.Transport
                                 if (Convert.ToInt32(connection.ExecuteScalar(selectSql, database.Guid(uniqueID))) == 0)
                                 {
                                     // Insert new device record
-                                    insertSql = database.ParameterizedQueryString("INSERT INTO Device(NodeID, ParentID, UniqueID, Acronym, Name, ProtocolID, IsConcentrator, Enabled, OriginalSource) " +
+                                    insertSql = database.ParameterizedQueryString("INSERT INTO Device(NodeID, ParentID, Acronym, Name, ProtocolID, IsConcentrator, Enabled, OriginalSource) " +
                                         "VALUES ({0}, {1}, {2}, {3}, {4}, 0, 1, {5})", "nodeID", "parentID", "acronym", "name", "protocolID", "originalSource");
 
                                     connection.ExecuteNonQuery(insertSql, database.Guid(m_nodeID), parentID, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), m_gatewayProtocolID,
@@ -1361,7 +1361,7 @@ namespace TimeSeriesFramework.Transport
                                 // Define query to determine if this phasor record is already defined, this is no Guid for these simple label records
                                 selectSql = database.ParameterizedQueryString("SELECT COUNT(*) FROM Phasor WHERE DeviceID = {0} AND SourceIndex = {1}", "deviceID", "sourceIndex");
 
-                                if (Convert.ToInt32(connection.ExecuteScalar(selectSql, deviceID, row.Field<int>("SourceIndex"))) == 0)
+                                if (Convert.ToInt32(connection.ExecuteScalar(selectSql, 30, deviceID, row.Field<int>("SourceIndex"))) == 0)
                                 {
                                     // Insert new phasor record
                                     insertSql = database.ParameterizedQueryString("INSERT INTO Phasor (DeviceID, Label, Type, Phase, SourceIndex) VALUES ({0}, {1}, {2}, {3}, {4})", "deviceID", "label", "type", "phase", "sourceIndex");
@@ -1402,7 +1402,7 @@ namespace TimeSeriesFramework.Transport
                 else
                 {
                     OnStatusMessage("WARNING: Meta-data synchronization was not performed, deserialized dataset was empty.");
-                }                
+                }
             }
             catch (Exception ex)
             {

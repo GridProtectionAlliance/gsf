@@ -1425,29 +1425,52 @@ namespace TimeSeriesFramework.Transport
                 DataTable table;
 
                 // Initialize active node ID
-                Guid m_nodeID = Guid.Parse(dbConnection.ExecuteScalar(string.Format("SELECT NodeID FROM IaonActionAdapter WHERE ID = {0}", ID)).ToString());
-
-                string nodeIDQueryString = m_nodeID.ToString();
-                if (adoDatabase.IsJetEngine)
-                    nodeIDQueryString = "{" + nodeIDQueryString + "}";
-                else
-                    nodeIDQueryString = "'" + nodeIDQueryString + "'";
+                Guid nodeID = Guid.Parse(dbConnection.ExecuteScalar(string.Format("SELECT NodeID FROM IaonActionAdapter WHERE ID = {0}", ID)).ToString());
 
                 // Copy key meta-data tables
                 foreach (string tableExpression in m_metadataTables.Split(';'))
                 {
                     if (!string.IsNullOrWhiteSpace(tableExpression))
                     {
-                        string queryFormat = tableExpression.IndexOf(" WHERE ", StringComparison.InvariantCultureIgnoreCase) >= 0 ? "SELECT * FROM {0} AND NodeID = {1}" : "SELECT * FROM {0} WHERE NodeID = {1}";
-
                         // Query the table or view information from the database
-                        table = dbConnection.RetrieveData(adoDatabase.AdapterType, string.Format(queryFormat, tableExpression, nodeIDQueryString));
+                        table = dbConnection.RetrieveData(adoDatabase.AdapterType, string.Format("SELECT * FROM {0}", tableExpression));
 
                         // Remove any expression from table name
                         table.TableName = tableExpression.Split(' ')[0];
 
-                        // Add a copy of the results to the dataset for meta-data exchange
-                        metadata.Tables.Add(table.Copy());
+                        // If table has a NodeID column, filter table data for just this node
+                        if (table.Columns.Contains("NodeID"))
+                        {
+                            // A copy of the table structure
+                            metadata.Tables.Add(table.Clone());
+
+                            // Reduce data to only this node
+                            DataRow[] nodeData = table.Select(string.Format("NodeID = '{0}'", nodeID));
+
+                            if (nodeData.Length > 0)
+                            {
+                                DataTable metadataTable = metadata.Tables[table.TableName];
+
+                                // Manually copy-in each row into table
+                                foreach (DataRow row in nodeData)
+                                {
+                                    DataRow newRow = metadataTable.NewRow();
+
+                                    // Copy each column of data in the current row
+                                    for (int x = 0; x < table.Columns.Count; x++)
+                                    {
+                                        newRow[x] = row[x];
+                                    }
+
+                                    metadataTable.Rows.Add(newRow);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // Add a copy of the results to the dataset for meta-data exchange
+                            metadata.Tables.Add(table.Copy());
+                        }
                     }
                 }
 
