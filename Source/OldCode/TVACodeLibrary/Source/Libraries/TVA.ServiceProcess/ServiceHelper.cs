@@ -1642,6 +1642,9 @@ namespace TVA.ServiceProcess
                 if (attachment != null)
                     response.Attachments.Add(attachment);
 
+                // Add original command arguments as an attachment
+                response.Attachments.Add(requestInfo.Request.Arguments);
+
                 // Send response to service
                 SendResponse(requestInfo.Sender.ClientID, response);
             }
