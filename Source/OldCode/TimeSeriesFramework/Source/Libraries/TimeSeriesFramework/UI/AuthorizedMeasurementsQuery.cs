@@ -357,9 +357,9 @@ namespace TimeSeriesFramework.UI
                                     {
                                         m_authorizedSignalIDs.AddRange(signalIDs);
                                     }
-                                }
 
-                                m_responses++;
+                                    m_responses++;
+                                }
                             }
                         }
                     }
