@@ -295,7 +295,7 @@ namespace TimeSeriesFramework.Transport
             m_clientConnections = new ConcurrentDictionary<Guid, ClientConnection>();
             m_clientPublicationChannels = new ConcurrentDictionary<Guid, IServer>();
             m_signalIDCache = new ConcurrentDictionary<MeasurementKey, Guid>();
-            m_metadataTables = "DeviceDetail WHERE OriginalSource IS NULL AND IsConcentrator <> 1;MeasurementDetail WHERE Internal <> 0";
+            m_metadataTables = "DeviceDetail WHERE OriginalSource IS NULL AND IsConcentrator = 0;MeasurementDetail WHERE Internal <> 0;PhasorDetail";
             m_routingTables = new RoutingTables()
             {
                 ActionAdapters = this
@@ -1433,14 +1433,18 @@ namespace TimeSeriesFramework.Transport
                 else
                     nodeIDQueryString = "'" + nodeIDQueryString + "'";
 
-
                 // Copy key meta-data tables
-                foreach (string tableName in m_metadataTables.Split(';'))
+                foreach (string tableExpression in m_metadataTables.Split(';'))
                 {
-                    if (!string.IsNullOrWhiteSpace(tableName))
+                    if (!string.IsNullOrWhiteSpace(tableExpression))
                     {
-                        table = dbConnection.RetrieveData(adoDatabase.AdapterType, string.Format("SELECT * FROM {0}", tableName) + " AND NodeID = " + nodeIDQueryString);
-                        table.TableName = tableName.Split(' ')[0];
+                        // Query the table or view information from the database
+                        table = dbConnection.RetrieveData(adoDatabase.AdapterType, string.Format("SELECT * FROM {0} AND NodeID = {1}", tableExpression, nodeIDQueryString));
+
+                        // Remove any expression from table name
+                        table.TableName = tableExpression.Split(' ')[0];
+
+                        // Add a copy of the results to the dataset for meta-data exchange
                         metadata.Tables.Add(table.Copy());
                     }
                 }

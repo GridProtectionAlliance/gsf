@@ -33,6 +33,7 @@ using System.Text;
 using System.Threading;
 using TimeSeriesFramework.Adapters;
 using TVA;
+using TVA.Collections;
 using TVA.Communication;
 using TVA.Data;
 using TVA.IO.Compression;
@@ -95,6 +96,7 @@ namespace TimeSeriesFramework.Transport
         private volatile int m_lastBytesReceived;
         private long m_totalBytesReceived;
         private Guid m_nodeID;
+        private int m_gatewayProtocolID;
         private List<ServerCommand> m_requests;
         private bool m_synchronizedSubscription;
         private bool m_requireAuthentication;
@@ -1172,65 +1174,111 @@ namespace TimeSeriesFramework.Transport
 
                 if (metadata != null)
                 {
-                    AdoDataConnection adoDatabase = new AdoDataConnection("systemSettings");
-                    IDbConnection connection = adoDatabase.Connection;
-                    int parentID = Convert.ToInt32(connection.ExecuteScalar(string.Format("SELECT SourceID FROM Runtime WHERE ID = {0} AND SourceTable='Device'", ID)));
-                    string sourcePrefix = Name + "!";
-                    Dictionary<string, int> deviceIDs = new Dictionary<string, int>(StringComparer.InvariantCultureIgnoreCase);
-                    string query;
+                    // Track total meta-data synchronization process time
+                    Ticks startTime = DateTime.UtcNow.Ticks;
 
-                    // Initialize active node ID
+                    // Open the configuration database using settings found in the config file
+                    AdoDataConnection database = new AdoDataConnection("systemSettings");
+                    IDbConnection connection = database.Connection;
+                    string guidPrefix = database.DatabaseType == DatabaseType.Access ? "{" : "'";
+                    string guidSuffix = database.DatabaseType == DatabaseType.Access ? "}" : "'";
+
+                    // Query the actual record ID based on the known run-time ID for this subscriber device
+                    int parentID = Convert.ToInt32(connection.ExecuteScalar(string.Format("SELECT SourceID FROM Runtime WHERE ID = {0} AND SourceTable='Device'", ID)));
+
+                    // Validate that the subscriber device is marked as a concentrator (we are about to associate children devices with it)
+                    if (!connection.ExecuteScalar(string.Format("SELECT IsConcentrator FROM Device WHERE ID = {0}", parentID)).ToString().ParseBoolean())
+                        connection.ExecuteNonQuery(string.Format("UPDATE Device SET IsConcentrator = 1 WHERE ID = {0}", parentID));
+
+                    // Determine the active node ID - we cache this since this value won't change for the lifetime of this class
                     if (m_nodeID == Guid.Empty)
                         m_nodeID = Guid.Parse(connection.ExecuteScalar(string.Format("SELECT NodeID FROM IaonInputAdapter WHERE ID = {0}", ID)).ToString());
 
+                    // Determine the protocol record auto-inc ID value for the gateway transport protocol (GEP) - this value is also cached since it shouldn't change for the lifetime of this class
+                    if (m_gatewayProtocolID == 0)
+                        m_gatewayProtocolID = int.Parse(connection.ExecuteScalar("SELECT ID FROM Protocol WHERE Acronym='GatewayTransport'").ToString());
+
+                    // Prefix all children devices with the name of the parent since the same device names could appear in different connections (helps keep device names unique)
+                    string sourcePrefix = Name + "!";
+                    Dictionary<string, int> deviceIDs = new Dictionary<string, int>(StringComparer.InvariantCultureIgnoreCase);
+                    string selectSql, insertSql, updateSql, deleteSql, deviceAcronym, signalTypeAcronym;
+                    int deviceID;
+
+                    // Check to see if data for the "DeviceDetail" table was included in the meta-data
                     if (metadata.Tables.Contains("DeviceDetail"))
                     {
+                        List<Guid> uniqueIDs = new List<Guid>();
+
                         foreach (DataRow row in metadata.Tables["DeviceDetail"].Rows)
                         {
                             Guid uniqueID = Guid.Parse(row.Field<object>("UniqueID").ToString()); // adoDatabase.Guid(row, "UniqueID"); // row.Field<Guid>("UniqueID");
 
-                            // We will synchronize metadata only if the source owns this device. Otherwise skip it.
+                            // Track unique device guid's in this meta-data session, we'll need to remove any old associated devices that no longer exist
+                            uniqueIDs.Add(uniqueID);
+
+                            // We will synchronize metadata only if the source owns this device and it's not defined as a concentrator (these should normally be filtered by publisher - but we check just in case).
                             if (row.Field<object>("OriginalSource") == null && !row["IsConcentrator"].ToNonNullString("0").ParseBoolean())
                             {
-                                query = adoDatabase.ParameterizedQueryString("SELECT COUNT(*) FROM Device WHERE UniqueID = {0}", "deviceGuid");
+                                // Define query to determine if this device is already defined (this should always be based on the unique device Guid)
+                                selectSql = database.ParameterizedQueryString("SELECT COUNT(*) FROM Device WHERE UniqueID = {0}", "deviceGuid");
 
-                                if (Convert.ToInt32(connection.ExecuteScalar(query, adoDatabase.Guid(uniqueID))) == 0)
+                                if (Convert.ToInt32(connection.ExecuteScalar(selectSql, database.Guid(uniqueID))) == 0)
                                 {
-                                    query = adoDatabase.ParameterizedQueryString("INSERT INTO Device(NodeID, ParentID, UniqueID, Acronym, " +
-                                        "Name, IsConcentrator, Enabled, OriginalSource) VALUES ( {0}, {1}, {2}, {3}, {4}, 0, 1, {5})",
-                                        "nodeID", "parentID", "uniqueID", "acronym", "name", "originalSource");
+                                    // Insert new device record
+                                    insertSql = database.ParameterizedQueryString("INSERT INTO Device(NodeID, ParentID, UniqueID, Acronym, Name, ProtocolID, IsConcentrator, Enabled, OriginalSource) " +
+                                        "VALUES ({0}, {1}, {2}, {3}, {4}, 0, 1, {5})", "nodeID", "parentID", "acronym", "name", "protocolID", "originalSource");
 
-                                    connection.ExecuteNonQuery(query, adoDatabase.Guid(m_nodeID), parentID, adoDatabase.Guid(uniqueID), sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"),
+                                    connection.ExecuteNonQuery(insertSql, database.Guid(m_nodeID), parentID, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), m_gatewayProtocolID,
                                         m_internal == true ? (object)DBNull.Value : string.IsNullOrEmpty(row.Field<string>("ParentAcronym")) ? sourcePrefix + row.Field<string>("Acronym") : sourcePrefix + row.Field<string>("ParentAcronym"));
+
+                                    // Guids are normally auto-generated during insert - after insertion update the guid so that it matches the source data. Most of the database
+                                    // scripts have triggers that support properly assigning the Guid during an insert, but this code ensures the Guid will always get assigned.
+                                    updateSql = database.ParameterizedQueryString("UPDATE Device SET UniqueID = {0} WHERE Acronym = {1}", "uniqueID", "acronym");
+                                    connection.ExecuteNonQuery(updateSql, database.Guid(uniqueID), sourcePrefix + row.Field<string>("Acronym"));
                                 }
                                 else
                                 {
+                                    // Update existing device record
                                     if (m_internal)
                                     {
-                                        query = adoDatabase.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1}, OriginalSource = {2} WHERE UniqueID = {3}", "acronym", "name", "originalSource", "uniqueID");
-                                        connection.ExecuteNonQuery(query, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), (object)DBNull.Value, adoDatabase.Guid(uniqueID));
+                                        // Gateway is assuming ownership of the device records when the "interal" flag is true - this means the device's measurements can be forwarded to another party.
+                                        // From a device record perspective, ownership is inferred by setting 'OriginalSource' to null.
+                                        updateSql = database.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1}, OriginalSource = {2}, ProtocolID = {3} WHERE UniqueID = {4}", "acronym", "name", "originalSource", "protocolID", "uniqueID");
+                                        connection.ExecuteNonQuery(updateSql, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), (object)DBNull.Value, m_gatewayProtocolID, database.Guid(uniqueID));
                                     }
                                     else
                                     {
-                                        query = adoDatabase.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1} WHERE UniqueID = {2}", "acronym", "name", "uniqueID");
-                                        connection.ExecuteNonQuery(query, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), adoDatabase.Guid(uniqueID));
+                                        // When gateway doesn't own device records (i.e., the "interal" flag is false), this means the device's measurements can only be consumed locally. From a device
+                                        // record perspective this means the 'OriginalSource' field is set to the acronym of the PDC or PMU that generated the source measurments. This field allows a
+                                        // mirrored source restriction to be implemented later to ensure all devices in an output protocol came from the same original source connection.
+                                        updateSql = database.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1}, ProtocolID = {2} WHERE UniqueID = {3}", "acronym", "name", "protocolID", "uniqueID");
+                                        connection.ExecuteNonQuery(updateSql, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), m_gatewayProtocolID, database.Guid(uniqueID));
                                     }
                                 }
                             }
 
-                            // Capture new device ID for measurement association
-                            query = adoDatabase.ParameterizedQueryString("SELECT ID FROM Device WHERE UniqueID = {0}", "deviceGuid");
-                            deviceIDs[row.Field<string>("Acronym")] = Convert.ToInt32(connection.ExecuteScalar(query, adoDatabase.Guid(uniqueID)));
+                            // Capture local device ID auto-inc value for measurement association
+                            selectSql = database.ParameterizedQueryString("SELECT ID FROM Device WHERE UniqueID = {0}", "deviceGuid");
+                            deviceIDs[row.Field<string>("Acronym")] = Convert.ToInt32(connection.ExecuteScalar(selectSql, database.Guid(uniqueID)));
+                        }
+
+                        // Remove any device records associated with this subscriber that no longer exist in the meta-data
+                        if (uniqueIDs.Count > 0)
+                        {
+                            deleteSql = string.Format("DELETE FROM Device WHERE ParentID = {0} AND UniqueID NOT IN ({1})", parentID, uniqueIDs.Select(uniqueID => guidPrefix + uniqueID.ToString() + guidSuffix).ToDelimitedString(", "));
+                            connection.ExecuteNonQuery(deleteSql);
                         }
                     }
 
+                    // Check to see if data for the "MeasurementDetail" table was included in the meta-data
                     if (metadata.Tables.Contains("MeasurementDetail"))
                     {
+                        List<Guid> signalIDs = new List<Guid>();
+
                         // Load signal type ID's from local database associated with their acronym for proper signal type translation
                         Dictionary<string, int> signalTypeIDs = new Dictionary<string, int>(StringComparer.InvariantCultureIgnoreCase);
-                        string signalTypeAcronym, deviceAcronym;
 
-                        foreach (DataRow row in connection.RetrieveData(adoDatabase.AdapterType, "SELECT ID, Acronym FROM SignalType").Rows)
+                        foreach (DataRow row in connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM SignalType").Rows)
                         {
                             signalTypeAcronym = row.Field<string>("Acronym");
 
@@ -1240,32 +1288,107 @@ namespace TimeSeriesFramework.Transport
 
                         foreach (DataRow row in metadata.Tables["MeasurementDetail"].Rows)
                         {
+                            // Verify that this measurement record is internal to the publisher (these should be filtered by the publisher, but we still check since we won't be able to subscribe to any measurements it doesn't own)
                             if (row["Internal"].ToNonNullString("1").ParseBoolean())
                             {
+                                // Get device and signal type acronyms
                                 deviceAcronym = row.Field<string>("DeviceAcronym") ?? string.Empty;
                                 signalTypeAcronym = row.Field<string>("SignalAcronym") ?? string.Empty;
 
+                                // Make sure we have an associated device and signal type already defined for the measurement
                                 if (!string.IsNullOrWhiteSpace(deviceAcronym) && deviceIDs.ContainsKey(deviceAcronym) && !string.IsNullOrWhiteSpace(signalTypeAcronym) && signalTypeIDs.ContainsKey(signalTypeAcronym))
                                 {
+                                    // Prefix the tag name with the "updated" device name
+                                    deviceID = deviceIDs[deviceAcronym];
                                     string pointTag = sourcePrefix + row.Field<string>("PointTag") ?? string.Empty;
                                     Guid signalID = Guid.Parse(row.Field<object>("SignalID").ToString()); // adoDatabase.Guid(row, "SignalID");  // row.Field<Guid>("SignalID");
 
-                                    query = adoDatabase.ParameterizedQueryString("SELECT COUNT(*) FROM Measurement WHERE SignalID = {0}", "signalID");
+                                    // Track unique measurement signal guid's in this meta-data session, we'll need to remove any old associated measurements that no longer exist
+                                    signalIDs.Add(signalID);
 
-                                    if (Convert.ToInt32(connection.ExecuteScalar(query, adoDatabase.Guid(signalID))) == 0)
+                                    // Define query to determine if this measurement is already defined (this should always be based on the unique signal ID Guid)
+                                    selectSql = database.ParameterizedQueryString("SELECT COUNT(*) FROM Measurement WHERE SignalID = {0}", "signalID");
+
+                                    if (Convert.ToInt32(connection.ExecuteScalar(selectSql, database.Guid(signalID))) == 0)
                                     {
-                                        string insert = adoDatabase.ParameterizedQueryString("INSERT INTO Measurement (DeviceID, PointTag, SignalTypeID, SignalReference, Description, Internal, Subscribed, Enabled ) VALUES ( {0}, {1}, {2}, {3}, {4}, {5}, 0, 1 )", "deviceID", "pointTag", "signalTypeID", "signalReference", "description", "internal");
-                                        string update = adoDatabase.ParameterizedQueryString("UPDATE Measurement SET SignalID = {0} WHERE PointTag = {1}", "signalID", "pointTag");
+                                        // Insert new measurement record
+                                        insertSql = database.ParameterizedQueryString("INSERT INTO Measurement (DeviceID, PointTag, SignalTypeID, SignalReference, Description, Internal, Subscribed, Enabled) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, 0, 1)", "deviceID", "pointTag", "signalTypeID", "signalReference", "description", "internal");
+                                        connection.ExecuteNonQuery(insertSql, 30, deviceID, pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, database.Bool(m_internal));
 
-                                        connection.ExecuteNonQuery(insert, 30, deviceIDs[deviceAcronym], pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, adoDatabase.Bool(m_internal));
-                                        connection.ExecuteNonQuery(update, adoDatabase.Guid(signalID), pointTag);
+                                        // Guids are normally auto-generated during insert - after insertion update the guid so that it matches the source data. Most of the database
+                                        // scripts have triggers that support properly assigning the Guid during an insert, but this code ensures the Guid will always get assigned.
+                                        updateSql = database.ParameterizedQueryString("UPDATE Measurement SET SignalID = {0} WHERE PointTag = {1}", "signalID", "pointTag");
+                                        connection.ExecuteNonQuery(updateSql, database.Guid(signalID), pointTag);
                                     }
                                     else
                                     {
-                                        query = adoDatabase.ParameterizedQueryString("UPDATE Measurement SET PointTag = {0}, SignalTypeID = {1}, SignalReference = {2}, Description = {3}, Internal = {4} WHERE SignalID = {5}", "pointTag", "signalTypeID", "signalReference", "description", "internal", "signalID");
-                                        connection.ExecuteNonQuery(query, pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, adoDatabase.Bool(m_internal), adoDatabase.Guid(signalID));
+                                        // Update existing measurement record. Note that this update assumes that measurements will remain associated with a static source device.
+                                        updateSql = database.ParameterizedQueryString("UPDATE Measurement SET PointTag = {0}, SignalTypeID = {1}, SignalReference = {2}, Description = {3}, Internal = {4} WHERE SignalID = {5}", "pointTag", "signalTypeID", "signalReference", "description", "internal", "signalID");
+                                        connection.ExecuteNonQuery(updateSql, pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, database.Bool(m_internal), database.Guid(signalID));
                                     }
                                 }
+                            }
+                        }
+
+                        // Remove any measurement records associated with existing devices in this session but no longer exist in the meta-data
+                        if (deviceIDs.Count > 0 && signalIDs.Count > 0)
+                        {
+                            deleteSql = string.Format("DELETE FROM Measurement WHERE DeviceID IN ({0}) AND SignalID NOT IN ({1})", deviceIDs.Values.ToDelimitedString(", "), signalIDs.Select(uniqueID => guidPrefix + uniqueID.ToString() + guidSuffix).ToDelimitedString(", "));
+                            connection.ExecuteNonQuery(deleteSql);
+                        }
+                    }
+
+                    // Check to see if data for the "PhasorDetail" table was included in the meta-data
+                    if (metadata.Tables.Contains("PhasorDetail"))
+                    {
+                        Dictionary<int, int> maxSourceIndicies = new Dictionary<int, int>();
+                        int sourceIndex;
+
+                        // Phasor data is normally only needed so that the user can property generate a mirrored IEEE C37.118 output stream from the source data.
+                        // This is necessary since, in this protocol, the phasors are described (i.e., labeled) as a unit (i.e., as a complex number) instead of
+                        // as two distinct angle and magnitude measurements.
+
+                        foreach (DataRow row in metadata.Tables["PhasorDetail"].Rows)
+                        {
+                            // Get device acronym
+                            deviceAcronym = row.Field<string>("DeviceAcronym") ?? string.Empty;
+
+                            // Make sure we have an associated device already defined for the phasor record
+                            if (!string.IsNullOrWhiteSpace(deviceAcronym) && deviceIDs.ContainsKey(deviceAcronym))
+                            {
+                                deviceID = deviceIDs[deviceAcronym];
+
+                                // Define query to determine if this phasor record is already defined, this is no Guid for these simple label records
+                                selectSql = database.ParameterizedQueryString("SELECT COUNT(*) FROM Phasor WHERE DeviceID = {0} AND SourceIndex = {1}", "deviceID", "sourceIndex");
+
+                                if (Convert.ToInt32(connection.ExecuteScalar(selectSql, deviceID, row.Field<int>("SourceIndex"))) == 0)
+                                {
+                                    // Insert new phasor record
+                                    insertSql = database.ParameterizedQueryString("INSERT INTO Phasor (DeviceID, Label, Type, Phase, SourceIndex) VALUES ({0}, {1}, {2}, {3}, {4})", "deviceID", "label", "type", "phase", "sourceIndex");
+                                    connection.ExecuteNonQuery(insertSql, 30, deviceID, row.Field<string>("Label") ?? "undefined", (row.Field<string>("Type") ?? "V").TruncateLeft(1), (row.Field<string>("Phase") ?? "+").TruncateLeft(1), row.Field<int>("SourceIndex"));
+                                }
+                                else
+                                {
+                                    // Update existing phasor record
+                                    updateSql = database.ParameterizedQueryString("UPDATE Phasor SET Label = {0}, Type = {1}, Phase = {2} WHERE DeviceID = {3} AND SourceIndex = {4}", "label", "type", "phase", "deviceID", "sourceIndex");
+                                    connection.ExecuteNonQuery(updateSql, row.Field<string>("Label") ?? "undefined", (row.Field<string>("Type") ?? "V").TruncateLeft(1), (row.Field<string>("Phase") ?? "+").TruncateLeft(1), deviceID, row.Field<int>("SourceIndex"));
+                                }
+
+                                // Track largest source index for each device
+                                maxSourceIndicies.TryGetValue(deviceID, out sourceIndex);
+
+                                if (row.Field<int>("SourceIndex") > sourceIndex)
+                                    maxSourceIndicies[deviceID] = row.Field<int>("SourceIndex");
+                            }
+                        }
+
+                        // Remove any phasor records associated with existing devices in this session but no longer exist in the meta-data
+                        if (maxSourceIndicies.Count > 0)
+                        {
+                            foreach (KeyValuePair<int, int> deviceIndexPair in maxSourceIndicies)
+                            {
+                                deleteSql = string.Format("DELETE FROM Phasor WHERE DeviceID = {0} AND SourceIndex > {1}", deviceIndexPair.Key, deviceIndexPair.Value);
+                                connection.ExecuteNonQuery(deleteSql);
                             }
                         }
                     }
@@ -1274,11 +1397,16 @@ namespace TimeSeriesFramework.Transport
                     if (m_remoteSignalIndexCache != null)
                         m_signalIndexCache = new SignalIndexCache(DataSource, m_remoteSignalIndexCache);
 
+                    OnStatusMessage("Meta-data synchronization completed successfully in {0}", (DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(3));
                 }
+                else
+                {
+                    OnStatusMessage("WARNING: Meta-data synchronization was not performed, deserialized dataset was empty.");
+                }                
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException("Failed to synchronize metadata to local cache: " + ex.Message, ex));
+                OnProcessException(new InvalidOperationException("Failed to synchronize meta-data to local cache: " + ex.Message, ex));
             }
         }
 

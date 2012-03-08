@@ -226,7 +226,9 @@ namespace TimeSeriesFramework.UI
                     try
                     {
                         database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                        string query = string.Format("SELECT DISTINCT DeviceID FROM ActiveMeasurement WHERE ProtocolType = 'Measurement' AND SignalID IN ({0})", sourceMeasurements.Select(signalID => "'" + signalID.ToString() + "'").ToDelimitedString(", "));
+                        string guidPrefix = database.DatabaseType == DatabaseType.Access ? "{" : "'";
+                        string guidSuffix = database.DatabaseType == DatabaseType.Access ? "}" : "'";
+                        string query = string.Format("SELECT DISTINCT DeviceID FROM ActiveMeasurement WHERE ProtocolType = 'Measurement' AND SignalID IN ({0})", sourceMeasurements.Select(signalID => guidPrefix + signalID.ToString() + guidSuffix).ToDelimitedString(", "));
                         DataTable measurementDevices = database.Connection.RetrieveData(database.AdapterType, query);
 
                         foreach (DataRow row in measurementDevices.Rows)
@@ -341,7 +343,7 @@ namespace TimeSeriesFramework.UI
 
                     if (ClientHelper.TryParseActionableResponse(response, out sourceCommand, out responseSuccess) && responseSuccess)
                     {
-                        if (!string.IsNullOrWhiteSpace(sourceCommand) && string.Compare(sourceCommand.Trim(), "GetAuthorizedSignalIDs", true) == 0)
+                        if (!string.IsNullOrWhiteSpace(sourceCommand) && string.Compare(sourceCommand.Trim(), "INVOKE", true) == 0)
                         {
                             List<object> attachments = response.Attachments;
 
