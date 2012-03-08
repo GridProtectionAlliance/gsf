@@ -28,6 +28,7 @@ using System.Linq;
 using System.Threading;
 using TVA;
 using TVA.Collections;
+using TVA.Console;
 using TVA.Data;
 using TVA.ServiceProcess;
 
@@ -45,7 +46,7 @@ namespace TimeSeriesFramework.UI
         /// <summary>
         /// Default value for <see cref="ResponseTimeout"/>.
         /// </summary>
-        public const int DefaultResponseTimeout = 250;
+        public const int DefaultResponseTimeout = 1000; // Defaulting to waiting for one second for each round-trip request
 
         // Events
 
@@ -274,7 +275,10 @@ namespace TimeSeriesFramework.UI
                     {
                         // Wait for command responses allowing processing time for each
                         if ((object)m_responseComplete != null)
-                            m_responseComplete.WaitOne(m_requests * m_responseTimeout);
+                        {
+                            if (!m_responseComplete.WaitOne(m_requests * m_responseTimeout))
+                                OnProcessException(new TimeoutException(string.Format("Timed-out after {0} seconds waiting for {1} service response{2}.", (m_requests * m_responseTimeout / 1000.0D).ToString("0.00"), m_requests, m_requests == 1 ? "" : "s")));
+                        }
 
                         // Create a sorted list of the source measurements to use as a filter to authorized measurements
                         List<Guid> sourceFilter = new List<Guid>(sourceMeasurements);
@@ -347,17 +351,25 @@ namespace TimeSeriesFramework.UI
                         {
                             List<object> attachments = response.Attachments;
 
-                            if ((object)attachments != null && attachments.Count > 0)
+                            // An INVOKE for GetAuthorizedSignalIDs will have two attachments: a guid array, item 0, and the original command arguments, item 1
+                            if ((object)attachments != null && attachments.Count > 1)
                             {
-                                Guid[] signalIDs = attachments[0] as Guid[];
+                                Arguments arguments = attachments[1] as Arguments;
 
-                                if ((object)signalIDs != null)
+                                // Check the method that was invoked - the second argument after the adapter ID
+                                if (string.Compare(arguments["OrderedArg2"], "GetAuthorizedSignalIDs", true) == 0)
                                 {
-                                    lock (m_authorizedSignalIDs)
+                                    Guid[] signalIDs = attachments[0] as Guid[];
+
+                                    if ((object)signalIDs != null)
                                     {
-                                        m_authorizedSignalIDs.AddRange(signalIDs);
+                                        lock (m_authorizedSignalIDs)
+                                        {
+                                            m_authorizedSignalIDs.AddRange(signalIDs);
+                                        }
                                     }
 
+                                    // A response for GetAuthorizedSignalIDs counts whether or not a guid array was returned
                                     m_responses++;
                                 }
                             }
