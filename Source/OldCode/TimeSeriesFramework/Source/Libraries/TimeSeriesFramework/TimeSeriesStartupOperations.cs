@@ -210,7 +210,7 @@ namespace TimeSeriesFramework
             for (int i = 0; i < StatNames.Length; i++)
             {
                 signalIndex = i + 1;
-                signalReference = string.Format("SYSTEM-ST{0}", signalIndex);
+                signalReference = string.Format("{0}!SYSTEM-ST{1}", nodeName, signalIndex);
                 statMeasurementCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(StatMeasurementCountFormat, signalReference, statHistorianID)));
 
                 if (statMeasurementCount == 0)

@@ -349,7 +349,7 @@ namespace TimeSeriesFramework.Statistics
                                 m_measurementSignalReferenceMap[definedMeasurement.Key] = signalReference;
 
                                 // Map system measurements to System source
-                                if (signalReference.StartsWith("SYSTEM-ST"))
+                                if (signalReference.Contains("!SYSTEM"))
                                     MapMeasurement(definedMeasurement, "System");
                             }
                             catch (Exception ex)
