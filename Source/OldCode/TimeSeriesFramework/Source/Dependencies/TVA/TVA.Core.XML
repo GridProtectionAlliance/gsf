@@ -28726,11 +28726,17 @@
             <summary>
             Initiates interprocess synchronized cache file save.
             </summary>
+            <remarks>
+            Subclasses should always call <see cref="M:TVA.IO.InterprocessCache.WaitForLoad"/> before calling this method.
+            </remarks>
         </member>
         <member name="M:TVA.IO.InterprocessCache.Load">
             <summary>
             Initiates interprocess synchronized cache file load.
             </summary>
+            <remarks>
+            Subclasses should always call <see cref="M:TVA.IO.InterprocessCache.WaitForLoad"/> before calling this method.
+            </remarks>
         </member>
         <member name="M:TVA.IO.InterprocessCache.WaitForLoad">
             <summary>
