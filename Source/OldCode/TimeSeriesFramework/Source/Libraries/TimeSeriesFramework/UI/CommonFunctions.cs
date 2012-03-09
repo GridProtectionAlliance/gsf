@@ -47,18 +47,14 @@ namespace TimeSeriesFramework.UI
         /// <summary>
         /// Defines the default settings category for TimeSeriesFramework data connections.
         /// </summary>
-        public const string DefaultSettingsCategory = "SystemSettings";
+        public const string DefaultSettingsCategory = "systemSettings";
 
         #endregion
 
         #region [ Static ]
 
         // Static Fields
-
         private static Guid s_currentNodeID;
-        // TODO: Remove s_remoteStatusServerConnectionString and s_dataPublisherPort and corresponding references.
-        //private static string s_remoteStatusServerConnectionString;
-        //private static string s_dataPublisherPort;
         private static string s_serviceConnectionString;
         private static string s_dataPublisherConnectionString;
         private static string s_realTimeStatisticServiceUrl;
@@ -83,13 +79,13 @@ namespace TimeSeriesFramework.UI
         /// <summary>
         /// Used to notify main window that connection to service has changed.
         /// </summary>
-        public static event EventHandler ServiceConntectionRefreshed = delegate
+        public static event EventHandler ServiceConnectionRefreshed = delegate
         {
         };
 
         // Static Methods
 
-        #region [AdoDataConnection Extension Methods]
+        #region [ AdoDataConnection Extension Methods ]
 
         /// <summary>
         /// Sets the current user context for the database.
@@ -489,7 +485,7 @@ namespace TimeSeriesFramework.UI
             if (overwrite)
             {
                 DisconnectWindowsServiceClient();
-                ServiceConntectionRefreshed(null, EventArgs.Empty);
+                ServiceConnectionRefreshed(null, EventArgs.Empty);
             }
             else
             {
@@ -522,7 +518,7 @@ namespace TimeSeriesFramework.UI
 
         static void RemotingClient_ConnectionEstablished(object sender, EventArgs e)
         {
-            ServiceConntectionRefreshed(null, EventArgs.Empty);
+            ServiceConnectionRefreshed(null, EventArgs.Empty);
         }
 
         /// <summary>
@@ -568,12 +564,21 @@ namespace TimeSeriesFramework.UI
         /// <returns>string, indicating success.</returns>
         public static string SendCommandToService(string command)
         {
-            if (s_windowsServiceClient != null && s_windowsServiceClient.Helper.RemotingClient.CurrentState == TVA.Communication.ClientState.Connected)
-                s_windowsServiceClient.Helper.SendRequest(command);
+            if (s_windowsServiceClient != null)
+            {
+                // Make sure requests are serialized
+                lock (s_windowsServiceClient)
+                {
+                    if (s_windowsServiceClient.Helper.RemotingClient.CurrentState == TVA.Communication.ClientState.Connected)
+                        s_windowsServiceClient.Helper.SendRequest(command);
+                    else
+                        throw new ApplicationException("Application is currently disconnected from service.");
+                }
+
+                return "Successfully sent " + command + " command.";
+            }
             else
                 throw new ApplicationException("Application is currently disconnected from service.");
-
-            return "Successfully sent " + command + " command.";
         }
 
         /// <summary>

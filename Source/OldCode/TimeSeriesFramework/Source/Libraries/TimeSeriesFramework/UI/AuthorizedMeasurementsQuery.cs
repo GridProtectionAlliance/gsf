@@ -267,7 +267,7 @@ namespace TimeSeriesFramework.UI
                     foreach (int deviceID in deviceIDs)
                     {
                         // Send command for authorized signals for this device
-                        m_serviceClient.Helper.SendRequest(string.Format("INVOKE {0} GetAuthorizedSignalIDs", deviceID));
+                        CommonFunctions.SendCommandToService(string.Format("INVOKE {0} GetAuthorizedSignalIDs", deviceID));
                         m_requests++;
                     }
 

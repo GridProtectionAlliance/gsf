@@ -241,7 +241,7 @@ namespace TimeSeriesFramework.UI.UserControls
             if (!string.IsNullOrEmpty(TextBoxServiceRequest.Text) &&
                 m_serviceClient != null && m_serviceClient.Helper.RemotingClient.CurrentState == TVA.Communication.ClientState.Connected)
             {
-                m_serviceClient.Helper.SendRequest(TextBoxServiceRequest.Text);
+                CommonFunctions.SendCommandToService(TextBoxServiceRequest.Text);
                 TextBoxServiceRequest.Focus();
                 TextBoxServiceRequest.SelectAll();
             }

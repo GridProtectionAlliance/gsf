@@ -89,7 +89,7 @@ namespace TsfManager
 
             CommonFunctions.SetRetryServiceConnection(true);
 
-            CommonFunctions.ServiceConntectionRefreshed += new EventHandler(CommonFunctions_ServiceConntectionRefreshed);
+            CommonFunctions.ServiceConnectionRefreshed += CommonFunctions_ServiceConnectionRefreshed;
 
             m_navigationProcessed = false;
             m_navigationList = new LinkedList<TextBlock>();
@@ -100,7 +100,7 @@ namespace TsfManager
 
         #region [ Methods ]
 
-        private void CommonFunctions_ServiceConntectionRefreshed(object sender, EventArgs e)
+        private void CommonFunctions_ServiceConnectionRefreshed(object sender, EventArgs e)
         {
             try
             {
@@ -179,7 +179,9 @@ namespace TsfManager
                     m_windowsServiceClient.Helper.RemotingClient.ConnectionEstablished -= RemotingClient_ConnectionEstablished;
                     m_windowsServiceClient.Helper.RemotingClient.ConnectionTerminated -= RemotingClient_ConnectionTerminated;
                 }
-                catch { }
+                catch
+                {
+                }
             }
 
             m_windowsServiceClient = CommonFunctions.GetWindowsServiceClient();
@@ -233,7 +235,9 @@ namespace TsfManager
                     m_currentNode = m_navigationList.Last;
                 }
             }
-            catch { }
+            catch
+            {
+            }
             finally
             {
                 updateButtons();
