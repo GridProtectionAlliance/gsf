@@ -1361,24 +1361,24 @@ namespace TimeSeriesFramework.Transport
                                 // Define query to determine if this phasor record is already defined, this is no Guid for these simple label records
                                 selectSql = database.ParameterizedQueryString("SELECT COUNT(*) FROM Phasor WHERE DeviceID = {0} AND SourceIndex = {1}", "deviceID", "sourceIndex");
 
-                                if (Convert.ToInt32(connection.ExecuteScalar(selectSql, 30, deviceID, row.Field<int>("SourceIndex"))) == 0)
+                                if (Convert.ToInt32(connection.ExecuteScalar(selectSql, 30, deviceID, row.ConvertField<int>("SourceIndex"))) == 0)
                                 {
                                     // Insert new phasor record
                                     insertSql = database.ParameterizedQueryString("INSERT INTO Phasor (DeviceID, Label, Type, Phase, SourceIndex) VALUES ({0}, {1}, {2}, {3}, {4})", "deviceID", "label", "type", "phase", "sourceIndex");
-                                    connection.ExecuteNonQuery(insertSql, 30, deviceID, row.Field<string>("Label") ?? "undefined", (row.Field<string>("Type") ?? "V").TruncateLeft(1), (row.Field<string>("Phase") ?? "+").TruncateLeft(1), row.Field<int>("SourceIndex"));
+                                    connection.ExecuteNonQuery(insertSql, 30, deviceID, row.Field<string>("Label") ?? "undefined", (row.Field<string>("Type") ?? "V").TruncateLeft(1), (row.Field<string>("Phase") ?? "+").TruncateLeft(1), row.ConvertField<int>("SourceIndex"));
                                 }
                                 else
                                 {
                                     // Update existing phasor record
                                     updateSql = database.ParameterizedQueryString("UPDATE Phasor SET Label = {0}, Type = {1}, Phase = {2} WHERE DeviceID = {3} AND SourceIndex = {4}", "label", "type", "phase", "deviceID", "sourceIndex");
-                                    connection.ExecuteNonQuery(updateSql, row.Field<string>("Label") ?? "undefined", (row.Field<string>("Type") ?? "V").TruncateLeft(1), (row.Field<string>("Phase") ?? "+").TruncateLeft(1), deviceID, row.Field<int>("SourceIndex"));
+                                    connection.ExecuteNonQuery(updateSql, row.Field<string>("Label") ?? "undefined", (row.Field<string>("Type") ?? "V").TruncateLeft(1), (row.Field<string>("Phase") ?? "+").TruncateLeft(1), deviceID, row.ConvertField<int>("SourceIndex"));
                                 }
 
                                 // Track largest source index for each device
                                 maxSourceIndicies.TryGetValue(deviceID, out sourceIndex);
 
-                                if (row.Field<int>("SourceIndex") > sourceIndex)
-                                    maxSourceIndicies[deviceID] = row.Field<int>("SourceIndex");
+                                if (row.ConvertField<int>("SourceIndex") > sourceIndex)
+                                    maxSourceIndicies[deviceID] = row.ConvertField<int>("SourceIndex");
                             }
                         }
 
