@@ -426,6 +426,8 @@ namespace TimeSeriesFramework.Transport
                 status.AppendLine();
                 status.AppendFormat(formatString, "Publish channel protocol", PublishChannel.TransportProtocol);
                 status.AppendLine();
+                status.AppendFormat(formatString, "Data packet security", m_keyIVs == null ? "unencrypted" : "encrypted");
+                status.AppendLine();
 
                 if (m_dataChannel != null)
                 {

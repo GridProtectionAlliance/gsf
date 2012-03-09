@@ -235,6 +235,8 @@ namespace TimeSeriesFramework.Transport
                 status.AppendLine();
                 status.AppendFormat("                Subscribed: {0}", m_subscribed);
                 status.AppendLine();
+                status.AppendFormat("      Data packet security: {0}", m_keyIVs == null ? "unencrypted" : "encrypted");
+                status.AppendLine();
 
                 if (m_dataChannel != null)
                 {
@@ -1015,7 +1017,23 @@ namespace TimeSeriesFramework.Transport
                                 }
                             }
                             else
-                                OnProcessException(new InvalidOperationException("Publisher sent a success code for an unsolicited server command: " + commandCode));
+                            {
+                                switch (commandCode)
+                                {
+                                    case ServerCommand.MetaDataRefresh:
+                                        // Meta-data refresh may be unsolicited
+                                        OnStatusMessage("Received server confirmation for unsolicited request to \"{0}\" command: latest meta-data received.", commandCode);
+                                        OnMetaDataReceived(Serialization.Deserialize<DataSet>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary));
+                                        break;
+                                    case ServerCommand.RotateCipherKeys:
+                                        // Key rotation may be unsolicited
+                                        OnStatusMessage("Received server confirmation for unsolicited request to \"{0}\" command: {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
+                                        break;
+                                    default:
+                                        OnProcessException(new InvalidOperationException("Publisher sent a success code for an unsolicited server command: " + commandCode));
+                                        break;
+                                }
+                            }
                             break;
                         case ServerResponse.Failed:
                             if (solicited)
@@ -1116,6 +1134,8 @@ namespace TimeSeriesFramework.Transport
 
                             // Deserialize new cipher keys
                             m_keyIVs = Serialization.Deserialize<byte[][][]>(bytes, TVA.SerializationFormat.Binary);
+
+                            OnStatusMessage("Successfully established new cipher keys for data packet transmissions.");
                             break;
                     }
                 }
