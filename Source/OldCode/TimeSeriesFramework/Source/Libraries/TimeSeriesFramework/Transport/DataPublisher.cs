@@ -262,6 +262,7 @@ namespace TimeSeriesFramework.Transport
         private ConcurrentDictionary<Guid, ClientConnection> m_clientConnections;
         private ConcurrentDictionary<Guid, IServer> m_clientPublicationChannels;
         private ConcurrentDictionary<MeasurementKey, Guid> m_signalIDCache;
+        private System.Timers.Timer m_commandChannelRestartTimer;
         private RoutingTables m_routingTables;
         private IAdapterCollection m_parent;
         private string m_metadataTables;
@@ -291,16 +292,24 @@ namespace TimeSeriesFramework.Transport
         {
             base.Name = "Data Publisher Collection";
             base.DataMember = "[internal]";
+            
             m_initializeWaitHandle = new ManualResetEvent(false);
             m_clientConnections = new ConcurrentDictionary<Guid, ClientConnection>();
             m_clientPublicationChannels = new ConcurrentDictionary<Guid, IServer>();
             m_signalIDCache = new ConcurrentDictionary<MeasurementKey, Guid>();
             m_metadataTables = "DeviceDetail WHERE OriginalSource IS NULL AND IsConcentrator = 0;MeasurementDetail WHERE Internal <> 0;PhasorDetail";
+            
             m_routingTables = new RoutingTables()
             {
                 ActionAdapters = this
             };
             m_routingTables.ProcessException += m_routingTables_ProcessException;
+
+            // Setup a timer for restarting the command channel if it fails
+            m_commandChannelRestartTimer = new System.Timers.Timer(2000.0D);
+            m_commandChannelRestartTimer.AutoReset = false;
+            m_commandChannelRestartTimer.Enabled = false;
+            m_commandChannelRestartTimer.Elapsed += m_commandChannelRestartTimer_Elapsed;
         }
 
         /// <summary>
@@ -507,6 +516,14 @@ namespace TimeSeriesFramework.Transport
                         }
 
                         m_initializeWaitHandle = null;
+                        
+                        // Dispose command channel restart timer
+                        if (m_commandChannelRestartTimer != null)
+                        {
+                            m_commandChannelRestartTimer.Elapsed -= m_commandChannelRestartTimer_Elapsed;
+                            m_commandChannelRestartTimer.Dispose();
+                        }
+                        m_commandChannelRestartTimer = null;
                     }
                 }
                 finally
@@ -1655,7 +1672,34 @@ namespace TimeSeriesFramework.Transport
 
         private void m_commandChannel_ServerStopped(object sender, EventArgs e)
         {
-            OnStatusMessage("Data publisher stopped.");
+            if (Enabled)
+            {
+                OnStatusMessage("Data publisher was unexpectedly terminated, restarting...");
+
+                // We must wait for command channel to completely shutdown before trying to restart...
+                if (m_commandChannelRestartTimer != null)
+                    m_commandChannelRestartTimer.Start();
+            }
+            else
+            {
+                OnStatusMessage("Data publisher stopped.");
+            }
+        }
+
+        private void m_commandChannelRestartTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            if (m_commandChannel != null)
+            {
+                try
+                {
+                    // After a short delay, we try to restart the command channel
+                    m_commandChannel.Start();
+                }
+                catch (Exception ex)
+                {
+                    OnProcessException(new InvalidOperationException("Failed to restart data publisher command channel: " + ex.Message, ex));
+                }
+            }
         }
 
         private void m_commandChannel_SendClientDataException(object sender, EventArgs<Guid, Exception> e)
@@ -1676,7 +1720,7 @@ namespace TimeSeriesFramework.Transport
 
         private void m_commandChannel_ReceiveClientDataTimeout(object sender, EventArgs<Guid> e)
         {
-            OnProcessException(new InvalidOperationException("Data publisher timed out while receiving data from client connection"));
+            OnProcessException(new TimeoutException("Data publisher timed out while receiving data from client connection"));
         }
 
         private void m_commandChannel_HandshakeProcessUnsuccessful(object sender, EventArgs e)
@@ -1686,7 +1730,7 @@ namespace TimeSeriesFramework.Transport
 
         private void m_commandChannel_HandshakeProcessTimeout(object sender, EventArgs e)
         {
-            OnProcessException(new InvalidOperationException("Data publisher timed out while trying validate client connection"));
+            OnProcessException(new TimeoutException("Data publisher timed out while trying validate client connection"));
         }
 
         #endregion
