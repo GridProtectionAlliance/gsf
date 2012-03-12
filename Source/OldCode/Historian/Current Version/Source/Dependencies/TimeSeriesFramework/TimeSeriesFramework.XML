@@ -5620,6 +5620,12 @@
             <param name="maxLength">Maximum number of available characters for display.</param>
             <returns>A short one-line summary of the current status of this <see cref="T:TimeSeriesFramework.Statistics.StatisticsEngine"/>.</returns>
         </member>
+        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.AssignParentCollection(TimeSeriesFramework.Adapters.IAdapterCollection)">
+            <summary>
+            Assigns the reference to the parent <see cref="T:TimeSeriesFramework.Adapters.IAdapterCollection"/> that will contain this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
+            </summary>
+            <param name="parent">Parent adapter collection.</param>
+        </member>
         <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.Dispose(System.Boolean)">
             <summary>
             Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.Statistics.StatisticsEngine"/> object and optionally releases the managed resources.
@@ -5630,6 +5636,21 @@
             <summary>
             Static initialization of <see cref="T:TimeSeriesFramework.Statistics.StatisticsEngine"/> class.
             </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.RegexMatch(System.String,System.String)">
+            <summary>
+            Determines whether the given signal reference matches the
+            signal reference regular expression using the given suffix.
+            </summary>
+            <param name="signalReference">The signal reference to be matched against the regular expression.</param>
+            <param name="suffix">The suffix used by a particular type of statistic.</param>
+            <returns>Flag indicating whether the signal reference matches the regular expression.</returns>
+            <remarks>
+            The format for signal reference of statistics is: <c>ACRONYM!SUFFIX-ST#</c>,
+            where <c>ACRONYM</c> is the acronym of the measurement's source, <c>SUFFIX</c>
+            is the suffix given as a parameter to this method, and <c>#</c> is an index
+            used to differentiate between statistics with the same source and type.
+            </remarks>
         </member>
         <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.WaitForDefaultInstance(System.Int32)">
             <summary>
@@ -5743,6 +5764,12 @@
             <summary>
             Data operation to validate and ensure there is a record
             in the ConfigurationEntity table for ActiveMeasurements.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.TimeSeriesStartupOperations.ValidateExternalDataPublisher(System.Data.IDbConnection,System.String)">
+            <summary>
+            Data operation to validate and ensure there is a record in the
+            CustomActionAdapter table for the external data publisher.
             </summary>
         </member>
         <member name="M:TimeSeriesFramework.TimeSeriesStartupOperations.ValidateStatistics(System.Data.IDbConnection,System.String)">
@@ -6303,6 +6330,11 @@
         <member name="P:TimeSeriesFramework.Transport.DataPublisher.Initialized">
             <summary>
             Gets or sets flag indicating if the adapter has been initialized successfully.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.IsConnected">
+            <summary>
+            Gets flag indicating if publisher is connected and listening.
             </summary>
         </member>
         <member name="T:TimeSeriesFramework.Transport.DataSubscriber">
