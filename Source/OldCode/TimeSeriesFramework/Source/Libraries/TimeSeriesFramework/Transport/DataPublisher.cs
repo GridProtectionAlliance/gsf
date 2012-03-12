@@ -479,6 +479,17 @@ namespace TimeSeriesFramework.Transport
             }
         }
 
+        /// <summary>
+        /// Gets flag indicating if publisher is connected and listening.
+        /// </summary>
+        public bool IsConnected
+        {
+            get
+            {
+                return m_commandChannel.Enabled;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]

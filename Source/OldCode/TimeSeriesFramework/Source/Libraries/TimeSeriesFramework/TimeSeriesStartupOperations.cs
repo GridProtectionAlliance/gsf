@@ -39,6 +39,9 @@ namespace TimeSeriesFramework
         private static Action<object, EventArgs<string>> s_statusMessage;
         private static Action<object, EventArgs<Exception>> s_processException;
 
+        // Adapter type of connection
+        private static Type s_adapterType;
+
         /// <summary>
         /// Delegates control to the data operations that are to be performed at startup.
         /// </summary>
@@ -48,9 +51,13 @@ namespace TimeSeriesFramework
             s_statusMessage = statusMessage;
             s_processException = processException;
 
+            // Store adapter type for calls to database
+            s_adapterType = adapterType;
+
             // Run data operations
             ValidateDefaultNode(connection, nodeIDQueryString);
             ValidateActiveMeasurements(connection, nodeIDQueryString);
+            ValidateExternalDataPublisher(connection, nodeIDQueryString);
             ValidateStatistics(connection, nodeIDQueryString);
             ValidateAlarming(connection, nodeIDQueryString);
         }
@@ -95,6 +102,21 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>
+        /// Data operation to validate and ensure there is a record in the
+        /// CustomActionAdapter table for the external data publisher.
+        /// </summary>
+        private static void ValidateExternalDataPublisher(IDbConnection connection, string nodeIDQueryString)
+        {
+            const string ExternalDataPublisherCountFormat = "SELECT COUNT(*) FROM CustomActionAdapter WHERE AdapterName='EXTERNAL!DATAPUBLISHER' AND NodeID = {0}";
+            const string ExternalDataPublisherInsertFormat = "INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, Enabled) VALUES({0}, 'EXTERNAL!DATAPUBLISHER', 'TimeSeriesFramework.dll', 'TimeSeriesFramework.Transport.DataPublisher', 'requireAuthentication=true', 1)";
+
+            int externalDataPublisherCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(ExternalDataPublisherCountFormat, nodeIDQueryString)));
+
+            if (externalDataPublisherCount == 0)
+                connection.ExecuteNonQuery(string.Format(ExternalDataPublisherInsertFormat, nodeIDQueryString));
+        }
+
+        /// <summary>
         /// Data operation to validate and ensure that certain records that
         /// are required for statistics calculations exist in the database.
         /// </summary>
@@ -106,11 +128,17 @@ namespace TimeSeriesFramework
 
             const string StatHistorianCountFormat = "SELECT COUNT(*) FROM Historian WHERE Acronym = 'STAT' AND NodeID = {0}";
             const string StatEngineCountFormat = "SELECT COUNT(*) FROM CustomActionAdapter WHERE AdapterName = 'STATISTIC!SERVICES' AND NodeID = {0}";
-            const string StatCountFormat = "SELECT COUNT(*) FROM Statistic WHERE Source = 'System'";
+            const string SystemStatCountFormat = "SELECT COUNT(*) FROM Statistic WHERE Source = 'System'";
+            const string SubscriberStatCountFormat = "SELECT COUNT(*) FROM Statistic WHERE Source = 'Subscriber'";
+            const string PublisherStatCountFormat = "SELECT COUNT(*) FROM Statistic WHERE Source = 'Publisher'";
 
             const string StatHistorianIDFormat = "SELECT ID FROM Historian WHERE Acronym = 'STAT' AND NodeID = {0}";
             const string StatSignalTypeIDFormat = "SELECT ID FROM SignalType WHERE Acronym = 'STAT'";
             const string StatMeasurementCountFormat = "SELECT COUNT(*) FROM Measurement WHERE SignalReference = '{0}' AND HistorianID = {1}";
+
+            const string SubscriberRowsFormat = "SELECT * FROM IaonInputAdapter WHERE TypeName = 'TimeSeriesFramework.Transport.DataSubscriber' AND NodeID = {0}";
+            const string PublisherRowsFormat = "SELECT * FROM IaonActionadapter WHERE TypeName = 'TimeSeriesFramework.Transport.DataPublisher' AND NodeID = {0}";
+            const string RuntimeSourceIDFormat = "SELECT SourceID FROM Runtime WHERE ID = {0}";
 
             // INSERT queries
             const string StatConfigEntityInsertFormat = "INSERT INTO ConfigurationEntity(SourceName, RuntimeName, Description, LoadOrder, Enabled) VALUES('RuntimeStatistic', 'Statistics', 'Defines statistics that are monitored for the system, devices, and output streams', 11, 1)";
@@ -118,28 +146,53 @@ namespace TimeSeriesFramework
 
             const string StatHistorianInsertFormat = "INSERT INTO Historian(NodeID, Acronym, Name, AssemblyName, TypeName, ConnectionString, IsLocal, Description, LoadOrder, Enabled) VALUES({0}, 'STAT', 'Statistics Archive', 'TestingAdapters.dll', 'TestingAdapters.VirtualOutputAdapter', '', 1, 'Local historian used to archive system statistics', 9999, 1)";
             const string StatEngineInsertFormat = "INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, LoadOrder, Enabled) VALUES({0}, 'STATISTIC!SERVICES', 'TimeSeriesFramework.dll', 'TimeSeriesFramework.Statistics.StatisticsEngine', 0, 1)";
-            const string StatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('System', {0}, '{1}', '{2}', 'TimeSeriesFramework.dll', 'TimeSeriesFramework.Statistics.PerformanceStatistics', 'GetSystemStatistic_{3}', '', 1, 'System.Double', '{{0:N3}}', 0, {0})";
+            const string SystemStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('System', {0}, '{1}', '{2}', 'TimeSeriesFramework.dll', 'TimeSeriesFramework.Statistics.PerformanceStatistics', 'GetSystemStatistic_{3}', '', 1, 'System.Double', '{{0:N3}}', 0, {0})";
+            const string SubscriberStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('System', {0}, '{1}', '{2}', 'TimeSeriesFramework.dll', 'TimeSeriesFramework.Statistics.PerformanceStatistics', 'GetSubscriberStatistic_{3}', '', 1, '{4}', '{5}', 0, {0})";
+            const string PublisherStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('System', {0}, '{1}', '{2}', 'TimeSeriesFramework.dll', 'TimeSeriesFramework.Statistics.PerformanceStatistics', 'GetPublisherStatistic_{3}', '', 1, '{4}', '{5}', 0, {0})";
 
             const string StatMeasurementInsertFormat = "INSERT INTO Measurement(HistorianID, PointTag, SignalTypeID, SignalReference, Description, Enabled) VALUES({0}, {1}, {2}, {3}, {4}, 1)";
 
             // Names and descriptions for each of the statistics
-            string[] StatNames = { "CPU Usage", "Average CPU Usage", "Memory Usage", "Average Memory Usage", "Thread Count", "Average Thread Count", "Threading Contention Rate", "Average Threading Contention Rate", "IO Usage", "Average IO Usage", "Datagram Send Rate", "Average Datagram Send Rate", "Datagram Receive Rate", "Average Datagram Receive Rate" };
+            string[] SystemStatNames = { "CPU Usage", "Average CPU Usage", "Memory Usage", "Average Memory Usage", "Thread Count", "Average Thread Count", "Threading Contention Rate", "Average Threading Contention Rate", "IO Usage", "Average IO Usage", "Datagram Send Rate", "Average Datagram Send Rate", "Datagram Receive Rate", "Average Datagram Receive Rate" };
 
-            string[] StatDescriptions = { "Percentage of CPU currently used by this process.",
-                                          "Average percentage of CPU used by this process.",
-                                          "Amount of memory currently used by this process in megabytes.",
-                                          "Average amount of memory used by this process in megabytes.",
-                                          "Number of threads currently used by this process.",
-                                          "Average number of threads used by this process.",
-                                          "Current thread lock contention rate in attempts per second.",
-                                          "Average thread lock contention rate in attempts per second.",
-                                          "Amount of IO currently used by this process in kilobytes per second.",
-                                          "Average amount of IO used by this process in kilobytes per second.",
-                                          "Number of IPv4 datagrams currently sent by this process per second.",
-                                          "Average number of IPv4 datagrams sent by this process per second.",
-                                          "Number of IPv4 datagrams currently received by this process per second.",
-                                          "Average number of IPv4 datagrams received by this process per second."
-                                        };
+            string[] SystemStatDescriptions = { "Percentage of CPU currently used by this process.",
+                                                "Average percentage of CPU used by this process.",
+                                                "Amount of memory currently used by this process in megabytes.",
+                                                "Average amount of memory used by this process in megabytes.",
+                                                "Number of threads currently used by this process.",
+                                                "Average number of threads used by this process.",
+                                                "Current thread lock contention rate in attempts per second.",
+                                                "Average thread lock contention rate in attempts per second.",
+                                                "Amount of IO currently used by this process in kilobytes per second.",
+                                                "Average amount of IO used by this process in kilobytes per second.",
+                                                "Number of IPv4 datagrams currently sent by this process per second.",
+                                                "Average number of IPv4 datagrams sent by this process per second.",
+                                                "Number of IPv4 datagrams currently received by this process per second.",
+                                                "Average number of IPv4 datagrams received by this process per second."
+                                              };
+
+            string[] SubscriberStatNames = { "Subscriber Connected", "Subscriber Authenticated", "Processed Measurements", "Total Bytes Received" };
+
+            string[] SubscriberStatDescriptions = { "Boolean value representing if the subscriber was continually connected during last reporting interval.",
+                                                    "Boolean value representing if the subscriber was authenticated to the publisher during last reporting interval.",
+                                                    "Number of processed measurements reported by the subscriber during last reporting interval.",
+                                                    "Number of bytes received from subscriber during last reporting interval."
+                                                  };
+
+            string[] SubscriberStatMethodSuffix = { "Connected", "Authenticated", "ProcessedMeasurements", "TotalBytesReceived" };
+            string[] SubscriberStatTypes = { "System.Boolean", "System.Boolean", "System.Int32", "System.Int32" };
+            string[] SubscriberStatFormats = { "{0}", "{0}", "{0:N0}", "{0:N0}" };
+
+            string[] PublisherStatNames = { "Publisher Connected", "Connected Clients", "Processed Measurements" };
+
+            string[] PublisherStatDescriptions = { "Boolean value representing if the publisher was continually connected during last reporting interval.",
+                                                   "Number of clients connected to the command channel of the publisher during last reporting interval.",
+                                                   "Number of processed measurements reported by the publisher during last reporting interval."
+                                                 };
+
+            string[] PublisherStatMethodSuffix = { "Connected", "ConnectedClientCount", "ProcessedMeasurements" };
+            string[] PublisherStatTypes = { "System.Boolean", "System.Int32", "System.Int32" };
+            string[] PublisherStatFormats = { "{0}", "{0:N0}", "{0:N0}" };
 
             // Parameterized query string for inserting statistic measurements
             string statMeasurementInsertQuery = ParameterizedQueryString(connection.GetType(), StatMeasurementInsertFormat, "historianID", "pointTag", "signalTypeID", "signalReference", "description");
@@ -150,13 +203,17 @@ namespace TimeSeriesFramework
 
             int statHistorianCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(StatHistorianCountFormat, nodeIDQueryString)));
             int statEngineCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(StatEngineCountFormat, nodeIDQueryString)));
-            int statCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(StatCountFormat, nodeIDQueryString)));
+            int systemStatCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(SystemStatCountFormat, nodeIDQueryString)));
+            int subscriberStatCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(SubscriberStatCountFormat, nodeIDQueryString)));
+            int publisherStatCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(PublisherStatCountFormat, nodeIDQueryString)));
 
             // Statistic info for inserting statistics
             int signalIndex;
             string statName;
             string statDescription;
-            string methodSuffix;
+            string statMethodSuffix;
+            string statType;
+            string statFormat;
 
             // Values from queries to ensure existence of statistic measurements
             int statHistorianID;
@@ -168,6 +225,12 @@ namespace TimeSeriesFramework
             string pointTag;
             string signalReference;
             string measurementDescription;
+
+            // Adapter info for inserting gateway measurements
+            int adapterID;
+            int adapterSourceID;
+            string adapterName;
+            string companyAcronym;
 
             // Ensure that STAT signal type exists
             if (statSignalTypeCount == 0)
@@ -186,15 +249,45 @@ namespace TimeSeriesFramework
                 connection.ExecuteNonQuery(string.Format(StatEngineInsertFormat, nodeIDQueryString));
 
             // Ensure that system statistics exist
-            if (statCount == 0)
+            if (systemStatCount == 0)
             {
-                for (int i = 0; i < StatNames.Length; i++)
+                for (int i = 0; i < SystemStatNames.Length; i++)
                 {
                     signalIndex = i + 1;
-                    statName = StatNames[i];
-                    statDescription = StatDescriptions[i];
-                    methodSuffix = statName.Replace(" ", "");
-                    connection.ExecuteNonQuery(string.Format(StatInsertFormat, signalIndex, statName, statDescription, methodSuffix));
+                    statName = SystemStatNames[i];
+                    statDescription = SystemStatDescriptions[i];
+                    statMethodSuffix = statName.Replace(" ", "");
+                    connection.ExecuteNonQuery(string.Format(SystemStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix));
+                }
+            }
+
+            // Ensure that subscriber statistics exist
+            if (subscriberStatCount == 0)
+            {
+                for (int i = 0; i < SubscriberStatNames.Length; i++)
+                {
+                    signalIndex = i + 1;
+                    statName = SubscriberStatNames[i];
+                    statDescription = SubscriberStatDescriptions[i];
+                    statMethodSuffix = SubscriberStatMethodSuffix[i];
+                    statType = SubscriberStatTypes[i];
+                    statFormat = SubscriberStatFormats[i];
+                    connection.ExecuteNonQuery(string.Format(SubscriberStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat));
+                }
+            }
+
+            // Ensure that subscriber statistics exist
+            if (publisherStatCount == 0)
+            {
+                for (int i = 0; i < PublisherStatNames.Length; i++)
+                {
+                    signalIndex = i + 1;
+                    statName = PublisherStatNames[i];
+                    statDescription = PublisherStatDescriptions[i];
+                    statMethodSuffix = PublisherStatMethodSuffix[i];
+                    statType = PublisherStatTypes[i];
+                    statFormat = PublisherStatFormats[i];
+                    connection.ExecuteNonQuery(string.Format(PublisherStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat));
                 }
             }
 
@@ -207,7 +300,7 @@ namespace TimeSeriesFramework
             nodeName = nodeName.RemoveCharacters(c => !char.IsLetterOrDigit(c));
             nodeName = nodeName.Replace(' ', '_').ToUpper();
 
-            for (int i = 0; i < StatNames.Length; i++)
+            for (int i = 0; i < SystemStatNames.Length; i++)
             {
                 signalIndex = i + 1;
                 signalReference = string.Format("{0}!SYSTEM-ST{1}", nodeName, signalIndex);
@@ -215,9 +308,58 @@ namespace TimeSeriesFramework
 
                 if (statMeasurementCount == 0)
                 {
-                    pointTag = string.Format("{0}:ST{1}", nodeName, signalIndex);
-                    measurementDescription = string.Format("System Statistic for {0}", StatDescriptions[i]);
+                    pointTag = string.Format("{0}!SYSTEM:ST{1}", nodeName, signalIndex);
+                    measurementDescription = string.Format("System Statistic for {0}", SystemStatDescriptions[i]);
                     connection.ExecuteNonQuery(statMeasurementInsertQuery, (object)statHistorianID, pointTag, statSignalTypeID, signalReference, measurementDescription);
+                }
+            }
+
+            // Ensure that subscriber statistic measurements exist
+            foreach (DataRow subscriber in connection.RetrieveData(s_adapterType, string.Format(SubscriberRowsFormat, nodeIDQueryString)).Rows)
+            {
+                adapterID = subscriber.ConvertField<int>("ID");
+                adapterSourceID = Convert.ToInt32(connection.ExecuteScalar(string.Format(RuntimeSourceIDFormat, adapterID)));
+                adapterName = subscriber.Field<string>("AdapterName");
+
+                if (!TryGetCompanyAcronymFromDevice(connection, adapterSourceID, out companyAcronym))
+                    companyAcronym = GetCompanyAcronym(connection, nodeIDQueryString);
+
+                for (int i = 0; i < SubscriberStatNames.Length; i++)
+                {
+                    signalIndex = i + 1;
+                    signalReference = string.Format("{0}!SUB-ST{1}", adapterName, signalIndex);
+                    statMeasurementCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(StatMeasurementCountFormat, signalReference, statHistorianID)));
+
+                    if (statMeasurementCount == 0)
+                    {
+                        pointTag = string.Format("{0}_{1}!SUB:ST{2}", companyAcronym, adapterName, signalIndex);
+                        measurementDescription = string.Format("Subscriber Statistic for {0}", SubscriberStatDescriptions[i]);
+                        connection.ExecuteNonQuery(statMeasurementInsertQuery, (object)statHistorianID, pointTag, statSignalTypeID, signalReference, measurementDescription);
+                    }
+                }
+            }
+
+            // Ensure that publisher statistic measurements exist
+            companyAcronym = GetCompanyAcronym(connection, nodeIDQueryString);
+
+            foreach (DataRow publisher in connection.RetrieveData(s_adapterType, string.Format(PublisherRowsFormat, nodeIDQueryString)).Rows)
+            {
+                adapterID = publisher.ConvertField<int>("ID");
+                adapterSourceID = Convert.ToInt32(connection.ExecuteScalar(string.Format(RuntimeSourceIDFormat, adapterID)));
+                adapterName = publisher.Field<string>("AdapterName");
+
+                for (int i = 0; i < PublisherStatNames.Length; i++)
+                {
+                    signalIndex = i + 1;
+                    signalReference = string.Format("{0}!PUB-ST{1}", adapterName, signalIndex);
+                    statMeasurementCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(StatMeasurementCountFormat, signalReference, statHistorianID)));
+
+                    if (statMeasurementCount == 0)
+                    {
+                        pointTag = string.Format("{0}_{1}!PUB:ST{2}", companyAcronym, adapterName, signalIndex);
+                        measurementDescription = string.Format("Publisher Statistic for {0}", PublisherStatDescriptions[i]);
+                        connection.ExecuteNonQuery(statMeasurementInsertQuery, (object)statHistorianID, pointTag, statSignalTypeID, signalReference, measurementDescription);
+                    }
                 }
             }
         }
@@ -283,6 +425,46 @@ namespace TimeSeriesFramework
         {
             const string NodeNameFormat = "SELECT Name FROM Node WHERE ID = {0}";
             return connection.ExecuteScalar(string.Format(NodeNameFormat, nodeIDQueryString)).ToString();
+        }
+
+        // Attempts to get company acronym from device table in database
+        private static bool TryGetCompanyAcronymFromDevice(IDbConnection connection, int deviceID, out string companyAcronym)
+        {
+            string CompanyIDFormat = "SELECT CompanyID FROM Device WHERE ID = {0}";
+            string CompanyAcronymFormat = "SELECT MapAcronym FROM Company WHERE ID = {0}";
+            int companyID;
+
+            try
+            {
+                companyID = Convert.ToInt32(connection.ExecuteScalar(string.Format(CompanyIDFormat, deviceID)));
+                companyAcronym = connection.ExecuteScalar(string.Format(CompanyAcronymFormat, companyID)).ToNonNullString();
+                return true;
+            }
+            catch
+            {
+                companyAcronym = string.Empty;
+                return false;
+            }
+        }
+
+        // Attempts to get company acronym from database and, failing
+        // that, attempts to get it from the configuration file.
+        private static string GetCompanyAcronym(IDbConnection connection, string nodeIDQueryString)
+        {
+            const string NodeCompanyIDFormat = "SELECT CompanyID FROM Node WHERE ID = {0}";
+            const string CompanyAcronymFormat = "SELECT MapAcronym FROM Company WHERE ID = {0}";
+
+            int nodeCompanyID;
+            string companyAcronym;
+
+            nodeCompanyID = int.Parse(connection.ExecuteScalar(string.Format(NodeCompanyIDFormat, nodeIDQueryString)).ToNonNullString("0"));
+
+            if (nodeCompanyID > 0)
+                companyAcronym = connection.ExecuteScalar(string.Format(CompanyAcronymFormat, nodeCompanyID)).ToNonNullString();
+            else
+                companyAcronym = ConfigurationFile.Current.Settings["systemSettings"]["CompanyAcronym"].Value.TruncateRight(3);
+
+            return companyAcronym;
         }
 
         /// <summary>

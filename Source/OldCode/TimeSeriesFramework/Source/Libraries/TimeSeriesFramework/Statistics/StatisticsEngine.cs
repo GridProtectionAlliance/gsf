@@ -28,12 +28,14 @@ using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading;
 using TimeSeriesFramework.Adapters;
+using TimeSeriesFramework.Transport;
 using TVA;
 using TVA.Configuration;
-using TVA.IO;
 using TVA.Diagnostics;
+using TVA.IO;
 
 namespace TimeSeriesFramework.Statistics
 {
@@ -105,6 +107,9 @@ namespace TimeSeriesFramework.Statistics
         private Dictionary<MeasurementKey, string> m_measurementSignalReferenceMap;
         private Dictionary<MeasurementKey, string> m_measurementSourceMap;
         private Dictionary<string, ICollection<object>> m_statisticSources;
+
+        private InputAdapterCollection m_inputAdapters;
+        private ActionAdapterCollection m_actionAdapters;
 
         private bool m_disposed;
 
@@ -348,9 +353,14 @@ namespace TimeSeriesFramework.Statistics
                                 m_definedMeasurements.Add(definedMeasurement);
                                 m_measurementSignalReferenceMap[definedMeasurement.Key] = signalReference;
 
-                                // Map system measurements to System source
-                                if (signalReference.Contains("!SYSTEM"))
+                                // Map known measurement types to their sources
+                                // TODO: Add a StatisticsCategory table to do mapping automatically
+                                if (RegexMatch(signalReference, "SYSTEM"))
                                     MapMeasurement(definedMeasurement, "System");
+                                else if (RegexMatch(signalReference, "PUB"))
+                                    MapMeasurement(definedMeasurement, "Publisher");
+                                else if (RegexMatch(signalReference, "SUB"))
+                                    MapMeasurement(definedMeasurement, "Subscriber");
                             }
                             catch (Exception ex)
                             {
@@ -420,6 +430,26 @@ namespace TimeSeriesFramework.Statistics
             }
 
             return string.Format("Currently publishing {0} statistics", publishedMeasurementCount).CenterText(maxLength);
+        }
+
+        /// <summary>
+        /// Assigns the reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="AdapterBase"/>.
+        /// </summary>
+        /// <param name="parent">Parent adapter collection.</param>
+        protected override void AssignParentCollection(IAdapterCollection parent)
+        {
+            base.AssignParentCollection(parent);
+
+            if ((object)parent != null)
+            {
+                m_inputAdapters = parent.Parent.First(collection => collection is InputAdapterCollection) as InputAdapterCollection;
+                m_actionAdapters = parent.Parent.First(collection => collection is ActionAdapterCollection) as ActionAdapterCollection;
+            }
+            else
+            {
+                m_inputAdapters = null;
+                m_actionAdapters = null;
+            }
         }
 
         /// <summary>
@@ -560,8 +590,21 @@ namespace TimeSeriesFramework.Statistics
 
         private void OnBeforeCalculate()
         {
+            // Sources are likely to change throughout the lifetime of
+            // the statistics engine. In order to keep them up to date,
+            // they must be refreshed each time we calculated statistics.
             ClearSources();
+
+            // Add the performance monitor as the source for system statistics
             AddSource("System", m_performanceMonitor);
+
+            // Add all data subscribers as sources for subscriber statistics
+            foreach (IAdapter subscriber in m_inputAdapters.Where<IInputAdapter>(adapter => adapter is DataSubscriber))
+                AddSource("Subscriber", subscriber);
+
+            // Add all data publishers as sources for publisher statistics
+            foreach (IAdapter publisher in m_actionAdapters.Where<IActionAdapter>(adapter => adapter is DataPublisher))
+                AddSource("Publisher", publisher);
 
             if ((object)BeforeCalculate != null)
                 BeforeCalculate(this, new EventArgs());
@@ -615,6 +658,25 @@ namespace TimeSeriesFramework.Statistics
         }
 
         // Static Methods
+
+        /// <summary>
+        /// Determines whether the given signal reference matches the
+        /// signal reference regular expression using the given suffix.
+        /// </summary>
+        /// <param name="signalReference">The signal reference to be matched against the regular expression.</param>
+        /// <param name="suffix">The suffix used by a particular type of statistic.</param>
+        /// <returns>Flag indicating whether the signal reference matches the regular expression.</returns>
+        /// <remarks>
+        /// The format for signal reference of statistics is: <c>ACRONYM!SUFFIX-ST#</c>,
+        /// where <c>ACRONYM</c> is the acronym of the measurement's source, <c>SUFFIX</c>
+        /// is the suffix given as a parameter to this method, and <c>#</c> is an index
+        /// used to differentiate between statistics with the same source and type.
+        /// </remarks>
+        public static bool RegexMatch(string signalReference, string suffix)
+        {
+            string regex = string.Format(@"!{0}-ST\d+$", suffix);
+            return Regex.IsMatch(signalReference, suffix);
+        }
 
         /// <summary>
         /// Waits for the default instance to be created.
