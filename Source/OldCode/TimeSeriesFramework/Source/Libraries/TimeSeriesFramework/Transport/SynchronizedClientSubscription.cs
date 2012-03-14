@@ -197,7 +197,7 @@ namespace TimeSeriesFramework.Transport
                     if (value != null && !(value.Length == 1 && value[0] == MeasurementKey.Undefined))
                         m_parent.UpdateSignalIndexCache(m_clientID, m_signalIndexCache, value);
 
-                    if (m_signalIndexCache != null)
+                    if ((object)DataSource != null && (object)m_signalIndexCache != null)
                         value = AdapterBase.ParseInputMeasurementKeys(DataSource, string.Join("; ", m_signalIndexCache.AuthorizedSignalIDs));
 
                     base.InputMeasurementKeys = value;

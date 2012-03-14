@@ -849,22 +849,28 @@ namespace TimeSeriesFramework.Transport
             // Attempt to lookup measurement key's signal ID that may have already been cached
             return m_signalIDCache.GetOrAdd(key, keyParam =>
             {
-                Guid signalID;
+                Guid signalID = Guid.Empty;
 
-                // Attempt to lookup input measurement keys for given source IDs from default measurement table, if defined
-                try
+                if (DataSource != null && DataSource.Tables.Contains("ActiveMeasurements"))
                 {
-                    DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select("ID='" + keyParam.ToString() + "'");
+                    // Attempt to lookup input measurement keys for given source IDs from default measurement table, if defined
+                    try
+                    {
+                        DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select("ID='" + keyParam.ToString() + "'");
 
-                    if (filteredRows.Length > 0 && Guid.TryParse(filteredRows[0]["SignalID"].ToString(), out signalID))
-                        return signalID;
-                }
-                catch
-                {
-                    // Errors here are not catastrophic, this simply limits the auto-assignment of input measurement keys based on specified source ID's
+                        if (filteredRows.Length > 0)
+                            Guid.TryParse(filteredRows[0]["SignalID"].ToString(), out signalID);
+                    }
+                    catch
+                    {
+                        // Errors here are not catastrophic, this simply limits the auto-assignment of input measurement keys based on specified source ID's
+                    }
                 }
 
-                return Guid.Empty;
+                if (signalID == Guid.Empty)
+                    signalID = key.SignalID;
+
+                return signalID;
             });
         }
 
@@ -1035,7 +1041,10 @@ namespace TimeSeriesFramework.Transport
             lock (this)
             {
                 if (TryGetClientSubscription(clientID, out clientSubscription))
+                {
                     Remove(clientSubscription);
+                    clientSubscription.Stop();
+                }
             }
 
             // Notify system that subscriber disconnected therefore demanded measurements may have changed

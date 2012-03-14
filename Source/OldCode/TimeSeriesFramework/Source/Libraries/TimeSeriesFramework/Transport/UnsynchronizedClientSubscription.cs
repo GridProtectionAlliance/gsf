@@ -22,10 +22,12 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TimeSeriesFramework.Adapters;
 using TVA;
@@ -39,6 +41,9 @@ namespace TimeSeriesFramework.Transport
     internal class UnsynchronizedClientSubscription : FacileActionAdapterBase, IClientSubscription
     {
         #region [ Members ]
+
+        // Constants
+        private const int ProcessWaitTimeout = 1000;
 
         // Events
 
@@ -60,6 +65,9 @@ namespace TimeSeriesFramework.Transport
         private bool m_useCompactMeasurementFormat;
         private long m_lastPublishTime;
         private bool m_includeTime;
+        private Thread m_processThread;
+        private Semaphore m_processSemaphore;
+        private ConcurrentQueue<IEnumerable<IMeasurement>> m_processQueue;
         private volatile bool m_startTimeSent;
         private IaonSession m_iaonSession;
         private bool m_disposed;
@@ -200,7 +208,7 @@ namespace TimeSeriesFramework.Transport
                     if (value != null && !(value.Length == 1 && value[0] == MeasurementKey.Undefined))
                         m_parent.UpdateSignalIndexCache(m_clientID, m_signalIndexCache, value);
 
-                    if (m_signalIndexCache != null)
+                    if ((object)DataSource != null && (object)m_signalIndexCache != null)
                         value = AdapterBase.ParseInputMeasurementKeys(DataSource, string.Join("; ", m_signalIndexCache.AuthorizedSignalIDs));
 
                     base.InputMeasurementKeys = value;
@@ -308,6 +316,31 @@ namespace TimeSeriesFramework.Transport
                 m_startTimeSent = false;
 
             base.Start();
+
+            m_processThread = new Thread(ProcessMeasurements);
+            m_processSemaphore = new Semaphore(0, int.MaxValue);
+            m_processQueue = new ConcurrentQueue<IEnumerable<IMeasurement>>();
+            m_processThread.Start();
+        }
+
+        /// <summary>
+        /// Stops the <see cref="UnsynchronizedClientSubscription"/>.
+        /// </summary>	
+        public override void Stop()
+        {
+            base.Stop();
+
+            if ((object)m_processSemaphore != null)
+            {
+                m_processSemaphore.Dispose();
+                m_processSemaphore = null;
+            }
+
+            if ((object)m_processThread != null && m_processThread.ThreadState == ThreadState.Running)
+            {
+                m_processThread.Join();
+                m_processThread = null;
+            }
         }
 
         /// <summary>
@@ -403,57 +436,66 @@ namespace TimeSeriesFramework.Transport
                         }
 
                         // Publish latest data values...
-                        Task.Factory.StartNew(ProcessMeasurements, currentMeasurements);
+                        m_processQueue.Enqueue(currentMeasurements);
+                        m_processSemaphore.Release();
                     }
                 }
                 else
                 {
                     // Publish unsynchronized on data receipt otherwise...
-                    Task.Factory.StartNew(ProcessMeasurements, measurements);
+                    m_processQueue.Enqueue(measurements);
+                    m_processSemaphore.Release();
                 }
             }
         }
 
-        private void ProcessMeasurements(object state)
+        private void ProcessMeasurements()
         {
-            IEnumerable<IMeasurement> measurements = state as IEnumerable<IMeasurement>;
+            IEnumerable<IMeasurement> measurements;
             List<ISupportBinaryImage> packet = new List<ISupportBinaryImage>();
             bool useCompactMeasurementFormat = m_useCompactMeasurementFormat;
             int packetSize = 5;
 
-            // Wait for any external events, if needed
-            WaitForExternalEvents();
-
-            foreach (IMeasurement measurement in measurements)
+            while (Enabled)
             {
-                ISupportBinaryImage binaryMeasurement;
-                int binaryLength;
-
-                // Serialize the current measurement.
-                if (useCompactMeasurementFormat)
-                    binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, m_includeTime);
-                else
-                    binaryMeasurement = new SerializableMeasurement(measurement);
-
-                // Determine the size of the measurement in bytes.
-                binaryLength = binaryMeasurement.BinaryLength;
-
-                // If the current measurement will not fit in the packet based on the max
-                // packet size, process the current packet and start a new packet.
-                if (packetSize + binaryLength > DataPublisher.MaxPacketSize)
+                if ((object)m_processSemaphore != null && m_processSemaphore.WaitOne(ProcessWaitTimeout) && m_processQueue.TryDequeue(out measurements))
                 {
+                    // Wait for any external events, if needed
+                    WaitForExternalEvents();
+
+                    foreach (IMeasurement measurement in measurements)
+                    {
+                        ISupportBinaryImage binaryMeasurement;
+                        int binaryLength;
+
+                        // Serialize the current measurement.
+                        if (useCompactMeasurementFormat)
+                            binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, m_includeTime);
+                        else
+                            binaryMeasurement = new SerializableMeasurement(measurement);
+
+                        // Determine the size of the measurement in bytes.
+                        binaryLength = binaryMeasurement.BinaryLength;
+
+                        // If the current measurement will not fit in the packet based on the max
+                        // packet size, process the current packet and start a new packet.
+                        if (packetSize + binaryLength > DataPublisher.MaxPacketSize)
+                        {
+                            ProcessBinaryMeasurements(packet, useCompactMeasurementFormat);
+                            packet.Clear();
+                            packetSize = 5;
+                        }
+
+                        // Add the current measurement to the packet.
+                        packet.Add(binaryMeasurement);
+                        packetSize += binaryLength;
+                    }
+
+                    // Process the remaining measurements.
                     ProcessBinaryMeasurements(packet, useCompactMeasurementFormat);
                     packet.Clear();
-                    packetSize = 5;
                 }
-
-                // Add the current measurement to the packet.
-                packet.Add(binaryMeasurement);
-                packetSize += binaryLength;
             }
-
-            // Process the remaining measurements.
-            ProcessBinaryMeasurements(packet, useCompactMeasurementFormat);
         }
 
         private void ProcessBinaryMeasurements(IEnumerable<ISupportBinaryImage> measurements, bool useCompactMeasurementFormat)

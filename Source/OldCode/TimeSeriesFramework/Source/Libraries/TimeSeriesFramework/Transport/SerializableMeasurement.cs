@@ -87,7 +87,9 @@ namespace TimeSeriesFramework.Transport
         {
             get
             {
-                return FixedLength + Key.Source.ToNonNullString().Length + TagName.ToNonNullString().Length;
+                int sourceLength = Encoding.Unicode.GetBytes(Key.Source.ToNonNullString()).Length;
+                int tagLength = Encoding.Unicode.GetBytes(TagName.ToNonNullString()).Length;
+                return FixedLength + sourceLength + tagLength;
             }
         }
 
