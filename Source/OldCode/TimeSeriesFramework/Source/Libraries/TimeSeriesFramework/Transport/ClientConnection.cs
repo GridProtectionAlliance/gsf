@@ -66,6 +66,7 @@ namespace TimeSeriesFramework.Transport
         private CompressionStrength m_compression;
         private string m_configurationString;
         private bool m_connectionEstablished;
+        private Ticks m_lastCipherKeyUpdateTime;
         private System.Timers.Timer m_pingTimer;
         private System.Timers.Timer m_reconnectTimer;
         private bool m_disposed;
@@ -368,6 +369,17 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
+        /// Gets time of last cipher key update.
+        /// </summary>
+        public Ticks LastCipherKeyUpdateTime
+        {
+            get
+            {
+                return m_lastCipherKeyUpdateTime;
+            }
+        }
+
+        /// <summary>
         /// Gets the IP address of the remote client connection.
         /// </summary>
         public IPAddress IPAddress
@@ -495,7 +507,7 @@ namespace TimeSeriesFramework.Transport
         /// <summary>
         /// Creates or updates cipher keys.
         /// </summary>
-        public void UpdateKeyIVs()
+        internal void UpdateKeyIVs()
         {
             AesManaged symmetricAlgorithm = new AesManaged();
 
@@ -530,33 +542,58 @@ namespace TimeSeriesFramework.Transport
                 // Set run-time to the other key set
                 m_cipherIndex = (m_cipherIndex == EvenKey ? OddKey : EvenKey);
             }
+
+            m_lastCipherKeyUpdateTime = DateTime.UtcNow.Ticks;
         }
 
         /// <summary>
         /// Rotates or initializes the crypto keys for this <see cref="ClientConnection"/>.
         /// </summary>
-        public void RotateCipherKeys()
+        public bool RotateCipherKeys()
         {
-            MemoryStream response = new MemoryStream();
+            // Make sure at a second has passed before next key rotation
+            if ((DateTime.UtcNow.Ticks - m_lastCipherKeyUpdateTime).ToMilliseconds() >= 1000.0D)
+            {
+                try
+                {
+                    MemoryStream response = new MemoryStream();
 
-            // Create or update cipher keys and initialization vectors 
-            UpdateKeyIVs();
+                    // Create or update cipher keys and initialization vectors 
+                    UpdateKeyIVs();
 
-            // Add current cipher index to response
-            response.Write(EndianOrder.BigEndian.GetBytes(m_cipherIndex), 0, 4);
+                    // Add current cipher index to response
+                    response.Write(EndianOrder.BigEndian.GetBytes(m_cipherIndex), 0, 4);
 
-            // Serialize new keys
-            byte[] bytes = Serialization.Serialize(m_keyIVs, TVA.SerializationFormat.Binary);
+                    // Serialize new keys
+                    byte[] bytes = Serialization.Serialize(m_keyIVs, TVA.SerializationFormat.Binary);
 
-            // Encrypt keys using private keys known only to current client and server
-            if (m_authenticated && !string.IsNullOrWhiteSpace(m_sharedSecret))
-                bytes = bytes.Encrypt(m_sharedSecret, CipherStrength.Aes256);
+                    // Encrypt keys using private keys known only to current client and server
+                    if (m_authenticated && !string.IsNullOrWhiteSpace(m_sharedSecret))
+                        bytes = bytes.Encrypt(m_sharedSecret, CipherStrength.Aes256);
 
-            // Add serialized key response
-            response.Write(bytes, 0, bytes.Length);
+                    // Add serialized key response
+                    response.Write(bytes, 0, bytes.Length);
 
-            // Send cipher key updates
-            m_parent.SendClientResponse(m_clientID, ServerResponse.UpdateCipherKeys, ServerCommand.Subscribe, response.ToArray());
+                    // Send cipher key updates
+                    m_parent.SendClientResponse(m_clientID, ServerResponse.UpdateCipherKeys, ServerCommand.Subscribe, response.ToArray());
+
+                    // Send success message
+                    m_parent.SendClientResponse(m_clientID, ServerResponse.Succeeded, ServerCommand.RotateCipherKeys, "New cipher keys established.");
+                    m_parent.OnStatusMessage(ConnectionID + " cipher keys rotated.");
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    // Send failure message
+                    m_parent.SendClientResponse(m_clientID, ServerResponse.Failed, ServerCommand.RotateCipherKeys, "Failed to establish new cipher keys: " + ex.Message);
+                    m_parent.OnStatusMessage("Failed to establish new cipher keys for {0}: {1}", ConnectionID, ex.Message);
+                    return false;
+                }
+            }
+
+            m_parent.SendClientResponse(m_clientID, ServerResponse.Failed, ServerCommand.RotateCipherKeys, "Cipher key rotation skipped, keys were already rotated within last second.");
+            m_parent.OnStatusMessage("WARNING: Cipher key rotation skipped for {0}, keys were already rotated within last second.", ConnectionID);
+            return false;
         }
 
         private void m_pingTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)

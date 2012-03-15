@@ -252,7 +252,27 @@ namespace TimeSeriesFramework.Transport
 
         // Constants
 
-        // Maximum packet size before split
+        /// <summary>
+        /// Default value for <see cref="RequireAuthentication"/>.
+        /// </summary>
+        public const bool DefaultRequireAuthentication = false;
+
+        /// <summary>
+        /// Default value for <see cref="EncryptPayload"/>.
+        /// </summary>
+        public const bool DefaultEncryptPayload = false;
+
+        /// <summary>
+        /// Default value for <see cref="SharedDatabase"/>.
+        /// </summary>
+        public const bool DefaultSharedDatabase = false;
+
+        /// <summary>
+        /// Default value for <see cref="CipherKeyRotationPeriod"/>.
+        /// </summary>
+        public const double DefaultCipherKeyRotationPeriod = 60000.0D;
+
+        // Maximum packet size before software fragmentation of UDP payload
         internal const int MaxPacketSize = ushort.MaxValue / 2;
 
         // Length of random salt prefix
@@ -265,6 +285,7 @@ namespace TimeSeriesFramework.Transport
         private ConcurrentDictionary<Guid, IServer> m_clientPublicationChannels;
         private ConcurrentDictionary<MeasurementKey, Guid> m_signalIDCache;
         private System.Timers.Timer m_commandChannelRestartTimer;
+        private System.Timers.Timer m_cipherKeyRotationTimer;
         private RoutingTables m_routingTables;
         private IAdapterCollection m_parent;
         private string m_metadataTables;
@@ -295,17 +316,20 @@ namespace TimeSeriesFramework.Transport
         {
             base.Name = "Data Publisher Collection";
             base.DataMember = "[internal]";
-            
+
             m_initializeWaitHandle = new ManualResetEvent(false);
             m_clientConnections = new ConcurrentDictionary<Guid, ClientConnection>();
             m_clientPublicationChannels = new ConcurrentDictionary<Guid, IServer>();
             m_signalIDCache = new ConcurrentDictionary<MeasurementKey, Guid>();
+            m_requireAuthentication = DefaultRequireAuthentication;
+            m_encryptPayload = DefaultEncryptPayload;
+            m_sharedDatabase = DefaultSharedDatabase;
 
             m_metadataTables =
                 "SELECT NodeID, UniqueID, OriginalSource, IsConcentrator, Acronym, Name, ParentAcronym, ProtocolName, FramesPerSecond, Enabled FROM DeviceDetail WHERE OriginalSource IS NULL AND IsConcentrator = 0;" +
                 "SELECT Internal, DeviceAcronym, DeviceName, SignalAcronym, ID, SignalID, PointTag, SignalReference, Description, Enabled FROM MeasurementDetail WHERE Internal <> 0;" +
                 "SELECT DeviceAcronym, Label, Type, Phase, SourceIndex FROM PhasorDetail";
-            
+
             m_routingTables = new RoutingTables()
             {
                 ActionAdapters = this
@@ -317,6 +341,12 @@ namespace TimeSeriesFramework.Transport
             m_commandChannelRestartTimer.AutoReset = false;
             m_commandChannelRestartTimer.Enabled = false;
             m_commandChannelRestartTimer.Elapsed += m_commandChannelRestartTimer_Elapsed;
+
+            // Setup a timer for rotating cipher keys
+            m_cipherKeyRotationTimer = new System.Timers.Timer(DefaultCipherKeyRotationPeriod);
+            m_cipherKeyRotationTimer.AutoReset = true;
+            m_cipherKeyRotationTimer.Enabled = false;
+            m_cipherKeyRotationTimer.Elapsed += m_cipherKeyRotationTimer_Elapsed;
         }
 
         /// <summary>
@@ -336,7 +366,7 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         [ConnectionStringParameter,
         Description("Define the flag that determines if the publisher should require subscribers to authenticate before making data requests."),
-        DefaultValue(false)]
+        DefaultValue(DefaultRequireAuthentication)]
         public bool RequireAuthentication
         {
             get
@@ -357,7 +387,7 @@ namespace TimeSeriesFramework.Transport
         /// </remarks>
         [ConnectionStringParameter,
         Description("Define the flag that determines whether data sent over the data channel should be encrypted. This value is only relevant when requireAuthentication is true."),
-        DefaultValue(false)]
+        DefaultValue(DefaultEncryptPayload)]
         public bool EncryptPayload
         {
             get
@@ -367,6 +397,10 @@ namespace TimeSeriesFramework.Transport
             set
             {
                 m_encryptPayload = value;
+
+                // Start cipher key rotation timer when encrypting payload
+                if (m_cipherKeyRotationTimer != null)
+                    m_cipherKeyRotationTimer.Enabled = value;
             }
         }
 
@@ -376,7 +410,7 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         [ConnectionStringParameter,
         Description("Define the flag that indicates whether this publisher is publishing data that this node subscribed to from another node in a shared database."),
-        DefaultValue(false)]
+        DefaultValue(DefaultSharedDatabase)]
         public bool SharedDatabase
         {
             get
@@ -386,6 +420,33 @@ namespace TimeSeriesFramework.Transport
             set
             {
                 m_sharedDatabase = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the cipher key rotation period.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the period, in milliseconds, over which new cipher keys will be provided to subscribers when EncryptPayload is true."),
+        DefaultValue(DefaultCipherKeyRotationPeriod)]
+        public double CipherKeyRotationPeriod
+        {
+            get
+            {
+                if (m_cipherKeyRotationTimer != null)
+                    return m_cipherKeyRotationTimer.Interval;
+
+                return double.NaN;
+            }
+            set
+            {
+                if (value < 1000.0D)
+                    throw new ArgumentOutOfRangeException("Cipher key rotation period should not be set to less than 1000 milliseconds.");
+
+                if (m_cipherKeyRotationTimer != null)
+                    m_cipherKeyRotationTimer.Interval = value;
+
+                throw new ArgumentException("Cannot assign new cipher rotation period, timer is not defined.");
             }
         }
 
@@ -577,7 +638,7 @@ namespace TimeSeriesFramework.Transport
                         }
 
                         m_initializeWaitHandle = null;
-                        
+
                         // Dispose command channel restart timer
                         if (m_commandChannelRestartTimer != null)
                         {
@@ -585,6 +646,14 @@ namespace TimeSeriesFramework.Transport
                             m_commandChannelRestartTimer.Dispose();
                         }
                         m_commandChannelRestartTimer = null;
+
+                        // Dispose the cipher key rotation timer
+                        if (m_cipherKeyRotationTimer != null)
+                        {
+                            m_cipherKeyRotationTimer.Elapsed -= m_cipherKeyRotationTimer_Elapsed;
+                            m_cipherKeyRotationTimer.Dispose();
+                        }
+                        m_cipherKeyRotationTimer = null;
                     }
                 }
                 finally
@@ -608,6 +677,7 @@ namespace TimeSeriesFramework.Transport
 
             Dictionary<string, string> settings = Settings;
             string setting;
+            double period;
 
             // Setup data publishing server with or without required authentication 
             if (settings.TryGetValue("requireAuthentication", out setting))
@@ -621,6 +691,10 @@ namespace TimeSeriesFramework.Transport
             // that its node subscribed to from another node in a shared database
             if (settings.TryGetValue("sharedDatabase", out setting))
                 m_sharedDatabase = setting.ParseBoolean();
+
+            // Get user specified period for cipher key rotation
+            if (settings.TryGetValue("cipherKeyRotationPeriod", out setting) && double.TryParse(setting, out period))
+                CipherKeyRotationPeriod = period;
 
             // Create a new TCP server
             TcpServer commandChannel = new TcpServer();
@@ -637,6 +711,10 @@ namespace TimeSeriesFramework.Transport
 
             // Initialize TCP server (loads config file settings)
             commandChannel.Initialize();
+
+            // Start cipher key rotation timer when encrypting payload
+            if (m_encryptPayload && m_cipherKeyRotationTimer != null)
+                m_cipherKeyRotationTimer.Start();
 
             Initialized = true;
         }
@@ -793,7 +871,7 @@ namespace TimeSeriesFramework.Transport
                 ClientConnection connection;
 
                 if (m_clientConnections.TryGetValue(clientID, out connection))
-                    HandleRotateCipherKeys(connection);
+                    connection.RotateCipherKeys();
                 else
                     OnStatusMessage("ERROR: Failed to find connected client " + clientID);
             }
@@ -1147,6 +1225,36 @@ namespace TimeSeriesFramework.Transport
         private void m_routingTables_ProcessException(object sender, EventArgs<Exception> e)
         {
             OnProcessException(e.Argument);
+        }
+
+        // Cipher key rotation timer handler
+        private void m_cipherKeyRotationTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            if (m_clientConnections != null)
+            {
+                foreach (ClientConnection connection in m_clientConnections.Values)
+                {
+                    if (connection != null && connection.Authenticated)
+                        connection.RotateCipherKeys();
+                }
+            }
+        }
+
+        // Command channel restart timer handler
+        private void m_commandChannelRestartTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            if (m_commandChannel != null)
+            {
+                try
+                {
+                    // After a short delay, we try to restart the command channel
+                    m_commandChannel.Start();
+                }
+                catch (Exception ex)
+                {
+                    OnProcessException(new InvalidOperationException("Failed to restart data publisher command channel: " + ex.Message, ex));
+                }
+            }
         }
 
         #region [ Server Command Request Handlers ]
@@ -1577,17 +1685,6 @@ namespace TimeSeriesFramework.Transport
             }
         }
 
-        // Handles request to rotate cipher keys on client session
-        private void HandleRotateCipherKeys(ClientConnection connection)
-        {
-            Guid clientID = connection.ClientID;
-
-            connection.RotateCipherKeys();
-
-            SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.RotateCipherKeys, "New cipher keys established.");
-            OnStatusMessage(connection.ConnectionID + " cipher keys rotated.");
-        }
-
         // Handles request to update processing interval on client session
         private void HandleUpdateProcessingInterval(ClientConnection connection, byte[] buffer, int startIndex, int length)
         {
@@ -1723,7 +1820,7 @@ namespace TimeSeriesFramework.Transport
                             break;
                         case ServerCommand.RotateCipherKeys:
                             // Handle rotation of cipher keys (per subscriber request)
-                            HandleRotateCipherKeys(connection);
+                            connection.RotateCipherKeys();
                             break;
                         case ServerCommand.UpdateProcessingInterval:
                             // Handle request to update processing interval
@@ -1759,22 +1856,6 @@ namespace TimeSeriesFramework.Transport
             else
             {
                 OnStatusMessage("Data publisher stopped.");
-            }
-        }
-
-        private void m_commandChannelRestartTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            if (m_commandChannel != null)
-            {
-                try
-                {
-                    // After a short delay, we try to restart the command channel
-                    m_commandChannel.Start();
-                }
-                catch (Exception ex)
-                {
-                    OnProcessException(new InvalidOperationException("Failed to restart data publisher command channel: " + ex.Message, ex));
-                }
             }
         }
 
