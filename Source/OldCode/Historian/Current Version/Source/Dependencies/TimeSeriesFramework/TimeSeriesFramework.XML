@@ -6296,6 +6296,20 @@
             Gets or sets flag that determines if <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/> should require subscribers to authenticate before making data requests.
             </summary>
         </member>
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.EncryptPayload">
+            <summary>
+            Gets or sets flag that determines whether data sent over the data channel should be encrypted.
+            </summary>
+            <remarks>
+            This value is only relevant if <see cref="P:TimeSeriesFramework.Transport.DataPublisher.RequireAuthentication"/> is true.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.SharedDatabase">
+            <summary>
+            Gets or sets flag that indicates whether this publisher is publishing
+            data that this node subscribed to from another node in a shared database.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Transport.DataPublisher.Status">
             <summary>
             Gets the status of this <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/>.
