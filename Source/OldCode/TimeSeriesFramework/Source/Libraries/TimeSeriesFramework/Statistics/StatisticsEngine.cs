@@ -675,7 +675,7 @@ namespace TimeSeriesFramework.Statistics
         public static bool RegexMatch(string signalReference, string suffix)
         {
             string regex = string.Format(@"!{0}-ST\d+$", suffix);
-            return Regex.IsMatch(signalReference, suffix);
+            return Regex.IsMatch(signalReference, regex);
         }
 
         /// <summary>
