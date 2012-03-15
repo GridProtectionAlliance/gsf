@@ -113,10 +113,10 @@ namespace TimeSeriesFramework.UI
                 WriteToIsolatedStorage("ChartRefreshInterval", 250);
 
             if (!s_userStoreForAssembly.FileExists("StatisticsDataRefreshInterval") || overWriteExisting || ReadFromIsolatedStorage("StatisticsDataRefreshInterval") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("StatisticsDataRefreshInterval").ToString()))
-                WriteToIsolatedStorage("StatisticsDataRefreshInterval", 10);
+                WriteToIsolatedStorage("StatisticsDataRefreshInterval", 2);
 
             if (!s_userStoreForAssembly.FileExists("MeasurementsDataRefreshInterval") || overWriteExisting || ReadFromIsolatedStorage("MeasurementsDataRefreshInterval") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("MeasurementsDataRefreshInterval").ToString()))
-                WriteToIsolatedStorage("MeasurementsDataRefreshInterval", 10);
+                WriteToIsolatedStorage("MeasurementsDataRefreshInterval", 2);
 
             if (!s_userStoreForAssembly.FileExists("DisplayXAxis") || overWriteExisting || ReadFromIsolatedStorage("DisplayXAxis") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("DisplayXAxis").ToString()))
                 WriteToIsolatedStorage("DisplayXAxis", "false");
