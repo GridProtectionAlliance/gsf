@@ -34,12 +34,14 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using TimeSeriesFramework.Adapters;
 using TVA;
@@ -268,6 +270,7 @@ namespace TimeSeriesFramework.Transport
         private string m_metadataTables;
         private bool m_requireAuthentication;
         private bool m_encryptPayload;
+        private bool m_sharedDatabase;
         private bool m_disposed;
 
         #endregion
@@ -297,7 +300,11 @@ namespace TimeSeriesFramework.Transport
             m_clientConnections = new ConcurrentDictionary<Guid, ClientConnection>();
             m_clientPublicationChannels = new ConcurrentDictionary<Guid, IServer>();
             m_signalIDCache = new ConcurrentDictionary<MeasurementKey, Guid>();
-            m_metadataTables = "DeviceDetail WHERE OriginalSource IS NULL AND IsConcentrator = 0;MeasurementDetail WHERE Internal <> 0;PhasorDetail";
+
+            m_metadataTables =
+                "SELECT NodeID, UniqueID, OriginalSource, IsConcentrator, Acronym, Name, ParentAcronym, ProtocolName, FramesPerSecond, Enabled FROM DeviceDetail WHERE OriginalSource IS NULL AND IsConcentrator = 0;" +
+                "SELECT Internal, DeviceAcronym, DeviceName, SignalAcronym, ID, SignalID, PointTag, SignalReference, Description, Enabled FROM MeasurementDetail WHERE Internal <> 0;" +
+                "SELECT DeviceAcronym, Label, Type, Phase, SourceIndex FROM PhasorDetail";
             
             m_routingTables = new RoutingTables()
             {
@@ -327,6 +334,9 @@ namespace TimeSeriesFramework.Transport
         /// <summary>
         /// Gets or sets flag that determines if <see cref="DataPublisher"/> should require subscribers to authenticate before making data requests.
         /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the flag that determines if the publisher should require subscribers to authenticate before making data requests."),
+        DefaultValue(false)]
         public bool RequireAuthentication
         {
             get
@@ -336,6 +346,46 @@ namespace TimeSeriesFramework.Transport
             set
             {
                 m_requireAuthentication = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines whether data sent over the data channel should be encrypted.
+        /// </summary>
+        /// <remarks>
+        /// This value is only relevant if <see cref="RequireAuthentication"/> is true.
+        /// </remarks>
+        [ConnectionStringParameter,
+        Description("Define the flag that determines whether data sent over the data channel should be encrypted. This value is only relevant when requireAuthentication is true."),
+        DefaultValue(false)]
+        public bool EncryptPayload
+        {
+            get
+            {
+                return m_encryptPayload;
+            }
+            set
+            {
+                m_encryptPayload = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that indicates whether this publisher is publishing
+        /// data that this node subscribed to from another node in a shared database.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the flag that indicates whether this publisher is publishing data that this node subscribed to from another node in a shared database."),
+        DefaultValue(false)]
+        public bool SharedDatabase
+        {
+            get
+            {
+                return m_sharedDatabase;
+            }
+            set
+            {
+                m_sharedDatabase = value;
             }
         }
 
@@ -566,6 +616,11 @@ namespace TimeSeriesFramework.Transport
             // Check flag that will determine if subsciber payloads should be encrypted by default
             if (settings.TryGetValue("encryptPayload", out setting))
                 m_encryptPayload = setting.ParseBoolean();
+
+            // Check flag that indicates whether publisher is publishing data
+            // that its node subscribed to from another node in a shared database
+            if (settings.TryGetValue("sharedDatabase", out setting))
+                m_sharedDatabase = setting.ParseBoolean();
 
             // Create a new TCP server
             TcpServer commandChannel = new TcpServer();
@@ -1470,13 +1525,14 @@ namespace TimeSeriesFramework.Transport
                     if (!string.IsNullOrWhiteSpace(tableExpression))
                     {
                         // Query the table or view information from the database
-                        table = dbConnection.RetrieveData(adoDatabase.AdapterType, string.Format("SELECT * FROM {0}", tableExpression));
+                        table = dbConnection.RetrieveData(adoDatabase.AdapterType, tableExpression);
 
                         // Remove any expression from table name
-                        table.TableName = tableExpression.Split(' ')[0];
+                        Match regexMatch = Regex.Match(tableExpression, @"FROM [A-Za-z]+");
+                        table.TableName = regexMatch.Value.Split(' ')[1];
 
                         // If table has a NodeID column, filter table data for just this node
-                        if (table.Columns.Contains("NodeID"))
+                        if (!m_sharedDatabase && table.Columns.Contains("NodeID"))
                         {
                             // A copy of the table structure
                             metadata.Tables.Add(table.Clone());
