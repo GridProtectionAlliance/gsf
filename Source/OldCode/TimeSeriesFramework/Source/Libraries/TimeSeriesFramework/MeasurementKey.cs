@@ -331,7 +331,7 @@ namespace TimeSeriesFramework
         /// <summary>
         /// Represents an undefined measurement key.
         /// </summary>
-        public static readonly MeasurementKey Undefined = new MeasurementKey(Guid.Empty, uint.MaxValue, "__");
+        public static readonly MeasurementKey Undefined = CreateUndefinedMeasurementKey();
 
         // Static Methods
 
@@ -350,6 +350,35 @@ namespace TimeSeriesFramework
                 return new MeasurementKey(signalID, uint.Parse(elem[1].Trim()), elem[0].Trim());
 
             throw new FormatException("The value is not in the correct format for a MeasurementKey value");
+        }
+
+        /// <summary>
+        /// Looks up the measurement key associated with the given signal ID.
+        /// </summary>
+        /// <param name="signalID">The signal ID of the measurement key.</param>
+        /// <returns>The measurement key associated with the given signal ID.</returns>
+        /// <remarks>
+        /// If no measurement key is found with the given signal ID, a measurement key is
+        /// returned with generic default values for <see cref="Source"/> and <see cref="ID"/>,
+        /// but this key is not cached. In order to cache a measurement key, a Source and ID
+        /// must be provided, either via the <see cref="MeasurementKey(Guid, uint, string)"/>
+        /// constructor or the <see cref="Parse"/> method.
+        /// </remarks>
+        public static MeasurementKey LookupBySignalID(Guid signalID)
+        {
+            MeasurementKey key;
+            
+            if (signalID == Guid.Empty)
+                key = Undefined;
+            else if (!s_idCache.TryGetValue(signalID, out key))
+            {
+                key = new MeasurementKey();
+                key.m_signalID = signalID;
+                key.m_source = "__";
+                key.m_id = 0;
+            }
+
+            return key;
         }
 
         /// <summary>
@@ -405,6 +434,21 @@ namespace TimeSeriesFramework
                         new MeasurementKey(measurement["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), uint.Parse(elems[1].Trim()), elems[0].Trim());
                 }
             }
+        }
+
+        /// <summary>
+        /// Creates the undefined measurement key. Used to initialize <see cref="Undefined"/>.
+        /// </summary>
+        /// <returns>The undefined measurement key.</returns>
+        private static MeasurementKey CreateUndefinedMeasurementKey()
+        {
+            MeasurementKey key = new MeasurementKey();
+
+            key.m_signalID = Guid.Empty;
+            key.m_source = "__";
+            key.m_id = uint.MaxValue;
+
+            return key;
         }
 
         #endregion

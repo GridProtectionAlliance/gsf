@@ -1479,6 +1479,10 @@ namespace TimeSeriesFramework.Adapters
                                     if (filteredRows.Length > 0 && MeasurementKey.TryParse(filteredRows[0]["ID"].ToString(), id, out key))
                                         keys.Add(key);
                                 }
+                                else
+                                {
+                                    keys.Add(MeasurementKey.LookupBySignalID(id));
+                                }
                             }
                             else
                             {
@@ -1576,6 +1580,10 @@ namespace TimeSeriesFramework.Adapters
                                         if (filteredRows.Length > 0)
                                             MeasurementKey.TryParse(filteredRows[0]["ID"].ToString(), id, out key);
                                     }
+                                    else
+                                    {
+                                        key = MeasurementKey.LookupBySignalID(id);
+                                    }
                                 }
                                 else
                                 {
@@ -1607,6 +1615,7 @@ namespace TimeSeriesFramework.Adapters
                             // Create a new measurement for the provided field level information
                             measurement = new Measurement()
                             {
+                                ID = key.SignalID,
                                 Key = key,
                                 Adder = adder,
                                 Multiplier = multipler
@@ -1643,7 +1652,6 @@ namespace TimeSeriesFramework.Adapters
                             catch
                             {
                                 // Errors here are not catastrophic, this simply limits the available meta-data
-                                measurement.ID = Guid.Empty;
                                 measurement.TagName = string.Empty;
                             }
 
