@@ -2619,6 +2619,20 @@
             <returns>A <see cref="T:TimeSeriesFramework.MeasurementKey"/> value equivalent the representation contained in <paramref name="value"/>.</returns>
             <exception cref="T:System.FormatException">The value is not in the correct format for a <see cref="T:TimeSeriesFramework.MeasurementKey"/> value.</exception>
         </member>
+        <member name="M:TimeSeriesFramework.MeasurementKey.LookupBySignalID(System.Guid)">
+            <summary>
+            Looks up the measurement key associated with the given signal ID.
+            </summary>
+            <param name="signalID">The signal ID of the measurement key.</param>
+            <returns>The measurement key associated with the given signal ID.</returns>
+            <remarks>
+            If no measurement key is found with the given signal ID, a measurement key is
+            returned with generic default values for <see cref="P:TimeSeriesFramework.MeasurementKey.Source"/> and <see cref="P:TimeSeriesFramework.MeasurementKey.ID"/>,
+            but this key is not cached. In order to cache a measurement key, a Source and ID
+            must be provided, either via the <see cref="M:TimeSeriesFramework.MeasurementKey.#ctor(System.Guid,System.UInt32,System.String)"/>
+            constructor or the <see cref="M:TimeSeriesFramework.MeasurementKey.Parse(System.String,System.Guid)"/> method.
+            </remarks>
+        </member>
         <member name="M:TimeSeriesFramework.MeasurementKey.TryParse(System.String,System.Guid,TimeSeriesFramework.MeasurementKey@)">
             <summary>
             Attempts to convert the string representation of a <see cref="T:TimeSeriesFramework.MeasurementKey"/> into its value equivalent.
@@ -2642,6 +2656,12 @@
                  SignalID    GUID        Unique identification for measurement
             </code>
             </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.MeasurementKey.CreateUndefinedMeasurementKey">
+            <summary>
+            Creates the undefined measurement key. Used to initialize <see cref="F:TimeSeriesFramework.MeasurementKey.Undefined"/>.
+            </summary>
+            <returns>The undefined measurement key.</returns>
         </member>
         <member name="P:TimeSeriesFramework.MeasurementKey.SignalID">
             <summary>
@@ -5898,6 +5918,11 @@
             Gets current cipher index.
             </summary>
         </member>
+        <member name="P:TimeSeriesFramework.Transport.ClientConnection.LastCipherKeyUpdateTime">
+            <summary>
+            Gets time of last cipher key update.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Transport.ClientConnection.IPAddress">
             <summary>
             Gets the IP address of the remote client connection.
@@ -6122,6 +6147,26 @@
             Represents a data publishing server that allows multiple connections for data subscriptions.
             </summary>
         </member>
+        <member name="F:TimeSeriesFramework.Transport.DataPublisher.DefaultRequireAuthentication">
+            <summary>
+            Default value for <see cref="P:TimeSeriesFramework.Transport.DataPublisher.RequireAuthentication"/>.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.DataPublisher.DefaultEncryptPayload">
+            <summary>
+            Default value for <see cref="P:TimeSeriesFramework.Transport.DataPublisher.EncryptPayload"/>.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.DataPublisher.DefaultSharedDatabase">
+            <summary>
+            Default value for <see cref="P:TimeSeriesFramework.Transport.DataPublisher.SharedDatabase"/>.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.DataPublisher.DefaultCipherKeyRotationPeriod">
+            <summary>
+            Default value for <see cref="P:TimeSeriesFramework.Transport.DataPublisher.CipherKeyRotationPeriod"/>.
+            </summary>
+        </member>
         <member name="M:TimeSeriesFramework.Transport.DataPublisher.#ctor">
             <summary>
             Creates a new <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/>.
@@ -6308,6 +6353,11 @@
             <summary>
             Gets or sets flag that indicates whether this publisher is publishing
             data that this node subscribed to from another node in a shared database.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.CipherKeyRotationPeriod">
+            <summary>
+            Gets or sets the cipher key rotation period.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.DataPublisher.Status">
