@@ -57,6 +57,7 @@ namespace TimeSeriesFramework.Transport
 
             // Fields
             private DataSubscriber m_parent;
+            private bool m_disposed;
 
             #endregion
 
@@ -75,6 +76,27 @@ namespace TimeSeriesFramework.Transport
             #region [ Methods ]
 
             /// <summary>
+            /// Releases the unmanaged resources used by the <see cref="LocalConcentrator"/> object and optionally releases the managed resources.
+            /// </summary>
+            /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+            protected override void Dispose(bool disposing)
+            {
+                if (!m_disposed)
+                {
+                    try
+                    {
+                        if (disposing)
+                            m_parent = null;
+                    }
+                    finally
+                    {
+                        m_disposed = true;          // Prevent duplicate dispose.
+                        base.Dispose(disposing);    // Call base class Dispose().
+                    }
+                }
+            }
+
+            /// <summary>
             /// Publish <see cref="IFrame"/> of time-aligned collection of <see cref="IMeasurement"/> values that arrived within the
             /// concentrator's defined <see cref="ConcentratorBase.LagTime"/>.
             /// </summary>
@@ -83,7 +105,8 @@ namespace TimeSeriesFramework.Transport
             protected override void PublishFrame(IFrame frame, int index)
             {
                 // Publish locally sorted measurements
-                m_parent.OnNewMeasurements(frame.Measurements.Values);
+                if ((object)m_parent != null)
+                    m_parent.OnNewMeasurements(frame.Measurements.Values);
             }
 
             #endregion
@@ -427,14 +450,7 @@ namespace TimeSeriesFramework.Transport
                     {
                         CommandChannel = null;
                         DataChannel = null;
-
-                        if ((object)m_localConcentrator != null)
-                        {
-                            m_localConcentrator.ProcessException -= m_localConcentrator_ProcessException;
-                            m_localConcentrator.Dispose();
-                        }
-
-                        m_localConcentrator = null;
+                        DisposeLocalConcentrator();
                     }
                 }
                 finally
@@ -676,6 +692,9 @@ namespace TimeSeriesFramework.Transport
         /// </remarks>
         public virtual bool RemotelySynchronizedSubscribe(bool compactFormat, int framesPerSecond, double lagTime, double leadTime, string filterExpression, string dataChannel = null, bool useLocalClockAsRealTime = false, bool ignoreBadTimestamps = false, bool allowSortsByArrival = true, long timeResolution = Ticks.PerMillisecond, bool allowPreemptivePublishing = true, DownsamplingMethod downsamplingMethod = DownsamplingMethod.LastReceived, string startTime = null, string stopTime = null, string constraintParameters = null, int processingInterval = -1, string waitHandleNames = null, int waitHandleTimeout = 0)
         {
+            // Dispose of any previously established local concentrator
+            DisposeLocalConcentrator();
+
             StringBuilder connectionString = new StringBuilder();
 
             connectionString.Append("usePrecisionTimer=false; ");
@@ -775,14 +794,10 @@ namespace TimeSeriesFramework.Transport
         /// </remarks>
         public virtual bool LocallySynchronizedSubscribe(bool compactFormat, int framesPerSecond, double lagTime, double leadTime, string filterExpression, string dataChannel = null, bool useLocalClockAsRealTime = false, bool ignoreBadTimestamps = false, bool allowSortsByArrival = true, long timeResolution = Ticks.PerMillisecond, bool allowPreemptivePublishing = true, DownsamplingMethod downsamplingMethod = DownsamplingMethod.LastReceived, string startTime = null, string stopTime = null, string constraintParameters = null, int processingInterval = -1, string waitHandleNames = null, int waitHandleTimeout = 0)
         {
-            // Establish a local concentrator to synchronize received measurements
-            if ((object)m_localConcentrator != null)
-            {
-                m_localConcentrator.ProcessException -= m_localConcentrator_ProcessException;
-                m_localConcentrator.Dispose();
-            }
+            // Dispose of any previously established local concentrator
+            DisposeLocalConcentrator();
 
-            // Setup a new local concentrator
+            // Establish a local concentrator to synchronize received measurements
             m_localConcentrator = new LocalConcentrator(this);
             m_localConcentrator.ProcessException += m_localConcentrator_ProcessException;
             m_localConcentrator.FramesPerSecond = framesPerSecond;
@@ -794,8 +809,8 @@ namespace TimeSeriesFramework.Transport
             m_localConcentrator.TimeResolution = timeResolution;
             m_localConcentrator.AllowPreemptivePublishing = allowPreemptivePublishing;
             m_localConcentrator.DownsamplingMethod = downsamplingMethod;
-            m_localConcentrator.Start();
 
+            // Parse time constraints, if defined
             DateTime startTimeConstraint, stopTimeConstraint;
 
             if (!string.IsNullOrWhiteSpace(startTime))
@@ -815,11 +830,40 @@ namespace TimeSeriesFramework.Transport
                 m_localConcentrator.LeadTime = double.MaxValue;
             }
 
+            // Assign alternate processing interval, if defined
             if (processingInterval != -1)
                 m_localConcentrator.ProcessingInterval = processingInterval;
 
             // Initiate unsynchronized subscribe
-            return UnsynchronizedSubscribe(compactFormat, false, filterExpression, dataChannel, startTime: startTime, stopTime: stopTime, constraintParameters: constraintParameters, processingInterval: processingInterval, waitHandleNames: waitHandleNames, waitHandleTimeout: waitHandleTimeout);
+            StringBuilder connectionString = new StringBuilder();
+
+            connectionString.AppendFormat("trackLatestMeasurements={0}; ", false);
+            connectionString.AppendFormat("inputMeasurementKeys={{{0}}}; ", filterExpression.ToNonNullString());
+            connectionString.AppendFormat("dataChannel={{{0}}}; ", dataChannel.ToNonNullString());
+            connectionString.AppendFormat("includeTime={0}; ", true);
+            connectionString.AppendFormat("lagTime={0}; ", 10.0D);
+            connectionString.AppendFormat("leadTime={0}; ", 5.0D);
+            connectionString.AppendFormat("useLocalClockAsRealTime={0}; ", false);
+            connectionString.AppendFormat("startTimeConstraint={0}; ", startTime.ToNonNullString());
+            connectionString.AppendFormat("stopTimeConstraint={0}; ", stopTime.ToNonNullString());
+            connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
+            connectionString.AppendFormat("processingInterval={0}", processingInterval);
+
+            if (!string.IsNullOrWhiteSpace(waitHandleNames))
+            {
+                connectionString.AppendFormat("; waitHandleNames={0}", waitHandleNames);
+                connectionString.AppendFormat("; waitHandleTimeout={0}", waitHandleTimeout);
+            }
+
+            // Start subscription process
+            if (Subscribe(false, compactFormat, connectionString.ToString()))
+            {
+                // If subscription succeeds, start local concentrator
+                m_localConcentrator.Start();
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -888,6 +932,9 @@ namespace TimeSeriesFramework.Transport
         /// </remarks>
         public virtual bool UnsynchronizedSubscribe(bool compactFormat, bool throttled, string filterExpression, string dataChannel = null, bool includeTime = true, double lagTime = 10.0D, double leadTime = 5.0D, bool useLocalClockAsRealTime = false, string startTime = null, string stopTime = null, string constraintParameters = null, int processingInterval = -1, string waitHandleNames = null, int waitHandleTimeout = 0)
         {
+            // Dispose of any previously established local concentrator
+            DisposeLocalConcentrator();
+
             StringBuilder connectionString = new StringBuilder();
 
             connectionString.AppendFormat("trackLatestMeasurements={0}; ", throttled);
@@ -1685,6 +1732,20 @@ namespace TimeSeriesFramework.Transport
 
             // Also raise base class event in case this event has been subscribed
             OnProcessingComplete();
+        }
+
+        /// <summary>
+        /// Disposes of any previously defined local concentrator.
+        /// </summary>
+        protected internal void DisposeLocalConcentrator()
+        {
+            if ((object)m_localConcentrator != null)
+            {
+                m_localConcentrator.ProcessException -= m_localConcentrator_ProcessException;
+                m_localConcentrator.Dispose();
+            }
+
+            m_localConcentrator = null;
         }
 
         private void m_localConcentrator_ProcessException(object sender, EventArgs<Exception> e)
