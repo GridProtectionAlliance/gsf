@@ -66,7 +66,7 @@ namespace TimeSeriesFramework.Transport
         private long m_lastPublishTime;
         private bool m_includeTime;
         private Thread m_processThread;
-        private Semaphore m_processSemaphore;
+        private SemaphoreSlim m_processSemaphore;
         private ConcurrentQueue<IEnumerable<IMeasurement>> m_processQueue;
         private volatile bool m_startTimeSent;
         private IaonSession m_iaonSession;
@@ -318,7 +318,7 @@ namespace TimeSeriesFramework.Transport
             base.Start();
 
             m_processThread = new Thread(ProcessMeasurements);
-            m_processSemaphore = new Semaphore(0, int.MaxValue);
+            m_processSemaphore = new SemaphoreSlim(0, int.MaxValue);
             m_processQueue = new ConcurrentQueue<IEnumerable<IMeasurement>>();
             m_processThread.Start();
         }
@@ -458,7 +458,7 @@ namespace TimeSeriesFramework.Transport
 
             while (Enabled)
             {
-                if ((object)m_processSemaphore != null && m_processSemaphore.WaitOne(ProcessWaitTimeout) && m_processQueue.TryDequeue(out measurements))
+                if ((object)m_processSemaphore != null && m_processSemaphore.Wait(ProcessWaitTimeout) && m_processQueue.TryDequeue(out measurements))
                 {
                     // Wait for any external events, if needed
                     WaitForExternalEvents();

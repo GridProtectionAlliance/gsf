@@ -54,7 +54,7 @@ namespace DataQualityMonitoring
 
         private ConcurrentQueue<IMeasurement> m_measurementQueue;
         private Thread m_processThread;
-        private Semaphore m_processSemaphore;
+        private SemaphoreSlim m_processSemaphore;
         private long m_eventCount;
 
         private bool m_supportsTemporalProcessing;
@@ -150,7 +150,7 @@ namespace DataQualityMonitoring
 
             m_measurementQueue = new ConcurrentQueue<IMeasurement>();
             m_processThread = new Thread(ProcessMeasurements);
-            m_processSemaphore = new Semaphore(0, int.MaxValue);
+            m_processSemaphore = new SemaphoreSlim(0, int.MaxValue);
             m_eventCount = 0L;
 
             m_processThread.Start();
@@ -270,7 +270,7 @@ namespace DataQualityMonitoring
 
             while (Enabled)
             {
-                if ((object)m_processSemaphore != null && m_processSemaphore.WaitOne(WaitTimeout) && m_measurementQueue.TryDequeue(out measurement))
+                if ((object)m_processSemaphore != null && m_processSemaphore.Wait(WaitTimeout) && m_measurementQueue.TryDequeue(out measurement))
                 {
                     lock (m_alarms)
                     {
