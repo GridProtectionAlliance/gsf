@@ -6162,6 +6162,11 @@
             Default value for <see cref="P:TimeSeriesFramework.Transport.DataPublisher.SharedDatabase"/>.
             </summary>
         </member>
+        <member name="F:TimeSeriesFramework.Transport.DataPublisher.DefaultAllowSynchronizedSubscription">
+            <summary>
+            Default value for <see cref="P:TimeSeriesFramework.Transport.DataPublisher.AllowSynchronizedSubscription"/>.
+            </summary>
+        </member>
         <member name="F:TimeSeriesFramework.Transport.DataPublisher.DefaultCipherKeyRotationPeriod">
             <summary>
             Default value for <see cref="P:TimeSeriesFramework.Transport.DataPublisher.CipherKeyRotationPeriod"/>.
@@ -6355,6 +6360,11 @@
             data that this node subscribed to from another node in a shared database.
             </summary>
         </member>
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.AllowSynchronizedSubscription">
+            <summary>
+            Gets or sets flag that indicates if this publisher will allow synchronized subscriptions.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Transport.DataPublisher.CipherKeyRotationPeriod">
             <summary>
             Gets or sets the cipher key rotation period.
@@ -6430,9 +6440,79 @@
             <param name="authenticationID">Authentication ID that publisher will use to validate subscriber identity.</param>
             <returns><c>true</c> if authentication transmission was successful; otherwise <c>false</c>.</returns>
         </member>
-        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.SynchronizedSubscribe(System.Boolean,System.Int32,System.Double,System.Double,System.String,System.String,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Boolean,TimeSeriesFramework.DownsamplingMethod,System.String,System.String,System.String,System.Int32,System.String,System.Int32)">
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.RemotelySynchronizedSubscribe(System.Boolean,System.Int32,System.Double,System.Double,System.String,System.String,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Boolean,TimeSeriesFramework.DownsamplingMethod,System.String,System.String,System.String,System.Int32,System.String,System.Int32)">
             <summary>
-            Subscribes (or re-subscribes) to a data publisher for a synchronized set of data points.
+            Subscribes (or re-subscribes) to a data publisher for a remotely synchronized set of data points.
+            </summary>
+            <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>true</c> for bandwidth conservation.</param>
+            <param name="framesPerSecond">The desired number of data frames per second.</param>
+            <param name="lagTime">Allowed past time deviation tolerance, in seconds (can be subsecond).</param>
+            <param name="leadTime">Allowed future time deviation tolerance, in seconds (can be subsecond).</param>
+            <param name="filterExpression">Filtering expression that defines the measurements that are being subscribed.</param>
+            <param name="dataChannel">Desired UDP return data channel connection string to use for data packet transmission. Set to <c>null</c> to use TCP channel for data transmission.</param>
+            <param name="useLocalClockAsRealTime">Boolean value that determines whether or not to use the local clock time as real-time.</param>
+            <param name="ignoreBadTimestamps">Boolean value that determines if bad timestamps (as determined by measurement's timestamp quality) should be ignored when sorting measurements.</param>
+            <param name="allowSortsByArrival"> Gets or sets flag that determines whether or not to allow incoming measurements with bad timestamps to be sorted by arrival time.</param>
+            <param name="timeResolution">Gets or sets the maximum time resolution, in ticks, to use when sorting measurements by timestamps into their proper destination frame.</param>
+            <param name="allowPreemptivePublishing">Gets or sets flag that allows system to preemptively publish frames assuming all expected measurements have arrived.</param>
+            <param name="downsamplingMethod">Gets the total number of downsampled measurements processed by the concentrator.</param>
+            <param name="startTime">Defines a relative or exact start time for the temporal constraint to use for historical playback.</param>
+            <param name="stopTime">Defines a relative or exact stop time for the temporal constraint to use for historical playback.</param>
+            <param name="constraintParameters">Defines any temporal parameters related to the constraint to use for historical playback.</param>
+            <param name="processingInterval">Defines the desired processing interval milliseconds, i.e., historical play back speed, to use when temporal constraints are defined.</param>
+            <param name="waitHandleNames">Comma separated list of wait handle names used to establish external event wait handles needed for inter-adapter synchronization.</param>
+            <param name="waitHandleTimeout">Maximum wait time for external events, in milliseconds, before proceeding.</param>
+            <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
+            <remarks>
+            <para>
+            When the <paramref name="startTime"/> or <paramref name="stopTime"/> temporal processing contraints are defined (i.e., not <c>null</c>), this
+            specifies the start and stop time over which the subscriber session will process data. Passing in <c>null</c> for the <paramref name="startTime"/>
+            and <paramref name="stopTime"/> specifies the the subscriber session will process data in standard, i.e., real-time, operation.
+            </para>
+            <para>
+            With the exception of the values of -1 and 0, the <paramref name="processingInterval"/> value specifies the desired historical playback data
+            processing interval in milliseconds. This is basically a delay, or timer interval, overwhich to process data. Setting this value to -1 means
+            to use the default processing interval while setting the value to 0 means to process data as fast as possible.
+            </para>
+            <para>
+            The <paramref name="startTime"/> and <paramref name="stopTime"/> parameters can be specified in one of the
+            following formats:
+            <list type="table">
+                <listheader>
+                    <term>Time Format</term>
+                    <description>Format Description</description>
+                </listheader>
+                <item>
+                    <term>12-30-2000 23:59:59.033</term>
+                    <description>Absolute date and time.</description>
+                </item>
+                <item>
+                    <term>*</term>
+                    <description>Evaluates to <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-20s</term>
+                    <description>Evaluates to 20 seconds before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-10m</term>
+                    <description>Evaluates to 10 minutes before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-1h</term>
+                    <description>Evaluates to 1 hour before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-1d</term>
+                    <description>Evaluates to 1 day before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+            </list>
+            </para>
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.LocallySynchronizedSubscribe(System.Boolean,System.Int32,System.Double,System.Double,System.String,System.String,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Boolean,TimeSeriesFramework.DownsamplingMethod,System.String,System.String,System.String,System.Int32,System.String,System.Int32)">
+            <summary>
+            Subscribes (or re-subscribes) to a data publisher for a locally synchronized set of data points.
             </summary>
             <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>true</c> for bandwidth conservation.</param>
             <param name="framesPerSecond">The desired number of data frames per second.</param>
@@ -6570,7 +6650,7 @@
             <summary>
             Subscribes (or re-subscribes) to a data publisher for a set of data points.
             </summary>
-            <param name="synchronized">Boolean value that determines if subscription should be synchronized.</param>
+            <param name="remotelySynchronized">Boolean value that determines if subscription should be remotely synchronized - note that data publisher may not allow remote synchronization.</param>
             <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>true</c> for bandwidth conservation.</param>
             <param name="connectionString">Connection string that defines required and optional parameters for the subscription.</param>
             <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
@@ -6763,6 +6843,19 @@
             <summary>
             Gets or sets reference to <see cref="T:TVA.Communication.TcpClient"/> command channel, attaching and/or detaching to events as needed.
             </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.LocalConcentrator.#ctor(TimeSeriesFramework.Transport.DataSubscriber)">
+            <summary>
+            Creates a new local concentrator.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.LocalConcentrator.PublishFrame(TimeSeriesFramework.IFrame,System.Int32)">
+            <summary>
+            Publish <see cref="T:TimeSeriesFramework.IFrame"/> of time-aligned collection of <see cref="T:TimeSeriesFramework.IMeasurement"/> values that arrived within the
+            concentrator's defined <see cref="P:TimeSeriesFramework.ConcentratorBase.LagTime"/>.
+            </summary>
+            <param name="frame"><see cref="T:TimeSeriesFramework.IFrame"/> of measurements with the same timestamp that arrived within <see cref="P:TimeSeriesFramework.ConcentratorBase.LagTime"/> that are ready for processing.</param>
+            <param name="index">Index of <see cref="T:TimeSeriesFramework.IFrame"/> within a second ranging from zero to <c><see cref="P:TimeSeriesFramework.ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
         </member>
         <member name="T:TimeSeriesFramework.DebugHostBase">
             <summary>
