@@ -75,11 +75,22 @@ namespace DataSubscriberTest
             {
                 if (TVA.Security.Cryptography.Random.Boolean)
                 {
-                    lock (displayLock)
+                    if (TVA.Security.Cryptography.Random.Boolean)
                     {
-                        Console.WriteLine("Initiating synchronized subscription...");
+                        lock (displayLock)
+                        {
+                            Console.WriteLine("Initiating remotely synchronized subscription...");
+                        }
+                        subscriber.RemotelySynchronizedSubscribe(true, 30, 0.5D, 1.0D, "DEVARCHIVE:1;DEVARCHIVE:2");
                     }
-                    subscriber.SynchronizedSubscribe(true, 30, 0.5D, 1.0D, "DEVARCHIVE:1;DEVARCHIVE:2");
+                    else
+                    {
+                        lock (displayLock)
+                        {
+                            Console.WriteLine("Initiating locally synchronized subscription...");
+                        }
+                        subscriber.LocallySynchronizedSubscribe(true, 30, 0.5D, 1.0D, "DEVARCHIVE:1;DEVARCHIVE:2");
+                    }
                 }
                 else
                 {

@@ -48,6 +48,49 @@ namespace TimeSeriesFramework.Transport
     {
         #region [ Members ]
 
+        // Nested Types
+
+        // Local measurement concentrator
+        private class LocalConcentrator : ConcentratorBase
+        {
+            #region [ Members ]
+
+            // Fields
+            private DataSubscriber m_parent;
+
+            #endregion
+
+            #region [ Constructors ]
+
+            /// <summary>
+            /// Creates a new local concentrator.
+            /// </summary>
+            public LocalConcentrator(DataSubscriber parent)
+            {
+                m_parent = parent;
+            }
+
+            #endregion
+
+            #region [ Methods ]
+
+            /// <summary>
+            /// Publish <see cref="IFrame"/> of time-aligned collection of <see cref="IMeasurement"/> values that arrived within the
+            /// concentrator's defined <see cref="ConcentratorBase.LagTime"/>.
+            /// </summary>
+            /// <param name="frame"><see cref="IFrame"/> of measurements with the same timestamp that arrived within <see cref="ConcentratorBase.LagTime"/> that are ready for processing.</param>
+            /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
+            protected override void PublishFrame(IFrame frame, int index)
+            {
+                // Publish locally sorted measurements
+                m_parent.OnNewMeasurements(frame.Measurements.Values);
+            }
+
+            #endregion
+        }
+
+        // Events
+
         /// <summary>
         /// Occurs when client connection to the data publication server is established.
         /// </summary>
@@ -85,6 +128,7 @@ namespace TimeSeriesFramework.Transport
         // Fields
         private TcpClient m_commandChannel;
         private UdpClient m_dataChannel;
+        private LocalConcentrator m_localConcentrator;
         private long m_connectionAttempts;
         private volatile SignalIndexCache m_remoteSignalIndexCache;
         private volatile SignalIndexCache m_signalIndexCache;
@@ -227,7 +271,7 @@ namespace TimeSeriesFramework.Transport
             {
                 StringBuilder status = new StringBuilder();
 
-                status.AppendFormat("         Subscription mode: {0}", m_synchronizedSubscription ? "Synchronized" : "Unsynchronized");
+                status.AppendFormat("         Subscription mode: {0}", m_synchronizedSubscription ? "Remotely Synchronized" : (object)m_localConcentrator == null ? "Unsynchronized" : "Locally Synchronized");
                 status.AppendLine();
                 status.AppendFormat("  Pending command requests: {0}", m_requests.Count);
                 status.AppendLine();
@@ -238,7 +282,7 @@ namespace TimeSeriesFramework.Transport
                 status.AppendFormat("      Data packet security: {0}", m_keyIVs == null ? "unencrypted" : "encrypted");
                 status.AppendLine();
 
-                if (m_dataChannel != null)
+                if ((object)m_dataChannel != null)
                 {
                     status.AppendLine();
                     status.AppendLine("Data Channel Status".CenterText(50));
@@ -246,12 +290,20 @@ namespace TimeSeriesFramework.Transport
                     status.Append(m_dataChannel.Status);
                 }
 
-                if (m_commandChannel != null)
+                if ((object)m_commandChannel != null)
                 {
                     status.AppendLine();
                     status.AppendLine("Command Channel Status".CenterText(50));
                     status.AppendLine("----------------------".CenterText(50));
                     status.Append(m_commandChannel.Status);
+                }
+
+                if ((object)m_localConcentrator != null)
+                {
+                    status.AppendLine();
+                    status.AppendLine("Local Concentrator Status".CenterText(50));
+                    status.AppendLine("-------------------------".CenterText(50));
+                    status.Append(m_localConcentrator.Status);
                 }
 
                 status.Append(base.Status);
@@ -375,6 +427,14 @@ namespace TimeSeriesFramework.Transport
                     {
                         CommandChannel = null;
                         DataChannel = null;
+
+                        if ((object)m_localConcentrator != null)
+                        {
+                            m_localConcentrator.ProcessException -= m_localConcentrator_ProcessException;
+                            m_localConcentrator.Dispose();
+                        }
+
+                        m_localConcentrator = null;
                     }
                 }
                 finally
@@ -547,7 +607,7 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
-        /// Subscribes (or re-subscribes) to a data publisher for a synchronized set of data points.
+        /// Subscribes (or re-subscribes) to a data publisher for a remotely synchronized set of data points.
         /// </summary>
         /// <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>true</c> for bandwidth conservation.</param>
         /// <param name="framesPerSecond">The desired number of data frames per second.</param>
@@ -614,7 +674,7 @@ namespace TimeSeriesFramework.Transport
         /// </list>
         /// </para>
         /// </remarks>
-        public virtual bool SynchronizedSubscribe(bool compactFormat, int framesPerSecond, double lagTime, double leadTime, string filterExpression, string dataChannel = null, bool useLocalClockAsRealTime = false, bool ignoreBadTimestamps = false, bool allowSortsByArrival = true, long timeResolution = Ticks.PerMillisecond, bool allowPreemptivePublishing = true, DownsamplingMethod downsamplingMethod = DownsamplingMethod.LastReceived, string startTime = null, string stopTime = null, string constraintParameters = null, int processingInterval = -1, string waitHandleNames = null, int waitHandleTimeout = 0)
+        public virtual bool RemotelySynchronizedSubscribe(bool compactFormat, int framesPerSecond, double lagTime, double leadTime, string filterExpression, string dataChannel = null, bool useLocalClockAsRealTime = false, bool ignoreBadTimestamps = false, bool allowSortsByArrival = true, long timeResolution = Ticks.PerMillisecond, bool allowPreemptivePublishing = true, DownsamplingMethod downsamplingMethod = DownsamplingMethod.LastReceived, string startTime = null, string stopTime = null, string constraintParameters = null, int processingInterval = -1, string waitHandleNames = null, int waitHandleTimeout = 0)
         {
             StringBuilder connectionString = new StringBuilder();
 
@@ -643,6 +703,123 @@ namespace TimeSeriesFramework.Transport
             }
 
             return Subscribe(true, compactFormat, connectionString.ToString());
+        }
+
+        /// <summary>
+        /// Subscribes (or re-subscribes) to a data publisher for a locally synchronized set of data points.
+        /// </summary>
+        /// <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>true</c> for bandwidth conservation.</param>
+        /// <param name="framesPerSecond">The desired number of data frames per second.</param>
+        /// <param name="lagTime">Allowed past time deviation tolerance, in seconds (can be subsecond).</param>
+        /// <param name="leadTime">Allowed future time deviation tolerance, in seconds (can be subsecond).</param>
+        /// <param name="filterExpression">Filtering expression that defines the measurements that are being subscribed.</param>
+        /// <param name="dataChannel">Desired UDP return data channel connection string to use for data packet transmission. Set to <c>null</c> to use TCP channel for data transmission.</param>
+        /// <param name="useLocalClockAsRealTime">Boolean value that determines whether or not to use the local clock time as real-time.</param>
+        /// <param name="ignoreBadTimestamps">Boolean value that determines if bad timestamps (as determined by measurement's timestamp quality) should be ignored when sorting measurements.</param>
+        /// <param name="allowSortsByArrival"> Gets or sets flag that determines whether or not to allow incoming measurements with bad timestamps to be sorted by arrival time.</param>
+        /// <param name="timeResolution">Gets or sets the maximum time resolution, in ticks, to use when sorting measurements by timestamps into their proper destination frame.</param>
+        /// <param name="allowPreemptivePublishing">Gets or sets flag that allows system to preemptively publish frames assuming all expected measurements have arrived.</param>
+        /// <param name="downsamplingMethod">Gets the total number of downsampled measurements processed by the concentrator.</param>
+        /// <param name="startTime">Defines a relative or exact start time for the temporal constraint to use for historical playback.</param>
+        /// <param name="stopTime">Defines a relative or exact stop time for the temporal constraint to use for historical playback.</param>
+        /// <param name="constraintParameters">Defines any temporal parameters related to the constraint to use for historical playback.</param>
+        /// <param name="processingInterval">Defines the desired processing interval milliseconds, i.e., historical play back speed, to use when temporal constraints are defined.</param>
+        /// <param name="waitHandleNames">Comma separated list of wait handle names used to establish external event wait handles needed for inter-adapter synchronization.</param>
+        /// <param name="waitHandleTimeout">Maximum wait time for external events, in milliseconds, before proceeding.</param>
+        /// <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
+        /// <remarks>
+        /// <para>
+        /// When the <paramref name="startTime"/> or <paramref name="stopTime"/> temporal processing contraints are defined (i.e., not <c>null</c>), this
+        /// specifies the start and stop time over which the subscriber session will process data. Passing in <c>null</c> for the <paramref name="startTime"/>
+        /// and <paramref name="stopTime"/> specifies the the subscriber session will process data in standard, i.e., real-time, operation.
+        /// </para>
+        /// <para>
+        /// With the exception of the values of -1 and 0, the <paramref name="processingInterval"/> value specifies the desired historical playback data
+        /// processing interval in milliseconds. This is basically a delay, or timer interval, overwhich to process data. Setting this value to -1 means
+        /// to use the default processing interval while setting the value to 0 means to process data as fast as possible.
+        /// </para>
+        /// <para>
+        /// The <paramref name="startTime"/> and <paramref name="stopTime"/> parameters can be specified in one of the
+        /// following formats:
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term>Time Format</term>
+        ///         <description>Format Description</description>
+        ///     </listheader>
+        ///     <item>
+        ///         <term>12-30-2000 23:59:59.033</term>
+        ///         <description>Absolute date and time.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*</term>
+        ///         <description>Evaluates to <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-20s</term>
+        ///         <description>Evaluates to 20 seconds before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-10m</term>
+        ///         <description>Evaluates to 10 minutes before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-1h</term>
+        ///         <description>Evaluates to 1 hour before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-1d</term>
+        ///         <description>Evaluates to 1 day before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        /// </list>
+        /// </para>
+        /// </remarks>
+        public virtual bool LocallySynchronizedSubscribe(bool compactFormat, int framesPerSecond, double lagTime, double leadTime, string filterExpression, string dataChannel = null, bool useLocalClockAsRealTime = false, bool ignoreBadTimestamps = false, bool allowSortsByArrival = true, long timeResolution = Ticks.PerMillisecond, bool allowPreemptivePublishing = true, DownsamplingMethod downsamplingMethod = DownsamplingMethod.LastReceived, string startTime = null, string stopTime = null, string constraintParameters = null, int processingInterval = -1, string waitHandleNames = null, int waitHandleTimeout = 0)
+        {
+            // Establish a local concentrator to synchronize received measurements
+            if ((object)m_localConcentrator != null)
+            {
+                m_localConcentrator.ProcessException -= m_localConcentrator_ProcessException;
+                m_localConcentrator.Dispose();
+            }
+
+            // Setup a new local concentrator
+            m_localConcentrator = new LocalConcentrator(this);
+            m_localConcentrator.ProcessException += m_localConcentrator_ProcessException;
+            m_localConcentrator.FramesPerSecond = framesPerSecond;
+            m_localConcentrator.LagTime = lagTime;
+            m_localConcentrator.LeadTime = leadTime;
+            m_localConcentrator.UseLocalClockAsRealTime = useLocalClockAsRealTime;
+            m_localConcentrator.IgnoreBadTimestamps = ignoreBadTimestamps;
+            m_localConcentrator.AllowSortsByArrival = allowSortsByArrival;
+            m_localConcentrator.TimeResolution = timeResolution;
+            m_localConcentrator.AllowPreemptivePublishing = allowPreemptivePublishing;
+            m_localConcentrator.DownsamplingMethod = downsamplingMethod;
+            m_localConcentrator.Start();
+
+            DateTime startTimeConstraint, stopTimeConstraint;
+
+            if (!string.IsNullOrWhiteSpace(startTime))
+                startTimeConstraint = AdapterBase.ParseTimeTag(startTime);
+            else
+                startTimeConstraint = DateTime.MinValue;
+
+            if (!string.IsNullOrWhiteSpace(stopTime))
+                stopTimeConstraint = AdapterBase.ParseTimeTag(stopTime);
+            else
+                stopTimeConstraint = DateTime.MaxValue;
+
+            // When processing historical data, timestamps should not be evaluated for reasonability
+            if (startTimeConstraint != DateTime.MinValue || stopTimeConstraint != DateTime.MaxValue)
+            {
+                m_localConcentrator.PerformTimestampReasonabilityCheck = false;
+                m_localConcentrator.LeadTime = double.MaxValue;
+            }
+
+            if (processingInterval != -1)
+                m_localConcentrator.ProcessingInterval = processingInterval;
+
+            // Initiate unsynchronized subscribe
+            return UnsynchronizedSubscribe(compactFormat, false, filterExpression, dataChannel, startTime: startTime, stopTime: stopTime, constraintParameters: constraintParameters, processingInterval: processingInterval, waitHandleNames: waitHandleNames, waitHandleTimeout: waitHandleTimeout);
         }
 
         /// <summary>
@@ -737,11 +914,11 @@ namespace TimeSeriesFramework.Transport
         /// <summary>
         /// Subscribes (or re-subscribes) to a data publisher for a set of data points.
         /// </summary>
-        /// <param name="synchronized">Boolean value that determines if subscription should be synchronized.</param>
+        /// <param name="remotelySynchronized">Boolean value that determines if subscription should be remotely synchronized - note that data publisher may not allow remote synchronization.</param>
         /// <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>true</c> for bandwidth conservation.</param>
         /// <param name="connectionString">Connection string that defines required and optional parameters for the subscription.</param>
         /// <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
-        public virtual bool Subscribe(bool synchronized, bool compactFormat, string connectionString)
+        public virtual bool Subscribe(bool remotelySynchronized, bool compactFormat, string connectionString)
         {
             bool success = false;
 
@@ -761,6 +938,7 @@ namespace TimeSeriesFramework.Transport
                         m_includeTime = true;
 
                     settings.TryGetValue("dataChannel", out setting);
+
                     if (!string.IsNullOrWhiteSpace(setting))
                     {
                         dataChannel = new UdpClient(setting);
@@ -787,7 +965,7 @@ namespace TimeSeriesFramework.Transport
                     DataPacketFlags flags = DataPacketFlags.NoFlags;
                     byte[] bytes;
 
-                    if (synchronized)
+                    if (remotelySynchronized)
                         flags |= DataPacketFlags.Synchronized;
 
                     if (compactFormat)
@@ -806,7 +984,7 @@ namespace TimeSeriesFramework.Transport
                     buffer.Write(bytes, 0, bytes.Length);
 
                     // Cache subscribed synchronization state
-                    m_synchronizedSubscription = synchronized;
+                    m_synchronizedSubscription = remotelySynchronized;
 
                     // Send subscribe server command with associated command buffer
                     success = SendServerCommand(ServerCommand.Subscribe, buffer.ToArray());
@@ -1101,8 +1279,11 @@ namespace TimeSeriesFramework.Transport
                                 }
                             }
 
-                            // Expose new measurements to consumer
-                            OnNewMeasurements(measurements);
+                            // Provide new measurements to local concentrator, if defined, otherwise directly expose them to the consumer
+                            if ((object)m_localConcentrator != null)
+                                m_localConcentrator.SortMeasurements(measurements);
+                            else
+                                OnNewMeasurements(measurements);
                             break;
                         case ServerResponse.DataStartTime:
                             // Raise data start time event
@@ -1176,7 +1357,8 @@ namespace TimeSeriesFramework.Transport
             }
 
             // Initiate meta-data refresh
-            SendServerCommand(ServerCommand.MetaDataRefresh);
+            if (m_synchronizeMetadata)
+                SendServerCommand(ServerCommand.MetaDataRefresh);
         }
 
         /// <summary>
@@ -1503,6 +1685,12 @@ namespace TimeSeriesFramework.Transport
 
             // Also raise base class event in case this event has been subscribed
             OnProcessingComplete();
+        }
+
+        private void m_localConcentrator_ProcessException(object sender, EventArgs<Exception> e)
+        {
+            // Make sure any exceptions reported by local concentrator get exposed as needed
+            OnProcessException(e.Argument);
         }
 
         #region [ Command Channel Event Handlers ]

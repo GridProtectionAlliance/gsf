@@ -268,6 +268,11 @@ namespace TimeSeriesFramework.Transport
         public const bool DefaultSharedDatabase = false;
 
         /// <summary>
+        /// Default value for <see cref="AllowSynchronizedSubscription"/>.
+        /// </summary>
+        public const bool DefaultAllowSynchronizedSubscription = true;
+
+        /// <summary>
         /// Default value for <see cref="CipherKeyRotationPeriod"/>.
         /// </summary>
         public const double DefaultCipherKeyRotationPeriod = 60000.0D;
@@ -292,6 +297,7 @@ namespace TimeSeriesFramework.Transport
         private bool m_requireAuthentication;
         private bool m_encryptPayload;
         private bool m_sharedDatabase;
+        private bool m_allowSynchronizedSubscription;
         private bool m_disposed;
 
         #endregion
@@ -324,6 +330,7 @@ namespace TimeSeriesFramework.Transport
             m_requireAuthentication = DefaultRequireAuthentication;
             m_encryptPayload = DefaultEncryptPayload;
             m_sharedDatabase = DefaultSharedDatabase;
+            m_allowSynchronizedSubscription = DefaultAllowSynchronizedSubscription;
 
             m_metadataTables =
                 "SELECT NodeID, UniqueID, OriginalSource, IsConcentrator, Acronym, Name, ParentAcronym, ProtocolName, FramesPerSecond, Enabled FROM DeviceDetail WHERE OriginalSource IS NULL AND IsConcentrator = 0;" +
@@ -420,6 +427,24 @@ namespace TimeSeriesFramework.Transport
             set
             {
                 m_sharedDatabase = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that indicates if this publisher will allow synchronized subscriptions.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the flag that indicates if this publisher will allow synchronized subscriptions."),
+        DefaultValue(DefaultAllowSynchronizedSubscription)]
+        public bool AllowSynchronizedSubscription
+        {
+            get
+            {
+                return m_allowSynchronizedSubscription;
+            }
+            set
+            {
+                m_allowSynchronizedSubscription = value;
             }
         }
 
@@ -691,6 +716,10 @@ namespace TimeSeriesFramework.Transport
             // that its node subscribed to from another node in a shared database
             if (settings.TryGetValue("sharedDatabase", out setting))
                 m_sharedDatabase = setting.ParseBoolean();
+
+            // Check flag to see if synchronized subscriptions are allowed
+            if (settings.TryGetValue("allowSynchronizedSubscription", out setting))
+                m_allowSynchronizedSubscription = setting.ParseBoolean();
 
             // Get user specified period for cipher key rotation
             if (settings.TryGetValue("cipherKeyRotationPeriod", out setting) && double.TryParse(setting, out period))
@@ -1284,18 +1313,10 @@ namespace TimeSeriesFramework.Transport
                             subscriber = row;
                             break;
                         }
-
                     }
 
                     if (subscriber != null)
                         break;
-
-                    //if (row["ValidIPAddresses"].ToNonNullString().Split(';', ',').Where(ip => !string.IsNullOrWhiteSpace(ip)).Select(ip => IPAddress.Parse(ip.Trim())).Contains(connection.IPAddress))
-                    //{
-                    //    // Found registered subscriber record for the connected IP
-                    //    subscriber = row;
-                    //    break;
-                    //}
                 }
 
                 if (subscriber == null)
@@ -1402,181 +1423,192 @@ namespace TimeSeriesFramework.Transport
                     startIndex++;
 
                     bool useSynchronizedSubscription = ((byte)(flags & DataPacketFlags.Synchronized) > 0);
-                    bool useCompactMeasurementFormat = ((byte)(flags & DataPacketFlags.Compact) > 0);
-                    bool addSubscription = false;
 
-                    // Next 4 bytes are an integer representing the length of the connection string that follows
-                    int byteLength = EndianOrder.BigEndian.ToInt32(buffer, startIndex);
-                    startIndex += 4;
-
-                    if (byteLength > 0 && length >= 6 + byteLength)
+                    if (useSynchronizedSubscription && !m_allowSynchronizedSubscription)
                     {
-                        string connectionString = Encoding.Unicode.GetString(buffer, startIndex, byteLength);
-                        startIndex += byteLength;
-
-                        // Get client subscription
-                        if (connection.Subscription == null)
-                            TryGetClientSubscription(clientID, out subscription);
-                        else
-                            subscription = connection.Subscription;
-
-                        if (subscription == null)
-                        {
-                            // Client subscription not established yet, so we create a new one
-                            if (useSynchronizedSubscription)
-                                subscription = new SynchronizedClientSubscription(this, clientID, connection.SubscriberID);
-                            else
-                                subscription = new UnsynchronizedClientSubscription(this, clientID, connection.SubscriberID);
-
-                            addSubscription = true;
-                        }
-                        else
-                        {
-                            // Check to see if consumer is requesting to change synchronization method
-                            if (useSynchronizedSubscription)
-                            {
-                                if (subscription is UnsynchronizedClientSubscription)
-                                {
-                                    // Subscription is for unsynchronized measurements and consumer is requesting synchronized
-                                    subscription.Stop();
-
-                                    lock (this)
-                                    {
-                                        Remove(subscription);
-                                    }
-
-                                    // Create a new synchronized subscription
-                                    subscription = new SynchronizedClientSubscription(this, clientID, connection.SubscriberID);
-                                    addSubscription = true;
-                                }
-                            }
-                            else
-                            {
-                                if (subscription is SynchronizedClientSubscription)
-                                {
-                                    // Subscription is for synchronized measurements and consumer is requesting unsynchronized
-                                    subscription.Stop();
-
-                                    lock (this)
-                                    {
-                                        Remove(subscription);
-                                    }
-
-                                    // Create a new unsynchronized subscription
-                                    subscription = new UnsynchronizedClientSubscription(this, clientID, connection.SubscriberID);
-                                    addSubscription = true;
-                                }
-                            }
-                        }
-
-                        // Update client subscription properties
-                        subscription.ConnectionString = connectionString;
-                        subscription.DataSource = DataSource;
-
-                        if (subscription.Settings.TryGetValue("initializationTimeout", out setting))
-                            subscription.InitializationTimeout = int.Parse(setting);
-                        else
-                            subscription.InitializationTimeout = InitializationTimeout;
-
-                        // Set up UDP data channel if client has requested this
-                        connection.DataChannel = null;
-
-                        if (subscription.Settings.TryGetValue("dataChannel", out setting))
-                        {
-                            Dictionary<string, string> settings = setting.ParseKeyValuePairs();
-                            string networkInterface;
-                            bool compressionEnabled = false;
-
-                            settings.TryGetValue("interface", out networkInterface);
-
-                            if (string.IsNullOrWhiteSpace(networkInterface))
-                                networkInterface = "::0";
-
-                            if (settings.TryGetValue("compression", out setting))
-                                compressionEnabled = setting.ParseBoolean();
-
-                            if (settings.TryGetValue("port", out setting))
-                            {
-                                connection.DataChannel = new UdpServer(string.Format("Port=-1; Clients={0}:{1}; interface={2}", connection.IPAddress, int.Parse(setting), networkInterface));
-
-                                if (compressionEnabled)
-                                    connection.DataChannel.Compression = CompressionStrength.Standard;
-
-                                connection.DataChannel.Start();
-                            }
-                        }
-
-                        // Remove any existing cached publication channel since connection is changing
-                        IServer publicationChannel;
-                        m_clientPublicationChannels.TryRemove(clientID, out publicationChannel);
-
-                        // Update measurement serialization format type
-                        subscription.UseCompactMeasurementFormat = useCompactMeasurementFormat;
-
-                        // Track subscription in connection information
-                        connection.Subscription = subscription;
-
-                        // Subscribed signals (i.e., input measurement keys) will be parsed from connection string during
-                        // initialization of adapter. This should also gracefully handle "resubscribing" which can add and
-                        // remove subscribed points since assignment and use of input measurement keys is synchronized
-                        // within the client subscription class
-                        if (addSubscription)
-                        {
-                            // Adding client subscription to collection will automatically initialize it
-                            lock (this)
-                            {
-                                Add(subscription);
-                            }
-
-                            // Attach to processing completed notification
-                            subscription.ProcessingComplete += subscription_ProcessingComplete;
-                        }
-                        else
-                        {
-                            // Manually re-initialize existing client subscription
-                            subscription.Initialize();
-                            subscription.Initialized = true;
-                        }
-
-                        // Spawn routing table recalculation
-                        m_routingTables.CalculateRoutingTables(null);
-
-                        // Make sure adapter is started
-                        subscription.Start();
-
-                        // Send updated signal index cache to client with validated rights of the selected input measurement keys
-                        SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, Serialization.Serialize(subscription.SignalIndexCache, TVA.SerializationFormat.Binary));
-
-                        // TODO: Add a flag to the database to allow payload encryption to be subsciber specific instead of global...
-                        // Send new or updated cipher keys
-                        if (connection.Authenticated && m_encryptPayload)
-                            connection.RotateCipherKeys();
-
-                        // Send success response
-                        if (subscription.TemporalConstraintIsDefined())
-                        {
-                            message = string.Format("Client subscribed as {0}compact {1}synchronized with a temporal constraint.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un");
-                        }
-                        else
-                        {
-                            if (subscription.InputMeasurementKeys != null)
-                                message = string.Format("Client subscribed as {0}compact {1}synchronized with {2} signals.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un", subscription.InputMeasurementKeys.Length);
-                            else
-                                message = string.Format("Client subscribed as {0}compact {1}synchronized, but no signals were specified. Make sure \"inputMeasurementKeys\" setting is properly defined.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un");
-                        }
-
-                        SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.Subscribe, message);
-                        OnStatusMessage(message);
+                        // Remotely synchronized subscriptions are currently disallowed by data publisher
+                        message = "Client request for remotely synchronized data subscription was denied. Data publisher is currently configured to disallow synchronized subscriptions.";
+                        SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Subscribe, message);
+                        OnProcessException(new InvalidOperationException(message));
                     }
                     else
                     {
-                        if (byteLength > 0)
-                            message = "Not enough buffer was provided to parse client data subscription.";
-                        else
-                            message = "Cannot initialize client data subscription without a connection string.";
+                        bool useCompactMeasurementFormat = ((byte)(flags & DataPacketFlags.Compact) > 0);
+                        bool addSubscription = false;
 
-                        SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Subscribe, message);
-                        OnProcessException(new InvalidOperationException(message));
+                        // Next 4 bytes are an integer representing the length of the connection string that follows
+                        int byteLength = EndianOrder.BigEndian.ToInt32(buffer, startIndex);
+                        startIndex += 4;
+
+                        if (byteLength > 0 && length >= 6 + byteLength)
+                        {
+                            string connectionString = Encoding.Unicode.GetString(buffer, startIndex, byteLength);
+                            startIndex += byteLength;
+
+                            // Get client subscription
+                            if (connection.Subscription == null)
+                                TryGetClientSubscription(clientID, out subscription);
+                            else
+                                subscription = connection.Subscription;
+
+                            if (subscription == null)
+                            {
+                                // Client subscription not established yet, so we create a new one
+                                if (useSynchronizedSubscription)
+                                    subscription = new SynchronizedClientSubscription(this, clientID, connection.SubscriberID);
+                                else
+                                    subscription = new UnsynchronizedClientSubscription(this, clientID, connection.SubscriberID);
+
+                                addSubscription = true;
+                            }
+                            else
+                            {
+                                // Check to see if consumer is requesting to change synchronization method
+                                if (useSynchronizedSubscription)
+                                {
+                                    if (subscription is UnsynchronizedClientSubscription)
+                                    {
+                                        // Subscription is for unsynchronized measurements and consumer is requesting synchronized
+                                        subscription.Stop();
+
+                                        lock (this)
+                                        {
+                                            Remove(subscription);
+                                        }
+
+                                        // Create a new synchronized subscription
+                                        subscription = new SynchronizedClientSubscription(this, clientID, connection.SubscriberID);
+                                        addSubscription = true;
+                                    }
+                                }
+                                else
+                                {
+                                    if (subscription is SynchronizedClientSubscription)
+                                    {
+                                        // Subscription is for synchronized measurements and consumer is requesting unsynchronized
+                                        subscription.Stop();
+
+                                        lock (this)
+                                        {
+                                            Remove(subscription);
+                                        }
+
+                                        // Create a new unsynchronized subscription
+                                        subscription = new UnsynchronizedClientSubscription(this, clientID, connection.SubscriberID);
+                                        addSubscription = true;
+                                    }
+                                }
+                            }
+
+                            // Update client subscription properties
+                            subscription.ConnectionString = connectionString;
+                            subscription.DataSource = DataSource;
+
+                            if (subscription.Settings.TryGetValue("initializationTimeout", out setting))
+                                subscription.InitializationTimeout = int.Parse(setting);
+                            else
+                                subscription.InitializationTimeout = InitializationTimeout;
+
+                            // Set up UDP data channel if client has requested this
+                            connection.DataChannel = null;
+
+                            if (subscription.Settings.TryGetValue("dataChannel", out setting))
+                            {
+                                Dictionary<string, string> settings = setting.ParseKeyValuePairs();
+                                string networkInterface;
+                                bool compressionEnabled = false;
+
+                                settings.TryGetValue("interface", out networkInterface);
+
+                                if (string.IsNullOrWhiteSpace(networkInterface))
+                                    networkInterface = "::0";
+
+                                if (settings.TryGetValue("compression", out setting))
+                                    compressionEnabled = setting.ParseBoolean();
+
+                                if (settings.TryGetValue("port", out setting))
+                                {
+                                    connection.DataChannel = new UdpServer(string.Format("Port=-1; Clients={0}:{1}; interface={2}", connection.IPAddress, int.Parse(setting), networkInterface));
+
+                                    if (compressionEnabled)
+                                        connection.DataChannel.Compression = CompressionStrength.Standard;
+
+                                    connection.DataChannel.Start();
+                                }
+                            }
+
+                            // Remove any existing cached publication channel since connection is changing
+                            IServer publicationChannel;
+                            m_clientPublicationChannels.TryRemove(clientID, out publicationChannel);
+
+                            // Update measurement serialization format type
+                            subscription.UseCompactMeasurementFormat = useCompactMeasurementFormat;
+
+                            // Track subscription in connection information
+                            connection.Subscription = subscription;
+
+                            // Subscribed signals (i.e., input measurement keys) will be parsed from connection string during
+                            // initialization of adapter. This should also gracefully handle "resubscribing" which can add and
+                            // remove subscribed points since assignment and use of input measurement keys is synchronized
+                            // within the client subscription class
+                            if (addSubscription)
+                            {
+                                // Adding client subscription to collection will automatically initialize it
+                                lock (this)
+                                {
+                                    Add(subscription);
+                                }
+
+                                // Attach to processing completed notification
+                                subscription.ProcessingComplete += subscription_ProcessingComplete;
+                            }
+                            else
+                            {
+                                // Manually re-initialize existing client subscription
+                                subscription.Initialize();
+                                subscription.Initialized = true;
+                            }
+
+                            // Spawn routing table recalculation
+                            m_routingTables.CalculateRoutingTables(null);
+
+                            // Make sure adapter is started
+                            subscription.Start();
+
+                            // Send updated signal index cache to client with validated rights of the selected input measurement keys
+                            SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, Serialization.Serialize(subscription.SignalIndexCache, TVA.SerializationFormat.Binary));
+
+                            // TODO: Add a flag to the database to allow payload encryption to be subsciber specific instead of global to publisher...
+                            // Send new or updated cipher keys
+                            if (connection.Authenticated && m_encryptPayload)
+                                connection.RotateCipherKeys();
+
+                            // Send success response
+                            if (subscription.TemporalConstraintIsDefined())
+                            {
+                                message = string.Format("Client subscribed as {0}compact {1}synchronized with a temporal constraint.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un");
+                            }
+                            else
+                            {
+                                if (subscription.InputMeasurementKeys != null)
+                                    message = string.Format("Client subscribed as {0}compact {1}synchronized with {2} signals.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un", subscription.InputMeasurementKeys.Length);
+                                else
+                                    message = string.Format("Client subscribed as {0}compact {1}synchronized, but no signals were specified. Make sure \"inputMeasurementKeys\" setting is properly defined.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un");
+                            }
+
+                            SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.Subscribe, message);
+                            OnStatusMessage(message);
+                        }
+                        else
+                        {
+                            if (byteLength > 0)
+                                message = "Not enough buffer was provided to parse client data subscription.";
+                            else
+                                message = "Cannot initialize client data subscription without a connection string.";
+
+                            SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Subscribe, message);
+                            OnProcessException(new InvalidOperationException(message));
+                        }
                     }
                 }
                 else
@@ -1636,7 +1668,7 @@ namespace TimeSeriesFramework.Transport
                         table = dbConnection.RetrieveData(adoDatabase.AdapterType, tableExpression);
 
                         // Remove any expression from table name
-                        Match regexMatch = Regex.Match(tableExpression, @"FROM [A-Za-z]+");
+                        Match regexMatch = Regex.Match(tableExpression, @"FROM \w+");
                         table.TableName = regexMatch.Value.Split(' ')[1];
 
                         // If table has a NodeID column, filter table data for just this node

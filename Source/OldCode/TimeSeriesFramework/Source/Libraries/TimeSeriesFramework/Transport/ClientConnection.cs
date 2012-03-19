@@ -551,7 +551,7 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         public bool RotateCipherKeys()
         {
-            // Make sure at a second has passed before next key rotation
+            // Make sure at least a second has passed before next key rotation
             if ((DateTime.UtcNow.Ticks - m_lastCipherKeyUpdateTime).ToMilliseconds() >= 1000.0D)
             {
                 try
