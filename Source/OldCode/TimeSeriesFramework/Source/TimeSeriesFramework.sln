@@ -100,9 +100,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FLEE", "FLEE", "{C78E58AC-B
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicCalculator", "Libraries\Adapters\DynamicCalculator\DynamicCalculator.csproj", "{374F5805-28DB-4BCA-8062-BF802793BD4F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TSFPlatformLibrary", "Libraries\TSFPlatformLibrary\TSFPlatformLibrary.vcxproj", "{2A542BE8-8D17-44C3-BCD2-768DF480FF82}"
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 18
+		SccNumberOfProjects = 19
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs07
 		SccLocalPath0 = .
@@ -174,6 +176,10 @@ Global
 		SccProjectTopLevelParentUniqueName17 = TimeSeriesFramework.sln
 		SccProjectName17 = Libraries/Adapters/DynamicCalculator
 		SccLocalPath17 = Libraries\\Adapters\\DynamicCalculator
+		SccProjectUniqueName18 = Libraries\\TSFPlatformLibrary\\TSFPlatformLibrary.vcxproj
+		SccProjectTopLevelParentUniqueName18 = TimeSeriesFramework.sln
+		SccProjectName18 = Libraries/TSFPlatformLibrary
+		SccLocalPath18 = Libraries\\TSFPlatformLibrary
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -420,6 +426,18 @@ Global
 		{374F5805-28DB-4BCA-8062-BF802793BD4F}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{374F5805-28DB-4BCA-8062-BF802793BD4F}.Release|Win32.ActiveCfg = Release|Any CPU
 		{374F5805-28DB-4BCA-8062-BF802793BD4F}.Release|x86.ActiveCfg = Release|Any CPU
+		{2A542BE8-8D17-44C3-BCD2-768DF480FF82}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{2A542BE8-8D17-44C3-BCD2-768DF480FF82}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{2A542BE8-8D17-44C3-BCD2-768DF480FF82}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{2A542BE8-8D17-44C3-BCD2-768DF480FF82}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2A542BE8-8D17-44C3-BCD2-768DF480FF82}.Debug|Win32.Build.0 = Debug|Win32
+		{2A542BE8-8D17-44C3-BCD2-768DF480FF82}.Debug|x86.ActiveCfg = Debug|Win32
+		{2A542BE8-8D17-44C3-BCD2-768DF480FF82}.Release|Any CPU.ActiveCfg = Release|Win32
+		{2A542BE8-8D17-44C3-BCD2-768DF480FF82}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{2A542BE8-8D17-44C3-BCD2-768DF480FF82}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{2A542BE8-8D17-44C3-BCD2-768DF480FF82}.Release|Win32.ActiveCfg = Release|Win32
+		{2A542BE8-8D17-44C3-BCD2-768DF480FF82}.Release|Win32.Build.0 = Release|Win32
+		{2A542BE8-8D17-44C3-BCD2-768DF480FF82}.Release|x86.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -440,6 +458,7 @@ Global
 		{7ED01B57-DD71-4A38-BB29-65D629224A12} = {2D752CB3-5075-49A0-BFA1-6E6131AF2404}
 		{5AF0D55A-30BF-46A5-8A47-FA885F56BFEF} = {2D752CB3-5075-49A0-BFA1-6E6131AF2404}
 		{3AFB6F1F-816E-42EE-A99C-75F8652A1557} = {2D752CB3-5075-49A0-BFA1-6E6131AF2404}
+		{2A542BE8-8D17-44C3-BCD2-768DF480FF82} = {2D752CB3-5075-49A0-BFA1-6E6131AF2404}
 		{3F0B62F6-99B8-4F57-8C58-0B4B862358EA} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
 		{C4145EB5-FEF9-4419-AC5E-31D4F23AD311} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
 		{A8861372-0FE2-45E5-9DED-73B55AC4196C} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}

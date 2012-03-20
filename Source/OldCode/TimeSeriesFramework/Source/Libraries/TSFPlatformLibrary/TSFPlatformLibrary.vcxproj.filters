@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="Measurement.h" />
+    <ClInclude Include="Transport\SignalIndexCache.h">
+      <Filter>Transport</Filter>
+    </ClInclude>
+    <ClInclude Include="Guid.h" />
+    <ClInclude Include="Transport\CompactMeasurementParser.h">
+      <Filter>Transport</Filter>
+    </ClInclude>
+    <ClInclude Include="Transport\GatewayMeasurementParser.h">
+      <Filter>Transport</Filter>
+    </ClInclude>
+    <ClInclude Include="EndianConverter.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Transport\SignalIndexCache.cpp">
+      <Filter>Transport</Filter>
+    </ClCompile>
+    <ClCompile Include="Transport\CompactMeasurementParser.cpp">
+      <Filter>Transport</Filter>
+    </ClCompile>
+    <ClCompile Include="EndianConverter.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Transport">
+      <UniqueIdentifier>{0f19b432-ab9c-4d18-9a92-f80c87dc20c7}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
