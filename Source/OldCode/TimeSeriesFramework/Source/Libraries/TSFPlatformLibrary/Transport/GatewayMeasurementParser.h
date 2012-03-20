@@ -24,7 +24,9 @@
 #ifndef __GATEWAY_MEASUREMENT_PARSER_H
 #define __GATEWAY_MEASUREMENT_PARSER_H
 
+#include <cstddef>
 #include "../Measurement.h"
+#include "../Types.h"
 
 namespace TimeSeriesFramework {
 namespace Transport
@@ -38,7 +40,7 @@ namespace Transport
 		// updated by this method to indicate how many bytes were used when parsing.
 		// Measurements can be partially parsed if there is not enough data in the buffer,
 		// as long as parsing can be resumed by calling this method again with more data.
-		virtual bool TryParseMeasurement(char buffer[], int& offset, int& length) = 0;
+		virtual bool TryParseMeasurement(uint8_t buffer[], std::size_t& offset, std::size_t& length) = 0;
 
 		// Returns the measurement that was parsed by the last successful call to TryParseMeasurement.
 		virtual Measurement GetParsedMeasurement() const = 0;

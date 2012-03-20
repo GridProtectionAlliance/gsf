@@ -24,9 +24,11 @@
 #ifndef __COMPACT_MEASUREMENT_PARSER_H
 #define __COMPACT_MEASUREMENT_PARSER_H
 
+#include <cstddef>
 #include "GatewayMeasurementParser.h"
 #include "SignalIndexCache.h"
 #include "../Measurement.h"
+#include "../Types.h"
 #include "../EndianConverter.h"
 
 namespace TimeSeriesFramework {
@@ -44,7 +46,7 @@ namespace Transport
 
 		// Takes the 8-bit compact measurement flags and maps
 		// them to the full 32-bit measurement flags format.
-		unsigned int MapToFullFlags(int compactFlags) const;
+		uint32_t MapToFullFlags(uint8_t compactFlags) const;
 
 	public:
 		// Creates a new instance of the compact measurement parser
@@ -67,31 +69,31 @@ namespace Transport
 		}
 
 		// Gets the byte length of the compact measurements parsed by this compact measurement parser.
-		int GetMeasurementByteLength() const;
+		std::size_t GetMeasurementByteLength() const;
 
 		// Attempts to parse a measurement from the buffer. Return value of false indicates
 		// that there is not enough data to parse the measurement. Offset and length will be
 		// updated by this method to indicate how many bytes were used when parsing.
-		bool TryParseMeasurement(char buffer[], int& offset, int& length);
+		bool TryParseMeasurement(uint8_t buffer[], std::size_t& offset, std::size_t& length);
 
 		// These constants represent each flag in the 8-bit compact measurement state flags.
-		static const int CompactDataRangeFlag       = 0x01;
-		static const int CompactDataQualityFlag     = 0x02;
-		static const int CompactTimeQualityFlag     = 0x04;
-		static const int CompactSystemIssueFlag     = 0x08;
-		static const int CompactCalculatedValueFlag = 0x10;
-		static const int CompactDiscardedValueFlag  = 0x20;
-		static const int CompactUserFlag            = 0x40;
-		static const int CompactTimeIndexFlag       = 0x80;
+		static const uint8_t CompactDataRangeFlag       = 0x01;
+		static const uint8_t CompactDataQualityFlag     = 0x02;
+		static const uint8_t CompactTimeQualityFlag     = 0x04;
+		static const uint8_t CompactSystemIssueFlag     = 0x08;
+		static const uint8_t CompactCalculatedValueFlag = 0x10;
+		static const uint8_t CompactDiscardedValueFlag  = 0x20;
+		static const uint8_t CompactUserFlag            = 0x40;
+		static const uint8_t CompactTimeIndexFlag       = 0x80;
 
 		// These constants are masks used to set flags within the full 32-bit measurement state flags.
-		static const unsigned int DataRangeMask       = 0x000000FC;
-		static const unsigned int DataQualityMask     = 0x0000EF03;
-		static const unsigned int TimeQualityMask     = 0x00BF0000;
-		static const unsigned int SystemIssueMask     = 0xE0000000;
-		static const unsigned int UserFlagMask        = 0x1F000000;
-		static const unsigned int CalculatedValueMask = 0x00001000;
-		static const unsigned int DiscardedValueMask  = 0x00800000;
+		static const uint32_t DataRangeMask       = 0x000000FC;
+		static const uint32_t DataQualityMask     = 0x0000EF03;
+		static const uint32_t TimeQualityMask     = 0x00BF0000;
+		static const uint32_t SystemIssueMask     = 0xE0000000;
+		static const uint32_t UserFlagMask        = 0x1F000000;
+		static const uint32_t CalculatedValueMask = 0x00001000;
+		static const uint32_t DiscardedValueMask  = 0x00800000;
 	};
 }}
 

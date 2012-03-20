@@ -25,7 +25,7 @@
 #define __MEASUREMENT_H
 
 #include <string>
-#include "Guid.h"
+#include "Types.h"
 
 namespace TimeSeriesFramework
 {
@@ -35,7 +35,7 @@ namespace TimeSeriesFramework
 	{
 		// Identification number used in
 		// human-readable measurement key.
-		unsigned int ID;
+		uint32_t ID;
 
 		// Source used in human-
 		// readable measurement key.
@@ -51,21 +51,21 @@ namespace TimeSeriesFramework
 
 		// Instantaneous value
 		// of the measurement.
-		double Value;
+		float64_t Value;
 
 		// Additive value modifier.
-		double Adder;
+		float64_t Adder;
 
 		// Multiplicative value modifier.
-		double Multiplier;
+		float64_t Multiplier;
 
 		// The time, in ticks, that
 		// this measurement was taken.
-		long Timestamp;
+		int64_t Timestamp;
 
 		// Flags indicating the state of the measurement
 		// as reported by the device that took it.
-		unsigned int Flags;
+		uint32_t Flags;
 
 		// Creates a new instance.
 		Measurement() : Adder(0), Multiplier(1)
@@ -74,7 +74,7 @@ namespace TimeSeriesFramework
 
 		// Returns the value after applying the
 		// multiplicative and additive value modifiers.
-		double AdjustedValue()
+		float64_t AdjustedValue()
 		{
 			return Value * Multiplier + Adder;
 		}

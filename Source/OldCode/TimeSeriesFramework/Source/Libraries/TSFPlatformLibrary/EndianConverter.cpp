@@ -30,11 +30,11 @@ tsf::EndianConverter::EndianConverter()
 {
 	union
 	{
-		unsigned int i;
-		char c[4];
+		uint32_t num;
+		uint8_t bytes[4];
 	} endianTest = { 0x00000001 };
 
-	if (endianTest.c[0] == 1)
+	if (endianTest.bytes[0] == 1)
 		m_nativeOrder = EndianConverter::LittleEndian;
 	else
 		m_nativeOrder = EndianConverter::BigEndian;
@@ -42,10 +42,10 @@ tsf::EndianConverter::EndianConverter()
 
 // Swaps the bytes in a character array.
 // Used for conversion between different byte orders.
-void tsf::EndianConverter::ByteSwap(char* value, std::size_t length) const
+void tsf::EndianConverter::ByteSwap(uint8_t* value, std::size_t length) const
 {
-	char *start, *end;
-	char temp;
+	uint8_t *start, *end;
+	uint8_t temp;
 
 	for(start = value, end = value + length - 1; start < end; ++start, --end)
 	{

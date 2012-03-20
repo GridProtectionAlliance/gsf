@@ -12,7 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EndianConverter.h" />
-    <ClInclude Include="Guid.h" />
+    <ClInclude Include="Types.h" />
     <ClInclude Include="Measurement.h" />
     <ClInclude Include="Transport\CompactMeasurementParser.h" />
     <ClInclude Include="Transport\GatewayMeasurementParser.h" />
@@ -54,6 +54,9 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>$(SolutionDir)\Libraries\TSFPlatformLibrary\Include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(SolutionDir)\Libraries\TSFPlatformLibrary\Include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

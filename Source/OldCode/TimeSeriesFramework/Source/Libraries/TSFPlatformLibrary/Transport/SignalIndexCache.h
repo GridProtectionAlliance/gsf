@@ -27,7 +27,7 @@
 #include <map>
 #include <vector>
 #include <string>
-#include "../Guid.h"
+#include "../Types.h"
 
 namespace TimeSeriesFramework {
 namespace Transport
@@ -38,42 +38,42 @@ namespace Transport
 	class SignalIndexCache
 	{
 	private:
-		std::map<unsigned short, int> m_reference;
+		std::map<uint16_t, uint32_t> m_reference;
 		std::vector<Guid> m_signalIDList;
 		std::vector<std::string> m_sourceList;
-		std::vector<unsigned int> m_idList;
+		std::vector<uint32_t> m_idList;
 
-		std::map<Guid, unsigned short> m_signalIDCache;
+		std::map<Guid, uint16_t> m_signalIDCache;
 
 	public:
 		// Adds a measurement key to the cache.
 		void AddMeasurementKey(
-			unsigned short signalIndex,
+			uint16_t signalIndex,
 			Guid signalID,
 			std::string source,
-			unsigned int id);
+			uint32_t id);
 
 		// Empties the cache.
 		void Clear();
 
 		// Gets the globally unique signal ID associated with the given 16-bit runtime ID.
-		Guid GetSignalID(unsigned short signalIndex) const;
+		Guid GetSignalID(uint16_t signalIndex) const;
 
 		// Gets the first half of the human-readable measurement
 		// key associated with the given 16-bit runtime ID.
-		std::string GetSource(unsigned short signalIndex) const;
+		std::string GetSource(uint16_t signalIndex) const;
 
 		// Gets the second half of the human-readable measurement
 		// key associated with the given 16-bit runtime ID.
-		unsigned int GetID(unsigned short signalIndex) const;
+		unsigned int GetID(uint16_t signalIndex) const;
 
 		// Gets the globally unique signal ID as well as the human-readable
 		// measurement key associated with the given 16-bit runtime ID.
 		void GetMeasurementKey(
-			unsigned short signalIndex,
+			uint16_t signalIndex,
 			Guid& signalID,
 			std::string& source,
-			unsigned int& id) const;
+			uint32_t& id) const;
 
 		// Gets the 16-bit runtime ID associated with the given globally unique signal ID.
 		unsigned short GetSignalIndex(Guid signalID);

@@ -27,7 +27,7 @@ namespace tsf = TimeSeriesFramework;
 
 // Takes the 8-bit compact measurement flags and maps
 // them to the full 32-bit measurement flags format.
-unsigned int tsf::Transport::CompactMeasurementParser::MapToFullFlags(int compactFlags) const
+uint32_t tsf::Transport::CompactMeasurementParser::MapToFullFlags(uint8_t compactFlags) const
 {
 	unsigned int fullFlags = 0;
 
@@ -56,10 +56,10 @@ unsigned int tsf::Transport::CompactMeasurementParser::MapToFullFlags(int compac
 }
 
 // Returns the measurement that was parsed by the last successful call to TryParseMeasurement.
-int tsf::Transport::CompactMeasurementParser::GetMeasurementByteLength() const
+std::size_t tsf::Transport::CompactMeasurementParser::GetMeasurementByteLength() const
 {
-	const int FixedLength = 7;
-	int length = FixedLength;
+	const std::size_t FixedLength = 7;
+	std::size_t length = FixedLength;
 
 	if(m_includeTime)
 		length += 8;
@@ -70,17 +70,17 @@ int tsf::Transport::CompactMeasurementParser::GetMeasurementByteLength() const
 // Attempts to parse a measurement from the buffer. Return value of false indicates
 // that there is not enough data to parse the measurement. Offset and length will be
 // updated by this method to indicate how many bytes were used when parsing.
-bool tsf::Transport::CompactMeasurementParser::TryParseMeasurement(char buffer[], int& offset, int& length)
+bool tsf::Transport::CompactMeasurementParser::TryParseMeasurement(uint8_t buffer[], std::size_t& offset, std::size_t& length)
 {
-	int compactFlags;
-	unsigned short runtimeID;
-	tsf::Guid signalID;
+	uint8_t compactFlags;
+	uint16_t runtimeID;
+	Guid signalID;
 	std::string measurementSource;
-	unsigned int measurementID;
-	float measurementValue;
-	long timestamp = 0L;
+	uint32_t measurementID;
+	float32_t measurementValue;
+	int64_t timestamp = 0;
 
-	int end = offset + length;
+	std::size_t end = offset + length;
 
 	if (length < GetMeasurementByteLength())
 		return false;
@@ -88,16 +88,16 @@ bool tsf::Transport::CompactMeasurementParser::TryParseMeasurement(char buffer[]
 	compactFlags = buffer[offset] & 0xFF;
 	++offset;
 
-	runtimeID = m_endianConverter.ConvertBigEndian<unsigned short>(*(unsigned short*)(buffer + offset));
+	runtimeID = m_endianConverter.ConvertBigEndian<uint16_t>(*(uint16_t*)(buffer + offset));
 	m_signalIndexCache.GetMeasurementKey(runtimeID, signalID, measurementSource, measurementID);
 	offset += 2;
 
-	measurementValue = m_endianConverter.ConvertBigEndian<float>(*(float*)(buffer + offset));
+	measurementValue = m_endianConverter.ConvertBigEndian<float32_t>(*(float32_t*)(buffer + offset));
 	offset += 4;
 
 	if(m_includeTime)
 	{
-		timestamp = m_endianConverter.ConvertBigEndian<long>(*(long*)(buffer + offset));
+		timestamp = m_endianConverter.ConvertBigEndian<int64_t>(*(int64_t*)(buffer + offset));
 		offset += 8;
 	}
 

@@ -25,6 +25,7 @@
 #define __ENDIAN_CONVERTER_H
 
 #include <cstddef>
+#include "Types.h"
 
 namespace TimeSeriesFramework
 {
@@ -37,7 +38,7 @@ namespace TimeSeriesFramework
 
 		// Swaps the bytes in a character array.
 		// Used for conversion between different byte orders.
-		void ByteSwap(char* value, std::size_t length) const;
+		void ByteSwap(uint8_t* value, std::size_t length) const;
 
 	public:
 		// Creates a new instance.
@@ -74,7 +75,7 @@ namespace TimeSeriesFramework
 	T EndianConverter::ConvertBigEndian(T value) const
 	{
 		if (m_nativeOrder != EndianConverter::BigEndian)
-			ByteSwap((char*)&value, sizeof(T));
+			ByteSwap((uint8_t*)&value, sizeof(T));
 
 		return value;
 	}
@@ -85,7 +86,7 @@ namespace TimeSeriesFramework
 	T EndianConverter::ConvertLittleEndian(T value) const
 	{
 		if (m_nativeOrder != EndianConverter::LittleEndian)
-			ByteSwap((char*)&value, sizeof(T));
+			ByteSwap((uint8_t*)&value, sizeof(T));
 
 		return value;
 	}

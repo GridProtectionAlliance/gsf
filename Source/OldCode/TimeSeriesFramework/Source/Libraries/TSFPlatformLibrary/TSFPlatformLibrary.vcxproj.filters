@@ -5,7 +5,6 @@
     <ClInclude Include="Transport\SignalIndexCache.h">
       <Filter>Transport</Filter>
     </ClInclude>
-    <ClInclude Include="Guid.h" />
     <ClInclude Include="Transport\CompactMeasurementParser.h">
       <Filter>Transport</Filter>
     </ClInclude>
@@ -13,6 +12,7 @@
       <Filter>Transport</Filter>
     </ClInclude>
     <ClInclude Include="EndianConverter.h" />
+    <ClInclude Include="Types.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Transport\SignalIndexCache.cpp">

@@ -21,16 +21,30 @@
 //
 //******************************************************************************************************
 
-#ifndef __GUID_H
-#define __GUID_H
+#ifndef __TYPES_H
+#define __TYPES_H
 
 #include <boost/uuid/uuid.hpp>
 
 namespace TimeSeriesFramework
 {
-	// Typedef Boost uuid as Guid to
-	// match TSF naming convention
 	typedef boost::uuids::uuid Guid;
+
+	// Signed integer types
+	typedef signed char		int8_t;
+	typedef short			int16_t;
+	typedef int				int32_t;
+	typedef long			int64_t;
+
+	// Unsigned integer types
+	typedef unsigned char	uint8_t;
+	typedef unsigned short	uint16_t;
+	typedef unsigned int	uint32_t;
+	typedef unsigned long	uint64_t;
+
+	// Floating-point types
+	typedef float			float32_t;
+	typedef double			float64_t;
 }
 
 #endif
