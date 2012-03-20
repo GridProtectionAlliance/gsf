@@ -163,16 +163,16 @@ namespace DataQualityMonitoring
         {
             base.Stop();
 
-            if ((object)m_processSemaphore != null)
-            {
-                m_processSemaphore.Dispose();
-                m_processSemaphore = null;
-            }
-
             if ((object)m_processThread != null && m_processThread.ThreadState == ThreadState.Running)
             {
                 m_processThread.Join();
                 m_processThread = null;
+            }
+
+            if ((object)m_processSemaphore != null)
+            {
+                m_processSemaphore.Dispose();
+                m_processSemaphore = null;
             }
         }
 
