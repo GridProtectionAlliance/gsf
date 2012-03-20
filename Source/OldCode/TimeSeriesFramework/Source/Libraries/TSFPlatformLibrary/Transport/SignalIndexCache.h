@@ -38,7 +38,7 @@ namespace Transport
 	class SignalIndexCache
 	{
 	private:
-		std::map<uint16_t, uint32_t> m_reference;
+		std::map<uint16_t, std::size_t> m_reference;
 		std::vector<Guid> m_signalIDList;
 		std::vector<std::string> m_sourceList;
 		std::vector<uint32_t> m_idList;
@@ -76,7 +76,7 @@ namespace Transport
 			uint32_t& id) const;
 
 		// Gets the 16-bit runtime ID associated with the given globally unique signal ID.
-		unsigned short GetSignalIndex(Guid signalID);
+		unsigned short GetSignalIndex(Guid signalID) const;
 	};
 }}
 

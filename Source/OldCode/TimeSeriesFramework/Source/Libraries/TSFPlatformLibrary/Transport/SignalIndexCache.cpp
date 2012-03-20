@@ -56,7 +56,7 @@ void tsf::Transport::SignalIndexCache::Clear()
 // Gets the globally unique signal ID associated with the given 16-bit runtime ID.
 tsf::Guid tsf::Transport::SignalIndexCache::GetSignalID(uint16_t signalIndex) const
 {
-	std::size_t vectorIndex = m_reference[signalIndex];
+	std::size_t vectorIndex = m_reference.find(signalIndex)->second;
 	return m_signalIDList[vectorIndex];
 }
 
@@ -64,7 +64,7 @@ tsf::Guid tsf::Transport::SignalIndexCache::GetSignalID(uint16_t signalIndex) co
 // key associated with the given 16-bit runtime ID.
 std::string tsf::Transport::SignalIndexCache::GetSource(uint16_t signalIndex) const
 {
-	std::size_t vectorIndex = m_reference[signalIndex];
+	std::size_t vectorIndex = m_reference.find(signalIndex)->second;
 	return m_sourceList[vectorIndex];
 }
 
@@ -72,7 +72,7 @@ std::string tsf::Transport::SignalIndexCache::GetSource(uint16_t signalIndex) co
 // key associated with the given 16-bit runtime ID.
 uint32_t tsf::Transport::SignalIndexCache::GetID(uint16_t signalIndex) const
 {
-	std::size_t vectorIndex = m_reference[signalIndex];
+	std::size_t vectorIndex = m_reference.find(signalIndex)->second;
 	return m_idList[vectorIndex];
 }
 
@@ -84,7 +84,7 @@ void tsf::Transport::SignalIndexCache::GetMeasurementKey(
 	std::string& source,
 	uint32_t& id) const
 {
-	std::size_t vectorIndex = m_reference[signalIndex];
+	std::size_t vectorIndex = m_reference.find(signalIndex)->second;
 
 	signalID = m_signalIDList[vectorIndex];
 	source = m_sourceList[vectorIndex];
@@ -92,7 +92,7 @@ void tsf::Transport::SignalIndexCache::GetMeasurementKey(
 }
 
 // Gets the 16-bit runtime ID associated with the given globally unique signal ID.
-unsigned short TimeSeriesFramework::Transport::SignalIndexCache::GetSignalIndex(tsf::Guid signalID)
+unsigned short TimeSeriesFramework::Transport::SignalIndexCache::GetSignalIndex(tsf::Guid signalID) const
 {
 	std::map<tsf::Guid, uint16_t>::iterator it;
 	uint16_t signalIndex = 0xFFFF;
