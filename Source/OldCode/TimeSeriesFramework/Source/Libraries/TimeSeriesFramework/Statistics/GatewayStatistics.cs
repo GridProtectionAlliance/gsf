@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System.Linq;
 using TimeSeriesFramework.Transport;
 
 namespace TimeSeriesFramework.Statistics
@@ -69,6 +70,28 @@ namespace TimeSeriesFramework.Statistics
 
             if ((object)subscriber != null)
                 statistic = s_statisticValueCache.GetDifference(subscriber, subscriber.TotalBytesReceived, "TotalBytesReceived");
+
+            return statistic;
+        }
+
+        private static double GetSubscriberStatistic_AuthorizedCount(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            DataSubscriber subscriber = source as DataSubscriber;
+
+            if ((object)subscriber != null)
+                statistic = subscriber.GetAuthorizedSignalIDs().Count();
+
+            return statistic;
+        }
+
+        private static double GetSubscriberStatistic_UnauthorizedCount(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            DataSubscriber subscriber = source as DataSubscriber;
+
+            if ((object)subscriber != null)
+                statistic = subscriber.GetUnauthorizedSignalIDs().Count();
 
             return statistic;
         }

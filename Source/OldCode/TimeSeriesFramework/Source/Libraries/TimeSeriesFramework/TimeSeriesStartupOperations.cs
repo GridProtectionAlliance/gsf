@@ -171,17 +171,19 @@ namespace TimeSeriesFramework
                                                 "Average number of IPv4 datagrams received by this process per second."
                                               };
 
-            string[] SubscriberStatNames = { "Subscriber Connected", "Subscriber Authenticated", "Processed Measurements", "Total Bytes Received" };
+            string[] SubscriberStatNames = { "Subscriber Connected", "Subscriber Authenticated", "Processed Measurements", "Total Bytes Received", "Authorized Signal Count", "Unauthorized Signal Count" };
 
             string[] SubscriberStatDescriptions = { "Boolean value representing if the subscriber was continually connected during last reporting interval.",
                                                     "Boolean value representing if the subscriber was authenticated to the publisher during last reporting interval.",
                                                     "Number of processed measurements reported by the subscriber during last reporting interval.",
-                                                    "Number of bytes received from subscriber during last reporting interval."
+                                                    "Number of bytes received from subscriber during last reporting interval.",
+                                                    "Number of signals authorized to the subscriber by the publisher.",
+                                                    "Number of signals denied to the subscriber by the publisher."
                                                   };
 
-            string[] SubscriberStatMethodSuffix = { "Connected", "Authenticated", "ProcessedMeasurements", "TotalBytesReceived" };
-            string[] SubscriberStatTypes = { "System.Boolean", "System.Boolean", "System.Int32", "System.Int32" };
-            string[] SubscriberStatFormats = { "{0}", "{0}", "{0:N0}", "{0:N0}" };
+            string[] SubscriberStatMethodSuffix = { "Connected", "Authenticated", "ProcessedMeasurements", "TotalBytesReceived", "AuthorizedCount", "UnauthorizedCount" };
+            string[] SubscriberStatTypes = { "System.Boolean", "System.Boolean", "System.Int32", "System.Int32", "System.Int32", "System.Int32" };
+            string[] SubscriberStatFormats = { "{0}", "{0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}" };
 
             string[] PublisherStatNames = { "Publisher Connected", "Connected Clients", "Processed Measurements" };
 
