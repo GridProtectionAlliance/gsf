@@ -56,6 +56,9 @@ namespace Transport
 		// Empties the cache.
 		void Clear();
 
+		// Determines whether an element with the given runtime ID exists in the signal index cache.
+		bool Contains(uint16_t signalIndex) const;
+
 		// Gets the globally unique signal ID associated with the given 16-bit runtime ID.
 		Guid GetSignalID(uint16_t signalIndex) const;
 

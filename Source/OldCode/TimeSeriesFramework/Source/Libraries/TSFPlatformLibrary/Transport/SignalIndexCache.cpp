@@ -53,6 +53,12 @@ void tsf::Transport::SignalIndexCache::Clear()
 	m_signalIDCache.clear();
 }
 
+// Determines whether an element with the given runtime ID exists in the signal index cache.
+bool tsf::Transport::SignalIndexCache::Contains(uint16_t signalIndex) const
+{
+	return m_reference.find(signalIndex) != m_reference.end();
+}
+
 // Gets the globally unique signal ID associated with the given 16-bit runtime ID.
 tsf::Guid tsf::Transport::SignalIndexCache::GetSignalID(uint16_t signalIndex) const
 {
