@@ -6747,6 +6747,11 @@
             </summary>
             <param name="source">Type name of adapter that sent the processing completed notification.</param>
         </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.DisposeLocalConcentrator">
+            <summary>
+            Disposes of any previously defined local concentrator.
+            </summary>
+        </member>
         <member name="E:TimeSeriesFramework.Transport.DataSubscriber.ConnectionEstablished">
             <summary>
             Occurs when client connection to the data publication server is established.
@@ -6848,6 +6853,12 @@
             <summary>
             Creates a new local concentrator.
             </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.LocalConcentrator.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.Transport.DataSubscriber.LocalConcentrator"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         </member>
         <member name="M:TimeSeriesFramework.Transport.DataSubscriber.LocalConcentrator.PublishFrame(TimeSeriesFramework.IFrame,System.Int32)">
             <summary>
