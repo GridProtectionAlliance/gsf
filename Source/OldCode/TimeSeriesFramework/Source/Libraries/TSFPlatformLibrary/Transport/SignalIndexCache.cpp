@@ -94,7 +94,7 @@ void tsf::Transport::SignalIndexCache::GetMeasurementKey(
 // Gets the 16-bit runtime ID associated with the given globally unique signal ID.
 unsigned short TimeSeriesFramework::Transport::SignalIndexCache::GetSignalIndex(tsf::Guid signalID) const
 {
-	std::map<tsf::Guid, uint16_t>::iterator it;
+	std::map<tsf::Guid, uint16_t>::const_iterator it;
 	uint16_t signalIndex = 0xFFFF;
 
 	it = m_signalIDCache.find(signalID);
