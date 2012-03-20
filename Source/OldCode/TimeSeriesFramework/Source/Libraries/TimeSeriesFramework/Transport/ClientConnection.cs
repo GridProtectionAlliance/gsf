@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -56,6 +57,7 @@ namespace TimeSeriesFramework.Transport
         private string m_subscriberAcronym;
         private string m_subscriberName;
         private string m_sharedSecret;
+        private string m_subscriberInfo;
         private IClientSubscription m_subscription;
         private volatile bool m_authenticated;
         private volatile byte[][][] m_keyIVs;
@@ -228,7 +230,30 @@ namespace TimeSeriesFramework.Transport
         {
             get
             {
-                return (m_dataChannel == null ? (IServer)m_commandChannel : (IServer)m_dataChannel);
+                return ((object)m_dataChannel == null ? (IServer)m_commandChannel : (IServer)m_dataChannel);
+            }
+        }
+
+        /// <summary>
+        /// Gets connected state of the associated client socket.
+        /// </summary>
+        public bool IsConnected
+        {
+            get
+            {
+                bool isConnected = false;
+
+                try
+                {
+                    if ((object)m_commandChannel != null)
+                        isConnected = m_commandChannel.Client(m_clientID).Provider.Connected;
+                }
+                catch
+                {
+                    isConnected = false;
+                }
+
+                return isConnected;
             }
         }
 
@@ -274,6 +299,38 @@ namespace TimeSeriesFramework.Transport
             set
             {
                 m_subscriberName = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets subscriber info for this <see cref="ClientConnection"/>.
+        /// </summary>
+        public string SubscriberInfo
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(m_subscriberInfo))
+                    return m_subscriberName;
+
+                return m_subscriberInfo;
+            }
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    m_subscriberInfo = null;
+                }
+                else
+                {
+                    Dictionary<string, string> settings = value.ParseKeyValuePairs();
+                    string source, version, buildDate;
+
+                    settings.TryGetValue("source", out source);
+                    settings.TryGetValue("version", out version);
+                    settings.TryGetValue("buildDate", out buildDate);
+
+                    m_subscriberInfo = string.Format("{0} version {1} built on {2}", source.ToNonNullNorWhiteSpace("unknown source"), version.ToNonNullNorWhiteSpace("?.?.?.?"), buildDate.ToNonNullNorWhiteSpace("undefined date"));
+                }
             }
         }
 

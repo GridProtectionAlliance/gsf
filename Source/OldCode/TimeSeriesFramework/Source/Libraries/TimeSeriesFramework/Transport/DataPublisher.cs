@@ -242,6 +242,16 @@ namespace TimeSeriesFramework.Transport
         // Events
 
         /// <summary>
+        /// Indicates that a new client has connected to the publisher.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T1, T2, T3}.Argument1"/> is the <see cref="Guid"/> based subscriber ID.<br/>
+        /// <see cref="EventArgs{T1, T2, T3}.Argument2"/> is the connection identification (e.g., IP and DNS name, if available).<br/>
+        /// <see cref="EventArgs{T1, T2, T3}.Argument3"/> is the subscriber information as reported by the client.
+        /// </remarks>
+        public event EventHandler<EventArgs<Guid, string, string>> ClientConnected;
+
+        /// <summary>
         /// Indicates to the host that processing for an input adapter (via temporal session) has completed.
         /// </summary>
         /// <remarks>
@@ -860,16 +870,8 @@ namespace TimeSeriesFramework.Transport
             for (int i = 0; i < clientIDs.Length; i++)
             {
                 if (m_clientConnections.TryGetValue(clientIDs[i], out connection))
-                    clientEnumeration.AppendFormat("  {0} - {1}\r\n", i.ToString().PadLeft(3), connection.ConnectionID);
+                    clientEnumeration.AppendFormat("  {0} - {1}\r\n          {2}\r\n\r\n", i.ToString().PadLeft(3), connection.ConnectionID, connection.SubscriberInfo);
             }
-
-            clientEnumeration.AppendLine();
-
-            //                                 1         2         3         4         5         6         7         8
-            //                        12345678901234567890123456789012345678901234567890123456789012345678901234567890
-            clientEnumeration.Append("You can now call a function (e.g., RotateCipherKeys) with these indices. Note");
-            clientEnumeration.Append("that if any client connects or disconnects these indices will become invalid.");
-            clientEnumeration.AppendLine();
 
             // Display enumeration
             OnStatusMessage(clientEnumeration.ToString());
@@ -904,6 +906,59 @@ namespace TimeSeriesFramework.Transport
                 else
                     OnStatusMessage("ERROR: Failed to find connected client " + clientID);
             }
+        }
+
+        /// <summary>
+        /// Gets subscriber information for specified client connection.
+        /// </summary>
+        /// <param name="clientIndex">Enumerated index for client connection.</param>
+        [AdapterCommand("Gets subscriber information for client connection using its enumerated index.")]
+        public virtual string GetSubscriberInfo(int clientIndex)
+        {
+            Guid clientID = Guid.Empty;
+            bool success = true;
+
+            try
+            {
+                clientID = m_commandChannel.ClientIDs[clientIndex];
+            }
+            catch
+            {
+                success = false;
+                OnStatusMessage("ERROR: Failed to find connected client with enumerated index " + clientIndex);
+            }
+
+            if (success)
+            {
+                ClientConnection connection;
+
+                if (m_clientConnections.TryGetValue(clientID, out connection))
+                    return connection.SubscriberInfo;
+                else
+                    OnStatusMessage("ERROR: Failed to find connected client " + clientID);
+            }
+
+            return "";
+        }
+
+        /// <summary>
+        /// Gets subscriber information for specified subscriber ID.
+        /// </summary>
+        /// <param name="subscriberID">Guid based subscriber ID for client connection.</param>
+        [AdapterCommand("Gets subscriber information for client connection using its subscriber ID.")]
+        public virtual string GetSubscriberInfo(Guid subscriberID)
+        {
+            return GetConnectionProperty(subscriberID, cc => cc.SubscriberInfo);
+        }
+
+        /// <summary>
+        /// Gets a flag that determines if the subscriber is connected given the specified subscriber ID.
+        /// </summary>
+        /// <param name="subscriberID">Guid based subscriber ID for client connection.</param>
+        [AdapterCommand("Gets subscribed client connection state using its subscriber ID.")]
+        public virtual bool GetSubscriberIsConnected(Guid subscriberID)
+        {
+            return GetConnectionProperty(subscriberID, cc => cc.IsConnected);
         }
 
         /// <summary>
@@ -1244,10 +1299,31 @@ namespace TimeSeriesFramework.Transport
             ClientConnection connection = m_clientConnections.Values.FirstOrDefault(cc => cc.SubscriberID == subscriberID);
 
             // Extract desired property from client connection using given predicate function
-            if (connection != null)
+            if ((object)connection != null)
                 result = predicate(connection);
 
             return result;
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ProcessingComplete"/> event.
+        /// </summary>
+        protected virtual void OnProcessingComplete()
+        {
+            if ((object)ProcessingComplete != null)
+                ProcessingComplete(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ClientConnected"/> event.
+        /// </summary>
+        /// <param name="subscriberID">Subscriber <see cref="Guid"/> (normally <see cref="ClientConnection.SubscriberID"/>).</param>
+        /// <param name="connectionID">Connection identification (normally <see cref="ClientConnection.ConnectionID"/>).</param>
+        /// <param name="subscriberInfo">Subscriber information (normally <see cref="ClientConnection.SubscriberInfo"/>).</param>
+        protected virtual void OnClientConnected(Guid subscriberID, string connectionID, string subscriberInfo)
+        {
+            if ((object)ClientConnected != null)
+                ClientConnected(this, new EventArgs<Guid, string, string>(subscriberID, connectionID, subscriberInfo));
         }
 
         // Make sure to expose any routing table exceptions
@@ -1259,7 +1335,7 @@ namespace TimeSeriesFramework.Transport
         // Cipher key rotation timer handler
         private void m_cipherKeyRotationTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            if (m_clientConnections != null)
+            if ((object)m_clientConnections != null)
             {
                 foreach (ClientConnection connection in m_clientConnections.Values)
                 {
@@ -1272,7 +1348,7 @@ namespace TimeSeriesFramework.Transport
         // Command channel restart timer handler
         private void m_commandChannelRestartTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            if (m_commandChannel != null)
+            if ((object)m_commandChannel != null)
             {
                 try
                 {
@@ -1509,6 +1585,10 @@ namespace TimeSeriesFramework.Transport
                             else
                                 subscription.InitializationTimeout = InitializationTimeout;
 
+                            // Pass subscriber assembly information to connection, if defined
+                            if (subscription.Settings.TryGetValue("assemblyInfo", out setting))
+                                connection.SubscriberInfo = setting;
+
                             // Set up UDP data channel if client has requested this
                             connection.DataChannel = null;
 
@@ -1582,6 +1662,16 @@ namespace TimeSeriesFramework.Transport
                             // Send new or updated cipher keys
                             if (connection.Authenticated && m_encryptPayload)
                                 connection.RotateCipherKeys();
+
+                            // Notify any direct publisher consumers about the new client connection
+                            try
+                            {
+                                OnClientConnected(connection.SubscriberID, connection.ConnectionID, connection.SubscriberInfo);
+                            }
+                            catch (Exception ex)
+                            {
+                                OnProcessException(new InvalidOperationException(string.Format("ClientConnected event handler exception: {0}", ex.Message), ex));
+                            }
 
                             // Send success response
                             if (subscription.TemporalConstraintIsDefined())

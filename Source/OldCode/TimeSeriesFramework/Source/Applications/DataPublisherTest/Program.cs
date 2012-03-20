@@ -33,6 +33,7 @@ namespace DataPublisherTest
     class Program
     {
         static DataPublisher publisher = new DataPublisher();
+        static Ticks lastDisplayTime;
         static object displayLock = new object();
 
         static void Main(string[] args)
@@ -40,6 +41,7 @@ namespace DataPublisherTest
             // Attach to publisher events
             publisher.StatusMessage += publisher_StatusMessage;
             publisher.ProcessException += publisher_ProcessException;
+            publisher.ClientConnected += publisher_ClientConnected;
 
             // Initialize publisher
             publisher.Name = "dataPublisher";
@@ -73,6 +75,23 @@ namespace DataPublisherTest
             lock (displayLock)
             {
                 Console.WriteLine(e.Argument);
+            }
+        }
+
+        static void publisher_ClientConnected(object sender, EventArgs<Guid, string, string> e)
+        {
+            ThreadPool.QueueUserWorkItem(ShowConnectedClients);
+        }
+
+        static void ShowConnectedClients(object state)
+        {
+            Ticks displayTime = DateTime.UtcNow.Ticks;
+
+            // Don't show client enumeration more than every two seconds...
+            if ((displayTime - lastDisplayTime).ToSeconds() > 2.0D)
+            {
+                lastDisplayTime = displayTime;
+                publisher.EnumerateClients();
             }
         }
 

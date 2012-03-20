@@ -37,6 +37,7 @@ using TVA.Collections;
 using TVA.Communication;
 using TVA.Data;
 using TVA.IO.Compression;
+using TVA.Reflection;
 using TVA.Security.Cryptography;
 
 namespace TimeSeriesFramework.Transport
@@ -696,6 +697,7 @@ namespace TimeSeriesFramework.Transport
             DisposeLocalConcentrator();
 
             StringBuilder connectionString = new StringBuilder();
+            AssemblyInfo assemblyInfo = AssemblyInfo.ExecutingAssembly;
 
             connectionString.Append("usePrecisionTimer=false; ");
             connectionString.AppendFormat("framesPerSecond={0}; ", framesPerSecond);
@@ -713,7 +715,8 @@ namespace TimeSeriesFramework.Transport
             connectionString.AppendFormat("startTimeConstraint={0}; ", startTime.ToNonNullString());
             connectionString.AppendFormat("stopTimeConstraint={0}; ", stopTime.ToNonNullString());
             connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
-            connectionString.AppendFormat("processingInterval={0}", processingInterval);
+            connectionString.AppendFormat("processingInterval={0}; ", processingInterval);
+            connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
 
             if (!string.IsNullOrWhiteSpace(waitHandleNames))
             {
@@ -809,6 +812,7 @@ namespace TimeSeriesFramework.Transport
             m_localConcentrator.TimeResolution = timeResolution;
             m_localConcentrator.AllowPreemptivePublishing = allowPreemptivePublishing;
             m_localConcentrator.DownsamplingMethod = downsamplingMethod;
+            m_localConcentrator.UsePrecisionTimer = false;
 
             // Parse time constraints, if defined
             DateTime startTimeConstraint, stopTimeConstraint;
@@ -836,6 +840,7 @@ namespace TimeSeriesFramework.Transport
 
             // Initiate unsynchronized subscribe
             StringBuilder connectionString = new StringBuilder();
+            AssemblyInfo assemblyInfo = AssemblyInfo.ExecutingAssembly;
 
             connectionString.AppendFormat("trackLatestMeasurements={0}; ", false);
             connectionString.AppendFormat("inputMeasurementKeys={{{0}}}; ", filterExpression.ToNonNullString());
@@ -847,7 +852,8 @@ namespace TimeSeriesFramework.Transport
             connectionString.AppendFormat("startTimeConstraint={0}; ", startTime.ToNonNullString());
             connectionString.AppendFormat("stopTimeConstraint={0}; ", stopTime.ToNonNullString());
             connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
-            connectionString.AppendFormat("processingInterval={0}", processingInterval);
+            connectionString.AppendFormat("processingInterval={0}; ", processingInterval);
+            connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
 
             if (!string.IsNullOrWhiteSpace(waitHandleNames))
             {
@@ -936,6 +942,7 @@ namespace TimeSeriesFramework.Transport
             DisposeLocalConcentrator();
 
             StringBuilder connectionString = new StringBuilder();
+            AssemblyInfo assemblyInfo = AssemblyInfo.ExecutingAssembly;
 
             connectionString.AppendFormat("trackLatestMeasurements={0}; ", throttled);
             connectionString.AppendFormat("inputMeasurementKeys={{{0}}}; ", filterExpression.ToNonNullString());
@@ -947,7 +954,8 @@ namespace TimeSeriesFramework.Transport
             connectionString.AppendFormat("startTimeConstraint={0}; ", startTime.ToNonNullString());
             connectionString.AppendFormat("stopTimeConstraint={0}; ", stopTime.ToNonNullString());
             connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
-            connectionString.AppendFormat("processingInterval={0}", processingInterval);
+            connectionString.AppendFormat("processingInterval={0}; ", processingInterval);
+            connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
 
             if (!string.IsNullOrWhiteSpace(waitHandleNames))
             {
