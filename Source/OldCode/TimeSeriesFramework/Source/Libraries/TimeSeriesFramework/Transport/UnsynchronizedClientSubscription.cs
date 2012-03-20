@@ -458,42 +458,49 @@ namespace TimeSeriesFramework.Transport
 
             while (Enabled)
             {
-                if ((object)m_processSemaphore != null && m_processSemaphore.Wait(ProcessWaitTimeout) && m_processQueue.TryDequeue(out measurements))
+                try
                 {
-                    // Wait for any external events, if needed
-                    WaitForExternalEvents();
-
-                    foreach (IMeasurement measurement in measurements)
+                    if ((object)m_processSemaphore != null && m_processSemaphore.Wait(ProcessWaitTimeout) && m_processQueue.TryDequeue(out measurements))
                     {
-                        ISupportBinaryImage binaryMeasurement;
-                        int binaryLength;
+                        // Wait for any external events, if needed
+                        WaitForExternalEvents();
 
-                        // Serialize the current measurement.
-                        if (useCompactMeasurementFormat)
-                            binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, m_includeTime);
-                        else
-                            binaryMeasurement = new SerializableMeasurement(measurement);
-
-                        // Determine the size of the measurement in bytes.
-                        binaryLength = binaryMeasurement.BinaryLength;
-
-                        // If the current measurement will not fit in the packet based on the max
-                        // packet size, process the current packet and start a new packet.
-                        if (packetSize + binaryLength > DataPublisher.MaxPacketSize)
+                        foreach (IMeasurement measurement in measurements)
                         {
-                            ProcessBinaryMeasurements(packet, useCompactMeasurementFormat);
-                            packet.Clear();
-                            packetSize = 5;
+                            ISupportBinaryImage binaryMeasurement;
+                            int binaryLength;
+
+                            // Serialize the current measurement.
+                            if (useCompactMeasurementFormat)
+                                binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, m_includeTime);
+                            else
+                                binaryMeasurement = new SerializableMeasurement(measurement);
+
+                            // Determine the size of the measurement in bytes.
+                            binaryLength = binaryMeasurement.BinaryLength;
+
+                            // If the current measurement will not fit in the packet based on the max
+                            // packet size, process the current packet and start a new packet.
+                            if (packetSize + binaryLength > DataPublisher.MaxPacketSize)
+                            {
+                                ProcessBinaryMeasurements(packet, useCompactMeasurementFormat);
+                                packet.Clear();
+                                packetSize = 5;
+                            }
+
+                            // Add the current measurement to the packet.
+                            packet.Add(binaryMeasurement);
+                            packetSize += binaryLength;
                         }
 
-                        // Add the current measurement to the packet.
-                        packet.Add(binaryMeasurement);
-                        packetSize += binaryLength;
+                        // Process the remaining measurements.
+                        ProcessBinaryMeasurements(packet, useCompactMeasurementFormat);
+                        packet.Clear();
                     }
-
-                    // Process the remaining measurements.
-                    ProcessBinaryMeasurements(packet, useCompactMeasurementFormat);
-                    packet.Clear();
+                }
+                catch (Exception ex)
+                {
+                    OnProcessException(ex);
                 }
             }
         }

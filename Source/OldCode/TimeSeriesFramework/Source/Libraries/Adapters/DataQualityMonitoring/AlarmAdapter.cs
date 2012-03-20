@@ -270,31 +270,38 @@ namespace DataQualityMonitoring
 
             while (Enabled)
             {
-                if ((object)m_processSemaphore != null && m_processSemaphore.Wait(WaitTimeout) && m_measurementQueue.TryDequeue(out measurement))
+                try
                 {
-                    lock (m_alarms)
+                    if ((object)m_processSemaphore != null && m_processSemaphore.Wait(WaitTimeout) && m_measurementQueue.TryDequeue(out measurement))
                     {
-                        // Get alarms that triggered events
-                        events = m_alarms.Where(a => a.SignalID == measurement.ID)
-                            .Where(a => a.Test(measurement))
-                            .ToList();
-                    }
-
-                    // Create event measurements and send them into the system
-                    foreach (Alarm alarm in events)
-                    {
-                        alarmEvent = new Measurement()
+                        lock (m_alarms)
                         {
-                            Timestamp = measurement.Timestamp,
-                            Value = (int)alarm.State
-                        };
+                            // Get alarms that triggered events
+                            events = m_alarms.Where(a => a.SignalID == measurement.ID)
+                                .Where(a => a.Test(measurement))
+                                .ToList();
+                        }
 
-                        if ((object)alarm.AssociatedMeasurementID != null)
-                            alarmEvent.ID = alarm.AssociatedMeasurementID.Value;
+                        // Create event measurements and send them into the system
+                        foreach (Alarm alarm in events)
+                        {
+                            alarmEvent = new Measurement()
+                            {
+                                Timestamp = measurement.Timestamp,
+                                Value = (int)alarm.State
+                            };
 
-                        OnNewMeasurement(alarmEvent);
-                        m_eventCount++;
+                            if ((object)alarm.AssociatedMeasurementID != null)
+                                alarmEvent.ID = alarm.AssociatedMeasurementID.Value;
+
+                            OnNewMeasurement(alarmEvent);
+                            m_eventCount++;
+                        }
                     }
+                }
+                catch (Exception ex)
+                {
+                    OnProcessException(ex);
                 }
             }
         }
