@@ -5868,6 +5868,11 @@
             Gets <see cref="T:TVA.Communication.IServer"/> publication channel - that is, data channel if defined otherwise command channel.
             </summary>
         </member>
+        <member name="P:TimeSeriesFramework.Transport.ClientConnection.IsConnected">
+            <summary>
+            Gets connected state of the associated client socket.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Transport.ClientConnection.SubscriberID">
             <summary>
             Gets or sets the <see cref="T:System.Guid"/> based subscriber ID of this <see cref="T:TimeSeriesFramework.Transport.ClientConnection"/>.
@@ -5881,6 +5886,11 @@
         <member name="P:TimeSeriesFramework.Transport.ClientConnection.SubscriberName">
             <summary>
             Gets or sets the subscriber name of this <see cref="T:TimeSeriesFramework.Transport.ClientConnection"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.ClientConnection.SubscriberInfo">
+            <summary>
+            Gets or sets subscriber info for this <see cref="T:TimeSeriesFramework.Transport.ClientConnection"/>.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.ClientConnection.ConnectionID">
@@ -5936,6 +5946,12 @@
         <member name="P:TimeSeriesFramework.Transport.ClientConnection.Name">
             <summary>
             Gets the subscriber name of this <see cref="T:TimeSeriesFramework.Transport.ClientConnection"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.ClientConnection.UseCommonSerializationFormat">
+            <summary>
+            Gets or sets flag that indicates whether this client
+            has requested to use the alternat binary format.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.ClientConnection.Status">
@@ -6253,6 +6269,18 @@
             </summary>
             <param name="clientIndex">Enumerated index for client connection.</param>
         </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.GetSubscriberInfo(System.Int32)">
+            <summary>
+            Gets subscriber information for specified client connection.
+            </summary>
+            <param name="clientIndex">Enumerated index for client connection.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.GetSubscriberStatus(System.Guid)">
+            <summary>
+            Gets subscriber status for specified subscriber ID.
+            </summary>
+            <param name="subscriberID">Guid based subscriber ID for client connection.</param>
+        </member>
         <member name="M:TimeSeriesFramework.Transport.DataPublisher.UpdateSignalIndexCache(System.Guid,TimeSeriesFramework.Transport.SignalIndexCache,TimeSeriesFramework.MeasurementKey[])">
             <summary>
             Updates signal index cache based on input measurement keys.
@@ -6331,6 +6359,29 @@
             <param name="command">In response to command.</param>
             <param name="data">Data to return to client; null if none.</param>
             <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.OnProcessingComplete">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Transport.DataPublisher.ProcessingComplete"/> event.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.OnClientConnected(System.Guid,System.String,System.String)">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Transport.DataPublisher.ClientConnected"/> event.
+            </summary>
+            <param name="subscriberID">Subscriber <see cref="T:System.Guid"/> (normally <see cref="P:TimeSeriesFramework.Transport.ClientConnection.SubscriberID"/>).</param>
+            <param name="connectionID">Connection identification (normally <see cref="P:TimeSeriesFramework.Transport.ClientConnection.ConnectionID"/>).</param>
+            <param name="subscriberInfo">Subscriber information (normally <see cref="P:TimeSeriesFramework.Transport.ClientConnection.SubscriberInfo"/>).</param>
+        </member>
+        <member name="E:TimeSeriesFramework.Transport.DataPublisher.ClientConnected">
+            <summary>
+            Indicates that a new client has connected to the publisher.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`3.Argument1"/> is the <see cref="T:System.Guid"/> based subscriber ID.<br/>
+            <see cref="F:TVA.EventArgs`3.Argument2"/> is the connection identification (e.g., IP and DNS name, if available).<br/>
+            <see cref="F:TVA.EventArgs`3.Argument3"/> is the subscriber information as reported by the client.
+            </remarks>
         </member>
         <member name="E:TimeSeriesFramework.Transport.DataPublisher.ProcessingComplete">
             <summary>
@@ -6804,6 +6855,12 @@
         <member name="P:TimeSeriesFramework.Transport.DataSubscriber.TotalBytesReceived">
             <summary>
             Gets total data packet bytes received during this session.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataSubscriber.UseCommonSerializationFormat">
+            <summary>
+            Gets or sets flag that indicates whether this client
+            has requested to use the alternate binary format.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.DataSubscriber.SupportsTemporalProcessing">
@@ -7796,6 +7853,23 @@
             <param name="signalID"><see cref="T:System.Guid"/> signal ID used to lookup associated runtime signal index.</param>
             <returns>Runtime signal index for given <see cref="T:System.Guid"/> <paramref name="signalID"/>.</returns>
         </member>
+        <member name="M:TimeSeriesFramework.Transport.SignalIndexCache.GenerateBinaryImage(System.Byte[],System.Int32)">
+            <summary>
+            Generates binary image of the <see cref="T:TimeSeriesFramework.Transport.SignalIndexCache"/> and copies it into the given buffer, for <see cref="P:TimeSeriesFramework.Transport.SignalIndexCache.BinaryLength"/> bytes.
+            </summary>
+            <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+            <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+            <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.SignalIndexCache.ParseBinaryImage(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Initializes the <see cref="T:TimeSeriesFramework.Transport.SignalIndexCache"/> by parsing the specified <paramref name="buffer"/> containing a binary image.
+            </summary>
+            <param name="buffer">Buffer containing binary image to parse.</param>
+            <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start parsing.</param>
+            <param name="length">Valid number of bytes within <paramref name="buffer"/> to read from <paramref name="startIndex"/>.</param>
+            <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed).</returns>
+        </member>
         <member name="P:TimeSeriesFramework.Transport.SignalIndexCache.SubscriberID">
             <summary>
             Gets or sets the <see cref="T:System.Guid"/> based subscriber ID of this <see cref="T:TimeSeriesFramework.Transport.SignalIndexCache"/>.
@@ -7819,6 +7893,11 @@
         <member name="P:TimeSeriesFramework.Transport.SignalIndexCache.MaximumIndex">
             <summary>
             Gets the current maximum integer signal index.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SignalIndexCache.BinaryLength">
+            <summary>
+            Gets the length of the binary image.
             </summary>
         </member>
         <member name="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription">
