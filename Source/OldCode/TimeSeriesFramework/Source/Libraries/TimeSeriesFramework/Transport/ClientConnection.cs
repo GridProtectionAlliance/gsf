@@ -71,6 +71,7 @@ namespace TimeSeriesFramework.Transport
         private Ticks m_lastCipherKeyUpdateTime;
         private System.Timers.Timer m_pingTimer;
         private System.Timers.Timer m_reconnectTimer;
+        private bool m_useCommonSerializationFormat;
         private bool m_disposed;
 
         #endregion
@@ -473,6 +474,22 @@ namespace TimeSeriesFramework.Transport
             get
             {
                 return SubscriberName;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that indicates whether this client
+        /// has requested to use the alternat binary format.
+        /// </summary>
+        public bool UseCommonSerializationFormat
+        {
+            get
+            {
+                return m_useCommonSerializationFormat;
+            }
+            set
+            {
+                m_useCommonSerializationFormat = value;
             }
         }
 

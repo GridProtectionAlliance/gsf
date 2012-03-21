@@ -28,6 +28,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -174,6 +175,7 @@ namespace TimeSeriesFramework.Transport
         private bool m_includeTime;
         private bool m_synchronizeMetadata;
         private bool m_internal;
+        private bool m_useCommonSerializationFormat;
         private bool m_disposed;
 
         #endregion
@@ -241,6 +243,22 @@ namespace TimeSeriesFramework.Transport
             get
             {
                 return Interlocked.Read(ref m_totalBytesReceived);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that indicates whether this client
+        /// has requested to use the alternate binary format.
+        /// </summary>
+        public bool UseCommonSerializationFormat
+        {
+            get
+            {
+                return m_useCommonSerializationFormat;
+            }
+            set
+            {
+                m_useCommonSerializationFormat = value;
             }
         }
 
@@ -497,6 +515,10 @@ namespace TimeSeriesFramework.Transport
             if (settings.TryGetValue("internal", out setting))
                 m_internal = setting.ParseBoolean();
 
+            // Check if we should be using the alternate binary format for communications with the publisher
+            if (settings.TryGetValue("useCommonSerializationFormat", out setting))
+                m_useCommonSerializationFormat = setting.ParseBoolean();
+
             // Define auto connect setting
             if (settings.TryGetValue("autoConnect", out setting))
                 m_autoConnect = setting.ParseBoolean();
@@ -716,6 +738,7 @@ namespace TimeSeriesFramework.Transport
             connectionString.AppendFormat("stopTimeConstraint={0}; ", stopTime.ToNonNullString());
             connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
             connectionString.AppendFormat("processingInterval={0}; ", processingInterval);
+            connectionString.AppendFormat("useCommonSerializationFormat={0};", m_useCommonSerializationFormat);
             connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
 
             if (!string.IsNullOrWhiteSpace(waitHandleNames))
@@ -853,6 +876,7 @@ namespace TimeSeriesFramework.Transport
             connectionString.AppendFormat("stopTimeConstraint={0}; ", stopTime.ToNonNullString());
             connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
             connectionString.AppendFormat("processingInterval={0}; ", processingInterval);
+            connectionString.AppendFormat("useCommonSerializationFormat={0};", m_useCommonSerializationFormat);
             connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
 
             if (!string.IsNullOrWhiteSpace(waitHandleNames))
@@ -955,6 +979,7 @@ namespace TimeSeriesFramework.Transport
             connectionString.AppendFormat("stopTimeConstraint={0}; ", stopTime.ToNonNullString());
             connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
             connectionString.AppendFormat("processingInterval={0}; ", processingInterval);
+            connectionString.AppendFormat("useCommonSerializationFormat={0};", m_useCommonSerializationFormat);
             connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
 
             if (!string.IsNullOrWhiteSpace(waitHandleNames))
@@ -1245,7 +1270,7 @@ namespace TimeSeriesFramework.Transport
                                         break;
                                     case ServerCommand.MetaDataRefresh:
                                         OnStatusMessage("Success code received in response to server command \"{0}\": latest meta-data received.", commandCode);
-                                        OnMetaDataReceived(Serialization.Deserialize<DataSet>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary));
+                                        OnMetaDataReceived(DeserializeMetadata(buffer.BlockCopy(responseIndex, responseLength)));
                                         break;
                                 }
                             }
@@ -1256,7 +1281,7 @@ namespace TimeSeriesFramework.Transport
                                     case ServerCommand.MetaDataRefresh:
                                         // Meta-data refresh may be unsolicited
                                         OnStatusMessage("Received server confirmation for unsolicited request to \"{0}\" command: latest meta-data received.", commandCode);
-                                        OnMetaDataReceived(Serialization.Deserialize<DataSet>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary));
+                                        OnMetaDataReceived(DeserializeMetadata(buffer.BlockCopy(responseIndex, responseLength)));
                                         break;
                                     case ServerCommand.RotateCipherKeys:
                                         // Key rotation may be unsolicited
@@ -1350,7 +1375,7 @@ namespace TimeSeriesFramework.Transport
                             break;
                         case ServerResponse.UpdateSignalIndexCache:
                             // Deserialize new signal index cache
-                            m_remoteSignalIndexCache = Serialization.Deserialize<SignalIndexCache>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary);
+                            m_remoteSignalIndexCache = DeserializeSignalIndexCache(buffer.BlockCopy(responseIndex, responseLength));
                             m_signalIndexCache = new SignalIndexCache(DataSource, m_remoteSignalIndexCache);
                             break;
                         case ServerResponse.UpdateBaseTimes:
@@ -1665,6 +1690,65 @@ namespace TimeSeriesFramework.Transport
             {
                 OnProcessException(new InvalidOperationException("Failed to synchronize meta-data to local cache: " + ex.Message, ex));
             }
+        }
+
+        private SignalIndexCache DeserializeSignalIndexCache(byte[] buffer)
+        {
+            SignalIndexCache deserializedCache;
+
+            if (!m_useCommonSerializationFormat)
+            {
+                deserializedCache = Serialization.Deserialize<SignalIndexCache>(buffer, TVA.SerializationFormat.Binary);
+            }
+            else
+            {
+                deserializedCache = new SignalIndexCache();
+                deserializedCache.ParseBinaryImage(buffer, 0, buffer.Length);
+            }
+
+            return deserializedCache;
+        }
+
+        private DataSet DeserializeMetadata(byte[] buffer)
+        {
+            DataSet deserializedMetadata;
+
+            if (!m_useCommonSerializationFormat)
+            {
+                deserializedMetadata = Serialization.Deserialize<DataSet>(buffer, TVA.SerializationFormat.Binary);
+            }
+            else
+            {
+                MemoryStream decompressedStream = null;
+                DeflateStream deflater = null;
+                StreamReader unicodeReader = null;
+
+                try
+                {
+                    decompressedStream = new MemoryStream();
+                    deflater = new DeflateStream(decompressedStream, CompressionMode.Decompress);
+                    unicodeReader = new StreamReader(decompressedStream, Encoding.Unicode);
+
+                    deflater.Write(buffer, 0, buffer.Length);
+                    deflater.Flush();
+
+                    deserializedMetadata = new DataSet();
+                    deserializedMetadata.ReadXml(unicodeReader, XmlReadMode.ReadSchema);
+                }
+                finally
+                {
+                    if ((object)unicodeReader != null)
+                        unicodeReader.Close();
+
+                    if ((object)deflater != null)
+                        deflater.Close();
+
+                    if ((object)decompressedStream != null)
+                        decompressedStream.Close();
+                }
+            }
+
+            return deserializedMetadata;
         }
 
         // This method is called when connection has been authenticated

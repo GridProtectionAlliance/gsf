@@ -330,7 +330,7 @@ namespace TimeSeriesFramework.Transport
         {
             base.Stop();
 
-            if ((object)m_processThread != null && m_processThread.ThreadState == ThreadState.Running)
+            if ((object)m_processThread != null)
             {
                 m_processThread.Join();
                 m_processThread = null;

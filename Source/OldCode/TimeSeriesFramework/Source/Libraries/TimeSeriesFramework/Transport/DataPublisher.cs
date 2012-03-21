@@ -37,6 +37,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -964,6 +965,8 @@ namespace TimeSeriesFramework.Transport
             ushort index = 0;
             Guid signalID;
 
+            byte[] serializedSignalIndexCache;
+
             if (inputMeasurementKeys != null)
             {
                 // We will now go through the client's requested keys and see which ones are authorized for subscription,
@@ -989,9 +992,10 @@ namespace TimeSeriesFramework.Transport
 
             signalIndexCache.Reference = reference;
             signalIndexCache.UnauthorizedSignalIDs = unauthorizedKeys.ToArray();
+            serializedSignalIndexCache = SerializeSignalIndexCache(signalIndexCache, m_clientConnections[clientID].UseCommonSerializationFormat);
 
             // Send client updated signal index cache
-            SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, Serialization.Serialize(signalIndexCache, TVA.SerializationFormat.Binary));
+            SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, serializedSignalIndexCache);
         }
 
         /// <summary>
@@ -1579,6 +1583,10 @@ namespace TimeSeriesFramework.Transport
                             if (subscription.Settings.TryGetValue("assemblyInfo", out setting))
                                 connection.SubscriberInfo = setting;
 
+                            // Pass binary format information to connection, if defined
+                            if (subscription.Settings.TryGetValue("useCommonSerializationFormat", out setting))
+                                connection.UseCommonSerializationFormat = setting.ParseBoolean();
+
                             // Set up UDP data channel if client has requested this
                             connection.DataChannel = null;
 
@@ -1646,7 +1654,8 @@ namespace TimeSeriesFramework.Transport
                             subscription.Start();
 
                             // Send updated signal index cache to client with validated rights of the selected input measurement keys
-                            SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, Serialization.Serialize(subscription.SignalIndexCache, TVA.SerializationFormat.Binary));
+                            byte[] serializedSignalIndexCache = SerializeSignalIndexCache(subscription.SignalIndexCache, connection.UseCommonSerializationFormat);
+                            SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, serializedSignalIndexCache);
 
                             // TODO: Add a flag to the database to allow payload encryption to be subsciber specific instead of global to publisher...
                             // Send new or updated cipher keys
@@ -1736,6 +1745,8 @@ namespace TimeSeriesFramework.Transport
                 DataSet metadata = new DataSet();
                 DataTable table;
 
+                byte[] serializedMetadata;
+
                 // Initialize active node ID
                 Guid nodeID = Guid.Parse(dbConnection.ExecuteScalar(string.Format("SELECT NodeID FROM IaonActionAdapter WHERE ID = {0}", ID)).ToString());
 
@@ -1787,7 +1798,8 @@ namespace TimeSeriesFramework.Transport
                     }
                 }
 
-                SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.MetaDataRefresh, Serialization.Serialize(metadata, TVA.SerializationFormat.Binary));
+                serializedMetadata = SerializeMetadata(metadata, connection.UseCommonSerializationFormat);
+                SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.MetaDataRefresh, serializedMetadata);
             }
             catch (Exception ex)
             {
@@ -1830,6 +1842,67 @@ namespace TimeSeriesFramework.Transport
                 SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.UpdateProcessingInterval, message);
                 OnProcessException(new InvalidOperationException(message));
             }
+        }
+
+        private byte[] SerializeSignalIndexCache(SignalIndexCache signalIndexCache, bool useCommonSerializationFormat)
+        {
+            byte[] serializedSignalIndexCache;
+
+            if (!useCommonSerializationFormat)
+            {
+                // Use standard .NET BinaryFormatter
+                serializedSignalIndexCache = Serialization.Serialize(signalIndexCache, TVA.SerializationFormat.Binary);
+            }
+            else
+            {
+                // Use ISupportBinaryImage implementation
+                serializedSignalIndexCache = new byte[signalIndexCache.BinaryLength];
+                signalIndexCache.GenerateBinaryImage(serializedSignalIndexCache, 0);
+            }
+
+            return serializedSignalIndexCache;
+        }
+
+        private byte[] SerializeMetadata(DataSet metadata, bool useCommonSerializationFormat)
+        {
+            byte[] serializedMetadata;
+
+            if (!useCommonSerializationFormat)
+            {
+                serializedMetadata = Serialization.Serialize(metadata, TVA.SerializationFormat.Binary);
+            }
+            else
+            {
+                MemoryStream compressedData = null;
+                DeflateStream deflater = null;
+                StreamWriter unicodeWriter = null;
+
+                try
+                {
+                    compressedData = new MemoryStream();
+                    deflater = new DeflateStream(compressedData, CompressionMode.Compress);
+                    unicodeWriter = new StreamWriter(deflater, Encoding.Unicode);
+
+                    metadata.WriteXml(unicodeWriter, XmlWriteMode.WriteSchema);
+                    unicodeWriter.Flush();
+                    deflater.Flush();
+
+                    serializedMetadata = compressedData.ToArray();
+                }
+                finally
+                {
+                    if ((object)unicodeWriter != null)
+                        unicodeWriter.Close();
+
+                    if ((object)deflater != null)
+                        deflater.Close();
+
+                    if ((object)compressedData != null)
+                        compressedData.Close();
+                }
+            }
+
+            return serializedMetadata;
         }
 
         // Bubble up processing complete notifications from subscriptions

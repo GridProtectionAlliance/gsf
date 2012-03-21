@@ -27,6 +27,9 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using TVA;
+using TVA.Parsing;
+using System.IO;
+using System.Text;
 
 namespace TimeSeriesFramework.Transport
 {
@@ -42,7 +45,7 @@ namespace TimeSeriesFramework.Transport
     /// runtime signal index cache could be established if this is a limitation for a given data set.
     /// </remarks>
     [Serializable]
-    public class SignalIndexCache
+    public class SignalIndexCache : ISupportBinaryImage
     {
         #region [ Members ]
 
@@ -184,6 +187,37 @@ namespace TimeSeriesFramework.Transport
             }
         }
 
+        /// <summary>
+        /// Gets the length of the binary image.
+        /// </summary>
+        public int BinaryLength
+        {
+            get
+            {
+                int binaryLength = 0;
+
+                // Byte size of cache
+                binaryLength += 4;
+
+                // Subscriber ID
+                binaryLength += 16;
+
+                // Number of references
+                binaryLength += 4;
+
+                // Each reference
+                binaryLength += m_reference.Sum(kvp => 2 + 16 + 4 + Encoding.Unicode.GetByteCount(kvp.Value.Item2) + 4);
+
+                // Number of unauthorized IDs
+                binaryLength += 4;
+
+                // Each unauthorized ID
+                binaryLength += 16 * (m_unauthorizedSignalIDs ?? new Guid[0]).Length;
+
+                return binaryLength;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -213,6 +247,162 @@ namespace TimeSeriesFramework.Transport
             }
 
             return index;
+        }
+
+        /// <summary>
+        /// Generates binary image of the <see cref="SignalIndexCache"/> and copies it into the given buffer, for <see cref="BinaryLength"/> bytes.
+        /// </summary>
+        /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+        /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+        public int GenerateBinaryImage(byte[] buffer, int startIndex)
+        {
+            Guid[] unauthorizedSignalIDs = m_unauthorizedSignalIDs ?? new Guid[0];
+
+            int binaryLength = BinaryLength;
+            int offset = startIndex;
+            byte[] bigEndianBuffer;
+            byte[] unicodeBuffer;
+
+            buffer.ValidateParameters(startIndex, binaryLength);
+
+            // Byte size of cache
+            bigEndianBuffer = EndianOrder.BigEndian.GetBytes(binaryLength);
+            Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
+            offset += bigEndianBuffer.Length;
+
+            // Subscriber ID
+            bigEndianBuffer = EndianOrder.BigEndian.GetBytes(m_subscriberID);
+            Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
+            offset += bigEndianBuffer.Length;
+
+            // Number of references
+            bigEndianBuffer = EndianOrder.BigEndian.GetBytes(m_reference.Count);
+            Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
+            offset += bigEndianBuffer.Length;
+
+            foreach (KeyValuePair<ushort, Tuple<Guid, string, uint>> kvp in m_reference)
+            {
+                // Signal index
+                bigEndianBuffer = EndianOrder.BigEndian.GetBytes(kvp.Key);
+                Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
+                offset += bigEndianBuffer.Length;
+
+                // Signal ID
+                bigEndianBuffer = EndianOrder.BigEndian.GetBytes(kvp.Value.Item1);
+                Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
+                offset += bigEndianBuffer.Length;
+
+                // Source
+                unicodeBuffer = Encoding.Unicode.GetBytes(kvp.Value.Item2);
+                bigEndianBuffer = EndianOrder.BigEndian.GetBytes(unicodeBuffer.Length);
+                Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
+                offset += bigEndianBuffer.Length;
+                Buffer.BlockCopy(unicodeBuffer, 0, buffer, offset, unicodeBuffer.Length);
+                offset += unicodeBuffer.Length;
+
+                // ID
+                bigEndianBuffer = EndianOrder.BigEndian.GetBytes(kvp.Value.Item3);
+                Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
+                offset += bigEndianBuffer.Length;
+            }
+
+            // Number of unauthorized IDs
+            bigEndianBuffer = EndianOrder.BigEndian.GetBytes(unauthorizedSignalIDs.Length);
+            Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
+            offset += bigEndianBuffer.Length;
+
+            foreach (Guid signalID in unauthorizedSignalIDs)
+            {
+                // Unauthorized ID
+                bigEndianBuffer = EndianOrder.BigEndian.GetBytes(signalID);
+                Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
+                offset += bigEndianBuffer.Length;
+            }
+
+            return binaryLength;
+        }
+
+        /// <summary>
+        /// Initializes the <see cref="SignalIndexCache"/> by parsing the specified <paramref name="buffer"/> containing a binary image.
+        /// </summary>
+        /// <param name="buffer">Buffer containing binary image to parse.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start parsing.</param>
+        /// <param name="length">Valid number of bytes within <paramref name="buffer"/> to read from <paramref name="startIndex"/>.</param>
+        /// <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed).</returns>
+        public int ParseBinaryImage(byte[] buffer, int startIndex, int length)
+        {
+            int binaryLength = 0;
+            int offset = startIndex;
+
+            int referenceCount;
+            ushort signalIndex;
+            Guid signalID;
+            int sourceSize;
+            string source;
+            uint id;
+
+            int unauthorizedIDCount;
+
+            buffer.ValidateParameters(startIndex, length);
+
+            if (length < 4)
+                return 0;
+
+            // Byte size of cache
+            binaryLength = EndianOrder.BigEndian.ToInt32(buffer, offset);
+            offset += 4;
+
+            if (length < binaryLength)
+                return 0;
+
+            // We know we have enough data so we can empty the reference cache
+            m_reference.Clear();
+
+            // Subscriber ID
+            m_subscriberID = EndianOrder.BigEndian.ToGuid(buffer, offset);
+            offset += 16;
+
+            // Number of references
+            referenceCount = EndianOrder.BigEndian.ToInt32(buffer, offset);
+            offset += 4;
+
+            for (int i = 0; i < referenceCount; i++)
+            {
+                // Signal index
+                signalIndex = EndianOrder.BigEndian.ToUInt16(buffer, offset);
+                offset += 2;
+
+                // Signal ID
+                signalID = EndianOrder.BigEndian.ToGuid(buffer, offset);
+                offset += 16;
+
+                // Source
+                sourceSize = EndianOrder.BigEndian.ToInt32(buffer, offset);
+                offset += 4;
+                source = Encoding.Unicode.GetString(buffer, offset, sourceSize);
+                offset += sourceSize;
+
+                // ID
+                id = EndianOrder.BigEndian.ToUInt32(buffer, offset);
+                offset += 4;
+
+                m_reference[signalIndex] = new Tuple<Guid, string, uint>(signalID, source, id);
+            }
+
+            // Number of unauthorized IDs
+            unauthorizedIDCount = EndianOrder.BigEndian.ToInt32(buffer, offset);
+            m_unauthorizedSignalIDs = new Guid[unauthorizedIDCount];
+            offset += 4;
+
+            for (int i = 0; i < unauthorizedIDCount; i++)
+            {
+                // Unauthorized ID
+                m_unauthorizedSignalIDs[i] = EndianOrder.BigEndian.ToGuid(buffer, offset);
+                offset += 16;
+            }
+
+            return binaryLength;
         }
 
         #endregion
