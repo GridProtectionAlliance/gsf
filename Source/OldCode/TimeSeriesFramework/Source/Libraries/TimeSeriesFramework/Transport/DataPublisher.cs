@@ -942,23 +942,13 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
-        /// Gets subscriber information for specified subscriber ID.
+        /// Gets subscriber status for specified subscriber ID.
         /// </summary>
         /// <param name="subscriberID">Guid based subscriber ID for client connection.</param>
-        [AdapterCommand("Gets subscriber information for client connection using its subscriber ID.")]
-        public virtual string GetSubscriberInfo(Guid subscriberID)
+        [AdapterCommand("Gets subscriber status for client connection using its subscriber ID.")]
+        public virtual Tuple<Guid, bool, string> GetSubscriberStatus(Guid subscriberID)
         {
-            return GetConnectionProperty(subscriberID, cc => cc.SubscriberInfo);
-        }
-
-        /// <summary>
-        /// Gets a flag that determines if the subscriber is connected given the specified subscriber ID.
-        /// </summary>
-        /// <param name="subscriberID">Guid based subscriber ID for client connection.</param>
-        [AdapterCommand("Gets subscribed client connection state using its subscriber ID.")]
-        public virtual bool GetSubscriberIsConnected(Guid subscriberID)
-        {
-            return GetConnectionProperty(subscriberID, cc => cc.IsConnected);
+            return new Tuple<Guid, bool, string>(subscriberID, GetConnectionProperty(subscriberID, cc => cc.IsConnected), GetConnectionProperty(subscriberID, cc => cc.SubscriberInfo));
         }
 
         /// <summary>

@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  AuthorizedMeasurementsQuery.cs - Gbtc
+//  SubscriberStatusQuery.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,28 +16,25 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  03/06/2012 - J. Ritchie Carroll
+//  03/21/2012 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Threading;
 using TVA;
-using TVA.Collections;
 using TVA.Console;
-using TVA.Data;
 using TVA.ServiceProcess;
 
 namespace TimeSeriesFramework.UI
 {
     /// <summary>
-    /// Represents an object that will query DataSubscriber instances to determine if measurements are authorized.
+    /// Represents an object that will query the external DataPublisher for real-time subscriber status.
     /// </summary>
-    public class AuthorizedMeasurementsQuery : IDisposable
+    public class SubscriberStatusQuery : IDisposable
     {
         #region [ Members ]
 
@@ -51,12 +48,12 @@ namespace TimeSeriesFramework.UI
         // Events
 
         /// <summary>
-        /// Provides full list of authorized measurement signal IDs.
+        /// Provides a dictionary of current subscriber statuses.
         /// </summary>
         /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is an array of the <see cref="Guid"/> based signal IDs of the authorized measurements.
+        /// <see cref="EventArgs{T}.Argument"/> is a dictionary keyed off the <see cref="Guid"/> based subscriber IDs containing the current connected state and status information.
         /// </remarks>
-        public event EventHandler<EventArgs<Guid[]>> AuthorizedMeasurements;
+        public event EventHandler<EventArgs<Dictionary<Guid, Tuple<bool, string>>>> SubscriberStatuses;
 
         /// <summary>
         /// Event is raised when there is an exception encountered while processing.
@@ -68,7 +65,7 @@ namespace TimeSeriesFramework.UI
 
         // Fields
         private WindowsServiceClient m_serviceClient;
-        private List<Guid> m_authorizedSignalIDs;
+        private List<Tuple<Guid, bool, string>> m_subscriberStatuses;
         private AutoResetEvent m_requestComplete;
         private AutoResetEvent m_responseComplete;
         private object m_queuedQueryPending;
@@ -82,14 +79,14 @@ namespace TimeSeriesFramework.UI
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="AuthorizedMeasurementsQuery"/>.
+        /// Creates a new <see cref="SubscriberStatusQuery"/>.
         /// </summary>
-        public AuthorizedMeasurementsQuery()
+        public SubscriberStatusQuery()
         {
             m_serviceClient = CommonFunctions.GetWindowsServiceClient();
             m_serviceClient.Helper.ReceivedServiceResponse += Helper_ReceivedServiceResponse;
 
-            m_authorizedSignalIDs = new List<Guid>();
+            m_subscriberStatuses = new List<Tuple<Guid, bool, string>>();
             m_responseComplete = new AutoResetEvent(false);
             m_requestComplete = new AutoResetEvent(true);
             m_queuedQueryPending = new object();
@@ -97,9 +94,9 @@ namespace TimeSeriesFramework.UI
         }
 
         /// <summary>
-        /// Releases the unmanaged resources before the <see cref="AuthorizedMeasurementsQuery"/> object is reclaimed by <see cref="GC"/>.
+        /// Releases the unmanaged resources before the <see cref="SubscriberStatusQuery"/> object is reclaimed by <see cref="GC"/>.
         /// </summary>
-        ~AuthorizedMeasurementsQuery()
+        ~SubscriberStatusQuery()
         {
             Dispose(false);
         }
@@ -128,7 +125,7 @@ namespace TimeSeriesFramework.UI
         #region [ Methods ]
 
         /// <summary>
-        /// Releases all the resources used by the <see cref="AuthorizedMeasurementsQuery"/> object.
+        /// Releases all the resources used by the <see cref="SubscriberStatusQuery"/> object.
         /// </summary>
         public void Dispose()
         {
@@ -137,7 +134,7 @@ namespace TimeSeriesFramework.UI
         }
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="AuthorizedMeasurementsQuery"/> object and optionally releases the managed resources.
+        /// Releases the unmanaged resources used by the <see cref="SubscriberStatusQuery"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
@@ -180,29 +177,29 @@ namespace TimeSeriesFramework.UI
         }
 
         /// <summary>
-        /// Requests the authorization state of the specified <paramref name="sourceMeasurements"/>.
+        /// Requests the status of the specified <paramref name="subscriberIDs"/>.
         /// </summary>
-        /// <param name="sourceMeasurements">Measurement signal IDs to request authorization state for.</param>
-        public void RequestAuthorizationStatus(IEnumerable<Guid> sourceMeasurements)
+        /// <param name="subscriberIDs">Subscriber IDs to request status for.</param>
+        public void RequestSubsscriberStatus(IEnumerable<Guid> subscriberIDs)
         {
-            if ((object)sourceMeasurements != null && sourceMeasurements.Count() > 0)
+            if ((object)subscriberIDs != null && subscriberIDs.Count() > 0)
             {
                 // Create single item operation queue so that multiple requests will be handled one at a time
-                ThreadPool.QueueUserWorkItem(QueueAuthorizationQuery, sourceMeasurements.Distinct());
+                ThreadPool.QueueUserWorkItem(QueueStatusQuery, subscriberIDs.Distinct());
             }
         }
 
         // Queue one authorization query at a time
-        private void QueueAuthorizationQuery(object state)
+        private void QueueStatusQuery(object state)
         {
-            // Queue up an authorization query unless another thread has already requested one
+            // Queue up a status query unless another thread has already requested one
             if (Monitor.TryEnter(m_queuedQueryPending))
             {
                 try
                 {
-                    // Queue new authorization query after waiting for any prior query request to complete
+                    // Queue new status query after waiting for any prior query request to complete
                     if (m_requestComplete.WaitOne())
-                        ThreadPool.QueueUserWorkItem(ExecuteAuthorizationQuery, state);
+                        ThreadPool.QueueUserWorkItem(ExecuteStatusQuery, state);
                 }
                 finally
                 {
@@ -211,52 +208,19 @@ namespace TimeSeriesFramework.UI
             }
         }
 
-        // Execute authorization query
-        private void ExecuteAuthorizationQuery(object state)
+        // Execute status query
+        private void ExecuteStatusQuery(object state)
         {
             try
             {
-                IEnumerable<Guid> sourceMeasurements = state as IEnumerable<Guid>;
+                IEnumerable<Guid> subscriberIDs = state as IEnumerable<Guid>;
 
-                if ((object)sourceMeasurements != null)
+                if ((object)subscriberIDs != null)
                 {
-                    List<int> deviceIDs = new List<int>();
-                    AdoDataConnection database = null;
-
-                    // Query associated device ID list for given measurements
-                    try
+                    // Clear existing subscriber statuses
+                    lock (m_subscriberStatuses)
                     {
-                        database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                        string guidPrefix = database.DatabaseType == DatabaseType.Access ? "{" : "'";
-                        string guidSuffix = database.DatabaseType == DatabaseType.Access ? "}" : "'";
-                        string query = string.Format("SELECT DISTINCT DeviceID FROM ActiveMeasurement WHERE ProtocolType = 'Measurement' AND SignalID IN ({0})", sourceMeasurements.Select(signalID => guidPrefix + signalID.ToString() + guidSuffix).ToDelimitedString(", "));
-                        DataTable measurementDevices = database.Connection.RetrieveData(database.AdapterType, query);
-
-                        foreach (DataRow row in measurementDevices.Rows)
-                        {
-                            int? deviceID = row.ConvertNullableField<int>("DeviceID");
-
-                            if (deviceID.HasValue)
-                            {
-                                // Validate that device ID is unique (not trusting all databases will handle DISTINCT properly)
-                                if (deviceIDs.BinarySearch(deviceID.Value) < 0)
-                                {
-                                    deviceIDs.Add(deviceID.Value);
-                                    deviceIDs.Sort();
-                                }
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        if ((object)database != null)
-                            database.Dispose();
-                    }
-
-                    // Clear existing destination signal ID lists
-                    lock (m_authorizedSignalIDs)
-                    {
-                        m_authorizedSignalIDs.Clear();
+                        m_subscriberStatuses.Clear();
                     }
 
                     // Reset request and response counts to zero
@@ -267,11 +231,11 @@ namespace TimeSeriesFramework.UI
                     if ((object)m_responseComplete != null)
                         m_responseComplete.Reset();
 
-                    // Send service commands to DataSubscribers to determine signal authorizations
-                    foreach (int deviceID in deviceIDs)
+                    // Send service commands to external data publisher to determine subscriber states
+                    foreach (Guid subscriberID in subscriberIDs)
                     {
                         // Send command for authorized signals for this device
-                        CommonFunctions.SendCommandToService(string.Format("INVOKE {0} GetAuthorizedSignalIDs", deviceID));
+                        CommonFunctions.SendCommandToService(string.Format("INVOKE EXTERNAL!DATAPUBLISHER GetSubscriberStatus {0}", subscriberID));
                         m_requests++;
                     }
 
@@ -284,27 +248,27 @@ namespace TimeSeriesFramework.UI
                                 OnProcessException(new TimeoutException(string.Format("Timed-out after {0} seconds waiting for {1} service response{2}.", (m_requests * m_responseTimeout / 1000.0D).ToString("0.00"), m_requests, m_requests == 1 ? "" : "s")));
                         }
 
-                        // Create a sorted list of the source measurements to use as a filter to authorized measurements
-                        List<Guid> sourceFilter = new List<Guid>(sourceMeasurements);
+                        // Create a sorted list of the subscriberIDs to use as a filter in case we get old responses from other queries
+                        List<Guid> sourceFilter = new List<Guid>(subscriberIDs);
                         sourceFilter.Sort();
 
-                        Guid[] authorizedSignalIDs = null;
+                        Dictionary<Guid, Tuple<bool, string>> subscriberStatuses = null;
 
-                        // Provide user with a distinct list of query results - if there are any
-                        lock (m_authorizedSignalIDs)
+                        // Provide user with a dictionary of query results - if there are any
+                        lock (m_subscriberStatuses)
                         {
-                            if (m_authorizedSignalIDs.Count > 0)
-                                authorizedSignalIDs = m_authorizedSignalIDs.Distinct().Where(signalID => sourceFilter.BinarySearch(signalID) >= 0).ToArray();
+                            if (m_subscriberStatuses.Count > 0)
+                                subscriberStatuses = m_subscriberStatuses.Where(tuple => sourceFilter.BinarySearch(tuple.Item1) >= 0).ToDictionary(key => key.Item1, value => new Tuple<bool, string>(value.Item2, value.Item3));
                         }
 
-                        if (authorizedSignalIDs != null && authorizedSignalIDs.Length > 0)
-                            OnAuthorizedMeasurements(authorizedSignalIDs);
+                        if (subscriberStatuses != null && subscriberStatuses.Count > 0)
+                            OnSubscriberStatuses(subscriberStatuses);
                     }
                 }
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException("Authorized measurements query error: " + ex.Message, ex));
+                OnProcessException(new InvalidOperationException("Subscriber status query error: " + ex.Message, ex));
             }
             finally
             {
@@ -314,13 +278,13 @@ namespace TimeSeriesFramework.UI
         }
 
         /// <summary>
-        /// Raises <see cref="AuthorizedMeasurements"/> event.
+        /// Raises <see cref="SubscriberStatuses"/> event.
         /// </summary>
-        /// <param name="authorizedMeasurements">Authorized measurements.</param>
-        protected virtual void OnAuthorizedMeasurements(Guid[] authorizedMeasurements)
+        /// <param name="subscriberStatuses">Dictionary of subscriber statuses.</param>
+        protected virtual void OnSubscriberStatuses(Dictionary<Guid, Tuple<bool, string>> subscriberStatuses)
         {
-            if (AuthorizedMeasurements != null)
-                AuthorizedMeasurements(this, new EventArgs<Guid[]>(authorizedMeasurements));
+            if (SubscriberStatuses != null)
+                SubscriberStatuses(this, new EventArgs<Dictionary<Guid, Tuple<bool, string>>>(subscriberStatuses));
         }
 
         /// <summary>
@@ -355,25 +319,25 @@ namespace TimeSeriesFramework.UI
                         {
                             List<object> attachments = response.Attachments;
 
-                            // An INVOKE for GetAuthorizedSignalIDs will have two attachments: a guid array, item 0, and the original command arguments, item 1
+                            // An INVOKE for GetSubscriberStatus will have two attachments: a tuple of the values, item 0, and the original command arguments, item 1
                             if ((object)attachments != null && attachments.Count > 1)
                             {
                                 Arguments arguments = attachments[1] as Arguments;
 
                                 // Check the method that was invoked - the second argument after the adapter ID
-                                if (string.Compare(arguments["OrderedArg2"], "GetAuthorizedSignalIDs", true) == 0)
+                                if (string.Compare(arguments["OrderedArg2"], "GetSubscriberStatus", true) == 0)
                                 {
-                                    Guid[] signalIDs = attachments[0] as Guid[];
+                                    Tuple<Guid, bool, string> subscriberStatus = attachments[0] as Tuple<Guid, bool, string>;
 
-                                    if ((object)signalIDs != null)
+                                    if ((object)subscriberStatus != null)
                                     {
-                                        lock (m_authorizedSignalIDs)
+                                        lock (m_subscriberStatuses)
                                         {
-                                            m_authorizedSignalIDs.AddRange(signalIDs);
+                                            m_subscriberStatuses.Add(subscriberStatus);
                                         }
                                     }
 
-                                    // A response for GetAuthorizedSignalIDs counts whether or not a guid array was returned
+                                    // A response for GetSubscriberStatus counts whether or not a status was returned
                                     m_responses++;
                                 }
                             }
