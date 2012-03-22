@@ -154,6 +154,7 @@ namespace TimeSeriesFramework.Transport
         private TcpClient m_commandChannel;
         private UdpClient m_dataChannel;
         private LocalConcentrator m_localConcentrator;
+        private System.Timers.Timer m_dataStreamMonitor;
         private long m_connectionAttempts;
         private volatile SignalIndexCache m_remoteSignalIndexCache;
         private volatile SignalIndexCache m_signalIndexCache;
@@ -163,6 +164,7 @@ namespace TimeSeriesFramework.Transport
         private volatile bool m_authenticated;
         private volatile bool m_subscribed;
         private volatile int m_lastBytesReceived;
+        private long m_monitoredBytesReceived;
         private long m_totalBytesReceived;
         private Guid m_nodeID;
         private int m_gatewayProtocolID;
@@ -188,6 +190,12 @@ namespace TimeSeriesFramework.Transport
         public DataSubscriber()
         {
             m_requests = new List<ServerCommand>();
+
+            // Create data stream monitoring timer
+            m_dataStreamMonitor = new System.Timers.Timer();
+            m_dataStreamMonitor.Elapsed += m_dataStreamMonitor_Elapsed;
+            m_dataStreamMonitor.AutoReset = true;
+            m_dataStreamMonitor.Enabled = false;
         }
 
         #endregion
@@ -322,6 +330,8 @@ namespace TimeSeriesFramework.Transport
                 status.AppendFormat("                Subscribed: {0}", m_subscribed);
                 status.AppendLine();
                 status.AppendFormat("      Data packet security: {0}", m_keyIVs == null ? "unencrypted" : "encrypted");
+                status.AppendLine();
+                status.AppendFormat("No data reconnect interval: {0} seconds", Ticks.FromMilliseconds(m_dataStreamMonitor.Interval).ToSeconds().ToString("0.000"));
                 status.AppendLine();
 
                 if ((object)m_dataChannel != null)
@@ -467,6 +477,13 @@ namespace TimeSeriesFramework.Transport
                 {
                     if (disposing)
                     {
+                        if (m_dataStreamMonitor != null)
+                        {
+                            m_dataStreamMonitor.Elapsed -= m_dataStreamMonitor_Elapsed;
+                            m_dataStreamMonitor.Dispose();
+                        }
+                        m_dataStreamMonitor = null;
+
                         CommandChannel = null;
                         DataChannel = null;
                         DisposeLocalConcentrator();
@@ -522,6 +539,11 @@ namespace TimeSeriesFramework.Transport
             // Define auto connect setting
             if (settings.TryGetValue("autoConnect", out setting))
                 m_autoConnect = setting.ParseBoolean();
+
+            if (settings.TryGetValue("dataLossInterval", out setting))
+                m_dataStreamMonitor.Interval = double.Parse(setting) * 1000.0D;
+            else
+                m_dataStreamMonitor.Interval = 5000.0D;
 
             // Connect to local events when automatically engaging connection cycle
             if (m_autoConnect)
@@ -586,6 +608,7 @@ namespace TimeSeriesFramework.Transport
             commandChannel.PayloadAware = true;
             commandChannel.Compression = CompressionStrength.NoCompression;
             commandChannel.PersistSettings = false;
+            commandChannel.MaxConnectionAttempts = 1;
 
             // Assign command channel client reference and attach to needed events
             this.CommandChannel = commandChannel;
@@ -988,6 +1011,10 @@ namespace TimeSeriesFramework.Transport
                 connectionString.AppendFormat("; waitHandleTimeout={0}", waitHandleTimeout);
             }
 
+            // Make sure not to monitor for data loss any faster than downsample time on throttled connections
+            if (throttled && (object)m_dataStreamMonitor != null && m_dataStreamMonitor.Interval / 1000.0D < lagTime)
+                m_dataStreamMonitor.Interval = lagTime * 1000.0D + 1000.0D;
+
             return Subscribe(false, compactFormat, connectionString.ToString());
         }
 
@@ -1178,6 +1205,7 @@ namespace TimeSeriesFramework.Transport
             m_subscribed = false;
             m_keyIVs = null;
             Interlocked.Exchange(ref m_totalBytesReceived, 0L);
+            Interlocked.Exchange(ref m_monitoredBytesReceived, 0L);
             m_lastBytesReceived = 0;
         }
 
@@ -1186,6 +1214,10 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         protected override void AttemptDisconnection()
         {
+            // Stop data stream monitor
+            m_dataStreamMonitor.Enabled = false;
+
+            // Disconnect command channel
             m_commandChannel.Disconnect();
         }
 
@@ -1260,10 +1292,12 @@ namespace TimeSeriesFramework.Transport
                                     case ServerCommand.Subscribe:
                                         OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
                                         m_subscribed = true;
+                                        m_dataStreamMonitor.Enabled = true;
                                         break;
                                     case ServerCommand.Unsubscribe:
                                         OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
                                         m_subscribed = false;
+                                        m_dataStreamMonitor.Enabled = false;
                                         break;
                                     case ServerCommand.RotateCipherKeys:
                                         OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
@@ -1308,6 +1342,7 @@ namespace TimeSeriesFramework.Transport
 
                             // Track total data packet bytes received from any channel
                             Interlocked.Add(ref m_totalBytesReceived, m_lastBytesReceived);
+                            Interlocked.Add(ref m_monitoredBytesReceived, m_lastBytesReceived);
 
                             // Decrypt data packet payload if keys are available
                             if (m_keyIVs != null)
@@ -1846,6 +1881,20 @@ namespace TimeSeriesFramework.Transport
             OnProcessException(e.Argument);
         }
 
+        private void m_dataStreamMonitor_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            if (Interlocked.Read(ref m_monitoredBytesReceived) == 0)
+            {
+                // If we've received no data in the last timespan, we restart connect cycle...
+                m_dataStreamMonitor.Enabled = false;
+                OnStatusMessage("\r\nNo data received in {0} seconds, restarting connect cycle...\r\n", (m_dataStreamMonitor.Interval / 1000.0D).ToString("0.0"));
+                Start();
+            }
+
+            // Reset bytes received bytes being monitored
+            Interlocked.Exchange(ref m_monitoredBytesReceived, 0L);
+        }
+
         #region [ Command Channel Event Handlers ]
 
         private void m_commandChannel_ConnectionEstablished(object sender, EventArgs e)
@@ -1884,6 +1933,10 @@ namespace TimeSeriesFramework.Transport
         {
             Exception ex = e.Argument;
             OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while attempting publisher connection: " + ex.Message, ex));
+
+            // So long as user hasn't requested to stop, keep trying connection
+            if (m_autoConnect && Enabled)
+                Start();
         }
 
         private void m_commandChannel_ConnectionAttempt(object sender, EventArgs e)
