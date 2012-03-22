@@ -5948,10 +5948,15 @@
             Gets the subscriber name of this <see cref="T:TimeSeriesFramework.Transport.ClientConnection"/>.
             </summary>
         </member>
-        <member name="P:TimeSeriesFramework.Transport.ClientConnection.UseCommonSerializationFormat">
+        <member name="P:TimeSeriesFramework.Transport.ClientConnection.OperationalModes">
             <summary>
-            Gets or sets flag that indicates whether this client
-            has requested to use the alternat binary format.
+            Gets or sets a set of flags that define ways in
+            which the subscriber and publisher communicate.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.ClientConnection.Encoding">
+            <summary>
+            Character encoding used to send messages to subscriber.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.ClientConnection.Status">
@@ -6052,6 +6057,15 @@
             Manually requests server to update the processing interval with the following specified value.
             </remarks>
         </member>
+        <member name="F:TimeSeriesFramework.Transport.ServerCommand.DefineOperationalModes">
+            <summary>
+            Define operational modes for subscriber connection.
+            </summary>
+            <remarks>
+            As soon as connection is established, requests that server set operational
+            modes that affect how the subscriber and publisher will communicate.
+            </remarks>
+        </member>
         <member name="T:TimeSeriesFramework.Transport.ServerResponse">
             <summary>
             Server responses sent by <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/> and received by <see cref="T:TimeSeriesFramework.Transport.DataSubscriber"/>.
@@ -6087,14 +6101,6 @@
             </summary>
             <remarks>
             Unsolicited response requests that client update its runtime signal index cache with the one that follows.
-            </remarks>
-        </member>
-        <member name="F:TimeSeriesFramework.Transport.ServerResponse.UpdateBaseTimes">
-            <summary>
-            Update runtime base-timestamp offsets response.
-            </summary>
-            <remarks>
-            Unsolicited response requests that client update its runtime base-timestamp offsets with those that follow.
             </remarks>
         </member>
         <member name="F:TimeSeriesFramework.Transport.ServerResponse.UpdateCipherKeys">
@@ -6157,6 +6163,83 @@
             <remarks>
             This would represent unsynchronized, full fidelity measurement data packets.
             </remarks>
+        </member>
+        <member name="T:TimeSeriesFramework.Transport.OperationalModes">
+            <summary>
+            Operational modes that affect how <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/> and <see cref="T:TimeSeriesFramework.Transport.DataSubscriber"/> communicate.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.OperationalModes.VersionMask">
+            <summary>
+            Mask to get version number of protocol.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.OperationalModes.CompressionModeMask">
+            <summary>
+            Mask to get mode of compression.
+            </summary>
+            <remarks>
+            Compression mode is currently not supported.
+            These bits are simply reserved for different compression modes.
+            </remarks>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.OperationalModes.EncodingMask">
+            <summary>
+            Mask to get character encoding used when exchanging messages between publisher and subscriber.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.OperationalModes.UseCommonSerializationFormat">
+            <summary>
+            Determines type of serialization to use when exchanging signal index cache and metadata.
+            </summary>
+            <remarks>
+            Bit set = common serialization format, bit set = .NET serialization format
+            </remarks>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.OperationalModes.CompressSignalIndexCache">
+            <summary>
+            Determines whether the signal index cache is compressed when exchanging between publisher and subscriber.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.OperationalModes.CompressMetadata">
+            <summary>
+            Determines whether is compressed when exchanging between publisher and subscriber.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.OperationalModes.NoFlags">
+            <summary>
+            No flags set.
+            </summary>
+            <remarks>
+            This would represent protocol version 0,
+            UTF-16 little endian character encoding,
+            .NET serialization, and no compression.
+            </remarks>
+        </member>
+        <member name="T:TimeSeriesFramework.Transport.OperationalEncoding">
+            <summary>
+            Enumeration for character encodings supported by the Gateway Exchange Protocol.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.OperationalEncoding.Unicode">
+            <summary>
+            UTF-16 little endian
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.OperationalEncoding.BigEndianUnicode">
+            <summary>
+            UTF-16 bit endian
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.OperationalEncoding.UTF8">
+            <summary>
+            UTF-8
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.OperationalEncoding.ANSI">
+            <summary>
+            ANSI
+            </summary>
         </member>
         <member name="T:TimeSeriesFramework.Transport.DataPublisher">
             <summary>
@@ -6857,10 +6940,15 @@
             Gets total data packet bytes received during this session.
             </summary>
         </member>
-        <member name="P:TimeSeriesFramework.Transport.DataSubscriber.UseCommonSerializationFormat">
+        <member name="P:TimeSeriesFramework.Transport.DataSubscriber.OperationalModes">
             <summary>
-            Gets or sets flag that indicates whether this client
-            has requested to use the alternate binary format.
+            Gets or sets a set of flags that define ways in
+            which the subscriber and publisher communicate.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataSubscriber.OperationalEncoding">
+            <summary>
+            Gets or sets the <see cref="P:TimeSeriesFramework.Transport.DataSubscriber.OperationalEncoding"/> used by the subscriber and publisher.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.DataSubscriber.SupportsTemporalProcessing">
@@ -6988,16 +7076,18 @@
             Fixed byte length of a <see cref="T:TimeSeriesFramework.Transport.SerializableMeasurement"/>.
             </summary>
         </member>
-        <member name="M:TimeSeriesFramework.Transport.SerializableMeasurement.#ctor">
+        <member name="M:TimeSeriesFramework.Transport.SerializableMeasurement.#ctor(System.Text.Encoding)">
             <summary>
             Creates a new <see cref="T:TimeSeriesFramework.Transport.SerializableMeasurement"/>.
             </summary>
+            <param name="encoding">Character encoding used to convert strings to binary.</param>
         </member>
-        <member name="M:TimeSeriesFramework.Transport.SerializableMeasurement.#ctor(TimeSeriesFramework.IMeasurement)">
+        <member name="M:TimeSeriesFramework.Transport.SerializableMeasurement.#ctor(TimeSeriesFramework.IMeasurement,System.Text.Encoding)">
             <summary>
             Creates a new <see cref="T:TimeSeriesFramework.Transport.SerializableMeasurement"/> from an existing <see cref="T:TimeSeriesFramework.IMeasurement"/> value.
             </summary>
             <param name="measurement">Source <see cref="T:TimeSeriesFramework.IMeasurement"/> value.</param>
+            <param name="encoding">Character encoding used to convert strings to binary.</param>
         </member>
         <member name="M:TimeSeriesFramework.Transport.SerializableMeasurement.ParseBinaryImage(System.Byte[],System.Int32,System.Int32)">
             <summary>
@@ -7893,6 +7983,11 @@
         <member name="P:TimeSeriesFramework.Transport.SignalIndexCache.MaximumIndex">
             <summary>
             Gets the current maximum integer signal index.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SignalIndexCache.Encoding">
+            <summary>
+            Gets or sets character encoding used to convert strings to binary.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.SignalIndexCache.BinaryLength">
