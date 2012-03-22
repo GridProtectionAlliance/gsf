@@ -44,6 +44,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Xml;
 using TimeSeriesFramework.Adapters;
 using TVA;
 using TVA.Communication;
@@ -126,7 +127,15 @@ namespace TimeSeriesFramework.Transport
         /// <remarks>
         /// Manually requests server to update the processing interval with the following specified value.
         /// </remarks>
-        UpdateProcessingInterval = 0x05
+        UpdateProcessingInterval = 0x05,
+        /// <summary>
+        /// Define operational modes for subscriber connection.
+        /// </summary>
+        /// <remarks>
+        /// As soon as connection is established, requests that server set operational
+        /// modes that affect how the subscriber and publisher will communicate.
+        /// </remarks>
+        DefineOperationalModes = 0x06
     }
 
     /// <summary>
@@ -165,13 +174,6 @@ namespace TimeSeriesFramework.Transport
         /// Unsolicited response requests that client update its runtime signal index cache with the one that follows.
         /// </remarks>
         UpdateSignalIndexCache = 0x83,
-        /// <summary>
-        /// Update runtime base-timestamp offsets response.
-        /// </summary>
-        /// <remarks>
-        /// Unsolicited response requests that client update its runtime base-timestamp offsets with those that follow.
-        /// </remarks>
-        UpdateBaseTimes = 0x84,
         /// <summary>
         /// Update runtime cipher keys response.
         /// </summary>
@@ -229,6 +231,77 @@ namespace TimeSeriesFramework.Transport
         /// This would represent unsynchronized, full fidelity measurement data packets.
         /// </remarks>
         NoFlags = (Byte)Bits.Nil
+    }
+
+    /// <summary>
+    /// Operational modes that affect how <see cref="DataPublisher"/> and <see cref="DataSubscriber"/> communicate.
+    /// </summary>
+    [Flags()]
+    public enum OperationalModes : uint
+    {
+        /// <summary>
+        /// Mask to get version number of protocol.
+        /// </summary>
+        VersionMask = (uint)(Bits.Bit04 | Bits.Bit03 | Bits.Bit02 | Bits.Bit01 | Bits.Bit00),
+        /// <summary>
+        /// Mask to get mode of compression.
+        /// </summary>
+        /// <remarks>
+        /// Compression mode is currently not supported.
+        /// These bits are simply reserved for different compression modes.
+        /// </remarks>
+        CompressionModeMask = (uint)(Bits.Bit07 | Bits.Bit06 | Bits.Bit05),
+        /// <summary>
+        /// Mask to get character encoding used when exchanging messages between publisher and subscriber.
+        /// </summary>
+        EncodingMask = (uint)(Bits.Bit09 | Bits.Bit08),
+        /// <summary>
+        /// Determines type of serialization to use when exchanging signal index cache and metadata.
+        /// </summary>
+        /// <remarks>
+        /// Bit set = common serialization format, bit set = .NET serialization format
+        /// </remarks>
+        UseCommonSerializationFormat = (uint)Bits.Bit24,
+        /// <summary>
+        /// Determines whether the signal index cache is compressed when exchanging between publisher and subscriber.
+        /// </summary>
+        CompressSignalIndexCache = (uint)Bits.Bit30,
+        /// <summary>
+        /// Determines whether is compressed when exchanging between publisher and subscriber.
+        /// </summary>
+        CompressMetadata = (uint)Bits.Bit31,
+        /// <summary>
+        /// No flags set.
+        /// </summary>
+        /// <remarks>
+        /// This would represent protocol version 0,
+        /// UTF-16 little endian character encoding,
+        /// .NET serialization, and no compression.
+        /// </remarks>
+        NoFlags = (uint)Bits.Nil
+    }
+
+    /// <summary>
+    /// Enumeration for character encodings supported by the Gateway Exchange Protocol.
+    /// </summary>
+    public enum OperationalEncoding : uint
+    {
+        /// <summary>
+        /// UTF-16 little endian
+        /// </summary>
+        Unicode = (uint)Bits.Nil,
+        /// <summary>
+        /// UTF-16 bit endian
+        /// </summary>
+        BigEndianUnicode = (uint)Bits.Bit08,
+        /// <summary>
+        /// UTF-8
+        /// </summary>
+        UTF8 = (uint)Bits.Bit09,
+        /// <summary>
+        /// ANSI
+        /// </summary>
+        ANSI = (uint)(Bits.Bit09 | Bits.Bit08)
     }
 
     #endregion
@@ -871,7 +944,7 @@ namespace TimeSeriesFramework.Transport
             for (int i = 0; i < clientIDs.Length; i++)
             {
                 if (m_clientConnections.TryGetValue(clientIDs[i], out connection))
-                    clientEnumeration.AppendFormat("  {0} - {1}\r\n          {2}\r\n\r\n", i.ToString().PadLeft(3), connection.ConnectionID, connection.SubscriberInfo);
+                    clientEnumeration.AppendFormat("  {0} - {1}\r\n          {2}\r\n          {3}\r\n\r\n", i.ToString().PadLeft(3), connection.ConnectionID, connection.SubscriberInfo, connection.OperationalModes);
             }
 
             // Display enumeration
@@ -992,7 +1065,7 @@ namespace TimeSeriesFramework.Transport
 
             signalIndexCache.Reference = reference;
             signalIndexCache.UnauthorizedSignalIDs = unauthorizedKeys.ToArray();
-            serializedSignalIndexCache = SerializeSignalIndexCache(signalIndexCache, m_clientConnections[clientID].UseCommonSerializationFormat);
+            serializedSignalIndexCache = SerializeSignalIndexCache(clientID, signalIndexCache);
 
             // Send client updated signal index cache
             SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, serializedSignalIndexCache);
@@ -1122,7 +1195,7 @@ namespace TimeSeriesFramework.Transport
         internal protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, string status)
         {
             if (status != null)
-                return SendClientResponse(clientID, response, command, Encoding.Unicode.GetBytes(status));
+                return SendClientResponse(clientID, response, command, m_clientConnections[clientID].Encoding.GetBytes(status));
 
             return SendClientResponse(clientID, response, command);
         }
@@ -1139,7 +1212,7 @@ namespace TimeSeriesFramework.Transport
         internal protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, string formattedStatus, params object[] args)
         {
             if (!string.IsNullOrWhiteSpace(formattedStatus))
-                return SendClientResponse(clientID, response, command, Encoding.Unicode.GetBytes(string.Format(formattedStatus, args)));
+                return SendClientResponse(clientID, response, command, m_clientConnections[clientID].Encoding.GetBytes(string.Format(formattedStatus, args)));
 
             return SendClientResponse(clientID, response, command);
         }
@@ -1423,7 +1496,7 @@ namespace TimeSeriesFramework.Transport
                                 startIndex += byteLength;
 
                                 // Validate the authentication ID - if it matches, connection is authenticated
-                                connection.Authenticated = (string.Compare(authenticationID, Encoding.Unicode.GetString(bytes, CipherSaltLength, bytes.Length - CipherSaltLength)) == 0);
+                                connection.Authenticated = (string.Compare(authenticationID, connection.Encoding.GetString(bytes, CipherSaltLength, bytes.Length - CipherSaltLength)) == 0);
 
                                 if (connection.Authenticated)
                                 {
@@ -1512,7 +1585,7 @@ namespace TimeSeriesFramework.Transport
 
                         if (byteLength > 0 && length >= 6 + byteLength)
                         {
-                            string connectionString = Encoding.Unicode.GetString(buffer, startIndex, byteLength);
+                            string connectionString = connection.Encoding.GetString(buffer, startIndex, byteLength);
                             startIndex += byteLength;
 
                             // Get client subscription
@@ -1583,10 +1656,6 @@ namespace TimeSeriesFramework.Transport
                             if (subscription.Settings.TryGetValue("assemblyInfo", out setting))
                                 connection.SubscriberInfo = setting;
 
-                            // Pass binary format information to connection, if defined
-                            if (subscription.Settings.TryGetValue("useCommonSerializationFormat", out setting))
-                                connection.UseCommonSerializationFormat = setting.ParseBoolean();
-
                             // Set up UDP data channel if client has requested this
                             connection.DataChannel = null;
 
@@ -1654,7 +1723,7 @@ namespace TimeSeriesFramework.Transport
                             subscription.Start();
 
                             // Send updated signal index cache to client with validated rights of the selected input measurement keys
-                            byte[] serializedSignalIndexCache = SerializeSignalIndexCache(subscription.SignalIndexCache, connection.UseCommonSerializationFormat);
+                            byte[] serializedSignalIndexCache = SerializeSignalIndexCache(clientID, subscription.SignalIndexCache);
                             SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, serializedSignalIndexCache);
 
                             // TODO: Add a flag to the database to allow payload encryption to be subsciber specific instead of global to publisher...
@@ -1798,7 +1867,7 @@ namespace TimeSeriesFramework.Transport
                     }
                 }
 
-                serializedMetadata = SerializeMetadata(metadata, connection.UseCommonSerializationFormat);
+                serializedMetadata = SerializeMetadata(clientID, metadata);
                 SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.MetaDataRefresh, serializedMetadata);
             }
             catch (Exception ex)
@@ -1844,9 +1913,33 @@ namespace TimeSeriesFramework.Transport
             }
         }
 
-        private byte[] SerializeSignalIndexCache(SignalIndexCache signalIndexCache, bool useCommonSerializationFormat)
+        // Handle request to define operational modes for client connection
+        private void HandleDefineOperationalModes(ClientConnection connection, byte[] buffer, int startIndex, int length)
         {
+            uint operationalModes;
+
+            if (length >= 4)
+            {
+                operationalModes = EndianOrder.BigEndian.ToUInt32(buffer, startIndex);
+
+                if ((operationalModes & (uint)OperationalModes.VersionMask) != 0u)
+                    OnStatusMessage("WARNING: Protocol version not supported. Operational modes may not be set correctly for client {0}.", connection.ClientID);
+
+                connection.OperationalModes = (OperationalModes)operationalModes;
+            }
+        }
+
+        private byte[] SerializeSignalIndexCache(Guid clientID, SignalIndexCache signalIndexCache)
+        {
+            ClientConnection connection = m_clientConnections[clientID];
+            OperationalModes operationalModes = connection.OperationalModes;
+            bool useCommonSerializationFormat = (operationalModes & OperationalModes.UseCommonSerializationFormat) > 0;
+            bool compressSignalIndexCache = (operationalModes & OperationalModes.CompressSignalIndexCache) > 0;
+
             byte[] serializedSignalIndexCache;
+
+            MemoryStream compressedData = null;
+            DeflateStream deflater = null;
 
             if (!useCommonSerializationFormat)
             {
@@ -1856,16 +1949,51 @@ namespace TimeSeriesFramework.Transport
             else
             {
                 // Use ISupportBinaryImage implementation
+                signalIndexCache.Encoding = connection.Encoding;
                 serializedSignalIndexCache = new byte[signalIndexCache.BinaryLength];
                 signalIndexCache.GenerateBinaryImage(serializedSignalIndexCache, 0);
+            }
+
+            if (compressSignalIndexCache)
+            {
+                try
+                {
+                    // Compress serialized signal index cache into compressed data buffer
+                    compressedData = new MemoryStream();
+                    deflater = new DeflateStream(compressedData, CompressionMode.Compress);
+                    deflater.Write(serializedSignalIndexCache, 0, serializedSignalIndexCache.Length);
+                    deflater.Close();
+                    deflater = null;
+
+                    serializedSignalIndexCache = compressedData.ToArray();
+                }
+                finally
+                {
+                    if ((object)deflater != null)
+                        deflater.Close();
+
+                    if ((object)compressedData != null)
+                        compressedData.Close();
+                }
             }
 
             return serializedSignalIndexCache;
         }
 
-        private byte[] SerializeMetadata(DataSet metadata, bool useCommonSerializationFormat)
+        private byte[] SerializeMetadata(Guid clientID, DataSet metadata)
         {
+            ClientConnection connection = m_clientConnections[clientID];
+            OperationalModes operationalModes = connection.OperationalModes;
+            bool useCommonSerializationFormat = (operationalModes & OperationalModes.UseCommonSerializationFormat) > 0;
+            bool compressMetadata = (operationalModes & OperationalModes.CompressMetadata) > 0;
+
             byte[] serializedMetadata;
+
+            MemoryStream encodedData = null;
+            XmlTextWriter unicodeWriter = null;
+
+            MemoryStream compressedData = null;
+            DeflateStream deflater = null;
 
             if (!useCommonSerializationFormat)
             {
@@ -1873,27 +2001,43 @@ namespace TimeSeriesFramework.Transport
             }
             else
             {
-                MemoryStream compressedData = null;
-                DeflateStream deflater = null;
-                StreamWriter unicodeWriter = null;
-
                 try
                 {
-                    compressedData = new MemoryStream();
-                    deflater = new DeflateStream(compressedData, CompressionMode.Compress);
-                    unicodeWriter = new StreamWriter(deflater, Encoding.Unicode);
-
+                    // Encode XML into encoded data buffer
+                    encodedData = new MemoryStream();
+                    unicodeWriter = new XmlTextWriter(encodedData, connection.Encoding);
                     metadata.WriteXml(unicodeWriter, XmlWriteMode.WriteSchema);
-                    unicodeWriter.Flush();
-                    deflater.Flush();
+                    unicodeWriter.Close();
+                    unicodeWriter = null;
 
-                    serializedMetadata = compressedData.ToArray();
+                    // Return result of compression
+                    serializedMetadata = encodedData.ToArray();
                 }
                 finally
                 {
                     if ((object)unicodeWriter != null)
                         unicodeWriter.Close();
 
+                    if ((object)encodedData != null)
+                        encodedData.Close();
+                }
+            }
+
+            if (compressMetadata)
+            {
+                try
+                {
+                    // Compress serialized metadata into compressed data buffer
+                    compressedData = new MemoryStream();
+                    deflater = new DeflateStream(compressedData, CompressionMode.Compress);
+                    deflater.Write(serializedMetadata, 0, serializedMetadata.Length);
+                    deflater.Close();
+                    deflater = null;
+
+                    serializedMetadata = compressedData.ToArray();
+                }
+                finally
+                {
                     if ((object)deflater != null)
                         deflater.Close();
 
@@ -2011,13 +2155,17 @@ namespace TimeSeriesFramework.Transport
                             // Handle request to update processing interval
                             HandleUpdateProcessingInterval(connection, buffer, index, length);
                             break;
+                        case ServerCommand.DefineOperationalModes:
+                            // Handle request to define oeprational modes
+                            HandleDefineOperationalModes(connection, buffer, index, length);
+                            break;
                     }
                 }
                 else
                 {
                     // Handle unrecognized commands
                     message = " sent an unrecognized server command: 0x" + commandByte.ToString("X").PadLeft(2, '0');
-                    SendClientResponse(clientID, (byte)ServerResponse.Failed, commandByte, Encoding.Unicode.GetBytes("Client" + message));
+                    SendClientResponse(clientID, (byte)ServerResponse.Failed, commandByte, connection.Encoding.GetBytes("Client" + message));
                     OnProcessException(new InvalidOperationException("WARNING: " + connection.ConnectionID + message));
                 }
             }

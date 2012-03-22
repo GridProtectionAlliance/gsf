@@ -71,7 +71,8 @@ namespace TimeSeriesFramework.Transport
         private Ticks m_lastCipherKeyUpdateTime;
         private System.Timers.Timer m_pingTimer;
         private System.Timers.Timer m_reconnectTimer;
-        private bool m_useCommonSerializationFormat;
+        private OperationalModes m_operationalModes;
+        private Encoding m_encoding;
         private bool m_disposed;
 
         #endregion
@@ -478,18 +479,47 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
-        /// Gets or sets flag that indicates whether this client
-        /// has requested to use the alternat binary format.
+        /// Gets or sets a set of flags that define ways in
+        /// which the subscriber and publisher communicate.
         /// </summary>
-        public bool UseCommonSerializationFormat
+        public OperationalModes OperationalModes
         {
             get
             {
-                return m_useCommonSerializationFormat;
+                return m_operationalModes;
             }
             set
             {
-                m_useCommonSerializationFormat = value;
+                m_operationalModes = value;
+
+                switch ((OperationalEncoding)(value & Transport.OperationalModes.EncodingMask))
+                {
+                    case OperationalEncoding.Unicode:
+                        m_encoding = Encoding.Unicode;
+                        break;
+                    case OperationalEncoding.BigEndianUnicode:
+                        m_encoding = Encoding.BigEndianUnicode;
+                        break;
+                    case OperationalEncoding.UTF8:
+                        m_encoding = Encoding.UTF8;
+                        break;
+                    case OperationalEncoding.ANSI:
+                        m_encoding = Encoding.Default;
+                        break;
+                    default:
+                        throw new InvalidOperationException(string.Format("Unsupported encoding detected: {0}", value));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Character encoding used to send messages to subscriber.
+        /// </summary>
+        public Encoding Encoding
+        {
+            get
+            {
+                return m_encoding ?? Encoding.Unicode;
             }
         }
 

@@ -61,6 +61,9 @@ namespace TimeSeriesFramework.Transport
         [NonSerialized] // SignalID reverse lookup runtime cache (used to speed deserialization)
         private ConcurrentDictionary<Guid, ushort> m_signalIDCache;
 
+        [NonSerialized]
+        private Encoding m_encoding;
+
         #endregion
 
         #region [ Constructors ]
@@ -188,6 +191,21 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
+        /// Gets or sets character encoding used to convert strings to binary.
+        /// </summary>
+        public Encoding Encoding
+        {
+            get
+            {
+                return m_encoding;
+            }
+            set
+            {
+                m_encoding = value;
+            }
+        }
+
+        /// <summary>
         /// Gets the length of the binary image.
         /// </summary>
         public int BinaryLength
@@ -195,6 +213,9 @@ namespace TimeSeriesFramework.Transport
             get
             {
                 int binaryLength = 0;
+
+                if ((object)m_encoding == null)
+                    throw new InvalidOperationException("Attempt to get binary length of signal index cache without setting a character encoding.");
 
                 // Byte size of cache
                 binaryLength += 4;
@@ -206,7 +227,7 @@ namespace TimeSeriesFramework.Transport
                 binaryLength += 4;
 
                 // Each reference
-                binaryLength += m_reference.Sum(kvp => 2 + 16 + 4 + Encoding.Unicode.GetByteCount(kvp.Value.Item2) + 4);
+                binaryLength += m_reference.Sum(kvp => 2 + 16 + 4 + m_encoding.GetByteCount(kvp.Value.Item2) + 4);
 
                 // Number of unauthorized IDs
                 binaryLength += 4;
@@ -264,6 +285,9 @@ namespace TimeSeriesFramework.Transport
             byte[] bigEndianBuffer;
             byte[] unicodeBuffer;
 
+            if ((object)m_encoding == null)
+                throw new InvalidOperationException("Attempt to generate binary image of signal index cache without setting a character encoding.");
+
             buffer.ValidateParameters(startIndex, binaryLength);
 
             // Byte size of cache
@@ -294,7 +318,7 @@ namespace TimeSeriesFramework.Transport
                 offset += bigEndianBuffer.Length;
 
                 // Source
-                unicodeBuffer = Encoding.Unicode.GetBytes(kvp.Value.Item2);
+                unicodeBuffer = m_encoding.GetBytes(kvp.Value.Item2);
                 bigEndianBuffer = EndianOrder.BigEndian.GetBytes(unicodeBuffer.Length);
                 Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
                 offset += bigEndianBuffer.Length;
@@ -344,6 +368,9 @@ namespace TimeSeriesFramework.Transport
 
             int unauthorizedIDCount;
 
+            if ((object)m_encoding == null)
+                throw new InvalidOperationException("Attempt to parse binary image of signal index cache without setting a character encoding.");
+
             buffer.ValidateParameters(startIndex, length);
 
             if (length < 4)
@@ -380,7 +407,7 @@ namespace TimeSeriesFramework.Transport
                 // Source
                 sourceSize = EndianOrder.BigEndian.ToInt32(buffer, offset);
                 offset += 4;
-                source = Encoding.Unicode.GetString(buffer, offset, sourceSize);
+                source = m_encoding.GetString(buffer, offset, sourceSize);
                 offset += sourceSize;
 
                 // ID

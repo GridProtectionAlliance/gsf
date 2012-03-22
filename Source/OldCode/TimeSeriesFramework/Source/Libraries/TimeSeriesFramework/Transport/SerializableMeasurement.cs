@@ -50,6 +50,9 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         public const int FixedLength = 64;
 
+        // Fields
+        private Encoding m_encoding;
+
         #endregion
 
         #region [ Constructors ]
@@ -57,15 +60,22 @@ namespace TimeSeriesFramework.Transport
         /// <summary>
         /// Creates a new <see cref="SerializableMeasurement"/>.
         /// </summary>
-        public SerializableMeasurement()
+        /// <param name="encoding">Character encoding used to convert strings to binary.</param>
+        public SerializableMeasurement(Encoding encoding)
         {
+            if ((object)encoding == null)
+                throw new ArgumentNullException("encoding", "Cannot create serializable measurement with no encoding.");
+
+            m_encoding = encoding;
         }
 
         /// <summary>
         /// Creates a new <see cref="SerializableMeasurement"/> from an existing <see cref="IMeasurement"/> value.
         /// </summary>
         /// <param name="measurement">Source <see cref="IMeasurement"/> value.</param>
-        public SerializableMeasurement(IMeasurement measurement)
+        /// <param name="encoding">Character encoding used to convert strings to binary.</param>
+        public SerializableMeasurement(IMeasurement measurement, Encoding encoding)
+            : this(encoding)
         {
             ID = measurement.ID;
             Key = measurement.Key;
@@ -87,8 +97,8 @@ namespace TimeSeriesFramework.Transport
         {
             get
             {
-                int sourceLength = Encoding.Unicode.GetBytes(Key.Source.ToNonNullString()).Length;
-                int tagLength = Encoding.Unicode.GetBytes(TagName.ToNonNullString()).Length;
+                int sourceLength = m_encoding.GetByteCount(Key.Source.ToNonNullString());
+                int tagLength = m_encoding.GetByteCount(TagName.ToNonNullString());
                 return FixedLength + sourceLength + tagLength;
             }
         }
@@ -132,7 +142,7 @@ namespace TimeSeriesFramework.Transport
             // Decode key source string
             if (size > 0)
             {
-                keySource = Encoding.Unicode.GetString(buffer, index, size);
+                keySource = m_encoding.GetString(buffer, index, size);
                 index += size;
             }
 
@@ -150,7 +160,7 @@ namespace TimeSeriesFramework.Transport
             // Decode tag name string
             if (size > 0)
             {
-                TagName = Encoding.Unicode.GetString(buffer, index, size);
+                TagName = m_encoding.GetString(buffer, index, size);
                 index += size;
             }
             else
@@ -227,7 +237,7 @@ namespace TimeSeriesFramework.Transport
             index += 4;
 
             // Encode key source string length
-            bytes = Encoding.Unicode.GetBytes(source);
+            bytes = m_encoding.GetBytes(source);
             size = bytes.Length;
             EndianOrder.BigEndian.CopyBytes(size, buffer, index);
             index += 4;
@@ -244,7 +254,7 @@ namespace TimeSeriesFramework.Transport
             index += 16;
 
             // Encode tag name string length
-            bytes = Encoding.Unicode.GetBytes(tagName);
+            bytes = m_encoding.GetBytes(tagName);
             size = bytes.Length;
             EndianOrder.BigEndian.CopyBytes(size, buffer, index);
             index += 4;

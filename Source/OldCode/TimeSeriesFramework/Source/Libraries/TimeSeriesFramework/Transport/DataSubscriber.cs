@@ -32,11 +32,13 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Xml;
 using TimeSeriesFramework.Adapters;
 using TVA;
 using TVA.Collections;
 using TVA.Communication;
 using TVA.Data;
+using TVA.IO;
 using TVA.IO.Compression;
 using TVA.Reflection;
 using TVA.Security.Cryptography;
@@ -158,7 +160,6 @@ namespace TimeSeriesFramework.Transport
         private long m_connectionAttempts;
         private volatile SignalIndexCache m_remoteSignalIndexCache;
         private volatile SignalIndexCache m_signalIndexCache;
-        private volatile long[] m_baseTimeOffsets;
         private volatile byte[][][] m_keyIVs;
         private volatile int m_cipherIndex;
         private volatile bool m_authenticated;
@@ -177,7 +178,8 @@ namespace TimeSeriesFramework.Transport
         private bool m_includeTime;
         private bool m_synchronizeMetadata;
         private bool m_internal;
-        private bool m_useCommonSerializationFormat;
+        private OperationalModes m_operationalModes;
+        private Encoding m_encoding;
         private bool m_disposed;
 
         #endregion
@@ -190,6 +192,7 @@ namespace TimeSeriesFramework.Transport
         public DataSubscriber()
         {
             m_requests = new List<ServerCommand>();
+            m_encoding = Encoding.Unicode;
 
             // Create data stream monitoring timer
             m_dataStreamMonitor = new System.Timers.Timer();
@@ -255,18 +258,39 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
-        /// Gets or sets flag that indicates whether this client
-        /// has requested to use the alternate binary format.
+        /// Gets or sets a set of flags that define ways in
+        /// which the subscriber and publisher communicate.
         /// </summary>
-        public bool UseCommonSerializationFormat
+        public OperationalModes OperationalModes
         {
             get
             {
-                return m_useCommonSerializationFormat;
+                return m_operationalModes;
             }
             set
             {
-                m_useCommonSerializationFormat = value;
+                OperationalEncoding operationalEncoding;
+
+                m_operationalModes = value;
+                operationalEncoding = (OperationalEncoding)(value & OperationalModes.EncodingMask);
+                m_encoding = GetCharacterEncoding(operationalEncoding);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="OperationalEncoding"/> used by the subscriber and publisher.
+        /// </summary>
+        public OperationalEncoding OperationalEncoding
+        {
+            get
+            {
+                return (OperationalEncoding)(m_operationalModes & OperationalModes.EncodingMask);
+            }
+            set
+            {
+                m_operationalModes &= ~OperationalModes.EncodingMask;
+                m_operationalModes |= (OperationalModes)value;
+                m_encoding = GetCharacterEncoding(value);
             }
         }
 
@@ -533,8 +557,8 @@ namespace TimeSeriesFramework.Transport
                 m_internal = setting.ParseBoolean();
 
             // Check if we should be using the alternate binary format for communications with the publisher
-            if (settings.TryGetValue("useCommonSerializationFormat", out setting))
-                m_useCommonSerializationFormat = setting.ParseBoolean();
+            if (settings.TryGetValue("operationalModes", out setting))
+                m_operationalModes = (OperationalModes)uint.Parse(setting);
 
             // Define auto connect setting
             if (settings.TryGetValue("autoConnect", out setting))
@@ -643,7 +667,7 @@ namespace TimeSeriesFramework.Transport
                     TVA.Security.Cryptography.Random.GetBytes(salt);
 
                     // Get encoded bytes of authentication key
-                    bytes = salt.Combine(Encoding.Unicode.GetBytes(authenticationID));
+                    bytes = salt.Combine(m_encoding.GetBytes(authenticationID));
 
                     // Encrypt authentication key
                     bytes = bytes.Encrypt(sharedSecret, CipherStrength.Aes256);
@@ -761,7 +785,6 @@ namespace TimeSeriesFramework.Transport
             connectionString.AppendFormat("stopTimeConstraint={0}; ", stopTime.ToNonNullString());
             connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
             connectionString.AppendFormat("processingInterval={0}; ", processingInterval);
-            connectionString.AppendFormat("useCommonSerializationFormat={0};", m_useCommonSerializationFormat);
             connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
 
             if (!string.IsNullOrWhiteSpace(waitHandleNames))
@@ -899,7 +922,6 @@ namespace TimeSeriesFramework.Transport
             connectionString.AppendFormat("stopTimeConstraint={0}; ", stopTime.ToNonNullString());
             connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
             connectionString.AppendFormat("processingInterval={0}; ", processingInterval);
-            connectionString.AppendFormat("useCommonSerializationFormat={0};", m_useCommonSerializationFormat);
             connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
 
             if (!string.IsNullOrWhiteSpace(waitHandleNames))
@@ -1002,7 +1024,6 @@ namespace TimeSeriesFramework.Transport
             connectionString.AppendFormat("stopTimeConstraint={0}; ", stopTime.ToNonNullString());
             connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
             connectionString.AppendFormat("processingInterval={0}; ", processingInterval);
-            connectionString.AppendFormat("useCommonSerializationFormat={0};", m_useCommonSerializationFormat);
             connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
 
             if (!string.IsNullOrWhiteSpace(waitHandleNames))
@@ -1082,7 +1103,7 @@ namespace TimeSeriesFramework.Transport
                     buffer.WriteByte((byte)flags);
 
                     // Get encoded bytes of connection string
-                    bytes = Encoding.Unicode.GetBytes(connectionString);
+                    bytes = m_encoding.GetBytes(connectionString);
 
                     // Write encoded connection string length into buffer
                     buffer.Write(EndianOrder.BigEndian.GetBytes(bytes.Length), 0, 4);
@@ -1243,7 +1264,7 @@ namespace TimeSeriesFramework.Transport
         /// <returns>Decoded response string.</returns>
         protected string InterpretResponseMessage(byte[] buffer, int startIndex, int length)
         {
-            return Encoding.Unicode.GetString(buffer, startIndex, length);
+            return m_encoding.GetString(buffer, startIndex, length);
         }
 
         private void ProcessServerResponse(byte[] buffer, int length)
@@ -1376,7 +1397,7 @@ namespace TimeSeriesFramework.Transport
                                 if (compactMeasurementFormat)
                                 {
                                     // Deserialize compact measurement format
-                                    CompactMeasurement measurement = new CompactMeasurement(m_signalIndexCache, m_includeTime, m_baseTimeOffsets);
+                                    CompactMeasurement measurement = new CompactMeasurement(m_signalIndexCache, m_includeTime);
                                     responseIndex += measurement.ParseBinaryImage(buffer, responseIndex, responseLength - responseIndex);
 
                                     // Apply timestamp from frame if not included in transmission
@@ -1388,7 +1409,7 @@ namespace TimeSeriesFramework.Transport
                                 else
                                 {
                                     // Deserialize full measurement format
-                                    SerializableMeasurement measurement = new SerializableMeasurement();
+                                    SerializableMeasurement measurement = new SerializableMeasurement(m_encoding);
                                     responseIndex += measurement.ParseBinaryImage(buffer, responseIndex, responseLength - responseIndex);
                                     measurements.Add(measurement);
                                 }
@@ -1412,10 +1433,6 @@ namespace TimeSeriesFramework.Transport
                             // Deserialize new signal index cache
                             m_remoteSignalIndexCache = DeserializeSignalIndexCache(buffer.BlockCopy(responseIndex, responseLength));
                             m_signalIndexCache = new SignalIndexCache(DataSource, m_remoteSignalIndexCache);
-                            break;
-                        case ServerResponse.UpdateBaseTimes:
-                            // Deserialize new base time offsets
-                            m_baseTimeOffsets = Serialization.Deserialize<long[]>(buffer.BlockCopy(responseIndex, responseLength), TVA.SerializationFormat.Binary);
                             break;
                         case ServerResponse.UpdateCipherKeys:
                             // Get active cipher index
@@ -1729,15 +1746,40 @@ namespace TimeSeriesFramework.Transport
 
         private SignalIndexCache DeserializeSignalIndexCache(byte[] buffer)
         {
+            bool useCommonSerializationFormat = (m_operationalModes & OperationalModes.UseCommonSerializationFormat) > 0;
+            bool compressSignalIndexCache = (m_operationalModes & OperationalModes.CompressSignalIndexCache) > 0;
+
             SignalIndexCache deserializedCache;
 
-            if (!m_useCommonSerializationFormat)
+            MemoryStream compressedData = null;
+            DeflateStream inflater = null;
+
+            if (compressSignalIndexCache)
+            {
+                try
+                {
+                    compressedData = new MemoryStream(buffer);
+                    inflater = new DeflateStream(compressedData, CompressionMode.Decompress);
+                    buffer = inflater.ReadStream();
+                }
+                finally
+                {
+                    if ((object)inflater != null)
+                        inflater.Close();
+
+                    if ((object)compressedData != null)
+                        compressedData.Close();
+                }
+            }
+
+            if (!useCommonSerializationFormat)
             {
                 deserializedCache = Serialization.Deserialize<SignalIndexCache>(buffer, TVA.SerializationFormat.Binary);
             }
             else
             {
                 deserializedCache = new SignalIndexCache();
+                deserializedCache.Encoding = m_encoding;
                 deserializedCache.ParseBinaryImage(buffer, 0, buffer.Length);
             }
 
@@ -1746,27 +1788,49 @@ namespace TimeSeriesFramework.Transport
 
         private DataSet DeserializeMetadata(byte[] buffer)
         {
+            bool useCommonSerializationFormat = (m_operationalModes & OperationalModes.UseCommonSerializationFormat) > 0;
+            bool compressMetadata = (m_operationalModes & OperationalModes.CompressMetadata) > 0;
+
             DataSet deserializedMetadata;
 
-            if (!m_useCommonSerializationFormat)
+            MemoryStream compressedData = null;
+            DeflateStream inflater = null;
+
+            MemoryStream encodedData = null;
+            XmlTextReader unicodeReader = null;
+
+            if (compressMetadata)
+            {
+                try
+                {
+                    // Insert compressed data into compressed buffer
+                    compressedData = new MemoryStream(buffer);
+                    inflater = new DeflateStream(compressedData, CompressionMode.Decompress);
+                    buffer = inflater.ReadStream();
+                }
+                finally
+                {
+                    if ((object)inflater != null)
+                        inflater.Close();
+
+                    if ((object)compressedData != null)
+                        compressedData.Close();
+                }
+            }
+
+            if (!useCommonSerializationFormat)
             {
                 deserializedMetadata = Serialization.Deserialize<DataSet>(buffer, TVA.SerializationFormat.Binary);
             }
             else
             {
-                MemoryStream decompressedStream = null;
-                DeflateStream deflater = null;
-                StreamReader unicodeReader = null;
-
                 try
                 {
-                    decompressedStream = new MemoryStream();
-                    deflater = new DeflateStream(decompressedStream, CompressionMode.Decompress);
-                    unicodeReader = new StreamReader(decompressedStream, Encoding.Unicode);
+                    // Copy decompressed data into encoded buffer
+                    encodedData = new MemoryStream(buffer);
 
-                    deflater.Write(buffer, 0, buffer.Length);
-                    deflater.Flush();
-
+                    // Read encoded data into data set as XML
+                    unicodeReader = new XmlTextReader(encodedData);
                     deserializedMetadata = new DataSet();
                     deserializedMetadata.ReadXml(unicodeReader, XmlReadMode.ReadSchema);
                 }
@@ -1775,15 +1839,37 @@ namespace TimeSeriesFramework.Transport
                     if ((object)unicodeReader != null)
                         unicodeReader.Close();
 
-                    if ((object)deflater != null)
-                        deflater.Close();
-
-                    if ((object)decompressedStream != null)
-                        decompressedStream.Close();
+                    if ((object)encodedData != null)
+                        encodedData.Close();
                 }
             }
 
             return deserializedMetadata;
+        }
+
+        private Encoding GetCharacterEncoding(OperationalEncoding operationalEncoding)
+        {
+            Encoding encoding;
+
+            switch (operationalEncoding)
+            {
+                case OperationalEncoding.Unicode:
+                    encoding = Encoding.Unicode;
+                    break;
+                case OperationalEncoding.BigEndianUnicode:
+                    encoding = Encoding.BigEndianUnicode;
+                    break;
+                case OperationalEncoding.UTF8:
+                    encoding = Encoding.UTF8;
+                    break;
+                case OperationalEncoding.ANSI:
+                    encoding = Encoding.Default;
+                    break;
+                default:
+                    throw new InvalidOperationException(string.Format("Unsupported encoding detected: {0}", operationalEncoding));
+            }
+
+            return encoding;
         }
 
         // This method is called when connection has been authenticated
@@ -1904,6 +1990,9 @@ namespace TimeSeriesFramework.Transport
             {
                 m_requests.Clear();
             }
+
+            // Define operational modes as soon as possible
+            SendServerCommand(ServerCommand.DefineOperationalModes, EndianOrder.BigEndian.GetBytes((uint)m_operationalModes));
 
             OnConnectionEstablished();
 

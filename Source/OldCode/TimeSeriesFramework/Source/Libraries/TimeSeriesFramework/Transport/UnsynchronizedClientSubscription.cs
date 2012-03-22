@@ -474,7 +474,7 @@ namespace TimeSeriesFramework.Transport
                             if (useCompactMeasurementFormat)
                                 binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, m_includeTime);
                             else
-                                binaryMeasurement = new SerializableMeasurement(measurement);
+                                binaryMeasurement = new SerializableMeasurement(measurement, m_parent.ClientConnections[m_clientID].Encoding);
 
                             // Determine the size of the measurement in bytes.
                             binaryLength = binaryMeasurement.BinaryLength;

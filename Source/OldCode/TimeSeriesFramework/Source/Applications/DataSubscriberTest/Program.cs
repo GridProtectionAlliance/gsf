@@ -47,6 +47,7 @@ namespace DataSubscriberTest
 
             // Initialize subscriber
             subscriber.ConnectionString = "server=localhost:6177";
+            //subscriber.OperationalModes |= OperationalModes.UseCommonSerializationFormat | OperationalModes.CompressMetadata | OperationalModes.CompressSignalIndexCache;
             subscriber.Initialize();
 
             // Start subscriber connection cycle
