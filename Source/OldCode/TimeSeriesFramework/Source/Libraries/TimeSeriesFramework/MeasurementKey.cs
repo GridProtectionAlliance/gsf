@@ -367,9 +367,11 @@ namespace TimeSeriesFramework
         public static MeasurementKey LookupBySignalID(Guid signalID)
         {
             MeasurementKey key;
-            
+
             if (signalID == Guid.Empty)
+            {
                 key = Undefined;
+            }
             else if (!s_idCache.TryGetValue(signalID, out key))
             {
                 key = new MeasurementKey();

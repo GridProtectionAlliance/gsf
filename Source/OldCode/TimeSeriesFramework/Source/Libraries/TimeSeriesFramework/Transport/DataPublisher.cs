@@ -2119,18 +2119,21 @@ namespace TimeSeriesFramework.Transport
                 }
                 else if (validServerCommand)
                 {
-                    if (command == ServerCommand.Authenticate)
+                    if (command != ServerCommand.DefineOperationalModes)
                     {
-                        // Handle authenticate
-                        HandleAuthenticationRequest(connection, buffer, index, length);
-                        return;
-                    }
-                    else if (m_requireAuthentication && !connection.Authenticated)
-                    {
-                        message = string.Format("Subscriber not authenticated - {0} request denied.", command);
-                        SendClientResponse(clientID, ServerResponse.Failed, command, message);
-                        OnStatusMessage("WARNING: Client {0} {1} command request denied - subscriber not authenticated.", connection.ConnectionID, command);
-                        return;
+                        if (command == ServerCommand.Authenticate)
+                        {
+                            // Handle authenticate
+                            HandleAuthenticationRequest(connection, buffer, index, length);
+                            return;
+                        }
+                        else if (m_requireAuthentication && !connection.Authenticated)
+                        {
+                            message = string.Format("Subscriber not authenticated - {0} request denied.", command);
+                            SendClientResponse(clientID, ServerResponse.Failed, command, message);
+                            OnStatusMessage("WARNING: Client {0} {1} command request denied - subscriber not authenticated.", connection.ConnectionID, command);
+                            return;
+                        }
                     }
 
                     switch (command)
