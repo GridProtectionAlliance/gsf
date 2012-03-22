@@ -660,25 +660,29 @@ namespace TVA.Scheduling
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+
                 foreach (CategorizedSettingsElement setting in settings)
                 {
-                    // Add the schedule if it doesn't exist or update it otherwise with data from the config file.
-                    Schedule existingSchedule = FindSchedule(setting.Name);
+                    if ((object)setting != null && !string.IsNullOrWhiteSpace(setting.Name))
+                    {
+                        // Add the schedule if it doesn't exist or update it otherwise with data from the config file.
+                        Schedule existingSchedule = FindSchedule(setting.Name);
 
-                    if ((object)existingSchedule == null)
-                    {
-                        // Schedule doesn't exist, so we'll add it.
-                        lock (m_schedules)
+                        if ((object)existingSchedule == null)
                         {
-                            m_schedules.Add(new Schedule(setting.Name, setting.Value, setting.Description));
+                            // Schedule doesn't exist, so we'll add it.
+                            lock (m_schedules)
+                            {
+                                m_schedules.Add(new Schedule(setting.Name, setting.Value.ToNonNullNorWhiteSpace("* * * * *"), setting.Description.ToNonNullString()));
+                            }
                         }
-                    }
-                    else
-                    {
-                        // Schedule exists, so we'll update it.
-                        existingSchedule.Name = setting.Name;
-                        existingSchedule.Rule = setting.Value;
-                        existingSchedule.Description = setting.Description;
+                        else
+                        {
+                            // Schedule exists, so we'll update it.
+                            existingSchedule.Name = setting.Name;
+                            existingSchedule.Rule = setting.Value.ToNonNullNorWhiteSpace("* * * * *");
+                            existingSchedule.Description = setting.Description.ToNonNullString();
+                        }
                     }
                 }
             }
