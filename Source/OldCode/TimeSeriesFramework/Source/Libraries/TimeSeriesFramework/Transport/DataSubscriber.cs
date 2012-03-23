@@ -1599,7 +1599,7 @@ namespace TimeSeriesFramework.Transport
                         // Remove any device records associated with this subscriber that no longer exist in the meta-data
                         if (uniqueIDs.Count > 0)
                         {
-                            deleteSql = string.Format("DELETE FROM Device WHERE ParentID = {0} AND UniqueID NOT IN ({1})", parentID, uniqueIDs.Select(uniqueID => guidPrefix + uniqueID.ToString() + guidSuffix).ToDelimitedString(", "));
+                            deleteSql = string.Format("DELETE FROM Device WHERE ParentID = {0} AND UniqueID NOT IN ({1})", parentID, uniqueIDs.Select(uniqueID => guidPrefix + uniqueID.ToString().ToLower() + guidSuffix).ToDelimitedString(", "));
                             connection.ExecuteNonQuery(deleteSql);
                         }
                     }
