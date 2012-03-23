@@ -6103,6 +6103,14 @@
             Unsolicited response requests that client update its runtime signal index cache with the one that follows.
             </remarks>
         </member>
+        <member name="F:TimeSeriesFramework.Transport.ServerResponse.UpdateBaseTimes">
+            <summary>
+            Update runtime base-timestamp offsets response.
+            </summary>
+            <remarks>
+            Unsolicited response requests that client update its runtime base-timestamp offsets with those that follow.
+            </remarks>
+        </member>
         <member name="F:TimeSeriesFramework.Transport.ServerResponse.UpdateCipherKeys">
             <summary>
             Update runtime cipher keys response.
@@ -6168,11 +6176,17 @@
             <summary>
             Operational modes that affect how <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/> and <see cref="T:TimeSeriesFramework.Transport.DataSubscriber"/> communicate.
             </summary>
+            <remarks>
+            Operational modes only apply to fundamental protocol control.
+            </remarks>
         </member>
         <member name="F:TimeSeriesFramework.Transport.OperationalModes.VersionMask">
             <summary>
             Mask to get version number of protocol.
             </summary>
+            <remarks>
+            Version number is currently set to 0.
+            </remarks>
         </member>
         <member name="F:TimeSeriesFramework.Transport.OperationalModes.CompressionModeMask">
             <summary>
@@ -6187,24 +6201,36 @@
             <summary>
             Mask to get character encoding used when exchanging messages between publisher and subscriber.
             </summary>
+            <remarks>
+            00 = UTF-16 little endian<br/>
+            01 = UTF-16 big endian<br/>
+            10 = UTF-8<br/>
+            11 = ANSI
+            </remarks>
         </member>
         <member name="F:TimeSeriesFramework.Transport.OperationalModes.UseCommonSerializationFormat">
             <summary>
             Determines type of serialization to use when exchanging signal index cache and metadata.
             </summary>
             <remarks>
-            Bit set = common serialization format, bit set = .NET serialization format
+            Bit set = common serialization format, bit clear = .NET serialization format
             </remarks>
         </member>
         <member name="F:TimeSeriesFramework.Transport.OperationalModes.CompressSignalIndexCache">
             <summary>
             Determines whether the signal index cache is compressed when exchanging between publisher and subscriber.
             </summary>
+            <remarks>
+            Bit set = compress, bit clear = no compression
+            </remarks>
         </member>
         <member name="F:TimeSeriesFramework.Transport.OperationalModes.CompressMetadata">
             <summary>
             Determines whether is compressed when exchanging between publisher and subscriber.
             </summary>
+            <remarks>
+            Bit set = compress, bit clear = no compression
+            </remarks>
         </member>
         <member name="F:TimeSeriesFramework.Transport.OperationalModes.NoFlags">
             <summary>
@@ -6213,7 +6239,8 @@
             <remarks>
             This would represent protocol version 0,
             UTF-16 little endian character encoding,
-            .NET serialization, and no compression.
+            .NET serialization, millisecond resolution,
+            and no compression.
             </remarks>
         </member>
         <member name="T:TimeSeriesFramework.Transport.OperationalEncoding">
@@ -6264,6 +6291,11 @@
         <member name="F:TimeSeriesFramework.Transport.DataPublisher.DefaultAllowSynchronizedSubscription">
             <summary>
             Default value for <see cref="P:TimeSeriesFramework.Transport.DataPublisher.AllowSynchronizedSubscription"/>.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.DataPublisher.DefaultUseBaseTimeOffsets">
+            <summary>
+            Default value for <see cref="P:TimeSeriesFramework.Transport.DataPublisher.UseBaseTimeOffsets"/>.
             </summary>
         </member>
         <member name="F:TimeSeriesFramework.Transport.DataPublisher.DefaultCipherKeyRotationPeriod">
@@ -6497,6 +6529,11 @@
         <member name="P:TimeSeriesFramework.Transport.DataPublisher.AllowSynchronizedSubscription">
             <summary>
             Gets or sets flag that indicates if this publisher will allow synchronized subscriptions.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.UseBaseTimeOffsets">
+            <summary>
+            Gets or sets flag that determines whether to use base time offsets to decrease the size of compact measurements.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.DataPublisher.CipherKeyRotationPeriod">
@@ -6928,6 +6965,11 @@
         <member name="P:TimeSeriesFramework.Transport.DataSubscriber.AutoConnect">
             <summary>
             Gets or sets flag that determines if <see cref="T:TimeSeriesFramework.Transport.DataSubscriber"/> should attempt to autoconnection to <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/> using defined connection settings.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataSubscriber.UseMillisecondResolution">
+            <summary>
+            Gets or sets flag that informs publisher if base time-offsets can use millisecond resolution to conserve bandwidth.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.DataSubscriber.Authenticated">
@@ -7714,9 +7756,9 @@
             Discarded bit was set.
             </summary>
         </member>
-        <member name="F:TimeSeriesFramework.Transport.CompactMeasurementStateFlags.UserFlag">
+        <member name="F:TimeSeriesFramework.Transport.CompactMeasurementStateFlags.BaseTimeOffset">
             <summary>
-            A user flag was set.
+            Compact measurement timestamp was serialized using base time offset when set.
             </summary>
         </member>
         <member name="F:TimeSeriesFramework.Transport.CompactMeasurementStateFlags.TimeIndex">
@@ -7764,15 +7806,17 @@
             Fixed byte length of a <see cref="T:TimeSeriesFramework.Transport.CompactMeasurement"/>.
             </summary>
         </member>
-        <member name="M:TimeSeriesFramework.Transport.CompactMeasurement.#ctor(TimeSeriesFramework.Transport.SignalIndexCache,System.Boolean,System.Int64[])">
+        <member name="M:TimeSeriesFramework.Transport.CompactMeasurement.#ctor(TimeSeriesFramework.Transport.SignalIndexCache,System.Boolean,System.Int64[],System.Int32,System.Boolean)">
             <summary>
             Creates a new <see cref="T:TimeSeriesFramework.Transport.CompactMeasurement"/>.
             </summary>
             <param name="signalIndexCache">Signal index cache used to serialize or deserialize runtime information.</param>
             <param name="includeTime">Set to <c>true</c> to include time in serialized packet; otherwise <c>false</c>.</param>
             <param name="baseTimeOffsets">Base time offset array - set to <c>null</c> to use full fidelity measurement time.</param>
+            <param name="timeIndex">Time index to use for base offset.</param>
+            <param name="useMillisecondResolution">Flag that determines if millisecond resolution is in use for this serialization.</param>
         </member>
-        <member name="M:TimeSeriesFramework.Transport.CompactMeasurement.#ctor(TimeSeriesFramework.IMeasurement,TimeSeriesFramework.Transport.SignalIndexCache,System.Boolean,System.Int64[],System.Int32)">
+        <member name="M:TimeSeriesFramework.Transport.CompactMeasurement.#ctor(TimeSeriesFramework.IMeasurement,TimeSeriesFramework.Transport.SignalIndexCache,System.Boolean,System.Int64[],System.Int32,System.Boolean)">
             <summary>
             Creates a new <see cref="T:TimeSeriesFramework.Transport.CompactMeasurement"/> from an existing <see cref="T:TimeSeriesFramework.IMeasurement"/> value.
             </summary>
@@ -7781,6 +7825,7 @@
             <param name="includeTime">Set to <c>true</c> to include time in serialized packet; otherwise <c>false</c>.</param>
             <param name="baseTimeOffsets">Base time offset array - set to <c>null</c> to use full fidelity measurement time.</param>
             <param name="timeIndex">Time index to use for base offset.</param>
+            <param name="useMillisecondResolution">Flag that determines if millisecond resolution is in use for this serialization.</param>
         </member>
         <member name="M:TimeSeriesFramework.Transport.CompactMeasurement.ParseBinaryImage(System.Byte[],System.Int32,System.Int32)">
             <summary>
@@ -7885,6 +7930,11 @@
         <member name="P:TimeSeriesFramework.Transport.IClientSubscription.UseCompactMeasurementFormat">
             <summary>
             Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.IClientSubscription.TimestampSize">
+            <summary>
+            Gets size of timestamp in bytes.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.IClientSubscription.HostName">
@@ -8024,6 +8074,11 @@
             Starts the <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/> or restarts it if it is already running.
             </summary>
         </member>
+        <member name="M:TimeSeriesFramework.Transport.SynchronizedClientSubscription.Stop">
+            <summary>
+            Stops the <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/>.
+            </summary>
+        </member>
         <member name="M:TimeSeriesFramework.Transport.SynchronizedClientSubscription.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
             <summary>
             Queues a collection of measurements for processing.
@@ -8069,6 +8124,11 @@
         <member name="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.UseCompactMeasurementFormat">
             <summary>
             Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.TimestampSize">
+            <summary>
+            Gets size of timestamp in bytes.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.HostName">
@@ -8220,6 +8280,11 @@
         <member name="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.UseCompactMeasurementFormat">
             <summary>
             Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="T:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.TimestampSize">
+            <summary>
+            Gets size of timestamp in bytes.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.HostName">
