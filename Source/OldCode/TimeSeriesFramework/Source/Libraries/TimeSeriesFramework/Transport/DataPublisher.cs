@@ -1680,7 +1680,7 @@ namespace TimeSeriesFramework.Transport
                                 if (settings.TryGetValue("compression", out setting))
                                     compressionEnabled = setting.ParseBoolean();
 
-                                if (settings.TryGetValue("port", out setting))
+                                if (settings.TryGetValue("port", out setting) || settings.TryGetValue("localport", out setting))
                                 {
                                     connection.DataChannel = new UdpServer(string.Format("Port=-1; Clients={0}:{1}; interface={2}", connection.IPAddress, int.Parse(setting), networkInterface));
 
