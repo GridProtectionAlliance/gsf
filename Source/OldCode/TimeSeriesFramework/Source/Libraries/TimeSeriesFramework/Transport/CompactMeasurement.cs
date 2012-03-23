@@ -64,9 +64,9 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         DiscardedValue = (byte)Bits.Bit05,
         /// <summary>
-        /// A user flag was set.
+        /// Compact measurement timestamp was serialized using base time offset when set.
         /// </summary>
-        UserFlag = (byte)Bits.Bit06,
+        BaseTimeOffset = (byte)Bits.Bit06,
         /// <summary>
         /// Use even time index when set; odd time index when not set.
         /// </summary>
@@ -86,7 +86,6 @@ namespace TimeSeriesFramework.Transport
         private const MeasurementStateFlags DataQualityMask = MeasurementStateFlags.BadData | MeasurementStateFlags.SuspectData | MeasurementStateFlags.FlatlineAlarm | MeasurementStateFlags.ComparisonAlarm | MeasurementStateFlags.ROCAlarm | MeasurementStateFlags.ReceivedAsBad | MeasurementStateFlags.CalculationError | MeasurementStateFlags.CalculationWarning | MeasurementStateFlags.ReservedQualityFlag;
         private const MeasurementStateFlags TimeQualityMask = MeasurementStateFlags.BadTime | MeasurementStateFlags.SuspectTime | MeasurementStateFlags.LateTimeAlarm | MeasurementStateFlags.FutureTimeAlarm | MeasurementStateFlags.UpSampled | MeasurementStateFlags.DownSampled | MeasurementStateFlags.ReservedTimeFlag;
         private const MeasurementStateFlags SystemIssueMask = MeasurementStateFlags.SystemError | MeasurementStateFlags.SystemWarning | MeasurementStateFlags.MeasurementError;
-        private const MeasurementStateFlags UserFlagMask = MeasurementStateFlags.UserDefinedFlag1 | MeasurementStateFlags.UserDefinedFlag2 | MeasurementStateFlags.UserDefinedFlag3 | MeasurementStateFlags.UserDefinedFlag4 | MeasurementStateFlags.UserDefinedFlag5;
         private const MeasurementStateFlags CalculatedValueMask = MeasurementStateFlags.CalcuatedValue;
         private const MeasurementStateFlags DiscardedValueMask = MeasurementStateFlags.DiscardedValue;
 
@@ -110,9 +109,6 @@ namespace TimeSeriesFramework.Transport
 
             if ((stateFlags & SystemIssueMask) > 0)
                 mappedStateFlags |= CompactMeasurementStateFlags.SystemIssue;
-
-            if ((stateFlags & UserFlagMask) > 0)
-                mappedStateFlags |= CompactMeasurementStateFlags.UserFlag;
 
             if ((stateFlags & CalculatedValueMask) > 0)
                 mappedStateFlags |= CompactMeasurementStateFlags.CalculatedValue;
@@ -143,9 +139,6 @@ namespace TimeSeriesFramework.Transport
 
             if ((stateFlags & CompactMeasurementStateFlags.SystemIssue) > 0)
                 mappedStateFlags |= SystemIssueMask;
-
-            if ((stateFlags & CompactMeasurementStateFlags.UserFlag) > 0)
-                mappedStateFlags |= UserFlagMask;
 
             if ((stateFlags & CompactMeasurementStateFlags.CalculatedValue) > 0)
                 mappedStateFlags |= CalculatedValueMask;
@@ -184,6 +177,8 @@ namespace TimeSeriesFramework.Transport
         private bool m_includeTime;
         private long[] m_baseTimeOffsets;
         private int m_timeIndex;
+        private bool m_useMillisecondResolution;
+        private bool m_usingBaseTimeOffset;
 
         #endregion
 
@@ -195,7 +190,9 @@ namespace TimeSeriesFramework.Transport
         /// <param name="signalIndexCache">Signal index cache used to serialize or deserialize runtime information.</param>
         /// <param name="includeTime">Set to <c>true</c> to include time in serialized packet; otherwise <c>false</c>.</param>
         /// <param name="baseTimeOffsets">Base time offset array - set to <c>null</c> to use full fidelity measurement time.</param>
-        public CompactMeasurement(SignalIndexCache signalIndexCache, bool includeTime = true, long[] baseTimeOffsets = null)
+        /// <param name="timeIndex">Time index to use for base offset.</param>
+        /// <param name="useMillisecondResolution">Flag that determines if millisecond resolution is in use for this serialization.</param>
+        public CompactMeasurement(SignalIndexCache signalIndexCache, bool includeTime = true, long[] baseTimeOffsets = null, int timeIndex = 0, bool useMillisecondResolution = false)
         {
             m_signalIndexCache = signalIndexCache;
             m_includeTime = includeTime;
@@ -204,6 +201,9 @@ namespace TimeSeriesFramework.Transport
                 m_baseTimeOffsets = s_emptyBaseTimeOffsets;
             else
                 m_baseTimeOffsets = baseTimeOffsets;
+
+            m_timeIndex = timeIndex;
+            m_useMillisecondResolution = useMillisecondResolution;
         }
 
         /// <summary>
@@ -214,7 +214,8 @@ namespace TimeSeriesFramework.Transport
         /// <param name="includeTime">Set to <c>true</c> to include time in serialized packet; otherwise <c>false</c>.</param>
         /// <param name="baseTimeOffsets">Base time offset array - set to <c>null</c> to use full fidelity measurement time.</param>
         /// <param name="timeIndex">Time index to use for base offset.</param>
-        public CompactMeasurement(IMeasurement measurement, SignalIndexCache signalIndexCache, bool includeTime = true, long[] baseTimeOffsets = null, int timeIndex = 0)
+        /// <param name="useMillisecondResolution">Flag that determines if millisecond resolution is in use for this serialization.</param>
+        public CompactMeasurement(IMeasurement measurement, SignalIndexCache signalIndexCache, bool includeTime = true, long[] baseTimeOffsets = null, int timeIndex = 0, bool useMillisecondResolution = false)
         {
             ID = measurement.ID;
             Key = measurement.Key;
@@ -233,6 +234,7 @@ namespace TimeSeriesFramework.Transport
                 m_baseTimeOffsets = baseTimeOffsets;
 
             m_timeIndex = timeIndex;
+            m_useMillisecondResolution = useMillisecondResolution;
         }
 
         #endregion
@@ -257,7 +259,40 @@ namespace TimeSeriesFramework.Transport
         {
             get
             {
-                return FixedLength + (m_includeTime ? (m_baseTimeOffsets[m_timeIndex] > 0 ? 2 : 8) : 0);
+                int length = FixedLength;
+
+                if (m_includeTime)
+                {
+                    long baseTimeOffset = m_baseTimeOffsets[m_timeIndex];
+
+                    if (baseTimeOffset > 0)
+                    {
+                        // See if timestamp will fit within space allowed for active base offset. We cache result so that post call
+                        // to binary length will speed other subsequent parsing operations by not having to reevaluate.
+                        long difference = (long)Timestamp - m_baseTimeOffsets[m_timeIndex];
+                        m_usingBaseTimeOffset = m_useMillisecondResolution ? difference / Ticks.PerMillisecond < ushort.MaxValue : difference < uint.MaxValue;
+
+                        if (m_usingBaseTimeOffset)
+                        {
+                            if (m_useMillisecondResolution)
+                                length += 2;    // Use two bytes for millisecond resolution timestamp with valid offset
+                            else
+                                length += 4;    // Use four bytes for tick resolution timestamp with valid offset
+                        }
+                        else
+                        {
+                            // Use eight bytes for full fidelity time
+                            length += 8;
+                        }
+                    }
+                    else
+                    {
+                        // Use eight bytes for full fidelity time
+                        length += 8;
+                    }
+                }
+
+                return length;
             }
         }
 
@@ -289,9 +324,9 @@ namespace TimeSeriesFramework.Transport
             CompactMeasurementStateFlags flags = (CompactMeasurementStateFlags)buffer[startIndex];
             StateFlags = flags.MapToFullFlags();
             m_timeIndex = (byte)(flags & CompactMeasurementStateFlags.TimeIndex) > 0 ? 1 : 0;
+            m_usingBaseTimeOffset = (flags & CompactMeasurementStateFlags.BaseTimeOffset) > 0;
 
             int index = startIndex + 1;
-            long baseTimeOffset = m_baseTimeOffsets[m_timeIndex];
 
             // Decode runtime ID
             ushort id = EndianOrder.BigEndian.ToUInt16(buffer, index);
@@ -314,15 +349,24 @@ namespace TimeSeriesFramework.Transport
 
             if (m_includeTime)
             {
-                if (baseTimeOffset > 0)
+                if (m_usingBaseTimeOffset)
                 {
-                    // Decode millisecond offset timestamp
-                    Timestamp = baseTimeOffset + EndianOrder.BigEndian.ToUInt16(buffer, index) * Ticks.PerMillisecond;
-                    index += 2;
+                    if (m_useMillisecondResolution)
+                    {
+                        // Decode 2-byte millisecond offset timestamp
+                        Timestamp = m_baseTimeOffsets[m_timeIndex] + EndianOrder.BigEndian.ToUInt16(buffer, index) * Ticks.PerMillisecond;
+                        index += 2;
+                    }
+                    else
+                    {
+                        // Decode 4-byte tick offset timestamp
+                        Timestamp = m_baseTimeOffsets[m_timeIndex] + EndianOrder.BigEndian.ToUInt32(buffer, index);
+                        index += 2;
+                    }
                 }
                 else
                 {
-                    // Decode full fidelity timestamp
+                    // Decode 8-byte full fidelity timestamp
                     Timestamp = EndianOrder.BigEndian.ToInt64(buffer, index);
                     index += 8;
                 }
@@ -358,12 +402,16 @@ namespace TimeSeriesFramework.Transport
         /// </remarks>
         public int GenerateBinaryImage(byte[] buffer, int startIndex)
         {
+            // Call to binary length property caches result of m_usingBaseTimeOffset
             int length = BinaryLength;
 
             buffer.ValidateParameters(startIndex, length);
 
-            // Encode flags
-            CompactMeasurementStateFlags flags = StateFlags.MapToCompactFlags() | (m_timeIndex == 0 ? CompactMeasurementStateFlags.NoFlags : CompactMeasurementStateFlags.TimeIndex);
+            // Encode compact state flags
+            CompactMeasurementStateFlags flags =
+                StateFlags.MapToCompactFlags() |
+                (m_timeIndex == 0 ? CompactMeasurementStateFlags.NoFlags : CompactMeasurementStateFlags.TimeIndex) |
+                (m_usingBaseTimeOffset ? CompactMeasurementStateFlags.BaseTimeOffset : CompactMeasurementStateFlags.NoFlags);
 
             // Added flags to beginning of buffer
             buffer[startIndex++] = (byte)flags;
@@ -379,19 +427,23 @@ namespace TimeSeriesFramework.Transport
 
             if (m_includeTime)
             {
-                long baseTimeOffset = m_baseTimeOffsets[m_timeIndex];
-
-                if (baseTimeOffset > 0)
+                if (m_usingBaseTimeOffset)
                 {
-                    // Encode millisecond offset timestamp
-                    EndianOrder.BigEndian.CopyBytes((ushort)(Timestamp - baseTimeOffset).ToMilliseconds(), buffer, startIndex);
-                    //startIndex += 2;
+                    if (m_useMillisecondResolution)
+                    {
+                        // Encode 2-byte millisecond offset timestamp
+                        EndianOrder.BigEndian.CopyBytes((ushort)(Timestamp - m_baseTimeOffsets[m_timeIndex]).ToMilliseconds(), buffer, startIndex);
+                    }
+                    else
+                    {
+                        // Encode 4-byte ticks offset timestamp
+                        EndianOrder.BigEndian.CopyBytes((uint)((long)Timestamp - m_baseTimeOffsets[m_timeIndex]), buffer, startIndex);
+                    }
                 }
                 else
                 {
-                    // Encode full fidelity timestamp
+                    // Encode 8-byte full fidelity timestamp
                     EndianOrder.BigEndian.CopyBytes((long)Timestamp, buffer, startIndex);
-                    //startIndex += 8;
                 }
             }
 

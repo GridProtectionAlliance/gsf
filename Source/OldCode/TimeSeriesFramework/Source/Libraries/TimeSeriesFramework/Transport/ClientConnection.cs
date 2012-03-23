@@ -669,7 +669,31 @@ namespace TimeSeriesFramework.Transport
                     response.Write(EndianOrder.BigEndian.GetBytes(m_cipherIndex), 0, 4);
 
                     // Serialize new keys
-                    byte[] bytes = Serialization.Serialize(m_keyIVs, TVA.SerializationFormat.Binary);
+                    MemoryStream buffer = new MemoryStream();
+                    byte[] bytes, bufferLen;
+
+                    // Write even key
+                    bufferLen = EndianOrder.BigEndian.GetBytes(m_keyIVs[EvenKey][KeyIndex].Length);
+                    buffer.Write(bufferLen, 0, bufferLen.Length);
+                    buffer.Write(m_keyIVs[EvenKey][KeyIndex], 0, m_keyIVs[EvenKey][KeyIndex].Length);
+
+                    // Write even initialization vector
+                    bufferLen = EndianOrder.BigEndian.GetBytes(m_keyIVs[EvenKey][IVIndex].Length);
+                    buffer.Write(bufferLen, 0, bufferLen.Length);
+                    buffer.Write(m_keyIVs[EvenKey][IVIndex], 0, m_keyIVs[EvenKey][IVIndex].Length);
+
+                    // Write odd key
+                    bufferLen = EndianOrder.BigEndian.GetBytes(m_keyIVs[OddKey][KeyIndex].Length);
+                    buffer.Write(bufferLen, 0, bufferLen.Length);
+                    buffer.Write(m_keyIVs[EvenKey][KeyIndex], 0, m_keyIVs[OddKey][KeyIndex].Length);
+
+                    // Write odd initialization vector
+                    bufferLen = EndianOrder.BigEndian.GetBytes(m_keyIVs[OddKey][IVIndex].Length);
+                    buffer.Write(bufferLen, 0, bufferLen.Length);
+                    buffer.Write(m_keyIVs[EvenKey][IVIndex], 0, m_keyIVs[OddKey][IVIndex].Length);
+
+                    // Get bytes from serialized buffer
+                    bytes = buffer.ToArray();
 
                     // Encrypt keys using private keys known only to current client and server
                     if (m_authenticated && !string.IsNullOrWhiteSpace(m_sharedSecret))

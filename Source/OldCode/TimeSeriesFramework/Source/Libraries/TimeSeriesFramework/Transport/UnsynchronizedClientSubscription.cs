@@ -28,7 +28,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using TimeSeriesFramework.Adapters;
 using TVA;
 using TVA.Parsing;
@@ -472,7 +471,7 @@ namespace TimeSeriesFramework.Transport
 
                             // Serialize the current measurement.
                             if (useCompactMeasurementFormat)
-                                binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, m_includeTime);
+                                binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, m_includeTime /*, m_baseTimeOffsets, m_timeIndex, m_useMillisecondResolution */);
                             else
                                 binaryMeasurement = new SerializableMeasurement(measurement, m_parent.ClientConnections[m_clientID].Encoding);
 

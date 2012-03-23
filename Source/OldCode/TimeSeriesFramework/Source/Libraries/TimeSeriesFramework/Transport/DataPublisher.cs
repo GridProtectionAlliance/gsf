@@ -175,6 +175,13 @@ namespace TimeSeriesFramework.Transport
         /// </remarks>
         UpdateSignalIndexCache = 0x83,
         /// <summary>
+        /// Update runtime base-timestamp offsets response.
+        /// </summary>
+        /// <remarks>
+        /// Unsolicited response requests that client update its runtime base-timestamp offsets with those that follow.
+        /// </remarks>
+        UpdateBaseTimes = 0x84,
+        /// <summary>
         /// Update runtime cipher keys response.
         /// </summary>
         /// <remarks>

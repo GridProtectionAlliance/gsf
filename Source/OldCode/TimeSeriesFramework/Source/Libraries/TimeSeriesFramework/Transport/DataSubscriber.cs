@@ -116,6 +116,12 @@ namespace TimeSeriesFramework.Transport
             #endregion
         }
 
+        // Constants
+        private const int EvenKey = 0;      // Even key/IV index
+        private const int OddKey = 1;       // Odd key/IV index
+        private const int KeyIndex = 0;     // Index of cipher key component in keyIV array
+        private const int IVIndex = 1;      // Index of initialization vector component in keyIV array
+
         // Events
 
         /// <summary>
@@ -161,6 +167,8 @@ namespace TimeSeriesFramework.Transport
         private long m_dataChannelConnectionAttempts;
         private volatile SignalIndexCache m_remoteSignalIndexCache;
         private volatile SignalIndexCache m_signalIndexCache;
+        private volatile long[] m_baseTimeOffsets;
+        private volatile int m_timeIndex;
         private volatile byte[][][] m_keyIVs;
         private volatile int m_cipherIndex;
         private volatile bool m_authenticated;
@@ -173,6 +181,7 @@ namespace TimeSeriesFramework.Transport
         private List<ServerCommand> m_requests;
         private bool m_synchronizedSubscription;
         private bool m_requireAuthentication;
+        private bool m_useMillisecondResolution;
         private bool m_autoConnect;
         private string m_sharedSecret;
         private string m_authenticationID;
@@ -233,6 +242,21 @@ namespace TimeSeriesFramework.Transport
             set
             {
                 m_autoConnect = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that informs publisher if base time-offsets can use millisecond resolution to conserve bandwidth.
+        /// </summary>
+        public bool UseMillisecondResolution
+        {
+            get
+            {
+                return m_useMillisecondResolution;
+            }
+            set
+            {
+                m_useMillisecondResolution = value;
             }
         }
 
@@ -563,6 +587,10 @@ namespace TimeSeriesFramework.Transport
             if (settings.TryGetValue("operationalModes", out setting))
                 m_operationalModes = (OperationalModes)uint.Parse(setting);
 
+            // Check if user wants to request that publisher use millisecond resolution to conserve bandwidth
+            if (settings.TryGetValue("useMillisecondResolution", out setting))
+                m_useMillisecondResolution = setting.ParseBoolean();
+
             // Define auto connect setting
             if (settings.TryGetValue("autoConnect", out setting))
                 m_autoConnect = setting.ParseBoolean();
@@ -788,6 +816,7 @@ namespace TimeSeriesFramework.Transport
             connectionString.AppendFormat("stopTimeConstraint={0}; ", stopTime.ToNonNullString());
             connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
             connectionString.AppendFormat("processingInterval={0}; ", processingInterval);
+            connectionString.AppendFormat("useMillisecondResolution={0}; ", m_useMillisecondResolution);
             connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
 
             if (!string.IsNullOrWhiteSpace(waitHandleNames))
@@ -925,6 +954,7 @@ namespace TimeSeriesFramework.Transport
             connectionString.AppendFormat("stopTimeConstraint={0}; ", stopTime.ToNonNullString());
             connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
             connectionString.AppendFormat("processingInterval={0}; ", processingInterval);
+            connectionString.AppendFormat("useMillisecondResolution={0}; ", m_useMillisecondResolution);
             connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
 
             if (!string.IsNullOrWhiteSpace(waitHandleNames))
@@ -1027,6 +1057,7 @@ namespace TimeSeriesFramework.Transport
             connectionString.AppendFormat("stopTimeConstraint={0}; ", stopTime.ToNonNullString());
             connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
             connectionString.AppendFormat("processingInterval={0}; ", processingInterval);
+            connectionString.AppendFormat("useMillisecondResolution={0}; ", m_useMillisecondResolution);
             connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
 
             if (!string.IsNullOrWhiteSpace(waitHandleNames))
@@ -1402,7 +1433,7 @@ namespace TimeSeriesFramework.Transport
                                 if (compactMeasurementFormat)
                                 {
                                     // Deserialize compact measurement format
-                                    CompactMeasurement measurement = new CompactMeasurement(m_signalIndexCache, m_includeTime);
+                                    CompactMeasurement measurement = new CompactMeasurement(m_signalIndexCache, m_includeTime, m_baseTimeOffsets, m_timeIndex, m_useMillisecondResolution);
                                     responseIndex += measurement.ParseBinaryImage(buffer, responseIndex, responseLength - responseIndex);
 
                                     // Apply timestamp from frame if not included in transmission
@@ -1439,6 +1470,13 @@ namespace TimeSeriesFramework.Transport
                             m_remoteSignalIndexCache = DeserializeSignalIndexCache(buffer.BlockCopy(responseIndex, responseLength));
                             m_signalIndexCache = new SignalIndexCache(DataSource, m_remoteSignalIndexCache);
                             break;
+                        case ServerResponse.UpdateBaseTimes:
+                            // Get active time index
+                            m_timeIndex = EndianOrder.BigEndian.ToInt32(buffer, responseIndex);
+
+                            // Deserialize new base time offsets
+                            m_baseTimeOffsets = new long[] { EndianOrder.BigEndian.ToInt64(buffer, responseIndex + 2), EndianOrder.BigEndian.ToInt64(buffer, responseIndex + 10) };
+                            break;
                         case ServerResponse.UpdateCipherKeys:
                             // Get active cipher index
                             m_cipherIndex = EndianOrder.BigEndian.ToInt32(buffer, responseIndex);
@@ -1451,7 +1489,51 @@ namespace TimeSeriesFramework.Transport
                                 bytes = bytes.Decrypt(m_sharedSecret, CipherStrength.Aes256);
 
                             // Deserialize new cipher keys
-                            m_keyIVs = Serialization.Deserialize<byte[][][]>(bytes, TVA.SerializationFormat.Binary);
+                            byte[][][] keyIVs = new byte[2][][];
+                            keyIVs[EvenKey] = new byte[2][];
+                            keyIVs[OddKey] = new byte[2][];
+
+                            int index = 0;
+                            int bufferLen;
+
+                            // Read even key size
+                            bufferLen = EndianOrder.BigEndian.ToInt32(bytes, index);
+                            index += 4;
+
+                            // Read even key
+                            keyIVs[EvenKey][KeyIndex] = new byte[bufferLen];
+                            Buffer.BlockCopy(bytes, index, keyIVs[EvenKey][KeyIndex], 0, bufferLen);
+                            index += bufferLen;
+
+                            // Read even initialization vector size
+                            bufferLen = EndianOrder.BigEndian.ToInt32(bytes, index);
+                            index += 4;
+
+                            // Read even initialization vector
+                            keyIVs[EvenKey][IVIndex] = new byte[bufferLen];
+                            Buffer.BlockCopy(bytes, index, keyIVs[EvenKey][IVIndex], 0, bufferLen);
+                            index += bufferLen;
+
+                            // Read odd key size
+                            bufferLen = EndianOrder.BigEndian.ToInt32(bytes, index);
+                            index += 4;
+
+                            // Read odd key
+                            keyIVs[OddKey][KeyIndex] = new byte[bufferLen];
+                            Buffer.BlockCopy(bytes, index, keyIVs[OddKey][KeyIndex], 0, bufferLen);
+                            index += bufferLen;
+
+                            // Read odd initialization vector size
+                            bufferLen = EndianOrder.BigEndian.ToInt32(bytes, index);
+                            index += 4;
+
+                            // Read odd initialization vector
+                            keyIVs[OddKey][IVIndex] = new byte[bufferLen];
+                            Buffer.BlockCopy(bytes, index, keyIVs[OddKey][IVIndex], 0, bufferLen);
+                            index += bufferLen;
+
+                            // Exchange keys
+                            m_keyIVs = keyIVs;
 
                             OnStatusMessage("Successfully established new cipher keys for data packet transmissions.");
                             break;
@@ -1777,15 +1859,15 @@ namespace TimeSeriesFramework.Transport
                 }
             }
 
-            if (!useCommonSerializationFormat)
-            {
-                deserializedCache = Serialization.Deserialize<SignalIndexCache>(buffer, TVA.SerializationFormat.Binary);
-            }
-            else
+            if (useCommonSerializationFormat)
             {
                 deserializedCache = new SignalIndexCache();
                 deserializedCache.Encoding = m_encoding;
                 deserializedCache.ParseBinaryImage(buffer, 0, buffer.Length);
+            }
+            else
+            {
+                deserializedCache = Serialization.Deserialize<SignalIndexCache>(buffer, TVA.SerializationFormat.Binary);
             }
 
             return deserializedCache;
@@ -1823,11 +1905,7 @@ namespace TimeSeriesFramework.Transport
                 }
             }
 
-            if (!useCommonSerializationFormat)
-            {
-                deserializedMetadata = Serialization.Deserialize<DataSet>(buffer, TVA.SerializationFormat.Binary);
-            }
-            else
+            if (useCommonSerializationFormat)
             {
                 try
                 {
@@ -1847,6 +1925,10 @@ namespace TimeSeriesFramework.Transport
                     if ((object)encodedData != null)
                         encodedData.Close();
                 }
+            }
+            else
+            {
+                deserializedMetadata = Serialization.Deserialize<DataSet>(buffer, TVA.SerializationFormat.Binary);
             }
 
             return deserializedMetadata;

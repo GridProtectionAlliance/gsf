@@ -359,7 +359,7 @@ namespace TimeSeriesFramework.Transport
 
                     // Serialize the current measurement.
                     if (useCompactMeasurementFormat)
-                        binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, false);
+                        binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, false /*, m_baseTimeOffsets, m_timeIndex, m_useMillisecondResolution */);
                     else
                         binaryMeasurement = new SerializableMeasurement(measurement, m_parent.ClientConnections[m_clientID].Encoding);
 
