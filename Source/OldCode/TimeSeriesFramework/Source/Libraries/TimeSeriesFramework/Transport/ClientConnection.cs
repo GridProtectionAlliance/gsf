@@ -644,7 +644,7 @@ namespace TimeSeriesFramework.Transport
                 m_keyIVs[m_cipherIndex][IVIndex] = symmetricAlgorithm.IV;
 
                 // Set run-time to the other key set
-                m_cipherIndex = (m_cipherIndex == EvenKey ? OddKey : EvenKey);
+                m_cipherIndex ^= 1;
             }
 
             m_lastCipherKeyUpdateTime = DateTime.UtcNow.Ticks;

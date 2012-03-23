@@ -64,6 +64,11 @@ namespace TimeSeriesFramework.Transport
         private bool m_useCompactMeasurementFormat;
         private long m_lastPublishTime;
         private bool m_includeTime;
+        private bool m_useMillisecondResolution;
+        private volatile long[] m_baseTimeOffsets;
+        private volatile int m_timeIndex;
+        private System.Timers.Timer m_baseTimeRotationTimer;
+        private volatile bool m_initializedBaseTimeOffsets;
         private Thread m_processThread;
         private SemaphoreSlim m_processSemaphore;
         private ConcurrentQueue<IEnumerable<IMeasurement>> m_processQueue;
@@ -144,6 +149,26 @@ namespace TimeSeriesFramework.Transport
             set
             {
                 m_useCompactMeasurementFormat = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets size of timestamp in bytes.
+        /// </summary>
+        public int TimestampSize
+        {
+            get
+            {
+                if (!m_useCompactMeasurementFormat)
+                    return 8;
+                else if (!m_includeTime)
+                    return 0;
+                else if (!m_parent.UseBaseTimeOffsets)
+                    return 8;
+                else if (!m_useMillisecondResolution)
+                    return 4;
+                else
+                    return 2;
             }
         }
 
@@ -275,6 +300,13 @@ namespace TimeSeriesFramework.Transport
                         // Remove reference to parent
                         m_parent = null;
 
+                        // Dispose base time rotation timer
+                        if ((object)m_baseTimeRotationTimer != null)
+                        {
+                            m_baseTimeRotationTimer.Dispose();
+                            m_baseTimeRotationTimer = null;
+                        }
+
                         // Dispose Iaon session
                         this.DisposeTemporalSession(ref m_iaonSession);
                     }
@@ -301,6 +333,19 @@ namespace TimeSeriesFramework.Transport
             else
                 m_includeTime = true;
 
+            if (Settings.TryGetValue("useMillisecondResolution", out setting))
+                m_useMillisecondResolution = setting.ParseBoolean();
+            else
+                m_useMillisecondResolution = false;
+
+            if (m_parent.UseBaseTimeOffsets)
+            {
+                m_baseTimeRotationTimer = new System.Timers.Timer();
+                m_baseTimeRotationTimer.Interval = m_useMillisecondResolution ? 60000 : 420000;
+                m_baseTimeRotationTimer.AutoReset = true;
+                m_baseTimeRotationTimer.Elapsed += BaseTimeRotationTimer_Elapsed;
+            }
+
             // Handle temporal session intialization
             if (this.TemporalConstraintIsDefined())
                 m_iaonSession = this.CreateTemporalSession();
@@ -320,6 +365,9 @@ namespace TimeSeriesFramework.Transport
             m_processSemaphore = new SemaphoreSlim(0, int.MaxValue);
             m_processQueue = new ConcurrentQueue<IEnumerable<IMeasurement>>();
             m_processThread.Start();
+
+            if ((object)m_baseTimeRotationTimer != null)
+                m_baseTimeRotationTimer.Start();
         }
 
         /// <summary>
@@ -328,6 +376,12 @@ namespace TimeSeriesFramework.Transport
         public override void Stop()
         {
             base.Stop();
+
+            if ((object)m_baseTimeRotationTimer != null)
+            {
+                m_baseTimeRotationTimer.Stop();
+                m_baseTimeOffsets = null;
+            }
 
             if ((object)m_processThread != null)
             {
@@ -340,6 +394,8 @@ namespace TimeSeriesFramework.Transport
                 m_processSemaphore.Dispose();
                 m_processSemaphore = null;
             }
+
+            m_initializedBaseTimeOffsets = false;
         }
 
         /// <summary>
@@ -436,14 +492,18 @@ namespace TimeSeriesFramework.Transport
 
                         // Publish latest data values...
                         m_processQueue.Enqueue(currentMeasurements);
-                        m_processSemaphore.Release();
+
+                        if ((object)m_processSemaphore != null)
+                            m_processSemaphore.Release();
                     }
                 }
                 else
                 {
                     // Publish unsynchronized on data receipt otherwise...
                     m_processQueue.Enqueue(measurements);
-                    m_processSemaphore.Release();
+
+                    if ((object)m_processSemaphore != null)
+                        m_processSemaphore.Release();
                 }
             }
         }
@@ -464,6 +524,12 @@ namespace TimeSeriesFramework.Transport
                         // Wait for any external events, if needed
                         WaitForExternalEvents();
 
+                        // If a base time has not yet been initialized, initialize one by rotating
+                        if (!m_initializedBaseTimeOffsets && m_parent.UseBaseTimeOffsets)
+                            RotateBaseTimes();
+                        
+                        m_initializedBaseTimeOffsets = true;
+
                         foreach (IMeasurement measurement in measurements)
                         {
                             ISupportBinaryImage binaryMeasurement;
@@ -471,7 +537,7 @@ namespace TimeSeriesFramework.Transport
 
                             // Serialize the current measurement.
                             if (useCompactMeasurementFormat)
-                                binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, m_includeTime /*, m_baseTimeOffsets, m_timeIndex, m_useMillisecondResolution */);
+                                binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, m_includeTime, m_baseTimeOffsets, m_timeIndex, m_useMillisecondResolution);
                             else
                                 binaryMeasurement = new SerializableMeasurement(measurement, m_parent.ClientConnections[m_clientID].Encoding);
 
@@ -536,6 +602,31 @@ namespace TimeSeriesFramework.Transport
             m_lastPublishTime = DateTime.UtcNow.Ticks;
         }
 
+        // Rotates base time offsets
+        private void RotateBaseTimes()
+        {
+            MemoryStream responsePacket = new MemoryStream();
+
+            if ((object)m_baseTimeOffsets == null)
+            {
+                m_baseTimeOffsets = new long[2];
+                m_baseTimeOffsets[0] = RealTime;
+                m_baseTimeOffsets[1] = RealTime + (long)m_baseTimeRotationTimer.Interval * Ticks.PerMillisecond;
+                m_timeIndex = 0;
+            }
+            else
+            {
+                m_baseTimeOffsets[m_timeIndex] = RealTime + (long)m_baseTimeRotationTimer.Interval * Ticks.PerMillisecond;
+                m_timeIndex ^= 1;
+            }
+
+            responsePacket.Write(EndianOrder.BigEndian.GetBytes(m_timeIndex), 0, 4);
+            responsePacket.Write(EndianOrder.BigEndian.GetBytes(m_baseTimeOffsets[0]), 0, 8);
+            responsePacket.Write(EndianOrder.BigEndian.GetBytes(m_baseTimeOffsets[1]), 0, 8);
+
+            m_parent.SendClientResponse(m_clientID, ServerResponse.UpdateBaseTimes, ServerCommand.Subscribe, responsePacket.ToArray());
+        }
+
         // Explicitly implement status message event bubbler to satisfy IClientSubscription interface
         void IClientSubscription.OnStatusMessage(string status)
         {
@@ -553,6 +644,11 @@ namespace TimeSeriesFramework.Transport
         {
             if (ProcessingComplete != null)
                 ProcessingComplete(sender, new EventArgs<IClientSubscription, EventArgs>(this, e));
+        }
+
+        private void BaseTimeRotationTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            RotateBaseTimes();
         }
 
         #endregion

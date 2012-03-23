@@ -1475,7 +1475,7 @@ namespace TimeSeriesFramework.Transport
                             m_timeIndex = EndianOrder.BigEndian.ToInt32(buffer, responseIndex);
 
                             // Deserialize new base time offsets
-                            m_baseTimeOffsets = new long[] { EndianOrder.BigEndian.ToInt64(buffer, responseIndex + 2), EndianOrder.BigEndian.ToInt64(buffer, responseIndex + 10) };
+                            m_baseTimeOffsets = new long[] { EndianOrder.BigEndian.ToInt64(buffer, responseIndex + 4), EndianOrder.BigEndian.ToInt64(buffer, responseIndex + 12) };
                             break;
                         case ServerResponse.UpdateCipherKeys:
                             // Get active cipher index

@@ -77,6 +77,14 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
+        /// Gets size of timestamp in bytes.
+        /// </summary>
+        int TimestampSize
+        {
+            get;
+        }
+
+        /// <summary>
         /// Gets or sets host name used to identify connection source of client subscription.
         /// </summary>
         string HostName

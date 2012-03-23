@@ -243,12 +243,18 @@ namespace TimeSeriesFramework.Transport
     /// <summary>
     /// Operational modes that affect how <see cref="DataPublisher"/> and <see cref="DataSubscriber"/> communicate.
     /// </summary>
+    /// <remarks>
+    /// Operational modes only apply to fundamental protocol control.
+    /// </remarks>
     [Flags()]
     public enum OperationalModes : uint
     {
         /// <summary>
         /// Mask to get version number of protocol.
         /// </summary>
+        /// <remarks>
+        /// Version number is currently set to 0.
+        /// </remarks>
         VersionMask = (uint)(Bits.Bit04 | Bits.Bit03 | Bits.Bit02 | Bits.Bit01 | Bits.Bit00),
         /// <summary>
         /// Mask to get mode of compression.
@@ -261,21 +267,33 @@ namespace TimeSeriesFramework.Transport
         /// <summary>
         /// Mask to get character encoding used when exchanging messages between publisher and subscriber.
         /// </summary>
+        /// <remarks>
+        /// 00 = UTF-16 little endian<br/>
+        /// 01 = UTF-16 big endian<br/>
+        /// 10 = UTF-8<br/>
+        /// 11 = ANSI
+        /// </remarks>
         EncodingMask = (uint)(Bits.Bit09 | Bits.Bit08),
         /// <summary>
         /// Determines type of serialization to use when exchanging signal index cache and metadata.
         /// </summary>
         /// <remarks>
-        /// Bit set = common serialization format, not set = .NET serialization format
+        /// Bit set = common serialization format, bit clear = .NET serialization format
         /// </remarks>
         UseCommonSerializationFormat = (uint)Bits.Bit24,
         /// <summary>
         /// Determines whether the signal index cache is compressed when exchanging between publisher and subscriber.
         /// </summary>
+        /// <remarks>
+        /// Bit set = compress, bit clear = no compression
+        /// </remarks>
         CompressSignalIndexCache = (uint)Bits.Bit30,
         /// <summary>
         /// Determines whether is compressed when exchanging between publisher and subscriber.
         /// </summary>
+        /// <remarks>
+        /// Bit set = compress, bit clear = no compression
+        /// </remarks>
         CompressMetadata = (uint)Bits.Bit31,
         /// <summary>
         /// No flags set.
@@ -283,7 +301,8 @@ namespace TimeSeriesFramework.Transport
         /// <remarks>
         /// This would represent protocol version 0,
         /// UTF-16 little endian character encoding,
-        /// .NET serialization, and no compression.
+        /// .NET serialization, millisecond resolution,
+        /// and no compression.
         /// </remarks>
         NoFlags = (uint)Bits.Nil
     }
@@ -364,6 +383,11 @@ namespace TimeSeriesFramework.Transport
         public const bool DefaultAllowSynchronizedSubscription = true;
 
         /// <summary>
+        /// Default value for <see cref="UseBaseTimeOffsets"/>.
+        /// </summary>
+        public const bool DefaultUseBaseTimeOffsets = false;
+
+        /// <summary>
         /// Default value for <see cref="CipherKeyRotationPeriod"/>.
         /// </summary>
         public const double DefaultCipherKeyRotationPeriod = 60000.0D;
@@ -389,6 +413,7 @@ namespace TimeSeriesFramework.Transport
         private bool m_encryptPayload;
         private bool m_sharedDatabase;
         private bool m_allowSynchronizedSubscription;
+        private bool m_useBaseTimeOffsets;
         private bool m_disposed;
 
         #endregion
@@ -422,6 +447,7 @@ namespace TimeSeriesFramework.Transport
             m_encryptPayload = DefaultEncryptPayload;
             m_sharedDatabase = DefaultSharedDatabase;
             m_allowSynchronizedSubscription = DefaultAllowSynchronizedSubscription;
+            m_useBaseTimeOffsets = DefaultUseBaseTimeOffsets;
 
             m_metadataTables =
                 "SELECT NodeID, UniqueID, OriginalSource, IsConcentrator, Acronym, Name, ParentAcronym, ProtocolName, FramesPerSecond, Enabled FROM DeviceDetail WHERE OriginalSource IS NULL AND IsConcentrator = 0;" +
@@ -536,6 +562,24 @@ namespace TimeSeriesFramework.Transport
             set
             {
                 m_allowSynchronizedSubscription = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines whether to use base time offsets to decrease the size of compact measurements.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the flag that determines whether to use base time offsets to decrease the size of compact measurements."),
+        DefaultValue(DefaultUseBaseTimeOffsets)]
+        public bool UseBaseTimeOffsets
+        {
+            get
+            {
+                return m_useBaseTimeOffsets;
+            }
+            set
+            {
+                m_useBaseTimeOffsets = value;
             }
         }
 
@@ -812,6 +856,9 @@ namespace TimeSeriesFramework.Transport
             if (settings.TryGetValue("allowSynchronizedSubscription", out setting))
                 m_allowSynchronizedSubscription = setting.ParseBoolean();
 
+            if (settings.TryGetValue("useBaseTimeOffsets", out setting))
+                m_useBaseTimeOffsets = setting.ParseBoolean();
+
             // Get user specified period for cipher key rotation
             if (settings.TryGetValue("cipherKeyRotationPeriod", out setting) && double.TryParse(setting, out period))
                 CipherKeyRotationPeriod = period;
@@ -951,7 +998,10 @@ namespace TimeSeriesFramework.Transport
             for (int i = 0; i < clientIDs.Length; i++)
             {
                 if (m_clientConnections.TryGetValue(clientIDs[i], out connection))
-                    clientEnumeration.AppendFormat("  {0} - {1}\r\n          {2}\r\n          {3}\r\n\r\n", i.ToString().PadLeft(3), connection.ConnectionID, connection.SubscriberInfo, connection.OperationalModes);
+                {
+                    string timestampFormat = string.Format("{0} Format, {1}-byte timestamps", connection.Subscription.UseCompactMeasurementFormat ? "Compact" : "Full", connection.Subscription.TimestampSize);
+                    clientEnumeration.AppendFormat("  {0} - {1}\r\n          {2}\r\n          {3}\r\n          {4}\r\n\r\n", i.ToString().PadLeft(3), connection.ConnectionID, connection.SubscriberInfo, timestampFormat, connection.OperationalModes);
+                }
             }
 
             // Display enumeration

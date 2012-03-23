@@ -361,7 +361,7 @@ namespace TimeSeriesFramework.Transport
                     {
                         // Decode 4-byte tick offset timestamp
                         Timestamp = m_baseTimeOffsets[m_timeIndex] + EndianOrder.BigEndian.ToUInt32(buffer, index);
-                        index += 2;
+                        index += 4;
                     }
                 }
                 else
