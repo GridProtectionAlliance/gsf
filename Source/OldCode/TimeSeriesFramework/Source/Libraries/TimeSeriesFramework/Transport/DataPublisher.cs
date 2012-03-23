@@ -259,7 +259,7 @@ namespace TimeSeriesFramework.Transport
         /// Determines type of serialization to use when exchanging signal index cache and metadata.
         /// </summary>
         /// <remarks>
-        /// Bit set = common serialization format, bit set = .NET serialization format
+        /// Bit set = common serialization format, not set = .NET serialization format
         /// </remarks>
         UseCommonSerializationFormat = (uint)Bits.Bit24,
         /// <summary>
@@ -2074,7 +2074,7 @@ namespace TimeSeriesFramework.Transport
 
             m_clientConnections[clientID] = new ClientConnection(this, clientID, m_commandChannel);
 
-            OnStatusMessage("Client connected.");
+            OnStatusMessage("Client connected to command channel.");
         }
 
         private void m_commandChannel_ClientDisconnected(object sender, EventArgs<Guid> e)
@@ -2090,7 +2090,7 @@ namespace TimeSeriesFramework.Transport
 
             m_clientPublicationChannels.TryRemove(clientID, out publicationChannel);
 
-            OnStatusMessage("Client disconnected.");
+            OnStatusMessage("Client disconnected from command channel.");
         }
 
         private void m_commandChannel_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
@@ -2176,14 +2176,14 @@ namespace TimeSeriesFramework.Transport
 
         private void m_commandChannel_ServerStarted(object sender, EventArgs e)
         {
-            OnStatusMessage("Data publisher started.");
+            OnStatusMessage("Data publisher command channel started.");
         }
 
         private void m_commandChannel_ServerStopped(object sender, EventArgs e)
         {
             if (Enabled)
             {
-                OnStatusMessage("Data publisher was unexpectedly terminated, restarting...");
+                OnStatusMessage("Data publisher command channel was unexpectedly terminated, restarting...");
 
                 // We must wait for command channel to completely shutdown before trying to restart...
                 if (m_commandChannelRestartTimer != null)
@@ -2191,7 +2191,7 @@ namespace TimeSeriesFramework.Transport
             }
             else
             {
-                OnStatusMessage("Data publisher stopped.");
+                OnStatusMessage("Data publisher command channel stopped.");
             }
         }
 
@@ -2200,7 +2200,7 @@ namespace TimeSeriesFramework.Transport
             Exception ex = e.Argument2;
 
             if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException) && !(ex is System.Net.Sockets.SocketException && (((System.Net.Sockets.SocketException)ex).ErrorCode == 10053 || ((System.Net.Sockets.SocketException)ex).ErrorCode == 10054)))
-                OnProcessException(new InvalidOperationException("Data publisher encountered an exception while sending data to client connection: " + ex.Message, ex));
+                OnProcessException(new InvalidOperationException("Data publisher encountered an exception while sending command channel data to client connection: " + ex.Message, ex));
         }
 
         private void m_commandChannel_ReceiveClientDataException(object sender, EventArgs<Guid, Exception> e)
@@ -2208,12 +2208,12 @@ namespace TimeSeriesFramework.Transport
             Exception ex = e.Argument2;
 
             if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException) && !(ex is System.Net.Sockets.SocketException && (((System.Net.Sockets.SocketException)ex).ErrorCode == 10053 || ((System.Net.Sockets.SocketException)ex).ErrorCode == 10054)))
-                OnProcessException(new InvalidOperationException("Data publisher encountered an exception while receiving data from client connection: " + ex.Message, ex));
+                OnProcessException(new InvalidOperationException("Data publisher encountered an exception while receiving command channel data from client connection: " + ex.Message, ex));
         }
 
         private void m_commandChannel_ReceiveClientDataTimeout(object sender, EventArgs<Guid> e)
         {
-            OnProcessException(new TimeoutException("Data publisher timed out while receiving data from client connection"));
+            OnProcessException(new TimeoutException("Data publisher timed out while receiving command channel data from client connection"));
         }
 
         private void m_commandChannel_HandshakeProcessUnsuccessful(object sender, EventArgs e)

@@ -157,7 +157,8 @@ namespace TimeSeriesFramework.Transport
         private UdpClient m_dataChannel;
         private LocalConcentrator m_localConcentrator;
         private System.Timers.Timer m_dataStreamMonitor;
-        private long m_connectionAttempts;
+        private long m_commandChannelConnectionAttempts;
+        private long m_dataChannelConnectionAttempts;
         private volatile SignalIndexCache m_remoteSignalIndexCache;
         private volatile SignalIndexCache m_signalIndexCache;
         private volatile byte[][][] m_keyIVs;
@@ -414,6 +415,7 @@ namespace TimeSeriesFramework.Transport
                 {
                     // Detach from events on existing data channel reference
                     m_dataChannel.ConnectionException -= m_dataChannel_ConnectionException;
+                    m_dataChannel.ConnectionAttempt -= m_dataChannel_ConnectionAttempt;
                     m_dataChannel.ReceiveData -= m_dataChannel_ReceiveData;
                     m_dataChannel.ReceiveDataException -= m_dataChannel_ReceiveDataException;
                     m_dataChannel.ReceiveDataTimeout -= m_dataChannel_ReceiveDataTimeout;
@@ -429,6 +431,7 @@ namespace TimeSeriesFramework.Transport
                 {
                     // Attach to desired events on new data channel reference
                     m_dataChannel.ConnectionException += m_dataChannel_ConnectionException;
+                    m_dataChannel.ConnectionAttempt += m_dataChannel_ConnectionAttempt;
                     m_dataChannel.ReceiveData += m_dataChannel_ReceiveData;
                     m_dataChannel.ReceiveDataException += m_dataChannel_ReceiveDataException;
                     m_dataChannel.ReceiveDataTimeout += m_dataChannel_ReceiveDataTimeout;
@@ -1082,6 +1085,7 @@ namespace TimeSeriesFramework.Transport
                             dataChannel.Compression = CompressionStrength.Standard;
 
                         dataChannel.ReceiveBufferSize = ushort.MaxValue;
+                        dataChannel.MaxConnectionAttempts = -1;
                         dataChannel.ConnectAsync();
                     }
 
@@ -1220,7 +1224,8 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         protected override void AttemptConnection()
         {
-            m_connectionAttempts = 0;
+            m_commandChannelConnectionAttempts = 0;
+            m_dataChannelConnectionAttempts = 0;
             m_commandChannel.ConnectAsync();
             m_authenticated = false;
             m_subscribed = false;
@@ -2011,7 +2016,7 @@ namespace TimeSeriesFramework.Transport
         private void m_commandChannel_ConnectionTerminated(object sender, EventArgs e)
         {
             OnConnectionTerminated();
-            OnStatusMessage("Data subscriber connection to publisher was terminated.");
+            OnStatusMessage("Data subscriber command channel connection to publisher was terminated.");
             DataChannel = null;
 
             if (m_autoConnect && Enabled)
@@ -2021,7 +2026,7 @@ namespace TimeSeriesFramework.Transport
         private void m_commandChannel_ConnectionException(object sender, EventArgs<Exception> e)
         {
             Exception ex = e.Argument;
-            OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while attempting publisher connection: " + ex.Message, ex));
+            OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while attempting command channel publisher connection: " + ex.Message, ex));
 
             // So long as user hasn't requested to stop, keep trying connection
             if (m_autoConnect && Enabled)
@@ -2031,11 +2036,11 @@ namespace TimeSeriesFramework.Transport
         private void m_commandChannel_ConnectionAttempt(object sender, EventArgs e)
         {
             // Inject a short delay between multiple connection attempts
-            if (m_connectionAttempts > 0)
+            if (m_commandChannelConnectionAttempts > 0)
                 Thread.Sleep(2000);
 
-            OnStatusMessage("Data subscriber attempting connection to publisher...");
-            m_connectionAttempts++;
+            OnStatusMessage("Attempting command channel connection to publisher...");
+            m_commandChannelConnectionAttempts++;
         }
 
         private void m_commandChannel_SendDataException(object sender, EventArgs<Exception> e)
@@ -2043,7 +2048,7 @@ namespace TimeSeriesFramework.Transport
             Exception ex = e.Argument;
 
             if (!(ex is ObjectDisposedException) && !(ex is System.Net.Sockets.SocketException && ((System.Net.Sockets.SocketException)ex).ErrorCode == 10054))
-                OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while sending data to publisher connection: " + ex.Message, ex));
+                OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while sending command channel data to publisher connection: " + ex.Message, ex));
         }
 
         private void m_commandChannel_ReceiveData(object sender, EventArgs<int> e)
@@ -2089,7 +2094,7 @@ namespace TimeSeriesFramework.Transport
 
         private void m_commandChannel_ReceiveDataTimeout(object sender, EventArgs e)
         {
-            OnProcessException(new InvalidOperationException("Data subscriber timed out while receiving data from publisher connection"));
+            OnProcessException(new InvalidOperationException("Data subscriber timed out while receiving command channel data from publisher connection"));
         }
 
         private void m_commandChannel_ReceiveDataException(object sender, EventArgs<Exception> e)
@@ -2097,7 +2102,7 @@ namespace TimeSeriesFramework.Transport
             Exception ex = e.Argument;
 
             if (!(ex is ObjectDisposedException) && !(ex is System.Net.Sockets.SocketException && ((System.Net.Sockets.SocketException)ex).ErrorCode == 10054))
-                OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while receiving data from publisher connection: " + ex.Message, ex));
+                OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while receiving command channel data from publisher connection: " + ex.Message, ex));
         }
 
         private void m_commandChannel_HandshakeProcessUnsuccessful(object sender, EventArgs e)
@@ -2118,6 +2123,16 @@ namespace TimeSeriesFramework.Transport
         {
             Exception ex = e.Argument;
             OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while attempting to establish UDP data channel connection: " + ex.Message, ex));
+        }
+
+        private void m_dataChannel_ConnectionAttempt(object sender, EventArgs e)
+        {
+            // Inject a short delay between multiple connection attempts
+            if (m_dataChannelConnectionAttempts > 0)
+                Thread.Sleep(2000);
+
+            OnStatusMessage("Attempting to establish data channel connection to publisher...");
+            m_dataChannelConnectionAttempts++;
         }
 
         private void m_dataChannel_ReceiveData(object sender, EventArgs<int> e)
