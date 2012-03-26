@@ -6849,6 +6849,11 @@
             Returns the measurements signal IDs that were unauthorized after the last successful subscription request.
             </summary>
         </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.RefreshMetadata">
+            <summary>
+            Initiate a metadata refresh.
+            </summary>
+        </member>
         <member name="M:TimeSeriesFramework.Transport.DataSubscriber.SendServerCommand(TimeSeriesFramework.Transport.ServerCommand,System.Byte[])">
             <summary>
             Sends a server command to the publisher connection.
