@@ -108,7 +108,7 @@ namespace TimeSeriesFramework
         private static void ValidateExternalDataPublisher(IDbConnection connection, string nodeIDQueryString)
         {
             const string ExternalDataPublisherCountFormat = "SELECT COUNT(*) FROM CustomActionAdapter WHERE AdapterName='EXTERNAL!DATAPUBLISHER' AND NodeID = {0}";
-            const string ExternalDataPublisherInsertFormat = "INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, Enabled) VALUES({0}, 'EXTERNAL!DATAPUBLISHER', 'TimeSeriesFramework.dll', 'TimeSeriesFramework.Transport.DataPublisher', 'requireAuthentication=true; allowSynchronizedSubscription=false', 1)";
+            const string ExternalDataPublisherInsertFormat = "INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, Enabled) VALUES({0}, 'EXTERNAL!DATAPUBLISHER', 'TimeSeriesFramework.dll', 'TimeSeriesFramework.Transport.DataPublisher', 'requireAuthentication=true; allowSynchronizedSubscription=false; useBaseTimeOffsets=true', 1)";
 
             int externalDataPublisherCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(ExternalDataPublisherCountFormat, nodeIDQueryString)));
 

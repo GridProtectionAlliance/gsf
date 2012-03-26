@@ -524,11 +524,14 @@ namespace TimeSeriesFramework.Transport
                         // Wait for any external events, if needed
                         WaitForExternalEvents();
 
-                        // If a base time has not yet been initialized, initialize one by rotating
-                        if (!m_initializedBaseTimeOffsets && m_parent.UseBaseTimeOffsets)
-                            RotateBaseTimes();
-                        
-                        m_initializedBaseTimeOffsets = true;
+                        // If a set of base times has not yet been initialized, initialize a set by rotating
+                        if (!m_initializedBaseTimeOffsets)
+                        {
+                            if (m_parent.UseBaseTimeOffsets)
+                                RotateBaseTimes();
+
+                            m_initializedBaseTimeOffsets = true;
+                        }
 
                         foreach (IMeasurement measurement in measurements)
                         {
@@ -616,8 +619,13 @@ namespace TimeSeriesFramework.Transport
             }
             else
             {
-                m_baseTimeOffsets[m_timeIndex] = RealTime + (long)m_baseTimeRotationTimer.Interval * Ticks.PerMillisecond;
+                int oldIndex = m_timeIndex;
+
+                // Switch to newer timestamp
                 m_timeIndex ^= 1;
+
+                // Now make older timestamp the newer timestamp
+                m_baseTimeOffsets[oldIndex] = RealTime + (long)m_baseTimeRotationTimer.Interval * Ticks.PerMillisecond;
             }
 
             responsePacket.Write(EndianOrder.BigEndian.GetBytes(m_timeIndex), 0, 4);

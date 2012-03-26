@@ -45,6 +45,7 @@ namespace DataPublisherTest
 
             // Initialize publisher
             publisher.Name = "dataPublisher";
+            publisher.UseBaseTimeOffsets = true;
             publisher.Initialize();
 
             // Start publisher

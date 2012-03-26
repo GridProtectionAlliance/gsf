@@ -131,11 +131,18 @@ namespace DataSubscriberTest
                 {
                     Console.WriteLine(string.Format("{0:N0} measurements have been processed so far...", dataCount));
                 }
+
+                //// Occasionally request another cipher key rotation
+                //if (TVA.Security.Cryptography.Random.Boolean)
+                //    subscriber.SendServerCommand(ServerCommand.RotateCipherKeys);
             }
         }
 
         static void subscriber_ConnectionEstablished(object sender, EventArgs e)
         {
+            //// Request cipher key rotation
+            //subscriber.SendServerCommand(ServerCommand.RotateCipherKeys);
+
             //subscriber.SynchronizedSubscribe(true, 30, 0.5D, 1.0D, "DEVARCHIVE:1;DEVARCHIVE:2;DEVARCHIVE:3;DEVARCHIVE:4;DEVARCHIVE:5");
             //subscriber.SynchronizedSubscribe(true, 30, 0.5D, 1.0D, "DEVARCHIVE:1");
             //subscriber.UnsynchronizedSubscribe(true, "DEVARCHIVE:1;DEVARCHIVE:2;DEVARCHIVE:3;DEVARCHIVE:4;DEVARCHIVE:5");

@@ -420,7 +420,7 @@ namespace TimeSeriesFramework.Transport
         {
             get
             {
-                return false;
+                return true;
             }
         }
 
@@ -1272,10 +1272,12 @@ namespace TimeSeriesFramework.Transport
         protected override void AttemptDisconnection()
         {
             // Stop data stream monitor
-            m_dataStreamMonitor.Enabled = false;
+            if ((object)m_dataStreamMonitor != null)
+                m_dataStreamMonitor.Enabled = false;
 
             // Disconnect command channel
-            m_commandChannel.Disconnect();
+            if ((object)m_commandChannel != null)
+                m_commandChannel.Disconnect();
         }
 
         /// <summary>
@@ -1314,6 +1316,7 @@ namespace TimeSeriesFramework.Transport
                     int responseLength = EndianOrder.BigEndian.ToInt32(buffer, 2);
                     int responseIndex = 6;
                     bool solicited = false;
+                    byte[][][] keyIVs;
 
                     // See if this was a solicited response to a requested server command
                     if (responseCode.IsSolicited())
@@ -1401,20 +1404,25 @@ namespace TimeSeriesFramework.Transport
                             Interlocked.Add(ref m_totalBytesReceived, m_lastBytesReceived);
                             Interlocked.Add(ref m_monitoredBytesReceived, m_lastBytesReceived);
 
-                            // Decrypt data packet payload if keys are available
-                            if (m_keyIVs != null)
-                            {
-                                buffer = buffer.BlockCopy(responseIndex, responseLength).Decrypt(m_keyIVs[m_cipherIndex][0], m_keyIVs[m_cipherIndex][1], CipherStrength.Aes256);
-                                responseIndex = 0;
-                                responseLength = buffer.Length;
-                            }
-
                             // Get data packet flags
                             flags = (DataPacketFlags)buffer[responseIndex];
                             responseIndex++;
 
                             bool synchronizedMeasurements = ((byte)(flags & DataPacketFlags.Synchronized) > 0);
                             bool compactMeasurementFormat = ((byte)(flags & DataPacketFlags.Compact) > 0);
+                            int cipherIndex = (flags & DataPacketFlags.CipherIndex) > 0 ? 1 : 0;
+
+                            // Decrypt data packet payload if keys are available
+                            if (m_keyIVs != null)
+                            {
+                                // Get a local copy of volatile keyIVs reference since this can change at any time
+                                keyIVs = m_keyIVs;
+
+                                // Decrypt payload portion of data packet
+                                buffer = Common.SymmetricAlgorithm.Decrypt(buffer, responseIndex, responseLength - 1, keyIVs[cipherIndex][0], keyIVs[cipherIndex][1]);
+                                responseIndex = 0;
+                                responseLength = buffer.Length;
+                            }
 
                             // Synchronized packets contain a frame level timestamp
                             if (synchronizedMeasurements)
@@ -1473,23 +1481,24 @@ namespace TimeSeriesFramework.Transport
                         case ServerResponse.UpdateBaseTimes:
                             // Get active time index
                             m_timeIndex = EndianOrder.BigEndian.ToInt32(buffer, responseIndex);
+                            responseIndex += 4;
 
                             // Deserialize new base time offsets
-                            m_baseTimeOffsets = new long[] { EndianOrder.BigEndian.ToInt64(buffer, responseIndex + 4), EndianOrder.BigEndian.ToInt64(buffer, responseIndex + 12) };
+                            m_baseTimeOffsets = new long[] { EndianOrder.BigEndian.ToInt64(buffer, responseIndex), EndianOrder.BigEndian.ToInt64(buffer, responseIndex + 8) };
                             break;
                         case ServerResponse.UpdateCipherKeys:
                             // Get active cipher index
-                            m_cipherIndex = EndianOrder.BigEndian.ToInt32(buffer, responseIndex);
+                            m_cipherIndex = buffer[responseIndex++];
 
                             // Extract remaining response
-                            byte[] bytes = buffer.BlockCopy(responseIndex + 4, responseLength - 4);
+                            byte[] bytes = buffer.BlockCopy(responseIndex, responseLength - 1);
 
                             // Decrypt response payload if subscription is authenticated
                             if (m_authenticated)
                                 bytes = bytes.Decrypt(m_sharedSecret, CipherStrength.Aes256);
 
                             // Deserialize new cipher keys
-                            byte[][][] keyIVs = new byte[2][][];
+                            keyIVs = new byte[2][][];
                             keyIVs[EvenKey] = new byte[2][];
                             keyIVs[OddKey] = new byte[2][];
 
@@ -2081,6 +2090,10 @@ namespace TimeSeriesFramework.Transport
             // Define operational modes as soon as possible
             SendServerCommand(ServerCommand.DefineOperationalModes, EndianOrder.BigEndian.GetBytes((uint)m_operationalModes));
 
+            // Notify input adapter base that asynchronous connection succeeded
+            OnConnected();
+
+            // Notify consumer that connection was sucessfully established
             OnConnectionEstablished();
 
             OnStatusMessage("Data subscriber command channel connection to publisher was established.");
@@ -2101,7 +2114,7 @@ namespace TimeSeriesFramework.Transport
             OnStatusMessage("Data subscriber command channel connection to publisher was terminated.");
             DataChannel = null;
 
-            if (m_autoConnect && Enabled)
+            if (Enabled)
                 Start();
         }
 
@@ -2110,8 +2123,7 @@ namespace TimeSeriesFramework.Transport
             Exception ex = e.Argument;
             OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while attempting command channel publisher connection: " + ex.Message, ex));
 
-            // So long as user hasn't requested to stop, keep trying connection
-            if (m_autoConnect && Enabled)
+            if (Enabled)
                 Start();
         }
 

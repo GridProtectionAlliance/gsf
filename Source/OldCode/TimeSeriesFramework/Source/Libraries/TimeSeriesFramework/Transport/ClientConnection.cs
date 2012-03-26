@@ -378,34 +378,6 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
-        /// Gets active cipher key, if any.
-        /// </summary>
-        public byte[] Key
-        {
-            get
-            {
-                if (m_keyIVs != null)
-                    return m_keyIVs[m_cipherIndex][KeyIndex];
-
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Gets active intitialization vector, if any.
-        /// </summary>
-        public byte[] IV
-        {
-            get
-            {
-                if (m_keyIVs != null)
-                    return m_keyIVs[m_cipherIndex][IVIndex];
-
-                return null;
-            }
-        }
-
-        /// <summary>
         /// Gets active and standby keys and initialization vectors.
         /// </summary>
         public byte[][][] KeyIVs
@@ -666,7 +638,7 @@ namespace TimeSeriesFramework.Transport
                     UpdateKeyIVs();
 
                     // Add current cipher index to response
-                    response.Write(EndianOrder.BigEndian.GetBytes(m_cipherIndex), 0, 4);
+                    response.WriteByte((byte)m_cipherIndex);
 
                     // Serialize new keys
                     MemoryStream buffer = new MemoryStream();
@@ -685,12 +657,12 @@ namespace TimeSeriesFramework.Transport
                     // Write odd key
                     bufferLen = EndianOrder.BigEndian.GetBytes(m_keyIVs[OddKey][KeyIndex].Length);
                     buffer.Write(bufferLen, 0, bufferLen.Length);
-                    buffer.Write(m_keyIVs[EvenKey][KeyIndex], 0, m_keyIVs[OddKey][KeyIndex].Length);
+                    buffer.Write(m_keyIVs[OddKey][KeyIndex], 0, m_keyIVs[OddKey][KeyIndex].Length);
 
                     // Write odd initialization vector
                     bufferLen = EndianOrder.BigEndian.GetBytes(m_keyIVs[OddKey][IVIndex].Length);
                     buffer.Write(bufferLen, 0, bufferLen.Length);
-                    buffer.Write(m_keyIVs[EvenKey][IVIndex], 0, m_keyIVs[OddKey][IVIndex].Length);
+                    buffer.Write(m_keyIVs[OddKey][IVIndex], 0, m_keyIVs[OddKey][IVIndex].Length);
 
                     // Get bytes from serialized buffer
                     bytes = buffer.ToArray();

@@ -21,6 +21,9 @@
 //
 //******************************************************************************************************
 
+using System.Security.Cryptography;
+using Microsoft.Win32;
+
 namespace TimeSeriesFramework.Transport
 {
     /// <summary>
@@ -28,6 +31,50 @@ namespace TimeSeriesFramework.Transport
     /// </summary>
     public static class Common
     {
+        // Flag that determines if managed encryption wrappers can be used over FIPS-compliant algorithms if desired.
+        private static bool s_canUseManagedEncryption;
+
+        // Static Constructor
+        static Common()
+        {
+            string fipsKeyOld = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa";
+            string fipsKeyNew = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\FipsAlgorithmPolicy";
+
+            // Determine if the operating system configuration to set to use FIPS-compliant algorithms
+            s_canUseManagedEncryption = (Registry.GetValue(fipsKeyNew, "Enabled", 0) ?? Registry.GetValue(fipsKeyOld, "FipsAlgorithmPolicy", 0)).ToString() == "0";
+        }
+
+        /// <summary>
+        /// Gets flag that determines if managed encryption can be used.
+        /// </summary>
+        public static bool CanUseManagedEncryption
+        {
+            get
+            {
+                return s_canUseManagedEncryption;
+            }
+        }
+
+        /// <summary>
+        /// Gets an AES symmetric algorithm to use for encryption or decryption.
+        /// </summary>
+        public static SymmetricAlgorithm SymmetricAlgorithm
+        {
+            get
+            {
+                Aes symmetricAlgorithm;
+
+                if (s_canUseManagedEncryption)
+                    symmetricAlgorithm = new AesManaged();
+                else
+                    symmetricAlgorithm = new AesCryptoServiceProvider();
+
+                symmetricAlgorithm.KeySize = 256;
+
+                return symmetricAlgorithm;
+            }
+        }
+
         /// <summary>
         /// Returns <c>true</c> if <see cref="ServerResponse"/> code is for a solicited <see cref="ServerCommand"/>.
         /// </summary>

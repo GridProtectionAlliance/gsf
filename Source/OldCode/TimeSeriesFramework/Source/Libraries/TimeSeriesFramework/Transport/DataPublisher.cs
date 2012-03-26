@@ -232,6 +232,13 @@ namespace TimeSeriesFramework.Transport
         /// </remarks>
         Compact = (byte)Bits.Bit01,
         /// <summary>
+        /// Detemines which cipher index to use when encrypting data packet.
+        /// </summary>
+        /// <remarks>
+        /// Bit set = use odd cipher index (i.e., 1), bit clear = use even cipher index (i.e., 0).
+        /// </remarks>
+        CipherIndex = (byte)Bits.Bit02,
+        /// <summary>
         /// No flags set.
         /// </summary>
         /// <remarks>
@@ -301,8 +308,7 @@ namespace TimeSeriesFramework.Transport
         /// <remarks>
         /// This would represent protocol version 0,
         /// UTF-16 little endian character encoding,
-        /// .NET serialization, millisecond resolution,
-        /// and no compression.
+        /// .NET serialization and no compression.
         /// </remarks>
         NoFlags = (uint)Bits.Nil
     }
@@ -992,14 +998,15 @@ namespace TimeSeriesFramework.Transport
             StringBuilder clientEnumeration = new StringBuilder();
             Guid[] clientIDs = (Guid[])m_commandChannel.ClientIDs.Clone();
             ClientConnection connection;
+            string timestampFormat;
 
             clientEnumeration.AppendFormat("\r\nIndices for {0} connected clients:\r\n\r\n", clientIDs.Length);
 
             for (int i = 0; i < clientIDs.Length; i++)
             {
-                if (m_clientConnections.TryGetValue(clientIDs[i], out connection))
+                if (m_clientConnections.TryGetValue(clientIDs[i], out connection) && (object)connection != null && (object)connection.Subscription != null)
                 {
-                    string timestampFormat = string.Format("{0} Format, {1}-byte timestamps", connection.Subscription.UseCompactMeasurementFormat ? "Compact" : "Full", connection.Subscription.TimestampSize);
+                    timestampFormat = string.Format("{0} Format, {1}-byte timestamps", connection.Subscription.UseCompactMeasurementFormat ? "Compact" : "Full", connection.Subscription.TimestampSize);
                     clientEnumeration.AppendFormat("  {0} - {1}\r\n          {2}\r\n          {3}\r\n          {4}\r\n\r\n", i.ToString().PadLeft(3), connection.ConnectionID, connection.SubscriberInfo, timestampFormat, connection.OperationalModes);
                 }
             }
@@ -1290,23 +1297,19 @@ namespace TimeSeriesFramework.Transport
         // Send binary response packet to client
         private bool SendClientResponse(Guid clientID, byte responseCode, byte commandCode, byte[] data)
         {
-            bool success = false;
+            ClientConnection connection = null;
             IServer publishChannel;
+            bool dataPacketResponse = responseCode == (byte)ServerResponse.DataPacket;
+            bool success = false;
 
             // Data packets can be published on a UDP data channel, so check for this...
-            if (responseCode == (byte)ServerResponse.DataPacket)
+            if (dataPacketResponse)
             {
-                ClientConnection connection;
-
                 // Attempt to lookup associated client connection
                 m_clientConnections.TryGetValue(clientID, out connection);
 
                 // Lookup proper publication channel
                 publishChannel = m_clientPublicationChannels.GetOrAdd(clientID, id => connection == null ? m_commandChannel : connection.PublishChannel);
-
-                // Encrypt data packet payload if connection key is defined
-                if (connection != null && connection.Key != null)
-                    data = data.Encrypt(connection.Key, connection.IV, CipherStrength.Aes256);
             }
             else
             {
@@ -1314,7 +1317,7 @@ namespace TimeSeriesFramework.Transport
             }
 
             // Send response packet
-            if (publishChannel != null && publishChannel.CurrentState == ServerState.Running)
+            if ((object)publishChannel != null && publishChannel.CurrentState == ServerState.Running)
             {
                 try
                 {
@@ -1326,22 +1329,60 @@ namespace TimeSeriesFramework.Transport
                     // Add original in response to command code
                     responsePacket.WriteByte(commandCode);
 
-                    if (data == null || data.Length == 0)
+                    if ((object)data == null || data.Length == 0)
                     {
                         // Add zero sized data buffer to response packet
-                        responsePacket.Write(EndianOrder.BigEndian.GetBytes(0), 0, 4);
+                        responsePacket.Write(s_zeroLengthBytes, 0, 4);
                     }
                     else
                     {
-                        // Add size of data buffer to response packet
-                        responsePacket.Write(EndianOrder.BigEndian.GetBytes(data.Length), 0, 4);
+                        // If response is for a data packet and a connection key is defined, encrypt the data packet payload
+                        if (dataPacketResponse && (object)connection != null && (object)connection.KeyIVs != null)
+                        {
+                            // Get a local copy of volatile keyIVs and cipher index since these can change at any time
+                            byte[][][] keyIVs = connection.KeyIVs;
+                            int cipherIndex = connection.CipherIndex;
 
-                        // Add data buffer
-                        responsePacket.Write(data, 0, data.Length);
+                            // Reserve space for size of data buffer to go into response packet
+                            responsePacket.Write(s_zeroLengthBytes, 0, 4);
+
+                            // Get data packet flags
+                            DataPacketFlags flags = (DataPacketFlags)data[0];
+
+                            // Encode current cipher index into data packet flags
+                            if (cipherIndex > 0)
+                                flags |= DataPacketFlags.CipherIndex;
+
+                            // Write data packet flags into response packet
+                            responsePacket.WriteByte((byte)flags);
+
+                            // Copy source data payload into a memory stream
+                            MemoryStream sourceData = new MemoryStream(data, 1, data.Length - 1);
+
+                            // Encrypt payload portion of data packet and copy into the response packet
+                            Common.SymmetricAlgorithm.Encrypt(sourceData, responsePacket, keyIVs[cipherIndex][0], keyIVs[cipherIndex][1]);
+
+                            // Calculate length of encrypted data payload
+                            int payloadLength = (int)responsePacket.Length - 6;
+
+                            // Move the response packet position back to the packet size reservation
+                            responsePacket.Seek(2, SeekOrigin.Begin);
+
+                            // Add the actual size of payload length to response packet
+                            responsePacket.Write(EndianOrder.BigEndian.GetBytes(payloadLength), 0, 4);
+                        }
+                        else
+                        {
+                            // Add size of data buffer to response packet
+                            responsePacket.Write(EndianOrder.BigEndian.GetBytes(data.Length), 0, 4);
+
+                            // Add data buffer
+                            responsePacket.Write(data, 0, data.Length);
+                        }
                     }
 
                     byte[] responseData = responsePacket.ToArray();
-                    int responseLength = unchecked((int)responsePacket.Length);
+                    int responseLength = responseData.Length;
 
                     if (publishChannel is UdpServer)
                         publishChannel.MulticastAsync(responseData, 0, responseLength);
@@ -1891,7 +1932,7 @@ namespace TimeSeriesFramework.Transport
                         // If table has a NodeID column, filter table data for just this node
                         if (!m_sharedDatabase && table.Columns.Contains("NodeID"))
                         {
-                            // A copy of the table structure
+                            // Make a copy of the table structure
                             metadata.Tables.Add(table.Clone());
 
                             // Reduce data to only this node
@@ -2284,6 +2325,15 @@ namespace TimeSeriesFramework.Transport
         }
 
         #endregion
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+
+        // Constant zero length integer byte array
+        private readonly static byte[] s_zeroLengthBytes = new byte[] { 0, 0, 0, 0 };
 
         #endregion
     }
