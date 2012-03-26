@@ -38,38 +38,33 @@ namespace Transport
 	class CompactMeasurementParser : public GatewayMeasurementParser
 	{
 	private:
-		SignalIndexCache& m_signalIndexCache;
-		bool m_includeTime;
-
 		EndianConverter m_endianConverter;
 		Measurement m_parsedMeasurement;
+		
+		SignalIndexCache& m_signalIndexCache;
+		long* m_baseTimeOffsets;
+		bool m_includeTime;
+		bool m_useMillisecondResolution;
 
 		// Takes the 8-bit compact measurement flags and maps
 		// them to the full 32-bit measurement flags format.
 		uint32_t MapToFullFlags(uint8_t compactFlags) const;
 
+		// Gets the byte length of measurements parsed by this parser.
+		std::size_t GetMeasurementByteLength(bool usingBaseTimeOffset) const;
+
 	public:
-		// Creates a new instance of the compact measurement parser
-		// that parses compact measurements with the timestamp included.
-		CompactMeasurementParser(SignalIndexCache& signalIndexCache)
-			: m_signalIndexCache(signalIndexCache), m_includeTime(true)
+		// Creates a new instance of the compact measurement parser.
+		CompactMeasurementParser(SignalIndexCache& signalIndexCache, long* baseTimeOffsets = 0, bool includeTime = true, bool useMillisecondResolution = false)
+			: m_signalIndexCache(signalIndexCache), m_baseTimeOffsets(baseTimeOffsets), m_includeTime(includeTime), m_useMillisecondResolution(useMillisecondResolution)
 		{
 		}
 
-		// Creates a new instance of the compact measurement parser that can parse measurements with or without the timestamp included.
-		CompactMeasurementParser(SignalIndexCache& signalIndexCache, bool includeTime)
-			: m_signalIndexCache(signalIndexCache), m_includeTime(includeTime)
-		{
-		}
-		
 		// Returns the measurement that was parsed by the last successful call to TryParseMeasurement.
 		Measurement GetParsedMeasurement() const
 		{
 			return m_parsedMeasurement;
 		}
-
-		// Gets the byte length of the compact measurements parsed by this compact measurement parser.
-		std::size_t GetMeasurementByteLength() const;
 
 		// Attempts to parse a measurement from the buffer. Return value of false indicates
 		// that there is not enough data to parse the measurement. Offset and length will be
@@ -83,7 +78,7 @@ namespace Transport
 		static const uint8_t CompactSystemIssueFlag     = 0x08;
 		static const uint8_t CompactCalculatedValueFlag = 0x10;
 		static const uint8_t CompactDiscardedValueFlag  = 0x20;
-		static const uint8_t CompactUserFlag            = 0x40;
+		static const uint8_t CompactBaseTimeOffsetFlag  = 0x40;
 		static const uint8_t CompactTimeIndexFlag       = 0x80;
 
 		// These constants are masks used to set flags within the full 32-bit measurement state flags.
@@ -91,9 +86,8 @@ namespace Transport
 		static const uint32_t DataQualityMask     = 0x0000EF03;
 		static const uint32_t TimeQualityMask     = 0x00BF0000;
 		static const uint32_t SystemIssueMask     = 0xE0000000;
-		static const uint32_t UserFlagMask        = 0x1F000000;
 		static const uint32_t CalculatedValueMask = 0x00001000;
-		static const uint32_t DiscardedValueMask  = 0x00800000;
+		static const uint32_t DiscardedValueMask  = 0x00400000;
 	};
 }}
 

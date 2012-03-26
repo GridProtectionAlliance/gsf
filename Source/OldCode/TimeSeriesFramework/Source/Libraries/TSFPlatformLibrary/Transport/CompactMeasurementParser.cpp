@@ -49,22 +49,25 @@ uint32_t tsf::Transport::CompactMeasurementParser::MapToFullFlags(uint8_t compac
 	if ((compactFlags & CompactMeasurementParser::CompactDiscardedValueFlag) > 0)
 		fullFlags |= CompactMeasurementParser::DiscardedValueMask;
 
-	if ((compactFlags & CompactMeasurementParser::CompactUserFlag) > 0)
-		fullFlags |= CompactMeasurementParser::UserFlagMask;
-
 	return fullFlags;
 }
 
-// Returns the measurement that was parsed by the last successful call to TryParseMeasurement.
-std::size_t tsf::Transport::CompactMeasurementParser::GetMeasurementByteLength() const
+// Gets the byte length of measurements parsed by this parser.
+std::size_t tsf::Transport::CompactMeasurementParser::GetMeasurementByteLength(bool usingBaseTimeOffset) const
 {
-	const std::size_t FixedLength = 7;
-	std::size_t length = FixedLength;
+	std::size_t byteLength = 7;
 
-	if(m_includeTime)
-		length += 8;
+	if (m_includeTime)
+	{
+		if (!usingBaseTimeOffset)
+			byteLength += 8;
+		else if (!m_useMillisecondResolution)
+			byteLength += 4;
+		else
+			byteLength += 2;
+	}
 
-	return length;
+	return byteLength;
 }
 
 // Attempts to parse a measurement from the buffer. Return value of false indicates
@@ -73,32 +76,69 @@ std::size_t tsf::Transport::CompactMeasurementParser::GetMeasurementByteLength()
 bool tsf::Transport::CompactMeasurementParser::TryParseMeasurement(uint8_t buffer[], std::size_t& offset, std::size_t& length)
 {
 	uint8_t compactFlags;
-	uint16_t runtimeID;
+	uint16_t signalIndex;
 	Guid signalID;
 	std::string measurementSource;
 	uint32_t measurementID;
 	float32_t measurementValue;
 	int64_t timestamp = 0;
 
+	bool usingBaseTimeOffset;
+	std::size_t timeIndex;
+
 	std::size_t end = offset + length;
 
-	if (length < GetMeasurementByteLength())
+	// Ensure that we at least have enough
+	// data to read the compact state flags
+	if (length < 1)
 		return false;
 
+	// Read the compact state flags to determine
+	// the size of the measurement being parsed
 	compactFlags = buffer[offset] & 0xFF;
+	usingBaseTimeOffset = (compactFlags & CompactBaseTimeOffsetFlag);
+	timeIndex = (compactFlags & timeIndex) ? 1 : 0;
+
+	// Ensure that we have enough data to read the rest of the measurement
+	if (length < GetMeasurementByteLength(usingBaseTimeOffset))
+		return false;
+
+	// Now that we know we have enough data,
+	// we can safely advance the offset
 	++offset;
 
-	runtimeID = m_endianConverter.ConvertBigEndian<uint16_t>(*(uint16_t*)(buffer + offset));
-	m_signalIndexCache.GetMeasurementKey(runtimeID, signalID, measurementSource, measurementID);
+	// Read the signal index from the buffer
+	signalIndex = m_endianConverter.ConvertBigEndian<uint16_t>(*(uint16_t*)(buffer + offset));
+	m_signalIndexCache.GetMeasurementKey(signalIndex, signalID, measurementSource, measurementID);
 	offset += 2;
 
+	// Read the measurement value from the buffer
 	measurementValue = m_endianConverter.ConvertBigEndian<float32_t>(*(float32_t*)(buffer + offset));
 	offset += 4;
 
-	if(m_includeTime)
+	if (m_includeTime)
 	{
-		timestamp = m_endianConverter.ConvertBigEndian<int64_t>(*(int64_t*)(buffer + offset));
-		offset += 8;
+		if (!usingBaseTimeOffset)
+		{
+			// Read full 8-byte timestamp from the buffer
+			timestamp = m_endianConverter.ConvertBigEndian<int64_t>(*(int64_t*)(buffer + offset));
+			offset += 8;
+		}
+		else if (!m_useMillisecondResolution)
+		{
+			// Read 4-byte offset from the buffer and apply the appropriate base time offset
+			timestamp = m_endianConverter.ConvertBigEndian<uint32_t>(*(uint32_t*)(buffer + offset));
+			timestamp += m_baseTimeOffsets[timeIndex];
+			offset += 4;
+		}
+		else
+		{
+			// Read 2-byte offset from the buffer, convert from milliseconds to ticks, and apply the appropriate base time offset
+			timestamp = m_endianConverter.ConvertBigEndian<uint16_t>(*(uint16_t*)(buffer + offset));
+			timestamp *= 10000;
+			timestamp += m_baseTimeOffsets[timeIndex];
+			offset += 2;
+		}
 	}
 
 	length = end - offset;
