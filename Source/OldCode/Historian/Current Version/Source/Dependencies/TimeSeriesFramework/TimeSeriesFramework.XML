@@ -5908,16 +5908,6 @@
             Gets or sets shared secret used to lookup cipher keys only known to client and server.
             </summary>
         </member>
-        <member name="P:TimeSeriesFramework.Transport.ClientConnection.Key">
-            <summary>
-            Gets active cipher key, if any.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.Transport.ClientConnection.IV">
-            <summary>
-            Gets active intitialization vector, if any.
-            </summary>
-        </member>
         <member name="P:TimeSeriesFramework.Transport.ClientConnection.KeyIVs">
             <summary>
             Gets active and standby keys and initialization vectors.
@@ -5978,6 +5968,16 @@
             </remarks>
             <param name="responseCode"><see cref="T:TimeSeriesFramework.Transport.ServerResponse"/> code to test.</param>
             <returns><c>true</c> if <see cref="T:TimeSeriesFramework.Transport.ServerResponse"/> code is for a solicited <see cref="T:TimeSeriesFramework.Transport.ServerCommand"/>; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.Common.CanUseManagedEncryption">
+            <summary>
+            Gets flag that determines if managed encryption can be used.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.Common.SymmetricAlgorithm">
+            <summary>
+            Gets an AES symmetric algorithm to use for encryption or decryption.
+            </summary>
         </member>
         <member name="T:TimeSeriesFramework.Transport.ServerCommand">
             <summary>
@@ -6164,6 +6164,14 @@
             Bit set = compact, bit clear = full fidelity.
             </remarks>
         </member>
+        <member name="F:TimeSeriesFramework.Transport.DataPacketFlags.CipherIndex">
+            <summary>
+            Detemines which cipher index to use when encrypting data packet.
+            </summary>
+            <remarks>
+            Bit set = use odd cipher index (i.e., 1), bit clear = use even cipher index (i.e., 0).
+            </remarks>
+        </member>
         <member name="F:TimeSeriesFramework.Transport.DataPacketFlags.NoFlags">
             <summary>
             No flags set.
@@ -6239,8 +6247,7 @@
             <remarks>
             This would represent protocol version 0,
             UTF-16 little endian character encoding,
-            .NET serialization, millisecond resolution,
-            and no compression.
+            .NET serialization and no compression.
             </remarks>
         </member>
         <member name="T:TimeSeriesFramework.Transport.OperationalEncoding">
@@ -7738,22 +7745,22 @@
         </member>
         <member name="F:TimeSeriesFramework.Transport.CompactMeasurementStateFlags.TimeQuality">
             <summary>
-            Time quality flag was set.
+            A time quality flag was set.
             </summary>
         </member>
         <member name="F:TimeSeriesFramework.Transport.CompactMeasurementStateFlags.SystemIssue">
             <summary>
-            System flag was set.
+            A system flag was set.
             </summary>
         </member>
         <member name="F:TimeSeriesFramework.Transport.CompactMeasurementStateFlags.CalculatedValue">
             <summary>
-            Calculated bit was set.
+            Calculated value bit was set.
             </summary>
         </member>
         <member name="F:TimeSeriesFramework.Transport.CompactMeasurementStateFlags.DiscardedValue">
             <summary>
-            Discarded bit was set.
+            Discarded value bit was set.
             </summary>
         </member>
         <member name="F:TimeSeriesFramework.Transport.CompactMeasurementStateFlags.BaseTimeOffset">
@@ -7763,7 +7770,7 @@
         </member>
         <member name="F:TimeSeriesFramework.Transport.CompactMeasurementStateFlags.TimeIndex">
             <summary>
-            Use even time index when set; odd time index when not set.
+            Use odd time index (i.e., 1) when bit is set; even time index (i.e., 0) when bit is clear.
             </summary>
         </member>
         <member name="F:TimeSeriesFramework.Transport.CompactMeasurementStateFlags.NoFlags">
@@ -7865,7 +7872,7 @@
             </para>
             <para>
             Constant Length = 7<br/>
-            Variable Length = 2 or 8 (milliseconds plus offset or full fidelity time)
+            Variable Length = 0, 2, 4 or 8 (i.e., total size is 7, 9, 11 or 15)
             </para>
             </remarks>
         </member>
