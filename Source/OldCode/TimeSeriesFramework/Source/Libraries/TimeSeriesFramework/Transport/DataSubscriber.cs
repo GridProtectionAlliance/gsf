@@ -122,6 +122,8 @@ namespace TimeSeriesFramework.Transport
         private const int KeyIndex = 0;     // Index of cipher key component in keyIV array
         private const int IVIndex = 1;      // Index of initialization vector component in keyIV array
 
+        private const long MissingCacheWarningInterval = 20000000;
+
         // Events
 
         /// <summary>
@@ -176,6 +178,7 @@ namespace TimeSeriesFramework.Transport
         private volatile int m_lastBytesReceived;
         private long m_monitoredBytesReceived;
         private long m_totalBytesReceived;
+        private long m_lastMissingCacheWarning;
         private Guid m_nodeID;
         private int m_gatewayProtocolID;
         private List<ServerCommand> m_requests;
@@ -1198,6 +1201,15 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
+        /// Initiate a metadata refresh.
+        /// </summary>
+        [AdapterCommand("Initiates a metadata refresh.")]
+        public virtual void RefreshMetadata()
+        {
+            SendServerCommand(ServerCommand.MetaDataRefresh);
+        }
+
+        /// <summary>
         /// Sends a server command to the publisher connection.
         /// </summary>
         /// <param name="commandCode"><see cref="ServerCommand"/> to send.</param>
@@ -1394,6 +1406,8 @@ namespace TimeSeriesFramework.Transport
                                 OnProcessException(new InvalidOperationException("Publisher sent a failed code for an unsolicited server command: " + commandCode));
                             break;
                         case ServerResponse.DataPacket:
+                            long now = DateTime.UtcNow.Ticks;
+
                             // Deserialize data packet
                             List<IMeasurement> measurements = new List<IMeasurement>();
                             DataPacketFlags flags;
@@ -1438,7 +1452,14 @@ namespace TimeSeriesFramework.Transport
                             // Deserialize measurements
                             for (int i = 0; i < count; i++)
                             {
-                                if (compactMeasurementFormat)
+                                if (!compactMeasurementFormat)
+                                {
+                                    // Deserialize full measurement format
+                                    SerializableMeasurement measurement = new SerializableMeasurement(m_encoding);
+                                    responseIndex += measurement.ParseBinaryImage(buffer, responseIndex, responseLength - responseIndex);
+                                    measurements.Add(measurement);
+                                }
+                                else if ((object)m_signalIndexCache != null)
                                 {
                                     // Deserialize compact measurement format
                                     CompactMeasurement measurement = new CompactMeasurement(m_signalIndexCache, m_includeTime, m_baseTimeOffsets, m_timeIndex, m_useMillisecondResolution);
@@ -1450,12 +1471,15 @@ namespace TimeSeriesFramework.Transport
 
                                     measurements.Add(measurement);
                                 }
-                                else
+                                else if (m_lastMissingCacheWarning + MissingCacheWarningInterval < now)
                                 {
-                                    // Deserialize full measurement format
-                                    SerializableMeasurement measurement = new SerializableMeasurement(m_encoding);
-                                    responseIndex += measurement.ParseBinaryImage(buffer, responseIndex, responseLength - responseIndex);
-                                    measurements.Add(measurement);
+                                    if (m_lastMissingCacheWarning != 0L)
+                                    {
+                                        // Warning message for missing signal index cache
+                                        OnStatusMessage("WARNING: Signal index cache has not arrived. No compact measurements can be parsed.");
+                                    }
+
+                                    m_lastMissingCacheWarning = now;
                                 }
                             }
 
