@@ -6435,6 +6435,13 @@
             <param name="key"><see cref="T:TimeSeriesFramework.MeasurementKey"/> to lookup.</param>
             <returns><see cref="T:System.Guid"/> signal ID if found; otherwise an empty Guid.</returns>
         </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.GetClientEncoding(System.Guid)">
+            <summary>
+            Gets the text encoding associated with a particular client.
+            </summary>
+            <param name="clientID">ID of client.</param>
+            <returns>Text encoding associated with a particular client.</returns>
+        </member>
         <member name="M:TimeSeriesFramework.Transport.DataPublisher.SendDataStartTime(System.Guid,TVA.Ticks)">
             <summary>
             Sends the start time of the first measurement in a connection transmission.
