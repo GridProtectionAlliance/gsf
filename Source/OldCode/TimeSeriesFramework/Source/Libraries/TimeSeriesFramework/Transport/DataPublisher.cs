@@ -1223,6 +1223,27 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
+        /// Gets the text encoding associated with a particular client.
+        /// </summary>
+        /// <param name="clientID">ID of client.</param>
+        /// <returns>Text encoding associated with a particular client.</returns>
+        protected internal Encoding GetClientEncoding(Guid clientID)
+        {
+            ClientConnection connection;
+
+            if (m_clientConnections.TryGetValue(clientID, out connection))
+            {
+                Encoding clientEncoding = connection.Encoding;
+
+                if ((object)clientEncoding != null)
+                    return clientEncoding;
+            }
+
+            // Default to unicode
+            return Encoding.Unicode;
+        }
+
+        /// <summary>
         /// Sends the start time of the first measurement in a connection transmission.
         /// </summary>
         /// <param name="clientID">ID of client to send response.</param>
@@ -1230,7 +1251,12 @@ namespace TimeSeriesFramework.Transport
         internal protected virtual bool SendDataStartTime(Guid clientID, Ticks startTime)
         {
             bool result = SendClientResponse(clientID, ServerResponse.DataStartTime, ServerCommand.Subscribe, EndianOrder.BigEndian.GetBytes((long)startTime));
-            OnStatusMessage("Start time sent to {0}.", m_clientConnections[clientID].ConnectionID);
+
+            ClientConnection connection;
+
+            if (m_clientConnections.TryGetValue(clientID, out connection))
+                OnStatusMessage("Start time sent to {0}.", connection.ConnectionID);
+
             return result;
         }
 
@@ -1259,7 +1285,7 @@ namespace TimeSeriesFramework.Transport
         internal protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, string status)
         {
             if (status != null)
-                return SendClientResponse(clientID, response, command, m_clientConnections[clientID].Encoding.GetBytes(status));
+                return SendClientResponse(clientID, response, command, GetClientEncoding(clientID).GetBytes(status));
 
             return SendClientResponse(clientID, response, command);
         }
@@ -1276,7 +1302,7 @@ namespace TimeSeriesFramework.Transport
         internal protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, string formattedStatus, params object[] args)
         {
             if (!string.IsNullOrWhiteSpace(formattedStatus))
-                return SendClientResponse(clientID, response, command, m_clientConnections[clientID].Encoding.GetBytes(string.Format(formattedStatus, args)));
+                return SendClientResponse(clientID, response, command, GetClientEncoding(clientID).GetBytes(string.Format(formattedStatus, args)));
 
             return SendClientResponse(clientID, response, command);
         }
@@ -1298,30 +1324,15 @@ namespace TimeSeriesFramework.Transport
         private bool SendClientResponse(Guid clientID, byte responseCode, byte commandCode, byte[] data)
         {
             ClientConnection connection = null;
-            IServer publishChannel;
-            bool dataPacketResponse = responseCode == (byte)ServerResponse.DataPacket;
             bool success = false;
 
-            // Data packets can be published on a UDP data channel, so check for this...
-            if (dataPacketResponse)
-            {
-                // Attempt to lookup associated client connection
-                m_clientConnections.TryGetValue(clientID, out connection);
-
-                // Lookup proper publication channel
-                publishChannel = m_clientPublicationChannels.GetOrAdd(clientID, id => connection == null ? m_commandChannel : connection.PublishChannel);
-            }
-            else
-            {
-                publishChannel = m_commandChannel;
-            }
-
-            // Send response packet
-            if ((object)publishChannel != null && publishChannel.CurrentState == ServerState.Running)
+            // Attempt to lookup associated client connection
+            if (m_clientConnections.TryGetValue(clientID, out connection) && (object)connection != null)
             {
                 try
                 {
                     MemoryStream responsePacket = new MemoryStream();
+                    bool dataPacketResponse = responseCode == (byte)ServerResponse.DataPacket;
 
                     // Add response code
                     responsePacket.WriteByte(responseCode);
@@ -1337,7 +1348,7 @@ namespace TimeSeriesFramework.Transport
                     else
                     {
                         // If response is for a data packet and a connection key is defined, encrypt the data packet payload
-                        if (dataPacketResponse && (object)connection != null && (object)connection.KeyIVs != null)
+                        if (dataPacketResponse && (object)connection.KeyIVs != null)
                         {
                             // Get a local copy of volatile keyIVs and cipher index since these can change at any time
                             byte[][][] keyIVs = connection.KeyIVs;
@@ -1381,15 +1392,26 @@ namespace TimeSeriesFramework.Transport
                         }
                     }
 
-                    byte[] responseData = responsePacket.ToArray();
-                    int responseLength = responseData.Length;
+                    IServer publishChannel;
 
-                    if (publishChannel is UdpServer)
-                        publishChannel.MulticastAsync(responseData, 0, responseLength);
+                    // Data packets can be published on a UDP data channel, so check for this...
+                    if (dataPacketResponse)
+                        publishChannel = m_clientPublicationChannels.GetOrAdd(clientID, id => connection == null ? m_commandChannel : connection.PublishChannel);
                     else
-                        publishChannel.SendToAsync(clientID, responseData, 0, responseLength);
+                        publishChannel = m_commandChannel;
 
-                    success = true;
+                    // Send response packet
+                    if ((object)publishChannel != null && publishChannel.CurrentState == ServerState.Running)
+                    {
+                        byte[] responseData = responsePacket.ToArray();
+
+                        if (publishChannel is UdpServer)
+                            publishChannel.MulticastAsync(responseData, 0, responseData.Length);
+                        else
+                            publishChannel.SendToAsync(clientID, responseData, 0, responseData.Length);
+
+                        success = true;
+                    }
                 }
                 catch (ObjectDisposedException)
                 {
@@ -1475,8 +1497,16 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         protected virtual void OnProcessingComplete()
         {
-            if ((object)ProcessingComplete != null)
-                ProcessingComplete(this, EventArgs.Empty);
+            try
+            {
+                if ((object)ProcessingComplete != null)
+                    ProcessingComplete(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ProcessingComplete event: {0}", ex.Message), ex));
+            }
         }
 
         /// <summary>
@@ -1487,8 +1517,16 @@ namespace TimeSeriesFramework.Transport
         /// <param name="subscriberInfo">Subscriber information (normally <see cref="ClientConnection.SubscriberInfo"/>).</param>
         protected virtual void OnClientConnected(Guid subscriberID, string connectionID, string subscriberInfo)
         {
-            if ((object)ClientConnected != null)
-                ClientConnected(this, new EventArgs<Guid, string, string>(subscriberID, connectionID, subscriberInfo));
+            try
+            {
+                if ((object)ClientConnected != null)
+                    ClientConnected(this, new EventArgs<Guid, string, string>(subscriberID, connectionID, subscriberInfo));
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ClientConnected event: {0}", ex.Message), ex));
+            }
         }
 
         // Make sure to expose any routing table exceptions
@@ -1594,7 +1632,7 @@ namespace TimeSeriesFramework.Transport
                                 startIndex += byteLength;
 
                                 // Validate the authentication ID - if it matches, connection is authenticated
-                                connection.Authenticated = (string.Compare(authenticationID, connection.Encoding.GetString(bytes, CipherSaltLength, bytes.Length - CipherSaltLength)) == 0);
+                                connection.Authenticated = (string.Compare(authenticationID, GetClientEncoding(clientID).GetString(bytes, CipherSaltLength, bytes.Length - CipherSaltLength)) == 0);
 
                                 if (connection.Authenticated)
                                 {
@@ -1683,7 +1721,7 @@ namespace TimeSeriesFramework.Transport
 
                         if (byteLength > 0 && length >= 6 + byteLength)
                         {
-                            string connectionString = connection.Encoding.GetString(buffer, startIndex, byteLength);
+                            string connectionString = GetClientEncoding(clientID).GetString(buffer, startIndex, byteLength);
                             startIndex += byteLength;
 
                             // Get client subscription
@@ -2029,49 +2067,52 @@ namespace TimeSeriesFramework.Transport
 
         private byte[] SerializeSignalIndexCache(Guid clientID, SignalIndexCache signalIndexCache)
         {
-            ClientConnection connection = m_clientConnections[clientID];
-            OperationalModes operationalModes = connection.OperationalModes;
-            bool useCommonSerializationFormat = (operationalModes & OperationalModes.UseCommonSerializationFormat) > 0;
-            bool compressSignalIndexCache = (operationalModes & OperationalModes.CompressSignalIndexCache) > 0;
+            byte[] serializedSignalIndexCache = null;
+            ClientConnection connection;
 
-            byte[] serializedSignalIndexCache;
-
-            MemoryStream compressedData = null;
-            DeflateStream deflater = null;
-
-            if (!useCommonSerializationFormat)
+            if (m_clientConnections.TryGetValue(clientID, out connection))
             {
-                // Use standard .NET BinaryFormatter
-                serializedSignalIndexCache = Serialization.Serialize(signalIndexCache, TVA.SerializationFormat.Binary);
-            }
-            else
-            {
-                // Use ISupportBinaryImage implementation
-                signalIndexCache.Encoding = connection.Encoding;
-                serializedSignalIndexCache = new byte[signalIndexCache.BinaryLength];
-                signalIndexCache.GenerateBinaryImage(serializedSignalIndexCache, 0);
-            }
+                OperationalModes operationalModes = connection.OperationalModes;
+                bool useCommonSerializationFormat = (operationalModes & OperationalModes.UseCommonSerializationFormat) > 0;
+                bool compressSignalIndexCache = (operationalModes & OperationalModes.CompressSignalIndexCache) > 0;
 
-            if (compressSignalIndexCache)
-            {
-                try
+                MemoryStream compressedData = null;
+                DeflateStream deflater = null;
+
+                if (!useCommonSerializationFormat)
                 {
-                    // Compress serialized signal index cache into compressed data buffer
-                    compressedData = new MemoryStream();
-                    deflater = new DeflateStream(compressedData, CompressionMode.Compress);
-                    deflater.Write(serializedSignalIndexCache, 0, serializedSignalIndexCache.Length);
-                    deflater.Close();
-                    deflater = null;
-
-                    serializedSignalIndexCache = compressedData.ToArray();
+                    // Use standard .NET BinaryFormatter
+                    serializedSignalIndexCache = Serialization.Serialize(signalIndexCache, TVA.SerializationFormat.Binary);
                 }
-                finally
+                else
                 {
-                    if ((object)deflater != null)
-                        deflater.Close();
+                    // Use ISupportBinaryImage implementation
+                    signalIndexCache.Encoding = GetClientEncoding(clientID);
+                    serializedSignalIndexCache = new byte[signalIndexCache.BinaryLength];
+                    signalIndexCache.GenerateBinaryImage(serializedSignalIndexCache, 0);
+                }
 
-                    if ((object)compressedData != null)
-                        compressedData.Close();
+                if (compressSignalIndexCache)
+                {
+                    try
+                    {
+                        // Compress serialized signal index cache into compressed data buffer
+                        compressedData = new MemoryStream();
+                        deflater = new DeflateStream(compressedData, CompressionMode.Compress);
+                        deflater.Write(serializedSignalIndexCache, 0, serializedSignalIndexCache.Length);
+                        deflater.Close();
+                        deflater = null;
+
+                        serializedSignalIndexCache = compressedData.ToArray();
+                    }
+                    finally
+                    {
+                        if ((object)deflater != null)
+                            deflater.Close();
+
+                        if ((object)compressedData != null)
+                            compressedData.Close();
+                    }
                 }
             }
 
@@ -2080,68 +2121,72 @@ namespace TimeSeriesFramework.Transport
 
         private byte[] SerializeMetadata(Guid clientID, DataSet metadata)
         {
-            ClientConnection connection = m_clientConnections[clientID];
-            OperationalModes operationalModes = connection.OperationalModes;
-            bool useCommonSerializationFormat = (operationalModes & OperationalModes.UseCommonSerializationFormat) > 0;
-            bool compressMetadata = (operationalModes & OperationalModes.CompressMetadata) > 0;
+            byte[] serializedMetadata = null;
+            ClientConnection connection;
 
-            byte[] serializedMetadata;
-
-            MemoryStream encodedData = null;
-            XmlTextWriter unicodeWriter = null;
-
-            MemoryStream compressedData = null;
-            DeflateStream deflater = null;
-
-            if (!useCommonSerializationFormat)
+            if (m_clientConnections.TryGetValue(clientID, out connection))
             {
-                serializedMetadata = Serialization.Serialize(metadata, TVA.SerializationFormat.Binary);
-            }
-            else
-            {
-                try
+                OperationalModes operationalModes = connection.OperationalModes;
+                bool useCommonSerializationFormat = (operationalModes & OperationalModes.UseCommonSerializationFormat) > 0;
+                bool compressMetadata = (operationalModes & OperationalModes.CompressMetadata) > 0;
+
+                MemoryStream encodedData = null;
+                XmlTextWriter unicodeWriter = null;
+
+                MemoryStream compressedData = null;
+                DeflateStream deflater = null;
+
+                if (!useCommonSerializationFormat)
                 {
-                    // Encode XML into encoded data buffer
-                    encodedData = new MemoryStream();
-                    unicodeWriter = new XmlTextWriter(encodedData, connection.Encoding);
-                    metadata.WriteXml(unicodeWriter, XmlWriteMode.WriteSchema);
-                    unicodeWriter.Close();
-                    unicodeWriter = null;
-
-                    // Return result of compression
-                    serializedMetadata = encodedData.ToArray();
+                    serializedMetadata = Serialization.Serialize(metadata, TVA.SerializationFormat.Binary);
                 }
-                finally
+                else
                 {
-                    if ((object)unicodeWriter != null)
+                    try
+                    {
+                        // Encode XML into encoded data buffer
+                        encodedData = new MemoryStream();
+                        unicodeWriter = new XmlTextWriter(encodedData, GetClientEncoding(clientID));
+                        metadata.WriteXml(unicodeWriter, XmlWriteMode.WriteSchema);
                         unicodeWriter.Close();
+                        unicodeWriter = null;
 
-                    if ((object)encodedData != null)
-                        encodedData.Close();
+                        // Return result of compression
+                        serializedMetadata = encodedData.ToArray();
+                    }
+                    finally
+                    {
+                        if ((object)unicodeWriter != null)
+                            unicodeWriter.Close();
+
+                        if ((object)encodedData != null)
+                            encodedData.Close();
+                    }
                 }
-            }
 
-            if (compressMetadata)
-            {
-                try
+                if (compressMetadata)
                 {
-                    // Compress serialized metadata into compressed data buffer
-                    compressedData = new MemoryStream();
-                    deflater = new DeflateStream(compressedData, CompressionMode.Compress);
-                    deflater.Write(serializedMetadata, 0, serializedMetadata.Length);
-                    deflater.Close();
-                    deflater = null;
-
-                    serializedMetadata = compressedData.ToArray();
-                }
-                finally
-                {
-                    if ((object)deflater != null)
+                    try
+                    {
+                        // Compress serialized metadata into compressed data buffer
+                        compressedData = new MemoryStream();
+                        deflater = new DeflateStream(compressedData, CompressionMode.Compress);
+                        deflater.Write(serializedMetadata, 0, serializedMetadata.Length);
                         deflater.Close();
+                        deflater = null;
 
-                    if ((object)compressedData != null)
-                        compressedData.Close();
+                        serializedMetadata = compressedData.ToArray();
+                    }
+                    finally
+                    {
+                        if ((object)deflater != null)
+                            deflater.Close();
+
+                        if ((object)compressedData != null)
+                            compressedData.Close();
+                    }
                 }
+
             }
 
             return serializedMetadata;
@@ -2166,6 +2211,94 @@ namespace TimeSeriesFramework.Transport
 
         #region [ Command Channel Handlers ]
 
+        private void m_commandChannel_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
+        {
+            try
+            {
+                Guid clientID = e.Argument1;
+                byte[] buffer = e.Argument2;
+                int length = e.Argument3;
+                int index = 0;
+
+                if (length > 0 && buffer != null)
+                {
+                    ClientConnection connection;
+                    ServerCommand command;
+                    string message;
+                    byte commandByte = buffer[index];
+                    index++;
+
+                    // Attempt to parse solicited server command
+                    bool validServerCommand = Enum.TryParse<ServerCommand>(commandByte.ToString(), out command);
+
+                    // Look up this client connection
+                    if (!m_clientConnections.TryGetValue(clientID, out connection))
+                    {
+                        // Received a request from an unknown client, this request is denied
+                        OnStatusMessage("WARNING: Ignored {0} byte {1} command request received from an unrecognized client: {2}", length, validServerCommand ? command.ToString() : "unidentified", clientID);
+                    }
+                    else if (validServerCommand)
+                    {
+                        if (command != ServerCommand.DefineOperationalModes)
+                        {
+                            if (command == ServerCommand.Authenticate)
+                            {
+                                // Handle authenticate
+                                HandleAuthenticationRequest(connection, buffer, index, length);
+                                return;
+                            }
+                            else if (m_requireAuthentication && !connection.Authenticated)
+                            {
+                                message = string.Format("Subscriber not authenticated - {0} request denied.", command);
+                                SendClientResponse(clientID, ServerResponse.Failed, command, message);
+                                OnStatusMessage("WARNING: Client {0} {1} command request denied - subscriber not authenticated.", connection.ConnectionID, command);
+                                return;
+                            }
+                        }
+
+                        switch (command)
+                        {
+                            case ServerCommand.Subscribe:
+                                // Handle subscribe
+                                HandleSubscribeRequest(connection, buffer, index, length);
+                                break;
+                            case ServerCommand.Unsubscribe:
+                                // Handle unsubscribe
+                                HandleUnsubscribeRequest(connection);
+                                break;
+                            case ServerCommand.MetaDataRefresh:
+                                // Handle meta data refresh (per subscriber request)
+                                HandleMetadataRefresh(connection);
+                                break;
+                            case ServerCommand.RotateCipherKeys:
+                                // Handle rotation of cipher keys (per subscriber request)
+                                connection.RotateCipherKeys();
+                                break;
+                            case ServerCommand.UpdateProcessingInterval:
+                                // Handle request to update processing interval
+                                HandleUpdateProcessingInterval(connection, buffer, index, length);
+                                break;
+                            case ServerCommand.DefineOperationalModes:
+                                // Handle request to define oeprational modes
+                                HandleDefineOperationalModes(connection, buffer, index, length);
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        // Handle unrecognized commands
+                        message = " sent an unrecognized server command: 0x" + commandByte.ToString("X").PadLeft(2, '0');
+                        SendClientResponse(clientID, (byte)ServerResponse.Failed, commandByte, GetClientEncoding(clientID).GetBytes("Client" + message));
+                        OnProcessException(new InvalidOperationException("WARNING: " + connection.ConnectionID + message));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException(string.Format("Encountered an exception while processing received client data: {0}", ex.Message), ex));
+            }
+        }
+
         private void m_commandChannel_ClientConnected(object sender, EventArgs<Guid> e)
         {
             Guid clientID = e.Argument;
@@ -2177,98 +2310,24 @@ namespace TimeSeriesFramework.Transport
 
         private void m_commandChannel_ClientDisconnected(object sender, EventArgs<Guid> e)
         {
-            Guid clientID = e.Argument;
-            ClientConnection connection;
-            IServer publicationChannel;
-
-            RemoveClientSubscription(clientID);
-
-            if (m_clientConnections.TryRemove(clientID, out connection))
-                connection.Dispose();
-
-            m_clientPublicationChannels.TryRemove(clientID, out publicationChannel);
-
-            OnStatusMessage("Client disconnected from command channel.");
-        }
-
-        private void m_commandChannel_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
-        {
-            Guid clientID = e.Argument1;
-            byte[] buffer = e.Argument2;
-            int length = e.Argument3;
-            int index = 0;
-
-            if (length > 0 && buffer != null)
+            try
             {
+                Guid clientID = e.Argument;
                 ClientConnection connection;
-                ServerCommand command;
-                string message;
-                byte commandByte = buffer[index];
-                index++;
+                IServer publicationChannel;
 
-                // Attempt to parse solicited server command
-                bool validServerCommand = Enum.TryParse<ServerCommand>(commandByte.ToString(), out command);
+                RemoveClientSubscription(clientID);
 
-                // Look up this client connection
-                if (!m_clientConnections.TryGetValue(clientID, out connection))
-                {
-                    // Received a request from an unknown client, this request is denied
-                    OnStatusMessage("WARNING: Ignored {0} byte {1} command request received from an unrecognized client: {2}", length, validServerCommand ? command.ToString() : "unidentified", clientID);
-                }
-                else if (validServerCommand)
-                {
-                    if (command != ServerCommand.DefineOperationalModes)
-                    {
-                        if (command == ServerCommand.Authenticate)
-                        {
-                            // Handle authenticate
-                            HandleAuthenticationRequest(connection, buffer, index, length);
-                            return;
-                        }
-                        else if (m_requireAuthentication && !connection.Authenticated)
-                        {
-                            message = string.Format("Subscriber not authenticated - {0} request denied.", command);
-                            SendClientResponse(clientID, ServerResponse.Failed, command, message);
-                            OnStatusMessage("WARNING: Client {0} {1} command request denied - subscriber not authenticated.", connection.ConnectionID, command);
-                            return;
-                        }
-                    }
+                if (m_clientConnections.TryRemove(clientID, out connection))
+                    connection.Dispose();
 
-                    switch (command)
-                    {
-                        case ServerCommand.Subscribe:
-                            // Handle subscribe
-                            HandleSubscribeRequest(connection, buffer, index, length);
-                            break;
-                        case ServerCommand.Unsubscribe:
-                            // Handle unsubscribe
-                            HandleUnsubscribeRequest(connection);
-                            break;
-                        case ServerCommand.MetaDataRefresh:
-                            // Handle meta data refresh (per subscriber request)
-                            HandleMetadataRefresh(connection);
-                            break;
-                        case ServerCommand.RotateCipherKeys:
-                            // Handle rotation of cipher keys (per subscriber request)
-                            connection.RotateCipherKeys();
-                            break;
-                        case ServerCommand.UpdateProcessingInterval:
-                            // Handle request to update processing interval
-                            HandleUpdateProcessingInterval(connection, buffer, index, length);
-                            break;
-                        case ServerCommand.DefineOperationalModes:
-                            // Handle request to define oeprational modes
-                            HandleDefineOperationalModes(connection, buffer, index, length);
-                            break;
-                    }
-                }
-                else
-                {
-                    // Handle unrecognized commands
-                    message = " sent an unrecognized server command: 0x" + commandByte.ToString("X").PadLeft(2, '0');
-                    SendClientResponse(clientID, (byte)ServerResponse.Failed, commandByte, connection.Encoding.GetBytes("Client" + message));
-                    OnProcessException(new InvalidOperationException("WARNING: " + connection.ConnectionID + message));
-                }
+                m_clientPublicationChannels.TryRemove(clientID, out publicationChannel);
+
+                OnStatusMessage("Client disconnected from command channel.");
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException(string.Format("Encountered an exception while processing client disconnect: {0}", ex.Message), ex));
             }
         }
 

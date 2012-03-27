@@ -357,16 +357,22 @@ namespace TimeSeriesFramework.Transport
             {
                 if (m_usingBaseTimeOffset)
                 {
+                    long baseTimeOffset = m_baseTimeOffsets[m_timeIndex];
+
                     if (m_useMillisecondResolution)
                     {
                         // Decode 2-byte millisecond offset timestamp
-                        Timestamp = m_baseTimeOffsets[m_timeIndex] + EndianOrder.BigEndian.ToUInt16(buffer, index) * Ticks.PerMillisecond;
+                        if (baseTimeOffset > 0)
+                            Timestamp = baseTimeOffset + EndianOrder.BigEndian.ToUInt16(buffer, index) * Ticks.PerMillisecond;
+
                         index += 2;
                     }
                     else
                     {
                         // Decode 4-byte tick offset timestamp
-                        Timestamp = m_baseTimeOffsets[m_timeIndex] + EndianOrder.BigEndian.ToUInt32(buffer, index);
+                        if (baseTimeOffset > 0)
+                            Timestamp = baseTimeOffset + EndianOrder.BigEndian.ToUInt32(buffer, index);
+
                         index += 4;
                     }
                 }

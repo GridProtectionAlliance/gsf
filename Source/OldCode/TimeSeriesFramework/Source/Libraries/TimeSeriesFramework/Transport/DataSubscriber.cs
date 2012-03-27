@@ -32,6 +32,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
 using TimeSeriesFramework.Adapters;
 using TVA;
@@ -281,7 +282,7 @@ namespace TimeSeriesFramework.Transport
         {
             get
             {
-                return Interlocked.Read(ref m_totalBytesReceived);
+                return m_totalBytesReceived;
             }
         }
 
@@ -1069,9 +1070,10 @@ namespace TimeSeriesFramework.Transport
                 connectionString.AppendFormat("; waitHandleTimeout={0}", waitHandleTimeout);
             }
 
-            // Make sure not to monitor for data loss any faster than downsample time on throttled connections
+            // Make sure not to monitor for data loss any faster than downsample time on throttled connections - additionally
+            // you will want to make sure data stream monitor is twice lagtime to allow time for initial points to arrive.
             if (throttled && (object)m_dataStreamMonitor != null && m_dataStreamMonitor.Interval / 1000.0D < lagTime)
-                m_dataStreamMonitor.Interval = lagTime * 1000.0D + 1000.0D;
+                m_dataStreamMonitor.Interval = 2.0D * lagTime * 1000.0D;
 
             return Subscribe(false, compactFormat, connectionString.ToString());
         }
@@ -1273,8 +1275,8 @@ namespace TimeSeriesFramework.Transport
             m_authenticated = false;
             m_subscribed = false;
             m_keyIVs = null;
-            Interlocked.Exchange(ref m_totalBytesReceived, 0L);
-            Interlocked.Exchange(ref m_monitoredBytesReceived, 0L);
+            m_totalBytesReceived = 0L;
+            m_monitoredBytesReceived = 0L;
             m_lastBytesReceived = 0;
         }
 
@@ -1319,6 +1321,8 @@ namespace TimeSeriesFramework.Transport
 
         private void ProcessServerResponse(byte[] buffer, int length)
         {
+            // Currently this work is done on the async socket completion thread, make sure work to be done is timely and if the response processing
+            // is coming in via the command channel and needs to send a command back to the server, it should be done on a separate thread...
             if (buffer != null && length > 0)
             {
                 try
@@ -1415,8 +1419,8 @@ namespace TimeSeriesFramework.Transport
                             int count;
 
                             // Track total data packet bytes received from any channel
-                            Interlocked.Add(ref m_totalBytesReceived, m_lastBytesReceived);
-                            Interlocked.Add(ref m_monitoredBytesReceived, m_lastBytesReceived);
+                            m_totalBytesReceived += m_lastBytesReceived;
+                            m_monitoredBytesReceived += m_lastBytesReceived;
 
                             // Get data packet flags
                             flags = (DataPacketFlags)buffer[responseIndex];
@@ -2012,8 +2016,16 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         protected void OnConnectionEstablished()
         {
-            if (ConnectionEstablished != null)
-                ConnectionEstablished(this, EventArgs.Empty);
+            try
+            {
+                if (ConnectionEstablished != null)
+                    ConnectionEstablished(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ConnectionEstablished event: {0}", ex.Message), ex));
+            }
         }
 
         /// <summary>
@@ -2021,8 +2033,16 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         protected void OnConnectionTerminated()
         {
-            if (ConnectionTerminated != null)
-                ConnectionTerminated(this, EventArgs.Empty);
+            try
+            {
+                if (ConnectionTerminated != null)
+                    ConnectionTerminated(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ConnectionTerminated event: {0}", ex.Message), ex));
+            }
         }
 
         /// <summary>
@@ -2030,8 +2050,16 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         protected void OnConnectionAuthenticated()
         {
-            if (ConnectionAuthenticated != null)
-                ConnectionAuthenticated(this, EventArgs.Empty);
+            try
+            {
+                if (ConnectionAuthenticated != null)
+                    ConnectionAuthenticated(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ConnectionAuthenticated event: {0}", ex.Message), ex));
+            }
         }
 
         /// <summary>
@@ -2040,8 +2068,16 @@ namespace TimeSeriesFramework.Transport
         /// <param name="metadata">Meta-data <see cref="DataSet"/> instance to send to client subscription.</param>
         protected void OnMetaDataReceived(DataSet metadata)
         {
-            if (MetaDataReceived != null)
-                MetaDataReceived(this, new EventArgs<DataSet>(metadata));
+            try
+            {
+                if (MetaDataReceived != null)
+                    MetaDataReceived(this, new EventArgs<DataSet>(metadata));
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for MetaDataReceived event: {0}", ex.Message), ex));
+            }
         }
 
         /// <summary>
@@ -2050,8 +2086,16 @@ namespace TimeSeriesFramework.Transport
         /// <param name="startTime">Start time, in <see cref="Ticks"/>, of first measurement transmitted.</param>
         protected void OnDataStartTime(Ticks startTime)
         {
-            if (DataStartTime != null)
-                DataStartTime(this, new EventArgs<Ticks>(startTime));
+            try
+            {
+                if (DataStartTime != null)
+                    DataStartTime(this, new EventArgs<Ticks>(startTime));
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for DataStartTime event: {0}", ex.Message), ex));
+            }
         }
 
         /// <summary>
@@ -2060,11 +2104,19 @@ namespace TimeSeriesFramework.Transport
         /// <param name="source">Type name of adapter that sent the processing completed notification.</param>
         protected void OnProcessingComplete(string source)
         {
-            if (ProcessingComplete != null)
-                ProcessingComplete(this, new EventArgs<string>(source));
+            try
+            {
+                if (ProcessingComplete != null)
+                    ProcessingComplete(this, new EventArgs<string>(source));
 
-            // Also raise base class event in case this event has been subscribed
-            OnProcessingComplete();
+                // Also raise base class event in case this event has been subscribed
+                OnProcessingComplete();
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ProcessingComplete event: {0}", ex.Message), ex));
+            }
         }
 
         /// <summary>
@@ -2089,16 +2141,16 @@ namespace TimeSeriesFramework.Transport
 
         private void m_dataStreamMonitor_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            if (Interlocked.Read(ref m_monitoredBytesReceived) == 0)
+            if (m_monitoredBytesReceived == 0)
             {
                 // If we've received no data in the last timespan, we restart connect cycle...
                 m_dataStreamMonitor.Enabled = false;
                 OnStatusMessage("\r\nNo data received in {0} seconds, restarting connect cycle...\r\n", (m_dataStreamMonitor.Interval / 1000.0D).ToString("0.0"));
-                Start();
+                Task.Factory.StartNew(Start);
             }
 
             // Reset bytes received bytes being monitored
-            Interlocked.Exchange(ref m_monitoredBytesReceived, 0L);
+            m_monitoredBytesReceived = 0L;
         }
 
         #region [ Command Channel Event Handlers ]

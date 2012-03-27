@@ -542,7 +542,7 @@ namespace TimeSeriesFramework.Transport
                             if (useCompactMeasurementFormat)
                                 binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, m_includeTime, m_baseTimeOffsets, m_timeIndex, m_useMillisecondResolution);
                             else
-                                binaryMeasurement = new SerializableMeasurement(measurement, m_parent.ClientConnections[m_clientID].Encoding);
+                                binaryMeasurement = new SerializableMeasurement(measurement, m_parent.GetClientEncoding(m_clientID));
 
                             // Determine the size of the measurement in bytes.
                             binaryLength = binaryMeasurement.BinaryLength;
@@ -608,31 +608,34 @@ namespace TimeSeriesFramework.Transport
         // Rotates base time offsets
         private void RotateBaseTimes()
         {
-            MemoryStream responsePacket = new MemoryStream();
-
-            if ((object)m_baseTimeOffsets == null)
+            if ((object)m_parent != null && (object)m_baseTimeRotationTimer != null)
             {
-                m_baseTimeOffsets = new long[2];
-                m_baseTimeOffsets[0] = RealTime;
-                m_baseTimeOffsets[1] = RealTime + (long)m_baseTimeRotationTimer.Interval * Ticks.PerMillisecond;
-                m_timeIndex = 0;
+                MemoryStream responsePacket = new MemoryStream();
+
+                if ((object)m_baseTimeOffsets == null)
+                {
+                    m_baseTimeOffsets = new long[2];
+                    m_baseTimeOffsets[0] = RealTime;
+                    m_baseTimeOffsets[1] = RealTime + (long)m_baseTimeRotationTimer.Interval * Ticks.PerMillisecond;
+                    m_timeIndex = 0;
+                }
+                else
+                {
+                    int oldIndex = m_timeIndex;
+
+                    // Switch to newer timestamp
+                    m_timeIndex ^= 1;
+
+                    // Now make older timestamp the newer timestamp
+                    m_baseTimeOffsets[oldIndex] = RealTime + (long)m_baseTimeRotationTimer.Interval * Ticks.PerMillisecond;
+                }
+
+                responsePacket.Write(EndianOrder.BigEndian.GetBytes(m_timeIndex), 0, 4);
+                responsePacket.Write(EndianOrder.BigEndian.GetBytes(m_baseTimeOffsets[0]), 0, 8);
+                responsePacket.Write(EndianOrder.BigEndian.GetBytes(m_baseTimeOffsets[1]), 0, 8);
+
+                m_parent.SendClientResponse(m_clientID, ServerResponse.UpdateBaseTimes, ServerCommand.Subscribe, responsePacket.ToArray());
             }
-            else
-            {
-                int oldIndex = m_timeIndex;
-
-                // Switch to newer timestamp
-                m_timeIndex ^= 1;
-
-                // Now make older timestamp the newer timestamp
-                m_baseTimeOffsets[oldIndex] = RealTime + (long)m_baseTimeRotationTimer.Interval * Ticks.PerMillisecond;
-            }
-
-            responsePacket.Write(EndianOrder.BigEndian.GetBytes(m_timeIndex), 0, 4);
-            responsePacket.Write(EndianOrder.BigEndian.GetBytes(m_baseTimeOffsets[0]), 0, 8);
-            responsePacket.Write(EndianOrder.BigEndian.GetBytes(m_baseTimeOffsets[1]), 0, 8);
-
-            m_parent.SendClientResponse(m_clientID, ServerResponse.UpdateBaseTimes, ServerCommand.Subscribe, responsePacket.ToArray());
         }
 
         // Explicitly implement status message event bubbler to satisfy IClientSubscription interface
