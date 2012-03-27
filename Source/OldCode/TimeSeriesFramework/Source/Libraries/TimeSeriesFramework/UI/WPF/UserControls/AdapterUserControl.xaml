@@ -110,10 +110,11 @@
                     
                     <ListBox Grid.Row="0" Grid.Column="1" Width="{StaticResource LargerItemSize}" Height="{StaticResource XSmallItemSize}" HorizontalContentAlignment="Stretch"
                              Name="ParameterListBox" ItemsSource="{Binding Source={StaticResource ParameterList}}" SelectedItem="{Binding Path=SelectedParameter}"
-                             DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}, Path=DataContext}">
+                             DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}, Path=DataContext}" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             ScrollViewer.HorizontalScrollBarVisibility="Auto">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock FontWeight="{Binding Path=Boldness}" Foreground="{Binding Path=Color}" Text="{Binding Path=Name}" ToolTipService.InitialShowDelay="0">
+                                <TextBlock FontWeight="{Binding Path=Boldness}" Foreground="{Binding Path=Color}" Text="{Binding Path=Name}" ToolTipService.InitialShowDelay="0" Width="Auto">
                                     <TextBlock.ToolTip>
                                         <ToolTip>
                                             <TextBlock Text="{Binding Path=Description}" />
