@@ -25,8 +25,8 @@
 #define __GATEWAY_MEASUREMENT_PARSER_H
 
 #include <cstddef>
-#include "../Measurement.h"
-#include "../Types.h"
+#include "../Common/Measurement.h"
+#include "../Common/Types.h"
 
 namespace TimeSeriesFramework {
 namespace Transport

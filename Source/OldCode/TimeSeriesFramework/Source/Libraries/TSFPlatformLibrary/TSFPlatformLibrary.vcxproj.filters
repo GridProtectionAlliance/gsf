@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="Measurement.h" />
     <ClInclude Include="Transport\SignalIndexCache.h">
       <Filter>Transport</Filter>
     </ClInclude>
@@ -11,8 +10,15 @@
     <ClInclude Include="Transport\GatewayMeasurementParser.h">
       <Filter>Transport</Filter>
     </ClInclude>
-    <ClInclude Include="EndianConverter.h" />
-    <ClInclude Include="Types.h" />
+    <ClInclude Include="Common\EndianConverter.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Types.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Measurement.h">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Transport\SignalIndexCache.cpp">
@@ -21,11 +27,16 @@
     <ClCompile Include="Transport\CompactMeasurementParser.cpp">
       <Filter>Transport</Filter>
     </ClCompile>
-    <ClCompile Include="EndianConverter.cpp" />
+    <ClCompile Include="Common\EndianConverter.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Transport">
       <UniqueIdentifier>{0f19b432-ab9c-4d18-9a92-f80c87dc20c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{e88bc1e0-d6ef-458b-8c07-4ca6aa8f916c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

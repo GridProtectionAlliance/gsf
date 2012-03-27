@@ -25,11 +25,13 @@
 #define __COMPACT_MEASUREMENT_PARSER_H
 
 #include <cstddef>
+
+#include "../Common/Measurement.h"
+#include "../Common/Types.h"
+#include "../Common/EndianConverter.h"
+
 #include "GatewayMeasurementParser.h"
 #include "SignalIndexCache.h"
-#include "../Measurement.h"
-#include "../Types.h"
-#include "../EndianConverter.h"
 
 namespace TimeSeriesFramework {
 namespace Transport

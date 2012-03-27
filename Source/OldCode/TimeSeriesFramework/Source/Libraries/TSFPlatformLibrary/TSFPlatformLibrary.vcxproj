@@ -11,15 +11,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="EndianConverter.h" />
-    <ClInclude Include="Types.h" />
-    <ClInclude Include="Measurement.h" />
+    <ClInclude Include="Common\EndianConverter.h" />
+    <ClInclude Include="Common\Measurement.h" />
+    <ClInclude Include="Common\Types.h" />
     <ClInclude Include="Transport\CompactMeasurementParser.h" />
     <ClInclude Include="Transport\GatewayMeasurementParser.h" />
     <ClInclude Include="Transport\SignalIndexCache.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="EndianConverter.cpp" />
+    <ClCompile Include="Common\EndianConverter.cpp" />
     <ClCompile Include="Transport\CompactMeasurementParser.cpp" />
     <ClCompile Include="Transport\SignalIndexCache.cpp" />
   </ItemGroup>

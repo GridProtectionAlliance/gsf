@@ -27,7 +27,7 @@
 #include <map>
 #include <vector>
 #include <string>
-#include "../Types.h"
+#include "../Common/Types.h"
 
 namespace TimeSeriesFramework {
 namespace Transport
