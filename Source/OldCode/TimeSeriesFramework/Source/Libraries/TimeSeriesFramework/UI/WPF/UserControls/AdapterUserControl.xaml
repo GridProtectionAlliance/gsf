@@ -114,7 +114,7 @@
                              ScrollViewer.HorizontalScrollBarVisibility="Auto">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock FontWeight="{Binding Path=Boldness}" Foreground="{Binding Path=Color}" Text="{Binding Path=Name}" ToolTipService.InitialShowDelay="0" Width="Auto">
+                                <TextBlock FontWeight="{Binding Path=Boldness}" Foreground="{Binding Path=Color}" Text="{Binding Path=Name}" ToolTipService.InitialShowDelay="0" Width="Auto" TextAlignment="Left" HorizontalAlignment="Left">
                                     <TextBlock.ToolTip>
                                         <ToolTip>
                                             <TextBlock Text="{Binding Path=Description}" />
