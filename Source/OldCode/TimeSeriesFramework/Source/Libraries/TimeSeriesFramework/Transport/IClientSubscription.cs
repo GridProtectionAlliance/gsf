@@ -24,8 +24,12 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Text;
 using TimeSeriesFramework.Adapters;
 using TVA;
+using TVA.Collections;
 
 namespace TimeSeriesFramework.Transport
 {
@@ -147,6 +151,9 @@ namespace TimeSeriesFramework.Transport
             session = new IaonSession();
             session.Name = "<" + clientSubscription.HostName.ToNonNullString("unavailable") + ">@" + clientSubscription.StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss");
 
+            // Assign requested input measurement keys as a routing restriction
+            session.InputMeasurementKeysRestriction = inputMeasurementKeys;
+
             // Setup default bubbling event handlers associated with the client session adapter
             EventHandler<EventArgs<string, UpdateType>> statusMessageHandler = (sender, e) =>
             {
@@ -178,32 +185,53 @@ namespace TimeSeriesFramework.Transport
                     clientSubscription.ProcessingInterval == -1 ? "at the default rate" : "at " + clientSubscription.ProcessingInterval + "ms intervals"),
                 UpdateType.Information));
 
-            // Duplicate current real-time session configuration for adapters that have temporal support
+            // Duplicate current real-time session configuration for adapters that report temporal support
             session.DataSource = IaonSession.ExtractTemporalConfiguration(clientSubscription.DataSource);
 
-            // Create in-situ action adapter for temporal Iaon session used to proxy data to the client subscription
-            TemporalClientSubscriptionProxy proxy = new TemporalClientSubscriptionProxy(clientSubscription);
+            // Define an in-situ action adapter for the temporal Iaon session used to proxy data back to the client subscription
+            DataTable actionAdapters = session.DataSource.Tables["ActionAdapters"];
+            DataRow proxyAdapterRow = actionAdapters.NewRow();
+
+            // Define connection string for proxy adapter based on original inputs and ouputs as requested by client subscription
+            StringBuilder connectionString = new StringBuilder();
+
+            if (inputMeasurementKeys != null && inputMeasurementKeys.Length > 0)
+                connectionString.AppendFormat("inputMeasurementKeys={{{0}}}", inputMeasurementKeys.Select(key => key.SignalID).ToDelimitedString(";"));
+
+            if (outputMeasurements != null && outputMeasurements.Length > 0)
+            {
+                if (connectionString.Length > 0)
+                    connectionString.Append("; ");
+
+                connectionString.AppendFormat("outputMeasurements={{{0}}}", outputMeasurements.Select(m => m.ID).ToDelimitedString(";"));
+            }
 
             // Assign critical adapter properties
-            proxy.Name = "PROXY!SERVICES";
-            proxy.ID = 0;
-            proxy.InitializationTimeout = session.ActionAdapters.InitializationTimeout;
-            proxy.DataSource = session.DataSource;
-            proxy.ConnectionString = null;
+            proxyAdapterRow["ID"] = 0;
+            proxyAdapterRow["AdapterName"] = "PROXY!SERVICES";
+            proxyAdapterRow["AssemblyName"] = "TimeSeriesFramework.dll";
+            proxyAdapterRow["TypeName"] = "TimeSeriesFramework.Transport.TemporalClientSubscriptionProxy";
+            proxyAdapterRow["ConnectionString"] = connectionString.ToString();
 
-            // Assign requested input measurement keys as a routing restriction
-            session.InputMeasurementKeysRestriction = inputMeasurementKeys;
+            // Add proxy row to Iaon action adapter definitions
+            actionAdapters.Rows.Add(proxyAdapterRow);
 
             // Initialize temporal session adapters without starting them
             session.Initialize(false);
 
-            // Add proxy to temporal session action adapters collection, this will auto-initialize the adapter
-            session.ActionAdapters.Add(proxy);
+            // Get reference to temporal session proxy adapter to it can be associated with the client subscription
+            TemporalClientSubscriptionProxy proxyAdapter = null;
+            IActionAdapter adapter0;
 
-            // Provide proxy with the original measurement keys requested by the remote subscriber, this will
-            // establish the needed session level measurement key routing demands
-            proxy.InputMeasurementKeys = inputMeasurementKeys;
-            proxy.OutputMeasurements = outputMeasurements;
+            // Lookup proxy adapter defined with reserved ID zero
+            if (session.ActionAdapters.TryGetAdapterByID(0, out adapter0))
+                proxyAdapter = adapter0 as TemporalClientSubscriptionProxy;
+
+            if ((object)proxyAdapter == null)
+                throw new InvalidOperationException("Failed to define temporal subscription proxy adapter - cannot complete temporal session initialization.");
+
+            // Associate proxy with client subscription
+            proxyAdapter.Parent = clientSubscription;
 
             // Load current temporal constraint parameters
             Dictionary<string, string> settings = clientSubscription.Settings;

@@ -38,22 +38,6 @@ namespace TimeSeriesFramework.Transport
 
         #endregion
 
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Creates a new <see cref="TemporalClientSubscriptionProxy"/>.
-        /// </summary>
-        /// <param name="parent">Parent <see cref="IClientSubscription"/> instance.</param>
-        /// <remarks>
-        /// This class constructor is marked as internal since it should not be dynamically created as part of a <see cref="IaonSession"/>.
-        /// </remarks>
-        internal TemporalClientSubscriptionProxy(IClientSubscription parent)
-        {
-            m_parent = parent;
-        }
-
-        #endregion
-
         #region [ Properties ]
 
         /// <summary>
@@ -67,6 +51,21 @@ namespace TimeSeriesFramework.Transport
             }
         }
 
+        /// <summary>
+        /// Gets or sets parent subscription for the proxy used to deliver data.
+        /// </summary>
+        public IClientSubscription Parent
+        {
+            get
+            {
+                return m_parent;
+            }
+            set
+            {
+                m_parent = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -77,7 +76,8 @@ namespace TimeSeriesFramework.Transport
         /// <param name="measurements">Collection of measurements to queue for processing.</param>
         public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
-            m_parent.QueueMeasurementsForProcessing(measurements);
+            if ((object)m_parent != null)
+                m_parent.QueueMeasurementsForProcessing(measurements);
         }
 
         /// <summary>
