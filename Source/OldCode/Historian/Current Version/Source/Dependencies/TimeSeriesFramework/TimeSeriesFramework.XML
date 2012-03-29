@@ -8199,15 +8199,6 @@
             Represents an action adapter that exists within a temporal <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/> to proxy data back to its parent <see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/> instance.
             </summary>
         </member>
-        <member name="M:TimeSeriesFramework.Transport.TemporalClientSubscriptionProxy.#ctor(TimeSeriesFramework.Transport.IClientSubscription)">
-            <summary>
-            Creates a new <see cref="T:TimeSeriesFramework.Transport.TemporalClientSubscriptionProxy"/>.
-            </summary>
-            <param name="parent">Parent <see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/> instance.</param>
-            <remarks>
-            This class constructor is marked as internal since it should not be dynamically created as part of a <see cref="T:TimeSeriesFramework.Adapters.IaonSession"/>.
-            </remarks>
-        </member>
         <member name="M:TimeSeriesFramework.Transport.TemporalClientSubscriptionProxy.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
             <summary>
             Proxies measurements to parent adapter for processing.
@@ -8224,6 +8215,11 @@
         <member name="P:TimeSeriesFramework.Transport.TemporalClientSubscriptionProxy.SupportsTemporalProcessing">
             <summary>
             Gets the flag indicating if this adapter supports temporal processing.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.TemporalClientSubscriptionProxy.Parent">
+            <summary>
+            Gets or sets parent subscription for the proxy used to deliver data.
             </summary>
         </member>
         <member name="T:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription">
