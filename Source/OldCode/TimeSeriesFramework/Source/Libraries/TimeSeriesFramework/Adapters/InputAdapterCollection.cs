@@ -90,8 +90,16 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="measurements">New measurements.</param>
         protected virtual void OnNewMeasurements(ICollection<IMeasurement> measurements)
         {
-            if (NewMeasurements != null)
-                NewMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
+            try
+            {
+                if (NewMeasurements != null)
+                    NewMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for NewMeasurements event: {0}", ex.Message), ex));
+            }
         }
 
         /// <summary>
@@ -99,8 +107,16 @@ namespace TimeSeriesFramework.Adapters
         /// </summary>
         protected virtual void OnProcessingComplete()
         {
-            if (ProcessingComplete != null)
-                ProcessingComplete(this, EventArgs.Empty);
+            try
+            {
+                if (ProcessingComplete != null)
+                    ProcessingComplete(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ProcessingComplete event: {0}", ex.Message), ex));
+            }
         }
 
         /// <summary>

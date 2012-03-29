@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -59,7 +60,7 @@ namespace TimeSeriesFramework.UI
         public event PropertyChangedEventHandler PropertyChanged;
 
         // Fields
-        private Dictionary<string, string> m_propertyErrors;
+        private ConcurrentDictionary<string, string> m_propertyErrors;
         private BindingFlags m_memberAccessBindingFlags;
         private bool m_requireEntityPropertyAttribute;
         private bool m_lastIsValidState;
@@ -85,7 +86,7 @@ namespace TimeSeriesFramework.UI
         /// </param>
         protected DataModelBase(bool requireEntityPropertyAttribute)
         {
-            m_propertyErrors = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            m_propertyErrors = new ConcurrentDictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
             m_memberAccessBindingFlags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly;
             m_requireEntityPropertyAttribute = requireEntityPropertyAttribute;
 

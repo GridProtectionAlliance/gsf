@@ -89,7 +89,7 @@ namespace TimeSeriesFramework
 
                     // Cache measurement based on signal ID
                     s_idCache[m_signalID] = this;
-                    s_keyCache.GetOrAdd(source, key => new ConcurrentDictionary<uint, MeasurementKey>())[id] = this;
+                    s_keyCache.GetOrAdd(source, kcf => new ConcurrentDictionary<uint, MeasurementKey>())[id] = this;
                 }
             }
         }
@@ -119,7 +119,7 @@ namespace TimeSeriesFramework
 
                     // Update measurement caches
                     s_idCache[m_signalID] = this;
-                    s_keyCache.GetOrAdd(m_source, key => new ConcurrentDictionary<uint, MeasurementKey>())[m_id] = this;
+                    s_keyCache.GetOrAdd(m_source, kcf => new ConcurrentDictionary<uint, MeasurementKey>())[m_id] = this;
                 }
             }
         }
@@ -344,10 +344,10 @@ namespace TimeSeriesFramework
         /// <exception cref="FormatException">The value is not in the correct format for a <see cref="MeasurementKey"/> value.</exception>
         public static MeasurementKey Parse(string value, Guid signalID = default(Guid))
         {
-            string[] elem = value.Trim().Split(':');
+            MeasurementKey key;
 
-            if (elem.Length == 2)
-                return new MeasurementKey(signalID, uint.Parse(elem[1].Trim()), elem[0].Trim());
+            if (TryParse(value, signalID, out key))
+                return key;
 
             throw new FormatException("The value is not in the correct format for a MeasurementKey value");
         }
@@ -392,16 +392,35 @@ namespace TimeSeriesFramework
         /// <returns>A <c>true</c> if <see cref="MeasurementKey"/>representation contained in <paramref name="value"/> could be parsed; otherwise <c>false</c>.</returns>
         public static bool TryParse(string value, Guid signalID, out MeasurementKey key)
         {
-            try
-            {
-                key = Parse(value, signalID);
+            // Check cache for an existing measurment key definition if signal ID is defined
+            if (signalID != Guid.Empty && s_idCache.TryGetValue(signalID, out key))
                 return true;
-            }
-            catch
+
+            if (!string.IsNullOrEmpty(value))
             {
-                key = default(MeasurementKey);
-                return false;
+                try
+                {
+                    string[] elem = value.Split(':');
+
+                    if (elem.Length == 2)
+                    {
+                        uint id;
+
+                        if (uint.TryParse(elem[1].Trim(), out id))
+                        {
+                            key = new MeasurementKey(signalID, id, elem[0].Trim());
+                            return true;
+                        }
+                    }
+                }
+                catch
+                {
+                    // Any exceptions result in failure to parse
+                }
             }
+
+            key = default(MeasurementKey);
+            return false;
         }
 
         /// <summary>
@@ -419,22 +438,12 @@ namespace TimeSeriesFramework
         /// </remarks>
         public static void EstablishDefaultCache(IDbConnection connection, Type adapterType, string measurementTable = "ActiveMeasurement")
         {
-            string keyID;
-            string[] elems;
+            MeasurementKey key;
 
             // Establish default measurement key cache
             foreach (DataRow measurement in connection.RetrieveData(adapterType, string.Format("SELECT ID, SignalID FROM {0}", measurementTable)).Rows)
             {
-                keyID = measurement["ID"].ToNonNullString();
-
-                if (!string.IsNullOrWhiteSpace(keyID))
-                {
-                    elems = keyID.Split(':');
-
-                    // Cache new measurement key with associated Guid signal ID
-                    if (elems.Length == 2)
-                        new MeasurementKey(measurement["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), uint.Parse(elems[1].Trim()), elems[0].Trim());
-                }
+                TryParse(measurement["ID"].ToString(), measurement["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), out key);
             }
         }
 
@@ -449,6 +458,9 @@ namespace TimeSeriesFramework
             key.m_signalID = Guid.Empty;
             key.m_source = "__";
             key.m_id = uint.MaxValue;
+            key.m_hashCode = int.MaxValue;
+
+            s_keyCache.GetOrAdd("__", kcf => new ConcurrentDictionary<uint, MeasurementKey>())[uint.MaxValue] = key;
 
             return key;
         }

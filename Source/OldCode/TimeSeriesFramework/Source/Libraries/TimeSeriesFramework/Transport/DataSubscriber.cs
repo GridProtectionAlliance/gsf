@@ -207,12 +207,7 @@ namespace TimeSeriesFramework.Transport
         {
             m_requests = new List<ServerCommand>();
             m_encoding = Encoding.Unicode;
-
-            // Create data stream monitoring timer
-            m_dataStreamMonitor = new System.Timers.Timer();
-            m_dataStreamMonitor.Elapsed += m_dataStreamMonitor_Elapsed;
-            m_dataStreamMonitor.AutoReset = true;
-            m_dataStreamMonitor.Enabled = false;
+            DataLossInterval = 10.0D;
         }
 
         #endregion
@@ -283,6 +278,43 @@ namespace TimeSeriesFramework.Transport
             get
             {
                 return m_totalBytesReceived;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets data loss monitoring interval, in seconds. Set to zero to disable monitoring.
+        /// </summary>
+        public double DataLossInterval
+        {
+            get
+            {
+                if ((object)m_dataStreamMonitor != null)
+                    return m_dataStreamMonitor.Interval / 1000.0D;
+
+                return 0.0D;
+            }
+            set
+            {
+                if (value > 0.0D)
+                {
+                    if ((object)m_dataStreamMonitor == null)
+                    {
+                        // Create data stream monitoring timer
+                        m_dataStreamMonitor = new System.Timers.Timer();
+                        m_dataStreamMonitor.Elapsed += m_dataStreamMonitor_Elapsed;
+                        m_dataStreamMonitor.AutoReset = true;
+                        m_dataStreamMonitor.Enabled = false;
+                    }
+                    // Set user specified interval
+                    m_dataStreamMonitor.Interval = value * 1000.0D;
+                }
+                else
+                {
+                    // Disable data monitor
+                    m_dataStreamMonitor.Elapsed -= m_dataStreamMonitor_Elapsed;
+                    m_dataStreamMonitor.Dispose();
+                    m_dataStreamMonitor = null;
+                }
             }
         }
 
@@ -384,7 +416,12 @@ namespace TimeSeriesFramework.Transport
                 status.AppendLine();
                 status.AppendFormat("      Data packet security: {0}", m_keyIVs == null ? "unencrypted" : "encrypted");
                 status.AppendLine();
-                status.AppendFormat("No data reconnect interval: {0} seconds", Ticks.FromMilliseconds(m_dataStreamMonitor.Interval).ToSeconds().ToString("0.000"));
+
+                if (DataLossInterval > 0.0D)
+                    status.AppendFormat("No data reconnect interval: {0} seconds", DataLossInterval.ToString("0.000"));
+                else
+                    status.Append("No data reconnect interval: disabled");
+
                 status.AppendLine();
 
                 if ((object)m_dataChannel != null)
@@ -532,13 +569,7 @@ namespace TimeSeriesFramework.Transport
                 {
                     if (disposing)
                     {
-                        if (m_dataStreamMonitor != null)
-                        {
-                            m_dataStreamMonitor.Elapsed -= m_dataStreamMonitor_Elapsed;
-                            m_dataStreamMonitor.Dispose();
-                        }
-                        m_dataStreamMonitor = null;
-
+                        DataLossInterval = 0.0D;
                         CommandChannel = null;
                         DataChannel = null;
                         DisposeLocalConcentrator();
@@ -561,8 +592,9 @@ namespace TimeSeriesFramework.Transport
 
             Dictionary<string, string> settings = Settings;
             string setting;
+            double interval;
 
-            // Setup data publishing server with or without required authentication 
+            // Setup connection to data publishing server with or without authentication required
             if (settings.TryGetValue("requireAuthentication", out setting))
                 m_requireAuthentication = setting.ParseBoolean();
             else
@@ -599,14 +631,13 @@ namespace TimeSeriesFramework.Transport
             if (settings.TryGetValue("autoConnect", out setting))
                 m_autoConnect = setting.ParseBoolean();
 
-            if (settings.TryGetValue("dataLossInterval", out setting))
-                m_dataStreamMonitor.Interval = double.Parse(setting) * 1000.0D;
-            else
-                m_dataStreamMonitor.Interval = 5000.0D;
+            // Define data loss interval
+            if (settings.TryGetValue("dataLossInterval", out setting) && double.TryParse(setting, out interval))
+                DataLossInterval = interval;
 
-            // Connect to local events when automatically engaging connection cycle
             if (m_autoConnect)
             {
+                // Connect to local events when automatically engaging connection cycle
                 ConnectionAuthenticated += DataSubscriber_ConnectionAuthenticated;
                 MetaDataReceived += DataSubscriber_MetaDataReceived;
 
@@ -618,25 +649,24 @@ namespace TimeSeriesFramework.Transport
                         // Filter to points associated with this subscriber that have been requested for subscription, are enabled and not owned locally
                         DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select("Subscribed <> 0");
                         List<IMeasurement> subscribedMeasurements = new List<IMeasurement>();
+                        MeasurementKey key;
                         Guid signalID;
 
                         foreach (DataRow row in filteredRows)
                         {
+                            // Create a new measurement for the provided field level information
+                            Measurement measurement = new Measurement();
+
+                            // Parse primary measurement identifier
                             signalID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
 
-                            // Create a new measurement for the provided field level information
-                            Measurement measurement = new Measurement()
-                            {
-                                Key = MeasurementKey.Parse(row["ID"].ToNonNullString(MeasurementKey.Undefined.ToString()), signalID)
-                            };
+                            // Set measurement key if defined
+                            if (MeasurementKey.TryParse(row["ID"].ToString(), signalID, out key))
+                                measurement.Key = key;
 
+                            // Assign other attributes
                             measurement.ID = signalID;
                             measurement.TagName = row["PointTag"].ToNonNullString();
-
-                            // Attempt to update empty signal ID if available
-                            if (measurement.Key.SignalID == Guid.Empty)
-                                measurement.Key.UpdateSignalID(measurement.ID);
-
                             measurement.Multiplier = double.Parse(row["Multiplier"].ToString());
                             measurement.Adder = double.Parse(row["Adder"].ToString());
 
@@ -652,9 +682,10 @@ namespace TimeSeriesFramework.Transport
                                 OutputMeasurements = subscribedMeasurements.Concat(OutputMeasurements).Distinct().ToArray();
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // Errors here are not catastrophic, this simply limits the auto-assignment of input measurement keys desired for subscription
+                        // Errors here may not be catastrophic, this simply limits the auto-assignment of input measurement keys desired for subscription
+                        OnProcessException(new InvalidOperationException(string.Format("Failed to define subscribed measurements: {0}", ex.Message), ex));
                     }
                 }
             }
@@ -1368,12 +1399,14 @@ namespace TimeSeriesFramework.Transport
                                     case ServerCommand.Subscribe:
                                         OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
                                         m_subscribed = true;
-                                        m_dataStreamMonitor.Enabled = true;
+                                        if ((object)m_dataStreamMonitor != null)
+                                            m_dataStreamMonitor.Enabled = true;
                                         break;
                                     case ServerCommand.Unsubscribe:
                                         OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
                                         m_subscribed = false;
-                                        m_dataStreamMonitor.Enabled = false;
+                                        if ((object)m_dataStreamMonitor != null)
+                                            m_dataStreamMonitor.Enabled = false;
                                         break;
                                     case ServerCommand.RotateCipherKeys:
                                         OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
@@ -1996,6 +2029,33 @@ namespace TimeSeriesFramework.Transport
             return encoding;
         }
 
+        // Socket exception handler
+        private bool HandleSocketException(System.Net.Sockets.SocketException ex)
+        {
+            if ((object)ex != null)
+            {
+                // WSAECONNABORTED and WSAECONNRESET are common errors after a client disconnect,
+                // if they happen for other reasons, make sure disconnect procedure is handled
+                if (ex.ErrorCode == 10053 || ex.ErrorCode == 10054)
+                {
+                    DisconnectClient();
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // Disconnect client, restarting if disconnect was not intentional
+        private void DisconnectClient()
+        {
+            DataChannel = null;
+
+            // If user didn't initiate disconnect, restart the connection
+            if (Enabled)
+                Start();
+        }
+
         // This method is called when connection has been authenticated
         private void DataSubscriber_ConnectionAuthenticated(object sender, EventArgs e)
         {
@@ -2188,19 +2248,14 @@ namespace TimeSeriesFramework.Transport
         {
             OnConnectionTerminated();
             OnStatusMessage("Data subscriber command channel connection to publisher was terminated.");
-            DataChannel = null;
-
-            if (Enabled)
-                Start();
+            DisconnectClient();
         }
 
         private void m_commandChannel_ConnectionException(object sender, EventArgs<Exception> e)
         {
             Exception ex = e.Argument;
             OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while attempting command channel publisher connection: " + ex.Message, ex));
-
-            if (Enabled)
-                Start();
+            DisconnectClient();
         }
 
         private void m_commandChannel_ConnectionAttempt(object sender, EventArgs e)
@@ -2217,7 +2272,7 @@ namespace TimeSeriesFramework.Transport
         {
             Exception ex = e.Argument;
 
-            if (!(ex is ObjectDisposedException) && !(ex is System.Net.Sockets.SocketException && ((System.Net.Sockets.SocketException)ex).ErrorCode == 10054))
+            if (!HandleSocketException(ex as System.Net.Sockets.SocketException) && !(ex is ObjectDisposedException))
                 OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while sending command channel data to publisher connection: " + ex.Message, ex));
         }
 
@@ -2271,7 +2326,7 @@ namespace TimeSeriesFramework.Transport
         {
             Exception ex = e.Argument;
 
-            if (!(ex is ObjectDisposedException) && !(ex is System.Net.Sockets.SocketException && ((System.Net.Sockets.SocketException)ex).ErrorCode == 10054))
+            if (!HandleSocketException(ex as System.Net.Sockets.SocketException) && !(ex is ObjectDisposedException))
                 OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while receiving command channel data from publisher connection: " + ex.Message, ex));
         }
 
@@ -2355,7 +2410,7 @@ namespace TimeSeriesFramework.Transport
         {
             Exception ex = e.Argument;
 
-            if (!(ex is ObjectDisposedException) && !(ex is System.Net.Sockets.SocketException && ((System.Net.Sockets.SocketException)ex).ErrorCode == 10054))
+            if (!HandleSocketException(ex as System.Net.Sockets.SocketException) && !(ex is ObjectDisposedException))
                 OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while receiving UDP data from publisher connection: " + ex.Message, ex));
         }
 

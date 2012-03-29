@@ -1423,7 +1423,13 @@ namespace TimeSeriesFramework.Transport
                 }
                 catch (SocketException ex)
                 {
-                    if (ex.ErrorCode != 10053 && ex.ErrorCode != 10054)
+                    if (!HandleSocketException(clientID, ex))
+                        OnProcessException(new InvalidOperationException("Failed to send response packet to client due to exception: " + ex.Message, ex));
+                }
+                catch (InvalidOperationException ex)
+                {
+                    // Could still be processing threads with client data after client has been disconnected, this can be safely ignored
+                    if (!ex.Message.StartsWith("No client exists"))
                         OnProcessException(new InvalidOperationException("Failed to send response packet to client due to exception: " + ex.Message, ex));
                 }
                 catch (Exception ex)
@@ -1431,28 +1437,68 @@ namespace TimeSeriesFramework.Transport
                     OnProcessException(new InvalidOperationException("Failed to send response packet to client due to exception: " + ex.Message, ex));
                 }
             }
-            else
-                OnProcessException(new InvalidOperationException("Publisher is not running. Cannot send response packet."));
 
             return success;
+        }
+
+        // Socket exception handler
+        private bool HandleSocketException(Guid clientID, SocketException ex)
+        {
+            if ((object)ex != null)
+            {
+                // WSAECONNABORTED and WSAECONNRESET are common errors after a client disconnect,
+                // if they happen for other reasons, make sure disconnect procedure is handled
+                if (ex.ErrorCode == 10053 || ex.ErrorCode == 10054)
+                {
+                    ThreadPool.QueueUserWorkItem(DisconnectClient, clientID);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // Disconnect client - this should be called from non-blocking thread (e.g., thread pool)
+        private void DisconnectClient(object state)
+        {
+            try
+            {
+                Guid clientID = (Guid)state;
+                ClientConnection connection;
+                IServer publicationChannel;
+
+                RemoveClientSubscription(clientID);
+
+                if (m_clientConnections.TryRemove(clientID, out connection))
+                {
+                    connection.Dispose();
+                    OnStatusMessage("Client disconnected from command channel.");
+                }
+
+                m_clientPublicationChannels.TryRemove(clientID, out publicationChannel);
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException(string.Format("Encountered an exception while processing client disconnect: {0}", ex.Message), ex));
+            }
         }
 
         // Remove client subscription
         private void RemoveClientSubscription(Guid clientID)
         {
-            IClientSubscription clientSubscription;
-
             lock (this)
             {
+                IClientSubscription clientSubscription;
+
                 if (TryGetClientSubscription(clientID, out clientSubscription))
                 {
                     Remove(clientSubscription);
                     clientSubscription.Stop();
+
+                    // Notify system that subscriber disconnected therefore demanded measurements may have changed
+                    ThreadPool.QueueUserWorkItem(NotifyHostOfSubscriptionRemoval);
                 }
             }
-
-            // Notify system that subscriber disconnected therefore demanded measurements may have changed
-            ThreadPool.QueueUserWorkItem(NotifyHostOfSubscriptionRemoval);
         }
 
         // Handle notfication on input measurement key change
@@ -1925,7 +1971,7 @@ namespace TimeSeriesFramework.Transport
         {
             Guid clientID = connection.ClientID;
 
-            RemoveClientSubscription(clientID); // This does not disconnect client command channel...
+            RemoveClientSubscription(clientID); // This does not disconnect client command channel - nor should it...
 
             // Detach from processing completed notification
             if (connection.Subscription != null)
@@ -2310,25 +2356,7 @@ namespace TimeSeriesFramework.Transport
 
         private void m_commandChannel_ClientDisconnected(object sender, EventArgs<Guid> e)
         {
-            try
-            {
-                Guid clientID = e.Argument;
-                ClientConnection connection;
-                IServer publicationChannel;
-
-                RemoveClientSubscription(clientID);
-
-                if (m_clientConnections.TryRemove(clientID, out connection))
-                    connection.Dispose();
-
-                m_clientPublicationChannels.TryRemove(clientID, out publicationChannel);
-
-                OnStatusMessage("Client disconnected from command channel.");
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(new InvalidOperationException(string.Format("Encountered an exception while processing client disconnect: {0}", ex.Message), ex));
-            }
+            ThreadPool.QueueUserWorkItem(DisconnectClient, e.Argument);
         }
 
         private void m_commandChannel_ServerStarted(object sender, EventArgs e)
@@ -2356,7 +2384,7 @@ namespace TimeSeriesFramework.Transport
         {
             Exception ex = e.Argument2;
 
-            if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException) && !(ex is System.Net.Sockets.SocketException && (((System.Net.Sockets.SocketException)ex).ErrorCode == 10053 || ((System.Net.Sockets.SocketException)ex).ErrorCode == 10054)))
+            if (!HandleSocketException(e.Argument1, ex as SocketException) && !(ex is NullReferenceException) && !(ex is ObjectDisposedException))
                 OnProcessException(new InvalidOperationException("Data publisher encountered an exception while sending command channel data to client connection: " + ex.Message, ex));
         }
 
@@ -2364,7 +2392,7 @@ namespace TimeSeriesFramework.Transport
         {
             Exception ex = e.Argument2;
 
-            if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException) && !(ex is System.Net.Sockets.SocketException && (((System.Net.Sockets.SocketException)ex).ErrorCode == 10053 || ((System.Net.Sockets.SocketException)ex).ErrorCode == 10054)))
+            if (!HandleSocketException(e.Argument1, ex as SocketException) && !(ex is NullReferenceException) && !(ex is ObjectDisposedException))
                 OnProcessException(new InvalidOperationException("Data publisher encountered an exception while receiving command channel data from client connection: " + ex.Message, ex));
         }
 

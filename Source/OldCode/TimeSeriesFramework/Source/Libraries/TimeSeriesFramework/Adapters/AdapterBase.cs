@@ -1033,8 +1033,16 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="status">New status message.</param>
         protected virtual void OnStatusMessage(string status)
         {
-            if (StatusMessage != null)
-                StatusMessage(this, new EventArgs<string>(status));
+            try
+            {
+                if (StatusMessage != null)
+                    StatusMessage(this, new EventArgs<string>(status));
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for StatusMessage event: {0}", ex.Message), ex));
+            }
         }
 
         /// <summary>
@@ -1047,8 +1055,16 @@ namespace TimeSeriesFramework.Adapters
         /// </remarks>
         protected virtual void OnStatusMessage(string formattedStatus, params object[] args)
         {
-            if (StatusMessage != null)
-                StatusMessage(this, new EventArgs<string>(string.Format(formattedStatus, args)));
+            try
+            {
+                if (StatusMessage != null)
+                    StatusMessage(this, new EventArgs<string>(string.Format(formattedStatus, args)));
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for StatusMessage event: {0}", ex.Message), ex));
+            }
         }
 
         /// <summary>
@@ -1066,8 +1082,16 @@ namespace TimeSeriesFramework.Adapters
         /// </summary>
         protected virtual void OnInputMeasurementKeysUpdated()
         {
-            if (InputMeasurementKeysUpdated != null)
-                InputMeasurementKeysUpdated(this, EventArgs.Empty);
+            try
+            {
+                if (InputMeasurementKeysUpdated != null)
+                    InputMeasurementKeysUpdated(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for InputMeasurementKeysUpdated event: {0}", ex.Message), ex));
+            }
         }
 
         /// <summary>
@@ -1075,8 +1099,16 @@ namespace TimeSeriesFramework.Adapters
         /// </summary>
         protected virtual void OnOutputMeasurementsUpdated()
         {
-            if (OutputMeasurementsUpdated != null)
-                OutputMeasurementsUpdated(this, EventArgs.Empty);
+            try
+            {
+                if (OutputMeasurementsUpdated != null)
+                    OutputMeasurementsUpdated(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for OutputMeasurementsUpdated event: {0}", ex.Message), ex));
+            }
         }
 
         /// <summary>

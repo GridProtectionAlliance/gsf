@@ -450,17 +450,6 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
-        /// Raises the <see cref="NewMeasurements"/> event.
-        /// </summary>
-        protected virtual void OnNewMeasurements(ICollection<IMeasurement> measurements)
-        {
-            if (NewMeasurements != null)
-                NewMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
-
-            IncrementProcessedMeasurements(measurements.Count);
-        }
-
-        /// <summary>
         /// Raises <see cref="AdapterBase.ProcessException"/> event.
         /// </summary>
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
@@ -470,13 +459,40 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
+        /// Raises the <see cref="NewMeasurements"/> event.
+        /// </summary>
+        protected virtual void OnNewMeasurements(ICollection<IMeasurement> measurements)
+        {
+            try
+            {
+                if (NewMeasurements != null)
+                    NewMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
+
+                IncrementProcessedMeasurements(measurements.Count);
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for NewMeasurements event: {0}", ex.Message), ex));
+            }
+        }
+
+        /// <summary>
         /// Raises the <see cref="UnpublishedSamples"/> event.
         /// </summary>
         /// <param name="seconds">Total number of unpublished seconds of data.</param>
         protected virtual void OnUnpublishedSamples(int seconds)
         {
-            if (UnpublishedSamples != null)
-                UnpublishedSamples(this, new EventArgs<int>(seconds));
+            try
+            {
+                if (UnpublishedSamples != null)
+                    UnpublishedSamples(this, new EventArgs<int>(seconds));
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for UnpublishedSamples event: {0}", ex.Message), ex));
+            }
         }
 
         /// <summary>
@@ -485,8 +501,16 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="measurements">Enumeration of <see cref="IMeasurement"/> values being discarded.</param>
         protected virtual void OnDiscardingMeasurements(IEnumerable<IMeasurement> measurements)
         {
-            if (DiscardingMeasurements != null)
-                DiscardingMeasurements(this, new EventArgs<IEnumerable<IMeasurement>>(measurements));
+            try
+            {
+                if (DiscardingMeasurements != null)
+                    DiscardingMeasurements(this, new EventArgs<IEnumerable<IMeasurement>>(measurements));
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for DiscardingMeasurements event: {0}", ex.Message), ex));
+            }
         }
 
         #endregion

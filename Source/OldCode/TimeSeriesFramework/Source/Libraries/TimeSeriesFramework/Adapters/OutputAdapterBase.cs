@@ -659,8 +659,16 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="unprocessedMeasurements">Total measurements in the queue that have not been processed.</param>
         protected virtual void OnUnprocessedMeasurements(int unprocessedMeasurements)
         {
-            if (UnprocessedMeasurements != null)
-                UnprocessedMeasurements(this, new EventArgs<int>(unprocessedMeasurements));
+            try
+            {
+                if (UnprocessedMeasurements != null)
+                    UnprocessedMeasurements(this, new EventArgs<int>(unprocessedMeasurements));
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for UnprocessedMeasurements event: {0}", ex.Message), ex));
+            }
         }
 
         /// <summary>
