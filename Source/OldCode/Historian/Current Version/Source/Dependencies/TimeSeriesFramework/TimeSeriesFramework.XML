@@ -3712,6 +3712,12 @@
             </para>
             </remarks>
         </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.OnProcessException(System.Exception)">
+            <summary>
+            Raises <see cref="E:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.ProcessException"/> event.
+            </summary>
+            <param name="ex">Processing <see cref="T:System.Exception"/>.</param>
+        </member>
         <member name="M:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.OnStatusMessage(System.String)">
             <summary>
             Raises the <see cref="E:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.StatusMessage"/> event.
@@ -3727,12 +3733,6 @@
             <remarks>
             This overload combines string.Format and SendStatusMessage for convienence.
             </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.OnProcessException(System.Exception)">
-            <summary>
-            Raises <see cref="E:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.ProcessException"/> event.
-            </summary>
-            <param name="ex">Processing <see cref="T:System.Exception"/>.</param>
         </member>
         <member name="M:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.OnInputMeasurementKeysUpdated">
             <summary>
@@ -4753,16 +4753,16 @@
             </summary>
             <param name="measurements">Measurements to queue for processing.</param>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.FacileActionAdapterBase.OnNewMeasurements(System.Collections.Generic.ICollection{TimeSeriesFramework.IMeasurement})">
-            <summary>
-            Raises the <see cref="E:TimeSeriesFramework.Adapters.FacileActionAdapterBase.NewMeasurements"/> event.
-            </summary>
-        </member>
         <member name="M:TimeSeriesFramework.Adapters.FacileActionAdapterBase.OnProcessException(System.Exception)">
             <summary>
             Raises <see cref="E:TimeSeriesFramework.Adapters.AdapterBase.ProcessException"/> event.
             </summary>
             <param name="ex">Processing <see cref="T:System.Exception"/>.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.FacileActionAdapterBase.OnNewMeasurements(System.Collections.Generic.ICollection{TimeSeriesFramework.IMeasurement})">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Adapters.FacileActionAdapterBase.NewMeasurements"/> event.
+            </summary>
         </member>
         <member name="M:TimeSeriesFramework.Adapters.FacileActionAdapterBase.OnUnpublishedSamples(System.Int32)">
             <summary>
@@ -6999,6 +6999,11 @@
         <member name="P:TimeSeriesFramework.Transport.DataSubscriber.TotalBytesReceived">
             <summary>
             Gets total data packet bytes received during this session.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataSubscriber.DataLossInterval">
+            <summary>
+            Gets or sets data loss monitoring interval, in seconds. Set to zero to disable monitoring.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.DataSubscriber.OperationalModes">
