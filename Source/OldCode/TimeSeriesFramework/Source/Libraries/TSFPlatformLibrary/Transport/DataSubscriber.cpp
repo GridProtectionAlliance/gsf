@@ -23,6 +23,7 @@
 
 #include <sstream>
 #include <exception>
+#include <boost/bind.hpp>
 
 #include "Constants.h"
 #include "DataSubscriber.h"
@@ -101,7 +102,7 @@ void tsf::Transport::DataSubscriber::RunCommandChannelResponseThread()
 		if (error == boost::asio::error::eof)
 		{
 			// Connection closed by peer
-			boost::thread t(&ConnectionTerminatedDispatcher);
+			boost::thread t(boost::bind(&tsf::Transport::DataSubscriber::ConnectionTerminatedDispatcher, this));
 			break;
 		}
 		
@@ -128,7 +129,7 @@ void tsf::Transport::DataSubscriber::RunCommandChannelResponseThread()
 		if (error == boost::asio::error::eof)
 		{
 			// Connection closed by peer
-			boost::thread t(&ConnectionTerminatedDispatcher);
+			boost::thread t(boost::bind(&tsf::Transport::DataSubscriber::ConnectionTerminatedDispatcher, this));
 			break;
 		}
 
@@ -593,7 +594,7 @@ void tsf::Transport::DataSubscriber::Connect(std::string hostname, uint16_t port
 	uint32_t operationalModes = OperationalMode::NoFlags;
 
 	if (m_commandChannelSocket.is_open())
-		throw std::exception("Subscriber is already connected; disconnect first");
+		throw SubscriberException("Subscriber is already connected; disconnect first");
 
 	hostEndpoint = boost::asio::connect(m_commandChannelSocket, endpointIterator, error);
 
@@ -601,13 +602,13 @@ void tsf::Transport::DataSubscriber::Connect(std::string hostname, uint16_t port
 		throw boost::system::system_error(error);
 
 	if (!m_commandChannelSocket.is_open())
-		throw std::exception("Failed to connect to host");
+		throw SubscriberException("Failed to connect to host");
 
 	m_hostAddress = hostEndpoint->endpoint().address();
 
-	m_commandThread = boost::thread(&RunCommandThread);
-	m_callbackThread = boost::thread(&RunCallbackThread);
-	m_commandChannelResponseThread = boost::thread(&RunCommandChannelResponseThread);
+	m_commandThread = boost::thread(boost::bind(&tsf::Transport::DataSubscriber::RunCommandThread, this));
+	m_callbackThread = boost::thread(boost::bind(&tsf::Transport::DataSubscriber::RunCallbackThread, this));
+	m_commandChannelResponseThread = boost::thread(boost::bind(&tsf::Transport::DataSubscriber::RunCommandChannelResponseThread, this));
 
 	operationalModes |= OperationalEncoding::UTF8;
 	operationalModes |= OperationalMode::UseCommonSerializationFormat;
@@ -650,7 +651,7 @@ void tsf::Transport::DataSubscriber::Disconnect()
 // Subscribe to publisher in order to start receving data.
 void tsf::Transport::DataSubscriber::Subscribe(tsf::Transport::SubscriptionInfo info)
 {
-	boost::asio::ip::udp::endpoint localEndpoint;
+	boost::asio::ip::udp ipVersion = boost::asio::ip::udp::v4();
 
 	std::stringstream stringStream;
 	std::string connectionString;
@@ -677,17 +678,15 @@ void tsf::Transport::DataSubscriber::Subscribe(tsf::Transport::SubscriptionInfo 
 	if (info.UdpDataChannel)
 	{
 		// Attempt to bind to local UDP port
-		if (m_hostAddress.is_v4())
-			localEndpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), info.DataChannelLocalPort);
-		else
-			localEndpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v6(), info.DataChannelLocalPort);
+		if (m_hostAddress.is_v6())
+			ipVersion = boost::asio::ip::udp::v6();
 
-		m_dataChannelSocket.open();
-		m_dataChannelSocket.bind(localEndpoint);
-		m_dataChannelResponseThread = boost::thread(&RunDataChannelResponseThread);
+		m_dataChannelSocket.open(ipVersion);
+		m_dataChannelSocket.bind(boost::asio::ip::udp::endpoint(ipVersion, info.DataChannelLocalPort));
+		m_dataChannelResponseThread = boost::thread(boost::bind(&tsf::Transport::DataSubscriber::RunDataChannelResponseThread, this));
 
 		if (!m_dataChannelSocket.is_open())
-			throw std::exception("Failed to bind to local port");
+			throw SubscriberException("Failed to bind to local port");
 
 		stringStream << "dataChannel={";
 

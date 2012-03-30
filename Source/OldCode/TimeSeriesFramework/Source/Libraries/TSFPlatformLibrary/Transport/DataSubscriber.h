@@ -39,6 +39,28 @@
 namespace TimeSeriesFramework {
 namespace Transport
 {
+	// Simple exception type thrown by the data subscriber.
+	class SubscriberException : public std::exception
+	{
+	private:
+		std::string m_message;
+
+	public:
+		SubscriberException(std::string message)
+		{
+			m_message = message;
+		}
+
+		~SubscriberException() throw()
+		{
+		}
+
+		const char* what() const throw()
+		{
+			return &m_message[0];
+		}
+	};
+
 	// Info structure used to configure subscriptions.
 	struct SubscriptionInfo
 	{

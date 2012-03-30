@@ -92,7 +92,7 @@ namespace TimeSeriesFramework
 	
 	// Releases all threads waiting for data.
 	template <class T>
-	void ThreadSafeQueue<T>::~ThreadSafeQueue()
+	ThreadSafeQueue<T>::~ThreadSafeQueue()
 	{
 		Release();
 	}
@@ -145,7 +145,7 @@ namespace TimeSeriesFramework
 		boost::unique_lock<boost::mutex> lock(m_mutex);
 
 		while(m_queue.size() == 0 && !m_release)
-			m_dataWaitHandle.wait(m_mutex);
+			m_dataWaitHandle.wait(lock);
 	}
 	
 	// Releases all threads waiting for data.
