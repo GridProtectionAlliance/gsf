@@ -32,7 +32,8 @@
 namespace tsf = TimeSeriesFramework;
 
 // Convenience functions to perform simple conversions.
-std::string ToString(int num);
+template <class T>
+std::string ToString(const T& obj);
 tsf::Guid ToGuid(uint8_t* data);
 
 // Deconstructor calls disconnect to clean up after itself.
@@ -751,7 +752,7 @@ void tsf::Transport::DataSubscriber::SendServerCommand(uint8_t commandCode, uint
 
 // Converts an object to a string.
 template <class T>
-std::string ToString(T obj)
+std::string ToString(const T& obj)
 {
 	std::stringstream stringStream;
 	stringStream << obj;
