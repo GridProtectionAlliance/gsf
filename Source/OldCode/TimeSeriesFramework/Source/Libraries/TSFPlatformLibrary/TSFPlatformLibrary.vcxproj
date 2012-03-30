@@ -13,14 +13,18 @@
   <ItemGroup>
     <ClInclude Include="Common\EndianConverter.h" />
     <ClInclude Include="Common\Measurement.h" />
+    <ClInclude Include="Common\ThreadSafeQueue.h" />
     <ClInclude Include="Common\Types.h" />
     <ClInclude Include="Transport\CompactMeasurementParser.h" />
+    <ClInclude Include="Transport\Constants.h" />
+    <ClInclude Include="Transport\DataSubscriber.h" />
     <ClInclude Include="Transport\GatewayMeasurementParser.h" />
     <ClInclude Include="Transport\SignalIndexCache.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common\EndianConverter.cpp" />
     <ClCompile Include="Transport\CompactMeasurementParser.cpp" />
+    <ClCompile Include="Transport\DataSubscriber.cpp" />
     <ClCompile Include="Transport\SignalIndexCache.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

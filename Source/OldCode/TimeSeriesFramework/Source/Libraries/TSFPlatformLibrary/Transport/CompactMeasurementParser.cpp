@@ -99,18 +99,25 @@ bool tsf::Transport::CompactMeasurementParser::TryParseMeasurement(uint8_t buffe
 	usingBaseTimeOffset = (compactFlags & CompactBaseTimeOffsetFlag);
 	timeIndex = (compactFlags & timeIndex) ? 1 : 0;
 
+	// If we are using base time offsets, ensure that it is defined
+	if (usingBaseTimeOffset && (m_baseTimeOffsets != 0 || m_baseTimeOffsets[timeIndex] > 0))
+		return false;
+
 	// Ensure that we have enough data to read the rest of the measurement
 	if (length < GetMeasurementByteLength(usingBaseTimeOffset))
 		return false;
 
-	// Now that we know we have enough data,
-	// we can safely advance the offset
-	++offset;
-
 	// Read the signal index from the buffer
-	signalIndex = m_endianConverter.ConvertBigEndian<uint16_t>(*(uint16_t*)(buffer + offset));
+	signalIndex = m_endianConverter.ConvertBigEndian<uint16_t>(*(uint16_t*)(buffer + offset + 1));
+
+	// If the signal index is not found in the cache, we cannot parse the measurement
+	if (!m_signalIndexCache.Contains(signalIndex))
+		return false;
+
+	// Now that we've validated our failure conditions,
+	// we can safely start advancing the offset
 	m_signalIndexCache.GetMeasurementKey(signalIndex, signalID, measurementSource, measurementID);
-	offset += 2;
+	offset += 3;
 
 	// Read the measurement value from the buffer
 	measurementValue = m_endianConverter.ConvertBigEndian<float32_t>(*(float32_t*)(buffer + offset));

@@ -25,10 +25,14 @@
 #define __TYPES_H
 
 #include <boost/uuid/uuid.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/ip/udp.hpp>
 
 namespace TimeSeriesFramework
 {
 	typedef boost::uuids::uuid Guid;
+	typedef boost::asio::ip::tcp::socket TcpSocket;
+	typedef boost::asio::ip::udp::socket UdpSocket;
 
 	// Signed integer types
 	typedef signed char		int8_t;

@@ -19,6 +19,15 @@
     <ClInclude Include="Common\Measurement.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="Transport\DataSubscriber.h">
+      <Filter>Transport</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\ThreadSafeQueue.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Transport\Constants.h">
+      <Filter>Transport</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Transport\SignalIndexCache.cpp">
@@ -29,6 +38,9 @@
     </ClCompile>
     <ClCompile Include="Common\EndianConverter.cpp">
       <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Transport\DataSubscriber.cpp">
+      <Filter>Transport</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
