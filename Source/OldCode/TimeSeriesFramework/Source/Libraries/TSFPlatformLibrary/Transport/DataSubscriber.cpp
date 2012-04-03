@@ -637,6 +637,8 @@ void tsf::Transport::DataSubscriber::Connect(std::string hostname, uint16_t port
 // Disconnects from the publisher.
 void tsf::Transport::DataSubscriber::Disconnect()
 {
+	boost::system::error_code error;
+
 	// Notify running threads that
 	// the subscriber is disconnecting
 	m_disconnecting = true;
@@ -645,8 +647,9 @@ void tsf::Transport::DataSubscriber::Disconnect()
 	// that threads can shut down gracefully
 	m_commandQueue.Release();
 	m_callbackQueue.Release();
-	m_commandChannelSocket.close();
-	m_dataChannelSocket.close();
+	m_commandChannelSocket.close(error);
+	m_dataChannelSocket.shutdown(boost::asio::ip::udp::socket::shutdown_receive, error);
+	m_dataChannelSocket.close(error);
 
 	// Join with all threads to guarantee their completion
 	// before returning control to the caller
@@ -764,8 +767,11 @@ void tsf::Transport::DataSubscriber::Subscribe(tsf::Transport::SubscriptionInfo 
 // Unsubscribe from publisher to stop receiving data.
 void tsf::Transport::DataSubscriber::Unsubscribe()
 {
+	boost::system::error_code error;
+
 	m_disconnecting = true;
-	m_dataChannelSocket.close();
+	m_dataChannelSocket.shutdown(boost::asio::ip::udp::socket::shutdown_receive, error);
+	m_dataChannelSocket.close(error);
 	m_dataChannelResponseThread.join();
 	m_disconnecting = false;
 
