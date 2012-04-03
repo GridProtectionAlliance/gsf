@@ -100,7 +100,7 @@ bool tsf::Transport::CompactMeasurementParser::TryParseMeasurement(uint8_t* buff
 	timeIndex = (compactFlags & timeIndex) ? 1 : 0;
 
 	// If we are using base time offsets, ensure that it is defined
-	if (usingBaseTimeOffset && (m_baseTimeOffsets != 0 || m_baseTimeOffsets[timeIndex] > 0))
+	if (usingBaseTimeOffset && (m_baseTimeOffsets == 0 || m_baseTimeOffsets[timeIndex] == 0))
 		return false;
 
 	// Ensure that we have enough data to read the rest of the measurement
