@@ -212,9 +212,11 @@ namespace Transport
 			  m_dataChannelSocket(m_dataChannelService),
 			  m_statusMessageCallback(0),
 			  m_errorMessageCallback(0),
-			  m_connectionTerminatedCallback(0),
+			  m_dataStartTimeCallback(0),
 			  m_metadataCallback(0),
-			  m_newMeasurementsCallback(0)
+			  m_newMeasurementsCallback(0),
+			  m_processingCompleteCallback(0),
+			  m_connectionTerminatedCallback(0)
 		{
 			m_baseTimeOffsets[0] = 0;
 			m_baseTimeOffsets[1] = 0;

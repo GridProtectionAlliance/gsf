@@ -55,7 +55,7 @@ void tsf::Transport::DataSubscriber::RunCommandThread()
 			break;
 
 		packet = m_commandQueue.Dequeue();
-		m_commandChannelSocket.send(boost::asio::buffer(packet));
+		boost::asio::write(m_commandChannelSocket, boost::asio::buffer(packet));
 	}
 }
 
@@ -87,8 +87,8 @@ void tsf::Transport::DataSubscriber::RunCommandChannelResponseThread()
 	boost::system::error_code error;
 	std::stringstream errorMessageStream;
 
-	uint32_t* packetSizePtr;
-	uint32_t packetSize;
+	int32_t* packetSizePtr;
+	int32_t packetSize;
 
 	while (true)
 	{
@@ -115,7 +115,7 @@ void tsf::Transport::DataSubscriber::RunCommandChannelResponseThread()
 			break;
 		}
 
-		packetSizePtr = (uint32_t*)&buffer[packetSizeOffset];
+		packetSizePtr = (int32_t*)&buffer[packetSizeOffset];
 		packetSize = m_endianConverter.ConvertLittleEndian(*packetSizePtr);
 		buffer.reserve(packetSize);
 
@@ -202,7 +202,7 @@ void tsf::Transport::DataSubscriber::HandleSucceeded(uint8_t commandCode, uint8_
 	case ServerCommand::RotateCipherKeys:
 		// Each of these responses come with a message that will
 		// be delivered to the user via the status message callback.
-		messageStart = (char*)data;
+		messageStart = (char*)(data + offset);
 		messageEnd = messageStart + messageLength;
 		messageStream << "Received success code in response to server command 0x" << std::hex << (int)commandCode << ": ";
 
@@ -234,7 +234,7 @@ void tsf::Transport::DataSubscriber::HandleFailed(uint8_t commandCode, uint8_t* 
 	char* messageEnd;
 	char* messageIter;
 
-	messageStart = (char*)data;
+	messageStart = (char*)(data + offset);
 	messageEnd = messageStart + messageLength;
 	messageStream << "Received failure code from server command 0x" << std::hex << (int)commandCode << ": ";
 
@@ -321,7 +321,7 @@ void tsf::Transport::DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* data,
 			sourceStream << *sourceIter;
 
 		// Set values for measurement key
-		signalIndex = m_endianConverter.ConvertBigEndian(*signalIDPtr);
+		signalIndex = m_endianConverter.ConvertBigEndian(*signalIndexPtr);
 		signalID = ToGuid(signalIDPtr);
 		source = sourceStream.str();
 		id = m_endianConverter.ConvertBigEndian(*idPtr);
@@ -330,7 +330,7 @@ void tsf::Transport::DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* data,
 		m_signalIndexCache.AddMeasurementKey(signalIndex, signalID, source, id);
 
 		// Advance signalIndexPtr to the next signal index
-		signalIndexPtr = (uint16_t*)(id + 1);
+		signalIndexPtr = (uint16_t*)(idPtr + 1);
 	}
 
 	// There is additional data about unauthorized signal
@@ -377,31 +377,45 @@ void tsf::Transport::DataSubscriber::Dispatch(DispatcherFunction function, uint8
 // Invokes the status message callback on the callback thread and provides the given message to it.
 void tsf::Transport::DataSubscriber::DispatchStatusMessage(std::string message)
 {
-	Dispatch(&StatusMessageDispatcher, (uint8_t*)&message[0], 0, message.size());
+	const std::size_t CharSize = sizeof(char);
+	std::size_t messageSize = message.size() * CharSize;
+	Dispatch(&StatusMessageDispatcher, (uint8_t*)message.data(), 0, messageSize);
 }
 
 // Invokes the error message callback on the callback thread and provides the given message to it.
 void tsf::Transport::DataSubscriber::DispatchErrorMessage(std::string message)
 {
-	Dispatch(&ErrorMessageDispatcher, (uint8_t*)&message[0], 0, message.size());
+	const std::size_t CharSize = sizeof(char);
+	std::size_t messageSize = message.size() * CharSize;
+	Dispatch(&ErrorMessageDispatcher, (uint8_t*)message.data(), 0, messageSize);
 }
 
 // Dispatcher function for status messages. Decodes the message and provides it to the user via the status message callback.
 void tsf::Transport::DataSubscriber::StatusMessageDispatcher(DataSubscriber* source, std::vector<uint8_t> data)
 {
 	MessageCallback statusMessageCallback = source->m_statusMessageCallback;
+	std::stringstream messageStream;
+	std::size_t i;
+
+	for (i = 0; i < data.size(); ++i)
+		messageStream << data[i];
 
 	if (statusMessageCallback != 0)
-		statusMessageCallback(std::string((char*)&data[0]));
+		statusMessageCallback(messageStream.str());
 }
 
 // Dispatcher function for error messages. Decodes the message and provides it to the user via the error message callback.
 void tsf::Transport::DataSubscriber::ErrorMessageDispatcher(DataSubscriber* source, std::vector<uint8_t> data)
 {
 	MessageCallback errorMessageCallback = source->m_errorMessageCallback;
+	std::stringstream messageStream;
+	std::size_t i;
+
+	for (i = 0; i < data.size(); ++i)
+		messageStream << data[i];
 
 	if (errorMessageCallback != 0)
-		errorMessageCallback(std::string((char*)&data[0]));
+		errorMessageCallback(messageStream.str());
 }
 
 // Dispatcher function for data start time. Decodes the start time and provides it to the user via the data start time callback.
@@ -435,9 +449,10 @@ void tsf::Transport::DataSubscriber::NewMeasurementsDispatcher(DataSubscriber* s
 	CompactMeasurementParser measurementParser(source->m_signalIndexCache, source->m_baseTimeOffsets, info.IncludeTime, info.UseMillisecondResolution);
 	std::vector<Measurement> newMeasurements;
 
-	uint8_t* buffer = &data[0];
+	// Skip data packet flags and length
+	uint8_t* buffer = &data[5];
 	std::size_t offset = 0;
-	std::size_t length = data.size();
+	std::size_t length = data.size() - 5;
 
 	if (newMeasurementsCallback != 0)
 	{
@@ -503,7 +518,6 @@ void tsf::Transport::DataSubscriber::ProcessServerResponse(uint8_t* buffer, std:
 	const std::size_t packetHeaderSize = 6;
 
 	uint8_t* packetBodyStart = buffer + packetHeaderSize;
-	std::size_t packetBodyOffset = offset + packetHeaderSize;
 	std::size_t packetBodyLength = length - packetHeaderSize;
 	
 	uint8_t responseCode = buffer[0];
@@ -512,31 +526,31 @@ void tsf::Transport::DataSubscriber::ProcessServerResponse(uint8_t* buffer, std:
 	switch (responseCode)
 	{
 	case ServerResponse::Succeeded:
-		HandleSucceeded(commandCode, packetBodyStart, packetBodyOffset, packetBodyLength);
+		HandleSucceeded(commandCode, packetBodyStart, 0, packetBodyLength);
 		break;
 
 	case ServerResponse::Failed:
-		HandleFailed(commandCode, packetBodyStart, packetBodyOffset, packetBodyLength);
+		HandleFailed(commandCode, packetBodyStart, 0, packetBodyLength);
 		break;
 
 	case ServerResponse::DataPacket:
-		HandleDataPacket(packetBodyStart, packetBodyOffset, packetBodyLength);
+		HandleDataPacket(packetBodyStart, 0, packetBodyLength);
 		break;
 
 	case ServerResponse::DataStartTime:
-		HandleDataStartTime(packetBodyStart, packetBodyOffset, packetBodyLength);
+		HandleDataStartTime(packetBodyStart, 0, packetBodyLength);
 		break;
 
 	case ServerResponse::ProcessingComplete:
-		HandleProcessingComplete(packetBodyStart, packetBodyOffset, packetBodyLength);
+		HandleProcessingComplete(packetBodyStart, 0, packetBodyLength);
 		break;
 
 	case ServerResponse::UpdateSignalIndexCache:
-		HandleUpdateSignalIndexCache(packetBodyStart, packetBodyOffset, packetBodyLength);
+		HandleUpdateSignalIndexCache(packetBodyStart, 0, packetBodyLength);
 		break;
 
 	case ServerResponse::UpdateBaseTimes:
-		HandleUpdateBaseTimes(packetBodyStart, packetBodyOffset, packetBodyLength);
+		HandleUpdateBaseTimes(packetBodyStart, 0, packetBodyLength);
 		break;
 	}
 }
@@ -593,6 +607,7 @@ void tsf::Transport::DataSubscriber::Connect(std::string hostname, uint16_t port
 	boost::system::error_code error;
 
 	uint32_t operationalModes = OperationalMode::NoFlags;
+	uint32_t bigEndianOperationalModes;
 
 	if (m_commandChannelSocket.is_open())
 		throw SubscriberException("Subscriber is already connected; disconnect first");
@@ -614,7 +629,9 @@ void tsf::Transport::DataSubscriber::Connect(std::string hostname, uint16_t port
 	operationalModes |= OperationalEncoding::UTF8;
 	operationalModes |= OperationalMode::UseCommonSerializationFormat;
 	operationalModes |= OperationalMode::CompressMetadata;
-	SendServerCommand(ServerCommand::DefineOperationalModes, (uint8_t*)&operationalModes, 0, 4);
+
+	bigEndianOperationalModes = m_endianConverter.ConvertBigEndian(operationalModes);
+	SendServerCommand(ServerCommand::DefineOperationalModes, (uint8_t*)&bigEndianOperationalModes, 0, 4);
 }
 
 // Disconnects from the publisher.
@@ -652,10 +669,21 @@ void tsf::Transport::DataSubscriber::Disconnect()
 // Subscribe to publisher in order to start receving data.
 void tsf::Transport::DataSubscriber::Subscribe(tsf::Transport::SubscriptionInfo info)
 {
+	const std::size_t CharSize = sizeof(char);
+
 	boost::asio::ip::udp ipVersion = boost::asio::ip::udp::v4();
 
 	std::stringstream stringStream;
 	std::string connectionString;
+
+	std::vector<uint8_t> buffer;
+	uint8_t* connectionStringPtr;
+	uint32_t connectionStringSize;
+	uint32_t bigEndianConnectionStringSize;
+	uint8_t* bigEndianConnectionStringSizePtr;
+
+	std::size_t bufferSize;
+	std::size_t i;
 
 	// Make sure to unsubscribe before attempting another
 	// subscription so we don't leave connections open
@@ -674,7 +702,7 @@ void tsf::Transport::DataSubscriber::Subscribe(tsf::Transport::SubscriptionInfo 
 	//stringStream << "assemblyInfo={source=???;version=???;buildDate=???};";
 	
 	if (!info.FilterExpression.empty())
-		stringStream << "inputMeasurementKeys=" << info.FilterExpression << ";";
+		stringStream << "inputMeasurementKeys={" << info.FilterExpression << "};";
 
 	if (info.UdpDataChannel)
 	{
@@ -713,7 +741,24 @@ void tsf::Transport::DataSubscriber::Subscribe(tsf::Transport::SubscriptionInfo 
 	}
 
 	connectionString = stringStream.str();
-	SendServerCommand(ServerCommand::Subscribe, (uint8_t*)&connectionString[0], 0, stringStream.str().size());
+	connectionStringPtr = (uint8_t*)&connectionString[0];
+	connectionStringSize = (uint32_t)(connectionString.size() * CharSize);
+	bigEndianConnectionStringSize = m_endianConverter.ConvertBigEndian(connectionStringSize);
+	bigEndianConnectionStringSizePtr = (uint8_t*)&bigEndianConnectionStringSize;
+
+	bufferSize = 5 + connectionStringSize;
+	buffer.reserve(bufferSize);
+
+	buffer[0] = 0x02;
+	buffer[1] = bigEndianConnectionStringSizePtr[0];
+	buffer[2] = bigEndianConnectionStringSizePtr[1];
+	buffer[3] = bigEndianConnectionStringSizePtr[2];
+	buffer[4] = bigEndianConnectionStringSizePtr[3];
+
+	for (i = 0; i < connectionStringSize; ++i)
+		buffer[5 + i] = connectionStringPtr[i];
+
+	SendServerCommand(ServerCommand::Subscribe, &buffer[0], 0, bufferSize);
 }
 
 // Unsubscribe from publisher to stop receiving data.
@@ -736,15 +781,32 @@ void tsf::Transport::DataSubscriber::SendServerCommand(uint8_t commandCode)
 // Sends a command along with the given data to the server.
 void tsf::Transport::DataSubscriber::SendServerCommand(uint8_t commandCode, uint8_t* data, std::size_t offset, std::size_t length)
 {
-	CommandPacket packet(length + 1);
+	std::size_t packetSize = 1 + length;
+	int32_t littleEndianPacketSize = m_endianConverter.ConvertLittleEndian((int32_t)packetSize);
+	uint8_t* littleEndianPacketSizePtr = (uint8_t*)&littleEndianPacketSize;
+
+	CommandPacket packet(8 + packetSize);
 	std::size_t i;
 	
-	packet[0] = commandCode;
+	// Insert payload marker
+	packet[0] = 0xAA;
+	packet[1] = 0xBB;
+	packet[2] = 0xCC;
+	packet[3] = 0xDD;
+
+	// Insert packet size
+	packet[4] = littleEndianPacketSizePtr[0];
+	packet[5] = littleEndianPacketSizePtr[1];
+	packet[6] = littleEndianPacketSizePtr[2];
+	packet[7] = littleEndianPacketSizePtr[3];
+
+	// Insert command code
+	packet[8] = commandCode;
 
 	if (data != 0)
 	{
 		for (i = 0; i < length; ++i)
-			packet[i + 1] = data[offset + i];
+			packet[9 + i] = data[offset + i];
 	}
 
 	m_commandQueue.Enqueue(packet);

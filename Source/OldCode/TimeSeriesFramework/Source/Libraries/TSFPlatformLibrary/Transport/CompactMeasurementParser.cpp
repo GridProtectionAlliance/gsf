@@ -73,7 +73,7 @@ std::size_t tsf::Transport::CompactMeasurementParser::GetMeasurementByteLength(b
 // Attempts to parse a measurement from the buffer. Return value of false indicates
 // that there is not enough data to parse the measurement. Offset and length will be
 // updated by this method to indicate how many bytes were used when parsing.
-bool tsf::Transport::CompactMeasurementParser::TryParseMeasurement(uint8_t buffer[], std::size_t& offset, std::size_t& length)
+bool tsf::Transport::CompactMeasurementParser::TryParseMeasurement(uint8_t* buffer, std::size_t& offset, std::size_t& length)
 {
 	uint8_t compactFlags;
 	uint16_t signalIndex;
