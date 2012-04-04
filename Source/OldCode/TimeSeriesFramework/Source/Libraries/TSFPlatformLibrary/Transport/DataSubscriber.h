@@ -134,7 +134,15 @@ namespace Transport
 		SubscriptionInfo m_currentSubscription;
 		EndianConverter m_endianConverter;
 		IPAddress m_hostAddress;
+		bool m_compressMetadata;
 		bool m_disconnecting;
+
+		// Statistics counters
+		long m_totalCommandChannelBytesReceived;
+		long m_totalDataChannelBytesReceived;
+		long m_totalMeasurementsReceived;
+		bool m_connected;
+		bool m_subscribed;
 
 		// Measurement parsing
 		SignalIndexCache m_signalIndexCache;
@@ -206,8 +214,14 @@ namespace Transport
 
 	public:
 		// Creates a new instance of the data subscriber.
-		DataSubscriber()
-			: m_disconnecting(false),
+		DataSubscriber(bool compressMetadata = true)
+			: m_compressMetadata(compressMetadata),
+			  m_totalCommandChannelBytesReceived(0L),
+			  m_totalDataChannelBytesReceived(0L),
+			  m_totalMeasurementsReceived(0L),
+			  m_connected(false),
+			  m_subscribed(false),
+			  m_disconnecting(false),
 			  m_commandChannelSocket(m_commandChannelService),
 			  m_dataChannelSocket(m_dataChannelService),
 			  m_statusMessageCallback(0),
@@ -247,6 +261,11 @@ namespace Transport
 		void RegisterProcessingCompleteCallback(MessageCallback processingCompleteCallback);
 		void RegisterConnectionTerminatedCallback(ConnectionTerminatedCallback connectionTerminatedCallback);
 
+		// Gets or sets value that determines
+		// whether metadata transfer is compressed.
+		bool IsMetadataCompressed() const;
+		void SetMetadataCompressed(bool compressed);
+
 		// Synchronously connects to publisher.
 		void Connect(std::string hostname, uint16_t port);
 
@@ -260,6 +279,7 @@ namespace Transport
 
 		// Subscribe to measurements to start receiving data.
 		void Subscribe(SubscriptionInfo info);
+		SubscriptionInfo GetCurrentSubscription() const;
 
 		// Cancel the current subscription to stop receiving data.
 		void Unsubscribe();
@@ -277,6 +297,18 @@ namespace Transport
 		//   ServerCommand::DefineOperationalModes
 		void SendServerCommand(uint8_t commandCode);
 		void SendServerCommand(uint8_t commandCode, uint8_t* data, std::size_t offset, std::size_t length);
+
+		// Convenience method to send the currently defined and/or supported
+		// operational modes to the server. Supported operational modes are
+		// UTF-8 encoding, common serialization format, and optional metadata compression.
+		void SendOperationalModes();
+
+		// Functions for statistics gathering
+		long GetTotalCommandChannelBytesReceived() const;
+		long GetTotalDataChannelBytesReceived() const;
+		long GetTotalMeasurementsReceived() const;
+		bool IsConnected() const;
+		bool IsSubscribed() const;
 	};
 }}
 

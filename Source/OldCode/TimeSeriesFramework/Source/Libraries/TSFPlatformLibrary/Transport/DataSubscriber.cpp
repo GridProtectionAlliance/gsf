@@ -80,8 +80,8 @@ void tsf::Transport::DataSubscriber::RunCallbackThread()
 // exception of data packets which may or may not be handled by this thread.
 void tsf::Transport::DataSubscriber::RunCommandChannelResponseThread()
 {
-	const std::size_t payloadHeaderSize = 8;
-	const std::size_t packetSizeOffset = 4;
+	const std::size_t PayloadHeaderSize = 8;
+	const std::size_t PacketSizeOffset = 4;
 
 	std::vector<uint8_t> buffer(65536);
 	boost::system::error_code error;
@@ -95,7 +95,7 @@ void tsf::Transport::DataSubscriber::RunCommandChannelResponseThread()
 		// Read payload header
 		// This read method is guaranteed not to return until the
 		// requested size has been read or an error has occurred.
-		boost::asio::read(m_commandChannelSocket, boost::asio::buffer(buffer, payloadHeaderSize), error);
+		boost::asio::read(m_commandChannelSocket, boost::asio::buffer(buffer, PayloadHeaderSize), error);
 
 		if (m_disconnecting)
 			break;
@@ -114,8 +114,12 @@ void tsf::Transport::DataSubscriber::RunCommandChannelResponseThread()
 			DispatchErrorMessage(errorMessageStream.str());
 			break;
 		}
+		
+		// Gather statistics
+		m_totalCommandChannelBytesReceived += PayloadHeaderSize;
 
-		packetSizePtr = (int32_t*)&buffer[packetSizeOffset];
+		// Parse payload header
+		packetSizePtr = (int32_t*)&buffer[PacketSizeOffset];
 		packetSize = m_endianConverter.ConvertLittleEndian(*packetSizePtr);
 		buffer.reserve(packetSize);
 
@@ -142,6 +146,10 @@ void tsf::Transport::DataSubscriber::RunCommandChannelResponseThread()
 			break;
 		}
 
+		// Gather statistics
+		m_totalCommandChannelBytesReceived += packetSize;
+
+		// Process response
 		ProcessServerResponse(&buffer[0], 0, packetSize);
 	}
 }
@@ -195,10 +203,14 @@ void tsf::Transport::DataSubscriber::HandleSucceeded(uint8_t commandCode, uint8_
 		// message, but rather the metadata itself.
 		HandleMetadataRefresh(data, offset, length);
 		break;
-
-	case ServerCommand::Authenticate:
+		
 	case ServerCommand::Subscribe:
 	case ServerCommand::Unsubscribe:
+		// Do not break on these messages because there is
+		// still an associated message to be processed.
+		m_subscribed = (commandCode == ServerCommand::Subscribe);
+
+	case ServerCommand::Authenticate:
 	case ServerCommand::RotateCipherKeys:
 		// Each of these responses come with a message that will
 		// be delivered to the user via the status message callback.
@@ -448,8 +460,13 @@ void tsf::Transport::DataSubscriber::NewMeasurementsDispatcher(DataSubscriber* s
 
 	CompactMeasurementParser measurementParser(source->m_signalIndexCache, source->m_baseTimeOffsets, info.IncludeTime, info.UseMillisecondResolution);
 	std::vector<Measurement> newMeasurements;
+	int32_t* measurementCountPtr;
 
-	// Skip data packet flags and length
+	// Read measurement count and gather statistics
+	measurementCountPtr = (int32_t*)&data[1];
+	source->m_totalMeasurementsReceived += source->m_endianConverter.ConvertBigEndian(*measurementCountPtr);
+
+	// Skip over data packet flags and length
 	uint8_t* buffer = &data[5];
 	std::size_t offset = 0;
 	std::size_t length = data.size() - 5;
@@ -597,6 +614,21 @@ void tsf::Transport::DataSubscriber::RegisterConnectionTerminatedCallback(Connec
 	m_connectionTerminatedCallback = connectionTerminatedCallback;
 }
 
+// Returns true if metadata exchange is compressed.
+bool tsf::Transport::DataSubscriber::IsMetadataCompressed() const
+{
+	return m_compressMetadata;
+}
+
+// Set the value which determines whether metadata exchange is compressed.
+void tsf::Transport::DataSubscriber::SetMetadataCompressed(bool compressed)
+{
+	m_compressMetadata = compressed;
+
+	if (m_commandChannelSocket.is_open())
+		SendOperationalModes();
+}
+
 // Synchronously connects to publisher.
 void tsf::Transport::DataSubscriber::Connect(std::string hostname, uint16_t port)
 {
@@ -606,8 +638,9 @@ void tsf::Transport::DataSubscriber::Connect(std::string hostname, uint16_t port
 	boost::asio::ip::tcp::resolver::iterator hostEndpoint;
 	boost::system::error_code error;
 
-	uint32_t operationalModes = OperationalMode::NoFlags;
-	uint32_t bigEndianOperationalModes;
+	m_totalCommandChannelBytesReceived = 0L;
+	m_totalDataChannelBytesReceived = 0L;
+	m_totalMeasurementsReceived = 0L;
 
 	if (m_commandChannelSocket.is_open())
 		throw SubscriberException("Subscriber is already connected; disconnect first");
@@ -626,12 +659,8 @@ void tsf::Transport::DataSubscriber::Connect(std::string hostname, uint16_t port
 	m_callbackThread = boost::thread(boost::bind(&tsf::Transport::DataSubscriber::RunCallbackThread, this));
 	m_commandChannelResponseThread = boost::thread(boost::bind(&tsf::Transport::DataSubscriber::RunCommandChannelResponseThread, this));
 
-	operationalModes |= OperationalEncoding::UTF8;
-	operationalModes |= OperationalMode::UseCommonSerializationFormat;
-	operationalModes |= OperationalMode::CompressMetadata;
-
-	bigEndianOperationalModes = m_endianConverter.ConvertBigEndian(operationalModes);
-	SendServerCommand(ServerCommand::DefineOperationalModes, (uint8_t*)&bigEndianOperationalModes, 0, 4);
+	SendOperationalModes();
+	m_connected = true;
 }
 
 // Disconnects from the publisher.
@@ -666,7 +695,9 @@ void tsf::Transport::DataSubscriber::Disconnect()
 	m_callbackQueue.Reset();
 
 	// Disconnect completed
+	m_subscribed = false;
 	m_disconnecting = false;
+	m_connected = false;
 }
 
 // Subscribe to publisher in order to start receving data.
@@ -690,10 +721,11 @@ void tsf::Transport::DataSubscriber::Subscribe(tsf::Transport::SubscriptionInfo 
 
 	// Make sure to unsubscribe before attempting another
 	// subscription so we don't leave connections open
-	if (m_dataChannelSocket.is_open())
+	if (m_subscribed)
 		Unsubscribe();
 
 	m_currentSubscription = info;
+	m_totalMeasurementsReceived = 0L;
 
 	stringStream << "trackLatestMeasurements=" << info.Throttled << ";";
 	stringStream << "includeTime=" << info.IncludeTime << ";";
@@ -764,6 +796,12 @@ void tsf::Transport::DataSubscriber::Subscribe(tsf::Transport::SubscriptionInfo 
 	SendServerCommand(ServerCommand::Subscribe, &buffer[0], 0, bufferSize);
 }
 
+// Returns the subscription info object used to define the most recent subscription.
+tsf::Transport::SubscriptionInfo tsf::Transport::DataSubscriber::GetCurrentSubscription() const
+{
+	return m_currentSubscription;
+}
+
 // Unsubscribe from publisher to stop receiving data.
 void tsf::Transport::DataSubscriber::Unsubscribe()
 {
@@ -816,6 +854,53 @@ void tsf::Transport::DataSubscriber::SendServerCommand(uint8_t commandCode, uint
 	}
 
 	m_commandQueue.Enqueue(packet);
+}
+
+// Convenience method to send the currently defined
+// and/or supported operational modes to the server.
+void tsf::Transport::DataSubscriber::SendOperationalModes()
+{
+	uint32_t operationalModes = OperationalMode::NoFlags;
+	uint32_t bigEndianOperationalModes;
+
+	operationalModes |= OperationalEncoding::UTF8;
+	operationalModes |= OperationalMode::UseCommonSerializationFormat;
+
+	if (m_compressMetadata)
+		operationalModes |= OperationalMode::CompressMetadata;
+
+	bigEndianOperationalModes = m_endianConverter.ConvertBigEndian(operationalModes);
+	SendServerCommand(ServerCommand::DefineOperationalModes, (uint8_t*)&bigEndianOperationalModes, 0, 4);
+}
+
+// Gets the total number of bytes received via the command channel since last connection.
+long tsf::Transport::DataSubscriber::GetTotalCommandChannelBytesReceived() const
+{
+	return m_totalCommandChannelBytesReceived;
+}
+
+// Gets the total number of bytes received via the data channel since last connection.
+long tsf::Transport::DataSubscriber::GetTotalDataChannelBytesReceived() const
+{
+	return m_totalDataChannelBytesReceived;
+}
+
+// Gets the total number of measurements received since last subscription.
+long tsf::Transport::DataSubscriber::GetTotalMeasurementsReceived() const
+{
+	return m_totalMeasurementsReceived;
+}
+
+// Indicates whether the subscriber is connected.
+bool tsf::Transport::DataSubscriber::IsConnected() const
+{
+	return m_connected;
+}
+
+// Indicates whether the subscriber is subscribed.
+bool tsf::Transport::DataSubscriber::IsSubscribed() const
+{
+	return m_subscribed;
 }
 
 // Converts an object to a string.
