@@ -1904,6 +1904,9 @@ namespace TimeSeriesFramework.Transport
                                 subscription.Initialized = true;
                             }
 
+                            // Ensure that subscription is initialized and signal index cache has been updated.
+                            subscription.WaitForInitialize(subscription.InitializationTimeout);
+
                             // Send updated signal index cache to client with validated rights of the selected input measurement keys
                             byte[] serializedSignalIndexCache = SerializeSignalIndexCache(clientID, subscription.SignalIndexCache);
                             SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, serializedSignalIndexCache);
