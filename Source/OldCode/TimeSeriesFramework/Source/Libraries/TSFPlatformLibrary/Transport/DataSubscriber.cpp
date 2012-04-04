@@ -341,8 +341,10 @@ void tsf::Transport::DataSubscriber::HandleUpdateSignalIndexCache(uint8_t* data,
 		// Add measurement key to the cache
 		m_signalIndexCache.AddMeasurementKey(signalIndex, signalID, source, id);
 
-		// Advance signalIndexPtr to the next signal index
+		// Advance signalIndexPtr to the next signal
+		// index and clear out the string stream
 		signalIndexPtr = (uint16_t*)(idPtr + 1);
+		sourceStream.str("");
 	}
 
 	// There is additional data about unauthorized signal
@@ -532,10 +534,10 @@ void tsf::Transport::DataSubscriber::ConnectionTerminatedDispatcher()
 // Processes a response sent by the server. Response codes are defined in the header file "Constants.h".
 void tsf::Transport::DataSubscriber::ProcessServerResponse(uint8_t* buffer, std::size_t offset, std::size_t length)
 {
-	const std::size_t packetHeaderSize = 6;
+	const std::size_t PacketHeaderSize = 6;
 
-	uint8_t* packetBodyStart = buffer + packetHeaderSize;
-	std::size_t packetBodyLength = length - packetHeaderSize;
+	uint8_t* packetBodyStart = buffer + PacketHeaderSize;
+	std::size_t packetBodyLength = length - PacketHeaderSize;
 	
 	uint8_t responseCode = buffer[0];
 	uint8_t commandCode = buffer[1];
