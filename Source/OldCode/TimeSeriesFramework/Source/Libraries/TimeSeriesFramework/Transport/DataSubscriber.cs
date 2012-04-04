@@ -834,7 +834,6 @@ namespace TimeSeriesFramework.Transport
             StringBuilder connectionString = new StringBuilder();
             AssemblyInfo assemblyInfo = AssemblyInfo.ExecutingAssembly;
 
-            connectionString.Append("usePrecisionTimer=false; ");
             connectionString.AppendFormat("framesPerSecond={0}; ", framesPerSecond);
             connectionString.AppendFormat("lagTime={0}; ", lagTime);
             connectionString.AppendFormat("leadTime={0}; ", leadTime);
@@ -851,7 +850,6 @@ namespace TimeSeriesFramework.Transport
             connectionString.AppendFormat("stopTimeConstraint={0}; ", stopTime.ToNonNullString());
             connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
             connectionString.AppendFormat("processingInterval={0}; ", processingInterval);
-            connectionString.AppendFormat("useMillisecondResolution={0}; ", m_useMillisecondResolution);
             connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
 
             if (!string.IsNullOrWhiteSpace(waitHandleNames))

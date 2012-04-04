@@ -296,6 +296,7 @@ namespace TimeSeriesFramework.Transport
         public override void Initialize()
         {
             base.Initialize();
+            base.UsePrecisionTimer = false;
 
             // Handle temporal session intialization
             if (this.TemporalConstraintIsDefined())
