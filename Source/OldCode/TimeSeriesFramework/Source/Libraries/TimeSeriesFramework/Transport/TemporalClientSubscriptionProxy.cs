@@ -54,7 +54,7 @@ namespace TimeSeriesFramework.Transport
         /// <summary>
         /// Gets or sets parent subscription for the proxy used to deliver data.
         /// </summary>
-        public IClientSubscription Parent
+        public new IClientSubscription Parent
         {
             get
             {
