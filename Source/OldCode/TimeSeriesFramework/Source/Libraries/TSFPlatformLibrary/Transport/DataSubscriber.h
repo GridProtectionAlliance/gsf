@@ -67,6 +67,7 @@ namespace Transport
 		std::string FilterExpression;
 		void (*NewMeasurementsCallback)(std::vector<Measurement>);
 
+		bool RemotelySynchronized;
 		//bool CompactFormat;
 		bool Throttled;
 

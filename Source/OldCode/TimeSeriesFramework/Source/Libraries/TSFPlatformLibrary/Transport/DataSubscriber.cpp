@@ -754,6 +754,9 @@ void tsf::Transport::DataSubscriber::Subscribe(tsf::Transport::SubscriptionInfo 
 
 	m_currentSubscription = info;
 	m_totalMeasurementsReceived = 0L;
+	
+	if (info.NewMeasurementsCallback != 0)
+		m_newMeasurementsCallback = info.NewMeasurementsCallback;
 
 	stringStream << "trackLatestMeasurements=" << info.Throttled << ";";
 	stringStream << "includeTime=" << info.IncludeTime << ";";
@@ -815,7 +818,8 @@ void tsf::Transport::DataSubscriber::Subscribe(tsf::Transport::SubscriptionInfo 
 	bufferSize = 5 + connectionStringSize;
 	buffer.reserve(bufferSize);
 
-	buffer[0] = 0x02;
+	buffer[0] = DataPacketFlags::Compact | (info.RemotelySynchronized ? DataPacketFlags::Synchronized : DataPacketFlags::NoFlags);
+
 	buffer[1] = bigEndianConnectionStringSizePtr[0];
 	buffer[2] = bigEndianConnectionStringSizePtr[1];
 	buffer[3] = bigEndianConnectionStringSizePtr[2];
