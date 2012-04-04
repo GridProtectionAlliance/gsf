@@ -29,6 +29,14 @@
 namespace TimeSeriesFramework {
 namespace Transport
 {
+	struct DataPacketFlags
+	{
+		static const uint8_t Synchronized = 0x01;
+		static const uint8_t Compact      = 0x02;
+		static const uint8_t CipherIndex  = 0x03;
+		static const uint8_t NoFlags      = 0x00;
+	};
+
 	struct ServerCommand
 	{
 		static const uint8_t Authenticate             = 0x00;
@@ -53,7 +61,7 @@ namespace Transport
 		static const uint8_t NoOP                   = 0xFF;
 	};
 
-	struct OperationalMode
+	struct OperationalModes
 	{
 		static const uint32_t VersionMask                  = 0x0000001F;
 		static const uint32_t CompressionModeMask          = 0x000000E0;

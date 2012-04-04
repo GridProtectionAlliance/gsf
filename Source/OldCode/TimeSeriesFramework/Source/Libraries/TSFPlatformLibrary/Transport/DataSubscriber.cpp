@@ -461,17 +461,38 @@ void tsf::Transport::DataSubscriber::NewMeasurementsDispatcher(DataSubscriber* s
 	SubscriptionInfo& info = source->m_currentSubscription;
 
 	CompactMeasurementParser measurementParser(source->m_signalIndexCache, source->m_baseTimeOffsets, info.IncludeTime, info.UseMillisecondResolution);
+	Measurement parsedMeasurement;
 	std::vector<Measurement> newMeasurements;
+
+	uint8_t dataPacketFlags;
 	int32_t* measurementCountPtr;
+	int64_t* frameLevelTimestampPtr = 0;
+	int64_t frameLevelTimestamp;
+
+	uint8_t* buffer;
+	std::size_t offset = 0;
+	std::size_t length = 0;
+
+	// Read data packet flags
+	dataPacketFlags = data[0];
+	++offset;
 
 	// Read measurement count and gather statistics
 	measurementCountPtr = (int32_t*)&data[1];
 	source->m_totalMeasurementsReceived += source->m_endianConverter.ConvertBigEndian(*measurementCountPtr);
+	offset += 4;
 
-	// Skip over data packet flags and length
-	uint8_t* buffer = &data[5];
-	std::size_t offset = 0;
-	std::size_t length = data.size() - 5;
+	// Read frame-level timestamp, if available
+	if (dataPacketFlags & DataPacketFlags::Synchronized)
+	{
+		frameLevelTimestampPtr = (int64_t*)(measurementCountPtr + 1);
+		frameLevelTimestamp = source->m_endianConverter.ConvertBigEndian(*frameLevelTimestampPtr);
+		offset += 8;
+	}
+
+	// Set up buffer and length for measurement parsing
+	buffer = &data[0];
+	length = data.size() - offset;
 
 	if (newMeasurementsCallback != 0)
 	{
@@ -482,6 +503,11 @@ void tsf::Transport::DataSubscriber::NewMeasurementsDispatcher(DataSubscriber* s
 				errorMessageCallback("Error parsing measurement");
 				break;
 			}
+
+			parsedMeasurement = measurementParser.GetParsedMeasurement();
+
+			if (frameLevelTimestampPtr != 0)
+				parsedMeasurement.Timestamp = frameLevelTimestamp;
 
 			newMeasurements.push_back(measurementParser.GetParsedMeasurement());
 		}
@@ -865,14 +891,14 @@ void tsf::Transport::DataSubscriber::SendServerCommand(uint8_t commandCode, uint
 // and/or supported operational modes to the server.
 void tsf::Transport::DataSubscriber::SendOperationalModes()
 {
-	uint32_t operationalModes = OperationalMode::NoFlags;
+	uint32_t operationalModes = OperationalModes::NoFlags;
 	uint32_t bigEndianOperationalModes;
 
 	operationalModes |= OperationalEncoding::UTF8;
-	operationalModes |= OperationalMode::UseCommonSerializationFormat;
+	operationalModes |= OperationalModes::UseCommonSerializationFormat;
 
 	if (m_compressMetadata)
-		operationalModes |= OperationalMode::CompressMetadata;
+		operationalModes |= OperationalModes::CompressMetadata;
 
 	bigEndianOperationalModes = m_endianConverter.ConvertBigEndian(operationalModes);
 	SendServerCommand(ServerCommand::DefineOperationalModes, (uint8_t*)&bigEndianOperationalModes, 0, 4);
