@@ -460,7 +460,6 @@ void tsf::Transport::DataSubscriber::NewMeasurementsDispatcher(DataSubscriber* s
 	MessageCallback errorMessageCallback = source->m_errorMessageCallback;
 	SubscriptionInfo& info = source->m_currentSubscription;
 
-	CompactMeasurementParser measurementParser(source->m_signalIndexCache, source->m_baseTimeOffsets, info.IncludeTime, info.UseMillisecondResolution);
 	Measurement parsedMeasurement;
 	std::vector<Measurement> newMeasurements;
 
@@ -472,6 +471,8 @@ void tsf::Transport::DataSubscriber::NewMeasurementsDispatcher(DataSubscriber* s
 	uint8_t* buffer;
 	std::size_t offset = 0;
 	std::size_t length = 0;
+
+	bool includeTime = info.IncludeTime;
 
 	// Read data packet flags
 	dataPacketFlags = data[0];
@@ -488,11 +489,16 @@ void tsf::Transport::DataSubscriber::NewMeasurementsDispatcher(DataSubscriber* s
 		frameLevelTimestampPtr = (int64_t*)(measurementCountPtr + 1);
 		frameLevelTimestamp = source->m_endianConverter.ConvertBigEndian(*frameLevelTimestampPtr);
 		offset += 8;
+
+		includeTime = false;
 	}
 
 	// Set up buffer and length for measurement parsing
 	buffer = &data[0];
 	length = data.size() - offset;
+	
+	// Create measurement parser
+	CompactMeasurementParser measurementParser(source->m_signalIndexCache, source->m_baseTimeOffsets, includeTime, info.UseMillisecondResolution);
 
 	if (newMeasurementsCallback != 0)
 	{
