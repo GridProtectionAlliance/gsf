@@ -68,6 +68,7 @@ namespace TimeSeriesFramework.Transport
         private CompressionStrength m_compression;
         private string m_configurationString;
         private bool m_connectionEstablished;
+        private bool m_isSubscribed;
         private Ticks m_lastCipherKeyUpdateTime;
         private System.Timers.Timer m_pingTimer;
         private System.Timers.Timer m_reconnectTimer;
@@ -256,6 +257,21 @@ namespace TimeSeriesFramework.Transport
                 }
 
                 return isConnected;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets IsSubscribed state.
+        /// </summary>
+        public bool IsSubscribed
+        {
+            get
+            {
+                return m_isSubscribed;
+            }
+            set
+            {
+                m_isSubscribed = value;
             }
         }
 

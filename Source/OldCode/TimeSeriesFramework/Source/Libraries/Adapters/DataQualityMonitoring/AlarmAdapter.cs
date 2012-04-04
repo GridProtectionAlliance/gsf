@@ -52,9 +52,8 @@ namespace DataQualityMonitoring
         private List<Alarm> m_alarms;
         private AlarmService m_alarmService;
 
-        private ConcurrentQueue<IMeasurement> m_measurementQueue;
+        private BlockingCollection<IMeasurement> m_measurementQueue;
         private Thread m_processThread;
-        private SemaphoreSlim m_processSemaphore;
         private long m_eventCount;
 
         private bool m_supportsTemporalProcessing;
@@ -148,9 +147,8 @@ namespace DataQualityMonitoring
         {
             base.Start();
 
-            m_measurementQueue = new ConcurrentQueue<IMeasurement>();
+            m_measurementQueue = new BlockingCollection<IMeasurement>(new ConcurrentQueue<IMeasurement>());
             m_processThread = new Thread(ProcessMeasurements);
-            m_processSemaphore = new SemaphoreSlim(0, int.MaxValue);
             m_eventCount = 0L;
 
             m_processThread.Start();
@@ -169,10 +167,10 @@ namespace DataQualityMonitoring
                 m_processThread = null;
             }
 
-            if ((object)m_processSemaphore != null)
+            if ((object)m_measurementQueue != null)
             {
-                m_processSemaphore.Dispose();
-                m_processSemaphore = null;
+                m_measurementQueue.Dispose();
+                m_measurementQueue = null;
             }
         }
 
@@ -212,10 +210,7 @@ namespace DataQualityMonitoring
             base.QueueMeasurementsForProcessing(measurements);
 
             foreach (IMeasurement measurement in measurements)
-            {
-                m_measurementQueue.Enqueue(measurement);
-                m_processSemaphore.Release();
-            }
+                m_measurementQueue.Add(measurement);
         }
 
         /// <summary>
@@ -272,7 +267,7 @@ namespace DataQualityMonitoring
             {
                 try
                 {
-                    if ((object)m_processSemaphore != null && m_processSemaphore.Wait(WaitTimeout) && m_measurementQueue.TryDequeue(out measurement))
+                    if ((object)m_measurementQueue != null && m_measurementQueue.TryTake(out measurement, WaitTimeout))
                     {
                         lock (m_alarms)
                         {

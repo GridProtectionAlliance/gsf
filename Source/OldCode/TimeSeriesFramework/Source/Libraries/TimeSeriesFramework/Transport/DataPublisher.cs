@@ -1006,7 +1006,11 @@ namespace TimeSeriesFramework.Transport
             {
                 if (m_clientConnections.TryGetValue(clientIDs[i], out connection) && (object)connection != null && (object)connection.Subscription != null)
                 {
-                    timestampFormat = string.Format("{0} Format, {1}-byte timestamps", connection.Subscription.UseCompactMeasurementFormat ? "Compact" : "Full", connection.Subscription.TimestampSize);
+                    if (connection.Subscription is UnsynchronizedClientSubscription)
+                        timestampFormat = string.Format("{0} Format, {1}-byte timestamps", connection.Subscription.UseCompactMeasurementFormat ? "Compact" : "Full", connection.Subscription.TimestampSize);
+                    else
+                        timestampFormat = string.Format("{0} Format, 8-byte frame-level timestamp", connection.Subscription.UseCompactMeasurementFormat ? "Compact" : "Full");
+
                     clientEnumeration.AppendFormat("  {0} - {1}\r\n          {2}\r\n          {3}\r\n          {4}\r\n\r\n", i.ToString().PadLeft(3), connection.ConnectionID, connection.SubscriberInfo, timestampFormat, connection.OperationalModes);
                 }
             }
@@ -1103,6 +1107,7 @@ namespace TimeSeriesFramework.Transport
             Guid signalID;
 
             byte[] serializedSignalIndexCache;
+            ClientConnection connection;
 
             if (inputMeasurementKeys != null)
             {
@@ -1132,7 +1137,8 @@ namespace TimeSeriesFramework.Transport
             serializedSignalIndexCache = SerializeSignalIndexCache(clientID, signalIndexCache);
 
             // Send client updated signal index cache
-            SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, serializedSignalIndexCache);
+            if (m_clientConnections.TryGetValue(clientID, out connection) && connection.IsSubscribed)
+                SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, serializedSignalIndexCache);
         }
 
         /// <summary>
@@ -1898,15 +1904,15 @@ namespace TimeSeriesFramework.Transport
                                 subscription.Initialized = true;
                             }
 
+                            // Send updated signal index cache to client with validated rights of the selected input measurement keys
+                            byte[] serializedSignalIndexCache = SerializeSignalIndexCache(clientID, subscription.SignalIndexCache);
+                            SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, serializedSignalIndexCache);
+
                             // Spawn routing table recalculation
                             m_routingTables.CalculateRoutingTables(null);
 
                             // Make sure adapter is started
                             subscription.Start();
-
-                            // Send updated signal index cache to client with validated rights of the selected input measurement keys
-                            byte[] serializedSignalIndexCache = SerializeSignalIndexCache(clientID, subscription.SignalIndexCache);
-                            SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, serializedSignalIndexCache);
 
                             // TODO: Add a flag to the database to allow payload encryption to be subsciber specific instead of global to publisher...
                             // Send new or updated cipher keys
@@ -1936,6 +1942,7 @@ namespace TimeSeriesFramework.Transport
                                     message = string.Format("Client subscribed as {0}compact {1}synchronized, but no signals were specified. Make sure \"inputMeasurementKeys\" setting is properly defined.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un");
                             }
 
+                            connection.IsSubscribed = true;
                             SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.Subscribe, message);
                             OnStatusMessage(message);
                         }
@@ -1978,6 +1985,7 @@ namespace TimeSeriesFramework.Transport
                 connection.Subscription.ProcessingComplete -= subscription_ProcessingComplete;
 
             connection.Subscription = null;
+            connection.IsSubscribed = false;
 
             SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.Unsubscribe, "Client unsubscribed.");
             OnStatusMessage(connection.ConnectionID + " unsubscribed.");

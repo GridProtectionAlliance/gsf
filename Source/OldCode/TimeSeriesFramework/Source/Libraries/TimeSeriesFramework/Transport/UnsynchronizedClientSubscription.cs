@@ -70,8 +70,7 @@ namespace TimeSeriesFramework.Transport
         private System.Timers.Timer m_baseTimeRotationTimer;
         private volatile bool m_initializedBaseTimeOffsets;
         private Thread m_processThread;
-        private SemaphoreSlim m_processSemaphore;
-        private ConcurrentQueue<IEnumerable<IMeasurement>> m_processQueue;
+        private BlockingCollection<IEnumerable<IMeasurement>> m_processQueue;
         private volatile bool m_startTimeSent;
         private IaonSession m_iaonSession;
         private bool m_disposed;
@@ -340,7 +339,7 @@ namespace TimeSeriesFramework.Transport
             else
                 m_useMillisecondResolution = false;
 
-            if (m_parent.UseBaseTimeOffsets)
+            if (m_parent.UseBaseTimeOffsets && m_includeTime)
             {
                 m_baseTimeRotationTimer = new System.Timers.Timer();
                 m_baseTimeRotationTimer.Interval = m_useMillisecondResolution ? 60000 : 420000;
@@ -364,11 +363,10 @@ namespace TimeSeriesFramework.Transport
             base.Start();
 
             m_processThread = new Thread(ProcessMeasurements);
-            m_processSemaphore = new SemaphoreSlim(0, int.MaxValue);
-            m_processQueue = new ConcurrentQueue<IEnumerable<IMeasurement>>();
+            m_processQueue = new BlockingCollection<IEnumerable<IMeasurement>>(new ConcurrentQueue<IEnumerable<IMeasurement>>());
             m_processThread.Start();
 
-            if ((object)m_baseTimeRotationTimer != null)
+            if ((object)m_baseTimeRotationTimer != null && m_includeTime)
                 m_baseTimeRotationTimer.Start();
         }
 
@@ -391,10 +389,10 @@ namespace TimeSeriesFramework.Transport
                 m_processThread = null;
             }
 
-            if ((object)m_processSemaphore != null)
+            if ((object)m_processQueue != null)
             {
-                m_processSemaphore.Dispose();
-                m_processSemaphore = null;
+                m_processQueue.Dispose();
+                m_processQueue = null;
             }
 
             m_initializedBaseTimeOffsets = false;
@@ -493,19 +491,15 @@ namespace TimeSeriesFramework.Transport
                         }
 
                         // Publish latest data values...
-                        m_processQueue.Enqueue(currentMeasurements);
-
-                        if ((object)m_processSemaphore != null)
-                            m_processSemaphore.Release();
+                        if ((object)m_processQueue != null)
+                            m_processQueue.Add(currentMeasurements);
                     }
                 }
                 else
                 {
                     // Publish unsynchronized on data receipt otherwise...
-                    m_processQueue.Enqueue(measurements);
-
-                    if ((object)m_processSemaphore != null)
-                        m_processSemaphore.Release();
+                    if ((object)m_processQueue != null)
+                        m_processQueue.Add(measurements);
                 }
             }
         }
@@ -521,7 +515,7 @@ namespace TimeSeriesFramework.Transport
             {
                 try
                 {
-                    if ((object)m_processSemaphore != null && m_processSemaphore.Wait(ProcessWaitTimeout) && m_processQueue.TryDequeue(out measurements))
+                    if ((object)m_processQueue != null && m_processQueue.TryTake(out measurements, ProcessWaitTimeout))
                     {
                         // Wait for any external events, if needed
                         WaitForExternalEvents();
