@@ -66,15 +66,14 @@ namespace Transport
 	{
 		std::string FilterExpression;
 		void (*NewMeasurementsCallback)(std::vector<Measurement>);
-			
-		//bool RemotelySynchronized;
+
 		//bool CompactFormat;
 		bool Throttled;
 
 		bool UdpDataChannel;
 		uint16_t DataChannelLocalPort;
 		std::string DataChannelInterface;
-		//bool DataChannelCompression;
+		//bool DataChannelCompressed;
 
 		bool IncludeTime;
 		float64_t LagTime;
@@ -89,6 +88,8 @@ namespace Transport
 
 		std::string WaitHandleNames;
 		uint32_t WaitHandleTimeout;
+
+		std::string ExtraConnectionStringParameters;
 
 		SubscriptionInfo()
 			: NewMeasurementsCallback(0),

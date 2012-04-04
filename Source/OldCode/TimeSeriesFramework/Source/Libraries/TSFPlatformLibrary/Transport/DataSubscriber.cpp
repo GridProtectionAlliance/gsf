@@ -777,6 +777,9 @@ void tsf::Transport::DataSubscriber::Subscribe(tsf::Transport::SubscriptionInfo 
 		stringStream << "waitHandleTimeout=" << info.WaitHandleTimeout << ";";
 	}
 
+	if (!info.ExtraConnectionStringParameters.empty())
+		stringStream << info.ExtraConnectionStringParameters << ";";
+
 	connectionString = stringStream.str();
 	connectionStringPtr = (uint8_t*)&connectionString[0];
 	connectionStringSize = (uint32_t)(connectionString.size() * CharSize);
