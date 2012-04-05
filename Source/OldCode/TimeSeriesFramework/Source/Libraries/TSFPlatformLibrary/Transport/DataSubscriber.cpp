@@ -952,10 +952,14 @@ bool tsf::Transport::DataSubscriber::IsSubscribed() const
 
 // --- SubscriberConnector ---
 
+// Static member variable definition.
+std::map<tsf::Transport::DataSubscriber*, tsf::Transport::SubscriberConnector> tsf::Transport::SubscriberConnector::s_connectors;
+
 // Auto-reconnect handler.
 void tsf::Transport::SubscriberConnector::AutoReconnect(DataSubscriber* subscriber)
 {
 	std::map<DataSubscriber*, SubscriberConnector>::iterator connectorIter;
+	s_connectors.find(subscriber);
 
 	if (connectorIter != s_connectors.end())
 		connectorIter->second.Connect(*subscriber);
@@ -968,7 +972,7 @@ void tsf::Transport::SubscriberConnector::RegisterErrorMessageCallback(ErrorMess
 	m_errorMessageCallback = errorMessageCallback;
 }
 
-		// Begin connection sequence.
+// Begin connection sequence.
 bool tsf::Transport::SubscriberConnector::Connect(DataSubscriber& subscriber)
 {
 	if (m_autoReconnect)
