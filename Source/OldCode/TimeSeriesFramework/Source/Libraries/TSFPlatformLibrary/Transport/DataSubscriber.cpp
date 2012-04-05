@@ -378,7 +378,7 @@ void tsf::Transport::DataSubscriber::Dispatch(DispatcherFunction function, uint8
 {
 	CallbackDispatcher dispatcher;
 	std::vector<uint8_t> dataVector(length);
-	int i;
+	std::size_t i;
 
 	if (data != 0)
 	{

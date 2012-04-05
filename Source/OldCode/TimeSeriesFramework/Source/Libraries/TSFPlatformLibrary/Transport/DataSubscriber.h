@@ -94,6 +94,7 @@ namespace Transport
 
 		SubscriptionInfo()
 			: NewMeasurementsCallback(0),
+			  RemotelySynchronized(false),
 			  Throttled(false),
 			  UdpDataChannel(false),
 			  DataChannelLocalPort(9500),
@@ -218,12 +219,12 @@ namespace Transport
 		// Creates a new instance of the data subscriber.
 		DataSubscriber(bool compressMetadata = true)
 			: m_compressMetadata(compressMetadata),
+			  m_disconnecting(false),
 			  m_totalCommandChannelBytesReceived(0L),
 			  m_totalDataChannelBytesReceived(0L),
 			  m_totalMeasurementsReceived(0L),
 			  m_connected(false),
 			  m_subscribed(false),
-			  m_disconnecting(false),
 			  m_commandChannelSocket(m_commandChannelService),
 			  m_dataChannelSocket(m_dataChannelService),
 			  m_statusMessageCallback(0),

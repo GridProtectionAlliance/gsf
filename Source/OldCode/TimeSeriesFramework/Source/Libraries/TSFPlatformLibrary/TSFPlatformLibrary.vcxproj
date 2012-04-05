@@ -23,9 +23,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common\EndianConverter.cpp" />
+    <ClCompile Include="SimpleSubscribe.cpp" />
     <ClCompile Include="Transport\CompactMeasurementParser.cpp" />
     <ClCompile Include="Transport\DataSubscriber.cpp" />
     <ClCompile Include="Transport\SignalIndexCache.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Makefile" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2A542BE8-8D17-44C3-BCD2-768DF480FF82}</ProjectGuid>

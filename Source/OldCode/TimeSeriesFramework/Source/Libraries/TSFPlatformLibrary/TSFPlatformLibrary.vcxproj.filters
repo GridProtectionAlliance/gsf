@@ -42,6 +42,9 @@
     <ClCompile Include="Transport\DataSubscriber.cpp">
       <Filter>Transport</Filter>
     </ClCompile>
+    <ClCompile Include="SimpleSubscribe.cpp">
+      <Filter>Samples</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Transport">
@@ -50,5 +53,11 @@
     <Filter Include="Common">
       <UniqueIdentifier>{e88bc1e0-d6ef-458b-8c07-4ca6aa8f916c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Samples">
+      <UniqueIdentifier>{25c46a62-2d85-46ae-a6ad-bd13b252d63c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Makefile" />
   </ItemGroup>
 </Project>
