@@ -23,7 +23,9 @@
 
 #include <sstream>
 #include <exception>
+
 #include <boost/bind.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include "Constants.h"
 #include "DataSubscriber.h"
@@ -35,6 +37,9 @@ namespace tsf = TimeSeriesFramework;
 template <class T>
 std::string ToString(const T& obj);
 tsf::Guid ToGuid(uint8_t* data);
+
+
+// --- DataSubscriber ---
 
 // Deconstructor calls disconnect to clean up after itself.
 tsf::Transport::DataSubscriber::~DataSubscriber()
@@ -560,7 +565,7 @@ void tsf::Transport::DataSubscriber::ConnectionTerminatedDispatcher()
 	Disconnect();
 
 	if (m_connectionTerminatedCallback != 0)
-		m_connectionTerminatedCallback();
+		m_connectionTerminatedCallback(this);
 }
 
 // Processes a response sent by the server. Response codes are defined in the header file "Constants.h".
@@ -943,6 +948,124 @@ bool tsf::Transport::DataSubscriber::IsSubscribed() const
 {
 	return m_subscribed;
 }
+
+
+// --- SubscriberConnector ---
+
+// Auto-reconnect handler.
+void tsf::Transport::SubscriberConnector::AutoReconnect(DataSubscriber* subscriber)
+{
+	std::map<DataSubscriber*, SubscriberConnector>::iterator connectorIter;
+
+	if (connectorIter != s_connectors.end())
+		connectorIter->second.Connect(*subscriber);
+}
+
+// Registers a callback to provide error messages each time
+// the subscriber fails to connect during a connection sequence.
+void tsf::Transport::SubscriberConnector::RegisterErrorMessageCallback(ErrorMessageCallback errorMessageCallback)
+{
+	m_errorMessageCallback = errorMessageCallback;
+}
+
+		// Begin connection sequence.
+bool tsf::Transport::SubscriberConnector::Connect(DataSubscriber& subscriber)
+{
+	if (m_autoReconnect)
+		subscriber.RegisterConnectionTerminatedCallback(&AutoReconnect);
+
+	for (int i = 0; !m_cancel && (m_maxRetries == -1 || i < m_maxRetries); ++i)
+	{
+		try
+		{
+			subscriber.Connect(m_hostname, m_port);
+			break;
+		}
+		catch (std::exception ex)
+		{
+			if (m_errorMessageCallback != 0)
+				boost::thread th(boost::bind(m_errorMessageCallback, ex.what()));
+
+			boost::asio::io_service io;
+			boost::asio::deadline_timer t(io, boost::posix_time::milliseconds(m_retryInterval));
+			t.wait();
+		}
+	}
+
+	return subscriber.IsConnected();
+}
+
+// Cancel all current and
+// future connection sequences.
+void tsf::Transport::SubscriberConnector::Cancel()
+{
+	m_cancel = true;
+}
+
+// Set the hostname of the publisher to connect to.
+void tsf::Transport::SubscriberConnector::SetHostname(std::string hostname)
+{
+	m_hostname = hostname;
+}
+
+// Set the port that the publisher is listening on.
+void tsf::Transport::SubscriberConnector::SetPort(uint16_t port)
+{
+	m_port = port;
+}
+
+// Set the maximum number of retries during a connection sequence.
+void tsf::Transport::SubscriberConnector::SetMaxRetries(int maxRetries)
+{
+	m_maxRetries = maxRetries;
+}
+
+// Set the interval of idle time between connection attempts.
+void tsf::Transport::SubscriberConnector::SetRetryInterval(int retryInterval)
+{
+	m_retryInterval = retryInterval;
+}
+
+// Set the flag that determines whether the subscriber should
+// automatically attempt to reconnect when the connection is terminated.
+void tsf::Transport::SubscriberConnector::SetAutoReconnect(bool autoReconnect)
+{
+	m_autoReconnect = autoReconnect;
+}
+
+// Gets the hostname of the publisher to connect to.
+std::string tsf::Transport::SubscriberConnector::GetHostname() const
+{
+	return m_hostname;
+}
+
+// Gets the port that the publisher is listening on.
+uint16_t tsf::Transport::SubscriberConnector::GetPort() const
+{
+	return m_port;
+}
+
+// Gets the maximum number of retries during a connection sequence.
+int tsf::Transport::SubscriberConnector::GetMaxRetries() const
+{
+	return m_maxRetries;
+}
+
+// Gets the interval of idle time between connection attempts.
+int tsf::Transport::SubscriberConnector::GetRetryInterval() const
+{
+	return m_retryInterval;
+}
+
+// Gets the flag that determines whether the subscriber should
+// automatically attempt to reconnect when the connection is terminated.
+bool tsf::Transport::SubscriberConnector::GetAutoReconnect() const
+{
+	return m_autoReconnect;
+}
+
+
+// --- Convenience Methods ---
 
 // Converts an object to a string.
 template <class T>

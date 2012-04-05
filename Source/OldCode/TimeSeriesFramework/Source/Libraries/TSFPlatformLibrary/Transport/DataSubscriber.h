@@ -122,7 +122,7 @@ namespace Transport
 		typedef void (*DataStartTimeCallback)(int64_t);
 		typedef void (*MetadataCallback)(std::vector<uint8_t>);
 		typedef void (*NewMeasurementsCallback)(std::vector<Measurement>);
-		typedef void (*ConnectionTerminatedCallback)();
+		typedef void (*ConnectionTerminatedCallback)(DataSubscriber*);
 		
 		// Structure used to dispatch
 		// callbacks on the callback thread.
@@ -311,6 +311,74 @@ namespace Transport
 		long GetTotalMeasurementsReceived() const;
 		bool IsConnected() const;
 		bool IsSubscribed() const;
+	};
+
+	// Helper class to provide retry and auto-reconnect functionality to the subscriber.
+	class SubscriberConnector
+	{
+	private:
+		typedef void (*ErrorMessageCallback)(std::string);
+
+		ErrorMessageCallback m_errorMessageCallback;
+
+		std::string m_hostname;
+		uint16_t m_port;
+
+		int m_maxRetries;
+		int m_retryInterval;
+		bool m_autoReconnect;
+
+		bool m_cancel;
+
+		// Auto-reconnect handler.
+		static void AutoReconnect(DataSubscriber* source);
+		static std::map<DataSubscriber*, SubscriberConnector> s_connectors;
+
+	public:
+		// Creates a new instance.
+		SubscriberConnector(std::string hostname, uint16_t port)
+			: m_errorMessageCallback(0),
+			  m_hostname(hostname),
+			  m_port(port),
+			  m_maxRetries(-1),
+			  m_retryInterval(2000),
+			  m_autoReconnect(true)
+		{
+		}
+
+		// Registers a callback to provide error messages each time
+		// the subscriber fails to connect during a connection sequence.
+		void RegisterErrorMessageCallback(ErrorMessageCallback errorMessageCallback);
+
+		// Begin connection sequence.
+		bool Connect(DataSubscriber& subscriber);
+
+		// Cancel all current and
+		// future connection sequences.
+		void Cancel();
+
+		// Set the hostname of the publisher to connect to.
+		void SetHostname(std::string hostname);
+
+		// Set the port that the publisher is listening on.
+		void SetPort(uint16_t port);
+
+		// Set the maximum number of retries during a connection sequence.
+		void SetMaxRetries(int maxRetries);
+
+		// Sets the interval of idle time between connection attempts.
+		void SetRetryInterval(int retryInterval);
+
+		// Sets flag that determines whether the subscriber should
+		// automatically attempt to reconnect when the connection is terminated.
+		void SetAutoReconnect(bool autoReconnect);
+
+		// Getters for configurable settings.
+		std::string GetHostname() const;
+		uint16_t GetPort() const;
+		int GetMaxRetries() const;
+		int GetRetryInterval() const;
+		bool GetAutoReconnect() const;
 	};
 }}
 
