@@ -783,10 +783,10 @@ void tsf::Transport::DataSubscriber::Subscribe(tsf::Transport::SubscriptionInfo 
 
 	if (info.UdpDataChannel)
 	{
-		// Attempt to bind to local UDP port
 		if (m_hostAddress.is_v6())
 			ipVersion = boost::asio::ip::udp::v6();
-
+		
+		// Attempt to bind to local UDP port
 		m_dataChannelSocket.open(ipVersion);
 		m_dataChannelSocket.bind(boost::asio::ip::udp::endpoint(ipVersion, info.DataChannelLocalPort));
 		m_dataChannelResponseThread = boost::thread(boost::bind(&tsf::Transport::DataSubscriber::RunDataChannelResponseThread, this));
@@ -962,7 +962,13 @@ void tsf::Transport::SubscriberConnector::AutoReconnect(DataSubscriber* subscrib
 	s_connectors.find(subscriber);
 
 	if (connectorIter != s_connectors.end())
-		connectorIter->second.Connect(*subscriber);
+	{
+		SubscriberConnector& connector = connectorIter->second;
+		connector.Connect(*subscriber);
+
+		if (connector.m_cancel == false && connector.m_reconnectCallback != 0)
+			connector.m_reconnectCallback(subscriber);
+	}
 }
 
 // Registers a callback to provide error messages each time
@@ -970,6 +976,12 @@ void tsf::Transport::SubscriberConnector::AutoReconnect(DataSubscriber* subscrib
 void tsf::Transport::SubscriberConnector::RegisterErrorMessageCallback(ErrorMessageCallback errorMessageCallback)
 {
 	m_errorMessageCallback = errorMessageCallback;
+}
+
+// Registers a callback to notify after an automatic reconnection attempt has been made.
+void tsf::Transport::SubscriberConnector::RegisterReconnectCallback(ReconnectCallback reconnectCallback)
+{
+	m_reconnectCallback = reconnectCallback;
 }
 
 // Begin connection sequence.

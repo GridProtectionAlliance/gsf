@@ -318,8 +318,10 @@ namespace Transport
 	{
 	private:
 		typedef void (*ErrorMessageCallback)(std::string);
+		typedef void (*ReconnectCallback)(DataSubscriber*);
 
 		ErrorMessageCallback m_errorMessageCallback;
+		ReconnectCallback m_reconnectCallback;
 
 		std::string m_hostname;
 		uint16_t m_port;
@@ -349,6 +351,11 @@ namespace Transport
 		// Registers a callback to provide error messages each time
 		// the subscriber fails to connect during a connection sequence.
 		void RegisterErrorMessageCallback(ErrorMessageCallback errorMessageCallback);
+
+		// Registers a callback to notify after an automatic reconnection attempt has been made.
+		// This callback will be called whether the connection was successful or not, so it is
+		// recommended to check the connected state of the subscriber using the IsConnected() method.
+		void RegisterReconnectCallback(ReconnectCallback reconnectCallback);
 
 		// Begin connection sequence.
 		bool Connect(DataSubscriber& subscriber);
