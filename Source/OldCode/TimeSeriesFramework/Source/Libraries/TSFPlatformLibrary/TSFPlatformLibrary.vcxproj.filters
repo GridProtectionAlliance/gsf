@@ -28,6 +28,9 @@
     <ClInclude Include="Transport\Constants.h">
       <Filter>Transport</Filter>
     </ClInclude>
+    <ClInclude Include="Common\Convert.h">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Transport\SignalIndexCache.cpp">
@@ -47,6 +50,9 @@
     </ClCompile>
     <ClCompile Include="Samples\SimpleSubscribe.cpp">
       <Filter>Samples</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Convert.cpp">
+      <Filter>Common</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

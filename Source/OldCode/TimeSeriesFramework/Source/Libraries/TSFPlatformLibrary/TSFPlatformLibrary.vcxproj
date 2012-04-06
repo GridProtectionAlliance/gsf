@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Common\Convert.h" />
     <ClInclude Include="Common\EndianConverter.h" />
     <ClInclude Include="Common\Measurement.h" />
     <ClInclude Include="Common\ThreadSafeQueue.h" />
@@ -22,6 +23,7 @@
     <ClInclude Include="Transport\SignalIndexCache.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Common\Convert.cpp" />
     <ClCompile Include="Common\EndianConverter.cpp" />
     <ClCompile Include="Samples\AdvancedSubscribe.cpp" />
     <ClCompile Include="Samples\SimpleSubscribe.cpp" />

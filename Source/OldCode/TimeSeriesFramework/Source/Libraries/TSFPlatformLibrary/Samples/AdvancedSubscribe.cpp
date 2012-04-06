@@ -25,6 +25,7 @@
 #include <string>
 #include <vector>
 
+#include "../Common/Convert.h"
 #include "../Common/Measurement.h"
 #include "../Transport/DataSubscriber.h"
 
@@ -123,26 +124,28 @@ tsft::SubscriptionInfo CreateSubscriptionInfo()
 	// The following filter expression formats are also available:
 	//
 	// - Signal ID list -
-	//info.FilterExpression = "74bc3271-35b5-4fe3-85ec-8cbc45ee4fb1;"
-	//						"fd7f5c51-5cca-4e84-b387-bd39d812b733;"
-	//						"36af1d3d-cd16-4973-afe8-dec94a24f5c4;"
-	//						"532b4b4c-d360-4263-bb1b-2fda7a7ac330;"
-	//						"81e3d66d-5eff-4bd6-8490-8cac3a715636;"
-	//						"1fdc0182-2ef5-4a93-83fa-a6b2ce074f71;"
-	//						"44d89db2-05ae-40d0-9a59-dfcbc08c464d;"
-	//						"91f9adea-e595-4b3c-8b00-c126f969a31d;"
-	//						"cf007929-7a25-408b-b684-9161e137d586;"
-	//						"96c1118b-9e7f-4fbb-af7e-0c3623532603;"
-	//						"9018180a-2ffa-4e46-94e1-6f6c9241fb31;"
-	//						"c97fda6d-c9bf-4cfd-ac85-09f4c04ce1c3;"
-	//						"3f172393-eb5d-43bf-8783-8a824793764c;"
-	//						"9ebf2209-d6f3-4f02-8766-4c30948b5a18";
+	//info.FilterExpression = "7aaf0a8f-3a4f-4c43-ab43-ed9d1e64a255;"
+	//						"93673c68-d59d-4926-b7e9-e7678f9f66b4;"
+	//						"65ac9cf6-ae33-4ece-91b6-bb79343855d5;"
+	//						"3647f729-d0ed-4f79-85ad-dae2149cd432;"
+	//						"069c5e29-f78a-46f6-9dff-c92cb4f69371;"
+	//						"25355a7b-2a9d-4ef2-99ba-4dd791461379";
 	//
 	// - Filter pattern -
 	//info.FilterExpression = "FILTER ActiveMeasurements WHERE ID LIKE 'PPA:*'";
+	//info.FilterExpression = "FILTER ActiveMeasurements WHERE Device = 'SHELBY' AND SignalType = 'FREQ'";
 
 	info.FilterExpression = "PPA:1;PPA:2;PPA:3;PPA:4;PPA:5;PPA:6;PPA:7;PPA:8;PPA:9;PPA:10;PPA:11;PPA:12;PPA:13;PPA:14";
 	info.NewMeasurementsCallback = &ProcessMeasurements;
+
+	// To set up a remotely synchronized subscription, set this flag
+	// to true and add the framesPerSecond parameter to the
+	// ExtraConnectionStringParameters. Additionally, the following
+	// example demonstrates the use of some other useful parameters
+	// when setting up remotely synchronized subscriptions.
+	//
+	//info.RemotelySynchronized = true;
+	//info.ExtraConnectionStringParameters = "framesPerSecond=30;timeResolution=10000;downsamplingMethod=Closest";
 
 	info.RemotelySynchronized = false;
 	info.Throttled = false;
@@ -186,8 +189,13 @@ tsft::SubscriberConnector CreateSubscriberConnector(std::string hostname, tsf::u
 // received a new packet of measurements from the publisher.
 void ProcessMeasurements(std::vector<tsf::Measurement> newMeasurements)
 {
+	const std::string TimestampFormat = "%Y-%m-%d %H:%M:%S.%f";
+	const std::size_t MaxTimestampSize = 80;
+
 	static int processCount = 0;
 	std::size_t i;
+
+	char timestamp[MaxTimestampSize];
 
 	// Only display messages every five
 	// seconds (assuming 30 calls per second).
@@ -197,7 +205,9 @@ void ProcessMeasurements(std::vector<tsf::Measurement> newMeasurements)
 
 		if (newMeasurements.size() > 0)
 		{
-			std::cout << "Timestamp: " << newMeasurements[0].Timestamp << std::endl;
+			if (tsf::TicksToString(timestamp, MaxTimestampSize, TimestampFormat, newMeasurements[0].Timestamp))
+				std::cout << "Timestamp: " << std::string(timestamp) << std::endl;
+
 			std::cout << "Point\tValue" << std::endl;
 
 			for (i = 0; i < newMeasurements.size(); ++i)

@@ -25,13 +25,14 @@
 #include <string>
 #include <vector>
 
+#include "../Common/Convert.h"
 #include "../Common/Measurement.h"
 #include "../Transport/DataSubscriber.h"
 
 namespace tsf = TimeSeriesFramework;
 namespace tsft = tsf::Transport;
 
-tsft::DataSubscriber subscriber;
+tsft::DataSubscriber Subscriber;
 
 void RunSubscriber(std::string hostname, tsf::uint16_t port);
 void ProcessMeasurements(std::vector<tsf::Measurement> newMeasurements);
@@ -71,7 +72,7 @@ int main(int argc, char* argv[])
 	std::getline(std::cin, line);
 
 	// Disconnect the subscriber to stop background threads.
-	subscriber.Disconnect();
+	Subscriber.Disconnect();
 
 	return 0;
 }
@@ -88,27 +89,34 @@ void RunSubscriber(std::string hostname, tsf::uint16_t port)
 	tsft::SubscriptionInfo info;
 	info.FilterExpression = "PPA:1;PPA:2;PPA:3;PPA:4;PPA:5;PPA:6;PPA:7;PPA:8;PPA:9;PPA:10;PPA:11;PPA:12;PPA:13;PPA:14";
 	
-	subscriber.RegisterNewMeasurementsCallback(&ProcessMeasurements);
-	subscriber.Connect(hostname, port);
-	subscriber.Subscribe(info);
+	Subscriber.RegisterNewMeasurementsCallback(&ProcessMeasurements);
+	Subscriber.Connect(hostname, port);
+	Subscriber.Subscribe(info);
 }
 
 // Callback which is called when the subscriber has
 // received a new packet of measurements from the publisher.
 void ProcessMeasurements(std::vector<tsf::Measurement> newMeasurements)
 {
+	const std::string TimestampFormat = "%Y-%m-%d %H:%M:%S.%f";
+	const std::size_t MaxTimestampSize = 80;
+
 	static int processCount = 0;
 	std::size_t i;
+
+	char timestamp[MaxTimestampSize];
 
 	// Only display messages every five
 	// seconds (assuming 30 calls per second).
 	if (processCount % 150 == 0)
 	{
-		std::cout << subscriber.GetTotalMeasurementsReceived() << " measurements received so far..." << std::endl;
+		std::cout << Subscriber.GetTotalMeasurementsReceived() << " measurements received so far..." << std::endl;
 
 		if (newMeasurements.size() > 0)
 		{
-			std::cout << "Timestamp: " << newMeasurements[0].Timestamp << std::endl;
+			if (tsf::TicksToString(timestamp, MaxTimestampSize, TimestampFormat, newMeasurements[0].Timestamp))
+				std::cout << "Timestamp: " << std::string(timestamp) << std::endl;
+
 			std::cout << "Point\tValue" << std::endl;
 
 			for (i = 0; i < newMeasurements.size(); ++i)
