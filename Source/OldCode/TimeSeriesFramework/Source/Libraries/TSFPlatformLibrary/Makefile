@@ -23,12 +23,17 @@
 
 CC := gcc
 CFLAGS := -Wall
-OUTPUT := Common/EndianConverter.o Transport/CompactMeasurementParser.o Transport/DataSubscriber.o Transport/SignalIndexCache.o Samples/SimpleSubscribe
+OUTPUT := Common/EndianConverter.o Transport/CompactMeasurementParser.o Transport/DataSubscriber.o Transport/SignalIndexCache.o Samples/SimpleSubscribe Samples/AdvancedSubscribe
 
-Samples: SimpleSubscribe
+Samples: SimpleSubscribe AdvancedSubscribe
+SimpleSubscribe: Samples/SimpleSubscribe
+AdvancedSubscribe: Samples/AdvancedSubscribe
 
-SimpleSubscribe: Common/EndianConverter.o Transport/CompactMeasurementParser.o Transport/DataSubscriber.o Transport/SignalIndexCache.o
-	$(CC) $(CFLAGS) $^ Samples/SimpleSubscribe.cpp -lboost_system -lboost_thread -o Samples/SimpleSubscribe
+Samples/SimpleSubscribe: Common/EndianConverter.o Transport/CompactMeasurementParser.o Transport/DataSubscriber.o Transport/SignalIndexCache.o Samples/SimpleSubscribe.cpp
+	$(CC) $(CFLAGS) $^ -lboost_system -lboost_thread -o $@
+	
+Samples/AdvancedSubscribe: Common/EndianConverter.o Transport/CompactMeasurementParser.o Transport/DataSubscriber.o Transport/SignalIndexCache.o Samples/AdvancedSubscribe.cpp
+	$(CC) $(CFLAGS) $^ -lboost_system -lboost_thread -o $@
 
 %.o : %.cpp
 	$(CC) $(CFLAGS) -c $< -o $@

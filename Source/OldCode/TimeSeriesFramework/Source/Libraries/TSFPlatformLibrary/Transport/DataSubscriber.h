@@ -339,10 +339,10 @@ namespace Transport
 
 	public:
 		// Creates a new instance.
-		SubscriberConnector(std::string hostname, uint16_t port)
+		SubscriberConnector()
 			: m_errorMessageCallback(0),
-			  m_hostname(hostname),
-			  m_port(port),
+			  m_reconnectCallback(0),
+			  m_port(0),
 			  m_maxRetries(-1),
 			  m_retryInterval(2000),
 			  m_autoReconnect(true)
@@ -374,7 +374,7 @@ namespace Transport
 		// Set the maximum number of retries during a connection sequence.
 		void SetMaxRetries(int maxRetries);
 
-		// Sets the interval of idle time between connection attempts.
+		// Sets the interval of idle time (in milliseconds) between connection attempts.
 		void SetRetryInterval(int retryInterval);
 
 		// Sets flag that determines whether the subscriber should

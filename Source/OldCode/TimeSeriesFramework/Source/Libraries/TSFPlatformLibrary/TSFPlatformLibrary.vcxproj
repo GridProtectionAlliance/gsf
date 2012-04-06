@@ -23,7 +23,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common\EndianConverter.cpp" />
-    <ClCompile Include="SimpleSubscribe.cpp" />
+    <ClCompile Include="Samples\AdvancedSubscribe.cpp" />
+    <ClCompile Include="Samples\SimpleSubscribe.cpp" />
     <ClCompile Include="Transport\CompactMeasurementParser.cpp" />
     <ClCompile Include="Transport\DataSubscriber.cpp" />
     <ClCompile Include="Transport\SignalIndexCache.cpp" />

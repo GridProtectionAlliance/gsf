@@ -105,9 +105,9 @@ void tsf::Transport::DataSubscriber::RunCommandChannelResponseThread()
 		if (m_disconnecting)
 			break;
 
-		if (error == boost::asio::error::eof)
+		if (error == boost::asio::error::connection_aborted || error == boost::asio::error::connection_reset || error == boost::asio::error::eof)
 		{
-			// Connection closed by peer
+			// Connection closed by peer; terminate connection
 			boost::thread t(boost::bind(&tsf::Transport::DataSubscriber::ConnectionTerminatedDispatcher, this));
 			break;
 		}
@@ -136,9 +136,9 @@ void tsf::Transport::DataSubscriber::RunCommandChannelResponseThread()
 		if (m_disconnecting)
 			break;
 
-		if (error == boost::asio::error::eof)
+		if (error == boost::asio::error::connection_aborted || error == boost::asio::error::connection_reset || error == boost::asio::error::eof)
 		{
-			// Connection closed by peer
+			// Connection closed by peer; terminate connection
 			boost::thread t(boost::bind(&tsf::Transport::DataSubscriber::ConnectionTerminatedDispatcher, this));
 			break;
 		}
@@ -681,7 +681,7 @@ void tsf::Transport::DataSubscriber::Connect(std::string hostname, uint16_t port
 	m_totalDataChannelBytesReceived = 0L;
 	m_totalMeasurementsReceived = 0L;
 
-	if (m_commandChannelSocket.is_open())
+	if (m_connected)
 		throw SubscriberException("Subscriber is already connected; disconnect first");
 
 	hostEndpoint = boost::asio::connect(m_commandChannelSocket, endpointIterator, error);
@@ -959,13 +959,19 @@ std::map<tsf::Transport::DataSubscriber*, tsf::Transport::SubscriberConnector> t
 void tsf::Transport::SubscriberConnector::AutoReconnect(DataSubscriber* subscriber)
 {
 	std::map<DataSubscriber*, SubscriberConnector>::iterator connectorIter;
-	s_connectors.find(subscriber);
+	connectorIter = s_connectors.find(subscriber);
 
 	if (connectorIter != s_connectors.end())
 	{
-		SubscriberConnector& connector = connectorIter->second;
+		SubscriberConnector connector = connectorIter->second;
+
+		// Notify the user that we are attempting to reconnect.
+		if (connector.m_cancel == false && connector.m_errorMessageCallback != 0)
+			connector.m_errorMessageCallback("Publisher connection terminated. Attempting to reconnect...");
+
 		connector.Connect(*subscriber);
 
+		// Notify the user that reconnect attempt was completed.
 		if (connector.m_cancel == false && connector.m_reconnectCallback != 0)
 			connector.m_reconnectCallback(subscriber);
 	}
@@ -988,19 +994,33 @@ void tsf::Transport::SubscriberConnector::RegisterReconnectCallback(ReconnectCal
 bool tsf::Transport::SubscriberConnector::Connect(DataSubscriber& subscriber)
 {
 	if (m_autoReconnect)
+	{
+		s_connectors[&subscriber] = *this;
 		subscriber.RegisterConnectionTerminatedCallback(&AutoReconnect);
+	}
 
 	for (int i = 0; !m_cancel && (m_maxRetries == -1 || i < m_maxRetries); ++i)
 	{
+		std::string errorMessage;
+
 		try
 		{
 			subscriber.Connect(m_hostname, m_port);
 			break;
 		}
-		catch (std::exception ex)
+		catch (SubscriberException ex)
+		{
+			errorMessage = ex.what();
+		}
+		catch (boost::system::system_error ex)
+		{
+			errorMessage = ex.what();
+		}
+
+		if (!errorMessage.empty())
 		{
 			if (m_errorMessageCallback != 0)
-				boost::thread th(boost::bind(m_errorMessageCallback, ex.what()));
+				boost::thread th(boost::bind(m_errorMessageCallback, errorMessage));
 
 			boost::asio::io_service io;
 			boost::asio::deadline_timer t(io, boost::posix_time::milliseconds(m_retryInterval));
@@ -1036,7 +1056,7 @@ void tsf::Transport::SubscriberConnector::SetMaxRetries(int maxRetries)
 	m_maxRetries = maxRetries;
 }
 
-// Set the interval of idle time between connection attempts.
+// Set the interval of idle time (in milliseconds) between connection attempts.
 void tsf::Transport::SubscriberConnector::SetRetryInterval(int retryInterval)
 {
 	m_retryInterval = retryInterval;

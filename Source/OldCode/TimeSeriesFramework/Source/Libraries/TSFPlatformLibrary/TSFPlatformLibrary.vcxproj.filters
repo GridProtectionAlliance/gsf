@@ -42,7 +42,10 @@
     <ClCompile Include="Transport\DataSubscriber.cpp">
       <Filter>Transport</Filter>
     </ClCompile>
-    <ClCompile Include="SimpleSubscribe.cpp">
+    <ClCompile Include="Samples\AdvancedSubscribe.cpp">
+      <Filter>Samples</Filter>
+    </ClCompile>
+    <ClCompile Include="Samples\SimpleSubscribe.cpp">
       <Filter>Samples</Filter>
     </ClCompile>
   </ItemGroup>
