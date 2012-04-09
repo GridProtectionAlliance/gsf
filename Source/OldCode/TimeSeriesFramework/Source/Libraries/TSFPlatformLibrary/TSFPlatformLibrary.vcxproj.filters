@@ -67,6 +67,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Makefile" />
+    <None Include="CMakeLists.txt" />
   </ItemGroup>
 </Project>
