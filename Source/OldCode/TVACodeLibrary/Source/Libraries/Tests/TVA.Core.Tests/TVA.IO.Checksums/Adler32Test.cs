@@ -1,19 +1,16 @@
 ﻿//*******************************************************************************************************
-//  ChecksumExtensions.cs - Gbtc
+//  Cipher.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2009
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  09/24/2008 - J. Ritchie Carroll
+//  04/11/2012 - Stephen C. Wills
 //       Generated original version of source code.
-//  06/10/2009 - Mehulbhi Thakkar
-//		 Added extension method for CRC-ModBus calculation.
-//  09/14/2009 - Stephen C. Wills
-//       Added new header and license agreement.
 //
 //*******************************************************************************************************
 
@@ -233,151 +230,94 @@
 */
 #endregion
 
-using System;
+#region [ Contributor License Agreements ]
 
-namespace TVA.IO.Checksums
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
+using System.Text;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TVA.IO.Checksums;
+
+namespace TVA.Core.Tests.TVA.IO.Checksums
 {
-    /// <summary>Defines extension functions related to computing checksums.</summary>
-    [CLSCompliant(false)]
-    public static class ChecksumExtensions
+    /// <summary>
+    /// This is a test class for Adler32 and is intended
+    /// to contain all Adler32 Unit Tests
+    /// </summary>
+    [TestClass]
+    public class Adler32Test
     {
-        /// <summary>Calculates the Adler-32 checksum on specified portion of a buffer.</summary>
-        /// <param name="data">Data buffer to perform checksum on.</param>
-        /// <param name="startIndex">Starts index in data buffer to begin checksum.</param>
-        /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
-        /// perform checksum over.</param>
-        /// <returns>Computed Adler-32 checksum over the specified portion of the buffer.</returns>
-        public static uint Adler32Checksum(this byte[] data, int startIndex, int length)
+        // Eclipse Public License used to test checksum algorithm.
+        private const string License = "EclipsePublicLicense-v1.0THEACCOMPANYINGPROGRAMISPROVIDEDUNDERTHETERMSOFTHISECLIPSEPUBLICLICENSE(\"AGREEMENT\").ANYUSE,REPRODUCTIONORDISTRIBUTIONOFTHEPROGRAMCONSTITUTESRECIPIENT'SACCEPTANCEOFTHISAGREEMENT.1.DEFINITIONS\"Contribution\"means:a)inthecaseoftheinitialContributor,theinitialcodeanddocumentationdistributedunderthisAgreement,andb)inthecaseofeachsubsequentContributor:i)changestotheProgram,andii)additionstotheProgram;wheresuchchangesand/oradditionstotheProgramoriginatefromandaredistributedbythatparticularContributor.AContribution'originates'fromaContributorifitwasaddedtotheProgrambysuchContributoritselforanyoneactingonsuchContributor'sbehalf.ContributionsdonotincludeadditionstotheProgramwhich:(i)areseparatemodulesofsoftwaredistributedinconjunctionwiththeProgramundertheirownlicenseagreement,and(ii)arenotderivativeworksoftheProgram.\"Contributor\"meansanypersonorentitythatdistributestheProgram.\"LicensedPatents\"meanpatentclaimslicensablebyaContributorwhicharenecessarilyinfringedbytheuseorsaleofitsContributionaloneorwhencombinedwiththeProgram.\"Program\"meanstheContributionsdistributedinaccordancewiththisAgreement.\"Recipient\"meansanyonewhoreceivestheProgramunderthisAgreement,includingallContributors.2.GRANTOFRIGHTSa)SubjecttothetermsofthisAgreement,eachContributorherebygrantsRecipientanon-exclusive,worldwide,royalty-freecopyrightlicensetoreproduce,preparederivativeworksof,publiclydisplay,publiclyperform,distributeandsublicensetheContributionofsuchContributor,ifany,andsuchderivativeworks,insourcecodeandobjectcodeform.b)SubjecttothetermsofthisAgreement,eachContributorherebygrantsRecipientanon-exclusive,worldwide,royalty-freepatentlicenseunderLicensedPatentstomake,use,sell,offertosell,importandotherwisetransfertheContributionofsuchContributor,ifany,insourcecodeandobjectcodeform.ThispatentlicenseshallapplytothecombinationoftheContributionandtheProgramif,atthetimetheContributionisaddedbytheContributor,suchadditionoftheContributioncausessuchcombinationtobecoveredbytheLicensedPatents.ThepatentlicenseshallnotapplytoanyothercombinationswhichincludetheContribution.Nohardwareperseislicensedhereunder.c)RecipientunderstandsthatalthougheachContributorgrantsthelicensestoitsContributionssetforthherein,noassurancesareprovidedbyanyContributorthattheProgramdoesnotinfringethepatentorotherintellectualpropertyrightsofanyotherentity.EachContributordisclaimsanyliabilitytoRecipientforclaimsbroughtbyanyotherentitybasedoninfringementofintellectualpropertyrightsorotherwise.Asaconditiontoexercisingtherightsandlicensesgrantedhereunder,eachRecipientherebyassumessoleresponsibilitytosecureanyotherintellectualpropertyrightsneeded,ifany.Forexample,ifathirdpartypatentlicenseisrequiredtoallowRecipienttodistributetheProgram,itisRecipient'sresponsibilitytoacquirethatlicensebeforedistributingtheProgram.d)EachContributorrepresentsthattoitsknowledgeithassufficientcopyrightrightsinitsContribution,ifany,tograntthecopyrightlicensesetforthinthisAgreement.3.REQUIREMENTSAContributormaychoosetodistributethePrograminobjectcodeformunderitsownlicenseagreement,providedthat:a)itcomplieswiththetermsandconditionsofthisAgreement;andb)itslicenseagreement:i)effectivelydisclaimsonbehalfofallContributorsallwarrantiesandconditions,expressandimplied,includingwarrantiesorconditionsoftitleandnon-infringement,andimpliedwarrantiesorconditionsofmerchantabilityandfitnessforaparticularpurpose;ii)effectivelyexcludesonbehalfofallContributorsallliabilityfordamages,includingdirect,indirect,special,incidentalandconsequentialdamages,suchaslostprofits;iii)statesthatanyprovisionswhichdifferfromthisAgreementareofferedbythatContributoraloneandnotbyanyotherparty;andiv)statesthatsourcecodefortheProgramisavailablefromsuchContributor,andinformslicenseeshowtoobtainitinareasonablemanneronorthroughamediumcustomarilyusedforsoftwareexchange.WhentheProgramismadeavailableinsourcecodeform:a)itmustbemadeavailableunderthisAgreement;andb)acopyofthisAgreementmustbeincludedwitheachcopyoftheProgram.ContributorsmaynotremoveoralteranycopyrightnoticescontainedwithintheProgram.EachContributormustidentifyitselfastheoriginatorofitsContribution,ifany,inamannerthatreasonablyallowssubsequentRecipientstoidentifytheoriginatoroftheContribution.4.COMMERCIALDISTRIBUTIONCommercialdistributorsofsoftwaremayacceptcertainresponsibilitieswithrespecttoendusers,businesspartnersandthelike.WhilethislicenseisintendedtofacilitatethecommercialuseoftheProgram,theContributorwhoincludesthePrograminacommercialproductofferingshoulddosoinamannerwhichdoesnotcreatepotentialliabilityforotherContributors.Therefore,ifaContributorincludesthePrograminacommercialproductoffering,suchContributor(\"CommercialContributor\")herebyagreestodefendandindemnifyeveryotherContributor(\"IndemnifiedContributor\")againstanylosses,damagesandcosts(collectively\"Losses\")arisingfromclaims,lawsuitsandotherlegalactionsbroughtbyathirdpartyagainsttheIndemnifiedContributortotheextentcausedbytheactsoromissionsofsuchCommercialContributorinconnectionwithitsdistributionofthePrograminacommercialproductoffering.TheobligationsinthissectiondonotapplytoanyclaimsorLossesrelatingtoanyactualorallegedintellectualpropertyinfringement.Inordertoqualify,anIndemnifiedContributormust:a)promptlynotifytheCommercialContributorinwritingofsuchclaim,andb)allowtheCommercialContributortocontrol,andcooperatewiththeCommercialContributorin,thedefenseandanyrelatedsettlementnegotiations.TheIndemnifiedContributormayparticipateinanysuchclaimatitsownexpense.Forexample,aContributormightincludethePrograminacommercialproductoffering,ProductX.ThatContributoristhenaCommercialContributor.IfthatCommercialContributorthenmakesperformanceclaims,orofferswarrantiesrelatedtoProductX,thoseperformanceclaimsandwarrantiesaresuchCommercialContributor'sresponsibilityalone.Underthissection,theCommercialContributorwouldhavetodefendclaimsagainsttheotherContributorsrelatedtothoseperformanceclaimsandwarranties,andifacourtrequiresanyotherContributortopayanydamagesasaresult,theCommercialContributormustpaythosedamages.5.NOWARRANTYEXCEPTASEXPRESSLYSETFORTHINTHISAGREEMENT,THEPROGRAMISPROVIDEDONAN\"ASIS\"BASIS,WITHOUTWARRANTIESORCONDITIONSOFANYKIND,EITHEREXPRESSORIMPLIEDINCLUDING,WITHOUTLIMITATION,ANYWARRANTIESORCONDITIONSOFTITLE,NON-INFRINGEMENT,MERCHANTABILITYORFITNESSFORAPARTICULARPURPOSE.EachRecipientissolelyresponsiblefordeterminingtheappropriatenessofusinganddistributingtheProgramandassumesallrisksassociatedwithitsexerciseofrightsunderthisAgreement,includingbutnotlimitedtotherisksandcostsofprogramerrors,compliancewithapplicablelaws,damagetoorlossofdata,programsorequipment,andunavailabilityorinterruptionofoperations.6.DISCLAIMEROFLIABILITYEXCEPTASEXPRESSLYSETFORTHINTHISAGREEMENT,NEITHERRECIPIENTNORANYCONTRIBUTORSSHALLHAVEANYLIABILITYFORANYDIRECT,INDIRECT,INCIDENTAL,SPECIAL,EXEMPLARY,ORCONSEQUENTIALDAMAGES(INCLUDINGWITHOUTLIMITATIONLOSTPROFITS),HOWEVERCAUSEDANDONANYTHEORYOFLIABILITY,WHETHERINCONTRACT,STRICTLIABILITY,ORTORT(INCLUDINGNEGLIGENCEOROTHERWISE)ARISINGINANYWAYOUTOFTHEUSEORDISTRIBUTIONOFTHEPROGRAMORTHEEXERCISEOFANYRIGHTSGRANTEDHEREUNDER,EVENIFADVISEDOFTHEPOSSIBILITYOFSUCHDAMAGES.7.GENERALIfanyprovisionofthisAgreementisinvalidorunenforceableunderapplicablelaw,itshallnotaffectthevalidityorenforceabilityoftheremainderofthetermsofthisAgreement,andwithoutfurtheractionbythepartieshereto,suchprovisionshallbereformedtotheminimumextentnecessarytomakesuchprovisionvalidandenforceable.IfRecipientinstitutespatentlitigationagainstanyentity(includingacross-claimorcounterclaiminalawsuit)allegingthattheProgramitself(excludingcombinationsoftheProgramwithothersoftwareorhardware)infringessuchRecipient'spatent(s),thensuchRecipient'srightsgrantedunderSection2(b)shallterminateasofthedatesuchlitigationisfiled.AllRecipient'srightsunderthisAgreementshallterminateifitfailstocomplywithanyofthematerialtermsorconditionsofthisAgreementanddoesnotcuresuchfailureinareasonableperiodoftimeafterbecomingawareofsuchnoncompliance.IfallRecipient'srightsunderthisAgreementterminate,RecipientagreestoceaseuseanddistributionoftheProgramassoonasreasonablypracticable.However,Recipient'sobligationsunderthisAgreementandanylicensesgrantedbyRecipientrelatingtotheProgramshallcontinueandsurvive.EveryoneispermittedtocopyanddistributecopiesofthisAgreement,butinordertoavoidinconsistencytheAgreementiscopyrightedandmayonlybemodifiedinthefollowingmanner.TheAgreementStewardreservestherighttopublishnewversions(includingrevisions)ofthisAgreementfromtimetotime.NooneotherthantheAgreementStewardhastherighttomodifythisAgreement.TheEclipseFoundationistheinitialAgreementSteward.TheEclipseFoundationmayassigntheresponsibilitytoserveastheAgreementStewardtoasuitableseparateentity.EachnewversionoftheAgreementwillbegivenadistinguishingversionnumber.TheProgram(includingContributions)mayalwaysbedistributedsubjecttotheversionoftheAgreementunderwhichitwasreceived.Inaddition,afteranewversionoftheAgreementispublished,ContributormayelecttodistributetheProgram(includingitsContributions)underthenewversion.ExceptasexpresslystatedinSections2(a)and2(b)above,RecipientreceivesnorightsorlicensestotheintellectualpropertyofanyContributorunderthisAgreement,whetherexpressly,byimplication,estoppelorotherwise.AllrightsintheProgramnotexpresslygrantedunderthisAgreementarereserved.ThisAgreementisgovernedbythelawsoftheStateofNewYorkandtheintellectualpropertylawsoftheUnitedStatesofAmerica.NopartytothisAgreementwillbringalegalactionunderthisAgreementmorethanoneyearafterthecauseofactionarose.Eachpartywaivesitsrightstoajurytrialinanyresultinglitigation.";
+
+        // UTF-8 encoding of the Eclipse Public License.
+        private readonly byte[] LicenseData = Encoding.UTF8.GetBytes(License);
+
+        // Precomputed checksum calculated by a separate checksum calculator.
+        private const uint LicenseChecksum = 0xE239CA42u;
+
+        /// <summary>
+        /// Tests the extension method which utilizes the most straightforward use of the checksum API.
+        /// </summary>
+        [TestMethod]
+        public void ExtensionMethodTest()
+        {
+            Assert.AreEqual(LicenseChecksum, LicenseData.Adler32Checksum(0, LicenseData.Length));
+        }
+
+        /// <summary>
+        /// Tests the Update method that accepts a single byte as a parameter.
+        /// </summary>
+        [TestMethod]
+        public void UpdateByteTest()
         {
             Adler32 checksum = new Adler32();
 
-            checksum.Update(data, startIndex, length);
+            foreach (byte d in LicenseData)
+                checksum.Update(d);
 
-            return checksum.Value;
+            Assert.AreEqual(LicenseChecksum, checksum.Value);
         }
 
-        /// <summary>Calculates the CRC16 check-sum on specified portion of a buffer.</summary>
-        /// <param name="data">Data buffer to perform check-sum on.</param>
-        /// <param name="startIndex">Starts index in data buffer to begin check-sum.</param>
-        /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
-        /// perform check-sum over.</param>
-        /// <returns>Computed CRC16 checksum over the specified portion of the buffer.</returns>
-        public static ushort Crc16Checksum(this byte[] data, int startIndex, int length)
+        /// <summary>
+        /// Tests the use of calls to the two separate implementations of Update in one checksum calculation.
+        /// </summary>
+        [TestMethod]
+        public void MixedUpdateTest()
         {
-            Crc16 checksum = new Crc16();
+            Adler32 checksum = new Adler32();
+            int i = 0;
 
-            checksum.Update(data, startIndex, length);
+            checksum.Reset();
 
-            return checksum.Value;
-        }
+            while (i < LicenseData.Length / 4)
+                checksum.Update(LicenseData[i++]);
 
-        /// <summary>Calculates the CRC-CCITT check-sum on specified portion of a buffer.</summary>
-        /// <param name="data">Data buffer to perform check-sum on.</param>
-        /// <param name="startIndex">Starts index in data buffer to begin check-sum.</param>
-        /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
-        /// perform check-sum over.</param>
-        /// <returns>Computed CRC-CCITT checksum over the specified portion of the buffer.</returns>
-        /// <remarks>
-        /// The CRC-CCITT is a table based 16-bit CRC popular for modem protocols defined for use by the
-        /// Consultative Committee on International Telegraphy and Telephony (CCITT) 
-        /// </remarks>
-        public static ushort CrcCCITTChecksum(this byte[] data, int startIndex, int length)
-        {
-            CrcCCITT checksum = new CrcCCITT();
+            for (int j = 0; j < 2; j++)
+            {
+                checksum.Update(LicenseData, i, LicenseData.Length / 4);
+                i += LicenseData.Length / 4;
+            }
 
-            checksum.Update(data, startIndex, length);
+            while (i < LicenseData.Length)
+                checksum.Update(LicenseData[i++]);
 
-            return checksum.Value;
-        }
-
-		/// <summary>Calculates the CRC-ModBus check-sum on specified portion of a buffer.</summary>
-		/// <param name="data">Data buffer to perform check-sum on.</param>
-		/// <param name="startIndex">Starts index in data buffer to begin check-sum.</param>
-		/// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
-		/// perform check-sum over.</param>
-		/// <returns>Computed CRC-ModBus checksum over the specified portion of the buffer.</returns>		
-		public static ushort ModBusCrcChecksum(this byte[] data, int startIndex, int length)
-		{
-			Crc16 checksum = new Crc16(ChecksumType.ModBus);
-
-			checksum.Update(data, startIndex, length);
-
-			return checksum.Value;
-		}
-
-        /// <summary>Calculates the CRC32 check-sum on specified portion of a buffer.</summary>
-        /// <param name="data">Data buffer to perform check-sum on.</param>
-        /// <param name="startIndex">Starts index in data buffer to begin check-sum.</param>
-        /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
-        /// perform check-sum over.</param>
-        /// <returns>Computed CRC32 checksum over the specified portion of the buffer.</returns>
-        public static uint Crc32Checksum(this byte[] data, int startIndex, int length)
-        {
-            Crc32 checksum = new Crc32();
-
-            checksum.Update(data, startIndex, length);
-
-            return checksum.Value;
-        }
-
-        /// <summary>Calculates byte length (8-bit) XOR-based check-sum on specified portion of a buffer.</summary>
-        /// <param name="data">Data buffer to perform XOR check-sum on.</param>
-        /// <param name="startIndex">Starts index in data buffer to begin XOR check-sum.</param>
-        /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
-        /// perform XOR check-sum over.</param>
-        /// <returns>Byte length XOR check-sum.</returns>
-        public static byte Xor8CheckSum(this byte[] data, int startIndex, int length)
-        {
-            Xor8 checksum = new Xor8();
-
-            checksum.Update(data, startIndex, length);
-
-            return checksum.Value;
-        }
-
-        /// <summary>Calculates word length (16-bit) XOR-based check-sum on specified portion of a buffer.</summary>
-        /// <param name="data">Data buffer to perform XOR check-sum on.</param>
-        /// <param name="startIndex">Starts index in data buffer to begin XOR check-sum.</param>
-        /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
-        /// perform XOR check-sum overs</param>
-        /// <returns>Word length XOR check-sum.</returns>
-        public static ushort Xor16CheckSum(this byte[] data, int startIndex, int length)
-        {
-            Xor16 checksum = new Xor16();
-
-            checksum.Update(data, startIndex, length);
-
-            return checksum.Value;
-        }
-
-        /// <summary>Calculates double-word length (32-bit) XOR-based check-sum on specified portion of a buffer.</summary>
-        /// <param name="data">Data buffer to perform XOR check-sum on.</param>
-        /// <param name="startIndex">Starts index in data buffer to begin XOR check-sum.</param>
-        /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
-        /// perform XOR check-sum over.</param>
-        /// <returns>Double-word length XOR check-sum.</returns>
-        public static uint Xor32CheckSum(this byte[] data, int startIndex, int length)
-        {
-            Xor32 checksum = new Xor32();
-
-            checksum.Update(data, startIndex, length);
-
-            return checksum.Value;
-        }
-
-        /// <summary>Calculates quad-word length (64-bit) XOR-based check-sum on specified portion of a buffer.</summary>
-        /// <param name="data">Data buffer to perform XOR check-sum on.</param>
-        /// <param name="startIndex">Starts index in data buffer to begin XOR check-sum.</param>
-        /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
-        /// perform XOR check-sum over.</param>
-        /// <returns>Quad-word length XOR check-sum.</returns>
-        public static ulong Xor64CheckSum(this byte[] data, int startIndex, int length)
-        {
-            Xor64 checksum = new Xor64();
-
-            checksum.Update(data, startIndex, length);
-
-            return checksum.Value;
+            Assert.AreEqual(LicenseChecksum, checksum.Value);
         }
     }
 }

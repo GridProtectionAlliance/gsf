@@ -1,19 +1,16 @@
 ﻿//*******************************************************************************************************
-//  ChecksumExtensions.cs - Gbtc
+//  Cipher.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2009
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  09/24/2008 - J. Ritchie Carroll
+//  04/11/2012 - Stephen C. Wills
 //       Generated original version of source code.
-//  06/10/2009 - Mehulbhi Thakkar
-//		 Added extension method for CRC-ModBus calculation.
-//  09/14/2009 - Stephen C. Wills
-//       Added new header and license agreement.
 //
 //*******************************************************************************************************
 
@@ -233,151 +230,159 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 
 namespace TVA.IO.Checksums
 {
-    /// <summary>Defines extension functions related to computing checksums.</summary>
-    [CLSCompliant(false)]
-    public static class ChecksumExtensions
+    /// <summary>
+    /// Generates an Adler-32 checksum calculation.
+    /// </summary>
+    public sealed class Adler32
     {
-        /// <summary>Calculates the Adler-32 checksum on specified portion of a buffer.</summary>
-        /// <param name="data">Data buffer to perform checksum on.</param>
-        /// <param name="startIndex">Starts index in data buffer to begin checksum.</param>
-        /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
-        /// perform checksum over.</param>
-        /// <returns>Computed Adler-32 checksum over the specified portion of the buffer.</returns>
-        public static uint Adler32Checksum(this byte[] data, int startIndex, int length)
+        #region [ Members ]
+
+        // Constants
+        private const uint AdlerMod = 65521u;
+        private const int MaxLoops = 5552;
+
+        // Fields
+        private uint m_a;
+        private uint m_b;
+
+        private int m_loopCount;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="Adler32"/> class.
+        /// </summary>
+        public Adler32()
         {
-            Adler32 checksum = new Adler32();
-
-            checksum.Update(data, startIndex, length);
-
-            return checksum.Value;
+            Reset();
         }
 
-        /// <summary>Calculates the CRC16 check-sum on specified portion of a buffer.</summary>
-        /// <param name="data">Data buffer to perform check-sum on.</param>
-        /// <param name="startIndex">Starts index in data buffer to begin check-sum.</param>
-        /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
-        /// perform check-sum over.</param>
-        /// <returns>Computed CRC16 checksum over the specified portion of the buffer.</returns>
-        public static ushort Crc16Checksum(this byte[] data, int startIndex, int length)
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Returns the Adler-32 data checksum computed so far.
+        /// </summary>
+        [CLSCompliant(false)]
+        public uint Value
         {
-            Crc16 checksum = new Crc16();
-
-            checksum.Update(data, startIndex, length);
-
-            return checksum.Value;
+            get
+            {
+                ApplyMod();
+                return m_a | (m_b << 16);
+            }
+            set
+            {
+                m_a = value & 0xFFFF;
+                m_b = value >> 16;
+                ApplyMod();
+            }
         }
 
-        /// <summary>Calculates the CRC-CCITT check-sum on specified portion of a buffer.</summary>
-        /// <param name="data">Data buffer to perform check-sum on.</param>
-        /// <param name="startIndex">Starts index in data buffer to begin check-sum.</param>
-        /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
-        /// perform check-sum over.</param>
-        /// <returns>Computed CRC-CCITT checksum over the specified portion of the buffer.</returns>
-        /// <remarks>
-        /// The CRC-CCITT is a table based 16-bit CRC popular for modem protocols defined for use by the
-        /// Consultative Committee on International Telegraphy and Telephony (CCITT) 
-        /// </remarks>
-        public static ushort CrcCCITTChecksum(this byte[] data, int startIndex, int length)
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Resets the Adler-32 data checksum as if no update was ever called.
+        /// </summary>
+        public void Reset()
         {
-            CrcCCITT checksum = new CrcCCITT();
-
-            checksum.Update(data, startIndex, length);
-
-            return checksum.Value;
+            m_a = 1;
+            m_b = 0;
+            m_loopCount = 0;
         }
 
-		/// <summary>Calculates the CRC-ModBus check-sum on specified portion of a buffer.</summary>
-		/// <param name="data">Data buffer to perform check-sum on.</param>
-		/// <param name="startIndex">Starts index in data buffer to begin check-sum.</param>
-		/// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
-		/// perform check-sum over.</param>
-		/// <returns>Computed CRC-ModBus checksum over the specified portion of the buffer.</returns>		
-		public static ushort ModBusCrcChecksum(this byte[] data, int startIndex, int length)
-		{
-			Crc16 checksum = new Crc16(ChecksumType.ModBus);
-
-			checksum.Update(data, startIndex, length);
-
-			return checksum.Value;
-		}
-
-        /// <summary>Calculates the CRC32 check-sum on specified portion of a buffer.</summary>
-        /// <param name="data">Data buffer to perform check-sum on.</param>
-        /// <param name="startIndex">Starts index in data buffer to begin check-sum.</param>
-        /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
-        /// perform check-sum over.</param>
-        /// <returns>Computed CRC32 checksum over the specified portion of the buffer.</returns>
-        public static uint Crc32Checksum(this byte[] data, int startIndex, int length)
+        /// <summary>
+        /// Updates the checksum with the byte value.
+        /// </summary>
+        /// <param name="value">The <see cref="Byte"/> value to use for the update.</param>
+        public void Update(byte value)
         {
-            Crc32 checksum = new Crc32();
+            m_a += value;
+            m_b += m_a;
+            m_loopCount++;
 
-            checksum.Update(data, startIndex, length);
-
-            return checksum.Value;
+            if (m_loopCount > MaxLoops)
+                ApplyMod();
         }
 
-        /// <summary>Calculates byte length (8-bit) XOR-based check-sum on specified portion of a buffer.</summary>
-        /// <param name="data">Data buffer to perform XOR check-sum on.</param>
-        /// <param name="startIndex">Starts index in data buffer to begin XOR check-sum.</param>
-        /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
-        /// perform XOR check-sum over.</param>
-        /// <returns>Byte length XOR check-sum.</returns>
-        public static byte Xor8CheckSum(this byte[] data, int startIndex, int length)
+        /// <summary>
+        /// Updates the checksum with the bytes taken from the array.
+        /// </summary>
+        /// <param name="buffer">buffer an array of bytes</param>
+        public void Update(byte[] buffer)
         {
-            Xor8 checksum = new Xor8();
-
-            checksum.Update(data, startIndex, length);
-
-            return checksum.Value;
+            Update(buffer, 0, buffer.Length);
         }
 
-        /// <summary>Calculates word length (16-bit) XOR-based check-sum on specified portion of a buffer.</summary>
-        /// <param name="data">Data buffer to perform XOR check-sum on.</param>
-        /// <param name="startIndex">Starts index in data buffer to begin XOR check-sum.</param>
-        /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
-        /// perform XOR check-sum overs</param>
-        /// <returns>Word length XOR check-sum.</returns>
-        public static ushort Xor16CheckSum(this byte[] data, int startIndex, int length)
+        /// <summary>
+        /// Adds the byte array to the data checksum.
+        /// </summary>
+        /// <param name="buffer">The buffer which contains the data</param>
+        /// <param name="offset">The offset in the buffer where the data starts</param>
+        /// <param name="count">The number of data bytes to update the checksum with.</param>
+        public void Update(byte[] buffer, int offset, int count)
         {
-            Xor16 checksum = new Xor16();
+            int remainingLoops = MaxLoops - m_loopCount;
+            int numLoops = Math.Min(remainingLoops, count);
 
-            checksum.Update(data, startIndex, length);
+            int i = 0;
 
-            return checksum.Value;
+            while (i < count)
+            {
+                remainingLoops = MaxLoops - m_loopCount;
+                numLoops = Math.Min(remainingLoops, count - i);
+
+                for (int loopCtr = 0; loopCtr < numLoops; loopCtr++)
+                {
+                    m_a += buffer[offset + i];
+                    m_b += m_a;
+                    i++;
+                }
+
+                m_loopCount += numLoops;
+                ApplyMod();
+            }
         }
 
-        /// <summary>Calculates double-word length (32-bit) XOR-based check-sum on specified portion of a buffer.</summary>
-        /// <param name="data">Data buffer to perform XOR check-sum on.</param>
-        /// <param name="startIndex">Starts index in data buffer to begin XOR check-sum.</param>
-        /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
-        /// perform XOR check-sum over.</param>
-        /// <returns>Double-word length XOR check-sum.</returns>
-        public static uint Xor32CheckSum(this byte[] data, int startIndex, int length)
+        // Applies the modulus operation
+        // to the checksum components.
+        private void ApplyMod()
         {
-            Xor32 checksum = new Xor32();
-
-            checksum.Update(data, startIndex, length);
-
-            return checksum.Value;
+            m_a %= AdlerMod;
+            m_b %= AdlerMod;
+            m_loopCount = 0;
         }
 
-        /// <summary>Calculates quad-word length (64-bit) XOR-based check-sum on specified portion of a buffer.</summary>
-        /// <param name="data">Data buffer to perform XOR check-sum on.</param>
-        /// <param name="startIndex">Starts index in data buffer to begin XOR check-sum.</param>
-        /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
-        /// perform XOR check-sum over.</param>
-        /// <returns>Quad-word length XOR check-sum.</returns>
-        public static ulong Xor64CheckSum(this byte[] data, int startIndex, int length)
-        {
-            Xor64 checksum = new Xor64();
+        #endregion
 
-            checksum.Update(data, startIndex, length);
 
-            return checksum.Value;
-        }
     }
 }

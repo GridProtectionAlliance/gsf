@@ -88,6 +88,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StringExtensionsTest.cs" />
     <Compile Include="TVA.Adapters\AdapterTest.cs" />
+    <Compile Include="TVA.IO.Checksums\Adler32Test.cs" />
     <Compile Include="TVA.Units\AngleTest.cs" />
     <Compile Include="TVA.Units\ChargeTest.cs" />
     <Compile Include="TVA.Units\CurrentTest.cs" />
