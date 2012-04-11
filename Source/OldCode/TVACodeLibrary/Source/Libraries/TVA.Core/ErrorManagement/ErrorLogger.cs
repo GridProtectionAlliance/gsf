@@ -30,6 +30,8 @@
 //       Added new header and license agreement.
 //  02/11/2010 - Pinal C. Patel
 //       Added OS version to the system information being logged.
+//  03/27/2012 - prasanthgs
+//       Exceptions logged through ErrorLogger are saved to backend db too.
 //
 //*******************************************************************************************************
 
@@ -270,6 +272,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
+using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -279,6 +282,7 @@ using System.Text;
 using System.Web;
 using System.Windows.Forms;
 using TVA.Configuration;
+using TVA.Data;
 using TVA.Identity;
 using TVA.IO;
 using TVA.Net.Smtp;
@@ -355,6 +359,11 @@ namespace TVA.ErrorManagement
         // Constants
 
         /// <summary>
+        /// Specifies the default value for the <see cref="DefaultExceptionLogSize"/> property.
+        /// </summary>
+        private const int DefaultExceptionLogSize = 2000;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="LogToUI"/> property.
         /// </summary>
         public const bool DefaultLogToUI = false;
@@ -373,6 +382,11 @@ namespace TVA.ErrorManagement
         /// Specifies the default value for the <see cref="LogToEventLog"/> property.
         /// </summary>
         public const bool DefaultLogToEventLog = true;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="LogToDatabase"/> property.
+        /// </summary>
+        public const bool DefaultLogToDatabase = false;
 
         /// <summary>
         /// Specifies the default value for the <see cref="LogToScreenshot"/> property.
@@ -439,6 +453,7 @@ namespace TVA.ErrorManagement
         private bool m_logToFile;
         private bool m_logToEmail;
         private bool m_logToEventLog;
+        private bool m_logToDatabase;
         private bool m_logToScreenshot;
         private bool m_logUserInfo;
         private string m_smtpServer;
@@ -461,6 +476,7 @@ namespace TVA.ErrorManagement
         private bool m_logToFileOK;
         private bool m_logToEmailOK;
         private bool m_logToEventLogOK;
+        private bool m_logToDatabaseOK;
         private bool m_logToScreenshotOK;
         private bool m_disposed;
         private bool m_initialized;
@@ -480,6 +496,7 @@ namespace TVA.ErrorManagement
             m_logToFile = DefaultLogToFile;
             m_logToEmail = DefaultLogToEmail;
             m_logToEventLog = DefaultLogToEventLog;
+            m_logToDatabase = DefaultLogToDatabase;
             m_logToScreenshot = DefaultLogToScreenshot;
             m_logUserInfo = DefaultLogUserInfo;
             m_smtpServer = DefaultSmtpServer;
@@ -501,6 +518,7 @@ namespace TVA.ErrorManagement
             // Initialize all logger methods.
             m_loggers = new List<Action<Exception>>();
             m_loggers.Add(ExceptionToScreenshot);
+            m_loggers.Add(ExceptionToDatabase);
             m_loggers.Add(ExceptionToEventLog);
             m_loggers.Add(ExceptionToEmail);
             m_loggers.Add(ExceptionToFile);
@@ -598,6 +616,25 @@ namespace TVA.ErrorManagement
             set
             {
                 m_logToEventLog = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether <see cref="Exception"/> information is to be 
+        /// written to the database.
+        /// </summary>
+        [Category("Logging"),
+        DefaultValue(DefaultLogToDatabase),
+        Description("Indicates whether Exception information is to be written to the database.")]
+        public bool LogToDatabase
+        {
+            get
+            {
+                return m_logToDatabase;
+            }
+            set
+            {
+                m_logToDatabase = value;
             }
         }
 
@@ -1033,6 +1070,9 @@ namespace TVA.ErrorManagement
                 status.Append("        Error to Event Log: ");
                 status.Append(m_logToEventLog ? "Enabled" : "Disabled");
                 status.AppendLine();
+                status.Append("         Error to Database: ");
+                status.Append(m_logToDatabase ? "Enabled" : "Disabled");
+                status.AppendLine();
                 status.Append("       Error to Screenshot: ");
                 status.Append(m_logToScreenshot ? "Enabled" : "Disabled");
                 status.AppendLine();
@@ -1150,6 +1190,7 @@ namespace TVA.ErrorManagement
                 settings["LogToFile", true].Update(m_logToFile);
                 settings["LogToEmail", true].Update(m_logToEmail);
                 settings["LogToEventLog", true].Update(m_logToEventLog);
+                settings["LogToDatabase", true].Update(m_logToDatabase);
                 settings["LogToScreenshot", true].Update(m_logToScreenshot);
                 settings["LogUserInfo", true].Update(m_logUserInfo);
                 settings["SmtpServer", true].Update(m_smtpServer);
@@ -1182,6 +1223,7 @@ namespace TVA.ErrorManagement
                 settings.Add("LogToFile", m_logToFile, "True if an encountered exception is to be logged to a file; otherwise False.");
                 settings.Add("LogToEmail", m_logToEmail, "True if an email is to be sent to ContactEmail with the details of an encountered exception; otherwise False.");
                 settings.Add("LogToEventLog", m_logToEventLog, "True if an encountered exception is to be logged to the Event Log; otherwise False.");
+                settings.Add("LogToDatabase", m_logToDatabase, "True if an encountered exception is logged to the database; otherwise False.");
                 settings.Add("LogToScreenshot", m_logToScreenshot, "True if a screenshot is to be taken when an exception is encountered; otherwise False.");
                 settings.Add("LogUserInfo", m_logUserInfo, "True if user information is to be logged along with exception information; otherwise False.");
                 settings.Add("SmtpServer", m_smtpServer, "Name of the SMTP server to be used for sending the email messages.");
@@ -1194,6 +1236,7 @@ namespace TVA.ErrorManagement
                 LogToFile = settings["LogToFile"].ValueAs(m_logToFile);
                 LogToEmail = settings["LogToEmail"].ValueAs(m_logToEmail);
                 LogToEventLog = settings["LogToEventLog"].ValueAs(m_logToEventLog);
+                LogToDatabase = settings["LogToDatabase"].ValueAs(m_logToDatabase);
                 LogToScreenshot = settings["LogToScreenshot"].ValueAs(m_logToScreenshot);
                 LogUserInfo = settings["LogUserInfo"].ValueAs(m_logUserInfo);
                 SmtpServer = settings["SmtpServer"].ValueAs(m_smtpServer);
@@ -1531,6 +1574,26 @@ namespace TVA.ErrorManagement
         }
 
         /// <summary>
+        /// Logs encountered <see cref="Exception"/> to the database.
+        /// </summary>
+        /// <param name="exception"><see cref="Exception"/> that was encountered.</param>
+        protected virtual void ExceptionToDatabase(Exception exception)
+        {
+            // Log if enabled.
+            if (m_logToDatabase)
+            {
+                m_logToDatabaseOK = false;
+
+                ErrorLogger.LogErrorToDatabase(exception.Source.ToNonNullNorEmptyString("No Source"),
+                            exception.Message.ToNonNullNorEmptyString("No Message"),
+                            GetExceptionInfo(exception, true),
+                            exception.GetType().FullName);
+
+                m_logToDatabaseOK = true;
+            }
+        }
+
+        /// <summary>
         /// Takes a screenshot of the user's desktop when the <see cref="Exception"/> is encountered.
         /// </summary>
         /// <param name="exception"><see cref="Exception"/> that was encountered.</param>
@@ -1729,6 +1792,19 @@ namespace TVA.ErrorManagement
                 moreInfoText.Append(m_errorLog.Name);
                 moreInfoText.AppendLine();
             }
+            if (m_logToDatabase)
+            {
+                moreInfoText.AppendFormat(" {0} ", bullet);
+                if (m_logToDatabaseOK)
+                {
+                    moreInfoText.Append("details were written to the database log");
+                }
+                else
+                {
+                    moreInfoText.Append("details could NOT be written to the database log");
+                }
+                moreInfoText.AppendLine();
+            }
             if (m_logToEmail)
             {
                 moreInfoText.AppendFormat(" {0} ", bullet);
@@ -1780,6 +1856,59 @@ namespace TVA.ErrorManagement
         #endregion
 
         #region [ Static ]
+
+        // Static Methods
+
+        /// <summary>
+        /// Deletes old <see cref="RestoreLogSize"/> record from database.
+        /// </summary>
+        /// <param name="dbConnection"><see cref="IDbConnection"/> to connection to database.</param>
+        private static void RestoreLogSize(IDbConnection dbConnection)
+        {
+            string query = string.Empty;
+            int minIDToDelete = 0;
+
+            try
+            {
+                while (Convert.ToInt32(dbConnection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM ErrorLog"))) >= DefaultExceptionLogSize)
+                {
+                    minIDToDelete = Convert.ToInt32(dbConnection.ExecuteScalar(string.Format("SELECT MIN(ID) FROM ErrorLog")));
+                    dbConnection.ExecuteNonQuery(string.Format("DELETE FROM ErrorLog WHERE ID = {0}", minIDToDelete));
+                }
+            }
+            catch
+            {
+                // Do nothing at this time.
+            }
+        }
+
+        /// <summary>
+        /// Logs information about an encountered exception to the backend datastore.
+        /// </summary>
+        /// <param name="source">Source of exception.</param>
+        /// <param name="message">Message section of the exception.</param>
+        /// <param name="detail">Detailed description of exception.</param>
+        /// <param name="type">Type of exception.</param>
+        public static void LogErrorToDatabase(String source, String message, String detail, String type)
+        {
+            try
+            {
+                string parameterizedQueryString;
+
+                using (AdoDataConnection dbConnection = new AdoDataConnection("systemSettings"))
+                {
+                    // Remove old entry for keeping table size limited to 2000.
+                    RestoreLogSize(dbConnection.Connection);
+
+                    parameterizedQueryString = dbConnection.ParameterizedQueryString("INSERT INTO ErrorLog (Source, Type, Message, Detail) VALUES ({0}, {1}, {2}, {3})", "source", "type", "message", "detail");
+                    dbConnection.Connection.ExecuteNonQuery(parameterizedQueryString, source, type, message, detail);
+                }
+            }
+            catch
+            {
+                // Do nothing, if exceptions are raised during error logging. 
+            }
+        }
 
         /// <summary>
         /// Gets information about an <see cref="Exception"/> complete with system and application information.
