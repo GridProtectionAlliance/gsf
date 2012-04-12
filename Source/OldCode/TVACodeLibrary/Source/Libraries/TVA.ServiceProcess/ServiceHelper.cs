@@ -74,6 +74,9 @@
 //       Added Mono implementation exception regions.
 //  02/17/2012 - Stephen C. Wills
 //       Added ReloadCryptoCache service command.
+//  04/12/2012 - Pinal C. Patel
+//       Added new UnscheduleProcess() and RemoveScheduledProcess methods.
+//       Changed AddProcess(), AddScheduledProcess() and ScheduleProcess() method to return a boolean.
 //
 //*******************************************************************************************************
 
@@ -1463,109 +1466,6 @@ namespace TVA.ServiceProcess
         }
 
         /// <summary>
-        /// Adds a new <see cref="ServiceProcess"/> to the <see cref="ServiceHelper"/>.
-        /// </summary>
-        /// <param name="processExecutionMethod">The <see cref="Delegate"/> to be invoked the <see cref="ServiceProcess"/> is started.</param>
-        /// <param name="processName">Name of the <see cref="ServiceProcess"/> being added.</param>
-        public void AddProcess(Action<string, object[]> processExecutionMethod, string processName)
-        {
-            AddProcess(processExecutionMethod, processName, null);
-        }
-
-        /// <summary>
-        /// Adds a new <see cref="ServiceProcess"/> to the <see cref="ServiceHelper"/>.
-        /// </summary>
-        /// <param name="processExecutionMethod">The <see cref="Delegate"/> to be invoked the <see cref="ServiceProcess"/> is started.</param>
-        /// <param name="processName">Name of the <see cref="ServiceProcess"/> being added.</param>
-        /// <param name="processArguments">Arguments to be passed in to the <paramref name="processExecutionMethod"/> during execution.</param>
-        public void AddProcess(Action<string, object[]> processExecutionMethod, string processName, object[] processArguments)
-        {
-            processName = processName.Trim();
-
-            if (FindProcess(processName) == null)
-            {
-                ServiceProcess process = new ServiceProcess(processExecutionMethod, processName, processArguments);
-                process.StateChanged += Process_StateChanged;
-
-                lock (m_processes)
-                {
-                    m_processes.Add(process);
-                }
-            }
-            else
-            {
-                throw new InvalidOperationException(string.Format("Process \"{0}\" is already defined", processName));
-            }
-        }
-
-        /// <summary>
-        /// Adds a new <see cref="ServiceProcess"/> to the <see cref="ServiceHelper"/> that executes on a schedule.
-        /// </summary>
-        /// <param name="processExecutionMethod">The <see cref="Delegate"/> to be invoked the <see cref="ServiceProcess"/> is started.</param>
-        /// <param name="processName">Name of the <see cref="ServiceProcess"/> being added.</param>
-        /// <param name="processSchedule"><see cref="Schedule"/> for the execution of the <see cref="ServiceProcess"/>.</param>
-        public void AddScheduledProcess(Action<string, object[]> processExecutionMethod, string processName, string processSchedule)
-        {
-            AddScheduledProcess(processExecutionMethod, processName, null, processSchedule);
-        }
-
-        /// <summary>
-        /// Adds a new <see cref="ServiceProcess"/> to the <see cref="ServiceHelper"/> that executes on a schedule.
-        /// </summary>
-        /// <param name="processExecutionMethod">The <see cref="Delegate"/> to be invoked the <see cref="ServiceProcess"/> is started.</param>
-        /// <param name="processName">Name of the <see cref="ServiceProcess"/> being added.</param>
-        /// <param name="processArguments">Arguments to be passed in to the <paramref name="processExecutionMethod"/> during execution.</param>
-        /// <param name="processSchedule"><see cref="Schedule"/> for the execution of the <see cref="ServiceProcess"/>.</param>
-        public void AddScheduledProcess(Action<string, object[]> processExecutionMethod, string processName, object[] processArguments, string processSchedule)
-        {
-            AddProcess(processExecutionMethod, processName, processArguments);
-            ScheduleProcess(processName, processSchedule);
-        }
-
-        /// <summary>
-        /// Schedules an existing <see cref="ServiceProcess"/> for automatic execution.
-        /// </summary>
-        /// <param name="processName">Name of the <see cref="ServiceProcess"/> to be scheduled.</param>
-        /// <param name="scheduleRule">Rule that defines the execution pattern of the <see cref="ServiceProcess"/>.</param>
-        public void ScheduleProcess(string processName, string scheduleRule)
-        {
-            ScheduleProcess(processName, scheduleRule, false);
-        }
-
-        /// <summary>
-        /// Schedules an existing <see cref="ServiceProcess"/> for automatic execution.
-        /// </summary>
-        /// <param name="processName">Name of the <see cref="ServiceProcess"/> to be scheduled.</param>
-        /// <param name="scheduleRule">Rule that defines the execution pattern of the <see cref="ServiceProcess"/>.</param>
-        /// <param name="updateExistingSchedule">true if the <see cref="ServiceProcess"/> is to be re-scheduled; otherwise false.</param>
-        public void ScheduleProcess(string processName, string scheduleRule, bool updateExistingSchedule)
-        {
-            processName = processName.Trim();
-
-            if (FindProcess(processName) != null)
-            {
-                // The specified process exists, so we'll schedule it, or update its schedule if it is acheduled already.
-                Schedule existingSchedule = m_processScheduler.FindSchedule(processName);
-
-                if (existingSchedule != null)
-                {
-                    // Update the process schedule if it is already exists.
-                    if (updateExistingSchedule)
-                        existingSchedule.Rule = scheduleRule;
-                }
-                else
-                {
-                    // Schedule the process if it is not scheduled already.
-                    m_processScheduler.Schedules.Add(new Schedule(processName, scheduleRule));
-                }
-            }
-            else
-            {
-                throw new InvalidOperationException(string.Format("Process \"{0}\" is not defined", processName));
-            }
-        }
-
-        /// <summary>
         /// Sends the specified <paramref name="response"/> to all <see cref="RemoteClients"/>.
         /// </summary>
         /// <param name="response">The <see cref="ServiceResponse"/> to be sent to all <see cref="RemoteClients"/>.</param>
@@ -1680,6 +1580,185 @@ namespace TVA.ServiceProcess
                 // Queue the status update for processing.
                 m_statusUpdateQueue.Add(new StatusUpdate(client, type, string.Format(message, args)));
             }
+        }
+
+        /// <summary>
+        /// Provides a line terminated status update to all <see cref="RemoteClients"/>.
+        /// </summary>
+        /// <param name="message">Text message to be transmitted to all <see cref="RemoteClients"/>.</param>
+        /// <param name="type">One of the <see cref="UpdateType"/> values.</param>
+        /// <param name="args">Arguments to be used for formatting the <paramref name="message"/>.</param>
+        public void UpdateStatusAppendLine(UpdateType type, string message, params object[] args)
+        {
+            UpdateStatusAppendLine(Guid.Empty, type, message, args);
+        }
+
+        /// <summary>
+        /// Provides a line terminated status update to the specified <paramref name="client"/>.
+        /// </summary>
+        /// <param name="client">ID of the client to whom the <paramref name="message"/> is to be sent.</param>
+        /// <param name="type">One of the <see cref="UpdateType"/> values.</param>
+        /// <param name="message">Text message to be transmitted to the <paramref name="client"/>.</param>
+        /// <param name="args">Arguments to be used for formatting the <paramref name="message"/>.</param>
+        public void UpdateStatusAppendLine(Guid client, UpdateType type, string message, params object[] args)
+        {
+            UpdateStatus(type, message + "\r\n", args);
+        }
+
+        /// <summary>
+        /// Adds a new <see cref="ServiceProcess"/> to the <see cref="ServiceHelper"/>.
+        /// </summary>
+        /// <param name="processExecutionMethod">The <see cref="Delegate"/> to be invoked the <see cref="ServiceProcess"/> is started.</param>
+        /// <param name="processName">Name of the <see cref="ServiceProcess"/> being added.</param>
+        /// <returns>true if the <see cref="ServiceProcess"/> does not already exist and is added, otherwise false.</returns>
+        public bool AddProcess(Action<string, object[]> processExecutionMethod, string processName)
+        {
+            return AddProcess(processExecutionMethod, processName, null);
+        }
+
+        /// <summary>
+        /// Adds a new <see cref="ServiceProcess"/> to the <see cref="ServiceHelper"/>.
+        /// </summary>
+        /// <param name="processExecutionMethod">The <see cref="Delegate"/> to be invoked the <see cref="ServiceProcess"/> is started.</param>
+        /// <param name="processName">Name of the <see cref="ServiceProcess"/> being added.</param>
+        /// <param name="processArguments">Arguments to be passed in to the <paramref name="processExecutionMethod"/> during execution.</param>
+        /// <returns>true if the <see cref="ServiceProcess"/> does not already exist and is added, otherwise false.</returns>
+        public bool AddProcess(Action<string, object[]> processExecutionMethod, string processName, object[] processArguments)
+        {
+            processName = processName.Trim();
+            if (FindProcess(processName) == null)
+            {
+                ServiceProcess process = new ServiceProcess(processExecutionMethod, processName, processArguments);
+                process.StateChanged += Process_StateChanged;
+
+                lock (m_processes)
+                {
+                    m_processes.Add(process);
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Removes an existing <see cref="ServiceProcess"/> from the <see cref="ServiceHelper"/>.
+        /// </summary>
+        /// <param name="processName">Name of the <see cref="ServiceProcess"/> to be removed.</param>
+        /// <returns>true if the <see cref="ServiceProcess"/> exists and is removed, otherwise false.</returns>
+        public bool RemoveProcess(string processName)
+        {
+            ServiceProcess process = FindProcess(processName.Trim());
+            if (process != null)
+            {
+                process.StateChanged -= Process_StateChanged;
+                lock (m_processes)
+                {
+                    m_processes.Remove(process);
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Adds a new <see cref="ServiceProcess"/> to the <see cref="ServiceHelper"/> that executes on a schedule.
+        /// </summary>
+        /// <param name="processExecutionMethod">The <see cref="Delegate"/> to be invoked the <see cref="ServiceProcess"/> is started.</param>
+        /// <param name="processName">Name of the <see cref="ServiceProcess"/> being added.</param>
+        /// <param name="processSchedule"><see cref="Schedule"/> for the execution of the <see cref="ServiceProcess"/>.</param>
+        /// <returns>true if the <see cref="ServiceProcess"/> does not exist already and is added and scheduled, otherwise false.</returns>
+        public bool AddScheduledProcess(Action<string, object[]> processExecutionMethod, string processName, string processSchedule)
+        {
+            return AddScheduledProcess(processExecutionMethod, processName, null, processSchedule);
+        }
+
+        /// <summary>
+        /// Adds a new <see cref="ServiceProcess"/> to the <see cref="ServiceHelper"/> that executes on a schedule.
+        /// </summary>
+        /// <param name="processExecutionMethod">The <see cref="Delegate"/> to be invoked the <see cref="ServiceProcess"/> is started.</param>
+        /// <param name="processName">Name of the <see cref="ServiceProcess"/> being added.</param>
+        /// <param name="processArguments">Arguments to be passed in to the <paramref name="processExecutionMethod"/> during execution.</param>
+        /// <param name="processSchedule"><see cref="Schedule"/> for the execution of the <see cref="ServiceProcess"/>.</param>
+        /// <returns>true if the <see cref="ServiceProcess"/> does not exist already and is added and scheduled, otherwise false.</returns>
+        public bool AddScheduledProcess(Action<string, object[]> processExecutionMethod, string processName, object[] processArguments, string processSchedule)
+        {
+            if (AddProcess(processExecutionMethod, processName, processArguments))
+                return ScheduleProcess(processName, processSchedule);
+
+            return false;
+        }
+
+        /// <summary>
+        /// Removes an existing <see cref="ServiceProcess"/> from the <see cref="ServiceHelper"/> that is scheduled for automatic execution.
+        /// </summary>
+        /// <param name="processName">Name of the scheduled <see cref="ServiceProcess"/> to be removed.</param>
+        /// <returns>true is the scheduled <see cref="ServiceProcess"/> is removed, otherwise false.</returns>
+        public bool RemoveScheduledProcess(string processName)
+        {
+            if (UnscheduleProcess(processName))
+                return RemoveProcess(processName);
+
+            return false;
+        }
+
+        /// <summary>
+        /// Schedules an existing <see cref="ServiceProcess"/> for automatic execution.
+        /// </summary>
+        /// <param name="processName">Name of the <see cref="ServiceProcess"/> to be scheduled.</param>
+        /// <param name="scheduleRule">Rule that defines the execution pattern of the <see cref="ServiceProcess"/>.</param>
+        /// <returns>true if the <see cref="ServiceProcess"/> exists and is scheduled, otherwise false.</returns>
+        public bool ScheduleProcess(string processName, string scheduleRule)
+        {
+            return ScheduleProcess(processName, scheduleRule, false);
+        }
+
+        /// <summary>
+        /// Schedules an existing <see cref="ServiceProcess"/> for automatic execution.
+        /// </summary>
+        /// <param name="processName">Name of the <see cref="ServiceProcess"/> to be scheduled.</param>
+        /// <param name="scheduleRule">Rule that defines the execution pattern of the <see cref="ServiceProcess"/>.</param>
+        /// <param name="updateExistingSchedule">true if the <see cref="ServiceProcess"/> is to be re-scheduled; otherwise false.</param>
+        /// <returns>true if the <see cref="ServiceProcess"/> exists and is scheduled or re-scheduled, otherwise false.</returns>
+        public bool ScheduleProcess(string processName, string scheduleRule, bool updateExistingSchedule)
+        {
+            processName = processName.Trim();
+            if (FindProcess(processName) != null)
+            {
+                // The specified process exists, so we'll schedule it, or update its schedule if it is acheduled already.
+                Schedule existingSchedule = m_processScheduler.FindSchedule(processName);
+
+                if (existingSchedule != null)
+                {
+                    // Update the process schedule if it is already exists.
+                    if (updateExistingSchedule)
+                    {
+                        existingSchedule.Rule = scheduleRule;
+                        return true;
+                    }
+                }
+                else
+                {
+                    // Schedule the process if it is not scheduled already.
+                    m_processScheduler.Schedules.Add(new Schedule(processName, scheduleRule));
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Unschedules an existing <see cref="ServiceProcess"/> scheduled for automatic execution.
+        /// </summary>
+        /// <param name="processName">Name of the <see cref="ServiceProcess"/> to be unscheduled.</param>
+        /// <returns>true if the scheduled <see cref="ServiceProcess"/> is unscheduled, otherwise false.</returns>
+        public bool UnscheduleProcess(string processName)
+        {
+            return m_processScheduler.RemoveSchedule(processName.Trim());
         }
 
         /// <summary>
