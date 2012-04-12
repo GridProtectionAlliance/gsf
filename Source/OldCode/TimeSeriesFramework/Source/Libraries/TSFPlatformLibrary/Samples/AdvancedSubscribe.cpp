@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
 	if (argc < 3)
 	{
 		std::cout << "Usage:" << std::endl;
-		std::cout << "    SimpleSubscribe HOSTNAME PORT" << std::endl;
+		std::cout << "    AdvancedSubscribe HOSTNAME PORT" << std::endl;
 		return 0;
 	}
 
