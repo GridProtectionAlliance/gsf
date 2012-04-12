@@ -27,6 +27,7 @@
 #include <boost/bind.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include "../Common/Version.h"
 #include "Constants.h"
 #include "DataSubscriber.h"
 #include "CompactMeasurementParser.h"
@@ -776,7 +777,7 @@ void tsf::Transport::DataSubscriber::Subscribe(tsf::Transport::SubscriptionInfo 
 	stringStream << "useLocalClockAsRealTime=" << info.UseLocalClockAsRealTime << ";";
 	stringStream << "processingInterval=" << info.ProcessingInterval << ";";
 	stringStream << "useMillisecondResolution=" << info.UseMillisecondResolution << ";";
-	//stringStream << "assemblyInfo={source=???;version=???;buildDate=???};";
+	stringStream << "assemblyInfo={source=TSFPlatformLibrary;version=" TSF_VERSION ";buildDate=April 2012};";
 	
 	if (!info.FilterExpression.empty())
 		stringStream << "inputMeasurementKeys={" << info.FilterExpression << "};";

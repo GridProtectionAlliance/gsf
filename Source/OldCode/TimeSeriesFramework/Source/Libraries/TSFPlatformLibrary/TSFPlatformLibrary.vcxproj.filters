@@ -31,6 +31,9 @@
     <ClInclude Include="Common\Convert.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="Common\Version.h">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Transport\SignalIndexCache.cpp">
@@ -68,5 +71,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="CMakeLists.txt" />
+    <None Include="Common\Version.h.in">
+      <Filter>Common</Filter>
+    </None>
   </ItemGroup>
 </Project>

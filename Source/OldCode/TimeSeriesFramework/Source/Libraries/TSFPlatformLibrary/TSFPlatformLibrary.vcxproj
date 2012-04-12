@@ -16,6 +16,7 @@
     <ClInclude Include="Common\Measurement.h" />
     <ClInclude Include="Common\ThreadSafeQueue.h" />
     <ClInclude Include="Common\Types.h" />
+    <ClInclude Include="Common\Version.h" />
     <ClInclude Include="Transport\CompactMeasurementParser.h" />
     <ClInclude Include="Transport\Constants.h" />
     <ClInclude Include="Transport\DataSubscriber.h" />
@@ -33,6 +34,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="CMakeLists.txt" />
+    <None Include="Common\Version.h.in" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2A542BE8-8D17-44C3-BCD2-768DF480FF82}</ProjectGuid>

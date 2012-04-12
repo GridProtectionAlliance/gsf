@@ -24,18 +24,26 @@
 cmake_minimum_required (VERSION 2.8)
 project (TSFPlatformLibrary)
 
+set (TSF_VERSION 0.9.0)
+
 set (HEADER_OUTPUT_DIRECTORY Include/TSF)
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY Output)
 set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY Libraries)
 set (CMAKE_LIBRARY_OUTPUT_DIRECTORY Libraries)
 
 set (headerFiles Common/Convert.h Common/EndianConverter.h Common/Measurement.h
-		Common/ThreadSafeQueue.h Common/Types.h Transport/CompactMeasurementParser.h
+		Common/ThreadSafeQueue.h Common/Types.h Common/Version.h Transport/CompactMeasurementParser.h
 		Transport/Constants.h Transport/DataSubscriber.h Transport/GatewayMeasurementParser.h
 		Transport/SignalIndexCache.h)
 
 # Option to choose whether to build static or shared libraries
 option (BUILD_SHARED_LIBS "Build tsf using shared libraries" OFF)
+
+# Configure version header with the proper version
+configure_file (
+  "${PROJECT_SOURCE_DIR}/Common/Version.h.in"
+  "${PROJECT_SOURCE_DIR}/Common/Version.h"
+  )
 
 # Copy header files
 foreach (headerFile ${headerFiles})
