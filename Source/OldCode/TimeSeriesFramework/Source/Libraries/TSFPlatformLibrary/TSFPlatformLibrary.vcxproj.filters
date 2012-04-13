@@ -74,5 +74,6 @@
     <None Include="Common\Version.h.in">
       <Filter>Common</Filter>
     </None>
+    <None Include="README.txt" />
   </ItemGroup>
 </Project>

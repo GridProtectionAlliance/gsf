@@ -35,6 +35,7 @@
   <ItemGroup>
     <None Include="CMakeLists.txt" />
     <None Include="Common\Version.h.in" />
+    <None Include="README.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2A542BE8-8D17-44C3-BCD2-768DF480FF82}</ProjectGuid>
