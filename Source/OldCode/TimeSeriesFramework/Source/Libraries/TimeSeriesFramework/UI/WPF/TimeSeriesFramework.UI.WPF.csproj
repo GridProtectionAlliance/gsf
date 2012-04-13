@@ -117,6 +117,9 @@
     <Compile Include="IViewModel.cs" />
     <Compile Include="MenuDataItem.cs" />
     <Compile Include="MenuItemStyleSelector.cs" />
+    <Compile Include="Modal\ErrorDetailDisplay.xaml.cs">
+      <DependentUpon>ErrorDetailDisplay.xaml</DependentUpon>
+    </Compile>
     <Compile Include="PagedViewModelBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
@@ -160,6 +163,9 @@
     <Compile Include="UserControls\DetailViewFooterUserControl.xaml.cs">
       <DependentUpon>DetailViewFooterUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\ErrorLogUserControl.xaml.cs">
+      <DependentUpon>ErrorLogUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\HistorianUserControl.xaml.cs">
       <DependentUpon>HistorianUserControl.xaml</DependentUpon>
     </Compile>
@@ -199,6 +205,7 @@
     <Compile Include="ViewModels\ApplicationRoles.cs" />
     <Compile Include="ViewModels\Adapters.cs" />
     <Compile Include="ViewModels\Companies.cs" />
+    <Compile Include="ViewModels\ErrorLogViewModel.cs" />
     <Compile Include="ViewModels\Historians.cs" />
     <Compile Include="ViewModels\IaonTrees.cs" />
     <Compile Include="ViewModels\Measurements.cs" />
@@ -233,6 +240,10 @@
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Modal\ErrorDetailDisplay.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UserControls\AdapterUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -262,6 +273,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UserControls\DetailViewFooterUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\ErrorLogUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

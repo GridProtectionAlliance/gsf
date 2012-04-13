@@ -38,6 +38,7 @@ namespace TimeSeriesFramework.UI.DataModels
         // Fields
         private int m_id;
         private string m_source;
+        private string m_type;
         private string m_message;
         private string m_detail;
         private DateTime m_createdOn;
@@ -77,6 +78,23 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 m_source = value;
                 OnPropertyChanged("Source");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="ErrorLog"/> Type.
+        /// </summary>
+        [StringLength(200, ErrorMessage = "Error log type cannot exceed 200 characters.")]
+        public string Type
+        {
+            get
+            {
+                return m_type;
+            }
+            set
+            {
+                m_type = value;
+                OnPropertyChanged("Type");
             }
         }
 
