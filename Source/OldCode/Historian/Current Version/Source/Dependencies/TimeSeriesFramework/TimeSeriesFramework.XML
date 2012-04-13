@@ -5873,6 +5873,11 @@
             Gets connected state of the associated client socket.
             </summary>
         </member>
+        <member name="P:TimeSeriesFramework.Transport.ClientConnection.IsSubscribed">
+            <summary>
+            Gets or sets IsSubscribed state.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Transport.ClientConnection.SubscriberID">
             <summary>
             Gets or sets the <see cref="T:System.Guid"/> based subscriber ID of this <see cref="T:TimeSeriesFramework.Transport.ClientConnection"/>.
@@ -8096,11 +8101,6 @@
         <member name="M:TimeSeriesFramework.Transport.SynchronizedClientSubscription.Start">
             <summary>
             Starts the <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/> or restarts it if it is already running.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.Transport.SynchronizedClientSubscription.Stop">
-            <summary>
-            Stops the <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/>.
             </summary>
         </member>
         <member name="M:TimeSeriesFramework.Transport.SynchronizedClientSubscription.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
