@@ -795,12 +795,7 @@ void tsf::Transport::DataSubscriber::Subscribe(tsf::Transport::SubscriptionInfo 
 		if (!m_dataChannelSocket.is_open())
 			throw SubscriberException("Failed to bind to local port");
 
-		stringStream << "dataChannel={";
-
-		if (!info.DataChannelInterface.empty())
-			stringStream << "interface=" << info.DataChannelInterface << ";";
-
-		stringStream << "localport=" << info.DataChannelLocalPort << "};";
+		stringStream << "dataChannel={localport=" << info.DataChannelLocalPort << "};";
 	}
 
 	if (!info.StartTime.empty())

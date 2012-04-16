@@ -153,11 +153,6 @@ tsft::SubscriptionInfo CreateSubscriptionInfo()
 	info.UdpDataChannel = true;
 	info.DataChannelLocalPort = 9600;
 
-	// Use 0.0.0.0 for IPv4 default interface,
-	// use ::0 for IPv6 default interface, or
-	// use specific IP to specify network card
-	info.DataChannelInterface = "::0:0.0.0.0";
-
 	info.IncludeTime = true;
 	info.LagTime = 3.0;
 	info.LeadTime = 1.0;

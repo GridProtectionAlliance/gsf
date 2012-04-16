@@ -73,7 +73,6 @@ namespace Transport
 
 		bool UdpDataChannel;
 		uint16_t DataChannelLocalPort;
-		std::string DataChannelInterface;
 		//bool DataChannelCompressed;
 
 		bool IncludeTime;
