@@ -1850,13 +1850,19 @@ namespace TimeSeriesFramework.Transport
                             if (subscription.Settings.TryGetValue("dataChannel", out setting))
                             {
                                 Dictionary<string, string> settings = setting.ParseKeyValuePairs();
-                                string networkInterface;
                                 bool compressionEnabled = false;
+                                string networkInterface;
 
-                                settings.TryGetValue("interface", out networkInterface);
-
-                                if (string.IsNullOrWhiteSpace(networkInterface))
-                                    networkInterface = "::0";
+                                // Make sure return interface matches incoming client connection
+                                try
+                                {
+                                    Socket socket = m_commandChannel.Client(connection.ClientID).Provider;
+                                    networkInterface = socket.LocalEndPoint.ToString();
+                                }
+                                catch
+                                {
+                                    networkInterface = m_commandChannel.Server.LocalEndPoint.ToString();
+                                }
 
                                 if (settings.TryGetValue("compression", out setting))
                                     compressionEnabled = setting.ParseBoolean();
