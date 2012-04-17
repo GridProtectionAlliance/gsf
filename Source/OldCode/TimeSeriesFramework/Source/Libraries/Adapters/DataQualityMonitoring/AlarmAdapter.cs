@@ -287,7 +287,10 @@ namespace DataQualityMonitoring
                             };
 
                             if ((object)alarm.AssociatedMeasurementID != null)
+                            {
                                 alarmEvent.ID = alarm.AssociatedMeasurementID.Value;
+                                alarmEvent.Key = MeasurementKey.LookupBySignalID(alarmEvent.ID);
+                            }
 
                             OnNewMeasurement(alarmEvent);
                             m_eventCount++;
