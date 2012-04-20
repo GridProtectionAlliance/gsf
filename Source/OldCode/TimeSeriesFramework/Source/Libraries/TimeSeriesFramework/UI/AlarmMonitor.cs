@@ -268,9 +268,9 @@ namespace TimeSeriesFramework.UI
             catch (Exception ex)
             {
                 if (ex.InnerException != null)
-                    CommonFunctions.LogException(null, "Get Statistic Data ", ex.InnerException);
+                    CommonFunctions.LogException(null, "Refresh Alarms ", ex.InnerException);
                 else
-                    CommonFunctions.LogException(null, "Get Statistic Data ", ex);
+                    CommonFunctions.LogException(null, "Refresh Alarms ", ex);
             }
         }
 
