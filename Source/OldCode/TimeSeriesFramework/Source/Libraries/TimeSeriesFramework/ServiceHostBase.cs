@@ -1759,12 +1759,17 @@ namespace TimeSeriesFramework
             else
             {
                 if (!LoadSystemConfiguration())
+                {
                     SendResponse(requestInfo, false, "System configuration failed to reload.");
+                }
                 else
                 {
                     m_iaonSession.AllAdapters.UpdateCollectionConfigurations();
                     SendResponse(requestInfo, true, "System configuration was successfully reloaded.");
                 }
+
+                // Spawn routing table calculation updates
+                m_iaonSession.RecalculateRoutingTables();
             }
         }
 
