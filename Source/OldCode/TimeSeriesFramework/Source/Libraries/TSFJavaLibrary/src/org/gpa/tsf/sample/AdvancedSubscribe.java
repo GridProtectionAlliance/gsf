@@ -182,8 +182,8 @@ public class AdvancedSubscribe extends JApplet
 				{
 					try
 					{
-						m_connector.connect(m_subscriber);
-						m_subscriber.subscribe(m_subscriptionInfo);
+						if (m_connector.connect(m_subscriber))
+							m_subscriber.subscribe(m_subscriptionInfo);
 					}
 					catch (SocketException ex)
 					{
@@ -216,14 +216,16 @@ public class AdvancedSubscribe extends JApplet
 			@Override
 			public void run()
 			{
+				// Cancel the connector first so it won't try
+				// to automatically reconnect for any reason
+				m_connector.cancel();
+				
 				// Lock the connect lock so we don't encounter
 				// synchronization issues between calls to connectAsync
 				// and disconnectAsync
 				synchronized (m_connectLock)
 				{
-					// Cancel the connector first so it won't try
-					// to automatically reconnect for any reason
-					m_connector.cancel();
+					// Disconnect from the publisher
 					m_subscriber.disconnect();
 					
 					// Create a new subscriber connector since we cancelled the old one
