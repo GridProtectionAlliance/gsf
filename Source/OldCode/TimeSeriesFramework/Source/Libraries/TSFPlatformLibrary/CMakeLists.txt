@@ -76,5 +76,9 @@ target_link_libraries (SimpleSubscribe tsf)
 add_executable (AdvancedSubscribe EXCLUDE_FROM_ALL Samples/AdvancedSubscribe.cpp)
 target_link_libraries (AdvancedSubscribe tsf)
 
+# AverageFrequencyCalculator sample
+add_executable (AverageFrequencyCalculator EXCLUDE_FROM_ALL Samples/AverageFrequencyCalculator.cpp)
+target_link_libraries (AverageFrequencyCalculator tsf)
+
 # Build with 'make samples'
-add_custom_target (samples DEPENDS SimpleSubscribe AdvancedSubscribe)
+add_custom_target (samples DEPENDS SimpleSubscribe AdvancedSubscribe AverageFrequencyCalculator)

@@ -57,6 +57,9 @@
     <ClCompile Include="Common\Convert.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="Samples\AverageFrequencyCalculator.cpp">
+      <Filter>Samples</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Transport">

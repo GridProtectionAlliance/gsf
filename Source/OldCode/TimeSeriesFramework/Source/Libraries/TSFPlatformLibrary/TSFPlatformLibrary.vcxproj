@@ -27,6 +27,7 @@
     <ClCompile Include="Common\Convert.cpp" />
     <ClCompile Include="Common\EndianConverter.cpp" />
     <ClCompile Include="Samples\AdvancedSubscribe.cpp" />
+    <ClCompile Include="Samples\AverageFrequencyCalculator.cpp" />
     <ClCompile Include="Samples\SimpleSubscribe.cpp" />
     <ClCompile Include="Transport\CompactMeasurementParser.cpp" />
     <ClCompile Include="Transport\DataSubscriber.cpp" />
