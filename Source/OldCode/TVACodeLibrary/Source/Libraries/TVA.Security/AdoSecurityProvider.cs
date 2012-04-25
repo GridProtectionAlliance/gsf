@@ -546,11 +546,33 @@ namespace TVA.Security
         /// <returns>true if the user is authenticated, otherwise false.</returns>
         public override bool Authenticate(string password)
         {
+            AuthenticationFailureReason = null;
+
             // Note that blank password should be allowed so that LDAP can authenticate current credentials for
             // pass through authentication, if desired
-            if (!UserData.IsDefined || UserData.IsDisabled || UserData.IsLockedOut ||
-                (UserData.PasswordChangeDateTime != DateTime.MinValue && UserData.PasswordChangeDateTime <= DateTime.UtcNow))
+            if (!UserData.IsDefined)
+            {
+                AuthenticationFailureReason = string.Format("User {0} is not defined.", UserData.LoginID);
                 return false;
+            }
+
+            if (UserData.IsDisabled)
+            {
+                AuthenticationFailureReason = string.Format("User {0} is disabled.", UserData.LoginID);
+                return false;
+            }
+
+            if (UserData.IsLockedOut)
+            {
+                AuthenticationFailureReason = string.Format("User {0} is locked out.", UserData.LoginID);
+                return false;
+            }
+
+            if (UserData.PasswordChangeDateTime != DateTime.MinValue && UserData.PasswordChangeDateTime <= DateTime.UtcNow)
+            {
+                AuthenticationFailureReason = string.Format("User {0}'s password has expired or has not been set.", UserData.LoginID);
+                return false;
+            }
 
             try
             {

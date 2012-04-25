@@ -405,16 +405,17 @@ namespace TVA.Security
         // Fields
         private string m_applicationName;
         private string m_connectionString;
-        private bool m_persistSettings;
+        private string m_authenticationFailureReason;
         private string m_settingsCategory;
         private UserData m_userData;
+        private bool m_persistSettings;
         private bool m_canRefreshData;
         private bool m_canUpdateData;
         private bool m_canResetPassword;
         private bool m_canChangePassword;
         private bool m_enabled;
-        private bool m_disposed;
         private bool m_initialized;
+        private bool m_disposed;
 
         #endregion
 
@@ -585,6 +586,21 @@ namespace TVA.Security
             get
             {
                 return m_canChangePassword;
+            }
+        }
+
+        /// <summary>
+        /// Gets or allows derived classes to set an authentication failure reason.
+        /// </summary>
+        public virtual string AuthenticationFailureReason
+        {
+            get
+            {
+                return m_authenticationFailureReason;
+            }
+            protected set
+            {
+                m_authenticationFailureReason = value;
             }
         }
 

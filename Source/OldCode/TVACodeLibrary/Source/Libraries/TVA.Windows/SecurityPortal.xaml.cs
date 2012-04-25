@@ -539,32 +539,32 @@ namespace TVA.Windows
                 // Attempt to authenticate user
                 if (provider.Authenticate(TextBoxPassword.Password))
                 {
-                    // User was successfully authenticated - verify their password hasn't expired
+                    // Setup security provider for subsequent uses
+                    SecurityProviderCache.CurrentProvider = provider;
+                    ClearErrorMessage();
+                    ExitSuccess = true;
+                }
+                else
+                {
+                    // Verify their password hasn't expired
                     if (provider.UserData.PasswordChangeDateTime <= DateTime.UtcNow)
                     {
                         // Display password expired message
-                        DisplayErrorMessage("Your password has expired. You must change your password to continue.");
+                        DisplayErrorMessage(string.Format("Your password has expired. {0} You must change your password to continue.", provider.AuthenticationFailureReason));
                         m_displayType = DisplayType.ChangePassword;
                         ManageScreenVisualization();
                         TextBoxPassword.Password = "";
                     }
                     else
                     {
-                        // Setup security provider for subsequent uses
-                        SecurityProviderCache.CurrentProvider = provider;
-                        ClearErrorMessage();
-                        ExitSuccess = true;
-                    }
-                }
-                else
-                {
-                    // Display login failure message
-                    DisplayErrorMessage("The username or password is invalid. Please try again.");
+                        // Display login failure message
+                        DisplayErrorMessage("The username or password is invalid. " + provider.AuthenticationFailureReason);
 
-                    if (string.IsNullOrWhiteSpace(TextBoxUserName.Text))
-                        TextBoxUserName.Focus();
-                    else
-                        TextBoxPassword.Focus();
+                        if (string.IsNullOrWhiteSpace(TextBoxUserName.Text))
+                            TextBoxUserName.Focus();
+                        else
+                            TextBoxPassword.Focus();
+                    }
                 }
             }
             catch (Exception ex)

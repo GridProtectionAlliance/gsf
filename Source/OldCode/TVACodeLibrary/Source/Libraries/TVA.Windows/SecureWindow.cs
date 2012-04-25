@@ -461,9 +461,17 @@ namespace TVA.Windows
                 }
             }
 
+            ISecurityProvider provider = SecurityProviderCache.CurrentProvider;
+
             // Verify that the current thread principal has been authenticated
             if (!Thread.CurrentPrincipal.Identity.IsAuthenticated || ForceLoginDisplay)
-                ShowSecurityDialog(DisplayType.Login);
+            {
+                // See if user's password has expired
+                if (provider.UserData.PasswordChangeDateTime <= DateTime.UtcNow)
+                    ShowSecurityDialog(DisplayType.ChangePassword, string.Format("Your password has expired. {0} You must change your password to continue.", provider.AuthenticationFailureReason));
+                else
+                    ShowSecurityDialog(DisplayType.Login);
+            }
 
             // Perform a top-level permission check on the resource being accessed
             if (!string.IsNullOrEmpty(resource))
@@ -488,6 +496,10 @@ namespace TVA.Windows
         private void ShowSecurityDialog(DisplayType displayType, string errorMessage = null)
         {
             SecurityPortal securityDialog = new SecurityPortal(displayType);
+
+            // Show authentication failure reason if one was defined and user didn't force another message
+            if (errorMessage == null)
+                errorMessage = SecurityProviderCache.CurrentProvider.AuthenticationFailureReason;
 
             if (!string.IsNullOrWhiteSpace(errorMessage))
             {

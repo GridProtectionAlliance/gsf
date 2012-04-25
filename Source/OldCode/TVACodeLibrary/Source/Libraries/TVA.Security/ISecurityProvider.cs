@@ -280,6 +280,11 @@ namespace TVA.Security
         /// </summary>
         bool CanChangePassword { get; }
 
+        /// <summary>
+        /// Gets an authentication failure reason, if set by the provider when authentication fails.
+        /// </summary>
+        string AuthenticationFailureReason { get; }
+
         #endregion
 
         #region [ Methods ]
