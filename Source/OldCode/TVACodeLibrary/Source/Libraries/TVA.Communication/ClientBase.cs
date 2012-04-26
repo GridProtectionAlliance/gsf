@@ -44,6 +44,9 @@
 //       buffer since you cannot assume how user will use the buffer (they may cache it).
 //  12/29/2011 - J. Ritchie Carrol
 //       Updated Status property to show ConnectionString information.
+//  04/26/2012 - Pinal C. Patel
+//       Updated Create() static method to apply settings from the connection string to the created 
+//       client instance using reflection.
 //
 //*******************************************************************************************************
 
@@ -293,6 +296,7 @@ using TVA.Configuration;
 using TVA.IO.Compression;
 using TVA.Security.Cryptography;
 using TVA.Units;
+using System.Reflection;
 
 namespace TVA.Communication
 {
@@ -1565,23 +1569,24 @@ namespace TVA.Communication
         /// <param name="connectionString">Connection string for the client.</param>
         public static IClient Create(string connectionString)
         {
-            Dictionary<string, string> connectionData = connectionString.ParseKeyValuePairs();
+            Dictionary<string, string> connectionSettings = connectionString.ParseKeyValuePairs();
             IClient client = null;
             string protocol;
 
-            if (connectionData.TryGetValue("protocol", out protocol))
+            if (connectionSettings.TryGetValue("protocol", out protocol))
             {
-                connectionData.Remove("protocol");
+                connectionSettings.Remove("protocol");
                 StringBuilder settings = new StringBuilder();
 
-                foreach (string key in connectionData.Keys)
+                foreach (string key in connectionSettings.Keys)
                 {
                     settings.Append(key);
                     settings.Append("=");
-                    settings.Append(connectionData[key]);
+                    settings.Append(connectionSettings[key]);
                     settings.Append(";");
                 }
 
+                // Create a client instance for the specified protocol.
                 switch (protocol.ToLower())
                 {
                     case "tcp":
@@ -1598,6 +1603,14 @@ namespace TVA.Communication
                         break;
                     default:
                         throw new ArgumentException(protocol + " is not a valid transport protocol");
+                }
+
+                // Apply client settings from the connection string to the client.
+                foreach (KeyValuePair<string, string> setting in connectionSettings)
+                {
+                    PropertyInfo property = client.GetType().GetProperty(setting.Key);
+                    if (property != null)
+                        property.SetValue(client, Convert.ChangeType(setting.Value, property.PropertyType), null);
                 }
             }
             else

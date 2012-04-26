@@ -37,6 +37,9 @@
 //       buffer since you cannot assume how user will use the buffer (they may cache it).
 //  12/04/2011 - J. Ritchie Carroll
 //       Modified to use concurrent dictionary.
+//  04/26/2012 - Pinal C. Patel
+//       Updated Create() static method to apply settings from the configuration string to the created 
+//       server instance using reflection.
 //
 //*******************************************************************************************************
 
@@ -288,6 +291,7 @@ using TVA.Configuration;
 using TVA.IO.Compression;
 using TVA.Security.Cryptography;
 using TVA.Units;
+using System.Reflection;
 
 namespace TVA.Communication
 {
@@ -1639,23 +1643,24 @@ namespace TVA.Communication
         /// <returns>A communications server.</returns>
         public static IServer Create(string configurationString)
         {
-            Dictionary<string, string> configurationData = configurationString.ParseKeyValuePairs();
+            Dictionary<string, string> configurationSettings = configurationString.ParseKeyValuePairs();
             IServer server = null;
             string protocol;
 
-            if (configurationData.TryGetValue("protocol", out protocol))
+            if (configurationSettings.TryGetValue("protocol", out protocol))
             {
-                configurationData.Remove("protocol");
+                configurationSettings.Remove("protocol");
                 StringBuilder settings = new StringBuilder();
 
-                foreach (string key in configurationData.Keys)
+                foreach (string key in configurationSettings.Keys)
                 {
                     settings.Append(key);
                     settings.Append("=");
-                    settings.Append(configurationData[key]);
+                    settings.Append(configurationSettings[key]);
                     settings.Append(";");
                 }
 
+                // Create a server instance for the specified protocol.
                 switch (protocol.ToLower())
                 {
                     case "tcp":
@@ -1666,6 +1671,14 @@ namespace TVA.Communication
                         break;
                     default:
                         throw new ArgumentException("Transport protocol \'" + protocol + "\' is not valid");
+                }
+
+                // Apply server settings from the connection string to the client.
+                foreach (KeyValuePair<string, string> setting in configurationSettings)
+                {
+                    PropertyInfo property = server.GetType().GetProperty(setting.Key);
+                    if (property != null)
+                        property.SetValue(server, Convert.ChangeType(setting.Value, property.PropertyType), null);
                 }
             }
             else
