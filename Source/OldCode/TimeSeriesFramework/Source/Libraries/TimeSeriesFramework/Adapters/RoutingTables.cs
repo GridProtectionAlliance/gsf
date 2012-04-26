@@ -772,7 +772,7 @@ namespace TimeSeriesFramework.Adapters
             {
                 lock (sourceCollection)
                 {
-                    adapters = sourceCollection.Where(adapter => !existingList.Contains(adapter) && adapter.OutputMeasurementKeys().Any(key => inputMeasurementKeysList.Contains(key)));
+                    adapters = sourceCollection.Where(adapter => !existingList.Contains(adapter) && adapter.OutputMeasurementKeys().Any(inputMeasurementKeysList.Contains));
                 }
 
                 if (adapters.Count() == 0)

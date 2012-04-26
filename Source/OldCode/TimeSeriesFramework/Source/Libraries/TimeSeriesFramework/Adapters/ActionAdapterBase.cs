@@ -908,7 +908,7 @@ namespace TimeSeriesFramework.Adapters
 
             // Establish any defined external event wait handles needed for inter-adapter synchronization
             if (settings.TryGetValue("waitHandleNames", out setting) && !string.IsNullOrWhiteSpace(setting))
-                ExternalEventHandles = setting.Split(',').Select(name => GetExternalEventHandle(name)).ToArray();
+                ExternalEventHandles = setting.Split(',').Select(GetExternalEventHandle).ToArray();
 
             int waitHandleTimeout;
 
