@@ -1144,8 +1144,8 @@ namespace TimeSeriesFramework.Adapters
         #region [ Static ]
 
         // Static Fields
-        private static Regex s_filterExpression = new Regex("(FILTER[ ]+(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+)[ ]+ORDER[ ]+BY[ ]+(?<SortField>\\w+))|(FILTER[ ]+(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static Regex s_timetagExpression = new Regex("\\*(?<Offset>[+-]?\\d*\\.?\\d*)(?<Unit>\\w+)", RegexOptions.Compiled);
+        private static readonly Regex s_filterExpression = new Regex("(FILTER[ ]+(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+)[ ]+ORDER[ ]+BY[ ]+(?<SortField>\\w+))|(FILTER[ ]+(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex s_timetagExpression = new Regex("\\*(?<Offset>[+-]?\\d*\\.?\\d*)(?<Unit>\\w+)", RegexOptions.Compiled);
 
         // Static Methods
 
@@ -1453,7 +1453,7 @@ namespace TimeSeriesFramework.Adapters
             MeasurementKey key;
             Guid id;
             Match filterMatch = null;
-            bool dataSourceAvailable = (object)dataSource != null;
+            bool dataSourceAvailable = ((object)dataSource != null);
 
             value = value.Trim();
 
@@ -1554,7 +1554,7 @@ namespace TimeSeriesFramework.Adapters
             MeasurementKey key;
             Match filterMatch = null;
             Guid id;
-            bool dataSourceAvailable = (object)dataSource != null;
+            bool dataSourceAvailable = ((object)dataSource != null);
 
             value = value.Trim();
 

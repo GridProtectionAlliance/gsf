@@ -599,11 +599,11 @@ namespace TimeSeriesFramework.Statistics
             AddSource("System", m_performanceMonitor);
 
             // Add all data subscribers as sources for subscriber statistics
-            foreach (IAdapter subscriber in m_inputAdapters.Where<IInputAdapter>(adapter => adapter is DataSubscriber))
+            foreach (IInputAdapter subscriber in m_inputAdapters.Where<IInputAdapter>(adapter => adapter is DataSubscriber))
                 AddSource("Subscriber", subscriber);
 
             // Add all data publishers as sources for publisher statistics
-            foreach (IAdapter publisher in m_actionAdapters.Where<IActionAdapter>(adapter => adapter is DataPublisher))
+            foreach (IActionAdapter publisher in m_actionAdapters.Where<IActionAdapter>(adapter => adapter is DataPublisher))
                 AddSource("Publisher", publisher);
 
             if ((object)BeforeCalculate != null)
@@ -622,7 +622,7 @@ namespace TimeSeriesFramework.Statistics
 
         // Static Fields
         private static StatisticsEngine s_default;
-        private static ManualResetEventSlim s_defaultWaitHandle;
+        private static readonly ManualResetEventSlim s_defaultWaitHandle;
 
         // Static Constructor
 

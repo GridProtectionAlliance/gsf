@@ -166,12 +166,12 @@ namespace TimeSeriesFramework.Adapters
                         m_actionAdapters = null;
                         m_outputAdapters = null;
 
-                        if (m_adapterRoutesCacheLock != null)
+                        if ((object)m_adapterRoutesCacheLock != null)
                             m_adapterRoutesCacheLock.Dispose();
 
                         m_adapterRoutesCacheLock = null;
 
-                        if (m_calculationComplete != null)
+                        if ((object)m_calculationComplete != null)
                         {
                             // Release any waiting threads before disposing wait handle
                             m_calculationComplete.Set();
@@ -229,7 +229,7 @@ namespace TimeSeriesFramework.Adapters
                 List<IOutputAdapter> outputAdapters, outputBroadcastRoutes = new List<IOutputAdapter>();
                 MeasurementKey[] measurementKeys;
 
-                if (m_actionAdapters != null)
+                if ((object)m_actionAdapters != null)
                 {
                     lock (m_actionAdapters)
                     {
@@ -240,7 +240,7 @@ namespace TimeSeriesFramework.Adapters
                             {
                                 measurementKeys = actionAdapter.InputMeasurementKeys;
 
-                                if (measurementKeys != null)
+                                if ((object)measurementKeys != null)
                                 {
                                     foreach (MeasurementKey key in measurementKeys)
                                     {
@@ -263,7 +263,7 @@ namespace TimeSeriesFramework.Adapters
                     }
                 }
 
-                if (m_outputAdapters != null)
+                if ((object)m_outputAdapters != null)
                 {
                     lock (m_outputAdapters)
                     {
@@ -274,7 +274,7 @@ namespace TimeSeriesFramework.Adapters
                             {
                                 measurementKeys = outputAdapter.InputMeasurementKeys;
 
-                                if (measurementKeys != null)
+                                if ((object)measurementKeys != null)
                                 {
                                     foreach (MeasurementKey key in measurementKeys)
                                     {
@@ -348,7 +348,7 @@ namespace TimeSeriesFramework.Adapters
         /// </remarks>
         public virtual void RoutedMeasurementsHandler(IEnumerable<IMeasurement> newMeasurements)
         {
-            if (m_actionRoutes == null || m_outputRoutes == null)
+            if ((object)m_actionRoutes == null || (object)m_outputRoutes == null)
                 return;
 
             List<IActionAdapter> actionRoutes;
@@ -458,7 +458,7 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
         protected virtual void OnProcessException(Exception ex)
         {
-            if (ProcessException != null)
+            if ((object)ProcessException != null)
                 ProcessException(this, new EventArgs<Exception>(ex));
         }
 
@@ -475,7 +475,7 @@ namespace TimeSeriesFramework.Adapters
             IEnumerable<MeasurementKey> inputMeasurementKeys = null;
             MeasurementKey[] requestedOutputMeasurementKeys, requestedInputMeasurementKeys, emptyKeys = new MeasurementKey[0];
 
-            if (inputMeasurementKeysRestriction != null && inputMeasurementKeysRestriction.Count() > 0)
+            if ((object)inputMeasurementKeysRestriction != null && inputMeasurementKeysRestriction.Any())
             {
                 // When an input measurement keys restriction has been defined, extract the needed input and output measurement keys by
                 // walking the dependency chain of the restriction
@@ -484,12 +484,12 @@ namespace TimeSeriesFramework.Adapters
             else
             {
                 // Get the full list of output measurements keys that can be provided in this Iaon session
-                if (m_inputAdapters != null)
+                if ((object)m_inputAdapters != null)
                     outputMeasurementKeys = m_inputAdapters.OutputMeasurementKeys();
 
-                if (m_actionAdapters != null)
+                if ((object)m_actionAdapters != null)
                 {
-                    if (outputMeasurementKeys == null || outputMeasurementKeys.Count() == 0)
+                    if ((object)outputMeasurementKeys == null || !outputMeasurementKeys.Any())
                     {
                         outputMeasurementKeys = m_actionAdapters.OutputMeasurementKeys();
                     }
@@ -497,18 +497,18 @@ namespace TimeSeriesFramework.Adapters
                     {
                         IEnumerable<MeasurementKey> actionAdapterOutputMeasurementKeys = m_actionAdapters.OutputMeasurementKeys();
 
-                        if (actionAdapterOutputMeasurementKeys != null && actionAdapterOutputMeasurementKeys.Count() > 0)
+                        if ((object)actionAdapterOutputMeasurementKeys != null && actionAdapterOutputMeasurementKeys.Any())
                             outputMeasurementKeys = outputMeasurementKeys.Concat(actionAdapterOutputMeasurementKeys).Distinct();
                     }
                 }
 
                 // Get the full list of input measurements that can be demanded in this Iaon session
-                if (m_outputAdapters != null)
+                if ((object)m_outputAdapters != null)
                     inputMeasurementKeys = m_outputAdapters.InputMeasurementKeys;
 
-                if (m_actionAdapters != null)
+                if ((object)m_actionAdapters != null)
                 {
-                    if (inputMeasurementKeys == null || inputMeasurementKeys.Count() == 0)
+                    if (inputMeasurementKeys == null || !inputMeasurementKeys.Any())
                     {
                         inputMeasurementKeys = m_actionAdapters.InputMeasurementKeys;
                     }
@@ -516,16 +516,16 @@ namespace TimeSeriesFramework.Adapters
                     {
                         MeasurementKey[] actionAdapterInputMeasurementKeys = m_actionAdapters.InputMeasurementKeys;
 
-                        if (actionAdapterInputMeasurementKeys != null && actionAdapterInputMeasurementKeys.Length > 0)
+                        if ((object)actionAdapterInputMeasurementKeys != null && actionAdapterInputMeasurementKeys.Length > 0)
                             inputMeasurementKeys = inputMeasurementKeys.Concat(actionAdapterInputMeasurementKeys).Distinct();
                     }
                 }
             }
 
             // Handle connect on demand action adapters and output adapters based on currently provisioned output measurements
-            if (outputMeasurementKeys != null && outputMeasurementKeys.Count() > 0)
+            if ((object)outputMeasurementKeys != null && outputMeasurementKeys.Any())
             {
-                if (m_actionAdapters != null)
+                if ((object)m_actionAdapters != null)
                 {
                     // Start or stop connect on demand action adapters based on need, i.e., they handle any of the currently created output measurements
                     foreach (IActionAdapter actionAdapter in m_actionAdapters)
@@ -533,7 +533,7 @@ namespace TimeSeriesFramework.Adapters
                         if (!actionAdapter.AutoStart && actionAdapter.RespectInputDemands)
                         {
                             // Create an intersection between the measurements the adapter can handle and those that are demanded throughout this Iaon session
-                            if (actionAdapter.InputMeasurementKeys != null && actionAdapter.InputMeasurementKeys.Length > 0)
+                            if ((object)actionAdapter.InputMeasurementKeys != null && actionAdapter.InputMeasurementKeys.Length > 0)
                                 requestedInputMeasurementKeys = actionAdapter.InputMeasurementKeys.Intersect(outputMeasurementKeys).ToArray();
                             else
                                 requestedInputMeasurementKeys = emptyKeys;
@@ -549,7 +549,7 @@ namespace TimeSeriesFramework.Adapters
                     }
                 }
 
-                if (m_outputAdapters != null)
+                if ((object)m_outputAdapters != null)
                 {
                     // Start or stop connect on demand output adapters based on need, i.e., they handle any of the currently created output measurements
                     foreach (IOutputAdapter outputAdapter in m_outputAdapters)
@@ -557,7 +557,7 @@ namespace TimeSeriesFramework.Adapters
                         if (!outputAdapter.AutoStart)
                         {
                             // Create an intersection between the measurements the adapter can handle and those that are demanded throughout this Iaon session
-                            if (outputAdapter.InputMeasurementKeys != null && outputAdapter.InputMeasurementKeys.Length > 0)
+                            if ((object)outputAdapter.InputMeasurementKeys != null && outputAdapter.InputMeasurementKeys.Length > 0)
                                 requestedInputMeasurementKeys = outputAdapter.InputMeasurementKeys.Intersect(outputMeasurementKeys).ToArray();
                             else
                                 requestedInputMeasurementKeys = emptyKeys;
@@ -567,7 +567,7 @@ namespace TimeSeriesFramework.Adapters
                                 outputAdapter.RequestedInputMeasurementKeys = requestedInputMeasurementKeys;
 
                             // Start or stop adapter
-                            outputAdapter.Enabled = (outputAdapter.RequestedInputMeasurementKeys != null && outputAdapter.RequestedInputMeasurementKeys.Length > 0);
+                            outputAdapter.Enabled = ((object)outputAdapter.RequestedInputMeasurementKeys != null && outputAdapter.RequestedInputMeasurementKeys.Length > 0);
                         }
                     }
                 }
@@ -575,11 +575,11 @@ namespace TimeSeriesFramework.Adapters
             else
             {
                 // Handle special case of clearing requested input keys for connect on demand action adapters when no output measurement keys are defined
-                if (m_actionAdapters != null)
+                if ((object)m_actionAdapters != null)
                 {
                     foreach (IActionAdapter actionAdapter in m_actionAdapters)
                     {
-                        if (!actionAdapter.AutoStart && actionAdapter.RequestedInputMeasurementKeys != null && actionAdapter.RespectInputDemands)
+                        if (!actionAdapter.AutoStart && (object)actionAdapter.RequestedInputMeasurementKeys != null && actionAdapter.RespectInputDemands)
                             actionAdapter.RequestedInputMeasurementKeys = null;
 
                         // Do not start or stop adapter
@@ -589,13 +589,13 @@ namespace TimeSeriesFramework.Adapters
                 }
 
                 // Handle special case of clearing requested input keys and stopping connect on demand output adapters when no output measurement keys are defined
-                if (m_outputAdapters != null)
+                if ((object)m_outputAdapters != null)
                 {
                     foreach (IOutputAdapter outputAdapter in m_outputAdapters)
                     {
                         if (!outputAdapter.AutoStart)
                         {
-                            if (outputAdapter.RequestedInputMeasurementKeys != null)
+                            if ((object)outputAdapter.RequestedInputMeasurementKeys != null)
                                 outputAdapter.RequestedInputMeasurementKeys = null;
 
                             outputAdapter.Enabled = false;
@@ -605,9 +605,9 @@ namespace TimeSeriesFramework.Adapters
             }
 
             // Handle connect on demand action adapters and input adapters based on currently demanded input measurements
-            if (inputMeasurementKeys != null && inputMeasurementKeys.Count() > 0)
+            if ((object)inputMeasurementKeys != null && inputMeasurementKeys.Any())
             {
-                if (m_actionAdapters != null)
+                if ((object)m_actionAdapters != null)
                 {
                     // Start or stop connect on demand action adapters based on need, i.e., they provide any of the currently demanded input measurements
                     foreach (IActionAdapter actionAdapter in m_actionAdapters)
@@ -617,7 +617,7 @@ namespace TimeSeriesFramework.Adapters
                             if (actionAdapter.RespectOutputDemands)
                             {
                                 // Create an intersection between the measurements the adapter can provide and those that are demanded throughout this Iaon session
-                                if (actionAdapter.OutputMeasurements != null && actionAdapter.OutputMeasurements.Length > 0)
+                                if ((object)actionAdapter.OutputMeasurements != null && actionAdapter.OutputMeasurements.Length > 0)
                                     requestedOutputMeasurementKeys = actionAdapter.OutputMeasurementKeys().Intersect(inputMeasurementKeys).ToArray();
                                 else
                                     requestedOutputMeasurementKeys = emptyKeys;
@@ -628,15 +628,15 @@ namespace TimeSeriesFramework.Adapters
                             }
 
                             // Start or stop adapter, action adapter should only be stopped if it also has no requested input measurements keys, as determined prior
-                            if (actionAdapter.RespectOutputDemands && actionAdapter.RequestedOutputMeasurementKeys != null && actionAdapter.RequestedOutputMeasurementKeys.Length > 0)
+                            if (actionAdapter.RespectOutputDemands && (object)actionAdapter.RequestedOutputMeasurementKeys != null && actionAdapter.RequestedOutputMeasurementKeys.Length > 0)
                                 actionAdapter.Enabled = true;
                             else
-                                actionAdapter.Enabled = (actionAdapter.RespectInputDemands && actionAdapter.RequestedInputMeasurementKeys != null && actionAdapter.RequestedInputMeasurementKeys.Length > 0);
+                                actionAdapter.Enabled = (actionAdapter.RespectInputDemands && (object)actionAdapter.RequestedInputMeasurementKeys != null && actionAdapter.RequestedInputMeasurementKeys.Length > 0);
                         }
                     }
                 }
 
-                if (m_inputAdapters != null)
+                if ((object)m_inputAdapters != null)
                 {
                     // Start or stop connect on demand input adapters based on need, i.e., they provide any of the currently demanded input measurements
                     foreach (IInputAdapter inputAdapter in m_inputAdapters)
@@ -644,7 +644,7 @@ namespace TimeSeriesFramework.Adapters
                         if (!inputAdapter.AutoStart)
                         {
                             // Create an intersection between the measurements the adapter can provide and those that are demanded throughout this Iaon session
-                            if (inputAdapter.OutputMeasurements != null && inputAdapter.OutputMeasurements.Length > 0)
+                            if ((object)inputAdapter.OutputMeasurements != null && inputAdapter.OutputMeasurements.Length > 0)
                                 requestedOutputMeasurementKeys = inputAdapter.OutputMeasurementKeys().Intersect(inputMeasurementKeys).ToArray();
                             else
                                 requestedOutputMeasurementKeys = emptyKeys;
@@ -654,7 +654,7 @@ namespace TimeSeriesFramework.Adapters
                                 inputAdapter.RequestedOutputMeasurementKeys = requestedOutputMeasurementKeys;
 
                             // Start or stop adapter
-                            inputAdapter.Enabled = (inputAdapter.RequestedOutputMeasurementKeys != null && inputAdapter.RequestedOutputMeasurementKeys.Length > 0);
+                            inputAdapter.Enabled = ((object)inputAdapter.RequestedOutputMeasurementKeys != null && inputAdapter.RequestedOutputMeasurementKeys.Length > 0);
                         }
                     }
                 }
@@ -662,7 +662,7 @@ namespace TimeSeriesFramework.Adapters
             else
             {
                 // Handle special case of clearing requested output keys and stopping connect on demand action adapters when no input measurement keys are defined
-                if (m_actionAdapters != null)
+                if ((object)m_actionAdapters != null)
                 {
                     foreach (IActionAdapter actionAdapter in m_actionAdapters)
                     {
@@ -670,25 +670,25 @@ namespace TimeSeriesFramework.Adapters
                         {
                             if (actionAdapter.RespectOutputDemands)
                             {
-                                if (actionAdapter.RequestedOutputMeasurementKeys != null)
+                                if ((object)actionAdapter.RequestedOutputMeasurementKeys != null)
                                     actionAdapter.RequestedOutputMeasurementKeys = null;
                             }
 
                             // Action adapter should be stopped if it has no requested input measurements keys, as determined prior
-                            if (!(actionAdapter.RespectInputDemands && actionAdapter.RequestedInputMeasurementKeys != null && actionAdapter.RequestedInputMeasurementKeys.Length > 0))
+                            if (!(actionAdapter.RespectInputDemands && (object)actionAdapter.RequestedInputMeasurementKeys != null && actionAdapter.RequestedInputMeasurementKeys.Length > 0))
                                 actionAdapter.Enabled = false;
                         }
                     }
                 }
 
                 // Handle special case of clearing requested output keys and stopping connect on demand input adapters when no input measurement keys are defined
-                if (m_inputAdapters != null)
+                if ((object)m_inputAdapters != null)
                 {
                     foreach (IInputAdapter inputAdapter in m_inputAdapters)
                     {
                         if (!inputAdapter.AutoStart)
                         {
-                            if (inputAdapter.RequestedOutputMeasurementKeys != null)
+                            if ((object)inputAdapter.RequestedOutputMeasurementKeys != null)
                                 inputAdapter.RequestedOutputMeasurementKeys = null;
 
                             inputAdapter.Enabled = false;
@@ -715,19 +715,19 @@ namespace TimeSeriesFramework.Adapters
             // Keep walking dependency chain until all subordinate action adapters have been found
             do
             {
-                if (actionAdapters != null)
+                if ((object)actionAdapters != null)
                 {
                     actionAdapterList.AddRange(actionAdapters);
 
                     IEnumerable<MeasurementKey> newInputKeys = actionAdapterList.InputMeasurementKeys();
 
-                    if (newInputKeys != null && newInputKeys.Count() > 0)
+                    if ((object)newInputKeys != null && newInputKeys.Any())
                         inputMeasurementKeyList = inputMeasurementKeyList.Concat(newInputKeys).Distinct().ToList();
                 }
 
                 actionAdapters = FindDistinctAdapters(m_actionAdapters, inputMeasurementKeyList, actionAdapterList);
             }
-            while (actionAdapters != null);
+            while ((object)actionAdapters != null);
 
             if (actionAdapterList.Count > 0)
                 outputMeasurementKeys = actionAdapterList.OutputMeasurementKeys();
@@ -738,23 +738,23 @@ namespace TimeSeriesFramework.Adapters
             // Keep walking dependency chain until all subordinate input adapters have been found
             do
             {
-                if (inputAdapters != null)
+                if ((object)inputAdapters != null)
                 {
                     inputAdapterList.AddRange(inputAdapters);
 
                     IEnumerable<MeasurementKey> newInputKeys = inputAdapterList.InputMeasurementKeys();
 
-                    if (newInputKeys != null && newInputKeys.Count() > 0)
+                    if ((object)newInputKeys != null && newInputKeys.Any())
                         inputMeasurementKeyList = inputMeasurementKeyList.Concat(newInputKeys).Distinct().ToList();
                 }
 
                 inputAdapters = FindDistinctAdapters(m_inputAdapters, inputMeasurementKeyList, inputAdapterList);
             }
-            while (inputAdapters != null);
+            while ((object)inputAdapters != null);
 
             if (inputAdapterList.Count > 0)
             {
-                if (outputMeasurementKeys == null)
+                if ((object)outputMeasurementKeys == null)
                     outputMeasurementKeys = inputAdapterList.OutputMeasurementKeys();
                 else
                     outputMeasurementKeys = outputMeasurementKeys.Concat(inputAdapterList.OutputMeasurementKeys()).Distinct();
@@ -768,14 +768,14 @@ namespace TimeSeriesFramework.Adapters
         {
             IEnumerable<T> adapters = null;
 
-            if (sourceCollection != null)
+            if ((object)sourceCollection != null)
             {
                 lock (sourceCollection)
                 {
                     adapters = sourceCollection.Where(adapter => !existingList.Contains(adapter) && adapter.OutputMeasurementKeys().Any(inputMeasurementKeysList.Contains));
                 }
 
-                if (adapters.Count() == 0)
+                if (!adapters.Any())
                     adapters = null;
             }
 

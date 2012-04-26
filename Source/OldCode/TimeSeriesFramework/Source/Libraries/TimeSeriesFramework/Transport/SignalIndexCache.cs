@@ -26,10 +26,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Text;
 using TVA;
 using TVA.Parsing;
-using System.IO;
-using System.Text;
 
 namespace TimeSeriesFramework.Transport
 {
@@ -59,7 +58,7 @@ namespace TimeSeriesFramework.Transport
         private Guid[] m_unauthorizedSignalIDs;
 
         [NonSerialized] // SignalID reverse lookup runtime cache (used to speed deserialization)
-        private ConcurrentDictionary<Guid, ushort> m_signalIDCache;
+        private readonly ConcurrentDictionary<Guid, ushort> m_signalIDCache;
 
         [NonSerialized]
         private Encoding m_encoding;

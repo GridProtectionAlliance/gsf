@@ -282,7 +282,10 @@ namespace TimeSeriesFramework
         /// <remarks>This implementation of a basic frame compares itself by timestamp.</remarks>
         public int CompareTo(IFrame other)
         {
-            return m_timestamp.CompareTo(other.Timestamp);
+            if ((object)other != null)
+                return m_timestamp.CompareTo(other.Timestamp);
+
+            return 1;
         }
 
         /// <summary>
@@ -324,7 +327,10 @@ namespace TimeSeriesFramework
         /// <returns>A <see cref="Boolean"/> representing the result of the operation.</returns>
         public static bool operator ==(Frame frame1, Frame frame2)
         {
-            return frame1.Equals(frame2);
+            if ((object)frame1 != null)
+                return frame1.Equals(frame2);
+
+            return ((object)frame2 == null);
         }
 
         /// <summary>
@@ -335,7 +341,10 @@ namespace TimeSeriesFramework
         /// <returns>A <see cref="Boolean"/> representing the result of the operation.</returns>
         public static bool operator !=(Frame frame1, Frame frame2)
         {
-            return !frame1.Equals(frame2);
+            if ((object)frame1 != null)
+                return !frame1.Equals(frame2);
+
+            return ((object)frame2 != null);
         }
 
         /// <summary>
@@ -346,7 +355,10 @@ namespace TimeSeriesFramework
         /// <returns>A <see cref="Boolean"/> representing the result of the operation.</returns>
         public static bool operator >(Frame frame1, Frame frame2)
         {
-            return frame1.CompareTo(frame2) > 0;
+            if ((object)frame1 != null)
+                return frame1.CompareTo(frame2) > 0;
+
+            return false;
         }
 
         /// <summary>
@@ -357,7 +369,10 @@ namespace TimeSeriesFramework
         /// <returns>A <see cref="Boolean"/> representing the result of the operation.</returns>
         public static bool operator >=(Frame frame1, Frame frame2)
         {
-            return frame1.CompareTo(frame2) >= 0;
+            if ((object)frame1 != null)
+                return frame1.CompareTo(frame2) >= 0;
+
+            return ((object)frame2 == null);
         }
 
         /// <summary>
@@ -368,7 +383,10 @@ namespace TimeSeriesFramework
         /// <returns>A <see cref="Boolean"/> representing the result of the operation.</returns>
         public static bool operator <(Frame frame1, Frame frame2)
         {
-            return frame1.CompareTo(frame2) < 0;
+            if ((object)frame1 != null)
+                return frame1.CompareTo(frame2) < 0;
+
+            return false;
         }
 
         /// <summary>
@@ -379,7 +397,10 @@ namespace TimeSeriesFramework
         /// <returns>A <see cref="Boolean"/> representing the result of the operation.</returns>
         public static bool operator <=(Frame frame1, Frame frame2)
         {
-            return frame1.CompareTo(frame2) <= 0;
+            if ((object)frame1 != null)
+                return frame1.CompareTo(frame2) <= 0;
+
+            return ((object)frame2 == null);
         }
 
         #endregion
@@ -387,7 +408,7 @@ namespace TimeSeriesFramework
         #region [ Static ]
 
         // Static Fields
-        private static int s_defaultConcurrencyLevel = Environment.ProcessorCount * 4;
+        private static readonly int s_defaultConcurrencyLevel = Environment.ProcessorCount * 4;
 
         #endregion
     }

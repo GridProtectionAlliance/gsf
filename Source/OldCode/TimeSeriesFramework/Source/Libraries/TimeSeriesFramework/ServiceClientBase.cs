@@ -54,7 +54,6 @@ namespace TimeSeriesFramework
         /// Creates a new instance of the <see cref="ServiceClientBase"/> class.
         /// </summary>
         public ServiceClientBase()
-            : base()
         {
             InitializeComponent();
 

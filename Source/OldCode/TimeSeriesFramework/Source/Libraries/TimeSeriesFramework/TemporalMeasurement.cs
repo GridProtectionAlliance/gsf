@@ -140,10 +140,7 @@ namespace TimeSeriesFramework
         public double GetAdjustedValue(Ticks timestamp)
         {
             // We only return a measurement value that is up-to-date...
-            if (Timestamp.TimeIsValid(timestamp, m_lagTime, m_leadTime))
-                return base.AdjustedValue;
-            else
-                return double.NaN;
+            return Timestamp.TimeIsValid(timestamp, m_lagTime, m_leadTime) ? base.AdjustedValue : double.NaN;
         }
 
         /// <summary>Gets numeric value of this <see cref="TemporalMeasurement"/>, constrained within specified ticks.</summary>
@@ -155,10 +152,7 @@ namespace TimeSeriesFramework
         public double GetValue(Ticks timestamp)
         {
             // We only return a measurement value that is up-to-date...
-            if (Timestamp.TimeIsValid(timestamp, m_lagTime, m_leadTime))
-                return base.Value;
-            else
-                return double.NaN;
+            return Timestamp.TimeIsValid(timestamp, m_lagTime, m_leadTime) ? base.Value : double.NaN;
         }
 
         /// <summary>Sets numeric value and timestamp, as ticks, of this <see cref="TemporalMeasurement"/>.</summary>

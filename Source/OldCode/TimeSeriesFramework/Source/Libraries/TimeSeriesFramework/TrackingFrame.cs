@@ -23,7 +23,6 @@
 
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading;
 using TVA.Threading;
 
 namespace TimeSeriesFramework
@@ -124,7 +123,7 @@ namespace TimeSeriesFramework
         public IMeasurement DeriveMeasurementValue(IMeasurement measurement)
         {
             IMeasurement derivedMeasurement;
-            List<IMeasurement> m_values;
+            List<IMeasurement> values;
 
             switch (m_downsamplingMethod)
             {
@@ -136,21 +135,21 @@ namespace TimeSeriesFramework
                     return measurement;
                 case DownsamplingMethod.Closest:
                     // Get tracked measurement values
-                    if (m_measurements.TryGetValue(measurement.Key, out m_values))
+                    if (m_measurements.TryGetValue(measurement.Key, out values))
                     {
-                        if (m_values != null && m_values.Count > 0)
+                        if ((object)values != null && values.Count > 0)
                         {
                             // Get first tracked value (should only be one for "Closest")
-                            derivedMeasurement = m_values[0];
+                            derivedMeasurement = values[0];
 
-                            if (derivedMeasurement != null)
+                            if ((object)derivedMeasurement != null)
                             {
                                 // Determine if new measurement's timestamp is closer to frame
                                 if (measurement.Timestamp < derivedMeasurement.Timestamp && measurement.Timestamp >= m_timestamp)
                                 {
                                     // This measurement came in out-of-order and is closer to frame timestamp, so 
                                     // we sort this measurement instead of the original
-                                    m_values[0] = measurement;
+                                    values[0] = measurement;
 
                                     // Keep track of total number of derived measurements
                                     m_derivedMeasurements++;
@@ -165,9 +164,8 @@ namespace TimeSeriesFramework
                     }
 
                     // No prior measurement exists, track this initial one
-                    m_values = new List<IMeasurement>();
-                    m_values.Add(measurement);
-                    m_measurements[measurement.Key] = m_values;
+                    values = new List<IMeasurement> { measurement };
+                    m_measurements[measurement.Key] = values;
 
                     // Keep track of total number of derived measurements
                     m_derivedMeasurements++;
@@ -175,14 +173,14 @@ namespace TimeSeriesFramework
                     return measurement;
                 case DownsamplingMethod.Filtered:
                     // Get tracked measurement values
-                    if (m_measurements.TryGetValue(measurement.Key, out m_values))
+                    if (m_measurements.TryGetValue(measurement.Key, out values))
                     {
-                        if (m_values != null && m_values.Count > 0)
+                        if ((object)values != null && values.Count > 0)
                         {
                             // Get first tracked value
-                            derivedMeasurement = m_values[0];
+                            derivedMeasurement = values[0];
 
-                            if (derivedMeasurement != null)
+                            if ((object)derivedMeasurement != null)
                             {
                                 // Get function defined for measurement value filtering
                                 MeasurementValueFilterFunction measurementValueFilter = derivedMeasurement.MeasurementValueFilter;
@@ -192,13 +190,13 @@ namespace TimeSeriesFramework
                                     measurementValueFilter = Measurement.AverageValueFilter;
 
                                 // Add new measurement to tracking collection
-                                if (measurement != null)
-                                    m_values.Add(measurement);
+                                if ((object)measurement != null)
+                                    values.Add(measurement);
 
                                 // Perform filter calculation as specified by device measurement
-                                if (m_values.Count > 1)
+                                if (values.Count > 1)
                                 {
-                                    derivedMeasurement.Value = measurementValueFilter(m_values);
+                                    derivedMeasurement.Value = measurementValueFilter(values);
 
                                     // Keep track of total number of derived measurements
                                     m_derivedMeasurements++;
@@ -213,9 +211,8 @@ namespace TimeSeriesFramework
                     }
 
                     // No prior measurement exists, track this initial one
-                    m_values = new List<IMeasurement>();
-                    m_values.Add(measurement);
-                    m_measurements[measurement.Key] = m_values;
+                    values = new List<IMeasurement> { measurement };
+                    m_measurements[measurement.Key] = values;
 
                     // Keep track of total number of derived measurements
                     m_derivedMeasurements++;
@@ -223,14 +220,14 @@ namespace TimeSeriesFramework
                     return measurement;
                 case DownsamplingMethod.BestQuality:
                     // Get tracked measurement values
-                    if (m_measurements.TryGetValue(measurement.Key, out m_values))
+                    if (m_measurements.TryGetValue(measurement.Key, out values))
                     {
-                        if (m_values != null && m_values.Count > 0)
+                        if ((object)values != null && values.Count > 0)
                         {
                             // Get first tracked value (should only be one for "BestQuality")
-                            derivedMeasurement = m_values[0];
+                            derivedMeasurement = values[0];
 
-                            if (derivedMeasurement != null)
+                            if ((object)derivedMeasurement != null)
                             {
                                 // Determine if new measurement's quality is better than existing one or if new measurement's timestamp is closer to frame
                                 if
@@ -248,7 +245,7 @@ namespace TimeSeriesFramework
                                 {
                                     // This measurement has a better quality or came in out-of-order and is closer to frame timestamp, so 
                                     // we sort this measurement instead of the original
-                                    m_values[0] = measurement;
+                                    values[0] = measurement;
 
                                     // Keep track of total number of derived measurements
                                     m_derivedMeasurements++;
@@ -263,9 +260,8 @@ namespace TimeSeriesFramework
                     }
 
                     // No prior measurement exists, track this initial one
-                    m_values = new List<IMeasurement>();
-                    m_values.Add(measurement);
-                    m_measurements[measurement.Key] = m_values;
+                    values = new List<IMeasurement> { measurement };
+                    m_measurements[measurement.Key] = values;
 
                     // Keep track of total number of derived measurements
                     m_derivedMeasurements++;

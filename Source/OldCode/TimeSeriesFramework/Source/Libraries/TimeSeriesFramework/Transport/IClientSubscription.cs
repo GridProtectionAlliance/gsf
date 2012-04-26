@@ -123,9 +123,9 @@ namespace TimeSeriesFramework.Transport
     public static class IClientSubscriptionExtensions
     {
         // Define cache of dynamically defined event handlers associated with each client subscription
-        private static ConcurrentDictionary<IClientSubscription, EventHandler<EventArgs<string, UpdateType>>> s_statusMessageHandlers = new ConcurrentDictionary<IClientSubscription, EventHandler<EventArgs<string, UpdateType>>>();
-        private static ConcurrentDictionary<IClientSubscription, EventHandler<EventArgs<Exception>>> s_processExceptionHandlers = new ConcurrentDictionary<IClientSubscription, EventHandler<EventArgs<Exception>>>();
-        private static ConcurrentDictionary<IClientSubscription, EventHandler> s_processingCompletedHandlers = new ConcurrentDictionary<IClientSubscription, EventHandler>();
+        private static readonly ConcurrentDictionary<IClientSubscription, EventHandler<EventArgs<string, UpdateType>>> s_statusMessageHandlers = new ConcurrentDictionary<IClientSubscription, EventHandler<EventArgs<string, UpdateType>>>();
+        private static readonly ConcurrentDictionary<IClientSubscription, EventHandler<EventArgs<Exception>>> s_processExceptionHandlers = new ConcurrentDictionary<IClientSubscription, EventHandler<EventArgs<Exception>>>();
+        private static readonly ConcurrentDictionary<IClientSubscription, EventHandler> s_processingCompletedHandlers = new ConcurrentDictionary<IClientSubscription, EventHandler>();
 
         /// <summary>
         /// Returns a new temporal <see cref="IaonSession"/> for a <see cref="IClientSubscription"/>.
@@ -145,7 +145,7 @@ namespace TimeSeriesFramework.Transport
             // by removing this adapter from external routes. To accomplish this we expose I/O demands for an
             // undefined measurement. Note: assigning to null would mean "broadcast" of all data is desired.
             clientSubscription.InputMeasurementKeys = new MeasurementKey[] { MeasurementKey.Undefined };
-            clientSubscription.OutputMeasurements = new Measurement[] { Measurement.Undefined };
+            clientSubscription.OutputMeasurements = new IMeasurement[] { Measurement.Undefined };
 
             // Create a new Iaon session
             session = new IaonSession();

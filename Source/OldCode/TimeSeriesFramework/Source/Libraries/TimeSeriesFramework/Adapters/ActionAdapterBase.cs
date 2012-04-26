@@ -109,7 +109,6 @@ namespace TimeSeriesFramework.Adapters
         /// Creates a new <see cref="ActionAdapterBase"/>.
         /// </summary>
         protected ActionAdapterBase()
-            : base()
         {
             m_name = this.GetType().Name;
             m_settings = new Dictionary<string, string>();
@@ -793,7 +792,7 @@ namespace TimeSeriesFramework.Adapters
             Initialized = false;
 
             Dictionary<string, string> settings = Settings;
-            string errorMessage = "{0} is missing from Settings - Example: framesPerSecond=30; lagTime=3; leadTime=1";
+            const string errorMessage = "{0} is missing from Settings - Example: framesPerSecond=30; lagTime=3; leadTime=1";
             string setting;
 
             // Load required parameters
@@ -858,7 +857,7 @@ namespace TimeSeriesFramework.Adapters
             {
                 DownsamplingMethod method;
 
-                if (Enum.TryParse<DownsamplingMethod>(setting, true, out method))
+                if (Enum.TryParse(setting, true, out method))
                 {
                     DownsamplingMethod = method;
                 }

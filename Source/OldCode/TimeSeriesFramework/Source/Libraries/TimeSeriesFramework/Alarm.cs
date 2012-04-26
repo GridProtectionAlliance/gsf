@@ -33,7 +33,7 @@ namespace TimeSeriesFramework
     /// <summary>
     /// Represents the two states that an alarm can be in: raised or cleared.
     /// </summary>
-    public enum AlarmState : int
+    public enum AlarmState
     {
         /// <summary>
         /// Indicates that an alarm is cleared.
@@ -49,7 +49,7 @@ namespace TimeSeriesFramework
     /// <summary>
     /// Represents the severity of alarms.
     /// </summary>
-    public enum AlarmSeverity : int
+    public enum AlarmSeverity
     {
         /// <summary>
         /// Indicates that an alarm is of no importance.
@@ -101,7 +101,7 @@ namespace TimeSeriesFramework
     /// Represents the operation to be performed
     /// when testing values from an incoming signal.
     /// </summary>
-    public enum AlarmOperation : int
+    public enum AlarmOperation
     {
         /// <summary>
         /// Internal range test
@@ -170,44 +170,72 @@ namespace TimeSeriesFramework
         #endregion
 
         #region [ Properties ]
-        
+
         /// <summary>
         /// Gets or sets the identification number of the alarm.
         /// </summary>
-        public int ID { get; set; }
+        public int ID
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the tag name of the alarm.
         /// </summary>
-        public string TagName { get; set; }
+        public string TagName
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the identification number of the
         /// signal whose value is monitored by the alarm.
         /// </summary>
-        public Guid SignalID { get; set; }
+        public Guid SignalID
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the identification number of
         /// the measurements generated for alarm events.
         /// </summary>
-        public Guid? AssociatedMeasurementID { get; set; }
+        public Guid? AssociatedMeasurementID
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the description of the alarm.
         /// </summary>
-        public string Description { get; set; }
+        public string Description
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the severity of the alarm.
         /// </summary>
-        public AlarmSeverity Severity { get; set; }
+        public AlarmSeverity Severity
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the operation to be performed
         /// when testing values from the incoming signal.
         /// </summary>
-        public AlarmOperation Operation { get; set; }
+        public AlarmOperation Operation
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the value to be compared against
@@ -215,7 +243,11 @@ namespace TimeSeriesFramework
         /// alarm. This value is irrelevant for the
         /// <see cref="AlarmOperation.Flatline"/> operation.
         /// </summary>
-        public double? SetPoint { get; set; }
+        public double? SetPoint
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets a tolerance window around the
@@ -234,14 +266,22 @@ namespace TimeSeriesFramework
         /// <item>Not equal: <c>(value &lt; SetPoint - Tolerance) || (value &gt; SetPoint + Tolerance)</c></item>
         /// </list>
         /// </remarks>
-        public double? Tolerance { get; set; }
+        public double? Tolerance
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the amount of time that the
         /// signal must be exhibiting alarming behavior
         /// before the alarm is raised.
         /// </summary>
-        public double? Delay { get; set; }
+        public double? Delay
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the hysteresis used when clearing
@@ -263,18 +303,30 @@ namespace TimeSeriesFramework
         /// operation is greater than (or equal) or less than (or equal).
         /// The hysteresis must be greater than zero.</para>
         /// </remarks>
-        public double? Hysteresis { get; set; }
+        public double? Hysteresis
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the state of the alarm (raised or cleared).
         /// </summary>
-        public AlarmState State { get; set; }
+        public AlarmState State
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the most recent measurement
         /// that caused the alarm to be raised.
         /// </summary>
-        public IMeasurement Cause { get; set; }
+        public IMeasurement Cause
+        {
+            get;
+            set;
+        }
 
         #endregion
 
@@ -307,8 +359,8 @@ namespace TimeSeriesFramework
         {
             if (Operation != AlarmOperation.Flatline)
                 return CheckRange(signal);
-            else
-                return CheckFlatline(signal);
+
+            return CheckFlatline(signal);
         }
 
         // Tests the given measurement to determine whether
@@ -376,8 +428,8 @@ namespace TimeSeriesFramework
         {
             if (Operation != AlarmOperation.Flatline)
                 return CheckRangeClear(signal);
-            else
-                return !CheckFlatline(signal);
+
+            return !CheckFlatline(signal);
         }
 
         // Tests the given measurement to determine whether its value

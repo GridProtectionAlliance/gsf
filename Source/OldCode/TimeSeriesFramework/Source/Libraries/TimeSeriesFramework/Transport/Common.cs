@@ -32,13 +32,13 @@ namespace TimeSeriesFramework.Transport
     public static class Common
     {
         // Flag that determines if managed encryption wrappers can be used over FIPS-compliant algorithms if desired.
-        private static bool s_canUseManagedEncryption;
+        private static readonly bool s_canUseManagedEncryption;
 
         // Static Constructor
         static Common()
         {
-            string fipsKeyOld = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa";
-            string fipsKeyNew = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\FipsAlgorithmPolicy";
+            const string fipsKeyOld = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa";
+            const string fipsKeyNew = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\FipsAlgorithmPolicy";
 
             // Determine if the operating system configuration to set to use FIPS-compliant algorithms
             s_canUseManagedEncryption = (Registry.GetValue(fipsKeyNew, "Enabled", 0) ?? Registry.GetValue(fipsKeyOld, "FipsAlgorithmPolicy", 0)).ToString() == "0";

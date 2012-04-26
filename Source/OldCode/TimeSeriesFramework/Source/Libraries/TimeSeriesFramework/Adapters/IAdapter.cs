@@ -391,7 +391,7 @@ namespace TimeSeriesFramework.Adapters
             {
                 IEnumerable<MeasurementKey> adapterOutputMeasurementKeys = adapter.OutputMeasurementKeys();
 
-                if (adapterOutputMeasurementKeys != null && adapterOutputMeasurementKeys.Count() > 0)
+                if ((object)adapterOutputMeasurementKeys != null && adapterOutputMeasurementKeys.Any())
                     outputMeasurementKeys.AddRange(adapterOutputMeasurementKeys);
             }
 

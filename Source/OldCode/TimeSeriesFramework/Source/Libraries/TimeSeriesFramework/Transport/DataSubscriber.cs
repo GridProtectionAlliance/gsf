@@ -642,7 +642,7 @@ namespace TimeSeriesFramework.Transport
                 MetaDataReceived += DataSubscriber_MetaDataReceived;
 
                 // If active measurements are defined, attempt to defined desired subscription points from there
-                if (DataSource != null && DataSource.Tables != null && DataSource.Tables.Contains("ActiveMeasurements"))
+                if (DataSource != null && (object)DataSource.Tables != null && DataSource.Tables.Contains("ActiveMeasurements"))
                 {
                     try
                     {
@@ -949,17 +949,8 @@ namespace TimeSeriesFramework.Transport
             m_localConcentrator.UsePrecisionTimer = false;
 
             // Parse time constraints, if defined
-            DateTime startTimeConstraint, stopTimeConstraint;
-
-            if (!string.IsNullOrWhiteSpace(startTime))
-                startTimeConstraint = AdapterBase.ParseTimeTag(startTime);
-            else
-                startTimeConstraint = DateTime.MinValue;
-
-            if (!string.IsNullOrWhiteSpace(stopTime))
-                stopTimeConstraint = AdapterBase.ParseTimeTag(stopTime);
-            else
-                stopTimeConstraint = DateTime.MaxValue;
+            DateTime startTimeConstraint = !string.IsNullOrWhiteSpace(startTime) ? AdapterBase.ParseTimeTag(startTime) : DateTime.MinValue;
+            DateTime stopTimeConstraint = !string.IsNullOrWhiteSpace(stopTime) ? AdapterBase.ParseTimeTag(stopTime) : DateTime.MaxValue;
 
             // When processing historical data, timestamps should not be evaluated for reasonability
             if (startTimeConstraint != DateTime.MinValue || stopTimeConstraint != DateTime.MaxValue)

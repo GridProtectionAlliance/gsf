@@ -38,7 +38,7 @@ namespace TimeSeriesFramework.Adapters
         #region [ Members ]
 
         // Fields
-        private string m_description;
+        private readonly string m_description;
 
         #endregion
 

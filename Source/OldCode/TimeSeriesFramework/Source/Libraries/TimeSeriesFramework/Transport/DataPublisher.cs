@@ -607,7 +607,7 @@ namespace TimeSeriesFramework.Transport
             set
             {
                 if (value < 1000.0D)
-                    throw new ArgumentOutOfRangeException("Cipher key rotation period should not be set to less than 1000 milliseconds.");
+                    throw new ArgumentOutOfRangeException("value", "Cipher key rotation period should not be set to less than 1000 milliseconds.");
 
                 if (m_cipherKeyRotationTimer != null)
                     m_cipherKeyRotationTimer.Interval = value;
@@ -1076,8 +1076,8 @@ namespace TimeSeriesFramework.Transport
 
                 if (m_clientConnections.TryGetValue(clientID, out connection))
                     return connection.SubscriberInfo;
-                else
-                    OnStatusMessage("ERROR: Failed to find connected client " + clientID);
+
+                OnStatusMessage("ERROR: Failed to find connected client " + clientID);
             }
 
             return "";
@@ -2310,7 +2310,8 @@ namespace TimeSeriesFramework.Transport
                                 HandleAuthenticationRequest(connection, buffer, index, length);
                                 return;
                             }
-                            else if (m_requireAuthentication && !connection.Authenticated)
+
+                            if (m_requireAuthentication && !connection.Authenticated)
                             {
                                 message = string.Format("Subscriber not authenticated - {0} request denied.", command);
                                 SendClientResponse(clientID, ServerResponse.Failed, command, message);

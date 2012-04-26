@@ -177,10 +177,7 @@ namespace TimeSeriesFramework
             }
             set
             {
-                m_realTimeFunction = value;
-
-                if (m_realTimeFunction == null)
-                    m_realTimeFunction = () => PrecisionTimer.UtcNow.Ticks;
+                m_realTimeFunction = value ?? (() => PrecisionTimer.UtcNow.Ticks);
             }
         }
 

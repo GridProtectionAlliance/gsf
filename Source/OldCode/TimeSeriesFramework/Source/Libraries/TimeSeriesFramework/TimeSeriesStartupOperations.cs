@@ -77,7 +77,7 @@ namespace TimeSeriesFramework
             const string NodeUpdateFormat = "UPDATE Node SET ID = {0}";
 
             // Determine whether the node exists in the database and create it if it doesn't.
-            int nodeCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(NodeCountFormat, nodeIDQueryString)));
+            int nodeCount = Convert.ToInt32(connection.ExecuteScalar(NodeCountFormat));
 
             if (nodeCount == 0)
             {
@@ -205,9 +205,9 @@ namespace TimeSeriesFramework
 
             int statHistorianCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(StatHistorianCountFormat, nodeIDQueryString)));
             int statEngineCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(StatEngineCountFormat, nodeIDQueryString)));
-            int systemStatCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(SystemStatCountFormat, nodeIDQueryString)));
-            int subscriberStatCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(SubscriberStatCountFormat, nodeIDQueryString)));
-            int publisherStatCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(PublisherStatCountFormat, nodeIDQueryString)));
+            int systemStatCount = Convert.ToInt32(connection.ExecuteScalar(SystemStatCountFormat));
+            int subscriberStatCount = Convert.ToInt32(connection.ExecuteScalar(SubscriberStatCountFormat));
+            int publisherStatCount = Convert.ToInt32(connection.ExecuteScalar(PublisherStatCountFormat));
 
             // Statistic info for inserting statistics
             int signalIndex;

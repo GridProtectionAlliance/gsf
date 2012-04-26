@@ -135,6 +135,6 @@ namespace TimeSeriesFramework.Statistics
 
         #endregion
 
-        private static StatisticValueStateCache s_statisticValueCache = new StatisticValueStateCache();
+        private static readonly StatisticValueStateCache s_statisticValueCache = new StatisticValueStateCache();
     }
 }

@@ -353,7 +353,7 @@ namespace TimeSeriesFramework.Adapters
                 {
                     foreach (T adapter in this)
                     {
-                        if (adapter != null)
+                        if ((object)adapter != null)
                         {
                             MeasurementKey[] inputMeasurementKeys = adapter.InputMeasurementKeys;
 
@@ -396,7 +396,7 @@ namespace TimeSeriesFramework.Adapters
                 {
                     foreach (T adapter in this)
                     {
-                        if (adapter != null)
+                        if ((object)adapter != null)
                         {
                             IMeasurement[] outputMeasurements = adapter.OutputMeasurements;
 
@@ -467,7 +467,8 @@ namespace TimeSeriesFramework.Adapters
                 {
                     if (typeof(T) is IActionAdapter)
                         return this.Cast<IActionAdapter>().Where(item => item.RequestedInputMeasurementKeys != null).SelectMany(item => item.RequestedInputMeasurementKeys).Distinct().ToArray();
-                    else if (typeof(T) is IOutputAdapter)
+
+                    if (typeof(T) is IOutputAdapter)
                         return this.Cast<IOutputAdapter>().Where(item => item.RequestedInputMeasurementKeys != null).SelectMany(item => item.RequestedInputMeasurementKeys).Distinct().ToArray();
                 }
 
@@ -495,7 +496,8 @@ namespace TimeSeriesFramework.Adapters
                 {
                     if (typeof(T) is IActionAdapter)
                         return this.Cast<IActionAdapter>().Where(item => item.RequestedOutputMeasurementKeys != null).SelectMany(item => item.RequestedOutputMeasurementKeys).Distinct().ToArray();
-                    else if (typeof(T) is IInputAdapter)
+
+                    if (typeof(T) is IInputAdapter)
                         return this.Cast<IInputAdapter>().Where(item => item.RequestedOutputMeasurementKeys != null).SelectMany(item => item.RequestedOutputMeasurementKeys).Distinct().ToArray();
                 }
 
@@ -1454,7 +1456,7 @@ namespace TimeSeriesFramework.Adapters
         /// </remarks>
         protected virtual void InitializeItem(T item)
         {
-            if (item != null)
+            if ((object)item != null)
             {
                 // Wire up events
                 item.StatusMessage += item_StatusMessage;
@@ -1502,7 +1504,7 @@ namespace TimeSeriesFramework.Adapters
         /// </remarks>
         protected virtual void DisposeItem(T item)
         {
-            if (item != null)
+            if ((object)item != null)
             {
                 // Un-wire events
                 item.StatusMessage -= item_StatusMessage;
@@ -1526,35 +1528,35 @@ namespace TimeSeriesFramework.Adapters
         // Raise status message event on behalf of each item in collection
         private void item_StatusMessage(object sender, EventArgs<string> e)
         {
-            if (StatusMessage != null)
+            if ((object)StatusMessage != null)
                 StatusMessage(sender, e);
         }
 
         // Raise process exception event on behalf of each item in collection
         private void item_ProcessException(object sender, EventArgs<Exception> e)
         {
-            if (ProcessException != null)
+            if ((object)ProcessException != null)
                 ProcessException(sender, e);
         }
 
         // Raise input measurement keys updated event on behalf of each item in collection
         private void item_InputMeasurementKeysUpdated(object sender, EventArgs e)
         {
-            if (InputMeasurementKeysUpdated != null)
+            if ((object)InputMeasurementKeysUpdated != null)
                 InputMeasurementKeysUpdated(sender, e);
         }
 
         // Raise output measurements updated event on behalf of each item in collection
         private void item_OutputMeasurementsUpdated(object sender, EventArgs e)
         {
-            if (OutputMeasurementsUpdated != null)
+            if ((object)OutputMeasurementsUpdated != null)
                 OutputMeasurementsUpdated(sender, e);
         }
 
         // Raise disposed event on behalf of each item in collection
         private void item_Disposed(object sender, EventArgs e)
         {
-            if (Disposed != null)
+            if ((object)Disposed != null)
                 Disposed(sender, e);
         }
 

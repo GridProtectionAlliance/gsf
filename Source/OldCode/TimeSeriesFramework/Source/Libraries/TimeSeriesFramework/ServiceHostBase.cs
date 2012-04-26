@@ -122,7 +122,6 @@ namespace TimeSeriesFramework
         /// Creates a new <see cref="ServiceHostBase"/>.
         /// </summary>
         public ServiceHostBase()
-            : base()
         {
             InitializeComponent();
 
@@ -468,14 +467,14 @@ namespace TimeSeriesFramework
 
             // Create health exporter
             m_healthExporter = new MultipleDestinationExporter("HealthExporter", Timeout.Infinite);
-            m_healthExporter.Initialize(new ExportDestination[] { new ExportDestination(FilePath.GetAbsolutePath("Health.txt"), false, "", "", "") });
+            m_healthExporter.Initialize(new ExportDestination[] { new ExportDestination(FilePath.GetAbsolutePath("Health.txt"), false) });
             m_healthExporter.StatusMessage += m_iaonSession.StatusMessageHandler;
             m_healthExporter.ProcessException += m_iaonSession.ProcessExceptionHandler;
             m_serviceHelper.ServiceComponents.Add(m_healthExporter);
 
             // Create status exporter
             m_statusExporter = new MultipleDestinationExporter("StatusExporter", Timeout.Infinite);
-            m_statusExporter.Initialize(new ExportDestination[] { new ExportDestination(FilePath.GetAbsolutePath("Status.txt"), false, "", "", "") });
+            m_statusExporter.Initialize(new ExportDestination[] { new ExportDestination(FilePath.GetAbsolutePath("Status.txt"), false) });
             m_statusExporter.StatusMessage += m_iaonSession.StatusMessageHandler;
             m_statusExporter.ProcessException += m_iaonSession.ProcessExceptionHandler;
             m_serviceHelper.ServiceComponents.Add(m_statusExporter);
@@ -967,7 +966,7 @@ namespace TimeSeriesFramework
         /// <param name="parameters">Scheduled event parameters.</param>
         protected virtual void HealthMonitorProcessHandler(string name, object[] parameters)
         {
-            string requestCommand = "Health";
+            const string requestCommand = "Health";
             ClientRequestHandler requestHandler = m_serviceHelper.FindClientRequestHandler(requestCommand);
 
             if (requestHandler != null)
@@ -1004,10 +1003,11 @@ namespace TimeSeriesFramework
         {
             if (requestInfo.Request.Arguments.Exists("A"))
                 return m_iaonSession.ActionAdapters;
-            else if (requestInfo.Request.Arguments.Exists("O"))
+
+            if (requestInfo.Request.Arguments.Exists("O"))
                 return m_iaonSession.OutputAdapters;
-            else
-                return m_iaonSession.InputAdapters;
+
+            return m_iaonSession.InputAdapters;
         }
 
         /// <summary>
@@ -1043,37 +1043,27 @@ namespace TimeSeriesFramework
                 {
                     // Adapter ID is numeric, try numeric lookup by adapter ID in requested collection
                     if (collection.TryGetAdapterByID(id, out adapter))
-                    {
                         return adapter;
-                    }
+
                     // Try looking for ID in any collection if all runtime ID's are unique
-                    else if (m_uniqueAdapterIDs && m_iaonSession.AllAdapters.TryGetAnyAdapterByID(id, out adapter, out collection))
-                    {
+                    if (m_uniqueAdapterIDs && m_iaonSession.AllAdapters.TryGetAnyAdapterByID(id, out adapter, out collection))
                         return adapter;
-                    }
-                    else
-                    {
-                        collection = GetRequestedCollection(requestInfo);
-                        SendResponse(requestInfo, false, "Failed to find adapter with ID \"{0}\".", id);
-                    }
+
+                    collection = GetRequestedCollection(requestInfo);
+                    SendResponse(requestInfo, false, "Failed to find adapter with ID \"{0}\".", id);
                 }
                 else
                 {
                     // Adapter ID is alpha-numeric, try text-based lookup by adapter name in requested collection
                     if (collection.TryGetAdapterByName(adapterID, out adapter))
-                    {
                         return adapter;
-                    }
+
                     // Try looking for adapter name in any collection
-                    else if (m_iaonSession.AllAdapters.TryGetAnyAdapterByName(adapterID, out adapter, out collection))
-                    {
+                    if (m_iaonSession.AllAdapters.TryGetAnyAdapterByName(adapterID, out adapter, out collection))
                         return adapter;
-                    }
-                    else
-                    {
-                        collection = GetRequestedCollection(requestInfo);
-                        SendResponse(requestInfo, false, "Failed to find adapter named \"{0}\".", adapterID);
-                    }
+
+                    collection = GetRequestedCollection(requestInfo);
+                    SendResponse(requestInfo, false, "Failed to find adapter named \"{0}\".", adapterID);
                 }
             }
 
@@ -1460,67 +1450,62 @@ namespace TimeSeriesFramework
                         MethodInfo[] methods = adapter.GetType().GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.IgnoreCase);
 
                         // Invoke method
-                        if (methods != null)
+                        StringBuilder methodList = new StringBuilder();
+                        AdapterCommandAttribute commandAttribute;
+                        bool firstParameter;
+                        string typeName;
+
+                        methodList.AppendFormat("Adapter \"{0}\" [Type = {1}] Command List:", adapter.Name, adapter.GetType().Name);
+                        methodList.AppendLine();
+                        methodList.AppendLine();
+
+                        // Enumerate each public method
+                        foreach (MethodInfo method in methods)
                         {
-                            StringBuilder methodList = new StringBuilder();
-                            AdapterCommandAttribute commandAttribute;
-                            bool firstParameter;
-                            string typeName;
-
-                            methodList.AppendFormat("Adapter \"{0}\" [Type = {1}] Command List:", adapter.Name, adapter.GetType().Name);
-                            methodList.AppendLine();
-                            methodList.AppendLine();
-
-                            // Enumerate each public method
-                            foreach (MethodInfo method in methods)
+                            // Only display methods marked as invokable (i.e., AdapterCommandAttribute exists on method)
+                            if (method.TryGetAttribute(out commandAttribute))
                             {
-                                // Only display methods marked as invokable (i.e., AdapterCommandAttribute exists on method)
-                                if (method.TryGetAttribute(out commandAttribute))
+                                firstParameter = true;
+
+                                methodList.Append("    ");
+                                methodList.Append(method.Name);
+                                methodList.Append('(');
+
+                                // Enumerate each method parameter
+                                foreach (ParameterInfo parameter in method.GetParameters())
                                 {
-                                    firstParameter = true;
+                                    if (!firstParameter)
+                                        methodList.Append(", ");
 
-                                    methodList.Append("    ");
-                                    methodList.Append(method.Name);
-                                    methodList.Append('(');
+                                    typeName = parameter.ParameterType.ToString();
 
-                                    // Enumerate each method parameter
-                                    foreach (ParameterInfo parameter in method.GetParameters())
-                                    {
-                                        if (!firstParameter)
-                                            methodList.Append(", ");
+                                    // Assume namespace for basic System types...
+                                    if (typeName.StartsWith("System.", StringComparison.InvariantCultureIgnoreCase) && typeName.CharCount('.') == 1)
+                                        typeName = typeName.Substring(7);
 
-                                        typeName = parameter.ParameterType.ToString();
+                                    methodList.Append(typeName);
+                                    methodList.Append(' ');
+                                    methodList.Append(parameter.Name);
 
-                                        // Assume namespace for basic System types...
-                                        if (typeName.StartsWith("System.", StringComparison.InvariantCultureIgnoreCase) && typeName.CharCount('.') == 1)
-                                            typeName = typeName.Substring(7);
-
-                                        methodList.Append(typeName);
-                                        methodList.Append(' ');
-                                        methodList.Append(parameter.Name);
-
-                                        firstParameter = false;
-                                    }
-
-                                    methodList.Append(')');
-                                    methodList.AppendLine();
-
-                                    if (!string.IsNullOrWhiteSpace(commandAttribute.Description))
-                                    {
-                                        methodList.Append("        ");
-                                        methodList.Append(commandAttribute.Description);
-                                    }
-
-                                    methodList.AppendLine();
+                                    firstParameter = false;
                                 }
+
+                                methodList.Append(')');
+                                methodList.AppendLine();
+
+                                if (!string.IsNullOrWhiteSpace(commandAttribute.Description))
+                                {
+                                    methodList.Append("        ");
+                                    methodList.Append(commandAttribute.Description);
+                                }
+
+                                methodList.AppendLine();
                             }
-
-                            methodList.AppendLine();
-
-                            SendResponse(requestInfo, true, methodList.ToString());
                         }
-                        else
-                            SendResponse(requestInfo, false, "Specified adapter \"{0}\" [Type = {1}] has no commands.", adapter.Name, adapter.GetType().Name);
+
+                        methodList.AppendLine();
+
+                        SendResponse(requestInfo, true, methodList.ToString());
                     }
                     catch (Exception ex)
                     {
@@ -2010,17 +1995,19 @@ namespace TimeSeriesFramework
 
                     try
                     {
-                        ProcessStartInfo psi = null;
-                        psi = new ProcessStartInfo(ConsoleApplicationName);
-                        psi.CreateNoWindow = true;
-                        psi.WindowStyle = ProcessWindowStyle.Hidden;
-                        psi.UseShellExecute = false;
-                        psi.Arguments = ServiceName + " -restart";
+                        ProcessStartInfo psi = new ProcessStartInfo(ConsoleApplicationName)
+                        {
+                            CreateNoWindow = true,
+                            WindowStyle = ProcessWindowStyle.Hidden,
+                            UseShellExecute = false,
+                            Arguments = ServiceName + " -restart"
+                        };
 
                         using (Process shell = new Process())
                         {
                             shell.StartInfo = psi;
                             shell.Start();
+
                             if (!shell.WaitForExit(30000))
                                 shell.Kill();
                         }

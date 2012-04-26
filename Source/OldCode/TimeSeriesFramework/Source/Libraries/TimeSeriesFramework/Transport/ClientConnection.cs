@@ -519,7 +519,7 @@ namespace TimeSeriesFramework.Transport
             get
             {
                 StringBuilder status = new StringBuilder();
-                string formatString = "{0,26}: {1}";
+                const string formatString = "{0,26}: {1}";
 
                 status.AppendLine();
                 status.AppendFormat(formatString, "Subscriber ID", m_connectionID);

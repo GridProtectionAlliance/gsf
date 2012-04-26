@@ -325,8 +325,8 @@ namespace TimeSeriesFramework
         #region [ Static ]
 
         // Static Fields
-        private static ConcurrentDictionary<Guid, MeasurementKey> s_idCache = new ConcurrentDictionary<Guid, MeasurementKey>();
-        private static ConcurrentDictionary<string, ConcurrentDictionary<uint, MeasurementKey>> s_keyCache = new ConcurrentDictionary<string, ConcurrentDictionary<uint, MeasurementKey>>(StringComparer.InvariantCultureIgnoreCase);
+        private static readonly ConcurrentDictionary<Guid, MeasurementKey> s_idCache = new ConcurrentDictionary<Guid, MeasurementKey>();
+        private static readonly ConcurrentDictionary<string, ConcurrentDictionary<uint, MeasurementKey>> s_keyCache = new ConcurrentDictionary<string, ConcurrentDictionary<uint, MeasurementKey>>(StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
         /// Represents an undefined measurement key.
@@ -511,6 +511,7 @@ namespace TimeSeriesFramework
             {
                 if (s_comparer == null)
                     s_comparer = new MeasurementKeyComparer();
+
                 return s_comparer;
             }
         }

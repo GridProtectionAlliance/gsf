@@ -470,7 +470,7 @@ namespace TimeSeriesFramework.Transport
         #region [ Static ]
 
         // Static Fields
-        private static long[] s_emptyBaseTimeOffsets = new long[] { 0, 0 };
+        private static readonly long[] s_emptyBaseTimeOffsets = new long[] { 0, 0 };
 
         #endregion
 

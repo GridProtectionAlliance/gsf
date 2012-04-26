@@ -110,7 +110,7 @@ namespace TimeSeriesFramework
         /// <remarks>
         /// One static instance of this internal class is created per encountered frame rate / processing interval.
         /// </remarks>
-        private class FrameRateTimer : IDisposable
+        private sealed class FrameRateTimer : IDisposable
         {
             #region [ Members ]
 
@@ -239,7 +239,7 @@ namespace TimeSeriesFramework
             /// Releases the unmanaged resources used by the <see cref="FrameRateTimer"/> object and optionally releases the managed resources.
             /// </summary>
             /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-            protected virtual void Dispose(bool disposing)
+            private void Dispose(bool disposing)
             {
                 if (!m_disposed)
                 {
@@ -1568,7 +1568,7 @@ namespace TimeSeriesFramework
                 }
                 status.AppendFormat("     Ignore bad timestamps: {0}", m_ignoreBadTimestamps);
                 status.AppendLine();
-                status.AppendFormat("    Allow sorts by arrival: {0}", m_ignoreBadTimestamps ? false : m_allowSortsByArrival);
+                status.AppendFormat("    Allow sorts by arrival: {0}", !m_ignoreBadTimestamps && m_allowSortsByArrival);
                 status.AppendLine();
                 status.AppendFormat(" Use preemptive publishing: {0}", m_allowPreemptivePublishing);
                 status.AppendLine();
