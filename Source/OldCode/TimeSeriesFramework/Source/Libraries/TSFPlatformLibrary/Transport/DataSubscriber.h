@@ -112,6 +112,7 @@ namespace Transport
 	{
 	private:
 		static const int MaxPacketSize = 32767;
+		static const std::size_t PayloadHeaderSize = 8;
 
 		typedef boost::asio::ip::address IPAddress;
 		typedef std::vector<uint8_t> CommandPacket;
@@ -151,10 +152,6 @@ namespace Transport
 		std::size_t m_timeIndex;
 		int64_t m_baseTimeOffsets[2];
 
-		// Command thread members
-		boost::thread m_commandThread;
-		ThreadSafeQueue<CommandPacket> m_commandQueue;
-
 		// Callback thread members
 		boost::thread m_callbackThread;
 		ThreadSafeQueue<CallbackDispatcher> m_callbackQueue;
@@ -162,6 +159,7 @@ namespace Transport
 		// Command channel
 		boost::thread m_commandChannelResponseThread;
 		boost::asio::io_service m_commandChannelService;
+		std::vector<uint8_t> m_commandChannelBuffer;
 		TcpSocket m_commandChannelSocket;
 
 		// Data channel
@@ -179,10 +177,13 @@ namespace Transport
 		ConnectionTerminatedCallback m_connectionTerminatedCallback;
 
 		// Threads
-		void RunCommandThread();
 		void RunCallbackThread();
 		void RunCommandChannelResponseThread();
 		void RunDataChannelResponseThread();
+
+		// Command channel callbacks
+		void ReadPayloadHeader(const boost::system::error_code& error, std::size_t bytesTransferred);
+		void ReadPacket(const boost::system::error_code& error, std::size_t bytesTransferred);
 
 		// Server response handlers
 		void HandleSucceeded(uint8_t commandCode, uint8_t* data, std::size_t offset, std::size_t length);
@@ -225,6 +226,7 @@ namespace Transport
 			  m_connected(false),
 			  m_subscribed(false),
 			  m_commandChannelSocket(m_commandChannelService),
+			  m_commandChannelBuffer(65536),
 			  m_dataChannelSocket(m_dataChannelService),
 			  m_statusMessageCallback(0),
 			  m_errorMessageCallback(0),

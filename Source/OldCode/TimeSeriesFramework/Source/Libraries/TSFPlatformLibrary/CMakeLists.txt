@@ -55,7 +55,7 @@ endforeach (headerFile)
 add_library (tsf Common/Convert.cpp Common/EndianConverter.cpp
 				Transport/CompactMeasurementParser.cpp
 				Transport/DataSubscriber.cpp Transport/SignalIndexCache.cpp)
-target_link_libraries (tsf boost_system boost_thread)
+target_link_libraries (tsf boost_system boost_thread boost_date_time)
 
 # Install headers and library
 install (DIRECTORY ${PROJECT_BINARY_DIR}/${HEADER_OUTPUT_DIRECTORY} DESTINATION include)

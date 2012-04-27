@@ -38,6 +38,7 @@ namespace tsf = TimeSeriesFramework;
 template <class T>
 std::string ToString(const T& obj);
 tsf::Guid ToGuid(uint8_t* data);
+void WriteHandler(const boost::system::error_code& error, std::size_t bytesTransferred);
 
 
 // --- DataSubscriber ---
@@ -46,23 +47,6 @@ tsf::Guid ToGuid(uint8_t* data);
 tsf::Transport::DataSubscriber::~DataSubscriber()
 {
 	Disconnect();
-}
-
-// All commands to server are sent on the command thread from here.
-void tsf::Transport::DataSubscriber::RunCommandThread()
-{
-	CommandPacket packet;
-
-	while(true)
-	{
-		m_commandQueue.WaitForData();
-
-		if (m_disconnecting)
-			break;
-
-		packet = m_commandQueue.Dequeue();
-		boost::asio::write(m_commandChannelSocket, boost::asio::buffer(packet));
-	}
 }
 
 // All callbacks are run from the callback thread from here.
@@ -86,78 +70,84 @@ void tsf::Transport::DataSubscriber::RunCallbackThread()
 // exception of data packets which may or may not be handled by this thread.
 void tsf::Transport::DataSubscriber::RunCommandChannelResponseThread()
 {
+	boost::asio::async_read(m_commandChannelSocket, boost::asio::buffer(m_commandChannelBuffer, PayloadHeaderSize), boost::bind(&tsf::Transport::DataSubscriber::ReadPayloadHeader, this, _1, _2));
+	m_commandChannelService.run();
+}
+
+// Callback for async read of the payload header.
+void tsf::Transport::DataSubscriber::ReadPayloadHeader(const boost::system::error_code& error, std::size_t bytesTransferred)
+{
 	const std::size_t PayloadHeaderSize = 8;
 	const std::size_t PacketSizeOffset = 4;
 
-	std::vector<uint8_t> buffer(65536);
-	boost::system::error_code error;
 	std::stringstream errorMessageStream;
 
 	int32_t* packetSizePtr;
 	int32_t packetSize;
 
-	while (true)
+	if (m_disconnecting)
+		return;
+
+	if (error == boost::asio::error::connection_aborted || error == boost::asio::error::connection_reset || error == boost::asio::error::eof)
 	{
-		// Read payload header
-		// This read method is guaranteed not to return until the
-		// requested size has been read or an error has occurred.
-		boost::asio::read(m_commandChannelSocket, boost::asio::buffer(buffer, PayloadHeaderSize), error);
-
-		if (m_disconnecting)
-			break;
-
-		if (error == boost::asio::error::connection_aborted || error == boost::asio::error::connection_reset || error == boost::asio::error::eof)
-		{
-			// Connection closed by peer; terminate connection
-			boost::thread t(boost::bind(&tsf::Transport::DataSubscriber::ConnectionTerminatedDispatcher, this));
-			break;
-		}
-		
-		if (error)
-		{
-			errorMessageStream << "Error reading data from command channel: ";
-			errorMessageStream << boost::system::system_error(error).what();
-			DispatchErrorMessage(errorMessageStream.str());
-			break;
-		}
-		
-		// Gather statistics
-		m_totalCommandChannelBytesReceived += PayloadHeaderSize;
-
-		// Parse payload header
-		packetSizePtr = (int32_t*)&buffer[PacketSizeOffset];
-		packetSize = m_endianConverter.ConvertLittleEndian(*packetSizePtr);
-		buffer.reserve(packetSize);
-
-		// Read packet (payload body)
-		// This read method is guaranteed not to return until the
-		// requested size has been read or an error has occurred.
-		boost::asio::read(m_commandChannelSocket, boost::asio::buffer(buffer, packetSize), error);
-
-		if (m_disconnecting)
-			break;
-
-		if (error == boost::asio::error::connection_aborted || error == boost::asio::error::connection_reset || error == boost::asio::error::eof)
-		{
-			// Connection closed by peer; terminate connection
-			boost::thread t(boost::bind(&tsf::Transport::DataSubscriber::ConnectionTerminatedDispatcher, this));
-			break;
-		}
-
-		if (error)
-		{
-			errorMessageStream << "Error reading data from command channel: ";
-			errorMessageStream << boost::system::system_error(error).what();
-			DispatchErrorMessage(errorMessageStream.str());
-			break;
-		}
-
-		// Gather statistics
-		m_totalCommandChannelBytesReceived += packetSize;
-
-		// Process response
-		ProcessServerResponse(&buffer[0], 0, packetSize);
+		// Connection closed by peer; terminate connection
+		boost::thread t(boost::bind(&tsf::Transport::DataSubscriber::ConnectionTerminatedDispatcher, this));
+		return;
 	}
+		
+	if (error)
+	{
+		errorMessageStream << "Error reading data from command channel: ";
+		errorMessageStream << boost::system::system_error(error).what();
+		DispatchErrorMessage(errorMessageStream.str());
+		return;
+	}
+		
+	// Gather statistics
+	m_totalCommandChannelBytesReceived += PayloadHeaderSize;
+
+	// Parse payload header
+	packetSizePtr = (int32_t*)&m_commandChannelBuffer[PacketSizeOffset];
+	packetSize = m_endianConverter.ConvertLittleEndian(*packetSizePtr);
+	m_commandChannelBuffer.reserve(packetSize);
+
+	// Read packet (payload body)
+	// This read method is guaranteed not to return until the
+	// requested size has been read or an error has occurred.
+	boost::asio::async_read(m_commandChannelSocket, boost::asio::buffer(m_commandChannelBuffer, packetSize), boost::bind(&tsf::Transport::DataSubscriber::ReadPacket, this, _1, _2));
+}
+
+// Callback for async read of packets.
+void tsf::Transport::DataSubscriber::ReadPacket(const boost::system::error_code& error, std::size_t bytesTransferred)
+{
+	std::stringstream errorMessageStream;
+
+	if (m_disconnecting)
+		return;
+
+	if (error == boost::asio::error::connection_aborted || error == boost::asio::error::connection_reset || error == boost::asio::error::eof)
+	{
+		// Connection closed by peer; terminate connection
+		boost::thread t(boost::bind(&tsf::Transport::DataSubscriber::ConnectionTerminatedDispatcher, this));
+		return;
+	}
+
+	if (error)
+	{
+		errorMessageStream << "Error reading data from command channel: ";
+		errorMessageStream << boost::system::system_error(error).what();
+		DispatchErrorMessage(errorMessageStream.str());
+		return;
+	}
+
+	// Gather statistics
+	m_totalCommandChannelBytesReceived += bytesTransferred;
+
+	// Process response
+	ProcessServerResponse(&m_commandChannelBuffer[0], 0, bytesTransferred);
+
+	// Read next payload header
+	boost::asio::async_read(m_commandChannelSocket, boost::asio::buffer(m_commandChannelBuffer, PayloadHeaderSize), boost::bind(&tsf::Transport::DataSubscriber::ReadPayloadHeader, this, _1, _2));
 }
 
 // If the user defines a separate UDP channel for their
@@ -695,7 +685,6 @@ void tsf::Transport::DataSubscriber::Connect(std::string hostname, uint16_t port
 
 	m_hostAddress = hostEndpoint->endpoint().address();
 
-	m_commandThread = boost::thread(boost::bind(&tsf::Transport::DataSubscriber::RunCommandThread, this));
 	m_callbackThread = boost::thread(boost::bind(&tsf::Transport::DataSubscriber::RunCallbackThread, this));
 	m_commandChannelResponseThread = boost::thread(boost::bind(&tsf::Transport::DataSubscriber::RunCommandChannelResponseThread, this));
 
@@ -714,7 +703,6 @@ void tsf::Transport::DataSubscriber::Disconnect()
 
 	// Release queues and close sockets so
 	// that threads can shut down gracefully
-	m_commandQueue.Release();
 	m_callbackQueue.Release();
 	m_commandChannelSocket.close(error);
 	m_dataChannelSocket.shutdown(boost::asio::ip::udp::socket::shutdown_receive, error);
@@ -722,15 +710,12 @@ void tsf::Transport::DataSubscriber::Disconnect()
 
 	// Join with all threads to guarantee their completion
 	// before returning control to the caller
-	m_commandThread.join();
 	m_callbackThread.join();
 	m_commandChannelResponseThread.join();
 	m_dataChannelResponseThread.join();
 
 	// Empty queues and reset them so they can be used
 	// again later if the user decides to reconnect
-	m_commandQueue.Clear();
-	m_commandQueue.Reset();
 	m_callbackQueue.Clear();
 	m_callbackQueue.Reset();
 
@@ -895,7 +880,7 @@ void tsf::Transport::DataSubscriber::SendServerCommand(uint8_t commandCode, uint
 			packet[9 + i] = data[offset + i];
 	}
 
-	m_commandQueue.Enqueue(packet);
+	boost::asio::async_write(m_commandChannelSocket, boost::asio::buffer(packet), &WriteHandler);
 }
 
 // Convenience method to send the currently defined
@@ -1118,4 +1103,9 @@ tsf::Guid ToGuid(uint8_t* data)
 		*iter = (tsf::Guid::value_type)*data;
 
 	return id;
+}
+
+// This method does nothing. It is used as the callback for asynchronous write operations.
+void WriteHandler(const boost::system::error_code& error, std::size_t bytesTransferred)
+{
 }
