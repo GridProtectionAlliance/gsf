@@ -22,6 +22,8 @@
 //      Edited Comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  04/2/2012 - J. Ritchie Carroll
+//      Added new TryGetValue() method.
 //
 //*******************************************************************************************************
 
@@ -525,6 +527,16 @@ namespace TVA.Console
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Gets the value associated with the specified argument in the command-line command.
+        /// </summary>
+        /// <param name="argument">The argument whose value is to be retrieved.</param>
+        /// <param name="value">Value associated with the specified argument if it exists in the command-line command, otherwise null.</param>
+        public virtual void TryGetValue(string argument, out string value)
+        {
+            m_arguments.TryGetValue(argument, out value);
+        }
 
         /// <summary>
         /// Gets a boolean value that indicates whether the specified argument is present in the command-line command.
