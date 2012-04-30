@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
 using System.Reflection;
@@ -580,6 +581,7 @@ namespace TimeSeriesFramework
         }
 
         // Generation zero garbage collection handler
+        [SuppressMessage("Microsoft.Reliability", "CA2002")]
         private void m_gcGenZeroTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             // The time-series framework can allocate hundreds of thousands of measurements per second, non-stop, as a result the typical
@@ -649,6 +651,7 @@ namespace TimeSeriesFramework
         }
 
         // Load system configuration data set
+        [SuppressMessage("Microsoft.Reliability", "CA2000")]
         private DataSet GetConfigurationDataSet(ConfigurationType configType, string connectionString, string dataProviderString)
         {
             DataSet configuration = null;

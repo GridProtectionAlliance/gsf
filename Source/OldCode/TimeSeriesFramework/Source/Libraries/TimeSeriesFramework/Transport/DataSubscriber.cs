@@ -247,6 +247,7 @@ namespace TimeSeriesFramework.Transport
         /// <summary>
         /// Gets or sets flag that informs publisher if base time-offsets can use millisecond resolution to conserve bandwidth.
         /// </summary>
+        [Obsolete("SubscriptionInfo object defines this parameter.", false)]
         public bool UseMillisecondResolution
         {
             get
@@ -759,6 +760,188 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
+        /// Subscribes (or re-subscribes) to a data publisher for a set of data points.
+        /// </summary>
+        /// <param name="info">Configuration object that defines the subscription.</param>
+        /// <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
+        public bool Subscribe(SubscriptionInfo info)
+        {
+            if (info is SynchronizedSubscriptionInfo)
+                return SynchronizedSubscribe((SynchronizedSubscriptionInfo)info);
+
+            if (info is UnsynchronizedSubscriptionInfo)
+                return UnsynchronizedSubscribe((UnsynchronizedSubscriptionInfo)info);
+
+            throw new NotSupportedException("Type of subscription used is not supported");
+        }
+
+        /// <summary>
+        /// Subscribes (or re-subscribes) to a data publisher for a synchronized set of data points.
+        /// </summary>
+        /// <param name="info">Configuration object that defines the subscription.</param>
+        /// <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
+        public bool SynchronizedSubscribe(SynchronizedSubscriptionInfo info)
+        {
+            StringBuilder connectionString = new StringBuilder();
+            AssemblyInfo assemblyInfo = AssemblyInfo.ExecutingAssembly;
+
+            UnsynchronizedSubscriptionInfo unsynchronizedSubscription;
+            DateTime startTimeConstraint;
+            DateTime stopTimeConstraint;
+
+            // Dispose of any previously established local concentrator
+            DisposeLocalConcentrator();
+
+            if (info.RemotelySynchronized)
+            {
+                connectionString.AppendFormat("framesPerSecond={0};", info.FramesPerSecond);
+                connectionString.AppendFormat("lagTime={0};", info.LagTime);
+                connectionString.AppendFormat("leadTime={0};", info.LeadTime);
+                connectionString.AppendFormat("includeTime=false;");
+                connectionString.AppendFormat("useLocalClockAsRealTime={0};", info.UseLocalClockAsRealTime);
+                connectionString.AppendFormat("ignoreBadTimestamps={0};", info.IgnoreBadTimestamps);
+                connectionString.AppendFormat("allowSortsByArrival={0};", info.AllowSortsByArrival);
+                connectionString.AppendFormat("timeResolution={0};", info.TimeResolution);
+                connectionString.AppendFormat("allowPreemptivePublishing={0};", info.AllowPreemptivePublishing);
+                connectionString.AppendFormat("downsamplingMethod={0};", info.DownsamplingMethod.ToString());
+                connectionString.AppendFormat("processingInterval={0};", info.ProcessingInterval);
+                connectionString.AppendFormat("assemblyInfo={{source={0};version={1}.{2}.{3};buildDate={4}}};", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
+
+                if (!string.IsNullOrWhiteSpace(info.FilterExpression))
+                    connectionString.AppendFormat("inputMeasurementKeys={{{0}}};", info.FilterExpression);
+
+                if (info.UdpDataChannel)
+                    connectionString.AppendFormat("dataChannel={{localport={0}}};", info.DataChannelLocalPort);
+
+                if (!string.IsNullOrWhiteSpace(info.StartTime))
+                    connectionString.AppendFormat("startTimeConstraint={0};", info.StartTime);
+
+                if (!string.IsNullOrWhiteSpace(info.StopTime))
+                    connectionString.AppendFormat("stopTimeConstraint={0};", info.StopTime);
+
+                if (!string.IsNullOrWhiteSpace(info.ConstraintParameters))
+                    connectionString.AppendFormat("timeConstraintParameters={0};", info.ConstraintParameters);
+
+                if (!string.IsNullOrWhiteSpace(info.WaitHandleNames))
+                {
+                    connectionString.AppendFormat("waitHandleNames={0};", info.WaitHandleNames);
+                    connectionString.AppendFormat("waitHandleTimeout={0};", info.WaitHandleTimeout);
+                }
+
+                if (!string.IsNullOrWhiteSpace(info.ExtraConnectionStringParameters))
+                    connectionString.AppendFormat("{0};", info.ExtraConnectionStringParameters);
+
+                return Subscribe(true, info.UseCompactMeasurementFormat, connectionString.ToString());
+            }
+            else
+            {
+                // Dispose of any previously established local concentrator
+                DisposeLocalConcentrator();
+
+                // Locally concentrated subscription simply uses an
+                // unsynchronized subscription and concentrates the
+                // measurements on the subscriber side
+                unsynchronizedSubscription = FromLocallySynchronizedInfo(info);
+
+                // Establish a local concentrator to synchronize received measurements
+                m_localConcentrator = new LocalConcentrator(this);
+                m_localConcentrator.ProcessException += m_localConcentrator_ProcessException;
+                m_localConcentrator.FramesPerSecond = info.FramesPerSecond;
+                m_localConcentrator.LagTime = info.LagTime;
+                m_localConcentrator.LeadTime = info.LeadTime;
+                m_localConcentrator.UseLocalClockAsRealTime = info.UseLocalClockAsRealTime;
+                m_localConcentrator.IgnoreBadTimestamps = info.IgnoreBadTimestamps;
+                m_localConcentrator.AllowSortsByArrival = info.AllowSortsByArrival;
+                m_localConcentrator.TimeResolution = info.TimeResolution;
+                m_localConcentrator.AllowPreemptivePublishing = info.AllowPreemptivePublishing;
+                m_localConcentrator.DownsamplingMethod = info.DownsamplingMethod;
+                m_localConcentrator.UsePrecisionTimer = false;
+
+                // Parse time constraints, if defined
+                startTimeConstraint = !string.IsNullOrWhiteSpace(info.StartTime) ? AdapterBase.ParseTimeTag(info.StartTime) : DateTime.MinValue;
+                stopTimeConstraint = !string.IsNullOrWhiteSpace(info.StopTime) ? AdapterBase.ParseTimeTag(info.StopTime) : DateTime.MaxValue;
+
+                // When processing historical data, timestamps should not be evaluated for reasonability
+                if (startTimeConstraint != DateTime.MinValue || stopTimeConstraint != DateTime.MaxValue)
+                {
+                    m_localConcentrator.PerformTimestampReasonabilityCheck = false;
+                    m_localConcentrator.LeadTime = double.MaxValue;
+                }
+
+                // Assign alternate processing interval, if defined
+                if (info.ProcessingInterval != -1)
+                    m_localConcentrator.ProcessingInterval = info.ProcessingInterval;
+
+                // Start subscription process
+                if (Subscribe(unsynchronizedSubscription))
+                {
+                    // If subscription succeeds, start local concentrator
+                    m_localConcentrator.Start();
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Subscribes (or re-subscribes) to a data publisher for an unsynchronized set of data points.
+        /// </summary>
+        /// <param name="info">Configuration object that defines the subscription.</param>
+        /// <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
+        public bool UnsynchronizedSubscribe(UnsynchronizedSubscriptionInfo info)
+        {
+            // Dispose of any previously established local concentrator
+            DisposeLocalConcentrator();
+
+            StringBuilder connectionString = new StringBuilder();
+            AssemblyInfo assemblyInfo = AssemblyInfo.ExecutingAssembly;
+
+            connectionString.AppendFormat("trackLatestMeasurements={0};", info.Throttled);
+            connectionString.AppendFormat("includeTime={0};", info.IncludeTime);
+            connectionString.AppendFormat("lagTime={0};", info.LagTime);
+            connectionString.AppendFormat("leadTime={0};", info.LeadTime);
+            connectionString.AppendFormat("useLocalClockAsRealTime={0};", info.UseLocalClockAsRealTime);
+            connectionString.AppendFormat("processingInterval={0};", info.ProcessingInterval);
+            connectionString.AppendFormat("useMillisecondResolution={0};", info.UseMillisecondResolution);
+            connectionString.AppendFormat("assemblyInfo={{source={0};version={1}.{2}.{3};buildDate={4}}};", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
+
+            if (!string.IsNullOrWhiteSpace(info.FilterExpression))
+                connectionString.AppendFormat("inputMeasurementKeys={{{0}}};", info.FilterExpression);
+
+            if (info.UdpDataChannel)
+                connectionString.AppendFormat("dataChannel={{localport={0}}};", info.DataChannelLocalPort);
+
+            if (!string.IsNullOrWhiteSpace(info.StartTime))
+                connectionString.AppendFormat("startTimeConstraint={0};", info.StartTime);
+
+            if (!string.IsNullOrWhiteSpace(info.StopTime))
+                connectionString.AppendFormat("stopTimeConstraint={0};", info.StopTime);
+
+            if (!string.IsNullOrWhiteSpace(info.ConstraintParameters))
+                connectionString.AppendFormat("timeConstraintParameters={0};", info.ConstraintParameters);
+
+            if (!string.IsNullOrWhiteSpace(info.WaitHandleNames))
+            {
+                connectionString.AppendFormat("waitHandleNames={0};", info.WaitHandleNames);
+                connectionString.AppendFormat("waitHandleTimeout={0};", info.WaitHandleTimeout);
+            }
+
+            if (!string.IsNullOrWhiteSpace(info.ExtraConnectionStringParameters))
+                connectionString.AppendFormat("{0};", info.ExtraConnectionStringParameters);
+
+            // Make sure not to monitor for data loss any faster than downsample time on throttled connections - additionally
+            // you will want to make sure data stream monitor is twice lagtime to allow time for initial points to arrive.
+            if (info.Throttled && (object)m_dataStreamMonitor != null && m_dataStreamMonitor.Interval / 1000.0D < info.LagTime)
+                m_dataStreamMonitor.Interval = 2.0D * info.LagTime * 1000.0D;
+
+            // Set millisecond resolution member variable for compact measurement parsing
+            m_useMillisecondResolution = info.UseMillisecondResolution;
+
+            return Subscribe(false, info.UseCompactMeasurementFormat, connectionString.ToString());
+        }
+
+        /// <summary>
         /// Subscribes (or re-subscribes) to a data publisher for a remotely synchronized set of data points.
         /// </summary>
         /// <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>true</c> for bandwidth conservation.</param>
@@ -826,6 +1009,7 @@ namespace TimeSeriesFramework.Transport
         /// </list>
         /// </para>
         /// </remarks>
+        [Obsolete("Preferred method uses SubscriptionInfo object to subscribe.", false)]
         public virtual bool RemotelySynchronizedSubscribe(bool compactFormat, int framesPerSecond, double lagTime, double leadTime, string filterExpression, string dataChannel = null, bool useLocalClockAsRealTime = false, bool ignoreBadTimestamps = false, bool allowSortsByArrival = true, long timeResolution = Ticks.PerMillisecond, bool allowPreemptivePublishing = true, DownsamplingMethod downsamplingMethod = DownsamplingMethod.LastReceived, string startTime = null, string stopTime = null, string constraintParameters = null, int processingInterval = -1, string waitHandleNames = null, int waitHandleTimeout = 0)
         {
             // Dispose of any previously established local concentrator
@@ -929,6 +1113,7 @@ namespace TimeSeriesFramework.Transport
         /// </list>
         /// </para>
         /// </remarks>
+        [Obsolete("Preferred method uses SubscriptionInfo object to subscribe.", false)]
         public virtual bool LocallySynchronizedSubscribe(bool compactFormat, int framesPerSecond, double lagTime, double leadTime, string filterExpression, string dataChannel = null, bool useLocalClockAsRealTime = false, bool ignoreBadTimestamps = false, bool allowSortsByArrival = true, long timeResolution = Ticks.PerMillisecond, bool allowPreemptivePublishing = true, DownsamplingMethod downsamplingMethod = DownsamplingMethod.LastReceived, string startTime = null, string stopTime = null, string constraintParameters = null, int processingInterval = -1, string waitHandleNames = null, int waitHandleTimeout = 0)
         {
             // Dispose of any previously established local concentrator
@@ -1062,6 +1247,7 @@ namespace TimeSeriesFramework.Transport
         /// </list>
         /// </para>
         /// </remarks>
+        [Obsolete("Preferred method uses SubscriptionInfo object to subscribe.", false)]
         public virtual bool UnsynchronizedSubscribe(bool compactFormat, bool throttled, string filterExpression, string dataChannel = null, bool includeTime = true, double lagTime = 10.0D, double leadTime = 5.0D, bool useLocalClockAsRealTime = false, string startTime = null, string stopTime = null, string constraintParameters = null, int processingInterval = -1, string waitHandleNames = null, int waitHandleTimeout = 0)
         {
             // Dispose of any previously established local concentrator
@@ -1991,6 +2177,28 @@ namespace TimeSeriesFramework.Transport
             }
 
             return deserializedMetadata;
+        }
+
+        private UnsynchronizedSubscriptionInfo FromLocallySynchronizedInfo(SynchronizedSubscriptionInfo info)
+        {
+            return new UnsynchronizedSubscriptionInfo(false)
+            {
+                FilterExpression = info.FilterExpression,
+                UseCompactMeasurementFormat = info.UseCompactMeasurementFormat,
+                UdpDataChannel = info.UdpDataChannel,
+                DataChannelLocalPort = info.DataChannelLocalPort,
+                LagTime = info.LagTime,
+                LeadTime = info.LeadTime,
+                UseLocalClockAsRealTime = false,
+                UseMillisecondResolution = info.UseMillisecondResolution,
+                StartTime = info.StartTime,
+                StopTime = info.StopTime,
+                ConstraintParameters = info.ConstraintParameters,
+                ProcessingInterval = info.ProcessingInterval,
+                WaitHandleNames = info.WaitHandleNames,
+                WaitHandleTimeout = info.WaitHandleTimeout,
+                ExtraConnectionStringParameters = info.ExtraConnectionStringParameters
+            };
         }
 
         private Encoding GetCharacterEncoding(OperationalEncoding operationalEncoding)

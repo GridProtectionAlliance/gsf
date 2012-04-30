@@ -2008,66 +2008,68 @@ namespace TimeSeriesFramework.Transport
 
             try
             {
-                AdoDataConnection adoDatabase = new AdoDataConnection("systemSettings");
-                IDbConnection dbConnection = adoDatabase.Connection;
-                DataSet metadata = new DataSet();
-                DataTable table;
-
-                byte[] serializedMetadata;
-
-                // Initialize active node ID
-                Guid nodeID = Guid.Parse(dbConnection.ExecuteScalar(string.Format("SELECT NodeID FROM IaonActionAdapter WHERE ID = {0}", ID)).ToString());
-
-                // Copy key meta-data tables
-                foreach (string tableExpression in m_metadataTables.Split(';'))
+                using (AdoDataConnection adoDatabase = new AdoDataConnection("systemSettings"))
                 {
-                    if (!string.IsNullOrWhiteSpace(tableExpression))
+                    IDbConnection dbConnection = adoDatabase.Connection;
+                    DataSet metadata = new DataSet();
+                    DataTable table;
+
+                    byte[] serializedMetadata;
+
+                    // Initialize active node ID
+                    Guid nodeID = Guid.Parse(dbConnection.ExecuteScalar(string.Format("SELECT NodeID FROM IaonActionAdapter WHERE ID = {0}", ID)).ToString());
+
+                    // Copy key meta-data tables
+                    foreach (string tableExpression in m_metadataTables.Split(';'))
                     {
-                        // Query the table or view information from the database
-                        table = dbConnection.RetrieveData(adoDatabase.AdapterType, tableExpression);
-
-                        // Remove any expression from table name
-                        Match regexMatch = Regex.Match(tableExpression, @"FROM \w+");
-                        table.TableName = regexMatch.Value.Split(' ')[1];
-
-                        // If table has a NodeID column, filter table data for just this node
-                        if (!m_sharedDatabase && table.Columns.Contains("NodeID"))
+                        if (!string.IsNullOrWhiteSpace(tableExpression))
                         {
-                            // Make a copy of the table structure
-                            metadata.Tables.Add(table.Clone());
+                            // Query the table or view information from the database
+                            table = dbConnection.RetrieveData(adoDatabase.AdapterType, tableExpression);
 
-                            // Reduce data to only this node
-                            DataRow[] nodeData = table.Select(string.Format("NodeID = '{0}'", nodeID));
+                            // Remove any expression from table name
+                            Match regexMatch = Regex.Match(tableExpression, @"FROM \w+");
+                            table.TableName = regexMatch.Value.Split(' ')[1];
 
-                            if (nodeData.Length > 0)
+                            // If table has a NodeID column, filter table data for just this node
+                            if (!m_sharedDatabase && table.Columns.Contains("NodeID"))
                             {
-                                DataTable metadataTable = metadata.Tables[table.TableName];
+                                // Make a copy of the table structure
+                                metadata.Tables.Add(table.Clone());
 
-                                // Manually copy-in each row into table
-                                foreach (DataRow row in nodeData)
+                                // Reduce data to only this node
+                                DataRow[] nodeData = table.Select(string.Format("NodeID = '{0}'", nodeID));
+
+                                if (nodeData.Length > 0)
                                 {
-                                    DataRow newRow = metadataTable.NewRow();
+                                    DataTable metadataTable = metadata.Tables[table.TableName];
 
-                                    // Copy each column of data in the current row
-                                    for (int x = 0; x < table.Columns.Count; x++)
+                                    // Manually copy-in each row into table
+                                    foreach (DataRow row in nodeData)
                                     {
-                                        newRow[x] = row[x];
-                                    }
+                                        DataRow newRow = metadataTable.NewRow();
 
-                                    metadataTable.Rows.Add(newRow);
+                                        // Copy each column of data in the current row
+                                        for (int x = 0; x < table.Columns.Count; x++)
+                                        {
+                                            newRow[x] = row[x];
+                                        }
+
+                                        metadataTable.Rows.Add(newRow);
+                                    }
                                 }
                             }
-                        }
-                        else
-                        {
-                            // Add a copy of the results to the dataset for meta-data exchange
-                            metadata.Tables.Add(table.Copy());
+                            else
+                            {
+                                // Add a copy of the results to the dataset for meta-data exchange
+                                metadata.Tables.Add(table.Copy());
+                            }
                         }
                     }
-                }
 
-                serializedMetadata = SerializeMetadata(clientID, metadata);
-                SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.MetaDataRefresh, serializedMetadata);
+                    serializedMetadata = SerializeMetadata(clientID, metadata);
+                    SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.MetaDataRefresh, serializedMetadata);
+                }
             }
             catch (Exception ex)
             {

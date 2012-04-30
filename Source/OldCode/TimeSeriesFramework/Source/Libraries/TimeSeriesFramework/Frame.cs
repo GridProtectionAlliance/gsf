@@ -263,7 +263,6 @@ namespace TimeSeriesFramework
         /// true if the specified <see cref="Object"/> is equal to the current <see cref="Frame"/>;
         /// otherwise, false.
         /// </returns>
-        /// <exception cref="ArgumentException"><paramref name="obj"/> is not an <see cref="IFrame"/>.</exception>
         public override bool Equals(object obj)
         {
             IFrame other = obj as IFrame;
@@ -271,7 +270,7 @@ namespace TimeSeriesFramework
             if ((object)other != null)
                 return Equals(other);
 
-            throw new ArgumentException("Object is not an IFrame");
+            return false;
         }
 
         /// <summary>

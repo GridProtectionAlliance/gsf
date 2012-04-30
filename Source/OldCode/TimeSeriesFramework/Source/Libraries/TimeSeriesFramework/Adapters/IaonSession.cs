@@ -37,7 +37,7 @@ namespace TimeSeriesFramework.Adapters
     /// <summary>
     /// Represents a new Input, Action, Output interface session.
     /// </summary>
-    public class IaonSession : IProvideStatus
+    public class IaonSession : IProvideStatus, IDisposable
     {
         #region [ Members ]
 
@@ -452,6 +452,8 @@ namespace TimeSeriesFramework.Adapters
                 {
                     if (disposing)
                     {
+                        DataSet dataSource = this.DataSource;
+
                         // Dispose input adapters collection
                         if (m_inputAdapters != null)
                         {
@@ -523,6 +525,9 @@ namespace TimeSeriesFramework.Adapters
                             m_waitHandles.Clear();
                         }
                         m_waitHandles = null;
+
+                        if ((object)dataSource != null)
+                            dataSource.Dispose();
                     }
                 }
                 finally

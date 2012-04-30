@@ -360,7 +360,6 @@ namespace TimeSeriesFramework
         /// true if the specified <see cref="Object"/> is equal to the current <see cref="Measurement"/>;
         /// otherwise, false.
         /// </returns>
-        /// <exception cref="ArgumentException"><paramref name="obj"/> is not an <see cref="IMeasurement"/>.</exception>
         public override bool Equals(object obj)
         {
             ITimeSeriesValue other = obj as ITimeSeriesValue;
@@ -368,7 +367,7 @@ namespace TimeSeriesFramework
             if ((object)other != null)
                 return Equals(other);
 
-            throw new ArgumentException("Object is not a Measurement");
+            return false;
         }
 
         /// <summary>

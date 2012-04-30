@@ -308,6 +308,13 @@ namespace TimeSeriesFramework.Transport
                             m_baseTimeRotationTimer = null;
                         }
 
+                        // Dispose blocking queue
+                        if ((object)m_processQueue != null)
+                        {
+                            m_processQueue.Dispose();
+                            m_processQueue = null;
+                        }
+
                         // Dispose Iaon session
                         this.DisposeTemporalSession(ref m_iaonSession);
                     }

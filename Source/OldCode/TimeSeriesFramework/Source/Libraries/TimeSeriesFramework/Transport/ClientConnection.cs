@@ -601,38 +601,39 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         internal void UpdateKeyIVs()
         {
-            AesManaged symmetricAlgorithm = new AesManaged();
-
-            symmetricAlgorithm.KeySize = 256;
-            symmetricAlgorithm.GenerateKey();
-            symmetricAlgorithm.GenerateIV();
-
-            if (m_keyIVs == null)
+            using (AesManaged symmetricAlgorithm = new AesManaged())
             {
-                // Initialize new key set
-                m_keyIVs = new byte[2][][];
-                m_keyIVs[EvenKey] = new byte[2][];
-                m_keyIVs[OddKey] = new byte[2][];
-
-                m_keyIVs[EvenKey][KeyIndex] = symmetricAlgorithm.Key;
-                m_keyIVs[EvenKey][IVIndex] = symmetricAlgorithm.IV;
-
+                symmetricAlgorithm.KeySize = 256;
                 symmetricAlgorithm.GenerateKey();
                 symmetricAlgorithm.GenerateIV();
 
-                m_keyIVs[OddKey][KeyIndex] = symmetricAlgorithm.Key;
-                m_keyIVs[OddKey][IVIndex] = symmetricAlgorithm.IV;
+                if (m_keyIVs == null)
+                {
+                    // Initialize new key set
+                    m_keyIVs = new byte[2][][];
+                    m_keyIVs[EvenKey] = new byte[2][];
+                    m_keyIVs[OddKey] = new byte[2][];
 
-                m_cipherIndex = EvenKey;
-            }
-            else
-            {
-                // Generate a new key set for current cipher index
-                m_keyIVs[m_cipherIndex][KeyIndex] = symmetricAlgorithm.Key;
-                m_keyIVs[m_cipherIndex][IVIndex] = symmetricAlgorithm.IV;
+                    m_keyIVs[EvenKey][KeyIndex] = symmetricAlgorithm.Key;
+                    m_keyIVs[EvenKey][IVIndex] = symmetricAlgorithm.IV;
 
-                // Set run-time to the other key set
-                m_cipherIndex ^= 1;
+                    symmetricAlgorithm.GenerateKey();
+                    symmetricAlgorithm.GenerateIV();
+
+                    m_keyIVs[OddKey][KeyIndex] = symmetricAlgorithm.Key;
+                    m_keyIVs[OddKey][IVIndex] = symmetricAlgorithm.IV;
+
+                    m_cipherIndex = EvenKey;
+                }
+                else
+                {
+                    // Generate a new key set for current cipher index
+                    m_keyIVs[m_cipherIndex][KeyIndex] = symmetricAlgorithm.Key;
+                    m_keyIVs[m_cipherIndex][IVIndex] = symmetricAlgorithm.IV;
+
+                    // Set run-time to the other key set
+                    m_cipherIndex ^= 1;
+                }
             }
 
             m_lastCipherKeyUpdateTime = DateTime.UtcNow.Ticks;
