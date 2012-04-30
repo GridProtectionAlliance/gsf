@@ -249,6 +249,8 @@ namespace NAudioWpfDemo
         {
             if (m_dataSubscriber != null && m_metadata != null)
             {
+                UnsynchronizedSubscriptionInfo info;
+
                 StringBuilder filterExpression = new StringBuilder();
                 DataTable deviceTable = m_metadata.Tables["DeviceDetail"];
                 DataTable measurementTable = m_metadata.Tables["MeasurementDetail"];
@@ -313,9 +315,15 @@ namespace NAudioWpfDemo
                 m_waveProvider = new BufferedWaveProvider(new WaveFormat(m_sampleRate, m_numChannels));
                 m_wavePlayer = CreateWavePlayer(m_waveProvider);
 
+                info = new UnsynchronizedSubscriptionInfo(false)
+                {
+                    FilterExpression = filterExpression.ToString(),
+                    ExtraConnectionStringParameters = dataChannel
+                };
+
                 m_statTimer.Start();
                 m_wavePlayer.Play();
-                m_dataSubscriber.UnsynchronizedSubscribe(true, false, filterExpression.ToString(), dataChannel, false);
+                m_dataSubscriber.UnsynchronizedSubscribe(info);
                 m_timeoutTimer.Start();
                 OnStateChanged(PlaybackState.Buffering);
             }

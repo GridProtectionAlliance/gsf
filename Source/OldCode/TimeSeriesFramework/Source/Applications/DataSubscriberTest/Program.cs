@@ -31,6 +31,11 @@ namespace DataSubscriberTest
 {
     class Program
     {
+        static SynchronizedSubscriptionInfo remotelySynchronizedInfo = new SynchronizedSubscriptionInfo(true, 30);
+        static SynchronizedSubscriptionInfo locallySynchronizedInfo = new SynchronizedSubscriptionInfo(false, 30);
+        static UnsynchronizedSubscriptionInfo unsynchronizedInfo = new UnsynchronizedSubscriptionInfo(false);
+        static UnsynchronizedSubscriptionInfo throttledInfo = new UnsynchronizedSubscriptionInfo(true);
+
         static DataSubscriber subscriber = new DataSubscriber();
         static long dataCount = 0;
         static System.Timers.Timer timer = new System.Timers.Timer(10000);
@@ -44,6 +49,21 @@ namespace DataSubscriberTest
             subscriber.ConnectionEstablished += subscriber_ConnectionEstablished;
             subscriber.ConnectionTerminated += subscriber_ConnectionTerminated;
             subscriber.NewMeasurements += subscriber_NewMeasurements;
+
+            // Set up subscription info objects
+            remotelySynchronizedInfo.LagTime = 0.5D;
+            remotelySynchronizedInfo.LeadTime = 1.0D;
+            remotelySynchronizedInfo.FilterExpression = "DEVARCHIVE:1;DEVARCHIVE:2";
+
+            locallySynchronizedInfo.LagTime = 0.5D;
+            locallySynchronizedInfo.LeadTime = 1.0D;
+            locallySynchronizedInfo.FilterExpression = "DEVARCHIVE:1;DEVARCHIVE:2";
+
+            unsynchronizedInfo.FilterExpression = "DEVARCHIVE:1;DEVARCHIVE:2";
+
+            throttledInfo.LagTime = 5.0D;
+            throttledInfo.LeadTime = 1.0D;
+            throttledInfo.FilterExpression = "DEVARCHIVE:1;DEVARCHIVE:2";
 
             // Initialize subscriber
             subscriber.ConnectionString = "server=localhost:6177";
@@ -82,7 +102,7 @@ namespace DataSubscriberTest
                         {
                             Console.WriteLine("Initiating remotely synchronized subscription...");
                         }
-                        subscriber.RemotelySynchronizedSubscribe(true, 30, 0.5D, 1.0D, "DEVARCHIVE:1;DEVARCHIVE:2");
+                        subscriber.SynchronizedSubscribe(remotelySynchronizedInfo);
                     }
                     else
                     {
@@ -90,7 +110,7 @@ namespace DataSubscriberTest
                         {
                             Console.WriteLine("Initiating locally synchronized subscription...");
                         }
-                        subscriber.LocallySynchronizedSubscribe(true, 30, 0.5D, 1.0D, "DEVARCHIVE:1;DEVARCHIVE:2");
+                        subscriber.SynchronizedSubscribe(locallySynchronizedInfo);
                     }
                 }
                 else
@@ -101,7 +121,7 @@ namespace DataSubscriberTest
                         {
                             Console.WriteLine("Initiating on-change unsynchronized subscription...");
                         }
-                        subscriber.UnsynchronizedSubscribe(true, false, "DEVARCHIVE:1;DEVARCHIVE:2");
+                        subscriber.UnsynchronizedSubscribe(unsynchronizedInfo);
                     }
                     else
                     {
@@ -109,7 +129,7 @@ namespace DataSubscriberTest
                         {
                             Console.WriteLine("Initiating throttled unsynchronized subscription...");
                         }
-                        subscriber.UnsynchronizedSubscribe(true, true, "DEVARCHIVE:1;DEVARCHIVE:2", null, true, 5.0D, 1.0D, false);
+                        subscriber.UnsynchronizedSubscribe(throttledInfo);
                     }
                 }
             }
