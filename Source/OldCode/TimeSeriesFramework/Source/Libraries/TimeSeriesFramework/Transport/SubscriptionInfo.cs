@@ -66,6 +66,7 @@ namespace TimeSeriesFramework.Transport
         /// </summary>
         public SubscriptionInfo()
         {
+            m_useCompactMeasurementFormat = true;
             m_dataChannelLocalPort = 9500;
             m_lagTime = 10.0;
             m_leadTime = 5.0;
