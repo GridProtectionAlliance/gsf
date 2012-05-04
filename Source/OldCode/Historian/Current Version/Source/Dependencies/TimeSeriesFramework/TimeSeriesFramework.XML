@@ -1523,7 +1523,6 @@
             true if the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:TimeSeriesFramework.Frame"/>;
             otherwise, false.
             </returns>
-            <exception cref="T:System.ArgumentException"><paramref name="obj"/> is not an <see cref="T:TimeSeriesFramework.IFrame"/>.</exception>
         </member>
         <member name="M:TimeSeriesFramework.Frame.CompareTo(TimeSeriesFramework.IFrame)">
             <summary>
@@ -2289,7 +2288,6 @@
             true if the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:TimeSeriesFramework.Measurement"/>;
             otherwise, false.
             </returns>
-            <exception cref="T:System.ArgumentException"><paramref name="obj"/> is not an <see cref="T:TimeSeriesFramework.IMeasurement"/>.</exception>
         </member>
         <member name="M:TimeSeriesFramework.Measurement.CompareTo(TimeSeriesFramework.ITimeSeriesValue)">
             <summary>
@@ -6630,6 +6628,27 @@
             <param name="authenticationID">Authentication ID that publisher will use to validate subscriber identity.</param>
             <returns><c>true</c> if authentication transmission was successful; otherwise <c>false</c>.</returns>
         </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.Subscribe(TimeSeriesFramework.Transport.SubscriptionInfo)">
+            <summary>
+            Subscribes (or re-subscribes) to a data publisher for a set of data points.
+            </summary>
+            <param name="info">Configuration object that defines the subscription.</param>
+            <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.SynchronizedSubscribe(TimeSeriesFramework.Transport.SynchronizedSubscriptionInfo)">
+            <summary>
+            Subscribes (or re-subscribes) to a data publisher for a synchronized set of data points.
+            </summary>
+            <param name="info">Configuration object that defines the subscription.</param>
+            <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.UnsynchronizedSubscribe(TimeSeriesFramework.Transport.UnsynchronizedSubscriptionInfo)">
+            <summary>
+            Subscribes (or re-subscribes) to a data publisher for an unsynchronized set of data points.
+            </summary>
+            <param name="info">Configuration object that defines the subscription.</param>
+            <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
+        </member>
         <member name="M:TimeSeriesFramework.Transport.DataSubscriber.RemotelySynchronizedSubscribe(System.Boolean,System.Int32,System.Double,System.Double,System.String,System.String,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Boolean,TimeSeriesFramework.DownsamplingMethod,System.String,System.String,System.String,System.Int32,System.String,System.Int32)">
             <summary>
             Subscribes (or re-subscribes) to a data publisher for a remotely synchronized set of data points.
@@ -8072,6 +8091,319 @@
         <member name="P:TimeSeriesFramework.Transport.SignalIndexCache.BinaryLength">
             <summary>
             Gets the length of the binary image.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.Transport.SubscriptionInfo">
+            <summary>
+            Configuration object for data subscriptions.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.SubscriptionInfo.#ctor">
+            <summary>
+            Creates a new instance of the <see cref="T:TimeSeriesFramework.Transport.SubscriptionInfo"/> class.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.SubscriptionInfo.Copy">
+            <summary>
+            Creates a shallow copy of this
+            <see cref="T:TimeSeriesFramework.Transport.SubscriptionInfo"/> object.
+            </summary>
+            <returns>The copy of this object.</returns>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SubscriptionInfo.FilterExpression">
+            <summary>
+            Gets or sets the filter expression used to define which
+            measurements are being requested by the subscriber.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SubscriptionInfo.UseCompactMeasurementFormat">
+            <summary>
+            Gets or sets the flag that determines whether to use the
+            compact measurement format or the full measurement format
+            for transmitting measurements to the subscriber.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SubscriptionInfo.UdpDataChannel">
+            <summary>
+            Gets or sets the flag that determines whether the subscriber
+            is requesting its data over a separate UDP data channel.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SubscriptionInfo.DataChannelLocalPort">
+            <summary>
+            Gets or sets the port number that the UDP data channel binds to.
+            This value is only used when the subscriber requests a separate
+            UDP data channel.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SubscriptionInfo.LagTime">
+            <summary>
+            Gets or sets the allowed past time deviation
+            tolerance in seconds (can be subsecond).
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SubscriptionInfo.LeadTime">
+            <summary>
+            Gets or sets the allowed future time deviation
+            tolerance, in seconds (can be subsecond).
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SubscriptionInfo.UseLocalClockAsRealTime">
+            <summary>
+            Gets or sets the flag that determines whether the server's
+            local clock is used as real-time. If false, the timestamps
+            of the measurements will be used as real-time.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SubscriptionInfo.UseMillisecondResolution">
+            <summary>
+            Gets or sets the flag that determines whether measurement timestamps use
+            millisecond resolution. If false, they will use <see cref="T:TVA.Ticks"/> resolution.
+            </summary>
+            <remarks>
+            This flag determines the size of the timestamps transmitted as part of
+            the compact measurement format when the server is using base time offsets.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SubscriptionInfo.StartTime">
+            <summary>
+            Gets or sets the start time of the requested
+            temporal session for streaming historic data.
+            </summary>
+            <remarks>
+            <para>
+            When the <see cref="P:TimeSeriesFramework.Transport.SubscriptionInfo.StartTime"/> or <see cref="P:TimeSeriesFramework.Transport.SubscriptionInfo.StopTime"/> temporal processing contraints are defined (i.e., not <c>null</c>), this
+            specifies the start and stop time over which the subscriber session will process data. Passing in <c>null</c> for the <see cref="P:TimeSeriesFramework.Transport.SubscriptionInfo.StartTime"/>
+            and <see cref="P:TimeSeriesFramework.Transport.SubscriptionInfo.StopTime"/> specifies the the subscriber session will process data in standard, i.e., real-time, operation.
+            </para>
+            
+            <para>
+            Both the <see cref="P:TimeSeriesFramework.Transport.SubscriptionInfo.StartTime"/> and <see cref="P:TimeSeriesFramework.Transport.SubscriptionInfo.StopTime"/> parameters can be specified in one of the
+            following formats:
+            <list type="table">
+                <listheader>
+                    <term>Time Format</term>
+                    <description>Format Description</description>
+                </listheader>
+                <item>
+                    <term>12-30-2000 23:59:59.033</term>
+                    <description>Absolute date and time.</description>
+                </item>
+                <item>
+                    <term>*</term>
+                    <description>Evaluates to <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-20s</term>
+                    <description>Evaluates to 20 seconds before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-10m</term>
+                    <description>Evaluates to 10 minutes before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-1h</term>
+                    <description>Evaluates to 1 hour before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-1d</term>
+                    <description>Evaluates to 1 day before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+            </list>
+            </para>
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SubscriptionInfo.StopTime">
+            <summary>
+            Gets or sets the stop time of the requested
+            temporal session for streaming historic data.
+            </summary>
+            <remarks>
+            <para>
+            When the <see cref="P:TimeSeriesFramework.Transport.SubscriptionInfo.StartTime"/> or <see cref="P:TimeSeriesFramework.Transport.SubscriptionInfo.StopTime"/> temporal processing contraints are defined (i.e., not <c>null</c>), this
+            specifies the start and stop time over which the subscriber session will process data. Passing in <c>null</c> for the <see cref="P:TimeSeriesFramework.Transport.SubscriptionInfo.StartTime"/>
+            and <see cref="P:TimeSeriesFramework.Transport.SubscriptionInfo.StopTime"/> specifies the the subscriber session will process data in standard, i.e., real-time, operation.
+            </para>
+            
+            <para>
+            Both the <see cref="P:TimeSeriesFramework.Transport.SubscriptionInfo.StartTime"/> and <see cref="P:TimeSeriesFramework.Transport.SubscriptionInfo.StopTime"/> parameters can be specified in one of the
+            following formats:
+            <list type="table">
+                <listheader>
+                    <term>Time Format</term>
+                    <description>Format Description</description>
+                </listheader>
+                <item>
+                    <term>12-30-2000 23:59:59.033</term>
+                    <description>Absolute date and time.</description>
+                </item>
+                <item>
+                    <term>*</term>
+                    <description>Evaluates to <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-20s</term>
+                    <description>Evaluates to 20 seconds before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-10m</term>
+                    <description>Evaluates to 10 minutes before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-1h</term>
+                    <description>Evaluates to 1 hour before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+                <item>
+                    <term>*-1d</term>
+                    <description>Evaluates to 1 day before <see cref="P:System.DateTime.UtcNow"/>.</description>
+                </item>
+            </list>
+            </para>
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SubscriptionInfo.ConstraintParameters">
+            <summary>
+            Gets or sets the aditional constraint parameters
+            supplied to temporal adapters in a temporal session.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SubscriptionInfo.ProcessingInterval">
+            <summary>
+            Gets or sets the processing interval requested by the subscriber.
+            A value of <c>-1</c> indicates the default processing interval.
+            A value of <c>0</c> indicates data will be processed as fast as
+            possible.
+            </summary>
+            <remarks>
+            With the exception of the values of -1 and 0, the <see cref="P:TimeSeriesFramework.Transport.SubscriptionInfo.ProcessingInterval"/> value specifies the desired historical playback data
+            processing interval in milliseconds. This is basically a delay, or timer interval, overwhich to process data. Setting this value to -1 means
+            to use the default processing interval while setting the value to 0 means to process data as fast as possible.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SubscriptionInfo.WaitHandleNames">
+            <summary>
+            Gets or sets the wait handle names used to deterministically
+            wait for data to become available on the server side.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SubscriptionInfo.WaitHandleTimeout">
+            <summary>
+            Gets or sets the amount of time to wait on the wait handles
+            identified by the <see cref="P:TimeSeriesFramework.Transport.SubscriptionInfo.WaitHandleNames"/> before the
+            operation times out.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SubscriptionInfo.ExtraConnectionStringParameters">
+            <summary>
+            Gets or sets the additional connection string parameters to
+            be applied to the connection string sent to the publisher
+            during subscription.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.Transport.SynchronizedSubscriptionInfo">
+            <summary>
+            Configuration object for synchronized data subscriptions.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.SynchronizedSubscriptionInfo.#ctor(System.Boolean,System.Int32)">
+            <summary>
+            Creates a new instance of the <see cref="T:TimeSeriesFramework.Transport.SynchronizedSubscriptionInfo"/> class.
+            </summary>
+            <param name="remotelySynchronized">Flag that determines whether the subscription defined by this object is remotely synchronized or locally synchronized.</param>
+            <param name="framesPerSecond">Frame rate of the subscription in frames per second.</param>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SynchronizedSubscriptionInfo.RemotelySynchronized">
+            <summary>
+            Gets or sets the flag that determines whether this subscription
+            is remotely synchronized or locally synchronized.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SynchronizedSubscriptionInfo.FramesPerSecond">
+            <summary>
+            Gets or sets the frame rate of the subscription in frames per second.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SynchronizedSubscriptionInfo.DownsamplingMethod">
+            <summary>
+            Gets or sets the downsampling method used when the frame rate of
+            the subscription is lower than the frame rate of the measurement's
+            source.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SynchronizedSubscriptionInfo.AllowPreemptivePublishing">
+            <summary>
+            Gets or sets the flag that determines whether frames should be published
+            as soon as the data is available. If false, frames will be published
+            when their timestamp expires <c>(realTime > timestamp + lagTime)</c>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SynchronizedSubscriptionInfo.AllowSortsByArrival">
+            <summary>
+            Gets or sets the flag that determines whether to allow measurement
+            sorting based on the measurement's time of arrival, if its timestamp
+            is unreasonable.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SynchronizedSubscriptionInfo.IgnoreBadTimestamps">
+            <summary>
+            Gets or sets the flag that determines whether to
+            ignore bad timestamps when sorting measurements.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SynchronizedSubscriptionInfo.TimeResolution">
+            <summary>
+            Gets or sets the maximum time resolution, in ticks, to use when sorting measurements by timestamps into their proper destination frame.
+            </summary>
+            <remarks>
+            <list type="table">
+                <listheader>
+                    <term>Desired maximum resolution</term>
+                    <description>Value to assign</description>
+                </listheader>
+                <item>
+                    <term>Seconds</term>
+                    <description><see cref="T:TVA.Ticks"/>.<see cref="F:TVA.Ticks.PerSecond"/></description>
+                </item>
+                <item>
+                    <term>Milliseconds</term>
+                    <description><see cref="T:TVA.Ticks"/>.<see cref="F:TVA.Ticks.PerMillisecond"/></description>
+                </item>
+                <item>
+                    <term>Microseconds</term>
+                    <description><see cref="T:TVA.Ticks"/>.<see cref="F:TVA.Ticks.PerMicrosecond"/></description>
+                </item>
+                <item>
+                    <term>100-Nanoseconds</term>
+                    <description>0</description>
+                </item>
+            </list>
+            Assigning values less than zero will be set to zero since minimum possible concentrator resolution is one tick (100-nanoseconds). Assigning
+            values values greater than <see cref="T:TVA.Ticks"/>.<see cref="F:TVA.Ticks.PerSecond"/> will be set to <see cref="T:TVA.Ticks"/>.<see cref="F:TVA.Ticks.PerSecond"/>
+            since maximum possible concentrator resolution is one second (i.e., 1 frame per second).
+            </remarks>
+        </member>
+        <member name="T:TimeSeriesFramework.Transport.UnsynchronizedSubscriptionInfo">
+            <summary>
+            Configuration object for unsynchronized data subscriptions.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.UnsynchronizedSubscriptionInfo.#ctor(System.Boolean)">
+            <summary>
+            Creates a new instance of the <see cref="T:TimeSeriesFramework.Transport.UnsynchronizedSubscriptionInfo"/> class.
+            </summary>
+            <param name="throttled">The flag that determines whether to request that the subscription be throttled.</param>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.UnsynchronizedSubscriptionInfo.Throttled">
+            <summary>
+            Gets or sets the flag that determines whether
+            to request that the subscription be throttled.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.UnsynchronizedSubscriptionInfo.IncludeTime">
+            <summary>
+            Gets or sets the flag that determines whether timestamps are
+            included in the data sent from the publisher. This value is
+            ignored if the data is remotely synchronized.
             </summary>
         </member>
         <member name="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription">
