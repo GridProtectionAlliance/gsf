@@ -880,7 +880,7 @@ namespace TimeSeriesFramework
             Interlocked.Exchange(ref m_latestConfiguration, state);
 
             // Queue up a configuration cache unless another thread has already requested one
-            if (Monitor.TryEnter(m_queuedConfigurationCachePending))
+            if (Monitor.TryEnter(m_queuedConfigurationCachePending, 500))
             {
                 try
                 {
