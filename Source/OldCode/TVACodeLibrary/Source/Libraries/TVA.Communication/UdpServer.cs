@@ -607,7 +607,25 @@ namespace TVA.Communication
                                 udpClient.Provider.IOControl(SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
 
                                 // Connect socket to the client endpoint so communication on the socket is restricted to a single endpoint
-                                udpClient.Provider.Connect(Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack));
+                                EndPoint endPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
+                                udpClient.Provider.Connect(endPoint);
+
+                                // If the IP specified for the server is a multicast IP, subscribe to the specified multicast group.
+                                IPEndPoint serverEndpoint = (IPEndPoint)endPoint;
+
+                                if (Transport.IsMulticastIP(serverEndpoint.Address))
+                                {
+                                    if (serverEndpoint.AddressFamily == AddressFamily.InterNetworkV6)
+                                    {
+                                        udpClient.Provider.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.AddMembership, new MulticastOption(serverEndpoint.Address));
+                                        udpClient.Provider.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.MulticastTimeToLive, 10);
+                                    }
+                                    else
+                                    {
+                                        udpClient.Provider.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(serverEndpoint.Address));
+                                        udpClient.Provider.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 10);
+                                    }
+                                }
 
                                 m_udpClients.TryAdd(udpClient.ID, udpClient);
 

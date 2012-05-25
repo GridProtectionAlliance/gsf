@@ -583,6 +583,7 @@ namespace TVA.Communication
             {
                 // Client has a server endpoint specified.
                 Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
+
                 if (endpoint != Match.Empty)
                     m_udpServer = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
                 else
@@ -680,10 +681,12 @@ namespace TVA.Communication
         private void OpenPort()
         {
             int connectionAttempts = 0;
+
             if (Handshake)
             {
                 // Handshaking must be performed. 
                 m_receivedGoodbye = DoGoodbyeCheck;
+
                 HandshakeMessage handshake = new HandshakeMessage();
                 handshake.ID = this.ClientID;
                 handshake.Secretkey = this.SharedSecret;
@@ -691,7 +694,9 @@ namespace TVA.Communication
                 // Prepare binary image of handshake to be transmitted.
                 m_udpClient.Provider = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Udp, m_ipStack, m_allowDualStackSocket);
                 m_udpClient.SetSendBuffer(handshake.BinaryLength);
+
                 handshake.GenerateBinaryImage(m_udpClient.SendBuffer, 0);
+
                 m_udpClient.SendBufferOffset = 0;
                 m_udpClient.SendBufferLength = handshake.BinaryLength;
                 m_udpClient.ProcessTransmit(Encryption, SharedSecret, Compression);
@@ -751,6 +756,7 @@ namespace TVA.Communication
 
                         // If the IP specified for the server is a multicast IP, subscribe to the specified multicast group.
                         IPEndPoint serverEndpoint = (IPEndPoint)m_udpServer;
+
                         if (Transport.IsMulticastIP(serverEndpoint.Address))
                         {
                             if (serverEndpoint.AddressFamily == AddressFamily.InterNetworkV6)
@@ -761,6 +767,7 @@ namespace TVA.Communication
 
                         m_connectionHandle.Set();
                         OnConnectionEstablished();
+
                         // Listen for incoming data only if endpoint is bound to a local interface.
                         if (m_udpClient.Provider.LocalEndPoint != null)
                         {
