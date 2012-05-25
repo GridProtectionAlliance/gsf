@@ -5587,6 +5587,13 @@
             The arguments to be passed into the statistic calculation function.
             </summary>
         </member>
+        <member name="T:TimeSeriesFramework.Statistics.GetAcronymFunction">
+            <summary>
+            Defines function signature for getting the acronym of a source.
+            </summary>
+            <param name="source">The source.</param>
+            <returns>The acronym of the given source.</returns>
+        </member>
         <member name="T:TimeSeriesFramework.Statistics.StatisticsEngine">
             <summary>
             Represents the engine that computes statistics within applications of the TimeSeriesFramework.
@@ -5630,6 +5637,13 @@
             </summary>
             <param name="sourceName">The name of the source.</param>
             <param name="source">The source to be added.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.MapAcronymFunction(System.String,TimeSeriesFramework.Statistics.GetAcronymFunction)">
+            <summary>
+            Maps the given source name to the given acronym function.
+            </summary>
+            <param name="sourceName">The source name.</param>
+            <param name="acronymFunction">The function used to get the acronym of the source.</param>
         </member>
         <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.GetShortStatus(System.Int32)">
             <summary>
@@ -5676,6 +5690,13 @@
             </summary>
             <param name="timeout">The amount of time to wait before giving up.</param>
             <returns>Boolean to indicate whether the default instance was created or not.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.GetAdapterAcronym(System.Object)">
+            <summary>
+            Gets the adapter acronym of the given source object.
+            </summary>
+            <param name="source">The source object.</param>
+            <returns>The given source object's adapter acronym.</returns>
         </member>
         <member name="E:TimeSeriesFramework.Statistics.StatisticsEngine.Loaded">
             <summary>
