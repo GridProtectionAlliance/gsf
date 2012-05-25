@@ -40,6 +40,13 @@ using TVA.IO;
 namespace TimeSeriesFramework.Statistics
 {
     /// <summary>
+    /// Defines function signature for getting the acronym of a source.
+    /// </summary>
+    /// <param name="source">The source.</param>
+    /// <returns>The acronym of the given source.</returns>
+    public delegate string GetAcronymFunction(object source);
+
+    /// <summary>
     /// Represents the engine that computes statistics within applications of the TimeSeriesFramework.
     /// </summary>
     public class StatisticsEngine : FacileActionAdapterBase
@@ -107,6 +114,7 @@ namespace TimeSeriesFramework.Statistics
         private Dictionary<MeasurementKey, string> m_measurementSignalReferenceMap;
         private Dictionary<MeasurementKey, string> m_measurementSourceMap;
         private Dictionary<string, ICollection<object>> m_statisticSources;
+        private Dictionary<string, GetAcronymFunction> m_sourceAcronymFunctions;
 
         private InputAdapterCollection m_inputAdapters;
         private ActionAdapterCollection m_actionAdapters;
@@ -128,6 +136,9 @@ namespace TimeSeriesFramework.Statistics
             m_timerLock = new object();
             m_performanceMonitor = new PerformanceMonitor();
             m_loadWaitHandle = new ManualResetEvent(false);
+
+            m_sourceAcronymFunctions = new Dictionary<string, GetAcronymFunction>();
+
             Default = this;
         }
 
@@ -196,6 +207,11 @@ namespace TimeSeriesFramework.Statistics
             m_measurementSignalReferenceMap = new Dictionary<MeasurementKey, string>();
             m_measurementSourceMap = new Dictionary<MeasurementKey, string>();
             m_statisticSources = new Dictionary<string, ICollection<object>>();
+
+            // Map source names to their acronym functions
+            MapAcronymFunction("System", GetSystemAcronym);
+            MapAcronymFunction("Publisher", GetAdapterAcronym);
+            MapAcronymFunction("Subscriber", GetAdapterAcronym);
 
             // Kick off initial load of statistics from
             // thread pool since this may take a while
@@ -414,6 +430,16 @@ namespace TimeSeriesFramework.Statistics
         }
 
         /// <summary>
+        /// Maps the given source name to the given acronym function.
+        /// </summary>
+        /// <param name="sourceName">The source name.</param>
+        /// <param name="acronymFunction">The function used to get the acronym of the source.</param>
+        public void MapAcronymFunction(string sourceName, GetAcronymFunction acronymFunction)
+        {
+            m_sourceAcronymFunctions[sourceName] = acronymFunction;
+        }
+
+        /// <summary>
         /// Gets a short one-line status of this <see cref="StatisticsEngine"/>.
         /// </summary>
         /// <param name="maxLength">Maximum number of available characters for display.</param>
@@ -518,8 +544,13 @@ namespace TimeSeriesFramework.Statistics
             List<IMeasurement> calculatedStatistics = new List<IMeasurement>();
             DateTime serverTime;
 
-            IEnumerable<IMeasurement> sourceMeasurements;
+            IEnumerable<IMeasurement> measurements;
             IEnumerable<object> sources;
+            GetAcronymFunction acronymFunction;
+
+            string sourceAcronym;
+            string signalReferencePattern;
+            IMeasurement measurement;
             IMeasurement clone;
 
             lock (m_timerLock)
@@ -529,25 +560,27 @@ namespace TimeSeriesFramework.Statistics
 
                 foreach (Statistic stat in m_statistics)
                 {
-                    sourceMeasurements = GetStatisticMeasurements(stat);
+                    measurements = GetStatisticMeasurements(stat);
                     sources = GetSourceCollection(stat);
+                    acronymFunction = m_sourceAcronymFunctions[stat.Source];
 
                     // Run calculations
                     foreach (object source in sources)
                     {
-                        foreach (IMeasurement measurement in sourceMeasurements)
+                        sourceAcronym = acronymFunction(source);
+                        signalReferencePattern = string.Format(@"{0}![^!]+-ST{1}", sourceAcronym, stat.Index);
+                        measurement = measurements.Single(m => Regex.IsMatch(m_measurementSignalReferenceMap[m.Key], signalReferencePattern));
+
+                        try
                         {
-                            try
-                            {
-                                clone = Measurement.Clone(measurement);
-                                clone.Timestamp = serverTime;
-                                clone.Value = stat.Method(source, stat.Arguments);
-                                calculatedStatistics.Add(clone);
-                            }
-                            catch (Exception ex)
-                            {
-                                OnProcessException(new Exception(string.Format("Exception encountered while calculating statistic {0}: {1}", stat.Index, ex.Message), ex));
-                            }
+                            clone = Measurement.Clone(measurement);
+                            clone.Timestamp = serverTime;
+                            clone.Value = stat.Method(source, stat.Arguments);
+                            calculatedStatistics.Add(clone);
+                        }
+                        catch (Exception ex)
+                        {
+                            OnProcessException(new Exception(string.Format("Exception encountered while calculating statistic {0}: {1}", stat.Index, ex.Message), ex));
                         }
                     }
                 }
@@ -614,6 +647,23 @@ namespace TimeSeriesFramework.Statistics
         {
             if ((object)Calculated != null)
                 Calculated(this, new EventArgs());
+        }
+
+        private string MakeSignalReference(string acronym, string suffix, int index)
+        {
+            return string.Format("{0}!{1}-ST{2}", acronym, suffix, index);
+        }
+
+        private string GetSystemAcronym(object source)
+        {
+            string signalReference = m_definedMeasurements
+                .Select(measurement => m_measurementSignalReferenceMap[measurement.Key])
+                .FirstOrDefault(sigRef => RegexMatch(sigRef, "SYSTEM"));
+
+            if ((object)signalReference == null)
+                return null;
+
+            return signalReference.Remove(signalReference.LastIndexOf("!"));
         }
 
         #endregion
@@ -686,6 +736,21 @@ namespace TimeSeriesFramework.Statistics
         public static bool WaitForDefaultInstance(int timeout)
         {
             return s_defaultWaitHandle.Wait(timeout);
+        }
+
+        /// <summary>
+        /// Gets the adapter acronym of the given source object.
+        /// </summary>
+        /// <param name="source">The source object.</param>
+        /// <returns>The given source object's adapter acronym.</returns>
+        public static string GetAdapterAcronym(object source)
+        {
+            IAdapter adapter = source as IAdapter;
+
+            if ((object)adapter == null)
+                return null;
+
+            return adapter.Name;
         }
 
         #endregion
