@@ -618,12 +618,12 @@ namespace TVA.Communication
                                     if (serverEndpoint.AddressFamily == AddressFamily.InterNetworkV6)
                                     {
                                         udpClient.Provider.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.AddMembership, new MulticastOption(serverEndpoint.Address));
-                                        udpClient.Provider.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.MulticastTimeToLive, 10);
+                                        udpClient.Provider.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.MulticastTimeToLive, int.Parse(m_configData["multicastTimeToLive"]));
                                     }
                                     else
                                     {
                                         udpClient.Provider.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(serverEndpoint.Address));
-                                        udpClient.Provider.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 10);
+                                        udpClient.Provider.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, int.Parse(m_configData["multicastTimeToLive"]));
                                     }
                                 }
 
@@ -701,6 +701,9 @@ namespace TVA.Communication
         /// <exception cref="ArgumentOutOfRangeException">Port property value is not between <see cref="Transport.PortRangeLow"/> and <see cref="Transport.PortRangeHigh"/>.</exception>
         protected override void ValidateConfigurationString(string configurationString)
         {
+            string setting;
+            int value;
+
             m_configData = configurationString.ParseKeyValuePairs();
 
             // Derive desired IP stack based on specified "interface" setting, adding setting if it's not defined
@@ -711,6 +714,13 @@ namespace TVA.Communication
 
             if (!Transport.IsPortNumberValid(m_configData["port"]) && int.Parse(m_configData["port"]) != -1)
                 throw new ArgumentOutOfRangeException("configurationString", string.Format("Port number must be {0} or between {1} and {2}", -1, Transport.PortRangeLow, Transport.PortRangeHigh));
+
+            if (!m_configData.ContainsKey("multicastTimeToLive"))
+                m_configData.Add("multicastTimeToLive", "10");
+
+            // Make sure a valid multi-cast time-to-live value is defined in the configuration data
+            if (!(m_configData.TryGetValue("multicastTimeToLive", out setting) && int.TryParse(setting, out value)))
+                m_configData["multicastTimeToLive"] = "10";
         }
 
         /// <summary>
