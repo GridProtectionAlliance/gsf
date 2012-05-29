@@ -396,11 +396,14 @@ namespace HistorianView
                 if (File.Exists(fileName))
                     m_archiveFiles.Add(OpenArchiveFile(fileName));
             }
-
+            
             foreach (ArchiveFile file in m_archiveFiles)
             {
+               
                 foreach (MetadataRecord record in file.MetadataFile.Read())
                 {
+                   
+                   
                     if (record.GeneralFlags.Enabled)
                         m_metadata.Add(new MetadataWrapper(record));
                 }
@@ -515,6 +518,7 @@ namespace HistorianView
                     {
                         wrap.Export = bool.Parse(metadataElement.Attributes["export"].Value);
                         wrap.Display = bool.Parse(metadataElement.Attributes["display"].Value);
+                        
                     }
 
                     m_metadata.Add(wrap);
@@ -544,6 +548,8 @@ namespace HistorianView
         }
 
         // Saves the current session to a session file.
+        //svk_5/29/12:the earlier version crashes while saving a historian data viewer file as a null object was tried to be referenced,
+        //a fix for this error has been added.
         private void SaveCurrentSession(string filePath)
         {
             string[] attributeNames = { "archivePath", "historianId", "export", "display" };
@@ -559,13 +565,18 @@ namespace HistorianView
             endTime.Value = EndTime.ToString("MM/dd/yyyy HH:mm:ss.fff");
             root.Attributes.Append(startTime);
             root.Attributes.Append(endTime);
-
+            
             foreach (ArchiveFile archive in m_archiveFiles)
             {
                 foreach (MetadataRecord record in archive.MetadataFile.Read())
                 {
-                    MetadataWrapper wrapper = m_metadata.Single(wrap => wrap.GetMetadata() == record);
+                    //The earlier version used m_metadata.Single which would throw an exception(when GetMetadata returns a null) causing the application to crash
+                    //When m_metadata.SingleOrDefault is used it returns a null(default) value when the comparison is false
+                    MetadataWrapper wrapper = m_metadata.SingleOrDefault(wrap => wrap.GetMetadata() == record);//svk_modified from Single
 
+                  
+                   if(wrapper!=null)//svk_5/25/12//condition to ensure that an null referenced object is not accessed
+                   {
                     if (wrapper.Export || wrapper.Display)
                     {
                         string[] attributeValues = { archive.FileName, record.HistorianID.ToString(), wrapper.Export.ToString(), wrapper.Display.ToString() };
@@ -580,6 +591,8 @@ namespace HistorianView
 
                         root.AppendChild(metadataElement);
                     }
+                   }
+
                 }
             }
 
@@ -630,17 +643,25 @@ namespace HistorianView
         }
 
         // Filters the data grid rows by the results of the user's search.
+        //The earlier version of this function produces a output grid with spaces whenever a record was empty
+        //These empty records are filtered by removing the records which do not have a measurement name.
+        //The records are also arranged in Ascending order. 
         private void FilterBySearchResults()
         {
             string[] tokens = m_searchBox.Text.Split(' ');
 
+            //m_dataGrid.ItemsSource = m_metadata.ToDictionary(metadata => metadata, metadata => SearchProperties(metadata, tokens))
+            //    .Where(pair => pair.Key.Export || pair.Key.Display || pair.Value)
+            //    .OrderBy(pair => pair.Key.Export)
+            //    .OrderBy(pair => pair.Key.Display)
+            //    .OrderByDescending(pair => pair.Value)
+            //    .Select(pair => pair.Key)
+            //    .ToList();
             m_dataGrid.ItemsSource = m_metadata.ToDictionary(metadata => metadata, metadata => SearchProperties(metadata, tokens))
-                .Where(pair => pair.Key.Export || pair.Key.Display || pair.Value)
-                .OrderBy(pair => pair.Key.Export)
-                .OrderBy(pair => pair.Key.Display)
-                .OrderByDescending(pair => pair.Value)
+                .Where(pair => (pair.Key.Export || pair.Key.Display || pair.Value) && !string.IsNullOrEmpty(pair.Key.Name))
                 .Select(pair => pair.Key)
-                .ToList();
+                .ToList(); //svk_5/29/12
+
         }
 
         // Searches the non-boolean properties of an object to determine if their string representations collectively contain a set of tokens.
