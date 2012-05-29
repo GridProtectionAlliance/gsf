@@ -568,7 +568,7 @@ namespace TimeSeriesFramework.Statistics
                     foreach (object source in sources)
                     {
                         sourceAcronym = acronymFunction(source);
-                        signalReferencePattern = string.Format(@"{0}![^!]+-ST{1}", sourceAcronym, stat.Index);
+                        signalReferencePattern = string.Format(@"^{0}![^!]+-ST{1}", sourceAcronym, stat.Index);
                         measurement = measurements.Single(m => Regex.IsMatch(m_measurementSignalReferenceMap[m.Key], signalReferencePattern));
 
                         try
@@ -649,13 +649,11 @@ namespace TimeSeriesFramework.Statistics
                 Calculated(this, new EventArgs());
         }
 
-        private string MakeSignalReference(string acronym, string suffix, int index)
-        {
-            return string.Format("{0}!{1}-ST{2}", acronym, suffix, index);
-        }
-
         private string GetSystemAcronym(object source)
         {
+            if (DataSource.Tables.Contains("NodeInfo"))
+                return DataSource.Tables["NodeInfo"].Rows[0]["Name"].ToNonNullString().ToUpper();
+
             string signalReference = m_definedMeasurements
                 .Select(measurement => m_measurementSignalReferenceMap[measurement.Key])
                 .FirstOrDefault(sigRef => RegexMatch(sigRef, "SYSTEM"));
