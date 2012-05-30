@@ -277,6 +277,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
@@ -615,15 +616,42 @@ namespace TVA.Communication
 
                                 if (Transport.IsMulticastIP(serverEndpoint.Address))
                                 {
-                                    if (serverEndpoint.AddressFamily == AddressFamily.InterNetworkV6)
+                                    string multicastSource;
+
+                                    if (m_configData.TryGetValue("multicastSource", out multicastSource))
                                     {
-                                        udpClient.Provider.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.AddMembership, new MulticastOption(serverEndpoint.Address));
-                                        udpClient.Provider.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.MulticastTimeToLive, int.Parse(m_configData["multicastTimeToLive"]));
+                                        IPAddress sourceAddress = IPAddress.Parse(multicastSource);
+                                        IPAddress localAddress = ((IPEndPoint)udpClient.Provider.LocalEndPoint).Address;
+
+                                        if (sourceAddress.AddressFamily != serverEndpoint.AddressFamily)
+                                            throw new InvalidOperationException(string.Format("Source address \"{0}\" is not in the same IP format as server address \"{1}\"", sourceAddress, serverEndpoint.Address));
+
+                                        if (localAddress.AddressFamily != serverEndpoint.AddressFamily)
+                                            throw new InvalidOperationException(string.Format("Local address \"{0}\" is not in the same IP format as server address \"{1}\"", localAddress, serverEndpoint.Address));
+
+                                        MemoryStream membershipAddresses = new MemoryStream();
+
+                                        byte[] serverAddressBytes = serverEndpoint.Address.GetAddressBytes();
+                                        byte[] sourceAddressBytes = sourceAddress.GetAddressBytes();
+                                        byte[] localAddressBytes = localAddress.GetAddressBytes();
+
+                                        membershipAddresses.Write(serverAddressBytes, 0, serverAddressBytes.Length);
+                                        membershipAddresses.Write(sourceAddressBytes, 0, sourceAddressBytes.Length);
+                                        membershipAddresses.Write(localAddressBytes, 0, localAddressBytes.Length);
+
+                                        udpClient.MulticastMembershipAddresses = membershipAddresses.ToArray();
+
+                                        // Execute multicast subscribe for specific source
+                                        SocketOptionLevel level = serverEndpoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP;
+                                        udpClient.Provider.SetSocketOption(level, SocketOptionName.AddSourceMembership, udpClient.MulticastMembershipAddresses);
+                                        udpClient.Provider.SetSocketOption(level, SocketOptionName.MulticastTimeToLive, int.Parse(m_configData["multicastTimeToLive"]));
                                     }
                                     else
                                     {
-                                        udpClient.Provider.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(serverEndpoint.Address));
-                                        udpClient.Provider.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, int.Parse(m_configData["multicastTimeToLive"]));
+                                        // Execute multicast subscribe for any source
+                                        SocketOptionLevel level = serverEndpoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP;
+                                        udpClient.Provider.SetSocketOption(level, SocketOptionName.AddMembership, new MulticastOption(serverEndpoint.Address));
+                                        udpClient.Provider.SetSocketOption(level, SocketOptionName.MulticastTimeToLive, int.Parse(m_configData["multicastTimeToLive"]));
                                     }
                                 }
 
@@ -669,6 +697,33 @@ namespace TVA.Communication
                 udpClient.ProcessTransmit(Encryption, udpClient.SecretKey, Compression);
 
                 udpClient.Provider.SendTo(udpClient.SendBuffer, udpClient.SendBufferLength, SocketFlags.None, udpClient.Provider.RemoteEndPoint);
+            }
+
+            try
+            {
+                if ((object)udpClient.Provider != null)
+                {
+                    // If the IP specified for the server is a multicast IP, unsubscribe from the specified multicast group.
+                    IPEndPoint serverEndpoint = (IPEndPoint)udpClient.Provider.RemoteEndPoint;
+
+                    if (Transport.IsMulticastIP(serverEndpoint.Address))
+                    {
+                        if ((object)udpClient.MulticastMembershipAddresses != null)
+                        {
+                            // Execute multicast unsubscribe for specific source
+                            udpClient.Provider.SetSocketOption(serverEndpoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.DropSourceMembership, udpClient.MulticastMembershipAddresses);
+                        }
+                        else
+                        {
+                            // Execute multicast unsubscribe for any source
+                            udpClient.Provider.SetSocketOption(serverEndpoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.DropMembership, new MulticastOption(serverEndpoint.Address));
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                OnSendClientDataException(udpClient.ID, new InvalidOperationException(string.Format("Failed to drop multicast membership: {0}", ex.Message), ex));
             }
 
             if (udpClient.Provider != null)
@@ -1079,12 +1134,15 @@ namespace TVA.Communication
         /// </summary>
         private void TerminateConnection(TransportProvider<Socket> client, bool raiseEvent)
         {
-            client.Reset();
+            if ((object)client != null)
+            {
+                client.Reset();
 
-            if (raiseEvent)
-                OnClientDisconnected(client.ID);
+                if (raiseEvent)
+                    OnClientDisconnected(client.ID);
 
-            m_udpClients.TryRemove(client.ID, out client);
+                m_udpClients.TryRemove(client.ID, out client);
+            }
         }
 
         #endregion

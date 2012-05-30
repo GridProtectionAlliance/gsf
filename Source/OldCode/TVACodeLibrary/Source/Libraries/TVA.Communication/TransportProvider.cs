@@ -310,6 +310,11 @@ namespace TVA.Communication
         /// </summary>
         public TransportStatistics Statistics;
 
+        /// <summary>
+        /// Optional multicast membership addresses used when a multicast source address is specified.
+        /// </summary>
+        public byte[] MulticastMembershipAddresses;
+
         // Internally managed I/O buffers
         private byte[] m_sendBuffer;
         private int m_sendBufferSetSize;
@@ -452,7 +457,7 @@ namespace TVA.Communication
             // Cleanup the provider.
             try
             {
-                if (Provider != null)
+                if ((object)Provider != null)
                     ((IDisposable)Provider).Dispose();
             }
             catch
@@ -489,7 +494,7 @@ namespace TVA.Communication
                     AsyncCallback asyncCallback = data[0] as AsyncCallback;
                     IAsyncResult asyncResult = data[1] as IAsyncResult;
 
-                    if (asyncCallback != null && asyncResult != null)
+                    if ((object)asyncCallback != null && (object)asyncResult != null)
                         asyncCallback(asyncResult);
                 }
             }
