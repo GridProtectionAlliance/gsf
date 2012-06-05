@@ -161,7 +161,7 @@
       <NugetPackages Remove="@(NugetPackages)"/>
       <NugetPackages Include="$(NugetPackagesFolder)\TVACodeLibrary.*.$(Major).$(Minor).$(Build)*.nupkg" Exclude="$(NugetPackagesFolder)\TVACodeLibrary.*.$(Major).$(Minor).$(Build)*.symbols.nupkg"/>
     </ItemGroup>
-    <Exec Command="NuGet.exe push %22%(NugetPackages.FullPath)%22 $(NugetApiKey)" Condition="'@(NugetPackages)' != '' And '$(NugetApiKey)' != ''"/>
+    <Exec Command="NuGet.exe push %22%(NugetPackages.FullPath)%22 $(NugetApiKey)" Condition="'@(NugetPackages)' != ''"/>
   </Target>
 
 </Project>
