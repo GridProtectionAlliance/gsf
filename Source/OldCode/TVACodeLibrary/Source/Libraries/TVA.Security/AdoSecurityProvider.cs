@@ -325,6 +325,8 @@ namespace TVA.Security
         /// </summary>
         public new const int ProviderID = 1;
 
+        private Exception m_lastException;
+
         #endregion
 
         #region [ Constructor ]
@@ -373,6 +375,21 @@ namespace TVA.Security
                     // Data update not supported on internal user accounts.
                     return false;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Gets last exception reported by the <see cref="AdoSecurityProvider"/>.
+        /// </summary>
+        public Exception LastException
+        {
+            get
+            {
+                return m_lastException;
+            }
+            set
+            {
+                m_lastException = value;
             }
         }
 
@@ -534,6 +551,7 @@ namespace TVA.Security
             }
             catch (Exception ex)
             {
+                m_lastException = ex;
                 LogError(ex.Source, ex.ToString());
                 throw;
             }
@@ -586,12 +604,22 @@ namespace TVA.Security
                     UserData.IsAuthenticated = UserData.Password == SecurityProviderUtility.EncryptPassword(password);
 
                 // Log user authentication result.
-                LogLogin(UserData.IsAuthenticated);
+                try
+                {
+                    // Writing data will fail for read-only databases
+                    LogLogin(UserData.IsAuthenticated);
+                }
+                catch (Exception ex)
+                {
+                    // All we can do is track last exception in this case
+                    m_lastException = ex;
+                }
 
                 return UserData.IsAuthenticated;
             }
             catch (Exception ex)
             {
+                m_lastException = ex;
                 LogError(ex.Source, ex.ToString());
                 throw;
             }
@@ -665,12 +693,14 @@ namespace TVA.Security
 
                 return true;
             }
-            catch (SecurityException)
+            catch (SecurityException ex)
             {
+                m_lastException = ex;
                 throw;
             }
             catch (Exception ex)
             {
+                m_lastException = ex;
                 LogError(ex.Source, ex.ToString());
                 throw;
             }
@@ -723,9 +753,10 @@ namespace TVA.Security
 
                     return true;
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Nothing to-do if failure cannot be logged
+                    // All we can do is track last exception in this case
+                    m_lastException = ex;
                 }
             }
 
