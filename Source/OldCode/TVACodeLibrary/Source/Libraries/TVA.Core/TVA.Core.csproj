@@ -270,6 +270,7 @@
     <Compile Include="NumericalAnalysis\NamespaceDoc.cs" />
     <Compile Include="NumericalAnalysis\NumericalAnalysisExtensions.cs" />
     <Compile Include="NumericalAnalysis\RealTimeSlope.cs" />
+    <Compile Include="NumericalAnalysis\WaveFit.cs" />
     <Compile Include="NumericExtensions.cs" />
     <Compile Include="ObjectState.cs" />
     <Compile Include="Parsing\BinaryImageBase.cs" />
