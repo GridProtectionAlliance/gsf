@@ -13695,6 +13695,18 @@
             <param name="yValues">A list of <see cref="T:System.Double"/> y-values.</param>
             <returns>An array of <see cref="T:System.Double"/> values.</returns>
         </member>
+        <member name="M:TVA.NumericalAnalysis.CurveFit.LeastSquares(System.Double[],System.Double[],System.Double[],System.Double@,System.Double@,System.Double@)">
+            <summary>
+            Uses least squares linear regression to estimate the coefficients a, b, and c
+            from the given (x,y,z) data points for the equation z = a + bx + cy.
+            </summary>
+            <param name="zValues">z-value array</param>
+            <param name="xValues">x-value array</param>
+            <param name="yValues">y-value array</param>
+            <param name="a">the out a coefficient</param>
+            <param name="b">the out b coefficient</param>
+            <param name="c">the out c coefficient</param>
+        </member>
         <member name="T:TVA.Net.Ftp.FtpExceptionBase">
             <summary>
             FTP exception base class.
@@ -34963,6 +34975,52 @@
             <summary>
             Gets or sets number of units completed processing so far.
             </summary>
+        </member>
+        <member name="T:TVA.NumericalAnalysis.SineWave">
+            <summary>
+            Represents a sine wave of the form <c>y=A*sin(ω*t+Φ)+δ</c>.
+            </summary>
+        </member>
+        <member name="F:TVA.NumericalAnalysis.SineWave.Amplitude">
+            <summary>
+            Amplitude (A) of the sine wave.
+            </summary>
+        </member>
+        <member name="F:TVA.NumericalAnalysis.SineWave.Frequency">
+            <summary>
+            Frequency (ω) of the sine wave, in Hz.
+            </summary>
+        </member>
+        <member name="F:TVA.NumericalAnalysis.SineWave.Phase">
+            <summary>
+            Phase (Φ) shift of the sine wave.
+            </summary>
+        </member>
+        <member name="F:TVA.NumericalAnalysis.SineWave.Bias">
+            <summary>
+            Vertical offset (δ) of the sine wave.
+            </summary>
+        </member>
+        <member name="M:TVA.NumericalAnalysis.SineWave.CalculateY(System.Double)">
+            <summary>
+            Calculates the y-value for the given time.
+            </summary>
+            <param name="t">The time, in seconds.</param>
+            <returns><c>A*sin(ω*t+Φ)+δ</c></returns>
+        </member>
+        <member name="T:TVA.NumericalAnalysis.WaveFit">
+            <summary>
+            Linear regression algorithm for sine waves.
+            </summary>
+        </member>
+        <member name="M:TVA.NumericalAnalysis.WaveFit.SineFit(System.Double[],System.Double[],System.Double)">
+            <summary>
+            Uses least squares linear regression to calculate the best fit sine wave for the given data.
+            </summary>
+            <param name="yValues">The y values of the data points.</param>
+            <param name="tValues">The time values of the data points, in seconds.</param>
+            <param name="frequency">The frequency of the sine wave, in Hz.</param>
+            <returns>A <see cref="T:TVA.NumericalAnalysis.SineWave"/> approximated from the given data points.</returns>
         </member>
         <member name="T:TVA.NumericalAnalysis.NumericalAnalysisExtensions">
             <summary>Defines extension functions related to numerical analysis over a sequence of data.</summary>
