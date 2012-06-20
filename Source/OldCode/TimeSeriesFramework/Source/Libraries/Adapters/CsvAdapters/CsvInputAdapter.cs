@@ -24,7 +24,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.IO;
+using System.Linq;
 using System.Text;
 using TimeSeriesFramework;
 using TimeSeriesFramework.Adapters;
@@ -35,7 +37,7 @@ namespace CsvAdapters
     /// <summary>
     /// Represents an input adapter that reads measurements from a CSV file.
     /// </summary>
-    [Description("CSV: archives measurements to a CSV file.")]
+    [Description("CSV: reads measurements from a CSV file.")]
     public class CsvInputAdapter : InputAdapterBase
     {
         #region [ Members ]
@@ -45,9 +47,11 @@ namespace CsvAdapters
         private StreamReader m_inStream;
         private string m_header;
         private Dictionary<string, int> m_columns;
+        private Dictionary<int, IMeasurement> m_columnMappings;
         private double m_inputInterval;
         private int m_measurementsPerInterval;
         private bool m_simulateTimestamp;
+        private bool m_transverse;
         private System.Timers.Timer m_timer;
 
         #endregion
@@ -61,6 +65,7 @@ namespace CsvAdapters
         {
             m_fileName = "measurements.csv";
             m_columns = new Dictionary<string, int>(StringComparer.CurrentCultureIgnoreCase);
+            m_columnMappings = new Dictionary<int, IMeasurement>();
             m_inputInterval = 33.333333;
             m_measurementsPerInterval = 5;
             m_timer = new System.Timers.Timer();
@@ -125,6 +130,24 @@ namespace CsvAdapters
         }
 
         /// <summary>
+        /// Gets or sets a value that determines whether CSV file is in transverse mode for real-time concentration.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Indicate whether CSV file is in transverse mode for real-time concentration."),
+        DefaultValue(false)]
+        public bool TransverseMode
+        {
+            get
+            {
+                return m_transverse;
+            }
+            set
+            {
+                m_transverse = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets a value that determines whether timestamps are
         /// simulated for the purposes of real-time concentration.
         /// </summary>
@@ -141,6 +164,18 @@ namespace CsvAdapters
             {
                 m_simulateTimestamp = value;
             }
+        }
+
+        /// <summary>
+        /// Defines the column mappings must defined: e.g., 0=Timestamp; 1=PPA:12; 2=PPA13.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the column mappings must defined: e.g., \"0=Timestamp; 1=PPA:12; 2=PPA13\"."),
+        DefaultValue("")]
+        public int ColumnMappings
+        {
+            get;
+            set;
         }
 
         /// <summary>
@@ -173,6 +208,8 @@ namespace CsvAdapters
                 status.AppendFormat("            Input interval: {0}", m_inputInterval);
                 status.AppendLine();
                 status.AppendFormat(" Measurements per interval: {0}", m_measurementsPerInterval);
+                status.AppendLine();
+                status.AppendFormat("     Using traverse format: {0}", m_transverse);
                 status.AppendLine();
 
                 return status.ToString();
@@ -218,6 +255,89 @@ namespace CsvAdapters
             if (settings.TryGetValue("simulateTimestamp", out setting))
                 m_simulateTimestamp = setting.ParseBoolean();
 
+            if (settings.TryGetValue("transverse", out setting) || settings.TryGetValue("transverseMode", out setting))
+                m_transverse = setting.ParseBoolean();
+
+            if (m_transverse)
+            {
+                // Load column mappings:
+                if (settings.TryGetValue("columnMappings", out setting))
+                {
+                    Dictionary<int, string> columnMappings = new Dictionary<int, string>();
+                    int index;
+
+                    foreach (KeyValuePair<string, string> mapping in setting.ParseKeyValuePairs())
+                    {
+                        if (int.TryParse(mapping.Key, out index))
+                            columnMappings[index] = mapping.Value;
+                    }
+
+                    if (!m_simulateTimestamp && !columnMappings.Values.Contains("Timestamp", StringComparer.InvariantCultureIgnoreCase))
+                        throw new InvalidOperationException("One of the column mappings must be defined as a \"Timestamp\": e.g., columnMappings={0=Timestamp; 1=PPA:12; 2=PPA13}.");
+
+                    // In transverse mode, maximum measurements per interval is set to maximum columns in input file
+                    m_measurementsPerInterval = columnMappings.Keys.Max();
+
+                    // Auto-assign output measurements based on column mappings
+                    OutputMeasurements = columnMappings.Where(kvp => string.Compare(kvp.Value, "Timestamp", true) != 0).Select(kvp =>
+                    {
+                        string measurementID = kvp.Value;
+                        IMeasurement measurement = new Measurement();
+                        MeasurementKey key;
+                        Guid id;
+
+                        if (Guid.TryParse(measurementID, out id))
+                        {
+                            measurement.ID = id;
+                            measurement.Key = MeasurementKey.LookupBySignalID(id);
+                        }
+                        else if (MeasurementKey.TryParse(measurementID, Guid.Empty, out key))
+                        {
+                            measurement.Key = key;
+                            measurement.ID = key.SignalID;
+                        }
+
+                        try
+                        {
+                            DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalID = '{0}'", measurement.ID));
+
+                            if (filteredRows.Length > 0)
+                            {
+                                DataRow row = filteredRows[0];
+
+                                // Assign other attributes
+                                measurement.TagName = row["PointTag"].ToNonNullString();
+                                measurement.Multiplier = double.Parse(row["Multiplier"].ToString());
+                                measurement.Adder = double.Parse(row["Adder"].ToString());
+                            }
+                        }
+                        catch
+                        {
+                            // Failure to lookup extra metadata is not catastrophic
+                        }
+
+                        // Associate measurement with column index
+                        m_columnMappings[kvp.Key] = measurement;
+
+                        return measurement;
+                    }).ToArray();
+
+                    int timestampColumn = columnMappings.First(kvp => string.Compare(kvp.Value, "Timestamp", true) == 0).Key;
+
+                    // Reserve a column mapping for timestamp value
+                    IMeasurement timestampMeasurement = new Measurement()
+                    {
+                        TagName = "Timestamp"
+                    };
+
+                    m_columnMappings[timestampColumn] = timestampMeasurement;
+                }
+                else
+                {
+                    throw new InvalidOperationException("Column mappings must be defined when using transverse format: e.g., columnMappings={0=Timestamp; 1=PPA:12; 2=PPA13}.");
+                }
+            }
+
             // Override input interval based on temporal processing interval if it's not set to default
             if (ProcessingInterval > -1)
             {
@@ -240,7 +360,8 @@ namespace CsvAdapters
             m_inStream = new StreamReader(m_fileName);
 
             m_header = m_inStream.ReadLine();
-            string[] headings = m_header.Split(',');
+
+            string[] headings = m_header.ToNonNullString().Split(',');
 
             for (int i = 0; i < headings.Length; i++)
             {
@@ -271,30 +392,78 @@ namespace CsvAdapters
 
         private void m_timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            IMeasurement[] newMeasurements = new IMeasurement[m_measurementsPerInterval];
-            Ticks currentTime = DateTime.Now;
+            List<IMeasurement> newMeasurements = new List<IMeasurement>();
+            long fileTime = 0;
+            long currentTime = DateTime.Now.Ticks;
+            int timestampColumn = 0;
+            string measurementID;
+            string[] fields = m_inStream.ReadLine().ToNonNullString().Split(',');
+
+            if (fields.Length <= 0)
+                return;
+
+            // Read time from Timestamp column in transverse mode
+            if (m_transverse)
+            {
+                if (m_simulateTimestamp)
+                {
+                    fileTime = currentTime;
+                }
+                else
+                {
+                    timestampColumn = m_columnMappings.First(kvp => string.Compare(kvp.Value.TagName, "Timestamp", true) == 0).Key;
+                    fileTime = long.Parse(fields[timestampColumn]);
+                }
+            }
 
             for (int i = 0; i < m_measurementsPerInterval; i++)
             {
-                IMeasurement measurement = new Measurement();
-                string line = m_inStream.ReadLine();
-                string[] fields = line.Split(',');
+                IMeasurement measurement;
 
-                if (m_columns.ContainsKey("Signal ID"))
-                    measurement.ID = new Guid(fields[m_columns["Signal ID"]]);
+                if (m_transverse)
+                {
+                    // No measurement will be defined for timestamp column
+                    if (i == timestampColumn)
+                        continue;
 
-                if (m_columns.ContainsKey("Measurement Key"))
-                    measurement.Key = MeasurementKey.Parse(fields[m_columns["Measurement Key"]], measurement.ID);
+                    if (m_columnMappings.TryGetValue(i, out measurement))
+                    {
+                        measurement = Measurement.Clone(measurement);
+                        measurement.Value = double.Parse(fields[i]);
+                    }
+                    else
+                    {
+                        measurement = new Measurement();
+                        measurement.ID = Guid.Empty;
+                        measurement.Key = MeasurementKey.Undefined;
+                        measurement.Value = double.NaN;
+                    }
 
-                if (m_simulateTimestamp)
-                    measurement.Timestamp = currentTime;
-                else if (m_columns.ContainsKey("Timestamp"))
-                    measurement.Timestamp = long.Parse(fields[m_columns["Timestamp"]]);
+                    if (m_simulateTimestamp)
+                        measurement.Timestamp = currentTime;
+                    else if (m_columns.ContainsKey("Timestamp"))
+                        measurement.Timestamp = fileTime;
+                }
+                else
+                {
+                    measurement = new Measurement();
 
-                if (m_columns.ContainsKey("Value"))
-                    measurement.Value = double.Parse(fields[m_columns["Value"]]);
+                    if (m_columns.ContainsKey("Signal ID"))
+                        measurement.ID = new Guid(fields[m_columns["Signal ID"]]);
 
-                newMeasurements[i] = measurement;
+                    if (m_columns.ContainsKey("Measurement Key"))
+                        measurement.Key = MeasurementKey.Parse(fields[m_columns["Measurement Key"]], measurement.ID);
+
+                    if (m_simulateTimestamp)
+                        measurement.Timestamp = currentTime;
+                    else if (m_columns.ContainsKey("Timestamp"))
+                        measurement.Timestamp = long.Parse(fields[m_columns["Timestamp"]]);
+
+                    if (m_columns.ContainsKey("Value"))
+                        measurement.Value = double.Parse(fields[m_columns["Value"]]);
+                }
+
+                newMeasurements.Add(measurement);
             }
 
             OnNewMeasurements(newMeasurements);
