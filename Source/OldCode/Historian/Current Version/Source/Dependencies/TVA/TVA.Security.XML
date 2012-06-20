@@ -731,6 +731,11 @@
             Geta a boolean value that indicates whether <see cref="M:TVA.Security.SecurityProviderBase.UpdateData"/> operation is supported.
             </summary>
         </member>
+        <member name="P:TVA.Security.AdoSecurityProvider.LastException">
+            <summary>
+            Gets last exception reported by the <see cref="T:TVA.Security.AdoSecurityProvider"/>.
+            </summary>
+        </member>
         <member name="T:TVA.Security.SecurityProviderUtility">
             <summary>
             A helper class containing methods used in the implementation of role-based security.
