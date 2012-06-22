@@ -177,8 +177,8 @@ namespace TimeSeriesFramework
                     {
                         if ((object)values != null && values.Count > 0)
                         {
-                            // Get first tracked value
-                            derivedMeasurement = values[0];
+                            // Get first tracked value - we clone the measurement since we are updating its value
+                            derivedMeasurement = Measurement.Clone(values[0]);
 
                             if ((object)derivedMeasurement != null)
                             {
