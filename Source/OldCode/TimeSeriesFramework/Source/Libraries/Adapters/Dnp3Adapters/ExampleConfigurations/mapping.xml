@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+
+<MeasurementMap xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <binaryMap>
+
+    <Mapping>
+
+      <tsfId>a:b</tsfId>
+
+      <dnpIndex>0</dnpIndex>
+
+    </Mapping>
+
+  </binaryMap>
+
+  <analogMap>
+
+    <Mapping>
+
+      <tsfId>b:c</tsfId>
+
+      <dnpIndex>0</dnpIndex>
+
+    </Mapping>
+
+  </analogMap>
+
+  <counterMap>
+
+    <Mapping>
+
+      <tsfId>d:e</tsfId>
+
+      <dnpIndex>0</dnpIndex>
+
+    </Mapping>
+
+  </counterMap>
+
+  <controlStatusMap>
+
+    <Mapping>
+
+      <tsfId>e:f</tsfId>
+
+      <dnpIndex>0</dnpIndex>
+
+    </Mapping>
+
+  </controlStatusMap>
+
+  <setpointStatusMap>
+
+    <Mapping>
+
+      <tsfId>f:g</tsfId>
+
+      <dnpIndex>0</dnpIndex>
+
+    </Mapping>
+
+  </setpointStatusMap>
+
+</MeasurementMap>
