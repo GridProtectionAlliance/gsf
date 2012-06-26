@@ -9,7 +9,7 @@ using TimeSeriesFramework;
 namespace Dnp3Adapters
 {
     /// <summary>
-    /// This is the data adapter that marshalls data from the dnp3 world to the TSF
+    /// This is the data adapter that converts data from the dnp3 world to the TSF
     /// </summary>
     class TsfDataObserver : IDataObserver
     {

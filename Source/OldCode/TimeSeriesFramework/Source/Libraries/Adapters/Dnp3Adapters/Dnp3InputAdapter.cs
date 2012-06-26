@@ -136,21 +136,27 @@ namespace Dnp3Adapters
             this.m_portName = tcp.address + ":" + tcp.port;
             m_Manager.AddTCPClient(m_portName, tcp.level, tcp.retryMs, tcp.address, tcp.port);            
             var adapter = new TsfDataObserver(new MeasurementLookup(this.m_MeasMap));
-            adapter.NewMeasurements += new TsfDataObserver.OnNewMeasurements(this.OnNewMeasurements);
             adapter.NewMeasurements += new TsfDataObserver.OnNewMeasurements(adapter_NewMeasurements);
+            adapter.NewMeasurements += new TsfDataObserver.OnNewMeasurements(this.OnNewMeasurements);           
             var acceptor = m_Manager.AddMaster(m_portName, this.Name, FilterLevel.LEV_WARNING, adapter, m_MasterConfig.master);
         }
 
         void adapter_NewMeasurements(ICollection<IMeasurement> measurements)
         {
             this.m_numMeasurementsReceived += measurements.Count;
-            //this.OnStatusMessage("The adapter received " + measurements.Count + " updates");
+            if (measurements.Count > 0)
+            {
+                foreach (IMeasurement m in measurements)
+                {
+                    this.OnStatusMessage(m.ToString());
+                }
+            }
         }        
 
         protected override void AttemptDisconnection()
         {             
             //removes the port and the stack
-            m_Manager.RemovePort(m_portName);             
+            m_Manager.RemovePort(m_portName);        
         }
 
         public override bool SupportsTemporalProcessing

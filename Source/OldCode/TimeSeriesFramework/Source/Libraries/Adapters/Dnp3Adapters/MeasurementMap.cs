@@ -9,17 +9,19 @@ namespace Dnp3Adapters
     {
         public Mapping()
         {
-            this.tsfId = "";
+            this.tsfId = 0;
             this.dnpIndex = 0;
         }
 
-        public Mapping(String id, UInt32 index)
+        public Mapping(uint id, String source, UInt32 index)
         {
             this.tsfId = id;
+            this.tsfSource = source;
             this.dnpIndex = index;
         }
 
-        public string tsfId;
+        public uint tsfId;
+        public String tsfSource;        
         public UInt32 dnpIndex;
     }
 

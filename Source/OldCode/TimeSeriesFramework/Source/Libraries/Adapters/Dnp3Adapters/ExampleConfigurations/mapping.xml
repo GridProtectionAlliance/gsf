@@ -6,7 +6,9 @@
 
     <Mapping>
 
-      <tsfId>a:b</tsfId>
+      <tsfId>0</tsfId>
+
+      <tsfSource>PPA</tsfSource>
 
       <dnpIndex>0</dnpIndex>
 
@@ -18,7 +20,9 @@
 
     <Mapping>
 
-      <tsfId>b:c</tsfId>
+      <tsfId>1</tsfId>
+
+      <tsfSource>PPA</tsfSource>
 
       <dnpIndex>0</dnpIndex>
 
@@ -30,7 +34,9 @@
 
     <Mapping>
 
-      <tsfId>d:e</tsfId>
+      <tsfId>2</tsfId>
+
+      <tsfSource>PPA</tsfSource>
 
       <dnpIndex>0</dnpIndex>
 
@@ -42,7 +48,9 @@
 
     <Mapping>
 
-      <tsfId>e:f</tsfId>
+      <tsfId>3</tsfId>
+
+      <tsfSource>PPA</tsfSource>
 
       <dnpIndex>0</dnpIndex>
 
@@ -54,7 +62,9 @@
 
     <Mapping>
 
-      <tsfId>f:g</tsfId>
+      <tsfId>4</tsfId>
+
+      <tsfSource>PPA</tsfSource>
 
       <dnpIndex>0</dnpIndex>
 
