@@ -52,6 +52,12 @@ namespace Dnp3Adapters
         private int m_numMeasurementsReceived;
 
         /// <summary>
+        /// Flag that records wether or not the port/master have been added so that the resource can be cleaned
+        /// up in the Dispose/AttemptDisconnect methods
+        /// </summary>
+        private bool m_active;
+
+        /// <summary>
         /// Gets or sets the name of the xml file from which the communication parameters will be read
         /// </summary>
         [ConnectionStringParameter,
@@ -107,7 +113,17 @@ namespace Dnp3Adapters
             {                
                 this.OnProcessException(ex);                
             }            
-        }       
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (this.m_active)
+            {
+                m_Manager.RemovePort(m_portName);
+                this.m_active = false;
+            }
+            base.Dispose(disposing);
+        }
 
         private T ReadConfig<T>(string path)
         {
@@ -139,24 +155,21 @@ namespace Dnp3Adapters
             adapter.NewMeasurements += new TsfDataObserver.OnNewMeasurements(adapter_NewMeasurements);
             adapter.NewMeasurements += new TsfDataObserver.OnNewMeasurements(this.OnNewMeasurements);           
             var acceptor = m_Manager.AddMaster(m_portName, this.Name, FilterLevel.LEV_WARNING, adapter, m_MasterConfig.master);
+            this.m_active = true;
         }
 
         void adapter_NewMeasurements(ICollection<IMeasurement> measurements)
         {
-            this.m_numMeasurementsReceived += measurements.Count;
-            if (measurements.Count > 0)
-            {
-                foreach (IMeasurement m in measurements)
-                {
-                    this.OnStatusMessage(m.ToString());
-                }
-            }
+            this.m_numMeasurementsReceived += measurements.Count;                      
         }        
 
         protected override void AttemptDisconnection()
-        {             
-            //removes the port and the stack
-            m_Manager.RemovePort(m_portName);        
+        {
+            if (this.m_active)
+            {                
+                m_Manager.RemovePort(m_portName);
+                this.m_active = false;
+            }
         }
 
         public override bool SupportsTemporalProcessing
