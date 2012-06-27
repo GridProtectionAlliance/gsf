@@ -51,7 +51,7 @@ namespace Dnp3Adapters
         {
             var m = new Measurement();
             m.Key = new MeasurementKey(Guid.Empty, id, source);
-            m.Value = 42.8;// meas.value ? 1.0 : 0.0;
+            m.Value = meas.value ? 1.0 : 0.0;
             m.Timestamp = DateTime.UtcNow;
             return m;
         }
@@ -60,7 +60,7 @@ namespace Dnp3Adapters
         {
             var m = new Measurement();
             m.Key = new MeasurementKey(Guid.Empty, id, source);
-            m.Value = 23.7;// meas.value;
+            m.Value = meas.value;
             m.Timestamp = DateTime.UtcNow;
             return m;
         }
@@ -70,7 +70,7 @@ namespace Dnp3Adapters
             var m = new Measurement();
             m.Key = new MeasurementKey(Guid.Empty, id, source);
             m.Value = meas.value; //auto cast to double
-            m.Timestamp = meas.time;
+            m.Timestamp = DateTime.UtcNow;
             return m;
         }
 
@@ -79,7 +79,7 @@ namespace Dnp3Adapters
             var m = new Measurement();
             m.Key = new MeasurementKey(Guid.Empty, id, source);
             m.Value = meas.value ? 1.0 : 0.0;
-            m.Timestamp = meas.time;
+            m.Timestamp = DateTime.UtcNow;
             return m;
         }
 
@@ -88,7 +88,7 @@ namespace Dnp3Adapters
             var m = new Measurement();
             m.Key = new MeasurementKey(Guid.Empty, id, source);
             m.Value = meas.value;
-            m.Timestamp = meas.time;
+            m.Timestamp = DateTime.UtcNow;
             return m;
         }
 
