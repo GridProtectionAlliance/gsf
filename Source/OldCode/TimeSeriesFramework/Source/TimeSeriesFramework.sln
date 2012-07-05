@@ -113,6 +113,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OpenDNP3", "OpenDNP3", "{10
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dnp3Adapters", "Libraries\Adapters\Dnp3Adapters\Dnp3Adapters.csproj", "{A04A48C2-112D-4EE3-A6B0-3784A1315BCF}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "x86", "x86", "{9963387D-7D8C-4B3F-8584-93CC8279E87D}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\OpenDNP3\x86\boost_date_time-vc100-mt-1_47.dll = Dependencies\OpenDNP3\x86\boost_date_time-vc100-mt-1_47.dll
+		Dependencies\OpenDNP3\x86\boost_system-vc100-mt-1_47.dll = Dependencies\OpenDNP3\x86\boost_system-vc100-mt-1_47.dll
+		Dependencies\OpenDNP3\x86\boost_thread-vc100-mt-1_47.dll = Dependencies\OpenDNP3\x86\boost_thread-vc100-mt-1_47.dll
+		Dependencies\OpenDNP3\x86\DotNetAdapter.dll = Dependencies\OpenDNP3\x86\DotNetAdapter.dll
+		Dependencies\OpenDNP3\x86\DotNetInterface.dll = Dependencies\OpenDNP3\x86\DotNetInterface.dll
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
 		SccNumberOfProjects = 20
@@ -381,5 +390,6 @@ Global
 		{A04A48C2-112D-4EE3-A6B0-3784A1315BCF} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
 		{D78C3B1B-F673-45EB-86CB-93DCB4572905} = {7877F254-782B-4221-83B4-DB31D9107A43}
 		{5E75D20E-228E-4ACC-B73D-E9471D9E0852} = {7877F254-782B-4221-83B4-DB31D9107A43}
+		{9963387D-7D8C-4B3F-8584-93CC8279E87D} = {109F186F-C8B9-43EC-8D5B-F2494DBE8923}
 	EndGlobalSection
 EndGlobal
