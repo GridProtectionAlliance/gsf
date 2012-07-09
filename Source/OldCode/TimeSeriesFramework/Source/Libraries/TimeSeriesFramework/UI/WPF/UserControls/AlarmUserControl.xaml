@@ -76,6 +76,15 @@
                 <TextBlock Text="seconds" Margin="2,5,5,5" />
             </StackPanel>
 
+            <CheckBox Content="Enabled" Grid.Row="4" Grid.Column="3" IsChecked="{tsfBinding:Column Path=Enabled}"/>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="0" HorizontalAlignment="Right">
+                <TextBlock Text="Load Order" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Style="{StaticResource RequiredMarker}" />
+            </StackPanel>
+            
+            <TextBox Grid.Row="3" Grid.Column="1" Text="{tsfBinding:Column Path=LoadOrder}" Width="35" />
+
             <TextBlock Text="Severity" Grid.Row="3" Grid.Column="2" />
             <ComboBox Grid.Row="3" Grid.Column="3" ItemsSource="{Binding Source={StaticResource SeverityList}}" DisplayMemberPath="Value"
                       SelectedItem="{tsfBinding:Column Path=Severity, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource SeverityList}}"/>
@@ -83,14 +92,7 @@
             <TextBlock Text="Description" Grid.Row="5" Grid.Column="0" VerticalAlignment="Top" />
             <TextBox Grid.Row="5" Grid.Column="1" Text="{tsfBinding:Column Path=Description}" TextWrapping="Wrap" />
 
-            <CheckBox Content="Create Associated Measurement" Grid.Row="5" Grid.Column="3" Margin="5,15,5,5" IsChecked="{tsfBinding:Column Path=CreateAssociatedMeasurement}" />
-
-            <StackPanel Orientation="Horizontal" Grid.Row="6" Grid.Column="0" HorizontalAlignment="Right">
-                <TextBlock Text="Load Order" Style="{StaticResource RequiredLabel}" />
-                <TextBlock Style="{StaticResource RequiredMarker}" />
-            </StackPanel>
-            <TextBox Grid.Row="6" Grid.Column="1" Text="{tsfBinding:Column Path=LoadOrder}" Width="35" />
-            <CheckBox Content="Enabled" Grid.Row="6" Grid.Column="3" IsChecked="{tsfBinding:Column Path=Enabled}"/>      
+            <CheckBox Content="Create Associated Measurement" Grid.Row="5" Grid.Column="3" Margin="5,15,5,5" IsChecked="{tsfBinding:Column Path=CreateAssociatedMeasurement}" />     
         </Grid>
 
         <uc:DetailViewFooterUserControl x:Name="UserControlDetailViewFooter" DeleteCommand="{Binding DeleteCommand}" ClearCommand="{Binding ClearCommand}" SaveCommand="{Binding SaveCommand}"
