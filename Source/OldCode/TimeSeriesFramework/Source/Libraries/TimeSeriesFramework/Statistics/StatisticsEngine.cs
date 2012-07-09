@@ -28,6 +28,7 @@ using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using TimeSeriesFramework.Adapters;
@@ -119,6 +120,8 @@ namespace TimeSeriesFramework.Statistics
         private InputAdapterCollection m_inputAdapters;
         private ActionAdapterCollection m_actionAdapters;
 
+        private int m_lastStatisticCalculationCount;
+
         private bool m_disposed;
 
         #endregion
@@ -168,6 +171,30 @@ namespace TimeSeriesFramework.Statistics
             }
         }
 
+        /// <summary>
+        /// Returns the detailed status of the statistics engine.
+        /// </summary>
+        public override string Status
+        {
+            get
+            {
+                StringBuilder status = new StringBuilder(base.Status);
+
+                status.AppendFormat("          Statistics count: {0}", m_statistics.Count);
+                status.AppendLine();
+                status.AppendFormat("    Stat measurement count: {0}", m_definedMeasurements.Count);
+                status.AppendLine();
+                status.AppendFormat("    Statistic source count: {0}", m_statisticSources.SelectMany(pair => pair.Value).Count());
+                status.AppendLine();
+                status.AppendFormat("    Acronym function count: {0}", m_sourceAcronymFunctions.Count);
+                status.AppendLine();
+                status.AppendFormat(" Recently calculated stats: {0}", m_lastStatisticCalculationCount);
+                status.AppendLine();
+
+                return status.ToString();
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -206,7 +233,7 @@ namespace TimeSeriesFramework.Statistics
             m_definedMeasurements = new List<IMeasurement>();
             m_measurementSignalReferenceMap = new Dictionary<MeasurementKey, string>();
             m_measurementSourceMap = new Dictionary<MeasurementKey, string>();
-            m_statisticSources = new Dictionary<string, ICollection<object>>();
+            m_statisticSources = new Dictionary<string, ICollection<object>>(StringComparer.InvariantCultureIgnoreCase);
 
             // Map source names to their acronym functions
             MapAcronymFunction("System", GetSystemAcronym);
@@ -228,11 +255,8 @@ namespace TimeSeriesFramework.Statistics
 
             if (m_loadWaitHandle.WaitOne(DefaultInitializationTimeout))
             {
-                lock (m_timerLock)
-                {
-                    if (!m_statisticCalculationTimer.Enabled)
-                        m_statisticCalculationTimer.Start();
-                }
+                m_statisticCalculationTimer.Start();
+                OnStatusMessage("Started statistics calculation timer.");
             }
             else
             {
@@ -247,12 +271,7 @@ namespace TimeSeriesFramework.Statistics
         public override void Stop()
         {
             base.Stop();
-
-            lock (m_timerLock)
-            {
-                if (m_statisticCalculationTimer.Enabled)
-                    m_statisticCalculationTimer.Stop();
-            }
+            m_statisticCalculationTimer.Stop();
         }
 
         /// <summary>
@@ -541,6 +560,19 @@ namespace TimeSeriesFramework.Statistics
 
         private void StatisticCalculationTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
+            try
+            {
+                CalculateStatistics();
+            }
+            catch (Exception ex)
+            {
+                string message = "An error occurred while attempting to calculate statistics: " + ex.Message;
+                OnProcessException(new InvalidOperationException(message, ex));
+            }
+        }
+
+        private void CalculateStatistics()
+        {
             List<IMeasurement> calculatedStatistics = new List<IMeasurement>();
             DateTime serverTime;
 
@@ -563,6 +595,9 @@ namespace TimeSeriesFramework.Statistics
                     measurements = GetStatisticMeasurements(stat);
                     sources = GetSourceCollection(stat);
                     acronymFunction = m_sourceAcronymFunctions[stat.Source];
+
+                    if (measurements.Any() && !sources.Any())
+                        OnStatusMessage("WARNING: Source collection not found for {0} measurements.", stat.Source);
 
                     // Run calculations
                     foreach (object source in sources)
@@ -587,6 +622,8 @@ namespace TimeSeriesFramework.Statistics
 
                 OnNewMeasurements(calculatedStatistics);
                 OnCalculated();
+
+                m_lastStatisticCalculationCount = calculatedStatistics.Count;
             }
         }
 
