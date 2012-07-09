@@ -604,10 +604,13 @@ namespace TimeSeriesFramework.Statistics
                     {
                         sourceAcronym = acronymFunction(source);
                         signalReferencePattern = string.Format(@"^{0}![^!]+-ST{1}", sourceAcronym, stat.Index);
-                        measurement = measurements.Single(m => Regex.IsMatch(m_measurementSignalReferenceMap[m.Key], signalReferencePattern));
+                        measurement = measurements.SingleOrDefault(m => Regex.IsMatch(m_measurementSignalReferenceMap[m.Key], signalReferencePattern));
 
                         try
                         {
+                            if ((object)measurement == null)
+                                throw new Exception(string.Format("Statistic measurement not found for {0}.", sourceAcronym));
+
                             clone = Measurement.Clone(measurement);
                             clone.Timestamp = serverTime;
                             clone.Value = stat.Method(source, stat.Arguments);
@@ -615,7 +618,7 @@ namespace TimeSeriesFramework.Statistics
                         }
                         catch (Exception ex)
                         {
-                            OnProcessException(new Exception(string.Format("Exception encountered while calculating statistic {0}: {1}", stat.Index, ex.Message), ex));
+                            OnProcessException(new Exception(string.Format("Exception encountered while calculating {0} statistic ST{1}: {2}", stat.Source, stat.Index, ex.Message), ex));
                         }
                     }
                 }
