@@ -669,7 +669,6 @@ namespace TimeSeriesFramework
         private DataSet GetConfigurationDataSet(ConfigurationType configType, string connectionString, string dataProviderString)
         {
             DataSet configuration = null;
-            DataTable entities, entity;
 
             switch (configType)
             {
@@ -680,6 +679,7 @@ namespace TimeSeriesFramework
                     string assemblyName, connectionTypeName, adapterTypeName;
                     Assembly assembly;
                     Type connectionType, adapterType;
+                    DataTable entities, source, destination;
 
                     try
                     {
@@ -716,20 +716,62 @@ namespace TimeSeriesFramework
                         // Add configuration entities table to system configuration for reference
                         configuration.Tables.Add(entities.Copy());
 
+                        Ticks startTime;
+                        double elapsedTime;
+
                         // Add each configuration entity to the system configuration
-                        foreach (DataRow row in entities.Rows)
+                        foreach (DataRow entityRow in entities.Rows)
                         {
                             // Load configuration entity data filtered by node ID
-                            entity = connection.RetrieveData(adapterType, string.Format("SELECT * FROM {0} WHERE NodeID={1}", row["SourceName"].ToString(), m_nodeIDQueryString));
-                            entity.TableName = row["RuntimeName"].ToString();
+                            startTime = PrecisionTimer.UtcNow.Ticks;
+                            source = connection.RetrieveData(adapterType, string.Format("SELECT * FROM {0} WHERE NodeID={1}", entityRow["SourceName"].ToString(), m_nodeIDQueryString));
+                            elapsedTime = (PrecisionTimer.UtcNow.Ticks - startTime).ToSeconds();
 
-                            DisplayStatusMessage("Loaded configuration entity {0} with {1} rows of data...", UpdateType.Information, entity.TableName, entity.Rows.Count);
+                            // Update table name as defined in configuration entity
+                            source.TableName = entityRow["RuntimeName"].ToString();
+
+                            DisplayStatusMessage("Loaded {0} row{1} of data from \"{2}\" in {3}...", UpdateType.Information, source.Rows.Count, source.Rows.Count == 1 ? "" : "s", source.TableName, elapsedTime < 0.01D ? "less than a second" : elapsedTime.ToString("0.00") + " seconds");
+
+                            startTime = PrecisionTimer.UtcNow.Ticks;
+
+                            // Clone data source
+                            destination = source.Clone();
+
+                            // Get destination column collection
+                            DataColumnCollection columns = destination.Columns;
 
                             // Remove redundant node ID column
-                            entity.Columns.Remove("NodeID");
+                            columns.Remove("NodeID");
+
+                            // Pre-cache column index translation after removal of NodeID column to speed data copy
+                            Dictionary<int, int> columnIndex = new Dictionary<int, int>();
+
+                            foreach (DataColumn column in columns)
+                            {
+                                columnIndex[column.Ordinal] = source.Columns[column.ColumnName].Ordinal;
+                            }
+
+                            // Manually copy-in each row into table
+                            foreach (DataRow sourceRow in source.Rows)
+                            {
+                                DataRow newRow = destination.NewRow();
+
+                                // Copy each column of data in the current row
+                                for (int x = 0; x < columns.Count; x++)
+                                {
+                                    newRow[x] = sourceRow[columnIndex[x]];
+                                }
+
+                                // Add new row to destination table
+                                destination.Rows.Add(newRow);
+                            }
+
+                            elapsedTime = (PrecisionTimer.UtcNow.Ticks - startTime).ToSeconds();
 
                             // Add entity configuration data to system configuration
-                            configuration.Tables.Add(entity.Copy());
+                            configuration.Tables.Add(destination);
+
+                            DisplayStatusMessage("Configuration cache completed in {0}.", UpdateType.Information, elapsedTime < 0.01D ? "less than a second" : elapsedTime.ToString("0.00") + " seconds");
                         }
 
                         DisplayStatusMessage("Database configuration successfully loaded.", UpdateType.Information);
