@@ -141,8 +141,10 @@ namespace TimeSeriesFramework.UI
             }
             set
             {
-                //if (value != -1)
-                m_currentSelectedIndex = value;
+                if (value != -1)
+                {
+                    m_currentSelectedIndex = value;
+                }
                 OnPropertyChanged("CurrentSelectedIndex");
             }
         }
