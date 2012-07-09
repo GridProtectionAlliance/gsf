@@ -55,14 +55,12 @@
                 <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
             <TextBox Grid.Row="0" Grid.Column="1" Text="{tsfBinding:Column Path=AdapterName}" MaxLength="50"/>
-            <TextBlock Text="Node" Grid.Row="0" Grid.Column="2" />
-            <ComboBox Grid.Row="0" Grid.Column="3" ItemsSource="{Binding Source={StaticResource NodeLookupList}}" DisplayMemberPath="Value"
-                      SelectedItem="{tsfBinding:Column Path=NodeID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource NodeLookupList}}"/>
-            <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Right">
+                
+            <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="2" HorizontalAlignment="Right">
                 <TextBlock Text="Load Order" Style="{StaticResource RequiredLabel}" />
                 <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>            
-            <TextBox Grid.Row="1" Grid.Column="3" Text="{tsfBinding:Column Path=LoadOrder}" Width="35" />
+            <TextBox Grid.Row="0" Grid.Column="3" Text="{tsfBinding:Column Path=LoadOrder}" Width="35" />
             <GroupBox Grid.Row="2" Grid.ColumnSpan="4" Header="Adapter Type">
                 <Grid>
                     <Grid.ColumnDefinitions>
