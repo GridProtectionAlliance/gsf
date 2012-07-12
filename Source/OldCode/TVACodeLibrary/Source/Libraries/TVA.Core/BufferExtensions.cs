@@ -563,7 +563,7 @@ namespace TVA
             {
                 bool foundSequence = false;
 
-                while (index > 0 && !foundSequence)
+                while (index > -1 && !foundSequence)
                 {
                     // See if next bytes in sequence match
                     for (int x = 1; x < bytesToFind.Length; x++)
@@ -574,7 +574,6 @@ namespace TVA
                             // If sequence doesn't match, search for next first-byte
                             if (buffer[index + x] != bytesToFind[x])
                             {
-                                //index = Array.IndexOf(buffer, bytesToFind[0], index + 1, length - (index - startIndex));
                                 index = Array.IndexOf(buffer, bytesToFind[0], index + 1, length - (index + 1));
                                 break;
                             }
