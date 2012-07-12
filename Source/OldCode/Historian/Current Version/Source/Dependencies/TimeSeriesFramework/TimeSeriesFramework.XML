@@ -5723,6 +5723,11 @@
             Gets the flag indicating if this adapter supports temporal processing.
             </summary>
         </member>
+        <member name="P:TimeSeriesFramework.Statistics.StatisticsEngine.Status">
+            <summary>
+            Returns the detailed status of the statistics engine.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Statistics.StatisticsEngine.Default">
             <summary>
             Gets the <see cref="T:TimeSeriesFramework.Statistics.StatisticsEngine"/> singleton instance.
