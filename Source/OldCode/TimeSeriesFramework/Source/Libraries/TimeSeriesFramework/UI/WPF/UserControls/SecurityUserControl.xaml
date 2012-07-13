@@ -220,12 +220,12 @@
                         <TextBlock Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="0" Text="Press and hold CTRL key to select multiple users from the list." FontSize="{StaticResource SmallerTextSize}" Foreground="Red" HorizontalAlignment="Center"/>
                         <TextBlock Grid.Column="0" Grid.Row="1" Text="Member Users" HorizontalAlignment="Left" FontWeight="Bold"/>
                         <TextBlock Grid.Column="2" Grid.Row="1" Text="Available Users" HorizontalAlignment="Left" FontWeight="Bold"/>
-                        <ListBox x:Name="ListBoxCurrentGroupUsers" Grid.Column="0" Grid.Row="2" ItemsSource="{Binding Path=CurrentUsers}" DisplayMemberPath="Value" />
+                        <ListBox x:Name="ListBoxCurrentGroupUsers" Grid.Column="0" Grid.Row="2" ItemsSource="{Binding Path=CurrentUsers}" DisplayMemberPath="Value" SelectionMode="Extended" />
                         <StackPanel Orientation="Vertical" Grid.Column="1" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <Button Content="&gt;&gt;" Command="{Binding Path=DataContext.RemoveUserCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=GroupBox}}" CommandParameter="{Binding ElementName=ListBoxCurrentGroupUsers, Path=SelectedItems}" ToolTip="Remove Users" Width="Auto" Margin="2"/>
                             <Button Content="&lt;&lt;" Command="{Binding Path=DataContext.AddUserCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=GroupBox}}" CommandParameter="{Binding ElementName=ListBoxPossibleGroupUsers, Path=SelectedItems}" ToolTip="Add Users" Width="Auto" Margin="2"/>
                         </StackPanel>
-                        <ListBox x:Name="ListBoxPossibleGroupUsers" Grid.Column="2" Grid.Row="2" ItemsSource="{Binding Path=PossibleUsers}" DisplayMemberPath="Value" />                            
+                        <ListBox x:Name="ListBoxPossibleGroupUsers" Grid.Column="2" Grid.Row="2" ItemsSource="{Binding Path=PossibleUsers}" DisplayMemberPath="Value" SelectionMode="Extended" />                            
                         <TextBlock x:Name="TextBlockGroupUsersMessage" Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="3" Text="Changes Saved Successfully." Foreground="Navy" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="2" Visibility="Collapsed"/>
                     </Grid>
                 
@@ -278,12 +278,12 @@
                         <TextBlock Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="0" Text="Press and hold CTRL key to select multiple users from the list." FontSize="{StaticResource SmallerTextSize}" Foreground="Red" HorizontalAlignment="Center" />
                         <TextBlock Grid.Column="0" Grid.Row="1" Text="Allowed Users" FontWeight="Bold" HorizontalAlignment="Left"/>
                         <TextBlock Grid.Column="2" Grid.Row="1" Text="Available Users" FontWeight="Bold" HorizontalAlignment="Left"/>
-                        <ListBox x:Name="ListBoxCurrentRoleUsers" Grid.Column="0" Grid.Row="2" ItemsSource="{Binding Path=CurrentUsers}" DisplayMemberPath="Value" />
+                        <ListBox x:Name="ListBoxCurrentRoleUsers" Grid.Column="0" Grid.Row="2" ItemsSource="{Binding Path=CurrentUsers}" DisplayMemberPath="Value" SelectionMode="Extended" />
                         <StackPanel Orientation="Vertical" Grid.Column="1" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <Button Content="&gt;&gt;" Command="{Binding Path=DataContext.RemoveUserCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=GroupBox}}" CommandParameter="{Binding ElementName=ListBoxCurrentRoleUsers, Path=SelectedItems}" ToolTip="Remove Users" Width="Auto" Margin="2"/>
                             <Button Content="&lt;&lt;" Command="{Binding Path=DataContext.AddUserCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=GroupBox}}" CommandParameter="{Binding ElementName=ListBoxPossibleRoleUsers, Path=SelectedItems}" ToolTip="Add Users" Width="Auto" Margin="2"/>
                         </StackPanel>
-                        <ListBox x:Name="ListBoxPossibleRoleUsers" Grid.Column="2" Grid.Row="2" ItemsSource="{Binding Path=PossibleUsers}" DisplayMemberPath="Value" />
+                        <ListBox x:Name="ListBoxPossibleRoleUsers" Grid.Column="2" Grid.Row="2" ItemsSource="{Binding Path=PossibleUsers}" DisplayMemberPath="Value" SelectionMode="Extended" />
                     </Grid>
                     <Grid Grid.Column="1" Grid.Row="0" HorizontalAlignment="Right">
                         <Grid.ColumnDefinitions>
@@ -303,12 +303,12 @@
                         <TextBlock Grid.Column="0" Grid.Row="1" Text="Allowed Groups" HorizontalAlignment="Left" FontWeight="Bold"/>
                         <TextBlock Grid.Column="2" Grid.Row="1" Text="Available Groups" HorizontalAlignment="Left" FontWeight="Bold"/>
 
-                        <ListBox x:Name="ListBoxCurrentRoleGroups" Grid.Column="0" Grid.Row="2" ItemsSource="{Binding Path=CurrentGroups}" DisplayMemberPath="Value" />
+                        <ListBox x:Name="ListBoxCurrentRoleGroups" Grid.Column="0" Grid.Row="2" ItemsSource="{Binding Path=CurrentGroups}" DisplayMemberPath="Value" SelectionMode="Extended" />
                         <StackPanel Orientation="Vertical" Grid.Column="1" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <Button Content="&gt;&gt;" Command="{Binding Path=DataContext.RemoveGroupCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=GroupBox}}" CommandParameter="{Binding ElementName=ListBoxCurrentRoleGroups, Path=SelectedItems}" ToolTip="Remove Users" Width="Auto" Margin="2"/>
                             <Button Content="&lt;&lt;" Command="{Binding Path=DataContext.AddGroupCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=GroupBox}}" CommandParameter="{Binding ElementName=ListBoxPossibleRoleGroups, Path=SelectedItems}" ToolTip="Add Users" Width="Auto" Margin="2"/>
                         </StackPanel>
-                        <ListBox x:Name="ListBoxPossibleRoleGroups" Grid.Column="2" Grid.Row="2" ItemsSource="{Binding Path=PossibleGroups}" DisplayMemberPath="Value" />
+                        <ListBox x:Name="ListBoxPossibleRoleGroups" Grid.Column="2" Grid.Row="2" ItemsSource="{Binding Path=PossibleGroups}" DisplayMemberPath="Value" SelectionMode="Extended" />
                     </Grid>                    
                 </Grid>
 
