@@ -237,10 +237,13 @@ namespace MongoAdapters
         /// <param name="measurements">The measurements to be stored in the MongoDB database.</param>
         protected override void ProcessMeasurements(IMeasurement[] measurements)
         {
-            foreach (IMeasurement measurement in measurements)
+            if ((object)measurements != null)
             {
-                MeasurementWrapper wrapper = new MeasurementWrapper(measurement);
-                m_measurementCollection.Insert(wrapper);
+                foreach (IMeasurement measurement in measurements)
+                {
+                    MeasurementWrapper wrapper = new MeasurementWrapper(measurement);
+                    m_measurementCollection.Insert(wrapper);
+                }
             }
         }
 

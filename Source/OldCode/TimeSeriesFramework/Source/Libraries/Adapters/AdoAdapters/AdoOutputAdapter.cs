@@ -311,9 +311,12 @@ namespace AdoAdapters
         /// <param name="measurements">Measurements to be archived.</param>
         protected override void ProcessMeasurements(IMeasurement[] measurements)
         {
-            for (int i = 0; i < measurements.Length; i += m_bulkInsertLimit)
+            if ((object)measurements != null)
             {
-                BulkInsert(measurements.Skip(i).Take(m_bulkInsertLimit));
+                for (int i = 0; i < measurements.Length; i += m_bulkInsertLimit)
+                {
+                    BulkInsert(measurements.Skip(i).Take(m_bulkInsertLimit));
+                }
             }
         }
 

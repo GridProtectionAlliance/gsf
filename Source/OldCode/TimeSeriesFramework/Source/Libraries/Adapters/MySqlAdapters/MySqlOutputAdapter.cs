@@ -169,24 +169,27 @@ namespace MySqlAdapters
         /// <param name="measurements">Measurements to be archived.</param>
         protected override void ProcessMeasurements(IMeasurement[] measurements)
         {
-            foreach (IMeasurement measurement in measurements)
+            if ((object)measurements != null)
             {
-                // Create the command string to insert the measurement as a record in the table.
-                StringBuilder commandString = new StringBuilder("INSERT INTO Measurement VALUES ('");
-                IDbCommand command = m_connection.CreateCommand();
+                foreach (IMeasurement measurement in measurements)
+                {
+                    // Create the command string to insert the measurement as a record in the table.
+                    StringBuilder commandString = new StringBuilder("INSERT INTO Measurement VALUES ('");
+                    IDbCommand command = m_connection.CreateCommand();
 
-                commandString.Append(measurement.ID);
-                commandString.Append("','");
-                commandString.Append((long)measurement.Timestamp);
-                commandString.Append("',");
-                commandString.Append(measurement.AdjustedValue);
-                commandString.Append(')');
+                    commandString.Append(measurement.ID);
+                    commandString.Append("','");
+                    commandString.Append((long)measurement.Timestamp);
+                    commandString.Append("',");
+                    commandString.Append(measurement.AdjustedValue);
+                    commandString.Append(')');
 
-                command.CommandText = commandString.ToString();
-                command.ExecuteNonQuery();
+                    command.CommandText = commandString.ToString();
+                    command.ExecuteNonQuery();
 
+                }
+                m_measurementCount += measurements.Length;
             }
-            m_measurementCount += measurements.Length;
         }
 
         /// <summary>

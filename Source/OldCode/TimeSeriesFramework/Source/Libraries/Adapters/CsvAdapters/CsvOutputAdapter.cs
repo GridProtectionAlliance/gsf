@@ -164,22 +164,25 @@ namespace CsvAdapters
         /// <param name="measurements">Measurements to be archived.</param>
         protected override void ProcessMeasurements(IMeasurement[] measurements)
         {
-            StringBuilder builder = new StringBuilder();
-
-            foreach (IMeasurement measurement in measurements)
+            if ((object)measurements != null)
             {
-                builder.Append(measurement.ID);
-                builder.Append(',');
-                builder.Append(measurement.Key);
-                builder.Append(',');
-                builder.Append((long)measurement.Timestamp);
-                builder.Append(',');
-                builder.Append(measurement.AdjustedValue);
-                builder.Append(System.Environment.NewLine);
-            }
+                StringBuilder builder = new StringBuilder();
 
-            m_outStream.Write(builder.ToString());
-            m_measurementCount += measurements.Length;
+                foreach (IMeasurement measurement in measurements)
+                {
+                    builder.Append(measurement.ID);
+                    builder.Append(',');
+                    builder.Append(measurement.Key);
+                    builder.Append(',');
+                    builder.Append((long)measurement.Timestamp);
+                    builder.Append(',');
+                    builder.Append(measurement.AdjustedValue);
+                    builder.Append(System.Environment.NewLine);
+                }
+
+                m_outStream.Write(builder.ToString());
+                m_measurementCount += measurements.Length;
+            }           
         }
 
         /// <summary>
