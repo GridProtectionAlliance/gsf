@@ -291,7 +291,6 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Web.Configuration;
 using System.Web.Hosting;
 using System.Xml;
@@ -602,7 +601,7 @@ namespace TVA.Configuration
         {
             // Since the static open method always returns the same instance for the same configuration files,
             // synchronizing the instance will sync all saves.
-            Task.Factory.StartNew(QueueConfigurationSave, saveMode);
+            ThreadPool.QueueUserWorkItem(QueueConfigurationSave, saveMode);
         }
 
         private void QueueConfigurationSave(object state)
@@ -614,7 +613,7 @@ namespace TVA.Configuration
                 {
                     // Queue new configuration save after waiting for any prior save to complete
                     if (m_configurationSaveComplete.WaitOne())
-                        Task.Factory.StartNew(ExecuteConfigurationSave, state);
+                        ThreadPool.QueueUserWorkItem(ExecuteConfigurationSave, state);
                 }
                 finally
                 {
