@@ -39,10 +39,18 @@ namespace TimeSeriesFramework.UI
         /// <returns><see cref="Style"/> based on MenuText.</returns>
         public override Style SelectStyle(object item, System.Windows.DependencyObject container)
         {
-            if (string.IsNullOrEmpty((item as MenuDataItem).MenuText))
-                return ((container as FrameworkElement).FindResource("MenuSeparatorStyle") as Style);
-            else
-                return ((container as FrameworkElement).FindResource("MenuItemStyle") as Style);
+            FrameworkElement frameworkElement = container as FrameworkElement;
+            MenuDataItem menuDataItem = item as MenuDataItem;
+
+            if (((object)frameworkElement != null) && ((object)menuDataItem != null))
+            {
+                if (string.IsNullOrEmpty(menuDataItem.MenuText))
+                    return frameworkElement.FindResource("MenuSeparatorStyle") as Style;
+                else
+                    return frameworkElement.FindResource("MenuItemStyle") as Style;
+            }
+
+            return null;
         }
     }
 }
