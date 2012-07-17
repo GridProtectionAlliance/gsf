@@ -260,6 +260,11 @@ namespace TVA.NumericalAnalysis
     public struct SineWave
     {
         /// <summary>
+        /// 2 * pi
+        /// </summary>
+        public const double TwoPi = 2.0 * Math.PI;
+
+        /// <summary>
         /// Amplitude (A) of the sine wave.
         /// </summary>
         public double Amplitude;
@@ -286,7 +291,7 @@ namespace TVA.NumericalAnalysis
         /// <returns><c>A*sin(ω*t+Φ)+δ</c></returns>
         public double CalculateY(double t)
         {
-            return Amplitude * Math.Sin(Frequency * t + Phase) + Bias;
+            return Amplitude * Math.Sin(TwoPi * Frequency * t + Phase) + Bias;
         }
     }
 
