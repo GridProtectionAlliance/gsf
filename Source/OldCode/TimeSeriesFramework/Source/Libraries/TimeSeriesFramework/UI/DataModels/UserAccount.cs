@@ -337,7 +337,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 ObservableCollection<UserAccount> userAccountList = new ObservableCollection<UserAccount>();
-                DataTable userAccountTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * From UserAccount ORDER BY Name");
+                DataTable userAccountTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * From UserAccount WHERE DefaultNodeID = '" + database.CurrentNodeID() + "'  ORDER BY Name");
 
                 foreach (DataRow row in userAccountTable.Rows)
                 {
