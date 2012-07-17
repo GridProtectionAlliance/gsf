@@ -344,20 +344,21 @@ namespace MySqlAdapters
             commandString = string.Format("SELECT {0} FROM Measurement LIMIT {1},{2}", columnString, m_startingMeasurement, m_measurementsPerInput);
             command = m_connection.CreateCommand();
             command.CommandText = commandString;
-            reader = command.ExecuteReader();
 
-            while (reader.Read())
+            using (reader = command.ExecuteReader())
             {
-                Ticks timeStamp = m_fakeTimestamps ? new Ticks(DateTime.UtcNow) : new Ticks(reader.GetInt64(timestampColumn));
-                measurements.Add(new Measurement()
-                {
-                    ID = reader.GetGuid(idColumn),
-                    Value = reader.GetDouble(valueColumn),
-                    Timestamp = timeStamp
-                });
-            }
 
-            reader.Close();
+                while (reader.Read())
+                {
+                    Ticks timeStamp = m_fakeTimestamps ? new Ticks(DateTime.UtcNow) : new Ticks(reader.GetInt64(timestampColumn));
+                    measurements.Add(new Measurement()
+                    {
+                        ID = reader.GetGuid(idColumn),
+                        Value = reader.GetDouble(valueColumn),
+                        Timestamp = timeStamp
+                    });
+                }
+            }
             OnNewMeasurements(measurements);
             m_startingMeasurement += m_measurementsPerInput;
         }

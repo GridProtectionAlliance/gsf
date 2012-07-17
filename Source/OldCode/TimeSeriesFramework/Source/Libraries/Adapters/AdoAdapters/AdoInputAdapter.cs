@@ -469,131 +469,132 @@ namespace AdoAdapters
                     command = connection.CreateCommand();
                     command.CommandText = string.Format("SELECT * FROM {0}", m_dbTableName);
 
-                    dbReader = command.ExecuteReader();
-
-                    while (dbReader.Read())
+                    using (dbReader = command.ExecuteReader())
                     {
-                        measurement = new CompactMeasurement(signalIndexCache);
-
-                        foreach (string fieldName in m_fieldNames.Keys)
+                        while (dbReader.Read())
                         {
-                            object value = dbReader[fieldName];
-                            string propertyName = m_fieldNames[fieldName];
+                            measurement = new CompactMeasurement(signalIndexCache);
 
-                            switch (propertyName)
+                            foreach (string fieldName in m_fieldNames.Keys)
                             {
-                                case "Timestamp":
-                                    // If the value is a timestamp, use the timestamp format
-                                    // specified by the user when reading the timestamp.
-                                    if (m_timestampFormat == null)
-                                        measurement.Timestamp = long.Parse(value.ToNonNullString());
-                                    else
-                                        measurement.Timestamp = DateTime.ParseExact(value.ToNonNullString(), m_timestampFormat, CultureInfo.CurrentCulture);
-                                    break;
-                                case "ID":
-                                    if (Guid.TryParse(value.ToString(), out id))
-                                    {
-                                        if (!lookupCache.TryGetValue(id, out key))
-                                        {
-                                            if (DataSource.Tables.Contains(MeasurementTable))
-                                            {
-                                                DataRow[] filteredRows = DataSource.Tables[MeasurementTable].Select(string.Format("SignalID = '{0}'", id));
+                                object value = dbReader[fieldName];
+                                string propertyName = m_fieldNames[fieldName];
 
-                                                if (filteredRows.Length > 0)
-                                                    MeasurementKey.TryParse(filteredRows[0]["ID"].ToString(), id, out key);
+                                switch (propertyName)
+                                {
+                                    case "Timestamp":
+                                        // If the value is a timestamp, use the timestamp format
+                                        // specified by the user when reading the timestamp.
+                                        if (m_timestampFormat == null)
+                                            measurement.Timestamp = long.Parse(value.ToNonNullString());
+                                        else
+                                            measurement.Timestamp = DateTime.ParseExact(value.ToNonNullString(), m_timestampFormat, CultureInfo.CurrentCulture);
+                                        break;
+                                    case "ID":
+                                        if (Guid.TryParse(value.ToString(), out id))
+                                        {
+                                            if (!lookupCache.TryGetValue(id, out key))
+                                            {
+                                                if (DataSource.Tables.Contains(MeasurementTable))
+                                                {
+                                                    DataRow[] filteredRows = DataSource.Tables[MeasurementTable].Select(string.Format("SignalID = '{0}'", id));
+
+                                                    if (filteredRows.Length > 0)
+                                                        MeasurementKey.TryParse(filteredRows[0]["ID"].ToString(), id, out key);
+                                                }
+
+                                                if (key != default(MeasurementKey))
+                                                {
+                                                    // Cache measurement key associated with ID
+                                                    lookupCache[id] = key;
+
+                                                    // Assign a runtime index optimization for distinct measurements
+                                                    signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, string, uint>(id, key.Source, key.ID));
+                                                }
                                             }
 
-                                            if (key != default(MeasurementKey))
+                                            measurement.ID = id;
+                                            measurement.Key = key;
+                                        }
+                                        break;
+                                    case "Key":
+                                        if (MeasurementKey.TryParse(value.ToString(), Guid.Empty, out key))
+                                        {
+                                            // Attempt to update empty signal ID if available
+                                            if (key.SignalID == Guid.Empty)
                                             {
-                                                // Cache measurement key associated with ID
-                                                lookupCache[id] = key;
+                                                if (DataSource.Tables.Contains(MeasurementTable))
+                                                {
+                                                    DataRow[] filteredRows = DataSource.Tables[MeasurementTable].Select(string.Format("ID = '{0}'", key.ToString()));
 
-                                                // Assign a runtime index optimization for distinct measurements
-                                                signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, string, uint>(id, key.Source, key.ID));
+                                                    if (filteredRows.Length > 0)
+                                                        key.SignalID = filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
+                                                }
                                             }
-                                        }
 
-                                        measurement.ID = id;
-                                        measurement.Key = key;
-                                    }
-                                    break;
-                                case "Key":
-                                    if (MeasurementKey.TryParse(value.ToString(), Guid.Empty, out key))
-                                    {
-                                        // Attempt to update empty signal ID if available
-                                        if (key.SignalID == Guid.Empty)
-                                        {
-                                            if (DataSource.Tables.Contains(MeasurementTable))
+                                            if (key.SignalID != Guid.Empty)
                                             {
-                                                DataRow[] filteredRows = DataSource.Tables[MeasurementTable].Select(string.Format("ID = '{0}'", key.ToString()));
+                                                measurement.ID = key.SignalID;
 
-                                                if (filteredRows.Length > 0)
-                                                    key.SignalID = filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
+                                                if (!lookupCache.ContainsKey(measurement.ID))
+                                                {
+                                                    // Cache measurement key associated with ID
+                                                    lookupCache[measurement.ID] = key;
+
+                                                    // Assign a runtime index optimization for distinct measurements
+                                                    signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, string, uint>(measurement.ID, key.Source, key.ID));
+                                                }
                                             }
+
+                                            measurement.Key = key;
                                         }
+                                        break;
+                                    case "Value":
+                                        measurement.Value = Convert.ToDouble(value);
+                                        break;
+                                    default:
+                                        PropertyInfo property = GetAllProperties(typeof(IMeasurement)).FirstOrDefault(propertyInfo => propertyInfo.Name == propertyName);
 
-                                        if (key.SignalID != Guid.Empty)
+                                        if (property != null)
                                         {
-                                            measurement.ID = key.SignalID;
+                                            Type propertyType = property.PropertyType;
+                                            Type valueType = value.GetType();
 
-                                            if (!lookupCache.ContainsKey(measurement.ID))
+                                            if (property.PropertyType.IsAssignableFrom(value.GetType()))
                                             {
-                                                // Cache measurement key associated with ID
-                                                lookupCache[measurement.ID] = key;
-
-                                                // Assign a runtime index optimization for distinct measurements
-                                                signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, string, uint>(measurement.ID, key.Source, key.ID));
+                                                property.SetValue(measurement, value, null);
                                             }
-                                        }
+                                            else if (property.PropertyType == typeof(string))
+                                            {
+                                                property.SetValue(measurement, value.ToNonNullString(), null);
+                                            }
+                                            else if (valueType == typeof(string))
+                                            {
+                                                MethodInfo parseMethod = propertyType.GetMethod("Parse", new Type[] { typeof(string) });
 
-                                        measurement.Key = key;
-                                    }
-                                    break;
-                                case "Value":
-                                    measurement.Value = Convert.ToDouble(value);
-                                    break;
-                                default:
-                                    PropertyInfo property = GetAllProperties(typeof(IMeasurement)).FirstOrDefault(propertyInfo => propertyInfo.Name == propertyName);
-
-                                    if (property != null)
-                                    {
-                                        Type propertyType = property.PropertyType;
-                                        Type valueType = value.GetType();
-
-                                        if (property.PropertyType.IsAssignableFrom(value.GetType()))
-                                        {
-                                            property.SetValue(measurement, value, null);
-                                        }
-                                        else if (property.PropertyType == typeof(string))
-                                        {
-                                            property.SetValue(measurement, value.ToNonNullString(), null);
-                                        }
-                                        else if (valueType == typeof(string))
-                                        {
-                                            MethodInfo parseMethod = propertyType.GetMethod("Parse", new Type[] { typeof(string) });
-
-                                            if (parseMethod != null && parseMethod.IsStatic)
-                                                property.SetValue(measurement, parseMethod.Invoke(null, new object[] { value }), null);
+                                                if (parseMethod != null && parseMethod.IsStatic)
+                                                    property.SetValue(measurement, parseMethod.Invoke(null, new object[] { value }), null);
+                                            }
+                                            else
+                                            {
+                                                string exceptionMessage = string.Format("The type of field {0} could not be converted to the type of property {1}.", fieldName, propertyName);
+                                                OnProcessException(new InvalidCastException(exceptionMessage));
+                                            }
                                         }
                                         else
                                         {
-                                            string exceptionMessage = string.Format("The type of field {0} could not be converted to the type of property {1}.", fieldName, propertyName);
+                                            string exceptionMessage = string.Format("The type of field {0} could not be converted to the type of property {1} - no property match was found.", fieldName, propertyName);
                                             OnProcessException(new InvalidCastException(exceptionMessage));
                                         }
-                                    }
-                                    else
-                                    {
-                                        string exceptionMessage = string.Format("The type of field {0} could not be converted to the type of property {1} - no property match was found.", fieldName, propertyName);
-                                        OnProcessException(new InvalidCastException(exceptionMessage));
-                                    }
-                                    break;
+                                        break;
+                                }
+
+                                m_dbMeasurements.Add(measurement);
+
+                                if (m_dbMeasurements.Count % 50000 == 0)
+                                    OnStatusMessage("Loaded {0} records so far...", m_dbMeasurements.Count);
                             }
                         }
-
-                        m_dbMeasurements.Add(measurement);
-
-                        if (m_dbMeasurements.Count % 50000 == 0)
-                            OnStatusMessage("Loaded {0} records so far...", m_dbMeasurements.Count);
                     }
 
                     OnStatusMessage("Sorting data by time...");
@@ -652,6 +653,7 @@ namespace AdoAdapters
             }
             finally
             {
+
                 if (connection != null)
                     connection.Close();
             }
