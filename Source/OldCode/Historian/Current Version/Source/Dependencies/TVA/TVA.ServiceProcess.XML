@@ -4,68 +4,6 @@
         <name>TVA.ServiceProcess</name>
     </assembly>
     <members>
-        <member name="T:TVA.ServiceProcess.ClientInfo">
-            <summary>
-            Represents information about a client using <see cref="T:TVA.ServiceProcess.ClientHelper"/> for connecting to a Windows Service that uses <see cref="T:TVA.ServiceProcess.ServiceHelper"/>.
-            </summary>
-            <remarks>
-            <see cref="T:TVA.ServiceProcess.ClientInfo"/> can be serialized and deserialized using <see cref="T:System.Runtime.Serialization.Formatters.Binary.BinaryFormatter"/> only.
-            </remarks>
-            <seealso cref="T:TVA.ServiceProcess.ClientHelper"/>
-            <seealso cref="T:TVA.ServiceProcess.ServiceHelper"/>
-        </member>
-        <member name="M:TVA.ServiceProcess.ClientInfo.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.ServiceProcess.ClientInfo"/> class.
-            </summary>
-        </member>
-        <member name="M:TVA.ServiceProcess.ClientInfo.#ctor(TVA.ServiceProcess.ClientHelper)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.ServiceProcess.ClientInfo"/> class.
-            </summary>
-            <param name="parent">An <see cref="T:TVA.ServiceProcess.ClientHelper"/> object.</param>
-        </member>
-        <member name="M:TVA.ServiceProcess.ClientInfo.SetClientUser(System.Security.Principal.IPrincipal)">
-            <summary>
-            Updates the <see cref="P:TVA.ServiceProcess.ClientInfo.ClientUser"/>.
-            </summary>
-            <param name="user">New <see cref="T:System.Security.Principal.IPrincipal"/> object to be assigned to <see cref="P:TVA.ServiceProcess.ClientInfo.ClientUser"/>.</param>
-        </member>
-        <member name="P:TVA.ServiceProcess.ClientInfo.ClientID">
-            <summary>
-            Gets the identifier of the remote client application.
-            </summary>
-        </member>
-        <member name="P:TVA.ServiceProcess.ClientInfo.ClientType">
-            <summary>
-            Gets the <see cref="T:TVA.ApplicationType"/> of the remote client application.
-            </summary>
-        </member>
-        <member name="P:TVA.ServiceProcess.ClientInfo.ClientName">
-            <summary>
-            Gets the friendly name of the remote client application.
-            </summary>
-        </member>
-        <member name="P:TVA.ServiceProcess.ClientInfo.ClientUser">
-            <summary>
-            Gets the <see cref="T:System.Security.Principal.IPrincipal"/> of the remote client application's user.
-            </summary>
-        </member>
-        <member name="P:TVA.ServiceProcess.ClientInfo.ClientUserCredentials">
-            <summary>
-            Gets the credentials in 'username:password' format for authenticating the remote client application's user if a valid <see cref="P:TVA.ServiceProcess.ClientInfo.ClientUser"/> is not available.
-            </summary>
-        </member>
-        <member name="P:TVA.ServiceProcess.ClientInfo.MachineName">
-            <summary>
-            Gets the name of the machine running the remote client application.
-            </summary>
-        </member>
-        <member name="P:TVA.ServiceProcess.ClientInfo.ConnectedAt">
-            <summary>
-            Gets or sets the <see cref="T:System.DateTime"/> when the remote client application connected to the <see cref="T:TVA.ServiceProcess.ServiceHelper"/>.
-            </summary>
-        </member>
         <member name="T:TVA.ServiceProcess.RecoverAction">
             <summary>
             Defines the recover action to be performed upon service failure.
@@ -208,48 +146,6 @@
         <member name="P:TVA.ServiceProcess.ClientRequest.Attachments">
             <summary>
             Gets a list of attachments for the <see cref="T:TVA.ServiceProcess.ClientRequest"/>.
-            </summary>
-        </member>
-        <member name="T:TVA.ServiceProcess.ServiceResponse">
-            <summary>
-            Represents a response sent by the <see cref="T:TVA.ServiceProcess.ServiceHelper"/> to a <see cref="T:TVA.ServiceProcess.ClientRequest"/> from the <see cref="T:TVA.ServiceProcess.ClientHelper"/>.
-            </summary>
-            <seealso cref="T:TVA.ServiceProcess.ServiceHelper"/>
-            <seealso cref="T:TVA.ServiceProcess.ClientHelper"/>
-            <seealso cref="T:TVA.ServiceProcess.ClientRequest"/>
-        </member>
-        <member name="M:TVA.ServiceProcess.ServiceResponse.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.ServiceProcess.ServiceResponse"/> class.
-            </summary>
-        </member>
-        <member name="M:TVA.ServiceProcess.ServiceResponse.#ctor(System.String)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.ServiceProcess.ServiceResponse"/> class.
-            </summary>
-            <param name="type">Type of the <see cref="T:TVA.ServiceProcess.ServiceResponse"/> in plain text.</param>
-        </member>
-        <member name="M:TVA.ServiceProcess.ServiceResponse.#ctor(System.String,System.String)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.ServiceProcess.ServiceResponse"/> class.
-            </summary>
-            <param name="type">Type of the <see cref="T:TVA.ServiceProcess.ServiceResponse"/> in plain-text.</param>
-            <param name="message">Message associated with the <see cref="T:TVA.ServiceProcess.ServiceResponse"/>.</param>
-        </member>
-        <member name="P:TVA.ServiceProcess.ServiceResponse.Type">
-            <summary>
-            Gets or sets the plain-text type of the <see cref="T:TVA.ServiceProcess.ServiceResponse"/>.
-            </summary>
-            <exception cref="T:System.ArgumentNullException">The value being assigned is either a null or empty string.</exception>
-        </member>
-        <member name="P:TVA.ServiceProcess.ServiceResponse.Message">
-            <summary>
-            Gets or sets the palin-text message associated with the <see cref="T:TVA.ServiceProcess.ServiceResponse"/>.
-            </summary>
-        </member>
-        <member name="P:TVA.ServiceProcess.ServiceResponse.Attachments">
-            <summary>
-            Gets a list of serializable attachments of the <see cref="T:TVA.ServiceProcess.ServiceResponse"/>.
             </summary>
         </member>
         <member name="T:TVA.ServiceProcess.ServiceState">
@@ -883,6 +779,68 @@
             Gets or sets the <see cref="T:System.DateTime"/> when the <see cref="P:TVA.ServiceProcess.ClientRequestInfo.Request"/> was received from the <see cref="P:TVA.ServiceProcess.ClientRequestInfo.Sender"/>.
             </summary>
         </member>
+        <member name="T:TVA.ServiceProcess.ClientInfo">
+            <summary>
+            Represents information about a client using <see cref="T:TVA.ServiceProcess.ClientHelper"/> for connecting to a Windows Service that uses <see cref="T:TVA.ServiceProcess.ServiceHelper"/>.
+            </summary>
+            <remarks>
+            <see cref="T:TVA.ServiceProcess.ClientInfo"/> can be serialized and deserialized using <see cref="T:System.Runtime.Serialization.Formatters.Binary.BinaryFormatter"/> only.
+            </remarks>
+            <seealso cref="T:TVA.ServiceProcess.ClientHelper"/>
+            <seealso cref="T:TVA.ServiceProcess.ServiceHelper"/>
+        </member>
+        <member name="M:TVA.ServiceProcess.ClientInfo.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.ServiceProcess.ClientInfo"/> class.
+            </summary>
+        </member>
+        <member name="M:TVA.ServiceProcess.ClientInfo.#ctor(TVA.ServiceProcess.ClientHelper)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.ServiceProcess.ClientInfo"/> class.
+            </summary>
+            <param name="parent">An <see cref="T:TVA.ServiceProcess.ClientHelper"/> object.</param>
+        </member>
+        <member name="M:TVA.ServiceProcess.ClientInfo.SetClientUser(System.Security.Principal.IPrincipal)">
+            <summary>
+            Updates the <see cref="P:TVA.ServiceProcess.ClientInfo.ClientUser"/>.
+            </summary>
+            <param name="user">New <see cref="T:System.Security.Principal.IPrincipal"/> object to be assigned to <see cref="P:TVA.ServiceProcess.ClientInfo.ClientUser"/>.</param>
+        </member>
+        <member name="P:TVA.ServiceProcess.ClientInfo.ClientID">
+            <summary>
+            Gets the identifier of the remote client application.
+            </summary>
+        </member>
+        <member name="P:TVA.ServiceProcess.ClientInfo.ClientType">
+            <summary>
+            Gets the <see cref="T:TVA.ApplicationType"/> of the remote client application.
+            </summary>
+        </member>
+        <member name="P:TVA.ServiceProcess.ClientInfo.ClientName">
+            <summary>
+            Gets the friendly name of the remote client application.
+            </summary>
+        </member>
+        <member name="P:TVA.ServiceProcess.ClientInfo.ClientUser">
+            <summary>
+            Gets the <see cref="T:System.Security.Principal.IPrincipal"/> of the remote client application's user.
+            </summary>
+        </member>
+        <member name="P:TVA.ServiceProcess.ClientInfo.ClientUserCredentials">
+            <summary>
+            Gets the credentials in 'username:password' format for authenticating the remote client application's user if a valid <see cref="P:TVA.ServiceProcess.ClientInfo.ClientUser"/> is not available.
+            </summary>
+        </member>
+        <member name="P:TVA.ServiceProcess.ClientInfo.MachineName">
+            <summary>
+            Gets the name of the machine running the remote client application.
+            </summary>
+        </member>
+        <member name="P:TVA.ServiceProcess.ClientInfo.ConnectedAt">
+            <summary>
+            Gets or sets the <see cref="T:System.DateTime"/> when the remote client application connected to the <see cref="T:TVA.ServiceProcess.ServiceHelper"/>.
+            </summary>
+        </member>
         <member name="T:TVA.ServiceProcess.ClientHelper">
             <summary>
             Component that provides client-side functionality to <see cref="T:TVA.ServiceProcess.ServiceHelper"/>.
@@ -1130,6 +1088,48 @@
         <member name="T:TVA.ServiceProcess.NamespaceDoc">
             <summary>
             Contains classes used to simplify and standardize development and operation of Windows services that are remotely manageable.
+            </summary>
+        </member>
+        <member name="T:TVA.ServiceProcess.ServiceResponse">
+            <summary>
+            Represents a response sent by the <see cref="T:TVA.ServiceProcess.ServiceHelper"/> to a <see cref="T:TVA.ServiceProcess.ClientRequest"/> from the <see cref="T:TVA.ServiceProcess.ClientHelper"/>.
+            </summary>
+            <seealso cref="T:TVA.ServiceProcess.ServiceHelper"/>
+            <seealso cref="T:TVA.ServiceProcess.ClientHelper"/>
+            <seealso cref="T:TVA.ServiceProcess.ClientRequest"/>
+        </member>
+        <member name="M:TVA.ServiceProcess.ServiceResponse.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.ServiceProcess.ServiceResponse"/> class.
+            </summary>
+        </member>
+        <member name="M:TVA.ServiceProcess.ServiceResponse.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.ServiceProcess.ServiceResponse"/> class.
+            </summary>
+            <param name="type">Type of the <see cref="T:TVA.ServiceProcess.ServiceResponse"/> in plain text.</param>
+        </member>
+        <member name="M:TVA.ServiceProcess.ServiceResponse.#ctor(System.String,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.ServiceProcess.ServiceResponse"/> class.
+            </summary>
+            <param name="type">Type of the <see cref="T:TVA.ServiceProcess.ServiceResponse"/> in plain-text.</param>
+            <param name="message">Message associated with the <see cref="T:TVA.ServiceProcess.ServiceResponse"/>.</param>
+        </member>
+        <member name="P:TVA.ServiceProcess.ServiceResponse.Type">
+            <summary>
+            Gets or sets the plain-text type of the <see cref="T:TVA.ServiceProcess.ServiceResponse"/>.
+            </summary>
+            <exception cref="T:System.ArgumentNullException">The value being assigned is either a null or empty string.</exception>
+        </member>
+        <member name="P:TVA.ServiceProcess.ServiceResponse.Message">
+            <summary>
+            Gets or sets the palin-text message associated with the <see cref="T:TVA.ServiceProcess.ServiceResponse"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.ServiceProcess.ServiceResponse.Attachments">
+            <summary>
+            Gets a list of serializable attachments of the <see cref="T:TVA.ServiceProcess.ServiceResponse"/>.
             </summary>
         </member>
         <member name="T:TVA.ServiceProcess.ServiceProcessState">
