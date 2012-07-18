@@ -534,7 +534,8 @@ namespace TimeSeriesFramework.UI
             }
             catch (Exception ex)
             {
-                throw new ApplicationException("Failed to connect to service: " + ex.Message, ex.InnerException ?? ex);
+                //throw new ApplicationException("Failed to connect to service: " + ex.Message, ex.InnerException ?? ex);
+                MessageBox.Show("Failed to connect to service. " + ex.Message, "Connecting to node", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
