@@ -4,199 +4,129 @@
         <name>TVA.Web</name>
     </assembly>
     <members>
-        <member name="T:TVA.Web.SecurityModule">
+        <member name="T:TVA.Web.Embedded.NamespaceDoc">
             <summary>
-            Represents an <see cref="T:System.Web.IHttpModule">HTTP module</see> that can be used to enable site-wide role-based security.
-            </summary>
-            <example>
-            Required config file entries:
-            <code>
-            <![CDATA[
-            <?xml version="1.0"?>
-            <configuration>
-              <configSections>
-                <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
-              </configSections>
-              <categorizedSettings>
-                <securityProvider>
-                  <add name="ApplicationName" value="" description="Name of the application being secured as defined in the backend security datastore."
-                    encrypted="false" />
-                  <add name="ConnectionString" value="" description="Connection string to be used for connection to the backend security datastore."
-                    encrypted="false" />
-                  <add name="ProviderType" value="TVA.Security.LdapSecurityProvider, TVA.Security"
-                    description="The type to be used for enforcing security." encrypted="false" />
-                  <add name="IncludedResources" value="*/*.*=*" description="Semicolon delimited list of resources to be secured along with role names."
-                    encrypted="false" />
-                  <add name="ExcludedResources" value="*/WebResource.axd*;*/SecurityPortal.aspx*"
-                    description="Semicolon delimited list of resources to be excluded from being secured."
-                    encrypted="false" />
-                  <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
-                    encrypted="false" />
-                  <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
-                    encrypted="false" />
-                </securityProvider>
-                <activeDirectory>
-                  <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
-                    encrypted="false" />
-                  <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
-                    encrypted="false" />
-                  <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
-                    encrypted="true" />
-                </activeDirectory>
-              </categorizedSettings>
-              <system.web>
-                <authentication mode="Windows"/>
-                <httpModules>
-                  <add name="SecurityModule" type="TVA.Web.SecurityModule, TVA.Web" />
-                </httpModules>
-              </system.web>
-            </configuration>
-            ]]>
-            </code>
-            </example>
-            <seealso cref="T:TVA.Security.ISecurityProvider"/>
-        </member>
-        <member name="M:TVA.Web.SecurityModule.Init(System.Web.HttpApplication)">
-            <summary>
-            Initializes the <see cref="T:TVA.Web.SecurityModule"/>.
-            </summary>
-            <param name="context">An <see cref="T:System.Web.HttpApplication"/> object.</param>
-        </member>
-        <member name="M:TVA.Web.SecurityModule.Dispose">
-            <summary>
-            Releases the resources used by <see cref="T:TVA.Web.SecurityModule"/>.
+            Contains embedded ASP.NET web pages and WCF web services that support the implementation of role-based security in .NET and non-.NET based development platforms.
             </summary>
         </member>
-        <member name="M:TVA.Web.SecurityModule.Redirect(System.Net.HttpStatusCode)">
+        <member name="T:TVA.Web.Hosting.EmbeddedResourceFileAttribute">
             <summary>
-            Redirects the client browser based on the specified <paramref name="httpStatusCode"/>
-            </summary>
-            <param name="httpStatusCode"><see cref="T:System.Net.HttpStatusCode"/> to be used for the redirect.</param>
-        </member>
-        <member name="M:TVA.Web.SecurityModule.GetResourceName">
-            <summary>
-            Gets the name of resource being accessed.
-            </summary>
-            <returns><see cref="P:System.Web.HttpApplication.Request"/>.<see cref="P:System.Web.HttpRequest.Url"/>.<see cref="P:System.Uri.PathAndQuery"/> property value.</returns>
-        </member>
-        <member name="M:TVA.Web.SecurityModule.IsAccessRestricted">
-            <summary>
-            Determines if access to the requested resource is restricted by <see cref="T:TVA.Security.RestrictAccessAttribute"/>.
-            </summary>
-            <returns>true if access to the requested resource is restricted, otherwise false.</returns>
-        </member>
-        <member name="P:TVA.Web.SecurityModule.Application">
-            <summary>
-            Gets the current <see cref="T:System.Web.HttpApplication"/> instance.
-            </summary>
-        </member>
-        <member name="T:TVA.Web.SecurityModule.SessionEnabledHandler">
-            <summary>
-            A handler used to force the SessionStateModule to load session state.
-            </summary>
-        </member>
-        <member name="M:TVA.Web.SecurityModule.SessionEnabledHandler.#ctor(System.Web.IHttpHandler)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Web.SecurityModule.SessionEnabledHandler"/> class.
-            </summary>
-            <param name="originalHandler">The original handler object.</param>
-        </member>
-        <member name="M:TVA.Web.SecurityModule.SessionEnabledHandler.ProcessRequest(System.Web.HttpContext)">
-            <summary>
-            This method will never get called.
-            </summary>
-        </member>
-        <member name="P:TVA.Web.SecurityModule.SessionEnabledHandler.IsReusable">
-            <summary>
-            Returns false since class has a member.
-            </summary>
-        </member>
-        <member name="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile">
-            <summary>
-            Represents a file object in embedded resource space.
+            Attribute indicating the location of an embedded resource that should be
+            served by the <see cref="T:TVA.Web.Hosting.EmbeddedResourcePathProvider"/>.
             </summary>
             <remarks>
             <para>
-            This type is used by the <see cref="T:TVA.Web.Hosting.EmbeddedResourcePathProvider"/>
-            to serve embedded resources as virtual files.  The properties on the
-            file can be used to retrieve an embedded resource stream from the
-            <see cref="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ContainingAssembly"/>
-            at the appropriate
-            <see cref="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ResourcePath"/>
-            using reflection.  As part of the <see cref="T:System.Web.Hosting.VirtualFile"/>
-            interface, you can do this easily via <see cref="M:TVA.Web.Hosting.EmbeddedResourceVirtualFile.Open"/>.
-            </para>
-            <para>
-            For more information on embedded resource virtual filesystem
-            usage, see <see cref="T:TVA.Web.Hosting.EmbeddedResourcePathProvider"/>
+            This attribute is used by the <see cref="T:TVA.Web.Hosting.EmbeddedResourcePathProvider"/>
+            module/path provider to retrieve the list of embedded resources from an assembly
+            that should be considered a part of the virtual filesystem.
             </para>
             </remarks>
+            <example>
+            <para>
+            Below is an example of what it might look like to embed a web form and a
+            user control in an assembly to be served up with the <see cref="T:TVA.Web.Hosting.EmbeddedResourcePathProvider"/>:
+            </para>
+            <code lang="C#">
+            [assembly: EmbeddedResourceFileAttribute("MyNamespace.WebForm1.aspx", "MyNamespace")]
+            [assembly: EmbeddedResourceFileAttribute("MyNamespace.UserControl1.ascx", "MyNamespace")]
+            </code>
+            </example>
             <seealso cref="T:TVA.Web.Hosting.EmbeddedResourcePathProvider"/>
         </member>
-        <member name="F:TVA.Web.Hosting.EmbeddedResourceVirtualFile._containingAssembly">
+        <member name="F:TVA.Web.Hosting.EmbeddedResourceFileAttribute.m_resourceNamespace">
             <summary>
             Internal storage for the
-            <see cref="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ContainingAssembly"/>
+            <see cref="P:TVA.Web.Hosting.EmbeddedResourceFileAttribute.ResourceNamespace"/>
             property.
             </summary>
-            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/>
+            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceFileAttribute"/>
         </member>
-        <member name="F:TVA.Web.Hosting.EmbeddedResourceVirtualFile._resourcePath">
+        <member name="F:TVA.Web.Hosting.EmbeddedResourceFileAttribute.m_resourcePath">
             <summary>
             Internal storage for the
-            <see cref="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ResourcePath"/>
+            <see cref="P:TVA.Web.Hosting.EmbeddedResourceFileAttribute.ResourcePath"/>
             property.
             </summary>
-            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/>
+            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceFileAttribute"/>
         </member>
-        <member name="M:TVA.Web.Hosting.EmbeddedResourceVirtualFile.#ctor(System.String,System.Reflection.Assembly,System.String)">
+        <member name="M:TVA.Web.Hosting.EmbeddedResourceFileAttribute.#ctor(System.String,System.String)">
             <summary>
-            Initializes a new instance of the <see cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/> class.
+            Initializes a new instance of the <see cref="T:TVA.Web.Hosting.EmbeddedResourceFileAttribute"/> class.
             </summary>
-            <param name="virtualPath">The virtual path to the resource represented by this instance.</param>
-            <param name="containingAssembly">The <see cref="T:System.Reflection.Assembly"/> containing the resource represented by this instance.</param>
-            <param name="resourcePath">The path to the embedded resource in the <paramref name="containingAssembly"/>.</param>
+            <param name="resourcePath">The path to the embedded resource.  Used to get the resource as a stream from the assembly.</param>
+            <param name="resourceNamespace">The namespace the resource is in.  This will generally be removed from the full resource path to calculate the "application path" for the embedded resource.</param>
             <exception cref="T:System.ArgumentNullException">
-            Thrown if <paramref name="containingAssembly"/> or <paramref name="resourcePath"/> is <see langword="null"/>.
+            Thrown if <paramref name="resourcePath"/> or <paramref name="resourceNamespace"/> is <see langword="null"/>.
             </exception>
             <exception cref="T:System.ArgumentOutOfRangeException">
-            Thrown if <paramref name="resourcePath"/> is <see cref="F:System.String.Empty"/>.
+            Thrown if <paramref name="resourcePath"/> is <see cref="F:System.String.Empty"/>
+            or if it only consists of periods and/or spaces.
             </exception>
-            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/>
+            <remarks>
+            <para>
+            Both <paramref name="resourcePath"/> and <paramref name="resourceNamespace"/>
+            will be processed to have leading and trailing periods and spaces removed.
+            If <paramref name="resourcePath"/> ends up being empty, an
+            <see cref="T:System.ArgumentOutOfRangeException"/> is thrown.  No exception
+            is thrown if <paramref name="resourceNamespace"/> turns out empty.
+            </para>
+            </remarks>
+            <example>
+            <para>
+            If the <paramref name="resourcePath"/> is <c>RootNS.SubNS.AppRoot.Folder.File.aspx</c>
+            and the <paramref name="resourceNamespace"/> is <c>RootNS.SubNS.AppRoot</c>,
+            the virtual "path" to the embedded file will be <c>Folder.File.aspx</c>
+            (which will be converted by the <see cref="T:TVA.Web.Hosting.EmbeddedResourcePathProvider"/>
+            to <c>~/Folder/File.aspx</c>).
+            </para>
+            </example>
+            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceFileAttribute"/>
         </member>
-        <member name="M:TVA.Web.Hosting.EmbeddedResourceVirtualFile.Open">
+        <member name="M:TVA.Web.Hosting.EmbeddedResourceFileAttribute.RemoveMalformedEndChars(System.String)">
             <summary>
-            Returns a read-only stream to the virtual resource.
+            Removes leading and trailing dots and spaces from a string.
             </summary>
-            <returns>A read-only stream to the virtual file.</returns>
-            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/>
-            <seealso cref="M:System.Web.Hosting.VirtualFile.Open"/>
+            <param name="toFix">The <see cref="T:System.String"/> to be cleaned up.</param>
+            <returns>A version of <paramref name="toFix"/> with leading and trailing dots and spaces removed.</returns>
+            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceFileAttribute"/>
         </member>
-        <member name="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ContainingAssembly">
+        <member name="F:TVA.Web.Hosting.EmbeddedResourceFileAttribute.MalformedEndCharExpression">
             <summary>
-            Gets a reference to the assembly containing the virtual file.
+            Regular expression indicating the characters that can't start or end a resource.
+            </summary>
+            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceFileAttribute"/>
+            <seealso cref="M:TVA.Web.Hosting.EmbeddedResourceFileAttribute.RemoveMalformedEndChars(System.String)"/>
+        </member>
+        <member name="P:TVA.Web.Hosting.EmbeddedResourceFileAttribute.ResourceNamespace">
+            <summary>
+            Gets the namespace for the embedded resource.
             </summary>
             <value>
-            A <see cref="T:System.Reflection.Assembly"/> that contains the embedded
-            resource with the file contents.
+            A <see cref="T:System.String"/> with the embedded resource namespace.
             </value>
-            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/>
+            <remarks>
+            <para>
+            This namespace will be removed from the full <see cref="P:TVA.Web.Hosting.EmbeddedResourceFileAttribute.ResourcePath"/>
+            to create the virtual application path for the resource.
+            </para>
+            </remarks>
+            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceFileAttribute"/>
         </member>
-        <member name="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ResourcePath">
+        <member name="P:TVA.Web.Hosting.EmbeddedResourceFileAttribute.ResourcePath">
             <summary>
-            Gets the path to the embedded resource in the containing assembly.
+            Gets the path to the embedded resource.
             </summary>
             <value>
-            A <see cref="T:System.String"/> that indicates an embedded resource
-            in the <see cref="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ContainingAssembly"/>
-            that represents the file for this instance.
+            A <see cref="T:System.String"/> with the full path to an embedded resource in
+            the associated assembly.
             </value>
-            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/>
-        </member>
-        <member name="T:TVA.Web.Hosting.NamespaceDoc">
-            <summary>
-            Contains classes that make-up the framework for serving content embedded in .NET assemblies over the web.
-            </summary>
+            <remarks>
+            <para>
+            This path will be used to retrieve the resource from the assembly and serve
+            it up.
+            </para>
+            </remarks>
+            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceFileAttribute"/>
         </member>
         <member name="T:TVA.Web.Hosting.EmbeddedResourcePathProvider">
             <summary>
@@ -610,6 +540,303 @@
             that contains all of the files served by this provider.
             </value>
             <seealso cref="T:TVA.Web.Hosting.EmbeddedResourcePathProvider"/>
+        </member>
+        <member name="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile">
+            <summary>
+            Represents a file object in embedded resource space.
+            </summary>
+            <remarks>
+            <para>
+            This type is used by the <see cref="T:TVA.Web.Hosting.EmbeddedResourcePathProvider"/>
+            to serve embedded resources as virtual files.  The properties on the
+            file can be used to retrieve an embedded resource stream from the
+            <see cref="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ContainingAssembly"/>
+            at the appropriate
+            <see cref="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ResourcePath"/>
+            using reflection.  As part of the <see cref="T:System.Web.Hosting.VirtualFile"/>
+            interface, you can do this easily via <see cref="M:TVA.Web.Hosting.EmbeddedResourceVirtualFile.Open"/>.
+            </para>
+            <para>
+            For more information on embedded resource virtual filesystem
+            usage, see <see cref="T:TVA.Web.Hosting.EmbeddedResourcePathProvider"/>
+            </para>
+            </remarks>
+            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourcePathProvider"/>
+        </member>
+        <member name="F:TVA.Web.Hosting.EmbeddedResourceVirtualFile._containingAssembly">
+            <summary>
+            Internal storage for the
+            <see cref="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ContainingAssembly"/>
+            property.
+            </summary>
+            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/>
+        </member>
+        <member name="F:TVA.Web.Hosting.EmbeddedResourceVirtualFile._resourcePath">
+            <summary>
+            Internal storage for the
+            <see cref="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ResourcePath"/>
+            property.
+            </summary>
+            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/>
+        </member>
+        <member name="M:TVA.Web.Hosting.EmbeddedResourceVirtualFile.#ctor(System.String,System.Reflection.Assembly,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/> class.
+            </summary>
+            <param name="virtualPath">The virtual path to the resource represented by this instance.</param>
+            <param name="containingAssembly">The <see cref="T:System.Reflection.Assembly"/> containing the resource represented by this instance.</param>
+            <param name="resourcePath">The path to the embedded resource in the <paramref name="containingAssembly"/>.</param>
+            <exception cref="T:System.ArgumentNullException">
+            Thrown if <paramref name="containingAssembly"/> or <paramref name="resourcePath"/> is <see langword="null"/>.
+            </exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">
+            Thrown if <paramref name="resourcePath"/> is <see cref="F:System.String.Empty"/>.
+            </exception>
+            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/>
+        </member>
+        <member name="M:TVA.Web.Hosting.EmbeddedResourceVirtualFile.Open">
+            <summary>
+            Returns a read-only stream to the virtual resource.
+            </summary>
+            <returns>A read-only stream to the virtual file.</returns>
+            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/>
+            <seealso cref="M:System.Web.Hosting.VirtualFile.Open"/>
+        </member>
+        <member name="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ContainingAssembly">
+            <summary>
+            Gets a reference to the assembly containing the virtual file.
+            </summary>
+            <value>
+            A <see cref="T:System.Reflection.Assembly"/> that contains the embedded
+            resource with the file contents.
+            </value>
+            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/>
+        </member>
+        <member name="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ResourcePath">
+            <summary>
+            Gets the path to the embedded resource in the containing assembly.
+            </summary>
+            <value>
+            A <see cref="T:System.String"/> that indicates an embedded resource
+            in the <see cref="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ContainingAssembly"/>
+            that represents the file for this instance.
+            </value>
+            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/>
+        </member>
+        <member name="T:TVA.Web.Hosting.NamespaceDoc">
+            <summary>
+            Contains classes that make-up the framework for serving content embedded in .NET assemblies over the web.
+            </summary>
+        </member>
+        <member name="T:TVA.Web.Hosting.VirtualFileBaseCollection">
+            <summary>
+            A strongly typed <see cref="T:System.Collections.ObjectModel.KeyedCollection`2"/>
+            where each element is a <see cref="T:System.Web.Hosting.VirtualFileBase"/> and is keyed
+            off of the <see cref="P:System.Web.Hosting.VirtualFileBase.VirtualPath"/>
+            property.
+            </summary>
+            <remarks>
+            <para>
+            The default constructor for this collection does a culture-invariant case-insensitive
+            comparison on the keys.  This allows for proper case-insensitive web-oriented
+            behavior that is generally expected.
+            </para>
+            </remarks>
+            <seealso cref="T:System.Web.Hosting.VirtualFileBase"/>
+        </member>
+        <member name="M:TVA.Web.Hosting.VirtualFileBaseCollection.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/> class that uses a case-insensitive comparer.
+            </summary>
+            <seealso cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/>
+        </member>
+        <member name="M:TVA.Web.Hosting.VirtualFileBaseCollection.#ctor(System.Collections.Generic.IEqualityComparer{System.String})">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/> class that uses the specified equality comparer.
+            </summary>
+            <param name="comparer">
+            The implementation of the <see cref="T:System.Collections.Generic.IEqualityComparer`1"/>
+            generic interface to use when comparing keys, or <see langword="null"/> to use the default
+            equality comparer for the type of the key, obtained from <see cref="P:System.Collections.Generic.EqualityComparer`1.Default"/>.
+            </param>
+            <seealso cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/>
+        </member>
+        <member name="M:TVA.Web.Hosting.VirtualFileBaseCollection.#ctor(System.Collections.Generic.IEqualityComparer{System.String},System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/> class that uses the specified equality comparer.
+            </summary>
+            <param name="comparer">
+            The implementation of the <see cref="T:System.Collections.Generic.IEqualityComparer`1"/>
+            generic interface to use when comparing keys, or <see langword="null"/> to use the default
+            equality comparer for the type of the key, obtained from <see cref="P:System.Collections.Generic.EqualityComparer`1.Default"/>.
+            </param>
+            <param name="dictionaryCreationThreshold">
+            The number of elements the collection can hold without creating a lookup dictionary
+            (0 creates the lookup dictionary when the first item is added), or ?1 to specify that
+            a lookup dictionary is never created.
+            </param>
+            <seealso cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/>
+        </member>
+        <member name="M:TVA.Web.Hosting.VirtualFileBaseCollection.GetKeyForItem(System.Web.Hosting.VirtualFileBase)">
+            <summary>
+            Extracts the key from the specified element.
+            </summary>
+            <param name="item">
+            The <see cref="T:System.Web.Hosting.VirtualFileBase"/> element from which to extract the key (<see cref="P:System.Web.Hosting.VirtualFileBase.VirtualPath"/>).
+            </param>
+            <seealso cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/>
+        </member>
+        <member name="T:TVA.Web.Embedded.ISecurityService">
+            <summary>
+            Embedded WCF service contract used for securing external facing WCF services.
+            </summary>
+        </member>
+        <member name="M:TVA.Web.Embedded.ISecurityService.GetUserData">
+            <summary>
+            Returns information about the current user. 
+            </summary>
+            <returns>An <see cref="T:TVA.Security.UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
+        </member>
+        <member name="M:TVA.Web.Embedded.ISecurityService.RefreshUserData">
+            <summary>
+            Refreshes and returns information about the current user. 
+            </summary>
+            <returns>An <see cref="T:TVA.Security.UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
+        </member>
+        <member name="M:TVA.Web.Embedded.ISecurityService.Authenticate(System.String,System.String)">
+            <summary>
+            Authenticates a user and caches the security context upon successful authentication for subsequent use.
+            </summary>
+            <param name="username">Username of the user.</param>
+            <param name="password">Password of the user.</param>
+            <returns>An <see cref="T:TVA.Security.UserData"/> object of the user.</returns>
+        </member>
+        <member name="M:TVA.Web.Embedded.ISecurityService.ResetPassword(System.String)">
+            <summary>
+            Resets user password.
+            </summary>
+            <param name="securityAnswer">Answer to user's security question.</param>
+            <returns>true if password is reset, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Web.Embedded.ISecurityService.ChangePassword(System.String,System.String)">
+            <summary>
+            Changes user password.
+            </summary>
+            <param name="oldPassword">User's current password.</param>
+            <param name="newPassword">User's new password.</param>
+            <returns>true if the password is changed, otherwise false.</returns>
+        </member>
+        <member name="T:TVA.Web.NamespaceDoc">
+            <summary>
+            Contains classes and extension functions related to .NET web enabled platforms such as ASP.NET and WCF.
+            </summary>
+        </member>
+        <member name="T:TVA.Web.SecurityModule">
+            <summary>
+            Represents an <see cref="T:System.Web.IHttpModule">HTTP module</see> that can be used to enable site-wide role-based security.
+            </summary>
+            <example>
+            Required config file entries:
+            <code>
+            <![CDATA[
+            <?xml version="1.0"?>
+            <configuration>
+              <configSections>
+                <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+              </configSections>
+              <categorizedSettings>
+                <securityProvider>
+                  <add name="ApplicationName" value="" description="Name of the application being secured as defined in the backend security datastore."
+                    encrypted="false" />
+                  <add name="ConnectionString" value="" description="Connection string to be used for connection to the backend security datastore."
+                    encrypted="false" />
+                  <add name="ProviderType" value="TVA.Security.LdapSecurityProvider, TVA.Security"
+                    description="The type to be used for enforcing security." encrypted="false" />
+                  <add name="IncludedResources" value="*/*.*=*" description="Semicolon delimited list of resources to be secured along with role names."
+                    encrypted="false" />
+                  <add name="ExcludedResources" value="*/WebResource.axd*;*/SecurityPortal.aspx*"
+                    description="Semicolon delimited list of resources to be excluded from being secured."
+                    encrypted="false" />
+                  <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
+                    encrypted="false" />
+                  <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
+                    encrypted="false" />
+                </securityProvider>
+                <activeDirectory>
+                  <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
+                    encrypted="false" />
+                  <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
+                    encrypted="false" />
+                  <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
+                    encrypted="true" />
+                </activeDirectory>
+              </categorizedSettings>
+              <system.web>
+                <authentication mode="Windows"/>
+                <httpModules>
+                  <add name="SecurityModule" type="TVA.Web.SecurityModule, TVA.Web" />
+                </httpModules>
+              </system.web>
+            </configuration>
+            ]]>
+            </code>
+            </example>
+            <seealso cref="T:TVA.Security.ISecurityProvider"/>
+        </member>
+        <member name="M:TVA.Web.SecurityModule.Init(System.Web.HttpApplication)">
+            <summary>
+            Initializes the <see cref="T:TVA.Web.SecurityModule"/>.
+            </summary>
+            <param name="context">An <see cref="T:System.Web.HttpApplication"/> object.</param>
+        </member>
+        <member name="M:TVA.Web.SecurityModule.Dispose">
+            <summary>
+            Releases the resources used by <see cref="T:TVA.Web.SecurityModule"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Web.SecurityModule.Redirect(System.Net.HttpStatusCode)">
+            <summary>
+            Redirects the client browser based on the specified <paramref name="httpStatusCode"/>
+            </summary>
+            <param name="httpStatusCode"><see cref="T:System.Net.HttpStatusCode"/> to be used for the redirect.</param>
+        </member>
+        <member name="M:TVA.Web.SecurityModule.GetResourceName">
+            <summary>
+            Gets the name of resource being accessed.
+            </summary>
+            <returns><see cref="P:System.Web.HttpApplication.Request"/>.<see cref="P:System.Web.HttpRequest.Url"/>.<see cref="P:System.Uri.PathAndQuery"/> property value.</returns>
+        </member>
+        <member name="M:TVA.Web.SecurityModule.IsAccessRestricted">
+            <summary>
+            Determines if access to the requested resource is restricted by <see cref="T:TVA.Security.RestrictAccessAttribute"/>.
+            </summary>
+            <returns>true if access to the requested resource is restricted, otherwise false.</returns>
+        </member>
+        <member name="P:TVA.Web.SecurityModule.Application">
+            <summary>
+            Gets the current <see cref="T:System.Web.HttpApplication"/> instance.
+            </summary>
+        </member>
+        <member name="T:TVA.Web.SecurityModule.SessionEnabledHandler">
+            <summary>
+            A handler used to force the SessionStateModule to load session state.
+            </summary>
+        </member>
+        <member name="M:TVA.Web.SecurityModule.SessionEnabledHandler.#ctor(System.Web.IHttpHandler)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Web.SecurityModule.SessionEnabledHandler"/> class.
+            </summary>
+            <param name="originalHandler">The original handler object.</param>
+        </member>
+        <member name="M:TVA.Web.SecurityModule.SessionEnabledHandler.ProcessRequest(System.Web.HttpContext)">
+            <summary>
+            This method will never get called.
+            </summary>
+        </member>
+        <member name="P:TVA.Web.SecurityModule.SessionEnabledHandler.IsReusable">
+            <summary>
+            Returns false since class has a member.
+            </summary>
         </member>
         <member name="T:TVA.Web.Embedded.SecurityPortal">
             <summary>
@@ -1174,6 +1401,113 @@
             To modify move field declaration from designer file to code-behind file.
             </remarks>
         </member>
+        <member name="T:TVA.Web.Embedded.SecurityService">
+            <summary>
+            Embedded WCF service that can be used for securing applications using role-based security.
+            </summary>
+            <remarks>
+            This list shows the endpoints exposed by <see cref="T:TVA.Web.Embedded.SecurityService"/>:
+            <list type="table">
+                <listheader>
+                    <term>URI</term>
+                    <description>Protocol</description>
+                </listheader>
+                <item>
+                    <term><b>~/SecurityService.svc/soap</b></term>
+                    <description>SOAP 1.1</description>
+                </item>
+                <item>
+                    <term><b>~/SecurityService.svc/rest</b></term>
+                    <description>REST</description>
+                </item>
+            </list>
+            </remarks>
+            <example>
+            This example shows how to consume the REST endpoint of <see cref="T:TVA.Web.Embedded.SecurityService"/> using <a href="http://jquery.com/" target="_blank">jQuery</a>:
+            <code>
+            <![CDATA[
+            <script src="jquery.js" type="text/javascript" />
+            <script language="javascript" type="text/javascript">
+                $(document).ready(function () { login(); });
+            
+                function login() {
+                    $.get("SecurityService.svc/rest/getuserdata", loginCallback);
+                }
+            
+                function loginCallback(data) {
+                    var user = new UserData(data);
+                    if (!user.isAuthenticated) {
+                        alert('Access is denied.');
+                    }
+                    else {
+                        alert('Welcome ' + user.firstName + '!');
+                    }
+                }
+            
+                function UserData(xml) {
+                    this.username = $(xml).find('Username').text();
+                    this.password = $(xml).find('Password').text();
+                    this.firstName = $(xml).find('FirstName').text();
+                    this.lastName = $(xml).find('LastName').text();
+                    this.companyName = $(xml).find('CompanyName').text();
+                    this.phoneNumber = $(xml).find('PhoneNumber').text();
+                    this.emailAddress = $(xml).find('EmailAddress').text();
+                    this.securityQuestion = $(xml).find('SecurityQuestion').text();
+                    this.securityAnswer = $(xml).find('SecurityAnswer').text();
+                    this.passwordChangeDateTime = $(xml).find('PasswordChangeDateTime').text();
+                    this.accountCreatedDateTime = $(xml).find('AccountCreatedDateTime').text();
+                    this.isDefined = $(xml).find('IsDefined').text() === 'true';
+                    this.isExternal = $(xml).find('IsExternal').text() === 'true';
+                    this.isDisabled = $(xml).find('IsDisabled').text() === 'true';
+                    this.isLockedOut = $(xml).find('IsLockedOut').text() === 'true';
+                    this.isAuthenticated = $(xml).find('IsAuthenticated').text() === 'true';
+                    // Retrieve user groups.
+                    this.groups = groups = new Array();
+                    $(xml).find('Group').each(function () { groups.push($(this).text()); });
+                    // Retrieve user roles.
+                    this.roles = roles = new Array();
+                    $(xml).find('Role').each(function () { roles.push($(this).text()); });
+                }
+            </script>
+            ]]>
+            </code>
+            </example>
+        </member>
+        <member name="M:TVA.Web.Embedded.SecurityService.GetUserData">
+            <summary>
+            Returns information about the current user. 
+            </summary>
+            <returns>An <see cref="T:TVA.Security.UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
+        </member>
+        <member name="M:TVA.Web.Embedded.SecurityService.RefreshUserData">
+            <summary>
+            Refreshes and returns information about the current user. 
+            </summary>
+            <returns>An <see cref="T:TVA.Security.UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
+        </member>
+        <member name="M:TVA.Web.Embedded.SecurityService.Authenticate(System.String,System.String)">
+            <summary>
+            Authenticates a user and caches the security context upon successful authentication for subsequent use.
+            </summary>
+            <param name="username">Username of the user.</param>
+            <param name="password">Password of the user.</param>
+            <returns>An <see cref="T:TVA.Security.UserData"/> object of the user.</returns>
+        </member>
+        <member name="M:TVA.Web.Embedded.SecurityService.ResetPassword(System.String)">
+            <summary>
+            Resets user password.
+            </summary>
+            <param name="securityAnswer">Answer to user's security question.</param>
+            <returns>true if password is reset, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Web.Embedded.SecurityService.ChangePassword(System.String,System.String)">
+            <summary>
+            Changes user password.
+            </summary>
+            <param name="oldPassword">User's current password.</param>
+            <param name="newPassword">User's new password.</param>
+            <returns>true if the password is changed, otherwise false.</returns>
+        </member>
         <member name="T:TVA.Web.UI.MsgBoxStyle">
             <summary>
             Specifies the buttons to be displayed in a message box.
@@ -1447,340 +1781,6 @@
             <param name="title">Title of the message box.</param>
             <param name="buttons">Buttons to be displayed in the message box.</param>
             <param name="doPostBack">True if a post-back is to be performed when either OK, Retry, or Yes buttons are clicked in the message box, otherwise False.</param>
-        </member>
-        <member name="T:TVA.Web.Embedded.ISecurityService">
-            <summary>
-            Embedded WCF service contract used for securing external facing WCF services.
-            </summary>
-        </member>
-        <member name="M:TVA.Web.Embedded.ISecurityService.GetUserData">
-            <summary>
-            Returns information about the current user. 
-            </summary>
-            <returns>An <see cref="T:TVA.Security.UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
-        </member>
-        <member name="M:TVA.Web.Embedded.ISecurityService.RefreshUserData">
-            <summary>
-            Refreshes and returns information about the current user. 
-            </summary>
-            <returns>An <see cref="T:TVA.Security.UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
-        </member>
-        <member name="M:TVA.Web.Embedded.ISecurityService.Authenticate(System.String,System.String)">
-            <summary>
-            Authenticates a user and caches the security context upon successful authentication for subsequent use.
-            </summary>
-            <param name="username">Username of the user.</param>
-            <param name="password">Password of the user.</param>
-            <returns>An <see cref="T:TVA.Security.UserData"/> object of the user.</returns>
-        </member>
-        <member name="M:TVA.Web.Embedded.ISecurityService.ResetPassword(System.String)">
-            <summary>
-            Resets user password.
-            </summary>
-            <param name="securityAnswer">Answer to user's security question.</param>
-            <returns>true if password is reset, otherwise false.</returns>
-        </member>
-        <member name="M:TVA.Web.Embedded.ISecurityService.ChangePassword(System.String,System.String)">
-            <summary>
-            Changes user password.
-            </summary>
-            <param name="oldPassword">User's current password.</param>
-            <param name="newPassword">User's new password.</param>
-            <returns>true if the password is changed, otherwise false.</returns>
-        </member>
-        <member name="T:TVA.Web.NamespaceDoc">
-            <summary>
-            Contains classes and extension functions related to .NET web enabled platforms such as ASP.NET and WCF.
-            </summary>
-        </member>
-        <member name="T:TVA.Web.Hosting.VirtualFileBaseCollection">
-            <summary>
-            A strongly typed <see cref="T:System.Collections.ObjectModel.KeyedCollection`2"/>
-            where each element is a <see cref="T:System.Web.Hosting.VirtualFileBase"/> and is keyed
-            off of the <see cref="P:System.Web.Hosting.VirtualFileBase.VirtualPath"/>
-            property.
-            </summary>
-            <remarks>
-            <para>
-            The default constructor for this collection does a culture-invariant case-insensitive
-            comparison on the keys.  This allows for proper case-insensitive web-oriented
-            behavior that is generally expected.
-            </para>
-            </remarks>
-            <seealso cref="T:System.Web.Hosting.VirtualFileBase"/>
-        </member>
-        <member name="M:TVA.Web.Hosting.VirtualFileBaseCollection.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/> class that uses a case-insensitive comparer.
-            </summary>
-            <seealso cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/>
-        </member>
-        <member name="M:TVA.Web.Hosting.VirtualFileBaseCollection.#ctor(System.Collections.Generic.IEqualityComparer{System.String})">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/> class that uses the specified equality comparer.
-            </summary>
-            <param name="comparer">
-            The implementation of the <see cref="T:System.Collections.Generic.IEqualityComparer`1"/>
-            generic interface to use when comparing keys, or <see langword="null"/> to use the default
-            equality comparer for the type of the key, obtained from <see cref="P:System.Collections.Generic.EqualityComparer`1.Default"/>.
-            </param>
-            <seealso cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/>
-        </member>
-        <member name="M:TVA.Web.Hosting.VirtualFileBaseCollection.#ctor(System.Collections.Generic.IEqualityComparer{System.String},System.Int32)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/> class that uses the specified equality comparer.
-            </summary>
-            <param name="comparer">
-            The implementation of the <see cref="T:System.Collections.Generic.IEqualityComparer`1"/>
-            generic interface to use when comparing keys, or <see langword="null"/> to use the default
-            equality comparer for the type of the key, obtained from <see cref="P:System.Collections.Generic.EqualityComparer`1.Default"/>.
-            </param>
-            <param name="dictionaryCreationThreshold">
-            The number of elements the collection can hold without creating a lookup dictionary
-            (0 creates the lookup dictionary when the first item is added), or ?1 to specify that
-            a lookup dictionary is never created.
-            </param>
-            <seealso cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/>
-        </member>
-        <member name="M:TVA.Web.Hosting.VirtualFileBaseCollection.GetKeyForItem(System.Web.Hosting.VirtualFileBase)">
-            <summary>
-            Extracts the key from the specified element.
-            </summary>
-            <param name="item">
-            The <see cref="T:System.Web.Hosting.VirtualFileBase"/> element from which to extract the key (<see cref="P:System.Web.Hosting.VirtualFileBase.VirtualPath"/>).
-            </param>
-            <seealso cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/>
-        </member>
-        <member name="T:TVA.Web.Hosting.EmbeddedResourceFileAttribute">
-            <summary>
-            Attribute indicating the location of an embedded resource that should be
-            served by the <see cref="T:TVA.Web.Hosting.EmbeddedResourcePathProvider"/>.
-            </summary>
-            <remarks>
-            <para>
-            This attribute is used by the <see cref="T:TVA.Web.Hosting.EmbeddedResourcePathProvider"/>
-            module/path provider to retrieve the list of embedded resources from an assembly
-            that should be considered a part of the virtual filesystem.
-            </para>
-            </remarks>
-            <example>
-            <para>
-            Below is an example of what it might look like to embed a web form and a
-            user control in an assembly to be served up with the <see cref="T:TVA.Web.Hosting.EmbeddedResourcePathProvider"/>:
-            </para>
-            <code lang="C#">
-            [assembly: EmbeddedResourceFileAttribute("MyNamespace.WebForm1.aspx", "MyNamespace")]
-            [assembly: EmbeddedResourceFileAttribute("MyNamespace.UserControl1.ascx", "MyNamespace")]
-            </code>
-            </example>
-            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourcePathProvider"/>
-        </member>
-        <member name="F:TVA.Web.Hosting.EmbeddedResourceFileAttribute.m_resourceNamespace">
-            <summary>
-            Internal storage for the
-            <see cref="P:TVA.Web.Hosting.EmbeddedResourceFileAttribute.ResourceNamespace"/>
-            property.
-            </summary>
-            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceFileAttribute"/>
-        </member>
-        <member name="F:TVA.Web.Hosting.EmbeddedResourceFileAttribute.m_resourcePath">
-            <summary>
-            Internal storage for the
-            <see cref="P:TVA.Web.Hosting.EmbeddedResourceFileAttribute.ResourcePath"/>
-            property.
-            </summary>
-            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceFileAttribute"/>
-        </member>
-        <member name="M:TVA.Web.Hosting.EmbeddedResourceFileAttribute.#ctor(System.String,System.String)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Web.Hosting.EmbeddedResourceFileAttribute"/> class.
-            </summary>
-            <param name="resourcePath">The path to the embedded resource.  Used to get the resource as a stream from the assembly.</param>
-            <param name="resourceNamespace">The namespace the resource is in.  This will generally be removed from the full resource path to calculate the "application path" for the embedded resource.</param>
-            <exception cref="T:System.ArgumentNullException">
-            Thrown if <paramref name="resourcePath"/> or <paramref name="resourceNamespace"/> is <see langword="null"/>.
-            </exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">
-            Thrown if <paramref name="resourcePath"/> is <see cref="F:System.String.Empty"/>
-            or if it only consists of periods and/or spaces.
-            </exception>
-            <remarks>
-            <para>
-            Both <paramref name="resourcePath"/> and <paramref name="resourceNamespace"/>
-            will be processed to have leading and trailing periods and spaces removed.
-            If <paramref name="resourcePath"/> ends up being empty, an
-            <see cref="T:System.ArgumentOutOfRangeException"/> is thrown.  No exception
-            is thrown if <paramref name="resourceNamespace"/> turns out empty.
-            </para>
-            </remarks>
-            <example>
-            <para>
-            If the <paramref name="resourcePath"/> is <c>RootNS.SubNS.AppRoot.Folder.File.aspx</c>
-            and the <paramref name="resourceNamespace"/> is <c>RootNS.SubNS.AppRoot</c>,
-            the virtual "path" to the embedded file will be <c>Folder.File.aspx</c>
-            (which will be converted by the <see cref="T:TVA.Web.Hosting.EmbeddedResourcePathProvider"/>
-            to <c>~/Folder/File.aspx</c>).
-            </para>
-            </example>
-            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceFileAttribute"/>
-        </member>
-        <member name="M:TVA.Web.Hosting.EmbeddedResourceFileAttribute.RemoveMalformedEndChars(System.String)">
-            <summary>
-            Removes leading and trailing dots and spaces from a string.
-            </summary>
-            <param name="toFix">The <see cref="T:System.String"/> to be cleaned up.</param>
-            <returns>A version of <paramref name="toFix"/> with leading and trailing dots and spaces removed.</returns>
-            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceFileAttribute"/>
-        </member>
-        <member name="F:TVA.Web.Hosting.EmbeddedResourceFileAttribute.MalformedEndCharExpression">
-            <summary>
-            Regular expression indicating the characters that can't start or end a resource.
-            </summary>
-            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceFileAttribute"/>
-            <seealso cref="M:TVA.Web.Hosting.EmbeddedResourceFileAttribute.RemoveMalformedEndChars(System.String)"/>
-        </member>
-        <member name="P:TVA.Web.Hosting.EmbeddedResourceFileAttribute.ResourceNamespace">
-            <summary>
-            Gets the namespace for the embedded resource.
-            </summary>
-            <value>
-            A <see cref="T:System.String"/> with the embedded resource namespace.
-            </value>
-            <remarks>
-            <para>
-            This namespace will be removed from the full <see cref="P:TVA.Web.Hosting.EmbeddedResourceFileAttribute.ResourcePath"/>
-            to create the virtual application path for the resource.
-            </para>
-            </remarks>
-            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceFileAttribute"/>
-        </member>
-        <member name="P:TVA.Web.Hosting.EmbeddedResourceFileAttribute.ResourcePath">
-            <summary>
-            Gets the path to the embedded resource.
-            </summary>
-            <value>
-            A <see cref="T:System.String"/> with the full path to an embedded resource in
-            the associated assembly.
-            </value>
-            <remarks>
-            <para>
-            This path will be used to retrieve the resource from the assembly and serve
-            it up.
-            </para>
-            </remarks>
-            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceFileAttribute"/>
-        </member>
-        <member name="T:TVA.Web.Embedded.SecurityService">
-            <summary>
-            Embedded WCF service that can be used for securing applications using role-based security.
-            </summary>
-            <remarks>
-            This list shows the endpoints exposed by <see cref="T:TVA.Web.Embedded.SecurityService"/>:
-            <list type="table">
-                <listheader>
-                    <term>URI</term>
-                    <description>Protocol</description>
-                </listheader>
-                <item>
-                    <term><b>~/SecurityService.svc/soap</b></term>
-                    <description>SOAP 1.1</description>
-                </item>
-                <item>
-                    <term><b>~/SecurityService.svc/rest</b></term>
-                    <description>REST</description>
-                </item>
-            </list>
-            </remarks>
-            <example>
-            This example shows how to consume the REST endpoint of <see cref="T:TVA.Web.Embedded.SecurityService"/> using <a href="http://jquery.com/" target="_blank">jQuery</a>:
-            <code>
-            <![CDATA[
-            <script src="jquery.js" type="text/javascript" />
-            <script language="javascript" type="text/javascript">
-                $(document).ready(function () { login(); });
-            
-                function login() {
-                    $.get("SecurityService.svc/rest/getuserdata", loginCallback);
-                }
-            
-                function loginCallback(data) {
-                    var user = new UserData(data);
-                    if (!user.isAuthenticated) {
-                        alert('Access is denied.');
-                    }
-                    else {
-                        alert('Welcome ' + user.firstName + '!');
-                    }
-                }
-            
-                function UserData(xml) {
-                    this.username = $(xml).find('Username').text();
-                    this.password = $(xml).find('Password').text();
-                    this.firstName = $(xml).find('FirstName').text();
-                    this.lastName = $(xml).find('LastName').text();
-                    this.companyName = $(xml).find('CompanyName').text();
-                    this.phoneNumber = $(xml).find('PhoneNumber').text();
-                    this.emailAddress = $(xml).find('EmailAddress').text();
-                    this.securityQuestion = $(xml).find('SecurityQuestion').text();
-                    this.securityAnswer = $(xml).find('SecurityAnswer').text();
-                    this.passwordChangeDateTime = $(xml).find('PasswordChangeDateTime').text();
-                    this.accountCreatedDateTime = $(xml).find('AccountCreatedDateTime').text();
-                    this.isDefined = $(xml).find('IsDefined').text() === 'true';
-                    this.isExternal = $(xml).find('IsExternal').text() === 'true';
-                    this.isDisabled = $(xml).find('IsDisabled').text() === 'true';
-                    this.isLockedOut = $(xml).find('IsLockedOut').text() === 'true';
-                    this.isAuthenticated = $(xml).find('IsAuthenticated').text() === 'true';
-                    // Retrieve user groups.
-                    this.groups = groups = new Array();
-                    $(xml).find('Group').each(function () { groups.push($(this).text()); });
-                    // Retrieve user roles.
-                    this.roles = roles = new Array();
-                    $(xml).find('Role').each(function () { roles.push($(this).text()); });
-                }
-            </script>
-            ]]>
-            </code>
-            </example>
-        </member>
-        <member name="M:TVA.Web.Embedded.SecurityService.GetUserData">
-            <summary>
-            Returns information about the current user. 
-            </summary>
-            <returns>An <see cref="T:TVA.Security.UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
-        </member>
-        <member name="M:TVA.Web.Embedded.SecurityService.RefreshUserData">
-            <summary>
-            Refreshes and returns information about the current user. 
-            </summary>
-            <returns>An <see cref="T:TVA.Security.UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
-        </member>
-        <member name="M:TVA.Web.Embedded.SecurityService.Authenticate(System.String,System.String)">
-            <summary>
-            Authenticates a user and caches the security context upon successful authentication for subsequent use.
-            </summary>
-            <param name="username">Username of the user.</param>
-            <param name="password">Password of the user.</param>
-            <returns>An <see cref="T:TVA.Security.UserData"/> object of the user.</returns>
-        </member>
-        <member name="M:TVA.Web.Embedded.SecurityService.ResetPassword(System.String)">
-            <summary>
-            Resets user password.
-            </summary>
-            <param name="securityAnswer">Answer to user's security question.</param>
-            <returns>true if password is reset, otherwise false.</returns>
-        </member>
-        <member name="M:TVA.Web.Embedded.SecurityService.ChangePassword(System.String,System.String)">
-            <summary>
-            Changes user password.
-            </summary>
-            <param name="oldPassword">User's current password.</param>
-            <param name="newPassword">User's new password.</param>
-            <returns>true if the password is changed, otherwise false.</returns>
-        </member>
-        <member name="T:TVA.Web.Embedded.NamespaceDoc">
-            <summary>
-            Contains embedded ASP.NET web pages and WCF web services that support the implementation of role-based security in .NET and non-.NET based development platforms.
-            </summary>
         </member>
     </members>
 </doc>
