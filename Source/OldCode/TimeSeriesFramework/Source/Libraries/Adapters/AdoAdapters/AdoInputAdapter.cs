@@ -299,8 +299,16 @@ namespace AdoAdapters
             if (m_cacheFileName != null)
                 m_cacheFileName = FilePath.GetAbsolutePath(m_cacheFileName);
 
-            // Get measurements from the database.
-            ThreadPool.QueueUserWorkItem(GetDbMeasurements);
+            try
+            {
+                // Get measurements from the database.
+                ThreadPool.QueueUserWorkItem(GetDbMeasurements);
+            }
+            catch (Exception ex)
+            {
+                // Process exception for logging
+                OnProcessException(new InvalidOperationException("Failed to queue database query due to exception: " + ex.Message, ex));
+            }
         }
 
         /// <summary>

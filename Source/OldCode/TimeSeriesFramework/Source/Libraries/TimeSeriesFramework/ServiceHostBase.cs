@@ -508,8 +508,17 @@ namespace TimeSeriesFramework
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("RefreshRoutes", "Spawns request to recalculate routing tables", RefreshRoutesRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("TemporalSupport", "Detemines if any adapters support temporal processing", TemporalSupportRequestHandler));
 
-            // Start system initialization on an independent thread so that service responds in a timely fashion...
-            ThreadPool.QueueUserWorkItem(InitializeSystem);
+            try
+            {
+                // Start system initialization on an independent thread so that service responds in a timely fashion...
+                ThreadPool.QueueUserWorkItem(InitializeSystem);
+            }
+            catch (Exception ex)
+            {
+                // Process exception for logging
+                DisplayStatusMessage("Failed to queue system initialization due to exception: {0}", UpdateType.Alarm, ex.Message);
+                m_serviceHelper.ErrorLogger.Log(ex);
+            }
         }
 
         /// <summary>
@@ -911,8 +920,16 @@ namespace TimeSeriesFramework
         /// </remarks>
         protected virtual void CacheCurrentConfiguration(DataSet configuration)
         {
-            // Queue configuration serialization using latest dataset
-            ThreadPool.QueueUserWorkItem(QueueConfigurationCache, configuration);
+            try
+            {
+                // Queue configuration serialization using latest dataset
+                ThreadPool.QueueUserWorkItem(QueueConfigurationCache, configuration);
+            }
+            catch (Exception ex)
+            {
+                DisplayStatusMessage("Failed to queue configuration caching due to exception: {0}", UpdateType.Alarm, ex.Message);
+                m_serviceHelper.ErrorLogger.Log(ex);
+            }
         }
 
         // Since configuration serialization may take a while, we queue-up activity for one-at-a-time processing using latest dataset
@@ -934,8 +951,16 @@ namespace TimeSeriesFramework
                         // Get latest configuration
                         Interlocked.Exchange(ref latestConfiguration, m_latestConfiguration);
 
-                        // Queue up task to to execute cache of the latest configuration
-                        ThreadPool.QueueUserWorkItem(ExecuteConfigurationCache, latestConfiguration);
+                        try
+                        {
+                            // Queue up task to to execute cache of the latest configuration
+                            ThreadPool.QueueUserWorkItem(ExecuteConfigurationCache, latestConfiguration);
+                        }
+                        catch (Exception ex)
+                        {
+                            DisplayStatusMessage("Failed to queue configuration caching due to exception: {0}", UpdateType.Alarm, ex.Message);
+                            m_serviceHelper.ErrorLogger.Log(ex);
+                        }
 
                         // Dereference data set configuration if another one hasn't been queued-up in the mean time
                         Interlocked.CompareExchange(ref m_latestConfiguration, null, latestConfiguration);

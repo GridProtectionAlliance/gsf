@@ -74,6 +74,7 @@ namespace CsvAdapters
             private long m_lastMissedWindowTime;
             private long m_resynchronizations;
             private int m_referenceCount;
+            private Action<Exception> m_exceptionHandler;
             private bool m_disposed;
 
             #endregion
@@ -193,6 +194,21 @@ namespace CsvAdapters
                         return m_frameWaitHandleA;
 
                     return m_frameWaitHandleB;
+                }
+            }
+
+            /// <summary>
+            /// Gets or sets function used to handle exceptions.
+            /// </summary>
+            public Action<Exception> ExceptionHandler
+            {
+                get
+                {
+                    return m_exceptionHandler;
+                }
+                set
+                {
+                    m_exceptionHandler = value;
                 }
             }
 
@@ -360,6 +376,10 @@ namespace CsvAdapters
                             }
                         }
                     }
+                }
+                catch (Exception ex)
+                {
+                    ExceptionHandler(new InvalidOperationException("Exception thrown by precision input timer: " + ex.Message, ex));
                 }
                 finally
                 {
@@ -1000,11 +1020,20 @@ namespace CsvAdapters
                 // Get static input timer for given frames per second creating it if needed
                 if (!s_inputTimers.TryGetValue(framesPerSecond, out timer))
                 {
-                    // Create a new precision input timer
-                    timer = new PrecisionInputTimer(framesPerSecond);
+                    try
+                    {
+                        // Create a new precision input timer
+                        timer = new PrecisionInputTimer(framesPerSecond);
+                        timer.ExceptionHandler = OnProcessException;
 
-                    // Add timer state for given rate to static collection
-                    s_inputTimers.Add(framesPerSecond, timer);
+                        // Add timer state for given rate to static collection
+                        s_inputTimers.Add(framesPerSecond, timer);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Process exception for logging
+                        OnProcessException(new InvalidOperationException("Failed to create precision input timer due to exception: " + ex.Message, ex));
+                    }
                 }
 
                 // Increment reference count for input timer at given frame rate

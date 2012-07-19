@@ -1456,7 +1456,16 @@ namespace TimeSeriesFramework.Transport
                 // if they happen for other reasons, make sure disconnect procedure is handled
                 if (ex.ErrorCode == 10053 || ex.ErrorCode == 10054)
                 {
-                    ThreadPool.QueueUserWorkItem(DisconnectClient, clientID);
+                    try
+                    {
+                        ThreadPool.QueueUserWorkItem(DisconnectClient, clientID);
+                    }
+                    catch (Exception queueException)
+                    {
+                        // Process exception for logging
+                        OnProcessException(new InvalidOperationException("Failed to queue client disconnect due to exception: " + queueException.Message, queueException));
+                    }
+
                     return true;
                 }
             }
@@ -1501,8 +1510,16 @@ namespace TimeSeriesFramework.Transport
                     Remove(clientSubscription);
                     clientSubscription.Stop();
 
-                    // Notify system that subscriber disconnected therefore demanded measurements may have changed
-                    ThreadPool.QueueUserWorkItem(NotifyHostOfSubscriptionRemoval);
+                    try
+                    {
+                        // Notify system that subscriber disconnected therefore demanded measurements may have changed
+                        ThreadPool.QueueUserWorkItem(NotifyHostOfSubscriptionRemoval);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Process exception for logging
+                        OnProcessException(new InvalidOperationException("Failed to queue notification of subscription removal due to exception: " + ex.Message, ex));
+                    }
                 }
             }
         }
@@ -2376,7 +2393,15 @@ namespace TimeSeriesFramework.Transport
 
         private void m_commandChannel_ClientDisconnected(object sender, EventArgs<Guid> e)
         {
-            ThreadPool.QueueUserWorkItem(DisconnectClient, e.Argument);
+            try
+            {
+                ThreadPool.QueueUserWorkItem(DisconnectClient, e.Argument);
+            }
+            catch (Exception ex)
+            {
+                // Process exception for logging
+                OnProcessException(new InvalidOperationException("Failed to queue client disconnect due to exception: " + ex.Message, ex));
+            }
         }
 
         private void m_commandChannel_ServerStarted(object sender, EventArgs e)

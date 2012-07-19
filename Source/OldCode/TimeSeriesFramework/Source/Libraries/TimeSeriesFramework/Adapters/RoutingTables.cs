@@ -197,24 +197,40 @@ namespace TimeSeriesFramework.Adapters
         /// </remarks>
         public virtual void CalculateRoutingTables(MeasurementKey[] inputMeasurementKeysRestriction)
         {
-            ThreadPool.QueueUserWorkItem(QueueRoutingTableCalculation, inputMeasurementKeysRestriction);
+            try
+            {
+                ThreadPool.QueueUserWorkItem(QueueRoutingTableCalculation, inputMeasurementKeysRestriction);
+            }
+            catch (Exception ex)
+            {
+                // Process exception for logging
+                OnProcessException(new InvalidOperationException("Failed to queue routing table calculation: " + ex.Message, ex));
+            }
         }
 
         private void QueueRoutingTableCalculation(object state)
         {
-            // Queue up a routing table calculation unless another thread has already requested one
-            if (Monitor.TryEnter(m_queuedCalculationPending))
+            try
             {
-                try
+                // Queue up a routing table calculation unless another thread has already requested one
+                if (!m_disposed && Monitor.TryEnter(m_queuedCalculationPending))
                 {
-                    // Queue new routing table calculation after waiting for any prior calculation to complete
-                    if (m_calculationComplete.WaitOne())
-                        ThreadPool.QueueUserWorkItem(CalculateRoutingTables, state);
+                    try
+                    {
+                        // Queue new routing table calculation after waiting for any prior calculation to complete
+                        if (m_calculationComplete.WaitOne())
+                            ThreadPool.QueueUserWorkItem(CalculateRoutingTables, state);
+                    }
+                    finally
+                    {
+                        Monitor.Exit(m_queuedCalculationPending);
+                    }
                 }
-                finally
-                {
-                    Monitor.Exit(m_queuedCalculationPending);
-                }
+            }
+            catch (Exception ex)
+            {
+                // Process exception for logging
+                OnProcessException(new InvalidOperationException("Failed to queue routing table calculation: " + ex.Message, ex));
             }
         }
 

@@ -1056,11 +1056,20 @@ namespace TimeSeriesFramework.Adapters
                                     // Dispose old item, initialize new item
                                     this[i] = newAdapter;
 
-                                    // Attempt to start new item
-                                    if (AutoInitialize)
-                                        ThreadPool.QueueUserWorkItem(StartItem, newAdapter);
-                                    else if (AutoStart)
-                                        newAdapter.Start();
+                                    try
+                                    {
+                                        // Attempt to start new item
+                                        if (AutoInitialize)
+                                            ThreadPool.QueueUserWorkItem(StartItem, newAdapter);
+                                        else if (AutoStart)
+                                            newAdapter.Start();
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        // Process exception for logging
+                                        string errorMessage = string.Format("Failed to queue start operation for adapter {0}: {1}", newAdapter.Name, ex.Message);
+                                        OnProcessException(new InvalidOperationException(errorMessage, ex));
+                                    }
 
                                     foundItem = true;
                                     break;
@@ -1073,11 +1082,20 @@ namespace TimeSeriesFramework.Adapters
                                 // Add new adapter to the collection
                                 Add(newAdapter);
 
-                                // Start new item
-                                if (AutoInitialize)
-                                    ThreadPool.QueueUserWorkItem(StartItem, newAdapter);
-                                else if (AutoStart)
-                                    newAdapter.Start();
+                                try
+                                {
+                                    // Start new item
+                                    if (AutoInitialize)
+                                        ThreadPool.QueueUserWorkItem(StartItem, newAdapter);
+                                    else if (AutoStart)
+                                        newAdapter.Start();
+                                }
+                                catch (Exception ex)
+                                {
+                                    // Process exception for logging
+                                    string errorMessage = string.Format("Failed to queue start operation for adapter {0}: {1}", newAdapter.Name, ex.Message);
+                                    OnProcessException(new InvalidOperationException(errorMessage, ex));
+                                }
                             }
 
                             return true;
@@ -1111,12 +1129,21 @@ namespace TimeSeriesFramework.Adapters
                 {
                     try
                     {
-                        // We start items from thread pool if auto-intializing since
-                        // start will block and wait for initialization to complete
-                        if (AutoInitialize)
-                            ThreadPool.QueueUserWorkItem(StartItem, item);
-                        else if (AutoStart)
-                            item.Start();
+                        try
+                        {
+                            // We start items from thread pool if auto-intializing since
+                            // start will block and wait for initialization to complete
+                            if (AutoInitialize)
+                                ThreadPool.QueueUserWorkItem(StartItem, item);
+                            else if (AutoStart)
+                                item.Start();
+                        }
+                        catch (Exception ex)
+                        {
+                            // Process exception for logging
+                            string errorMessage = string.Format("Failed to queue start operation for adapter {0}: {1}", item.Name, ex.Message);
+                            OnProcessException(new InvalidOperationException(errorMessage, ex));
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -1471,10 +1498,19 @@ namespace TimeSeriesFramework.Adapters
                 // Update adapter routing type flag
                 item.ProcessMeasurementFilter = ProcessMeasurementFilter;
 
-                // If automatically initializing new elements, handle object initialization from
-                // thread pool so it can take needed amount of time
-                if (AutoInitialize)
-                    ThreadPool.QueueUserWorkItem(InitializeItem, item);
+                try
+                {
+                    // If automatically initializing new elements, handle object initialization from
+                    // thread pool so it can take needed amount of time
+                    if (AutoInitialize)
+                        ThreadPool.QueueUserWorkItem(InitializeItem, item);
+                }
+                catch (Exception ex)
+                {
+                    // Process exception for logging
+                    string errorMessage = string.Format("Failed to queue initialize operation for adapter {0}: {1}", item.Name, ex.Message);
+                    OnProcessException(new InvalidOperationException(errorMessage, ex));
+                }
             }
         }
 

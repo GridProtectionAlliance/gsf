@@ -312,8 +312,11 @@ namespace TimeSeriesFramework.Transport
                 else
                 {
                     // Disable data monitor
-                    m_dataStreamMonitor.Elapsed -= m_dataStreamMonitor_Elapsed;
-                    m_dataStreamMonitor.Dispose();
+                    if ((object)m_dataStreamMonitor != null)
+                    {
+                        m_dataStreamMonitor.Elapsed -= m_dataStreamMonitor_Elapsed;
+                        m_dataStreamMonitor.Dispose();
+                    }
                     m_dataStreamMonitor = null;
                 }
             }
@@ -2263,9 +2266,17 @@ namespace TimeSeriesFramework.Transport
         // This method is called then new metadata has been received
         private void DataSubscriber_MetaDataReceived(object sender, EventArgs<DataSet> e)
         {
-            // We handle synchronization on a seperate thread since this process may be lengthy
-            if (m_synchronizeMetadata)
-                ThreadPool.QueueUserWorkItem(SynchronizeMetadata, e.Argument);
+            try
+            {
+                // We handle synchronization on a seperate thread since this process may be lengthy
+                if (m_synchronizeMetadata)
+                    ThreadPool.QueueUserWorkItem(SynchronizeMetadata, e.Argument);
+            }
+            catch (Exception ex)
+            {
+                // Process exception for logging
+                OnProcessException(new InvalidOperationException("Failed to queue metadata synchronization due to exception: " + ex.Message, ex));
+            }
         }
 
         /// <summary>

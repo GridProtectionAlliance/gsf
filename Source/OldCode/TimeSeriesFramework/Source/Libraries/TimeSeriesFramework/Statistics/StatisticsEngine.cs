@@ -240,9 +240,17 @@ namespace TimeSeriesFramework.Statistics
             MapAcronymFunction("Publisher", GetAdapterAcronym);
             MapAcronymFunction("Subscriber", GetAdapterAcronym);
 
-            // Kick off initial load of statistics from
-            // thread pool since this may take a while
-            ThreadPool.QueueUserWorkItem(LoadStatistics);
+            try
+            {
+                // Kick off initial load of statistics from
+                // thread pool since this may take a while
+                ThreadPool.QueueUserWorkItem(LoadStatistics);
+            }
+            catch (Exception ex)
+            {
+                // Process exception for logging
+                OnProcessException(new InvalidOperationException("Failed to queue loading of statistics due to exception: " + ex.Message, ex));
+            }
         }
 
         /// <summary>
