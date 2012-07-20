@@ -102,6 +102,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicCalculator", "Librar
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TSFPlatformLibrary", "Libraries\TSFPlatformLibrary\TSFPlatformLibrary.vcxproj", "{2A542BE8-8D17-44C3-BCD2-768DF480FF82}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FrequencyAverager", "Libraries\Adapters\FrequencyAverager\FrequencyAverager.csproj", "{AF33B063-D523-493E-951A-29C930A49002}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OpenDNP3", "OpenDNP3", "{109F186F-C8B9-43EC-8D5B-F2494DBE8923}"
 	ProjectSection(SolutionItems) = preProject
 		Dependencies\OpenDNP3\boost_date_time-vc100-mt-1_47.dll = Dependencies\OpenDNP3\boost_date_time-vc100-mt-1_47.dll
@@ -204,6 +206,10 @@ Global
 		SccProjectTopLevelParentUniqueName19 = TimeSeriesFramework.sln
 		SccProjectName19 = Libraries/Adapters/Dnp3Adapters
 		SccLocalPath19 = Libraries\\Adapters\\Dnp3Adapters
+		SccProjectUniqueName20 = Libraries\\Adapters\\FrequencyAverager\\FrequencyAverager.csproj
+		SccProjectTopLevelParentUniqueName20 = TimeSeriesFramework.sln
+		SccProjectName20 = Libraries/Adapters/FrequencyAverager
+		SccLocalPath20 = Libraries\\Adapters\\FrequencyAverager
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -348,6 +354,16 @@ Global
 		{2A542BE8-8D17-44C3-BCD2-768DF480FF82}.Debug|x86.ActiveCfg = Debug|Win32
 		{2A542BE8-8D17-44C3-BCD2-768DF480FF82}.Release|Any CPU.ActiveCfg = Release|Win32
 		{2A542BE8-8D17-44C3-BCD2-768DF480FF82}.Release|x86.ActiveCfg = Release|Win32
+		{AF33B063-D523-493E-951A-29C930A49002}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF33B063-D523-493E-951A-29C930A49002}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF33B063-D523-493E-951A-29C930A49002}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{AF33B063-D523-493E-951A-29C930A49002}.Debug|x86.ActiveCfg = Debug|x86
+		{AF33B063-D523-493E-951A-29C930A49002}.Debug|x86.Build.0 = Debug|x86
+		{AF33B063-D523-493E-951A-29C930A49002}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF33B063-D523-493E-951A-29C930A49002}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF33B063-D523-493E-951A-29C930A49002}.Release|Win32.ActiveCfg = Release|Any CPU
+		{AF33B063-D523-493E-951A-29C930A49002}.Release|x86.ActiveCfg = Release|x86
+		{AF33B063-D523-493E-951A-29C930A49002}.Release|x86.Build.0 = Release|x86
 		{A04A48C2-112D-4EE3-A6B0-3784A1315BCF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A04A48C2-112D-4EE3-A6B0-3784A1315BCF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A04A48C2-112D-4EE3-A6B0-3784A1315BCF}.Debug|x86.ActiveCfg = Debug|x86
@@ -387,6 +403,7 @@ Global
 		{69846364-E3F5-4086-B9FE-D447BB7E56C3} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
 		{BB0CAA29-229E-4648-80A0-1474B3A0FACF} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
 		{374F5805-28DB-4BCA-8062-BF802793BD4F} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
+		{AF33B063-D523-493E-951A-29C930A49002} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
 		{A04A48C2-112D-4EE3-A6B0-3784A1315BCF} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
 		{D78C3B1B-F673-45EB-86CB-93DCB4572905} = {7877F254-782B-4221-83B4-DB31D9107A43}
 		{5E75D20E-228E-4ACC-B73D-E9471D9E0852} = {7877F254-782B-4221-83B4-DB31D9107A43}
