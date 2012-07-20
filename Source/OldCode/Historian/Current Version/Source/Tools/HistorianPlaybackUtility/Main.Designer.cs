@@ -15,6 +15,7 @@
         {
             if (disposing && (components != null))
             {
+                this.Font.Dispose();
                 components.Dispose();
             }
             base.Dispose(disposing);
