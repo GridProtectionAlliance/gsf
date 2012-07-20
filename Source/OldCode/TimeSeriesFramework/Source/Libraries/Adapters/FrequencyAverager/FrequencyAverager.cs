@@ -22,12 +22,18 @@
 //******************************************************************************************************
 
 using System.Collections.Generic;
-using TVA;
+using System.ComponentModel;
 using TimeSeriesFramework;
 using TimeSeriesFramework.Adapters;
+using TVA;
 
 namespace FrequencyAverager
 {
+    /// <summary>
+    /// Represents an adapter that calculates the average
+    /// of the input frequencies over each full second.
+    /// </summary>
+    [Description("FrequencyAverager: averages frequencies over one second intervals")]
     public class FrequencyAverager : ActionAdapterBase
     {
         #region [ Members ]
@@ -40,12 +46,11 @@ namespace FrequencyAverager
 
         #endregion
 
-        #region [ Constructors ]
-
-        #endregion
-
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets a flag indicating whether this adapter supports temporal processing.
+        /// </summary>
         public override bool SupportsTemporalProcessing
         {
             get
@@ -58,6 +63,9 @@ namespace FrequencyAverager
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Initializes this <see cref="FrequencyAverager"/>.
+        /// </summary>
         public override void Initialize()
         {
             Dictionary<string, string> settings = Settings;
@@ -79,6 +87,12 @@ namespace FrequencyAverager
                 m_supportsTemporalProcessing = DefaultSupportsTemporalProcessing;
         }
 
+        /// <summary>
+        /// Publish <see cref="IFrame"/> of time-aligned collection of <see cref="IMeasurement"/> values that arrived within the
+        /// concentrator's defined <see cref="ConcentratorBase.LagTime"/>.
+        /// </summary>
+        /// <param name="frame"><see cref="IFrame"/> of measurements with the same timestamp that arrived within <see cref="ConcentratorBase.LagTime"/> that are ready for processing.</param>
+        /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
         protected override void PublishFrame(IFrame frame, int index)
         {
             IList<IMeasurement> newMeasurements = new List<IMeasurement>();
