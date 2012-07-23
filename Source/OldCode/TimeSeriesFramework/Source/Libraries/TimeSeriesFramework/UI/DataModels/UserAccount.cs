@@ -418,10 +418,10 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                string passwordColumn = "Password";
+                string pColumn = "Password";
 
                 if (database.IsJetEngine)
-                    passwordColumn = "[Password]";
+                    pColumn = "[Password]";
 
                 object changePasswordOn = userAccount.ChangePasswordOn;
                 if (userAccount.ChangePasswordOn == DateTime.MinValue)
@@ -431,7 +431,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 if (userAccount.ID == null || userAccount.ID == Guid.Empty)
                 {
-                    query = database.ParameterizedQueryString("INSERT INTO UserAccount (Name, " + passwordColumn + ", FirstName, LastName, DefaultNodeID, Phone, Email, " +
+                    query = database.ParameterizedQueryString("INSERT INTO UserAccount (Name, " + pColumn + ", FirstName, LastName, DefaultNodeID, Phone, Email, " +
                         "LockedOut, UseADAuthentication, ChangePasswordOn, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, " +
                         "{9}, {10}, {11}, {12}, {13})", "name", "password", "firstName", "lastName", "defaultNodeID", "phone", "email", "lockedOut", "useADAuthentication",
                         "changePasswordOn", "updatedBy", "updatedOn", "createdBy", "createdOn");
@@ -443,7 +443,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 }
                 else
                 {
-                    query = database.ParameterizedQueryString("UPDATE UserAccount SET Name = {0}, " + passwordColumn + " = {1}, FirstName = {2}, LastName = {3}, " +
+                    query = database.ParameterizedQueryString("UPDATE UserAccount SET Name = {0}, " + pColumn + " = {1}, FirstName = {2}, LastName = {3}, " +
                             "DefaultNodeID = {4}, Phone = {5}, Email = {6}, LockedOut = {7}, UseADAuthentication = {8}, ChangePasswordOn = {9}, UpdatedBy = {10}, " +
                             "UpdatedOn = {11} WHERE ID = {12}", "name", "password", "firstName", "lastName", "defaultNodeID", "phone", "email", "lockedOut",
                             "useADAuthentication", "changePasswordOn", "updatedBy", "updatedOn", "id");
