@@ -69,25 +69,10 @@ namespace TimeSeriesFramework.UI
             m_remotingClient = new TcpClient();
             m_remotingClient.ConnectionString = connectionString;
 
-            // If user overrides shared secret, assume they are wanting an encrypted session
-            if (settings.TryGetValue("sharedSecret", out setting) && !string.IsNullOrWhiteSpace(setting))
-            {
-                m_remotingClient.Encryption = CipherStrength.Aes256;
-                m_remotingClient.SecureSession = true;
-                m_remotingClient.SharedSecret = setting.Trim();
-            }
-            else
-            {
-                m_remotingClient.Encryption = CipherStrength.None;
-                m_remotingClient.SecureSession = false;
-                m_remotingClient.SharedSecret = "TSF";
-            }
-
             // See if user wants to connect to remote service using integrated security
             if (settings.TryGetValue("integratedSecurity", out setting) && !string.IsNullOrWhiteSpace(setting))
                 m_remotingClient.IntegratedSecurity = setting.ParseBoolean();
 
-            m_remotingClient.Handshake = true;
             m_remotingClient.PayloadAware = true;
             m_remotingClient.MaxConnectionAttempts = -1;
 

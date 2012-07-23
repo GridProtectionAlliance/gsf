@@ -487,7 +487,6 @@ namespace TimeSeriesFramework.Transport
                     m_dataChannel.ConnectionAttempt -= m_dataChannel_ConnectionAttempt;
                     m_dataChannel.ReceiveData -= m_dataChannel_ReceiveData;
                     m_dataChannel.ReceiveDataException -= m_dataChannel_ReceiveDataException;
-                    m_dataChannel.ReceiveDataTimeout -= m_dataChannel_ReceiveDataTimeout;
 
                     if (m_dataChannel != value)
                         m_dataChannel.Dispose();
@@ -503,7 +502,6 @@ namespace TimeSeriesFramework.Transport
                     m_dataChannel.ConnectionAttempt += m_dataChannel_ConnectionAttempt;
                     m_dataChannel.ReceiveData += m_dataChannel_ReceiveData;
                     m_dataChannel.ReceiveDataException += m_dataChannel_ReceiveDataException;
-                    m_dataChannel.ReceiveDataTimeout += m_dataChannel_ReceiveDataTimeout;
                 }
             }
         }
@@ -526,11 +524,8 @@ namespace TimeSeriesFramework.Transport
                     m_commandChannel.ConnectionEstablished -= m_commandChannel_ConnectionEstablished;
                     m_commandChannel.ConnectionException -= m_commandChannel_ConnectionException;
                     m_commandChannel.ConnectionTerminated -= m_commandChannel_ConnectionTerminated;
-                    m_commandChannel.HandshakeProcessTimeout -= m_commandChannel_HandshakeProcessTimeout;
-                    m_commandChannel.HandshakeProcessUnsuccessful -= m_commandChannel_HandshakeProcessUnsuccessful;
                     m_commandChannel.ReceiveData -= m_commandChannel_ReceiveData;
                     m_commandChannel.ReceiveDataException -= m_commandChannel_ReceiveDataException;
-                    m_commandChannel.ReceiveDataTimeout -= m_commandChannel_ReceiveDataTimeout;
                     m_commandChannel.SendDataException -= m_commandChannel_SendDataException;
 
                     if (m_commandChannel != value)
@@ -547,11 +542,8 @@ namespace TimeSeriesFramework.Transport
                     m_commandChannel.ConnectionEstablished += m_commandChannel_ConnectionEstablished;
                     m_commandChannel.ConnectionException += m_commandChannel_ConnectionException;
                     m_commandChannel.ConnectionTerminated += m_commandChannel_ConnectionTerminated;
-                    m_commandChannel.HandshakeProcessTimeout += m_commandChannel_HandshakeProcessTimeout;
-                    m_commandChannel.HandshakeProcessUnsuccessful += m_commandChannel_HandshakeProcessUnsuccessful;
                     m_commandChannel.ReceiveData += m_commandChannel_ReceiveData;
                     m_commandChannel.ReceiveDataException += m_commandChannel_ReceiveDataException;
-                    m_commandChannel.ReceiveDataTimeout += m_commandChannel_ReceiveDataTimeout;
                     m_commandChannel.SendDataException += m_commandChannel_SendDataException;
                 }
             }
@@ -700,7 +692,6 @@ namespace TimeSeriesFramework.Transport
             // Initialize default settings
             commandChannel.ConnectionString = "server=localhost:6165";
             commandChannel.PayloadAware = true;
-            commandChannel.Compression = CompressionStrength.NoCompression;
             commandChannel.PersistSettings = false;
             commandChannel.MaxConnectionAttempts = 1;
 
@@ -1318,16 +1309,6 @@ namespace TimeSeriesFramework.Transport
                     if (!string.IsNullOrWhiteSpace(setting))
                     {
                         dataChannel = new UdpClient(setting);
-
-                        // Parse data channel sub-settings to check for compression setting
-                        settings = setting.ParseKeyValuePairs();
-                        bool compressionEnabled = false;
-
-                        if (settings.TryGetValue("compression", out setting))
-                            compressionEnabled = setting.ParseBoolean();
-
-                        if (compressionEnabled)
-                            dataChannel.Compression = CompressionStrength.Standard;
 
                         dataChannel.ReceiveBufferSize = ushort.MaxValue;
                         dataChannel.MaxConnectionAttempts = -1;
@@ -2490,33 +2471,20 @@ namespace TimeSeriesFramework.Transport
             {
                 byte[] buffer;
                 int length = e.Argument;
-                CipherStrength cryptoLevel = m_commandChannel.Encryption;
-                CompressionStrength compressLevel = m_commandChannel.Compression;
 
                 m_lastBytesReceived = length;
 
-                if (cryptoLevel == CipherStrength.None && compressLevel == CompressionStrength.NoCompression)
-                {
-                    buffer = BufferPool.TakeBuffer(length);
+                buffer = BufferPool.TakeBuffer(length);
 
-                    try
-                    {
-                        m_commandChannel.Read(buffer, 0, length);
-                        ProcessServerResponse(buffer, length);
-                    }
-                    finally
-                    {
-                        if (buffer != null)
-                            BufferPool.ReturnBuffer(buffer);
-                    }
-                }
-                else
+                try
                 {
-                    buffer = new byte[length];
-                    int offset = 0;
                     m_commandChannel.Read(buffer, 0, length);
-                    Payload.ProcessReceived(ref buffer, ref offset, ref length, cryptoLevel, m_commandChannel.SharedSecret, compressLevel);
                     ProcessServerResponse(buffer, length);
+                }
+                finally
+                {
+                    if (buffer != null)
+                        BufferPool.ReturnBuffer(buffer);
                 }
             }
             catch (Exception ex)
@@ -2525,27 +2493,12 @@ namespace TimeSeriesFramework.Transport
             }
         }
 
-        private void m_commandChannel_ReceiveDataTimeout(object sender, EventArgs e)
-        {
-            OnProcessException(new InvalidOperationException("Data subscriber timed out while receiving command channel data from publisher connection"));
-        }
-
         private void m_commandChannel_ReceiveDataException(object sender, EventArgs<Exception> e)
         {
             Exception ex = e.Argument;
 
             if (!HandleSocketException(ex as System.Net.Sockets.SocketException) && !(ex is ObjectDisposedException))
                 OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while receiving command channel data from publisher connection: " + ex.Message, ex));
-        }
-
-        private void m_commandChannel_HandshakeProcessUnsuccessful(object sender, EventArgs e)
-        {
-            OnProcessException(new InvalidOperationException("Data subscriber failed to be validated by publisher"));
-        }
-
-        private void m_commandChannel_HandshakeProcessTimeout(object sender, EventArgs e)
-        {
-            OnProcessException(new InvalidOperationException("Data subscriber timed out while waiting for publisher validation"));
         }
 
         #endregion
@@ -2574,44 +2527,26 @@ namespace TimeSeriesFramework.Transport
             {
                 byte[] buffer;
                 int length = e.Argument;
-                CipherStrength cryptoLevel = m_dataChannel.Encryption;
-                CompressionStrength compressLevel = m_dataChannel.Compression;
 
                 m_lastBytesReceived = length;
 
-                if (cryptoLevel == CipherStrength.None && compressLevel == CompressionStrength.NoCompression)
-                {
-                    buffer = BufferPool.TakeBuffer(length);
+                buffer = BufferPool.TakeBuffer(length);
 
-                    try
-                    {
-                        m_dataChannel.Read(buffer, 0, length);
-                        ProcessServerResponse(buffer, length);
-                    }
-                    finally
-                    {
-                        if (buffer != null)
-                            BufferPool.ReturnBuffer(buffer);
-                    }
-                }
-                else
+                try
                 {
-                    buffer = new byte[length];
-                    int offset = 0;
                     m_dataChannel.Read(buffer, 0, length);
-                    Payload.ProcessReceived(ref buffer, ref offset, ref length, cryptoLevel, m_dataChannel.SharedSecret, compressLevel);
                     ProcessServerResponse(buffer, length);
+                }
+                finally
+                {
+                    if (buffer != null)
+                        BufferPool.ReturnBuffer(buffer);
                 }
             }
             catch (Exception ex)
             {
                 OnProcessException(ex);
             }
-        }
-
-        private void m_dataChannel_ReceiveDataTimeout(object sender, EventArgs e)
-        {
-            OnProcessException(new InvalidOperationException("Data subscriber timed out while receiving UDP data from publisher connection"));
         }
 
         private void m_dataChannel_ReceiveDataException(object sender, EventArgs<Exception> e)

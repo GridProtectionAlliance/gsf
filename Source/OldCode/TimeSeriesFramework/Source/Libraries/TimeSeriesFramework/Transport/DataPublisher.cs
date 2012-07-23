@@ -700,11 +700,8 @@ namespace TimeSeriesFramework.Transport
                     // Detach from events on existing command channel reference
                     m_commandChannel.ClientConnected -= m_commandChannel_ClientConnected;
                     m_commandChannel.ClientDisconnected -= m_commandChannel_ClientDisconnected;
-                    m_commandChannel.HandshakeProcessTimeout -= m_commandChannel_HandshakeProcessTimeout;
-                    m_commandChannel.HandshakeProcessUnsuccessful -= m_commandChannel_HandshakeProcessUnsuccessful;
                     m_commandChannel.ReceiveClientDataComplete -= m_commandChannel_ReceiveClientDataComplete;
                     m_commandChannel.ReceiveClientDataException -= m_commandChannel_ReceiveClientDataException;
-                    m_commandChannel.ReceiveClientDataTimeout -= m_commandChannel_ReceiveClientDataTimeout;
                     m_commandChannel.SendClientDataException -= m_commandChannel_SendClientDataException;
                     m_commandChannel.ServerStarted -= m_commandChannel_ServerStarted;
                     m_commandChannel.ServerStopped -= m_commandChannel_ServerStopped;
@@ -721,11 +718,8 @@ namespace TimeSeriesFramework.Transport
                     // Attach to desired events on new command channel reference
                     m_commandChannel.ClientConnected += m_commandChannel_ClientConnected;
                     m_commandChannel.ClientDisconnected += m_commandChannel_ClientDisconnected;
-                    m_commandChannel.HandshakeProcessTimeout += m_commandChannel_HandshakeProcessTimeout;
-                    m_commandChannel.HandshakeProcessUnsuccessful += m_commandChannel_HandshakeProcessUnsuccessful;
                     m_commandChannel.ReceiveClientDataComplete += m_commandChannel_ReceiveClientDataComplete;
                     m_commandChannel.ReceiveClientDataException += m_commandChannel_ReceiveClientDataException;
-                    m_commandChannel.ReceiveClientDataTimeout += m_commandChannel_ReceiveClientDataTimeout;
                     m_commandChannel.SendClientDataException += m_commandChannel_SendClientDataException;
                     m_commandChannel.ServerStarted += m_commandChannel_ServerStarted;
                     m_commandChannel.ServerStopped += m_commandChannel_ServerStopped;
@@ -876,7 +870,6 @@ namespace TimeSeriesFramework.Transport
             commandChannel.SettingsCategory = Name.Replace("!", "").ToLower();
             commandChannel.ConfigurationString = "port=6165";
             commandChannel.PayloadAware = true;
-            commandChannel.Compression = CompressionStrength.NoCompression;
             commandChannel.PersistSettings = true;
 
             // Assign command channel client reference and attach to needed events
@@ -1867,7 +1860,6 @@ namespace TimeSeriesFramework.Transport
                             if (subscription.Settings.TryGetValue("dataChannel", out setting))
                             {
                                 Dictionary<string, string> settings = setting.ParseKeyValuePairs();
-                                bool compressionEnabled = false;
                                 string networkInterface;
 
                                 // Make sure return interface matches incoming client connection
@@ -1881,16 +1873,9 @@ namespace TimeSeriesFramework.Transport
                                     networkInterface = m_commandChannel.Server.LocalEndPoint.ToString();
                                 }
 
-                                if (settings.TryGetValue("compression", out setting))
-                                    compressionEnabled = setting.ParseBoolean();
-
                                 if (settings.TryGetValue("port", out setting) || settings.TryGetValue("localport", out setting))
                                 {
                                     connection.DataChannel = new UdpServer(string.Format("Port=-1; Clients={0}:{1}; interface={2}", connection.IPAddress, int.Parse(setting), networkInterface));
-
-                                    if (compressionEnabled)
-                                        connection.DataChannel.Compression = CompressionStrength.Standard;
-
                                     connection.DataChannel.Start();
                                 }
                             }
@@ -2439,21 +2424,6 @@ namespace TimeSeriesFramework.Transport
 
             if (!HandleSocketException(e.Argument1, ex as SocketException) && !(ex is NullReferenceException) && !(ex is ObjectDisposedException))
                 OnProcessException(new InvalidOperationException("Data publisher encountered an exception while receiving command channel data from client connection: " + ex.Message, ex));
-        }
-
-        private void m_commandChannel_ReceiveClientDataTimeout(object sender, EventArgs<Guid> e)
-        {
-            OnProcessException(new TimeoutException("Data publisher timed out while receiving command channel data from client connection"));
-        }
-
-        private void m_commandChannel_HandshakeProcessUnsuccessful(object sender, EventArgs e)
-        {
-            OnProcessException(new InvalidOperationException("Data publisher failed to validate client connection"));
-        }
-
-        private void m_commandChannel_HandshakeProcessTimeout(object sender, EventArgs e)
-        {
-            OnProcessException(new TimeoutException("Data publisher timed out while trying validate client connection"));
         }
 
         #endregion

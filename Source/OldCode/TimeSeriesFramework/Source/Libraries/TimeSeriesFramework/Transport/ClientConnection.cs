@@ -65,7 +65,6 @@ namespace TimeSeriesFramework.Transport
         private IPAddress m_ipAddress;
         private TcpServer m_commandChannel;
         private UdpServer m_dataChannel;
-        private CompressionStrength m_compression;
         private string m_configurationString;
         private bool m_connectionEstablished;
         private bool m_isSubscribed;
@@ -216,7 +215,6 @@ namespace TimeSeriesFramework.Transport
                 {
                     // Save UDP settings so channel can be reestablished if needed
                     m_configurationString = m_dataChannel.ConfigurationString;
-                    m_compression = m_dataChannel.Compression;
 
                     // Attach to events on new data channel reference
                     m_dataChannel.SendClientDataException += m_dataChannel_SendClientDataException;
@@ -753,7 +751,6 @@ namespace TimeSeriesFramework.Transport
                 this.DataChannel = null;
 
                 UdpServer dataChannel = new UdpServer(m_configurationString);
-                dataChannel.Compression = m_compression;
                 dataChannel.Start();
 
                 this.DataChannel = dataChannel;

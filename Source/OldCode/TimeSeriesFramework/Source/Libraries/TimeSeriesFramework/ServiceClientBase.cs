@@ -165,17 +165,12 @@ namespace TimeSeriesFramework
             }
             else
             {
-                if (arguments.Exists("server") || arguments.Exists("secret"))
+                if (arguments.Exists("server"))
                 {
                     // Override default settings with user provided input. 
                     m_clientHelper.PersistSettings = false;
                     m_remotingClient.PersistSettings = false;
-
-                    if (arguments.Exists("secret"))
-                        m_remotingClient.SharedSecret = arguments["secret"];
-
-                    if (arguments.Exists("server"))
-                        m_remotingClient.ConnectionString = string.Format("Server={0}", arguments["server"]);
+                    m_remotingClient.ConnectionString = string.Format("Server={0}", arguments["server"]);
                 }
 
                 // Connect to service and send commands. 
