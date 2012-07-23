@@ -285,13 +285,11 @@ using System.ComponentModel;
 using System.Configuration;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using TVA.Configuration;
-using TVA.IO.Compression;
-using TVA.Security.Cryptography;
 using TVA.Units;
-using System.Reflection;
 
 namespace TVA.Communication
 {
@@ -311,44 +309,9 @@ namespace TVA.Communication
         public const int DefaultMaxClientConnections = -1;
 
         /// <summary>
-        /// Specifies the default value for the <see cref="Handshake"/> property.
-        /// </summary>
-        public const bool DefaultHandshake = false;
-
-        /// <summary>
-        /// Specifies the default value for the <see cref="HandshakeTimeout"/> property.
-        /// </summary>
-        public const int DefaultHandshakeTimeout = 3000;
-
-        /// <summary>
-        /// Specifies the default value for the <see cref="SharedSecret"/> property.
-        /// </summary>
-        public const string DefaultSharedSecret = "6572a33d-826f-4d96-8c28-8be66bbc700e";
-
-        /// <summary>
-        /// Specifies the default value for the <see cref="Encryption"/> property.
-        /// </summary>
-        public const CipherStrength DefaultEncryption = CipherStrength.None;
-
-        /// <summary>
-        /// Specifies the default value for the <see cref="SecureSession"/> property.
-        /// </summary>
-        public const bool DefaultSecureSession = false;
-
-        /// <summary>
-        /// Specifies the default value for the <see cref="ReceiveTimeout"/> property.
-        /// </summary>
-        public const int DefaultReceiveTimeout = -1;
-
-        /// <summary>
         /// Specifies the default value for the <see cref="ReceiveBufferSize"/> property.
         /// </summary>
         public const int DefaultReceiveBufferSize = 8192;
-
-        /// <summary>
-        /// Specifies the default value for the <see cref="Compression"/> property.
-        /// </summary>
-        public const CompressionStrength DefaultCompression = CompressionStrength.NoCompression;
 
         /// <summary>
         /// Specifies the default value for the <see cref="PersistSettings"/> property.
@@ -377,20 +340,6 @@ namespace TVA.Communication
         public event EventHandler ServerStopped;
 
         /// <summary>
-        /// Occurs when server-client handshake, when enabled, cannot be performed within the specified <see cref="HandshakeTimeout"/> time.
-        /// </summary>
-        [Category("Server"),
-        Description("Occurs when server-client handshake, when enabled, cannot be performed within the specified HandshakeTimeout time.")]
-        public event EventHandler HandshakeProcessTimeout;
-
-        /// <summary>
-        /// Occurs when server-client handshake, when enabled, cannot be performed successfully due to information mismatch.
-        /// </summary>
-        [Category("Server"),
-        Description("Occurs when server-client handshake, when enabled, cannot be performed successfully due to information mismatch.")]
-        public event EventHandler HandshakeProcessUnsuccessful;
-
-        /// <summary>
         /// Occurs when a client connects to the server.
         /// </summary>
         /// <remarks>
@@ -409,6 +358,16 @@ namespace TVA.Communication
         [Category("Client"),
         Description("Occurs when a client disconnects from the server.")]
         public event EventHandler<EventArgs<Guid>> ClientDisconnected;
+
+        /// <summary>
+        /// Occurs when an exception is encountered while a client is connecting.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="Exception"/> encountered when connecting to the client.
+        /// </remarks>
+        [Category("Client"),
+        Description("Occurs when an Exception is encountered when connecting to a client.")]
+        public event EventHandler<EventArgs<Exception>> ClientConnectingException;
 
         /// <summary>
         /// Occurs when data is being sent to a client.
@@ -440,13 +399,6 @@ namespace TVA.Communication
         [Category("Data"),
         Description("Occurs when an Exception is encountered when sending data to a client.")]
         public event EventHandler<EventArgs<Guid, Exception>> SendClientDataException;
-
-        /// <summary>
-        /// Occurs when no data is received from a client for the <see cref="ReceiveTimeout"/> time.
-        /// </summary>
-        [Category("Data"),
-        Description("Occurs when no data is received from a client for the ReceiveTimeout time.")]
-        public event EventHandler<EventArgs<Guid>> ReceiveClientDataTimeout;
 
         /// <summary>
         /// Occurs when unprocessed data has been received from a client.
@@ -490,17 +442,20 @@ namespace TVA.Communication
         Description("Occurs when an Exception is encountered when receiving data from a client.")]
         public event EventHandler<EventArgs<Guid, Exception>> ReceiveClientDataException;
 
+        /// <summary>
+        /// Occurs when an <see cref="Exception"/> is encountered in a user-defined function via an event dispatch.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="Exception"/> thrown by the user-defined function.
+        /// </remarks>
+        [Category("User"),
+        Description("Occurs when an Exception is encountered when calling a user-defined function.")]
+        public event EventHandler<EventArgs<Exception>> UnhandledUserException;
+
         // Fields
         private string m_configurationString;
         private int m_maxClientConnections;
-        private bool m_handshake;
-        private int m_handshakeTimeout;
-        private string m_sharedSecret;
-        private CipherStrength m_encryption;
-        private bool m_secureSession;
-        private int m_receiveTimeout;
         private int m_receiveBufferSize;
-        private CompressionStrength m_compression;
         private bool m_persistSettings;
         private string m_settingsCategory;
         private Encoding m_textEncoding;
@@ -528,14 +483,7 @@ namespace TVA.Communication
             m_textEncoding = Encoding.ASCII;
             m_currentState = ServerState.NotRunning;
             m_maxClientConnections = DefaultMaxClientConnections;
-            m_handshake = DefaultHandshake;
-            m_handshakeTimeout = DefaultHandshakeTimeout;
-            m_sharedSecret = DefaultSharedSecret;
-            m_encryption = DefaultEncryption;
-            m_secureSession = DefaultSecureSession;
-            m_receiveTimeout = DefaultReceiveTimeout;
             m_receiveBufferSize = DefaultReceiveBufferSize;
-            m_compression = DefaultCompression;
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
         }
@@ -601,173 +549,6 @@ namespace TVA.Communication
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether the server will do a handshake with the clients after the connection has been established.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="Handshake"/> is required when <see cref="SecureSession"/> is enabled.
-        /// </remarks>
-        /// <exception cref="InvalidOperationException"><see cref="Handshake"/> is being disabled while <see cref="SecureSession"/> is enabled.</exception>
-        [Category("Security"),
-        DefaultValue(DefaultHandshake),
-        Description("Indicates whether the server will do a handshake with the clients after the connection has been established.")]
-        public virtual bool Handshake
-        {
-            get
-            {
-                return m_handshake;
-            }
-            set
-            {
-                // Can't disable handshake when secure session is enabled.
-                if (!value && m_secureSession)
-                    throw new InvalidOperationException("Handshake is required when SecureSession is enabled");
-
-                m_handshake = value;
-                ReStart();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the number of milliseconds that the server will wait for the clients to initiate the <see cref="Handshake"/> process.
-        /// </summary>
-        /// <exception cref="ArgumentException">The value being assigned is either zero or negative.</exception>
-        [Category("Security"),
-        DefaultValue(DefaultHandshakeTimeout),
-        Description("The number of milliseconds that the server will wait for the clients to initiate the handshake process.")]
-        public virtual int HandshakeTimeout
-        {
-            get
-            {
-                return m_handshakeTimeout;
-            }
-            set
-            {
-                if (value < 1)
-                    throw new ArgumentException("Value cannot be zero or negative");
-
-                m_handshakeTimeout = value;
-                ReStart();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the key to be used for ciphering the data exchanged between the server and clients.
-        /// </summary>
-        [Category("Security"),
-        DefaultValue(DefaultSharedSecret),
-        Description("The key to be used for ciphering the data exchanged between the server and clients.")]
-        public virtual string SharedSecret
-        {
-            get
-            {
-                return m_sharedSecret;
-            }
-            set
-            {
-                if (!string.IsNullOrEmpty(value))
-                    m_sharedSecret = value;
-                else
-                    m_sharedSecret = DefaultSharedSecret;
-                ReStart();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the <see cref="CipherStrength"/> to be used for ciphering the data exchanged between the server and clients.
-        /// </summary>
-        /// <exception cref="InvalidOperationException"><see cref="Encryption"/> is being disabled while <see cref="SecureSession"/> is enabled.</exception>
-        /// <remarks>
-        /// <list type="table">
-        ///     <listheader>
-        ///         <term><see cref="SecureSession"/></term>
-        ///         <description>Key used for <see cref="Encryption"/></description>
-        ///     </listheader>
-        ///     <item>
-        ///         <term>Disabled</term>
-        ///         <description><see cref="SharedSecret"/> is used.</description>
-        ///     </item>
-        ///     <item>
-        ///         <term>Enabled</term>
-        ///         <description>A private key exchanged between the server and client during the <see cref="Handshake"/> process is used.</description>
-        ///     </item>
-        /// </list>
-        /// </remarks>
-        [Category("Security"),
-        DefaultValue(DefaultEncryption),
-        Description("The CipherStrength to be used for ciphering the data exchanged between the server and clients.")]
-        public virtual CipherStrength Encryption
-        {
-            get
-            {
-                return m_encryption;
-            }
-            set
-            {
-                // Can't disable encryption when secure session is enabled.
-                if (value == CipherStrength.None && m_secureSession)
-                    throw new InvalidOperationException("Encryption is required when SecureSession is enabled");
-
-                m_encryption = value;
-                ReStart();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether the data exchanged between the server and clients will be encrypted using a private session passphrase.
-        /// </summary>
-        ///<remarks>
-        ///<see cref="Handshake"/> and <see cref="Encryption"/> must be enabled in order to use <see cref="SecureSession"/>.
-        ///</remarks>
-        ///<exception cref="InvalidOperationException"><see cref="SecureSession"/> is being enabled before enabling <see cref="Handshake"/>.</exception>
-        ///<exception cref="InvalidOperationException"><see cref="SecureSession"/> is being enabled before enabling <see cref="Encryption"/>.</exception>
-        [Category("Security"),
-        DefaultValue(DefaultSecureSession),
-        Description("Indicates whether the data exchanged between the server and clients will be encrypted using a private session passphrase.")]
-        public virtual bool SecureSession
-        {
-            get
-            {
-                return m_secureSession;
-            }
-            set
-            {
-                // Handshake is required for SecureSession.
-                if (value && !m_handshake)
-                    throw new InvalidOperationException("Handshake must be enabled in order to use SecureSession");
-
-                // Encryption is required for SecureSession.
-                if (value && m_encryption == CipherStrength.None)
-                    throw new InvalidOperationException("Encryption must be enabled in order to use SecureSession");
-
-                m_secureSession = value;
-                ReStart();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the number of milliseconds after which the server will raise the <see cref="ReceiveClientDataTimeout"/> event if no data is received from a client.
-        /// </summary>
-        /// <remarks>Set <see cref="ReceiveTimeout"/> to -1 to disable this feature.</remarks>
-        [Category("Data"),
-        DefaultValue(DefaultReceiveTimeout),
-        Description("The number of milliseconds after which the server will raise the ReceiveClientDataTimeout event if no data is received from a client. Set ReceiveTimeout to -1 to disable this feature.")]
-        public virtual int ReceiveTimeout
-        {
-            get
-            {
-                return m_receiveTimeout;
-            }
-            set
-            {
-                if (value < 1)
-                    m_receiveTimeout = -1;
-                else
-                    m_receiveTimeout = value;
-                ReStart();
-            }
-        }
-
-        /// <summary>
         /// Gets or sets the size of the buffer used by the server for receiving data from the clients.
         /// </summary>
         /// <exception cref="ArgumentException">The value being assigned is either zero or negative.</exception>
@@ -786,26 +567,6 @@ namespace TVA.Communication
                     throw new ArgumentException("Value cannot be zero or negative");
 
                 m_receiveBufferSize = value;
-                ReStart();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the <see cref="CompressionStrength"/> to be used for compressing the data exchanged between the server and clients.
-        /// </summary>
-        [Category("Data"),
-        DefaultValue(DefaultCompression),
-        Description("The CompressionStrength to be used for compressing the data exchanged between the server and clients.")]
-        public virtual CompressionStrength Compression
-        {
-            get
-            {
-                return m_compression;
-            }
-            set
-            {
-                m_compression = value;
-                ReStart();
             }
         }
 
@@ -993,21 +754,12 @@ namespace TVA.Communication
             get
             {
                 StringBuilder status = new StringBuilder();
-                if (m_handshake)
-                {
-                    // Display ID only if handshaking is enabled.
-                    status.Append("                 Server ID: ");
-                    status.Append(m_serverID.ToString());
-                    status.AppendLine();
-                }
+
                 status.Append("              Server state: ");
                 status.Append(m_currentState);
                 status.AppendLine();
                 status.Append("            Server runtime: ");
                 status.Append(RunTime.ToString());
-                status.AppendLine();
-                status.Append("      Configuration string: ");
-                status.Append(m_configurationString);
                 status.AppendLine();
                 status.Append("         Connected clients: ");
                 status.Append(m_clientIDs.Count);
@@ -1026,6 +778,18 @@ namespace TVA.Communication
                 status.AppendLine();
 
                 return status.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Gets a boolean value that indicates
+        /// whether the server has been initialized.
+        /// </summary>
+        protected bool Initialized
+        {
+            get
+            {
+                return m_initialized;
             }
         }
 
@@ -1070,13 +834,6 @@ namespace TVA.Communication
         protected abstract void ValidateConfigurationString(string configurationString);
 
         /// <summary>
-        /// When overridden in a derived class, returns the secret key used for ciphering client data.
-        /// </summary>
-        /// <param name="clientID">ID of the client whose secret key is to be retrieved.</param>
-        /// <returns>Secret key of the specified client.</returns>
-        protected abstract string GetSessionSecret(Guid clientID);
-
-        /// <summary>
         /// When overridden in a derived class, sends data to the specified client asynchronously.
         /// </summary>
         /// <param name="clientID">ID of the client to which the data is to be sent.</param>
@@ -1094,11 +851,8 @@ namespace TVA.Communication
         /// </remarks>
         public void Initialize()
         {
-            if (!m_initialized)
-            {
-                LoadSettings();         // Load settings from the config file.
-                m_initialized = true;   // Initialize only once.
-            }
+            LoadSettings();         // Load settings from the config file.
+            m_initialized = true;   // Initialize only once.
         }
 
         /// <summary>
@@ -1164,14 +918,7 @@ namespace TVA.Communication
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 settings["ConfigurationString", true].Update(m_configurationString);
                 settings["MaxClientConnections", true].Update(m_maxClientConnections);
-                settings["Handshake", true].Update(m_handshake);
-                settings["HandshakeTimeout", true].Update(m_handshakeTimeout);
-                settings["SharedSecret", true].Update(m_sharedSecret);
-                settings["Encryption", true].Update(m_encryption);
-                settings["SecureSession", true].Update(m_secureSession);
-                settings["ReceiveTimeout", true].Update(m_receiveTimeout);
                 settings["ReceiveBufferSize", true].Update(m_receiveBufferSize);
-                settings["Compression", true].Update(m_compression);
                 config.Save();
             }
         }
@@ -1193,24 +940,10 @@ namespace TVA.Communication
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 settings.Add("ConfigurationString", m_configurationString, "Data required by the server to initialize.");
                 settings.Add("MaxClientConnections", m_maxClientConnections, "Maximum number of clients that can connect to the server.");
-                settings.Add("Handshake", m_handshake, "True if the server will do a handshake with the client after the connection has been established; otherwise False.");
-                settings.Add("HandshakeTimeout", m_handshakeTimeout, "Number of milliseconds the server will wait for the clients to initiate the Handshake process.");
-                settings.Add("SharedSecret", m_sharedSecret, "Key to be used for ciphering the data exchanged between the server and clients.", true);
-                settings.Add("Encryption", m_encryption, "Cipher strength (None; Aes128; Aes256) to be used for ciphering the data exchanged between the server and clients.");
-                settings.Add("SecureSession", m_secureSession, "True if the data exchanged between the server and clients will be encrypted using a private session passphrase; otherwise False.");
-                settings.Add("ReceiveTimeout", m_receiveTimeout, "Number of milliseconds the server will wait for data to be received from the clients.");
                 settings.Add("ReceiveBufferSize", m_receiveBufferSize, "Size of the buffer used by the server for receiving data from the clients.");
-                settings.Add("Compression", m_compression, "Compression strength (NoCompression; Standard; MultiPass) to be used for compressing the data exchanged between the server and clients.");
                 ConfigurationString = settings["ConfigurationString"].ValueAs(m_configurationString);
                 MaxClientConnections = settings["MaxClientConnections"].ValueAs(m_maxClientConnections);
-                Handshake = settings["Handshake"].ValueAs(m_handshake);
-                HandshakeTimeout = settings["HandshakeTimeout"].ValueAs(m_handshakeTimeout);
-                SharedSecret = settings["SharedSecret"].ValueAs(m_sharedSecret);
-                Encryption = settings["Encryption"].ValueAs(m_encryption);
-                SecureSession = settings["SecureSession"].ValueAs(m_secureSession);
-                ReceiveTimeout = settings["ReceiveTimeout"].ValueAs(m_receiveTimeout);
                 ReceiveBufferSize = settings["ReceiveBufferSize"].ValueAs(m_receiveBufferSize);
-                Compression = settings["Compression"].ValueAs(m_compression);
             }
         }
 
@@ -1355,10 +1088,6 @@ namespace TVA.Communication
         {
             if (m_currentState == ServerState.Running)
             {
-                // Pre-condition data as needed and then send it.
-                Payload.ProcessTransmit(ref data, ref offset, ref length, m_encryption, GetSessionSecret(clientID), m_compression);
-
-
                 return SendDataToAsync(clientID, data, offset, length);
             }
             else
@@ -1420,12 +1149,19 @@ namespace TVA.Communication
         /// </summary>
         protected virtual void OnServerStarted()
         {
-            m_currentState = ServerState.Running;
-            m_stopTime = 0;
-            m_startTime = DateTime.Now.Ticks;   // Save the time when server is started.
+            try
+            {
+                m_currentState = ServerState.Running;
+                m_stopTime = 0;
+                m_startTime = DateTime.Now.Ticks;   // Save the time when server is started.
 
-            if (ServerStarted != null)
-                ServerStarted(this, EventArgs.Empty);
+                if (ServerStarted != null)
+                    ServerStarted(this, EventArgs.Empty);
+            }
+            catch (Exception userException)
+            {
+                OnUnhandledUserException(userException);
+            }
         }
 
         /// <summary>
@@ -1433,29 +1169,18 @@ namespace TVA.Communication
         /// </summary>
         protected virtual void OnServerStopped()
         {
-            m_currentState = ServerState.NotRunning;
-            m_stopTime = DateTime.Now.Ticks;    // Save the time when server is stopped.
+            try
+            {
+                m_currentState = ServerState.NotRunning;
+                m_stopTime = DateTime.Now.Ticks;    // Save the time when server is stopped.
 
-            if (ServerStopped != null)
-                ServerStopped(this, EventArgs.Empty);
-        }
-
-        /// <summary>
-        /// Raises the <see cref="HandshakeProcessTimeout"/> event.
-        /// </summary>
-        protected virtual void OnHandshakeProcessTimeout()
-        {
-            if (HandshakeProcessTimeout != null)
-                HandshakeProcessTimeout(this, EventArgs.Empty);
-        }
-
-        /// <summary>
-        /// Raises the <see cref="HandshakeProcessUnsuccessful"/> event.
-        /// </summary>
-        protected virtual void OnHandshakeProcessUnsuccessful()
-        {
-            if (HandshakeProcessUnsuccessful != null)
-                HandshakeProcessUnsuccessful(this, EventArgs.Empty);
+                if (ServerStopped != null)
+                    ServerStopped(this, EventArgs.Empty);
+            }
+            catch (Exception userException)
+            {
+                OnUnhandledUserException(userException);
+            }
         }
 
         /// <summary>
@@ -1464,10 +1189,17 @@ namespace TVA.Communication
         /// <param name="clientID">ID of client to send to <see cref="ClientConnected"/> event.</param>
         protected virtual void OnClientConnected(Guid clientID)
         {
-            m_clientIDs.TryAdd(clientID, 0);
+            try
+            {
+                m_clientIDs.TryAdd(clientID, 0);
 
-            if (ClientConnected != null)
-                ClientConnected(this, new EventArgs<Guid>(clientID));
+                if (ClientConnected != null)
+                    ClientConnected(this, new EventArgs<Guid>(clientID));
+            }
+            catch (Exception userException)
+            {
+                OnUnhandledUserException(userException);
+            }
         }
 
         /// <summary>
@@ -1476,11 +1208,35 @@ namespace TVA.Communication
         /// <param name="clientID">ID of client to send to <see cref="ClientDisconnected"/> event.</param>
         protected virtual void OnClientDisconnected(Guid clientID)
         {
-            int readIndex;
-            m_clientIDs.TryRemove(clientID, out readIndex);
+            try
+            {
+                int readIndex;
+                m_clientIDs.TryRemove(clientID, out readIndex);
 
-            if (ClientDisconnected != null)
-                ClientDisconnected(this, new EventArgs<Guid>(clientID));
+                if (ClientDisconnected != null)
+                    ClientDisconnected(this, new EventArgs<Guid>(clientID));
+            }
+            catch (Exception userException)
+            {
+                OnUnhandledUserException(userException);
+            }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ClientConnectingException"/> event.
+        /// </summary>
+        /// <param name="ex">The <see cref="Exception"/> encountered when connecting to the client.</param>
+        protected virtual void OnClientConnectingException(Exception ex)
+        {
+            try
+            {
+                if ((object)ClientConnectingException != null)
+                    ClientConnectingException(this, new EventArgs<Exception>(ex));
+            }
+            catch (Exception userException)
+            {
+                OnUnhandledUserException(userException);
+            }
         }
 
         /// <summary>
@@ -1489,8 +1245,15 @@ namespace TVA.Communication
         /// <param name="clientID">ID of client to send to <see cref="SendClientDataStart"/> event.</param>
         protected virtual void OnSendClientDataStart(Guid clientID)
         {
-            if (SendClientDataStart != null)
-                SendClientDataStart(this, new EventArgs<Guid>(clientID));
+            try
+            {
+                if (SendClientDataStart != null)
+                    SendClientDataStart(this, new EventArgs<Guid>(clientID));
+            }
+            catch (Exception userException)
+            {
+                OnUnhandledUserException(userException);
+            }
         }
 
         /// <summary>
@@ -1499,8 +1262,15 @@ namespace TVA.Communication
         /// <param name="clientID">ID of client to send to <see cref="SendClientDataComplete"/> event.</param>
         protected virtual void OnSendClientDataComplete(Guid clientID)
         {
-            if (SendClientDataComplete != null)
-                SendClientDataComplete(this, new EventArgs<Guid>(clientID));
+            try
+            {
+                if (SendClientDataComplete != null)
+                    SendClientDataComplete(this, new EventArgs<Guid>(clientID));
+            }
+            catch (Exception userException)
+            {
+                OnUnhandledUserException(userException);
+            }
         }
 
         /// <summary>
@@ -1510,18 +1280,15 @@ namespace TVA.Communication
         /// <param name="ex">Exception to send to <see cref="SendClientDataException"/> event.</param>
         protected virtual void OnSendClientDataException(Guid clientID, Exception ex)
         {
-            if (!(ex is ObjectDisposedException) && SendClientDataException != null)
-                SendClientDataException(this, new EventArgs<Guid, Exception>(clientID, ex));
-        }
-
-        /// <summary>
-        /// Raises the <see cref="ReceiveClientDataTimeout"/> event.
-        /// </summary>
-        /// <param name="clientID">ID of client to send to <see cref="ReceiveClientDataTimeout"/> event.</param>
-        protected virtual void OnReceiveClientDataTimeout(Guid clientID)
-        {
-            if (ReceiveClientDataTimeout != null)
-                ReceiveClientDataTimeout(this, new EventArgs<Guid>(clientID));
+            try
+            {
+                if (!(ex is ObjectDisposedException) && SendClientDataException != null)
+                    SendClientDataException(this, new EventArgs<Guid, Exception>(clientID, ex));
+            }
+            catch (Exception userException)
+            {
+                OnUnhandledUserException(userException);
+            }
         }
 
         /// <summary>
@@ -1536,8 +1303,15 @@ namespace TVA.Communication
         /// </remarks>
         protected virtual void OnReceiveClientData(Guid clientID, int size)
         {
-            if (ReceiveClientData != null)
-                ReceiveClientData(this, new EventArgs<Guid, int>(clientID, size));
+            try
+            {
+                if (ReceiveClientData != null)
+                    ReceiveClientData(this, new EventArgs<Guid, int>(clientID, size));
+            }
+            catch (Exception userException)
+            {
+                OnUnhandledUserException(userException);
+            }
         }
 
         /// <summary>
@@ -1548,31 +1322,26 @@ namespace TVA.Communication
         /// <param name="size">Number of bytes received from the client.</param>
         protected virtual void OnReceiveClientDataComplete(Guid clientID, byte[] data, int size)
         {
-            // Reset buffer index used by read method
-            m_clientIDs[clientID] = 0;
-
-            // Notify users of data ready
-            if (ReceiveClientData != null)
-                ReceiveClientData(this, new EventArgs<Guid, int>(clientID, size));
-
-            if (ReceiveClientDataComplete != null)
+            try
             {
-                try
-                {
-                    int offset = 0; // Received buffer will always have valid data starting at offset zero.
-                    Payload.ProcessReceived(ref data, ref offset, ref size, m_encryption, GetSessionSecret(clientID), m_compression);
-                }
-                catch (Exception ex)
-                {
-                    OnReceiveClientDataException(clientID, new InvalidOperationException("Failed to process received payload: " + ex.Message, ex));
-                }
-                finally
+                // Reset buffer index used by read method
+                m_clientIDs[clientID] = 0;
+
+                // Notify users of data ready
+                if (ReceiveClientData != null)
+                    ReceiveClientData(this, new EventArgs<Guid, int>(clientID, size));
+
+                if (ReceiveClientDataComplete != null)
                 {
                     // Most inheritors of this class "reuse" an existing buffer, as such you cannot assume what the user is going to do
                     // with the buffer provided, so we pass in a "copy" of the buffer for the user since they may assume control of and
                     // possibly even cache the provided buffer (e.g., passing the buffer to a process queue)
                     ReceiveClientDataComplete(this, new EventArgs<Guid, byte[], int>(clientID, data.BlockCopy(0, size), size));
                 }
+            }
+            catch (Exception userException)
+            {
+                OnUnhandledUserException(userException);
             }
         }
 
@@ -1583,8 +1352,33 @@ namespace TVA.Communication
         /// <param name="ex">Exception to send to <see cref="ReceiveClientDataException"/> event.</param>
         protected virtual void OnReceiveClientDataException(Guid clientID, Exception ex)
         {
-            if (!(ex is ObjectDisposedException) && ReceiveClientDataException != null)
-                ReceiveClientDataException(this, new EventArgs<Guid, Exception>(clientID, ex));
+            try
+            {
+                if (!(ex is ObjectDisposedException) && ReceiveClientDataException != null)
+                    ReceiveClientDataException(this, new EventArgs<Guid, Exception>(clientID, ex));
+            }
+            catch (Exception userException)
+            {
+                OnUnhandledUserException(userException);
+            }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="UnhandledUserException"/> event.
+        /// </summary>
+        /// <param name="ex">Exception to send to <see cref="UnhandledUserException"/> event.</param>
+        protected virtual void OnUnhandledUserException(Exception ex)
+        {
+            try
+            {
+                if ((object)UnhandledUserException != null)
+                    UnhandledUserException(this, new EventArgs<Exception>(ex));
+            }
+            catch
+            {
+                // Suppress unhandled exceptions in this handler.
+                // Handling them would defeat the purpose of this event.
+            }
         }
 
         /// <summary>
@@ -1616,7 +1410,7 @@ namespace TVA.Communication
         /// <summary>
         /// Re-starts the server if currently running.
         /// </summary>
-        private void ReStart()
+        protected void ReStart()
         {
             if (m_currentState == ServerState.Running)
             {

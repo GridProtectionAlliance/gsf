@@ -101,8 +101,6 @@
     <Compile Include="FileClient.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="GoodbyeMessage.cs" />
-    <Compile Include="HandshakeMessage.cs" />
     <Compile Include="IClient.cs" />
     <Compile Include="IServer.cs" />
     <Compile Include="NamespaceDoc.cs" />
@@ -116,6 +114,12 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="ServerBase.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SslClient.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SslServer.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="TcpClient.cs">

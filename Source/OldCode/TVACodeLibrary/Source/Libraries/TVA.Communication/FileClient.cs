@@ -522,7 +522,7 @@ namespace TVA.Communication
         /// <see cref="ReceiveInterval"/> will be set to -1 when <see cref="ReceiveOnDemand"/> is enabled.
         /// </remarks>
         [Category("Data"),
-        DefaultValue(DefaultReceiveTimeout),
+        DefaultValue(DefaultReceiveOnDemand),
         Description("Indicates whether receiving (reading) of data will be initiated manually by calling ReceiveData().")]
         public bool ReceiveOnDemand
         {
@@ -693,16 +693,16 @@ namespace TVA.Communication
         {
             buffer.ValidateParameters(startIndex, length);
 
-            if (m_fileClient.ReceiveBuffer != null)
+            if ((object)m_fileClient.ReceiveBuffer != null)
             {
-                int sourceLength = m_fileClient.ReceiveBufferLength;
+                int sourceLength = m_fileClient.BytesReceived - ReadIndex;
                 int readBytes = length > sourceLength ? sourceLength : length;
                 Buffer.BlockCopy(m_fileClient.ReceiveBuffer, ReadIndex, buffer, startIndex, readBytes);
 
                 // Update read index for next call
                 ReadIndex += readBytes;
 
-                if (ReadIndex >= sourceLength)
+                if (ReadIndex >= m_fileClient.BytesReceived)
                     ReadIndex = 0;
 
                 return readBytes;
@@ -757,8 +757,6 @@ namespace TVA.Communication
         {
             m_connectionHandle = (ManualResetEvent)base.ConnectAsync();
 
-            m_fileClient.ID = this.ClientID;
-            m_fileClient.SecretKey = this.SharedSecret;
             m_fileClient.SetReceiveBuffer(ReceiveBufferSize);
 
 #if ThreadTracking
@@ -868,15 +866,6 @@ namespace TVA.Communication
         }
 
         /// <summary>
-        /// Gets the secret key to be used for ciphering client data.
-        /// </summary>
-        /// <returns>Cipher secret key.</returns>
-        protected override string GetSessionSecret()
-        {
-            return m_fileClient.SecretKey;
-        }
-
-        /// <summary>
         /// Sends (writes) data to the file asynchronously.
         /// </summary>
         /// <param name="data">The buffer that contains the binary data to be sent (written).</param>
@@ -891,9 +880,7 @@ namespace TVA.Communication
             handle = m_fileClient.Provider.BeginWrite(data, offset, length, SendDataAsyncCallback, null).AsyncWaitHandle;
 
             // Notify that the send operation has started.
-            m_fileClient.SendBufferOffset = offset;
-            m_fileClient.SendBufferLength = length;
-            m_fileClient.Statistics.UpdateBytesSent(m_fileClient.SendBufferLength);
+            m_fileClient.Statistics.UpdateBytesSent(length);
             OnSendDataStart();
 
             // Return the async handle that can be used to wait for the async operation to complete.
@@ -986,11 +973,11 @@ namespace TVA.Communication
                 while (m_fileClient.Provider.Position < m_fileClient.Provider.Length)
                 {
                     // Retrieve data from the file.
-                    m_fileClient.ReceiveBufferLength = m_fileClient.Provider.Read(m_fileClient.ReceiveBuffer, m_fileClient.ReceiveBufferOffset, m_fileClient.ReceiveBuffer.Length);
-                    m_fileClient.Statistics.UpdateBytesReceived(m_fileClient.ReceiveBufferLength);
+                    m_fileClient.BytesReceived = m_fileClient.Provider.Read(m_fileClient.ReceiveBuffer, 0, m_fileClient.ReceiveBufferSize);
+                    m_fileClient.Statistics.UpdateBytesReceived(m_fileClient.BytesReceived);
 
                     // Notify of the retrieved data.
-                    OnReceiveDataComplete(m_fileClient.ReceiveBuffer, m_fileClient.ReceiveBufferLength);
+                    OnReceiveDataComplete(m_fileClient.ReceiveBuffer, m_fileClient.BytesReceived);
 
                     // Re-read the file if the user wants to repeat when done reading the file.
                     if (m_autoRepeat && m_fileClient.Provider.Position == m_fileClient.Provider.Length)

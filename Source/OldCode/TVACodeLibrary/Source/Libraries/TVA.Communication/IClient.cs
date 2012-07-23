@@ -307,16 +307,6 @@ namespace TVA.Communication
         event EventHandler<EventArgs<Exception>> ConnectionException;
 
         /// <summary>
-        /// Occurs when server-client handshake, when enabled, cannot be performed within the specified <see cref="HandshakeTimeout"/> time.
-        /// </summary>
-        event EventHandler HandshakeProcessTimeout;
-
-        /// <summary>
-        /// Occurs when server-client handshake, when enabled, cannot be performed successfully due to information mismatch.
-        /// </summary>
-        event EventHandler HandshakeProcessUnsuccessful;
-
-        /// <summary>
         /// Occurs when the client begins sending data to the server.
         /// </summary>
         event EventHandler SendDataStart;
@@ -333,11 +323,6 @@ namespace TVA.Communication
         /// <see cref="EventArgs{T}.Argument"/> is the <see cref="Exception"/> encountered when sending data to the server.
         /// </remarks>
         event EventHandler<EventArgs<Exception>> SendDataException;
-
-        /// <summary>
-        /// Occurs when no data is received from the server for the <see cref="ReceiveTimeout"/> time.
-        /// </summary>
-        event EventHandler ReceiveDataTimeout;
 
         /// <summary>
         /// Occurs when unprocessed data has been received from the server.
@@ -372,6 +357,14 @@ namespace TVA.Communication
         /// </remarks>
         event EventHandler<EventArgs<Exception>> ReceiveDataException;
 
+        /// <summary>
+        /// Occurs when an <see cref="Exception"/> is encountered in a user-defined function via an event dispatch.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="Exception"/> thrown by the user-defined function.
+        /// </remarks>
+        event EventHandler<EventArgs<Exception>> UnhandledUserException;
+
         #endregion
 
         #region [ Properties ]
@@ -395,60 +388,6 @@ namespace TVA.Communication
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether the client will do a handshake with the server after the connection has been established.
-        /// </summary>
-        bool Handshake
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the number of milliseconds that the client will wait for the server's response to the <see cref="Handshake"/>.
-        /// </summary>
-        int HandshakeTimeout
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the key to be used for ciphering the data exchanged between the client and server.
-        /// </summary>
-        string SharedSecret
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the <see cref="CipherStrength"/> to be used for ciphering the data exchanged between the client and server.
-        /// </summary>
-        CipherStrength Encryption
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether the data exchanged between the client and server will be encrypted using a private session passphrase.
-        /// </summary>
-        bool SecureSession
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the number of milliseconds after which the client will raise the <see cref="ReceiveDataTimeout"/> event if no data is received from the server.
-        /// </summary>
-        int ReceiveTimeout
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
         /// Gets or sets the size of the buffer used by the client for receiving data from the server.
         /// </summary>
         int ReceiveBufferSize
@@ -458,36 +397,9 @@ namespace TVA.Communication
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="CompressionStrength"/> to be used for compressing the data exchanged between the client and server.
-        /// </summary>
-        CompressionStrength Compression
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
         /// Gets or sets the <see cref="Encoding"/> to be used for the text sent to the server.
         /// </summary>
         Encoding TextEncoding
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets the server ID.
-        /// </summary>
-        Guid ServerID
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets the client ID.
-        /// </summary>
-        Guid ClientID
         {
             get;
             set;

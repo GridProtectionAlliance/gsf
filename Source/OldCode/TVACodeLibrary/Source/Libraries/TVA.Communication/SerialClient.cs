@@ -1,4 +1,4 @@
-//*******************************************************************************************************
+﻿//*******************************************************************************************************
 //  SerialClient.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2009
@@ -465,16 +465,16 @@ namespace TVA.Communication
         {
             buffer.ValidateParameters(startIndex, length);
 
-            if (m_serialClient.ReceiveBuffer != null)
+            if ((object)m_serialClient.ReceiveBuffer != null)
             {
-                int sourceLength = m_serialClient.ReceiveBufferLength;
+                int sourceLength = m_serialClient.BytesReceived - ReadIndex;
                 int readBytes = length > sourceLength ? sourceLength : length;
                 Buffer.BlockCopy(m_serialClient.ReceiveBuffer, ReadIndex, buffer, startIndex, readBytes);
 
                 // Update read index for next call
                 ReadIndex += readBytes;
 
-                if (ReadIndex >= sourceLength)
+                if (ReadIndex >= m_serialClient.BytesReceived)
                     ReadIndex = 0;
 
                 return readBytes;
@@ -514,8 +514,6 @@ namespace TVA.Communication
         {
             m_connectionHandle = (ManualResetEvent)base.ConnectAsync();
 
-            m_serialClient.ID = this.ClientID;
-            m_serialClient.SecretKey = this.SharedSecret;
             m_serialClient.SetReceiveBuffer(ReceiveBufferSize);
 
             m_serialClient.Provider = new SerialPort();
@@ -603,15 +601,6 @@ namespace TVA.Communication
         }
 
         /// <summary>
-        /// Gets the secret key to be used for ciphering client data.
-        /// </summary>
-        /// <returns>Cipher secret key.</returns>
-        protected override string GetSessionSecret()
-        {
-            return m_serialClient.SecretKey;
-        }
-
-        /// <summary>
         /// Sends (writes) data to the <see cref="SerialPort"/> asynchronously.
         /// </summary>
         /// <param name="data">The buffer that contains the binary data to be sent (written).</param>
@@ -626,9 +615,7 @@ namespace TVA.Communication
             handle = m_serialClient.Provider.BaseStream.BeginWrite(data, offset, length, SendDataAsyncCallback, null).AsyncWaitHandle;
 
             // Notify that the send operation has started.
-            m_serialClient.SendBufferOffset = offset;
-            m_serialClient.SendBufferLength = length;
-            m_serialClient.Statistics.UpdateBytesSent(m_serialClient.SendBufferLength);
+            m_serialClient.Statistics.UpdateBytesSent(length);
             OnSendDataStart();
 
             // Return the async handle that can be used to wait for the async operation to complete.
@@ -699,7 +686,7 @@ namespace TVA.Communication
                     bytesRead += m_serialClient.Provider.Read(m_serialClient.ReceiveBuffer, bytesRead, m_serialClient.ReceiveBuffer.Length - bytesRead);
                 }
 
-                m_serialClient.ReceiveBufferLength = bytesRead;
+                m_serialClient.BytesReceived = bytesRead;
                 m_serialClient.Statistics.UpdateBytesReceived(bytesRead);
 
                 // Notify of the retrieved data.

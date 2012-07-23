@@ -103,7 +103,6 @@
             // m_remotingServer
             // 
             this.m_remotingServer.ConfigurationString = "Port=4343";
-            this.m_remotingServer.Handshake = true;
             this.m_remotingServer.IntegratedSecurity = true;
             this.m_remotingServer.PayloadAware = true;
             this.m_remotingServer.PersistSettings = true;

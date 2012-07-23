@@ -240,8 +240,6 @@
 using System;
 using System.Text;
 using System.Threading;
-using TVA.IO.Compression;
-using TVA.Security.Cryptography;
 using TVA.Units;
 
 namespace TVA.Communication
@@ -285,16 +283,6 @@ namespace TVA.Communication
         event EventHandler ServerStopped;
 
         /// <summary>
-        /// Occurs when server-client handshake, when enabled, cannot be performed within the specified <see cref="HandshakeTimeout"/> time.
-        /// </summary>
-        event EventHandler HandshakeProcessTimeout;
-
-        /// <summary>
-        /// Occurs when server-client handshake, when enabled, cannot be performed successfully due to information mismatch.
-        /// </summary>
-        event EventHandler HandshakeProcessUnsuccessful;
-
-        /// <summary>
         /// Occurs when a client connects to the server.
         /// </summary>
         /// <remarks>
@@ -336,11 +324,6 @@ namespace TVA.Communication
         event EventHandler<EventArgs<Guid, Exception>> SendClientDataException;
 
         /// <summary>
-        /// Occurs when no data is received from a client for the <see cref="ReceiveTimeout"/> time.
-        /// </summary>
-        event EventHandler<EventArgs<Guid>> ReceiveClientDataTimeout;
-
-        /// <summary>
         /// Occurs when unprocessed data has been received from a client.
         /// </summary>
         /// <remarks>
@@ -376,6 +359,14 @@ namespace TVA.Communication
         /// </remarks>
         event EventHandler<EventArgs<Guid, Exception>> ReceiveClientDataException;
 
+        /// <summary>
+        /// Occurs when an <see cref="Exception"/> is encountered in a user-defined function via an event dispatch.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="Exception"/> thrown by the user-defined function.
+        /// </remarks>
+        event EventHandler<EventArgs<Exception>> UnhandledUserException;
+
         #endregion
 
         #region [ Properties ]
@@ -399,72 +390,9 @@ namespace TVA.Communication
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether the server will do a handshake with the clients after the connection has been established.
-        /// </summary>
-        bool Handshake
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the number of milliseconds that the server will wait for the clients to initiate the <see cref="Handshake"/> process.
-        /// </summary>
-        int HandshakeTimeout
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the key to be used for ciphering the data exchanged between the server and clients.
-        /// </summary>
-        string SharedSecret
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the <see cref="CipherStrength"/> to be used for ciphering the data exchanged between the server and clients.
-        /// </summary>
-        CipherStrength Encryption
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether the data exchanged between the server and clients will be encrypted using a private session passphrase.
-        /// </summary>
-        bool SecureSession
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the number of milliseconds after which the server will raise the <see cref="ReceiveClientDataTimeout"/> event if no data is received from a client.
-        /// </summary>
-        int ReceiveTimeout
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
         /// Gets or sets the size of the buffer used by the server for receiving data from the clients.
         /// </summary>
         int ReceiveBufferSize
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the <see cref="CompressionStrength"/> to be used for compressing the data exchanged between the server and clients.
-        /// </summary>
-        CompressionStrength Compression
         {
             get;
             set;

@@ -1,4 +1,4 @@
-//*******************************************************************************************************
+﻿//*******************************************************************************************************
 //  UdpClient.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2011
@@ -396,14 +396,45 @@ namespace TVA.Communication
         /// </summary>
         private const int SIO_UDP_CONNRESET = -1744830452;
 
+        // Events
+
+        /// <summary>
+        /// Occurs when unprocessed data has been received from the server.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This event can be used to receive a notification that server data has arrived. The <see cref="Read"/> method can then be used
+        /// to copy data to an existing buffer. In many cases it will be optimal to use an existing buffer instead of subscribing to the
+        /// <see cref="ReceiveDataFromComplete"/> event.
+        /// </para>
+        /// <para>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the end-point that data has been received from.<br/>
+        /// <see cref="EventArgs{T1,T2}.Argument2"/> is the number of bytes received in the buffer from the server.
+        /// </para>
+        /// </remarks>
+        [Category("Data"),
+        Description("Occurs when unprocessed data has been received from the server.")]
+        public event EventHandler<EventArgs<EndPoint, int>> ReceiveDataFrom;
+
+        /// <summary>
+        /// Occurs when data received from the server has been processed and is ready for consumption.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T1,T2,T3}.Argument1"/> is the end-point that data has been received from.<br/>
+        /// <see cref="EventArgs{T1,T2,T3}.Argument2"/> is a new buffer containing post-processed data received from the server starting at index zero.<br/>
+        /// <see cref="EventArgs{T1,T2,T3}.Argument3"/> is the number of post-processed bytes received in the buffer from the server.
+        /// </remarks>
+        [Category("Data"),
+        Description("Occurs when data received from the server has been processed and is ready for consumption.")]
+        public event EventHandler<EventArgs<EndPoint, byte[], int>> ReceiveDataFromComplete;
+
         // Fields
         //private bool m_destinationReachableCheck;
-        private EndPoint m_udpServer;
+        private IPEndPoint m_udpServer;
         private TransportProvider<Socket> m_udpClient;
         private IPStack m_ipStack;
         private bool m_allowDualStackSocket;
         private Dictionary<string, string> m_connectData;
-        private Func<TransportProvider<Socket>, bool> m_receivedGoodbye;
         private ManualResetEvent m_connectionHandle;
 #if ThreadTracking
         private ManagedThread m_connectionThread;
@@ -411,6 +442,9 @@ namespace TVA.Communication
         private Thread m_connectionThread;
 #endif
         private bool m_disposed;
+
+        private EventHandler<SocketAsyncEventArgs> m_sendHandler;
+        private EventHandler<SocketAsyncEventArgs> m_receiveHandler;
 
         #endregion
 
@@ -433,6 +467,9 @@ namespace TVA.Communication
         {
             base.ReceiveBufferSize = DefaultReceiveBufferSize;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
+
+            m_sendHandler += (sender, args) => ProcessSend(args);
+            m_receiveHandler += (sender, args) => ProcessReceive(args);
         }
 
         /// <summary>
@@ -492,6 +529,25 @@ namespace TVA.Communication
             }
         }
 
+        /// <summary>
+        /// Gets or sets the size of the buffer used by the client for receiving data from the server.
+        /// </summary>
+        /// <exception cref="ArgumentException">The value being assigned is either zero or negative.</exception>
+        public override int ReceiveBufferSize
+        {
+            get
+            {
+                return base.ReceiveBufferSize;
+            }
+            set
+            {
+                base.ReceiveBufferSize = value;
+
+                if ((object)m_udpClient != null)
+                    m_udpClient.SetReceiveBuffer(value);
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -517,16 +573,16 @@ namespace TVA.Communication
         {
             buffer.ValidateParameters(startIndex, length);
 
-            if (m_udpClient.ReceiveBuffer != null)
+            if ((object)m_udpClient.ReceiveBuffer != null)
             {
-                int sourceLength = m_udpClient.ReceiveBufferLength;
+                int sourceLength = m_udpClient.BytesReceived - ReadIndex;
                 int readBytes = length > sourceLength ? sourceLength : length;
                 Buffer.BlockCopy(m_udpClient.ReceiveBuffer, ReadIndex, buffer, startIndex, readBytes);
 
                 // Update read index for next call
                 ReadIndex += readBytes;
 
-                if (ReadIndex >= sourceLength)
+                if (ReadIndex >= m_udpClient.BytesReceived)
                     ReadIndex = 0;
 
                 return readBytes;
@@ -542,21 +598,6 @@ namespace TVA.Communication
         {
             if (CurrentState != ClientState.Disconnected)
             {
-                if (Handshake && m_udpClient.Provider != null)
-                {
-                    // Handshake is enabled so we'll notify the client.
-                    GoodbyeMessage message = new GoodbyeMessage(m_udpClient.ID);
-
-                    m_udpClient.SetSendBuffer(message.BinaryLength);
-                    message.GenerateBinaryImage(m_udpClient.SendBuffer, 0);
-
-                    m_udpClient.SendBufferOffset = 0;
-                    m_udpClient.SendBufferLength = message.BinaryLength;
-                    m_udpClient.ProcessTransmit(Encryption, m_udpClient.SecretKey, Compression);
-
-                    m_udpClient.Provider.SendTo(m_udpClient.SendBuffer, m_udpClient.SendBufferLength, SocketFlags.None, m_udpServer);
-                }
-
                 try
                 {
                     if ((object)m_udpServer != null && (object)m_udpClient.Provider != null)
@@ -588,6 +629,8 @@ namespace TVA.Communication
 
                 if (m_connectionThread != null)
                     m_connectionThread.Abort();
+
+                OnConnectionTerminated();
             }
         }
 
@@ -602,8 +645,6 @@ namespace TVA.Communication
             m_connectionHandle = (ManualResetEvent)base.ConnectAsync();
 
             m_udpClient = new TransportProvider<Socket>();
-            m_udpClient.ID = this.ClientID;
-            m_udpClient.SecretKey = SharedSecret;
             m_udpClient.SetReceiveBuffer(ReceiveBufferSize);
 
             // Create a server endpoint.
@@ -619,9 +660,6 @@ namespace TVA.Communication
             }
             else
             {
-                if (Handshake)
-                    throw new InvalidOperationException("Handshake requires Server property in the ConnectionString");
-
                 // Create a random server endpoint since one is not specified.
                 m_udpServer = Transport.CreateEndPoint(m_connectData["interface"], 0, m_ipStack);
             }
@@ -695,153 +733,83 @@ namespace TVA.Communication
         }
 
         /// <summary>
-        /// Gets the secret key to be used for ciphering client data.
-        /// </summary>
-        /// <returns>Cipher secret key.</returns>
-        protected override string GetSessionSecret()
-        {
-            return m_udpClient.SecretKey;
-        }
-
-        /// <summary>
         /// Connects to the <see cref="UdpClient"/>.
         /// </summary>
         private void OpenPort()
         {
             int connectionAttempts = 0;
 
-            if (Handshake)
+            while (MaxConnectionAttempts == -1 || connectionAttempts < MaxConnectionAttempts)
             {
-                // Handshaking must be performed. 
-                m_receivedGoodbye = DoGoodbyeCheck;
-
-                HandshakeMessage handshake = new HandshakeMessage();
-                handshake.ID = this.ClientID;
-                handshake.Secretkey = this.SharedSecret;
-
-                // Prepare binary image of handshake to be transmitted.
-                m_udpClient.Provider = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Udp, m_ipStack, m_allowDualStackSocket);
-                m_udpClient.SetSendBuffer(handshake.BinaryLength);
-
-                handshake.GenerateBinaryImage(m_udpClient.SendBuffer, 0);
-
-                m_udpClient.SendBufferOffset = 0;
-                m_udpClient.SendBufferLength = handshake.BinaryLength;
-                m_udpClient.ProcessTransmit(Encryption, SharedSecret, Compression);
-
-                while (true)
+                try
                 {
-                    try
-                    {
-                        connectionAttempts++;
-                        OnConnectionAttempt();
+                    OnConnectionAttempt();
 
-                        // Transmit the prepared and processed handshake message.
-                        m_udpClient.Provider.SendTo(m_udpClient.SendBuffer, m_udpClient.SendBufferLength, SocketFlags.None, m_udpServer);
+                    // Disable SocketError.ConnectionReset exception from being thrown when the enpoint is not listening.
+                    m_udpClient.Provider = Transport.CreateSocket(m_connectData["interface"], int.Parse(m_connectData["port"]), ProtocolType.Udp, m_ipStack, m_allowDualStackSocket);
+                    m_udpClient.Provider.IOControl(SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
 
-                        // Wait for the server's reponse to the handshake message.
-                        Thread.Sleep(1000);
-                        ReceiveHandshakeAsync(m_udpClient);
-                        break;
-                    }
-                    catch (SocketException ex)
+                    // If the IP specified for the server is a multicast IP, subscribe to the specified multicast group.
+                    IPEndPoint serverEndpoint = (IPEndPoint)m_udpServer;
+
+                    if (Transport.IsMulticastIP(serverEndpoint.Address))
                     {
-                        OnConnectionException(ex);
-                        if (ex.SocketErrorCode == SocketError.ConnectionReset &&
-                            (MaxConnectionAttempts == -1 || connectionAttempts < MaxConnectionAttempts))
+                        string multicastSource;
+
+                        if (m_connectData.TryGetValue("multicastSource", out multicastSource))
                         {
-                            // Server is unavailable, so keep retrying connection to the server.                                  
-                            continue;
+                            IPAddress sourceAddress = IPAddress.Parse(multicastSource);
+                            IPAddress localAddress = ((IPEndPoint)m_udpClient.Provider.LocalEndPoint).Address;
+
+                            if (sourceAddress.AddressFamily != serverEndpoint.AddressFamily)
+                                throw new InvalidOperationException(string.Format("Source address \"{0}\" is not in the same IP format as server address \"{1}\"", sourceAddress, serverEndpoint.Address));
+
+                            if (localAddress.AddressFamily != serverEndpoint.AddressFamily)
+                                throw new InvalidOperationException(string.Format("Local address \"{0}\" is not in the same IP format as server address \"{1}\"", localAddress, serverEndpoint.Address));
+
+                            MemoryStream membershipAddresses = new MemoryStream();
+
+                            byte[] serverAddressBytes = serverEndpoint.Address.GetAddressBytes();
+                            byte[] sourceAddressBytes = sourceAddress.GetAddressBytes();
+                            byte[] localAddressBytes = localAddress.GetAddressBytes();
+
+                            membershipAddresses.Write(serverAddressBytes, 0, serverAddressBytes.Length);
+                            membershipAddresses.Write(sourceAddressBytes, 0, sourceAddressBytes.Length);
+                            membershipAddresses.Write(localAddressBytes, 0, localAddressBytes.Length);
+
+                            m_udpClient.MulticastMembershipAddresses = membershipAddresses.ToArray();
+
+                            // Execute multicast subscribe for specific source
+                            m_udpClient.Provider.SetSocketOption(serverEndpoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.AddSourceMembership, m_udpClient.MulticastMembershipAddresses);
                         }
                         else
                         {
-                            // For any other reason, clean-up as if the client was disconnected.
-                            TerminateConnection(m_udpClient, false);
-                            break;
+                            // Execute multicast subscribe for any source
+                            m_udpClient.Provider.SetSocketOption(serverEndpoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(serverEndpoint.Address));
                         }
                     }
-                    catch (Exception ex)
+
+                    m_connectionHandle.Set();
+                    OnConnectionEstablished();
+
+                    // Listen for incoming data only if endpoint is bound to a local interface.
+                    if (m_udpClient.Provider.LocalEndPoint != null)
                     {
-                        // This is highly unlikely, but we must handle this situation just-in-case.
-                        OnConnectionException(ex);
-                        TerminateConnection(m_udpClient, false);
-                        break;
+                        SocketAsyncEventArgs args = ReusableObjectPool<SocketAsyncEventArgs>.TakeObject();
+                        args.SocketFlags = SocketFlags.None;
+                        args.Completed += m_receiveHandler;
+                        ReceivePayloadAsync(args);
                     }
+                    break;
                 }
-            }
-            else
-            {
-                // No handshaking to be performed.
-                while (MaxConnectionAttempts == -1 || connectionAttempts < MaxConnectionAttempts)
+                catch (ThreadAbortException)
                 {
-                    try
-                    {
-                        OnConnectionAttempt();
-
-                        // Disable SocketError.ConnectionReset exception from being thrown when the enpoint is not listening.
-                        m_udpClient.Provider = Transport.CreateSocket(m_connectData["interface"], int.Parse(m_connectData["port"]), ProtocolType.Udp, m_ipStack, m_allowDualStackSocket);
-                        m_udpClient.Provider.IOControl(SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
-
-                        // If the IP specified for the server is a multicast IP, subscribe to the specified multicast group.
-                        IPEndPoint serverEndpoint = (IPEndPoint)m_udpServer;
-
-                        if (Transport.IsMulticastIP(serverEndpoint.Address))
-                        {
-                            string multicastSource;
-
-                            if (m_connectData.TryGetValue("multicastSource", out multicastSource))
-                            {
-                                IPAddress sourceAddress = IPAddress.Parse(multicastSource);
-                                IPAddress localAddress = ((IPEndPoint)m_udpClient.Provider.LocalEndPoint).Address;
-
-                                if (sourceAddress.AddressFamily != serverEndpoint.AddressFamily)
-                                    throw new InvalidOperationException(string.Format("Source address \"{0}\" is not in the same IP format as server address \"{1}\"", sourceAddress, serverEndpoint.Address));
-
-                                if (localAddress.AddressFamily != serverEndpoint.AddressFamily)
-                                    throw new InvalidOperationException(string.Format("Local address \"{0}\" is not in the same IP format as server address \"{1}\"", localAddress, serverEndpoint.Address));
-
-                                MemoryStream membershipAddresses = new MemoryStream();
-
-                                byte[] serverAddressBytes = serverEndpoint.Address.GetAddressBytes();
-                                byte[] sourceAddressBytes = sourceAddress.GetAddressBytes();
-                                byte[] localAddressBytes = localAddress.GetAddressBytes();
-
-                                membershipAddresses.Write(serverAddressBytes, 0, serverAddressBytes.Length);
-                                membershipAddresses.Write(sourceAddressBytes, 0, sourceAddressBytes.Length);
-                                membershipAddresses.Write(localAddressBytes, 0, localAddressBytes.Length);
-
-                                m_udpClient.MulticastMembershipAddresses = membershipAddresses.ToArray();
-
-                                // Execute multicast subscribe for specific source
-                                m_udpClient.Provider.SetSocketOption(serverEndpoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.AddSourceMembership, m_udpClient.MulticastMembershipAddresses);
-                            }
-                            else
-                            {
-                                // Execute multicast subscribe for any source
-                                m_udpClient.Provider.SetSocketOption(serverEndpoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(serverEndpoint.Address));
-                            }
-                        }
-
-                        m_connectionHandle.Set();
-                        OnConnectionEstablished();
-
-                        // Listen for incoming data only if endpoint is bound to a local interface.
-                        if (m_udpClient.Provider.LocalEndPoint != null)
-                        {
-                            m_receivedGoodbye = NoGoodbyeCheck;
-                            ReceivePayloadAsync(m_udpClient);
-                        }
-                        break;
-                    }
-                    catch (ThreadAbortException)
-                    {
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        connectionAttempts++;
-                        OnConnectionException(ex);
-                    }
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    connectionAttempts++;
+                    OnConnectionException(ex);
                 }
             }
         }
@@ -855,30 +823,52 @@ namespace TVA.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         protected override WaitHandle SendDataAsync(byte[] data, int offset, int length)
         {
-            WaitHandle handle;
-
             // Send payload to the client asynchronously.
-            handle = m_udpClient.Provider.BeginSendTo(data, offset, length, SocketFlags.None, m_udpServer, SendPayloadAsyncCallback, m_udpClient).AsyncWaitHandle;
+            SocketAsyncEventArgs args = ReusableObjectPool<SocketAsyncEventArgs>.TakeObject();
+            ManualResetEventSlim handle = ReusableObjectPool<ManualResetEventSlim>.TakeObject();
+
+            args.SetBuffer(data, offset, length);
+            args.SocketFlags = SocketFlags.None;
+            args.RemoteEndPoint = m_udpServer;
+            args.UserToken = handle;
+            args.Completed += m_sendHandler;
+            handle.Reset();
+
+            if (!m_udpClient.Provider.SendToAsync(args))
+                ThreadPool.QueueUserWorkItem(state => ProcessSend((SocketAsyncEventArgs)state), args);
 
             // Notify that the send operation has started.
-            m_udpClient.SendBufferOffset = offset;
-            m_udpClient.SendBufferLength = length;
             OnSendDataStart();
 
             // Return the async handle that can be used to wait for the async operation to complete.
-            return handle;
+            return handle.WaitHandle;
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ClientBase.ConnectionTerminated"/> event.
+        /// </summary>
+        protected override void OnConnectionTerminated()
+        {
+            if (CurrentState != ClientState.Disconnected)
+                base.OnConnectionTerminated();
         }
 
         /// <summary>
         /// Callback method for asynchronous send operation.
         /// </summary>
-        private void SendPayloadAsyncCallback(IAsyncResult asyncResult)
+        private void ProcessSend(SocketAsyncEventArgs args)
         {
-            TransportProvider<Socket> udpClient = (TransportProvider<Socket>)asyncResult.AsyncState;
+            ManualResetEventSlim handle = (ManualResetEventSlim)args.UserToken;
+
             try
             {
                 // Send operation is complete.
-                udpClient.Statistics.UpdateBytesSent(udpClient.Provider.EndSendTo(asyncResult));
+                handle.Set();
+
+                if (args.SocketError != SocketError.Success)
+                    throw new SocketException((int)args.SocketError);
+
+                m_udpClient.Statistics.UpdateBytesSent(args.BytesTransferred);
                 OnSendDataComplete();
             }
             catch (Exception ex)
@@ -886,219 +876,143 @@ namespace TVA.Communication
                 // Send operation failed to complete.
                 OnSendDataException(ex);
             }
-        }
-
-        /// <summary>
-        /// Initiate method for asynchronous receive operation of handshake data.
-        /// </summary>
-        private void ReceiveHandshakeAsync(TransportProvider<Socket> worker)
-        {
-            if (worker.Provider == null)
-                return;
-
-            // Receive data asynchronously with a timeout.
-            worker.WaitAsync(HandshakeTimeout,
-                             ReceiveHandshakeAsyncCallback,
-                             worker.Provider.BeginReceiveFrom(worker.ReceiveBuffer,
-                                                              worker.ReceiveBufferOffset,
-                                                              worker.ReceiveBufferSetSize,
-                                                              SocketFlags.None,
-                                                              ref m_udpServer,
-                                                              ReceiveHandshakeAsyncCallback,
-                                                              worker));
-        }
-
-        /// <summary>
-        /// Callback method for asynchronous receive operation of handshake data.
-        /// </summary>
-        private void ReceiveHandshakeAsyncCallback(IAsyncResult asyncResult)
-        {
-            TransportProvider<Socket> udpClient = (TransportProvider<Socket>)asyncResult.AsyncState;
-            if (!asyncResult.IsCompleted)
+            finally
             {
-                // Handshake response is not recevied in a timely fashion.
-                TerminateConnection(udpClient, false);
-                OnHandshakeProcessTimeout();
-            }
-            else
-            {
-                // Received handshake response from server so we'll process it.
-                try
-                {
-                    // Update statistics and pointers.
-                    udpClient.Statistics.UpdateBytesReceived(udpClient.Provider.EndReceiveFrom(asyncResult, ref m_udpServer));
-                    udpClient.ReceiveBufferLength = udpClient.Statistics.LastBytesReceived;
-
-                    // Process the received handshake response message.
-                    udpClient.ProcessReceived(Encryption, SharedSecret, Compression);
-
-                    HandshakeMessage handshake = new HandshakeMessage();
-                    if (handshake.ParseBinaryImage(udpClient.ReceiveBuffer, udpClient.ReceiveBufferOffset, udpClient.ReceiveBufferLength) != -1)
-                    {
-                        // Received handshake response message could be parsed.
-                        this.ServerID = handshake.ID;
-                        udpClient.SecretKey = handshake.Secretkey;
-
-                        // Client is now considered to be connected to the server.
-                        m_connectionHandle.Set();
-                        OnConnectionEstablished();
-                        ReceivePayloadAsync(udpClient);
-                    }
-                    else
-                    {
-                        // Received handshake response message could not be parsed.
-                        TerminateConnection(udpClient, false);
-                        OnHandshakeProcessUnsuccessful();
-                    }
-                }
-                catch
-                {
-                    // This is most likely because the server forcibly disconnected the client.
-                    TerminateConnection(udpClient, false);
-                    OnHandshakeProcessUnsuccessful();
-                }
+                args.Completed -= m_sendHandler;
+                ReusableObjectPool<SocketAsyncEventArgs>.ReturnObject(args);
+                ReusableObjectPool<ManualResetEventSlim>.ReturnObject(handle);
             }
         }
 
         /// <summary>
         /// Initiate method for asynchronous receive operation of payload data.
         /// </summary>
-        private void ReceivePayloadAsync(TransportProvider<Socket> worker)
+        private void ReceivePayloadAsync(SocketAsyncEventArgs args)
         {
-            if (worker.Provider == null)
-                return;
+            byte[] buffer = m_udpClient.ReceiveBuffer;
+            int length = m_udpClient.ReceiveBufferSize;
 
-            if (ReceiveTimeout == -1)
-            {
-                // Wait for data indefinitely.
-                worker.Provider.BeginReceiveFrom(worker.ReceiveBuffer,
-                                                 worker.ReceiveBufferOffset,
-                                                 worker.ReceiveBufferSetSize,
-                                                 SocketFlags.None,
-                                                 ref m_udpServer,
-                                                 ReceivePayloadAsyncCallback,
-                                                 worker);
-            }
-            else
-            {
-                // Wait for data with a timeout.
-                worker.WaitAsync(ReceiveTimeout,
-                                 ReceivePayloadAsyncCallback,
-                                 worker.Provider.BeginReceiveFrom(worker.ReceiveBuffer,
-                                                                  worker.ReceiveBufferOffset,
-                                                                  worker.ReceiveBufferSetSize,
-                                                                  SocketFlags.None,
-                                                                  ref m_udpServer,
-                                                                  ReceivePayloadAsyncCallback,
-                                                                  worker));
-            }
+            args.SetBuffer(buffer, 0, length);
+            args.RemoteEndPoint = m_udpServer;
+
+            if (!m_udpClient.Provider.ReceiveFromAsync(args))
+                ThreadPool.QueueUserWorkItem(state => ProcessReceive((SocketAsyncEventArgs)state), args);
         }
 
-        /// <summary>
-        /// Callback method for asynchronous receive operation of payload data.
-        /// </summary>
-        private void ReceivePayloadAsyncCallback(IAsyncResult asyncResult)
+        private void ProcessReceive(SocketAsyncEventArgs args)
         {
-            TransportProvider<Socket> udpClient = (TransportProvider<Socket>)asyncResult.AsyncState;
-            if (!asyncResult.IsCompleted)
+            try
             {
-                // Timed-out on reception of data so notify via event and continue waiting for data.
-                OnReceiveDataTimeout();
-                udpClient.WaitAsync(ReceiveTimeout, ReceivePayloadAsyncCallback, asyncResult);
+                if (args.SocketError != SocketError.Success)
+                    throw new SocketException((int)args.SocketError);
+
+                // Update statistics and pointers.
+                m_udpClient.Statistics.UpdateBytesReceived(args.BytesTransferred);
+                m_udpClient.BytesReceived = m_udpClient.Statistics.LastBytesReceived;
+
+                // Notify of received data and resume receive operation.
+                OnReceive(args.RemoteEndPoint, m_udpClient.ReceiveBuffer, m_udpClient.BytesReceived);
+                ReceivePayloadAsync(args);
             }
-            else
+            catch (ObjectDisposedException)
+            {
+                // Make sure connection is terminated when client is disposed.
+                TerminateConnection(args, true);
+            }
+            catch (SocketException ex)
             {
                 try
                 {
-                    // Update statistics and pointers.
-                    udpClient.Statistics.UpdateBytesReceived(udpClient.Provider.EndReceiveFrom(asyncResult, ref m_udpServer));
-                    udpClient.ReceiveBufferLength = udpClient.Statistics.LastBytesReceived;
-
-                    // Received a goodbye message from the server.
-                    if (m_receivedGoodbye(udpClient))
-                        throw new SocketException((int)SocketError.ConnectionReset);
-
-                    // Notify of received data and resume receive operation.
-                    OnReceiveDataComplete(udpClient.ReceiveBuffer, udpClient.ReceiveBufferLength);
-                    ReceivePayloadAsync(udpClient);
+                    // Notify and resume receive.
+                    OnReceiveDataException(ex);
+                    ReceivePayloadAsync(args);
                 }
-                catch (ObjectDisposedException)
+                catch
                 {
-                    // Make sure connection is terminated when client is disposed.
-                    TerminateConnection(udpClient, true);
-                }
-                catch (SocketException ex)
-                {
-                    if (Handshake && ex.SocketErrorCode == SocketError.ConnectionReset)
-                    {
-                        // Terminate the connection if:
-                        // 1) Handshake is enabled and the endpoint is not listening for data.
-                        // 2) Handshake is enabled and the endpoint has notified of shutdown via a "goodbye" message.
-                        OnReceiveDataException(ex);
-                        TerminateConnection(udpClient, true);
-                    }
-                    else
-                    {
-                        try
-                        {
-                            // For any other exception, notify and resume receive.
-                            OnReceiveDataException(ex);
-                            ReceivePayloadAsync(udpClient);
-                        }
-                        catch
-                        {
-                            // Terminate connection if resuming receiving fails.
-                            TerminateConnection(udpClient, true);
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    try
-                    {
-                        // For any other exception, notify and resume receive.
-                        OnReceiveDataException(ex);
-                        ReceivePayloadAsync(udpClient);
-                    }
-                    catch
-                    {
-                        // Terminate connection if resuming receiving fails.
-                        TerminateConnection(udpClient, true);
-                    }
+                    // Terminate connection if resuming receiving fails.
+                    TerminateConnection(args, true);
                 }
             }
-        }
-
-        /// <summary>
-        /// Delegate that gets called to verify client disconnect when <see cref="ClientBase.Handshake"/> is turned off.
-        /// </summary>
-        private bool NoGoodbyeCheck(TransportProvider<Socket> client)
-        {
-            return false;
-        }
-
-        /// <summary>
-        /// Delegate that gets called to verify client disconnect when <see cref="ClientBase.Handshake"/> is turned on.
-        /// </summary>
-        private bool DoGoodbyeCheck(TransportProvider<Socket> client)
-        {
-            // Process data received in the buffer.
-            client.ProcessReceived(Encryption, client.SecretKey, Compression);
-
-            // Check if data is for goodbye message.
-            return (new GoodbyeMessage().ParseBinaryImage(client.ReceiveBuffer, client.ReceiveBufferOffset, client.ReceiveBufferLength) != -1);
+            catch (Exception ex)
+            {
+                try
+                {
+                    // For any other exception, notify and resume receive.
+                    OnReceiveDataException(ex);
+                    ReceivePayloadAsync(args);
+                }
+                catch
+                {
+                    // Terminate connection if resuming receiving fails.
+                    TerminateConnection(args, true);
+                }
+            }
         }
 
         /// <summary>
         /// Processes the termination of client.
         /// </summary>
-        private void TerminateConnection(TransportProvider<Socket> client, bool raiseEvent)
+        private void TerminateConnection(SocketAsyncEventArgs args, bool raiseEvent)
         {
-            if ((object)client != null)
-                client.Reset();
+            try
+            {
+                m_udpClient.Reset();
 
-            if (raiseEvent)
-                OnConnectionTerminated();
+                if (raiseEvent)
+                    OnConnectionTerminated();
+            }
+            finally
+            {
+                args.Completed -= m_receiveHandler;
+                ReusableObjectPool<SocketAsyncEventArgs>.ReturnObject(args);
+            }
+        }
+
+        /// <summary>
+        /// Calls all the receive handlers in sequence.
+        /// </summary>
+        private void OnReceive(EndPoint remoteEndPoint, byte[] data, int size)
+        {
+            OnReceiveDataFrom(remoteEndPoint, size);
+            OnReceiveDataFromComplete(remoteEndPoint, data, size);
+            OnReceiveDataComplete(data, size);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ReceiveDataFrom"/> event.
+        /// </summary>
+        /// <param name="remoteEndPoint">End-point from which data has been received.</param>
+        /// <param name="size">Number of bytes received from the client.</param>
+        private void OnReceiveDataFrom(EndPoint remoteEndPoint, int size)
+        {
+            try
+            {
+                if ((object)ReceiveDataFrom != null)
+                    ReceiveDataFrom(this, new EventArgs<EndPoint, int>(remoteEndPoint, size));
+            }
+            catch (Exception userException)
+            {
+                OnUnhandledUserException(userException);
+            }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ReceiveDataFrom"/> event.
+        /// </summary>
+        /// <param name="remoteEndPoint">End-point from which data has been received.</param>
+        /// <param name="data">Data received from the client.</param>
+        /// <param name="size">Number of bytes received from the client.</param>
+        private void OnReceiveDataFromComplete(EndPoint remoteEndPoint, byte[] data, int size)
+        {
+            try
+            {
+                if ((object)ReceiveDataFromComplete != null)
+                    ReceiveDataFromComplete(this, new EventArgs<EndPoint, byte[], int>(remoteEndPoint, data, size));
+            }
+            catch (Exception userException)
+            {
+                OnUnhandledUserException(userException);
+            }
         }
 
         #endregion

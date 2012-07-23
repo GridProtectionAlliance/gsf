@@ -256,7 +256,6 @@
 #endregion
 
 using System;
-using System.Threading;
 
 namespace TVA.Communication
 {
@@ -281,29 +280,9 @@ namespace TVA.Communication
         public T Provider;
 
         /// <summary>
-        /// Key used for the ciphering of data.
+        /// Number of bytes received in <see cref="ReceiveBuffer"/>.
         /// </summary>
-        public string SecretKey;
-
-        /// <summary>
-        /// Zero-based index of <see cref="SendBuffer"/> from which data is to be sent.
-        /// </summary>
-        public int SendBufferOffset;
-
-        /// <summary>
-        /// Number of bytes to be sent from <see cref="SendBuffer"/> starting at <see cref="SendBufferOffset"/>.
-        /// </summary>
-        public int SendBufferLength;
-
-        /// <summary>
-        /// Zero-based index of <see cref="ReceiveBuffer"/> at which data is to be received.
-        /// </summary>
-        public int ReceiveBufferOffset;
-
-        /// <summary>
-        /// Number of bytes received in <see cref="ReceiveBuffer"/> starting at <see cref="ReceiveBufferOffset"/>.
-        /// </summary>
-        public int ReceiveBufferLength;
+        public int BytesReceived;
 
         /// <summary>
         /// <see cref="TransportStatistics"/> for the <see cref="TransportProvider{T}"/> object.
@@ -316,10 +295,8 @@ namespace TVA.Communication
         public byte[] MulticastMembershipAddresses;
 
         // Internally managed I/O buffers
-        private byte[] m_sendBuffer;
-        private int m_sendBufferSetSize;
         private byte[] m_receiveBuffer;
-        private int m_receiveBufferSetSize;
+        private int m_receiveBufferSize;
 
         #endregion
 
@@ -339,31 +316,6 @@ namespace TVA.Communication
         #region [ Properties ]
 
         /// <summary>
-        /// Gets buffer used for sending data.
-        /// </summary>
-        /// <remarks>
-        /// Use <see cref="SetSendBuffer"/> to reset and/or establish send buffer size.
-        /// </remarks>
-        public byte[] SendBuffer
-        {
-            get
-            {
-                return m_sendBuffer;
-            }
-        }
-
-        /// <summary>
-        /// Gets send buffer requested size.
-        /// </summary>
-        public int SendBufferSetSize
-        {
-            get
-            {
-                return m_sendBufferSetSize;
-            }
-        }
-
-        /// <summary>
         /// Gets buffer used for receiving data.
         /// </summary>
         /// <remarks>
@@ -380,36 +332,17 @@ namespace TVA.Communication
         /// <summary>
         /// Gets receive buffer requested size.
         /// </summary>
-        public int ReceiveBufferSetSize
+        public int ReceiveBufferSize
         {
             get
             {
-                return m_receiveBufferSetSize;
+                return m_receiveBufferSize;
             }
         }
 
         #endregion
 
         #region [ Methods ]
-
-        /// <summary>
-        /// Establishes (or reestablishes) a send buffer of a given size.
-        /// </summary>
-        /// <param name="size">Desired minimum size of send buffer.</param>
-        /// <returns>New send buffer.</returns>
-        public byte[] SetSendBuffer(int size)
-        {
-            if (m_sendBuffer != null)
-                BufferPool.ReturnBuffer(m_sendBuffer);
-
-            // Take a buffer from the pool of the desired size
-            m_sendBuffer = BufferPool.TakeBuffer(size);
-
-            // The buffer returned may be bigger than the requested size, but only the specified size will be usable
-            m_sendBufferSetSize = size;
-
-            return m_sendBuffer;
-        }
 
         /// <summary>
         /// Establishes (or reestablishes) a receive buffer of a given size.
@@ -425,7 +358,7 @@ namespace TVA.Communication
             m_receiveBuffer = BufferPool.TakeBuffer(size);
 
             // The buffer returned may be bigger than the requested size, but only the specified size will be usable
-            m_receiveBufferSetSize = size;
+            m_receiveBufferSize = size;
 
             return m_receiveBuffer;
         }
@@ -435,21 +368,11 @@ namespace TVA.Communication
         /// </summary>
         public void Reset()
         {
-            SecretKey = string.Empty;
-
-            if (m_sendBuffer != null)
-                BufferPool.ReturnBuffer(m_sendBuffer);
-            m_sendBuffer = null;
-
-            SendBufferOffset = 0;
-            SendBufferLength = -1;
-
             if (m_receiveBuffer != null)
                 BufferPool.ReturnBuffer(m_receiveBuffer);
             m_receiveBuffer = null;
 
-            ReceiveBufferOffset = 0;
-            ReceiveBufferLength = -1;
+            BytesReceived = -1;
 
             // Reset the statistics.
             Statistics.Reset();
@@ -467,36 +390,6 @@ namespace TVA.Communication
             finally
             {
                 Provider = default(T);
-            }
-        }
-
-        /// <summary>
-        /// Asynchronously waits for an asynchronous operation to complete within the <paramref name="timeout"/> period and 
-        /// invokes the <paramref name="asyncCallback"/> with the <paramref name="asyncResult"/> if the operation times out.
-        /// </summary>
-        /// <param name="timeout">The number of milliseconds to wait for the asynchronous operation to complete.</param>
-        /// <param name="asyncCallback">The <see cref="AsyncCallback"/> of the asynchronous operation being monitored.</param>
-        /// <param name="asyncResult">The <see cref="IAsyncResult"/> of the asynchronous operation being monitored.</param>
-        public void WaitAsync(int timeout, AsyncCallback asyncCallback, IAsyncResult asyncResult)
-        {
-            ThreadPool.RegisterWaitForSingleObject(asyncResult.AsyncWaitHandle, WaitAsyncCallback, new object[] { asyncCallback, asyncResult }, timeout, true);
-        }
-
-        private void WaitAsyncCallback(object state, bool timeout)
-        {
-            if (timeout)
-            {
-                // The async operation timed-out, so we invoke the specified callback.
-                object[] data = state as object[];
-
-                if (state != null)
-                {
-                    AsyncCallback asyncCallback = data[0] as AsyncCallback;
-                    IAsyncResult asyncResult = data[1] as IAsyncResult;
-
-                    if ((object)asyncCallback != null && (object)asyncResult != null)
-                        asyncCallback(asyncResult);
-                }
             }
         }
 

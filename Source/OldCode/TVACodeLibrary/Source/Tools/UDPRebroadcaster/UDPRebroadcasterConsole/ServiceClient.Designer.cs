@@ -47,7 +47,6 @@
             // m_remotingClient
             // 
             this.m_remotingClient.ConnectionString = "Server=localhost:4242";
-            this.m_remotingClient.Handshake = true;
             this.m_remotingClient.PayloadAware = true;
             this.m_remotingClient.PersistSettings = true;
             this.m_remotingClient.SettingsCategory = "RemotingClient";

@@ -1,7 +1,7 @@
 ﻿//*******************************************************************************************************
-//  TcpServer.cs - Gbtc
+//  SslServer.cs - Gbtc
 //
-//  Tennessee Valley Authority, 2009
+//  Tennessee Valley Authority, 2012
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
@@ -9,28 +9,8 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  06/02/2006 - Pinal C. Patel
-//       Original version of source code generated.
-//  09/06/2006 - J. Ritchie Carroll
-//       Added bypass optimizations for high-speed socket access.
-//  12/01/2006 - Pinal C. Patel
-//       Modified code for handling "PayloadAware" transmissions.
-//  01/28/3008 - J. Ritchie Carroll
-//       Placed accepted TCP socket connections on their own threads instead of thread pool.
-//  09/29/2008 - J. Ritchie Carroll
-//       Converted to C#.
-//  07/17/2009 - Pinal C. Patel
-//       Added support to specify a specific interface address on a multiple interface machine.
-//  09/14/2009 - Stephen C. Wills
-//       Added new header and license agreement.
-//  10/14/2009 - Pinal C. Patel
-//       Added null reference check to DisconnectOne() for safety.
-//  02/11/2011 - Pinal C. Patel
-//       Added IntegratedSecurity property to enable integrated windows authentication.
-//  09/21/2011 - J. Ritchie Carroll
-//       Added Mono implementation exception regions.
-//  12/04/2011 - J. Ritchie Carroll
-//       Modified to use concurrent dictionary.
+//  07/12/2012 - Stephen C. Wills
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
@@ -254,7 +234,7 @@
 
 //******************************************************************************************************
 //
-//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
 //  not use this file except in compliance with the License. You may obtain a copy of the License at:
@@ -264,6 +244,21 @@
 //  Unless agreed to in writing, the subject software distributed under the License is distributed on an
 //  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
 //  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+//******************************************************************************************************
+//
+// Copyright © 2011, Board of Directors of the University of Illinois. All rights reserved.
+// Developed by:
+// Information Trust Institute
+// University of Illinois
+// www.iti.illinois.edu
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal with the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+// Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimers.
+// Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimers in the documentation and/or other materials provided with the distribution.
+// Neither the names of Information Trust Institute, University of Illinois, nor the names of its contributors may be used to endorse or promote products derived from this Software without specific prior written permission.
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE CONTRIBUTORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS WITH THE SOFTWARE.
 //
 //******************************************************************************************************
 
@@ -277,91 +272,17 @@ using System.IO;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Security.Principal;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using TVA.Configuration;
 
 namespace TVA.Communication
 {
     /// <summary>
-    /// Represents a TCP-based communication server.
+    /// Represents a TCP-based communication server with SSL authentication and encryption.
     /// </summary>
-    /// <remarks>
-    /// The <see cref="TcpServer.Server"/> socket can be bound to a specified interface on a machine with multiple interfaces by 
-    /// specifying the interface in the <see cref="ServerBase.ConfigurationString"/> (Example: "Port=8888; Interface=127.0.0.1")
-    /// </remarks>
-    /// <example>
-    /// This example shows how to use the <see cref="TcpServer"/> component:
-    /// <code>
-    /// using System;
-    /// using TVA;
-    /// using TVA.Communication;
-    /// using TVA.Security.Cryptography;
-    /// using TVA.IO.Compression;
-    /// 
-    /// class Program
-    /// {
-    ///     static TcpServer m_server;
-    /// 
-    ///     static void Main(string[] args)
-    ///     {
-    ///         // Initialize the server.
-    ///         m_server = new TcpServer("Port=8888");
-    ///         m_server.Handshake = false;
-    ///         m_server.PayloadAware = false;
-    ///         m_server.ReceiveTimeout = -1;
-    ///         m_server.Encryption = CipherStrength.None;
-    ///         m_server.Compression = CompressionStrength.NoCompression;
-    ///         m_server.SecureSession = false;
-    ///         m_server.Initialize();
-    ///         // Register event handlers.
-    ///         m_server.ServerStarted += m_server_ServerStarted;
-    ///         m_server.ServerStopped += m_server_ServerStopped;
-    ///         m_server.ClientConnected += m_server_ClientConnected;
-    ///         m_server.ClientDisconnected += m_server_ClientDisconnected;
-    ///         m_server.ReceiveClientDataComplete += m_server_ReceiveClientDataComplete;
-    ///         // Start the server.
-    ///         m_server.Start();
-    /// 
-    ///         // Multicast user input to all connected clients.
-    ///         string input;
-    ///         while (string.Compare(input = Console.ReadLine(), "Exit", true) != 0)
-    ///         {
-    ///             m_server.Multicast(input);
-    ///         }
-    /// 
-    ///         // Stop the server on shutdown.
-    ///         m_server.Stop();
-    ///     }
-    /// 
-    ///     static void m_server_ServerStarted(object sender, EventArgs e)
-    ///     {
-    ///         Console.WriteLine("Server has been started!");
-    ///     }
-    /// 
-    ///     static void m_server_ServerStopped(object sender, EventArgs e)
-    ///     {
-    ///         Console.WriteLine("Server has been stopped!");
-    ///     }
-    /// 
-    ///     static void m_server_ClientConnected(object sender, EventArgs&lt;Guid&gt; e)
-    ///     {
-    ///         Console.WriteLine(string.Format("Client connected - {0}.", e.Argument));
-    ///     }
-    /// 
-    ///     static void m_server_ClientDisconnected(object sender, EventArgs&lt;Guid&gt; e)
-    ///     {
-    ///         Console.WriteLine(string.Format("Client disconnected - {0}.", e.Argument));
-    ///     }
-    /// 
-    ///     static void m_server_ReceiveClientDataComplete(object sender, EventArgs&lt;Guid, byte[], int&gt; e)
-    ///     {
-    ///         Console.WriteLine(string.Format("Received data from {0} - {1}.", e.Argument1, m_server.TextEncoding.GetString(e.Argument2, 0, e.Argument3)));
-    ///     }
-    /// }
-    /// </code>
-    /// </example>
-    public class TcpServer : ServerBase
+    public class SslServer : ServerBase
     {
         #region [ Members ]
 
@@ -371,11 +292,6 @@ namespace TVA.Communication
         /// Specifies the default value for the <see cref="PayloadAware"/> property.
         /// </summary>
         public const bool DefaultPayloadAware = false;
-
-        /// <summary>
-        /// Specifies the default value for the <see cref="IntegratedSecurity"/> property.
-        /// </summary>
-        public const bool DefaultIntegratedSecurity = false;
 
         /// <summary>
         /// Specifies the default value for the <see cref="AllowDualStackSocket"/> property.
@@ -388,20 +304,23 @@ namespace TVA.Communication
         public const string DefaultConfigurationString = "Port=8888";
 
         // Fields
+        private RemoteCertificateValidationCallback m_remoteCertificateValidationCallback;
+        private LocalCertificateSelectionCallback m_localCertificateSelectionCallback;
+        private string m_certificateFile;
+        private X509Certificate m_certificate;
+        private SslProtocols m_enabledSslProtocols;
+        private bool m_checkCertificateRevocation;
+
         private bool m_payloadAware;
         private byte[] m_payloadMarker;
-        private bool m_integratedSecurity;
         private IPStack m_ipStack;
         private bool m_allowDualStackSocket;
         private Socket m_tcpServer;
         private SocketAsyncEventArgs m_acceptArgs;
-        private ConcurrentDictionary<Guid, TransportProvider<Socket>> m_tcpClients;
+        private ConcurrentDictionary<Guid, TransportProvider<SslStream>> m_tcpClients;
         private Dictionary<string, string> m_configData;
 
         private EventHandler<SocketAsyncEventArgs> m_acceptHandler;
-        private EventHandler<SocketAsyncEventArgs> m_sendHandler;
-        private EventHandler<SocketAsyncEventArgs> m_receivePayloadAwareHandler;
-        private EventHandler<SocketAsyncEventArgs> m_receivePayloadUnawareHandler;
 
         #endregion
 
@@ -410,7 +329,7 @@ namespace TVA.Communication
         /// <summary>
         /// Initializes a new instance of the <see cref="TcpServer"/> class.
         /// </summary>
-        public TcpServer()
+        public SslServer()
             : this(DefaultConfigurationString)
         {
         }
@@ -419,26 +338,26 @@ namespace TVA.Communication
         /// Initializes a new instance of the <see cref="TcpServer"/> class.
         /// </summary>
         /// <param name="configString">Config string of the <see cref="TcpServer"/>. See <see cref="DefaultConfigurationString"/> for format.</param>
-        public TcpServer(string configString)
+        public SslServer(string configString)
             : base(TransportProtocol.Tcp, configString)
         {
+            m_localCertificateSelectionCallback = DefaultLocalCertificateSelectionCallback;
+            m_enabledSslProtocols = SslProtocols.None;
+            m_checkCertificateRevocation = true;
+
             m_payloadAware = DefaultPayloadAware;
             m_payloadMarker = Payload.DefaultMarker;
-            m_integratedSecurity = DefaultIntegratedSecurity;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
-            m_tcpClients = new ConcurrentDictionary<Guid, TransportProvider<Socket>>();
+            m_tcpClients = new ConcurrentDictionary<Guid, TransportProvider<SslStream>>();
 
             m_acceptHandler = (sender, args) => ProcessAccept();
-            m_sendHandler = (sender, args) => ProcessSend(args);
-            m_receivePayloadAwareHandler = (sender, args) => ProcessReceivePayloadAware(args);
-            m_receivePayloadUnawareHandler = (sender, args) => ProcessReceivePayloadUnaware(args);
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TcpServer"/> class.
         /// </summary>
         /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="TcpServer"/>.</param>
-        public TcpServer(IContainer container)
+        public SslServer(IContainer container)
             : this()
         {
             if (container != null)
@@ -489,27 +408,6 @@ namespace TVA.Communication
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether the client Windows account credentials are used for authentication.
-        /// </summary>
-        /// <remarks>   
-        /// This option is ignored under Mono deployments.
-        /// </remarks>
-        [Category("Security"),
-        DefaultValue(DefaultIntegratedSecurity),
-        Description("Indicates whether the client Windows account credentials are used for authentication.")]
-        public bool IntegratedSecurity
-        {
-            get
-            {
-                return m_integratedSecurity;
-            }
-            set
-            {
-                m_integratedSecurity = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets a boolean value that determines if dual-mode socket is allowed when endpoint address is IPv6.
         /// </summary>
         [Category("Settings"),
@@ -540,13 +438,95 @@ namespace TVA.Communication
         }
 
         /// <summary>
-        /// Gets the receive handler used to handle data received on the connected sockets.
+        /// Gets or sets the callback used to validate remote certificates.
         /// </summary>
-        private EventHandler<SocketAsyncEventArgs> ReceiveHandler
+        public RemoteCertificateValidationCallback RemoteCertificateValidationCallback
         {
             get
             {
-                return m_payloadAware ? m_receivePayloadAwareHandler : m_receivePayloadUnawareHandler;
+                return m_remoteCertificateValidationCallback;
+            }
+            set
+            {
+                m_remoteCertificateValidationCallback = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the callback used to select local certificates.
+        /// </summary>
+        public LocalCertificateSelectionCallback LocalCertificateSelectionCallback
+        {
+            get
+            {
+                return m_localCertificateSelectionCallback;
+            }
+            set
+            {
+                m_localCertificateSelectionCallback = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the path to the certificate used for authentication.
+        /// </summary>
+        public string CertificateFile
+        {
+            get
+            {
+                return m_certificateFile;
+            }
+            set
+            {
+                m_certificateFile = value;
+
+                if (File.Exists(value))
+                    Certificate = new X509Certificate2(value);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the certificate used to identify this server.
+        /// </summary>
+        public X509Certificate Certificate
+        {
+            get
+            {
+                return m_certificate;
+            }
+            set
+            {
+                m_certificate = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a set of flags which determine the enabled <see cref="SslProtocols"/>.
+        /// </summary>
+        public SslProtocols EnabledSslProtocols
+        {
+            get
+            {
+                return m_enabledSslProtocols;
+            }
+            set
+            {
+                m_enabledSslProtocols = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that determines whether the certificate revocation list is checked during authentication.
+        /// </summary>
+        public bool CheckCertificateRevocation
+        {
+            get
+            {
+                return m_checkCertificateRevocation;
+            }
+            set
+            {
+                m_checkCertificateRevocation = value;
             }
         }
 
@@ -579,7 +559,7 @@ namespace TVA.Communication
         {
             buffer.ValidateParameters(startIndex, length);
 
-            TransportProvider<Socket> tcpClient;
+            TransportProvider<SslStream> tcpClient;
 
             if (m_tcpClients.TryGetValue(clientID, out tcpClient))
             {
@@ -618,8 +598,10 @@ namespace TVA.Communication
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                settings["EnabledSslProtocols", true].Update(m_enabledSslProtocols);
+                settings["CheckCertificateRevocation", true].Update(m_checkCertificateRevocation);
+                settings["CertificateFile", true].Update(m_certificateFile);
                 settings["PayloadAware", true].Update(m_payloadAware);
-                settings["IntegratedSecurity", true].Update(m_integratedSecurity);
                 settings["AllowDualStackSocket", true].Update(m_allowDualStackSocket);
                 config.Save();
             }
@@ -636,11 +618,15 @@ namespace TVA.Communication
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                settings.Add("EnabledSslProtocols", m_enabledSslProtocols, "The set of SSL protocols that are enabled for this server.");
+                settings.Add("CheckCertificateRevocation", m_checkCertificateRevocation, "True if the certificate revocation list is to be checked during authentication, otherwise False.");
+                settings.Add("CertificateFile", m_certificateFile, "Path to the certificate used by this server for authentication.");
                 settings.Add("PayloadAware", m_payloadAware, "True if payload boundaries are to be preserved during transmission, otherwise False.");
-                settings.Add("IntegratedSecurity", m_integratedSecurity, "True if the client Windows account credentials are used for authentication, otherwise False.");
                 settings.Add("AllowDualStackSocket", m_allowDualStackSocket, "True if dual-mode socket is allowed when IP address is IPv6, otherwise False.");
+                EnabledSslProtocols = settings["EnabledSslProtocols"].ValueAs(m_enabledSslProtocols);
+                CheckCertificateRevocation = settings["CheckCertificateRevocation"].ValueAs(m_checkCertificateRevocation);
+                CertificateFile = settings["CertificateFile"].ValueAs(m_certificateFile);
                 PayloadAware = settings["PayloadAware"].ValueAs(m_payloadAware);
-                IntegratedSecurity = settings["IntegratedSecurity"].ValueAs(m_integratedSecurity);
                 AllowDualStackSocket = settings["AllowDualStackSocket"].ValueAs(m_allowDualStackSocket);
             }
         }
@@ -656,11 +642,9 @@ namespace TVA.Communication
                 m_tcpServer.Close();    // Stop accepting new connections.
 
                 // Clean up accept args.
-                SocketAsyncEventArgs acceptArgs = m_acceptArgs;
+                m_acceptArgs.Completed -= m_acceptHandler;
+                ReusableObjectPool<SocketAsyncEventArgs>.ReturnObject(m_acceptArgs);
                 m_acceptArgs = null;
-
-                acceptArgs.Completed -= m_acceptHandler;
-                ReusableObjectPool<SocketAsyncEventArgs>.ReturnObject(acceptArgs);
 
                 OnServerStopped();
             }
@@ -719,9 +703,9 @@ namespace TVA.Communication
         /// <param name="clientID">ID of the client.</param>
         /// <returns>An <see cref="TransportProvider{Socket}"/> object.</returns>
         /// <exception cref="InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
-        public TransportProvider<Socket> Client(Guid clientID)
+        public TransportProvider<SslStream> Client(Guid clientID)
         {
-            TransportProvider<Socket> tcpClient;
+            TransportProvider<SslStream> tcpClient;
 
             if (m_tcpClients.TryGetValue(clientID, out tcpClient))
                 return tcpClient;
@@ -759,59 +743,21 @@ namespace TVA.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         protected override WaitHandle SendDataToAsync(Guid clientID, byte[] data, int offset, int length)
         {
-            TransportProvider<Socket> tcpClient = Client(clientID);
-
-            SocketAsyncEventArgs args;
-            ManualResetEventSlim handle;
-            EventArgs<TransportProvider<Socket>, ManualResetEventSlim> userToken;
+            TransportProvider<SslStream> tcpClient = Client(clientID);
+            WaitHandle handle;
 
             // Prepare for payload-aware transmission.
             if (m_payloadAware)
                 Payload.AddHeader(ref data, ref offset, ref length, m_payloadMarker);
 
             // Send payload to the client asynchronously.
-            args = ReusableObjectPool<SocketAsyncEventArgs>.TakeObject();
-            handle = ReusableObjectPool<ManualResetEventSlim>.TakeObject();
-            userToken = ReusableObjectPool<EventArgs<TransportProvider<Socket>, ManualResetEventSlim>>.TakeObject();
-
-            userToken.Argument1 = tcpClient;
-            userToken.Argument2 = handle;
-            args.SetBuffer(data, offset, length);
-            args.SocketFlags = SocketFlags.None;
-            args.UserToken = userToken;
-            args.Completed += m_sendHandler;
-            handle.Reset();
-
-            if (!tcpClient.Provider.SendAsync(args))
-                ThreadPool.QueueUserWorkItem(state => ProcessSend((SocketAsyncEventArgs)state), args);
+            handle = tcpClient.Provider.BeginWrite(data, offset, length, ProcessSend, new Tuple<Guid, int>(clientID, length)).AsyncWaitHandle;
 
             // Notify that the send operation has started.
             OnSendClientDataStart(tcpClient.ID);
 
             // Return the async handle that can be used to wait for the async operation to complete.
-            return handle.WaitHandle;
-        }
-
-        /// <summary>
-        /// Raises the <see cref="ServerBase.ReceiveClientDataException"/> event.
-        /// </summary>
-        /// <param name="clientID">ID of client to send to <see cref="ServerBase.ReceiveClientDataException"/> event.</param>
-        /// <param name="ex">Exception to send to <see cref="ServerBase.ReceiveClientDataException"/> event.</param>
-        protected virtual void OnReceiveClientDataException(Guid clientID, SocketException ex)
-        {
-            if (ex.SocketErrorCode != SocketError.Disconnecting)
-                OnReceiveClientDataException(clientID, (Exception)ex);
-        }
-
-        /// <summary>
-        /// Raises the <see cref="ServerBase.ReceiveClientDataException"/> event.
-        /// </summary>
-        /// <param name="clientID">ID of client to send to <see cref="ServerBase.ReceiveClientDataException"/> event.</param>
-        /// <param name="ex">Exception to send to <see cref="ServerBase.ReceiveClientDataException"/> event.</param>
-        protected override void OnReceiveClientDataException(Guid clientID, Exception ex)
-        {
-            if (CurrentState != ServerState.NotRunning)
-                base.OnReceiveClientDataException(clientID, ex);
+            return handle;
         }
 
         /// <summary>
@@ -819,8 +765,11 @@ namespace TVA.Communication
         /// </summary>
         private void ProcessAccept()
         {
-            TransportProvider<Socket> client = new TransportProvider<Socket>();
-            SocketAsyncEventArgs receiveArgs = null;
+            TransportProvider<SslStream> client = new TransportProvider<SslStream>();
+            IPEndPoint remoteEndPoint = null;
+            NetworkStream netStream;
+
+            Tuple<TransportProvider<SslStream>, IPEndPoint> asyncState;
 
             try
             {
@@ -835,11 +784,12 @@ namespace TVA.Communication
                 }
 
                 // Process the newly connected client.
-                client.Provider = m_acceptArgs.AcceptSocket;
+                remoteEndPoint = m_acceptArgs.AcceptSocket.RemoteEndPoint as IPEndPoint;
+                netStream = new NetworkStream(m_acceptArgs.AcceptSocket);
+                client.Provider = new SslStream(netStream, false, m_remoteCertificateValidationCallback, m_localCertificateSelectionCallback);
 
-                // Set up SocketAsyncEventArgs for receive operations.
-                receiveArgs = ReusableObjectPool<SocketAsyncEventArgs>.TakeObject();
-                receiveArgs.Completed += ReceiveHandler;
+                asyncState = new Tuple<TransportProvider<SslStream>, IPEndPoint>(client, remoteEndPoint);
+                client.Provider.BeginAuthenticateAsServer(m_certificate, true, m_enabledSslProtocols, m_checkCertificateRevocation, ProcessAuthenticate, asyncState);
 
                 // Return to accepting new connections.
                 m_acceptArgs.AcceptSocket = null;
@@ -848,114 +798,94 @@ namespace TVA.Communication
                 {
                     ThreadPool.QueueUserWorkItem(state => ProcessAccept());
                 }
-
-#if !MONO
-                // Authenticate the connected client Windows credentials.
-                if (m_integratedSecurity)
+            }
+            catch (Exception ex)
+            {
+                // Notify of the exception.
+                if ((object)remoteEndPoint != null)
                 {
-                    NetworkStream socketStream = null;
-                    NegotiateStream authenticationStream = null;
-                    try
-                    {
-                        socketStream = new NetworkStream(client.Provider);
-                        authenticationStream = new NegotiateStream(socketStream);
-                        authenticationStream.AuthenticateAsServer();
-
-                        if (authenticationStream.RemoteIdentity is WindowsIdentity)
-                            Thread.CurrentPrincipal = new WindowsPrincipal((WindowsIdentity)authenticationStream.RemoteIdentity);
-                    }
-                    finally
-                    {
-                        if (socketStream != null)
-                            socketStream.Dispose();
-
-                        if (authenticationStream != null)
-                            authenticationStream.Dispose();
-                    }
+                    string clientAddress = remoteEndPoint.Address.ToString();
+                    string errorMessage = string.Format("Unable to accept connection to client [{0}]: {1}", clientAddress, ex.Message);
+                    OnClientConnectingException(new Exception(errorMessage, ex));
                 }
-#endif
+
+                TerminateConnection(client, false);
+            }
+        }
+
+        /// <summary>
+        /// Callback method for asynchronous authenticate operation.
+        /// </summary>
+        private void ProcessAuthenticate(IAsyncResult asyncResult)
+        {
+            Tuple<TransportProvider<SslStream>, IPEndPoint> asyncState = (Tuple<TransportProvider<SslStream>, IPEndPoint>)asyncResult.AsyncState;
+            TransportProvider<SslStream> client = asyncState.Item1;
+            IPEndPoint remoteEndPoint = asyncState.Item2;
+
+            try
+            {
+                client.Provider.EndAuthenticateAsServer(asyncResult);
+
+                if (EnabledSslProtocols != SslProtocols.None)
+                {
+                    if (!client.Provider.IsAuthenticated)
+                        throw new InvalidOperationException("Unable to authenticate.");
+
+                    if (!client.Provider.IsEncrypted)
+                        throw new InvalidOperationException("Unable to encrypt data stream.");
+                }
 
                 if (MaxClientConnections != -1 && ClientIDs.Length >= MaxClientConnections)
                 {
                     // Reject client connection since limit has been reached.
-                    TerminateConnection(client, receiveArgs, false);
+                    TerminateConnection(client, false);
                 }
                 else
                 {
                     // We can proceed further with receiving data from the client.
                     m_tcpClients.TryAdd(client.ID, client);
                     OnClientConnected(client.ID);
-
-                    if (!m_payloadAware)
-                    {
-                        receiveArgs.UserToken = client;
-                    }
-                    else
-                    {
-                        EventArgs<TransportProvider<Socket>, bool> userToken = ReusableObjectPool<EventArgs<TransportProvider<Socket>, bool>>.TakeObject();
-                        userToken.Argument1 = client;
-                        receiveArgs.UserToken = userToken;
-                    }
-
-                    ReceivePayloadAsync(client, receiveArgs);
+                    ReceivePayloadAsync(client);
                 }
             }
             catch (Exception ex)
             {
                 // Notify of the exception.
-                if ((object)client.Provider != null)
-                {
-                    string clientAddress = ((IPEndPoint)client.Provider.RemoteEndPoint).Address.ToString();
-                    string errorMessage = string.Format("Unable to accept connection to client [{0}]: {1}", clientAddress, ex.Message);
-                    OnClientConnectingException(new Exception(errorMessage, ex));
-                }
-
-                if ((object)receiveArgs != null)
-                {
-                    TerminateConnection(client, receiveArgs, false);
-                }
+                string clientAddress = remoteEndPoint.Address.ToString();
+                string errorMessage = string.Format("Unable to accept connection to client [{0}]: {1}", clientAddress, ex.Message);
+                OnClientConnectingException(new Exception(errorMessage, ex));
+                TerminateConnection(client, false);
             }
         }
 
         /// <summary>
         /// Callback method for asynchronous send operation.
         /// </summary>
-        private void ProcessSend(SocketAsyncEventArgs args)
+        private void ProcessSend(IAsyncResult asyncResult)
         {
-            EventArgs<TransportProvider<Socket>, ManualResetEventSlim> userToken = (EventArgs<TransportProvider<Socket>, ManualResetEventSlim>)args.UserToken;
+            Tuple<Guid, int> asyncState = (Tuple<Guid, int>)asyncResult.AsyncState;
+            Guid clientID = asyncState.Item1;
 
-            TransportProvider<Socket> client = userToken.Argument1;
-            ManualResetEventSlim handle = userToken.Argument2;
+            TransportProvider<SslStream> client = Client(clientID);
 
             try
             {
                 // Send operation is complete.
-                handle.Set();
-
-                if (args.SocketError != SocketError.Success)
-                    throw new SocketException((int)args.SocketError);
-
-                client.Statistics.UpdateBytesSent(args.BytesTransferred);
-                OnSendClientDataComplete(client.ID);
+                client.Provider.EndWrite(asyncResult);
+                client.Statistics.UpdateBytesSent(asyncState.Item2);
+                OnSendClientDataComplete(clientID);
             }
             catch (Exception ex)
             {
                 // Send operation failed to complete.
-                OnSendClientDataException(client.ID, ex);
-            }
-            finally
-            {
-                args.Completed -= m_sendHandler;
-                ReusableObjectPool<SocketAsyncEventArgs>.ReturnObject(args);
-                ReusableObjectPool<ManualResetEventSlim>.ReturnObject(handle);
-                ReusableObjectPool<EventArgs<TransportProvider<Socket>, ManualResetEventSlim>>.ReturnObject(userToken);
+                OnSendClientDataException(clientID, ex);
             }
         }
 
         /// <summary>
         /// Initiate method for asynchronous receive operation of payload data.
         /// </summary>
-        private void ReceivePayloadAsync(TransportProvider<Socket> client, SocketAsyncEventArgs args)
+        private void ReceivePayloadAsync(TransportProvider<SslStream> client)
         {
             // Initialize bytes received.
             client.BytesReceived = 0;
@@ -963,58 +893,49 @@ namespace TVA.Communication
             // Initiate receiving.
             if (m_payloadAware)
             {
-                // Set user token to indicate we are waiting for payload header.
-                EventArgs<TransportProvider<Socket>, bool> userToken = (EventArgs<TransportProvider<Socket>, bool>)args.UserToken;
-                userToken.Argument2 = true;
-
                 // Payload boundaries are to be preserved.
                 client.SetReceiveBuffer(m_payloadMarker.Length + Payload.LengthSegment);
-                ReceivePayloadAwareAsync(client, args);
+                ReceivePayloadAwareAsync(client, true);
             }
             else
             {
                 // Payload boundaries are not to be preserved.
                 client.SetReceiveBuffer(ReceiveBufferSize);
-                ReceivePayloadUnawareAsync(client, args);
+                ReceivePayloadUnawareAsync(client);
             }
         }
 
         /// <summary>
         /// Initiate method for asynchronous receive operation of payload data in "payload-aware" mode.
         /// </summary>
-        private void ReceivePayloadAwareAsync(TransportProvider<Socket> client, SocketAsyncEventArgs args)
+        private void ReceivePayloadAwareAsync(TransportProvider<SslStream> client, bool waitingForHeader)
         {
-            byte[] buffer = client.ReceiveBuffer;
-            int offset = client.BytesReceived;
-            int length = client.ReceiveBufferSize - offset;
-
-            args.SetBuffer(buffer, offset, length);
-
-            if (!client.Provider.ReceiveAsync(args))
-                ThreadPool.QueueUserWorkItem(state => ProcessReceivePayloadAware((SocketAsyncEventArgs)state), args);
+            client.Provider.BeginRead(client.ReceiveBuffer,
+                                      client.BytesReceived,
+                                      client.ReceiveBufferSize - client.BytesReceived,
+                                      ProcessReceivePayloadAware,
+                                      new Tuple<Guid, bool>(client.ID, waitingForHeader));
         }
 
         /// <summary>
         /// Callback method for asynchronous receive operation of payload data in "payload-aware" mode.
         /// </summary>
-        private void ProcessReceivePayloadAware(SocketAsyncEventArgs args)
+        private void ProcessReceivePayloadAware(IAsyncResult asyncResult)
         {
-            EventArgs<TransportProvider<Socket>, bool> userToken = (EventArgs<TransportProvider<Socket>, bool>)args.UserToken;
-            TransportProvider<Socket> client = userToken.Argument1;
+            Tuple<Guid, bool> asyncState = (Tuple<Guid, bool>)asyncResult.AsyncState;
+            TransportProvider<SslStream> client = Client(asyncState.Item1);
+            bool waitingForHeader = asyncState.Item2;
 
             try
             {
-                if (args.SocketError != SocketError.Success)
-                    throw new SocketException((int)args.SocketError);
+                // Update statistics and pointers.
+                client.Statistics.UpdateBytesReceived(client.Provider.EndRead(asyncResult));
+                client.BytesReceived += client.Statistics.LastBytesReceived;
 
-                if (args.BytesTransferred == 0)
+                if (client.Statistics.LastBytesReceived == 0)
                     throw new SocketException((int)SocketError.Disconnecting);
 
-                // Update statistics and pointers.
-                client.Statistics.UpdateBytesReceived(args.BytesTransferred);
-                client.BytesReceived += args.BytesTransferred;
-
-                if (userToken.Argument2)
+                if (waitingForHeader)
                 {
                     // We're waiting on the payload length, so we'll check if the received data has this information.
                     int payloadLength = Payload.ExtractLength(client.ReceiveBuffer, client.BytesReceived, m_payloadMarker);
@@ -1030,10 +951,10 @@ namespace TVA.Communication
                     {
                         client.BytesReceived = 0;
                         client.SetReceiveBuffer(payloadLength);
-                        userToken.Argument2 = false;
+                        waitingForHeader = false;
                     }
 
-                    ReceivePayloadAwareAsync(client, args);
+                    ReceivePayloadAwareAsync(client, waitingForHeader);
                 }
                 else
                 {
@@ -1042,25 +963,25 @@ namespace TVA.Communication
                     {
                         // We've received the entire payload.
                         OnReceiveClientDataComplete(client.ID, client.ReceiveBuffer, client.BytesReceived);
-                        ReceivePayloadAsync(client, args);
+                        ReceivePayloadAsync(client);
                     }
                     else
                     {
                         // We've not yet received the entire payload.
-                        ReceivePayloadAwareAsync(client, args);
+                        ReceivePayloadAwareAsync(client, false);
                     }
                 }
             }
             catch (ObjectDisposedException)
             {
                 // Make sure connection is terminated when server is disposed.
-                TerminateConnection(client, args, true);
+                TerminateConnection(client, true);
             }
             catch (SocketException ex)
             {
                 // Terminate connection when socket exception is encountered.
                 OnReceiveClientDataException(client.ID, ex);
-                TerminateConnection(client, args, true);
+                TerminateConnection(client, true);
             }
             catch (Exception ex)
             {
@@ -1068,12 +989,12 @@ namespace TVA.Communication
                 {
                     // For any other exception, notify and resume receive.
                     OnReceiveClientDataException(client.ID, ex);
-                    ReceivePayloadAsync(client, args);
+                    ReceivePayloadAsync(client);
                 }
                 catch
                 {
                     // Terminate connection if resuming receiving fails.
-                    TerminateConnection(client, args, true);
+                    TerminateConnection(client, true);
                 }
             }
         }
@@ -1081,50 +1002,45 @@ namespace TVA.Communication
         /// <summary>
         /// Initiate method for asynchronous receive operation of payload data in "payload-unaware" mode.
         /// </summary>
-        private void ReceivePayloadUnawareAsync(TransportProvider<Socket> client, SocketAsyncEventArgs args)
+        private void ReceivePayloadUnawareAsync(TransportProvider<SslStream> client)
         {
-            byte[] buffer = client.ReceiveBuffer;
-            int length = client.ReceiveBufferSize;
-
-            args.SetBuffer(buffer, 0, length);
-
-            if (!client.Provider.ReceiveAsync(args))
-                ThreadPool.QueueUserWorkItem(state => ProcessReceivePayloadUnaware((SocketAsyncEventArgs)state), args);
+            client.Provider.BeginRead(client.ReceiveBuffer,
+                                      0,
+                                      client.ReceiveBufferSize,
+                                      ProcessReceivePayloadUnaware,
+                                      client);
         }
 
         /// <summary>
         /// Callback method for asynchronous receive operation of payload data in "payload-unaware" mode.
         /// </summary>
-        private void ProcessReceivePayloadUnaware(SocketAsyncEventArgs args)
+        private void ProcessReceivePayloadUnaware(IAsyncResult asyncResult)
         {
-            TransportProvider<Socket> client = (TransportProvider<Socket>)args.UserToken;
+            TransportProvider<SslStream> client = (TransportProvider<SslStream>)asyncResult.AsyncState;
 
             try
             {
-                if (args.SocketError != SocketError.Success)
-                    throw new SocketException((int)args.SocketError);
-
-                if (args.BytesTransferred == 0)
-                    throw new SocketException((int)SocketError.Disconnecting);
-
                 // Update statistics and pointers.
-                client.Statistics.UpdateBytesReceived(args.BytesTransferred);
-                client.BytesReceived = args.BytesTransferred;
+                client.Statistics.UpdateBytesReceived(client.Provider.EndRead(asyncResult));
+                client.BytesReceived = client.Statistics.LastBytesReceived;
+
+                if (client.Statistics.LastBytesReceived == 0)
+                    throw new SocketException((int)SocketError.Disconnecting);
 
                 // Notify of received data and resume receive operation.
                 OnReceiveClientDataComplete(client.ID, client.ReceiveBuffer, client.BytesReceived);
-                ReceivePayloadUnawareAsync(client, args);
+                ReceivePayloadUnawareAsync(client);
             }
             catch (ObjectDisposedException)
             {
                 // Make sure connection is terminated when server is disposed.
-                TerminateConnection(client, args, true);
+                TerminateConnection(client, true);
             }
             catch (SocketException ex)
             {
                 // Terminate connection when socket exception is encountered.
                 OnReceiveClientDataException(client.ID, ex);
-                TerminateConnection(client, args, true);
+                TerminateConnection(client, true);
             }
             catch (Exception ex)
             {
@@ -1132,12 +1048,12 @@ namespace TVA.Communication
                 {
                     // For any other exception, notify and resume receive.
                     OnReceiveClientDataException(client.ID, ex);
-                    ReceivePayloadAsync(client, args);
+                    ReceivePayloadAsync(client);
                 }
                 catch
                 {
                     // Terminate connection if resuming receiving fails.
-                    TerminateConnection(client, args, true);
+                    TerminateConnection(client, true);
                 }
             }
         }
@@ -1145,37 +1061,22 @@ namespace TVA.Communication
         /// <summary>
         /// Processes the termination of client.
         /// </summary>
-        private void TerminateConnection(TransportProvider<Socket> client, SocketAsyncEventArgs args, bool raiseEvent)
+        private void TerminateConnection(TransportProvider<SslStream> client, bool raiseEvent)
         {
-            try
-            {
-                client.Reset();
+            client.Reset();
 
-                if (raiseEvent)
-                    OnClientDisconnected(client.ID);
+            if (raiseEvent)
+                OnClientDisconnected(client.ID);
 
-                m_tcpClients.TryRemove(client.ID, out client);
-            }
-            finally
-            {
-                ReturnReceiveArgs(args);
-            }
+            m_tcpClients.TryRemove(client.ID, out client);
         }
 
         /// <summary>
-        /// Returns the <see cref="SocketAsyncEventArgs"/> used for receiving data on the socket.
+        /// Returns the certificate set by the user.
         /// </summary>
-        private void ReturnReceiveArgs(SocketAsyncEventArgs receiveArgs)
+        private X509Certificate DefaultLocalCertificateSelectionCallback(object sender, string targetHost, X509CertificateCollection localCertificates, X509Certificate remoteCertificate, string[] acceptableIssuers)
         {
-            EventArgs<TransportProvider<Socket>, bool> userToken = receiveArgs.UserToken as EventArgs<TransportProvider<Socket>, bool>;
-
-            receiveArgs.Completed -= ReceiveHandler;
-            ReusableObjectPool<SocketAsyncEventArgs>.ReturnObject(receiveArgs);
-
-            if ((object)userToken != null)
-            {
-                ReusableObjectPool<EventArgs<TransportProvider<Socket>, bool>>.ReturnObject(userToken);
-            }
+            return m_certificate;
         }
 
         #endregion

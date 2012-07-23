@@ -340,7 +340,6 @@ namespace UDPRebroadcaster
             // m_remotingServer
             // 
             this.m_remotingServer.ConfigurationString = "Port=4242";
-            this.m_remotingServer.Handshake = true;
             this.m_remotingServer.PayloadAware = true;
             this.m_remotingServer.PersistSettings = true;
             this.m_remotingServer.SettingsCategory = "RemotingServer";
