@@ -2127,6 +2127,10 @@ namespace TVA.ServiceProcess
         private void Process_StateChanged(object sender, EventArgs e)
         {
             ServiceProcess process = sender as ServiceProcess;
+
+            if ((object)process == null)
+                return; // Avoiding Null Derefenrence Exception
+
             OnProcessStateChanged(process.Name, process.CurrentState);
         }
 
@@ -2135,7 +2139,7 @@ namespace TVA.ServiceProcess
             ServiceProcess scheduledProcess = FindProcess(e.Argument.Name);
 
             // Start the process execution if it exists.
-            if (scheduledProcess != null)
+            if ((object)scheduledProcess != null)
                 scheduledProcess.Start();
         }
 
@@ -3047,7 +3051,7 @@ namespace TVA.ServiceProcess
                     foreach (object component in m_serviceComponents)
                     {
                         typedComponent = component as IPersistSettings;
-                        if (typedComponent != null &&
+                        if ((object) typedComponent != null &&
                             string.Compare(categoryName, typedComponent.SettingsCategory, true) == 0)
                         {
                             typedComponent.LoadSettings();

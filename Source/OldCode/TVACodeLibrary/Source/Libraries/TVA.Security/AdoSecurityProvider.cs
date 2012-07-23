@@ -459,7 +459,7 @@ namespace TVA.Security
                         UserData.IsExternal = !Convert.ToBoolean(userDataRow["UseADAuthentication"]);
                     }
 
-                    if (UserData.IsExternal && userDataRow != null)
+                    if (UserData.IsExternal && (object)userDataRow != null)
                     {
                         if (string.IsNullOrEmpty(UserData.LoginID))
                             UserData.LoginID = UserData.Username;

@@ -441,6 +441,10 @@ namespace TVA.ServiceModel
             {
                 // Extract and assign the caller's windows identity to current thread if available.
                 IList<IIdentity> identities = property as List<IIdentity>;
+
+                if ((object)identities == null)
+                    throw new SecurityException(string.Format("Null Dereterence Exception: '{0}'", Thread.CurrentPrincipal.Identity.ToString()));
+
                 foreach (IIdentity identity in identities)
                 {
                     if (identity is WindowsIdentity)

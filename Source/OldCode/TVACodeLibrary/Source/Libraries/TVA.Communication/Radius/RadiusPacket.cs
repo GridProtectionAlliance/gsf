@@ -647,6 +647,22 @@ namespace TVA.Communication.Radius
         /// <returns>A byte array.</returns>
         public static byte[] EncryptPassword(string password, string sharedSecret, byte[] requestAuthenticator)
         {
+            // Avoiding Null Dereferences
+            if ((string.IsNullOrEmpty(sharedSecret)))
+            {
+                throw new ArgumentException("Shared secret cannot be null or empty."); 
+            }
+
+            if ((string.IsNullOrEmpty(password)))
+            {
+                throw new ArgumentException("Password cannot be null or empty.");
+            }
+
+            if ((object)requestAuthenticator == null)
+            {
+                throw new ArgumentException("Request authenticator cannot be null.");
+            }
+                 
             // Max length of the password can be 130 according to RFC 2865. Since 128 is the closest multiple
             // of 16 (password segment length), we allow the password to be no longer than 128 characters.
             if (password.Length <= 128)

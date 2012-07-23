@@ -1958,6 +1958,9 @@ namespace TVA.Collections
                         // Retrieves items to be processed.
                         nextItems = ToArray();
 
+                        if ((object)nextItems == null || (object)m_itemsProcessing == null)
+                            return;
+
                         // Calls optional user function to see if these items should be processed.
                         if (CanProcessItems(nextItems))
                         {

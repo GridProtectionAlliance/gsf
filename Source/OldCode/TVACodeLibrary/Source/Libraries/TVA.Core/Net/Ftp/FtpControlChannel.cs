@@ -424,6 +424,8 @@ namespace TVA.Net.Ftp
         /// </summary>
         public void Connect()
         {
+            if ((object)m_connection == null)
+                return;
             m_connection.Connect(m_server, m_port);
 
             try
@@ -446,9 +448,11 @@ namespace TVA.Net.Ftp
         /// <param name="cmd">A <see cref="String"/> representing the command to send.</param>
         public void Command(string cmd)
         {
+            if ((object)m_connection == null)
+                return;
+            
             byte[] buff = System.Text.Encoding.Default.GetBytes(cmd + Environment.NewLine);
             NetworkStream stream = m_connection.GetStream();
-
             m_sessionHost.OnCommandSent(cmd);
             stream.Write(buff, 0, buff.Length);
             RefreshResponse();
@@ -459,6 +463,9 @@ namespace TVA.Net.Ftp
         /// </summary>
         public void RefreshResponse()
         {
+            if ((object)m_connection == null)
+                return;
+
             lock (this)
             {
                 m_lastResponse = new FtpResponse(m_connection.GetStream());
