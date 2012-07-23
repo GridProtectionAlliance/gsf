@@ -43,6 +43,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
@@ -227,6 +228,7 @@ namespace TVA.Historian
         private long m_totalBytesReceived;
         private long m_totalPacketsReceived;
         private List<IDataPoint> m_data;
+        private ConcurrentDictionary<IClient, Guid> m_clientIDs;
         private bool m_listenerStopping;
         private Thread m_startupThread;
         private AutoResetEvent m_initializeWaitHandle;
@@ -260,6 +262,7 @@ namespace TVA.Historian
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
             m_data = new List<IDataPoint>();
+            m_clientIDs = new ConcurrentDictionary<IClient, Guid>();
             m_initializeWaitHandle = new AutoResetEvent(false);
 
             m_parser = new PacketParser();
@@ -270,12 +273,14 @@ namespace TVA.Historian
             m_tcpClient.ConnectionEstablished += ClientSocket_ConnectionEstablished;
             m_tcpClient.ConnectionTerminated += ClientSocket_ConnectionTerminated;
             m_tcpClient.ReceiveDataComplete += ClientSocket_ReceiveDataComplete;
+            m_clientIDs.TryAdd(m_tcpClient, Guid.NewGuid());
 
             m_udpClient = new UdpClient();
             m_udpClient.ConnectionAttempt += ClientSocket_ConnectionAttempt;
             m_udpClient.ConnectionEstablished += ClientSocket_ConnectionEstablished;
             m_udpClient.ConnectionTerminated += ClientSocket_ConnectionTerminated;
             m_udpClient.ReceiveDataComplete += ClientSocket_ReceiveDataComplete;
+            m_clientIDs.TryAdd(m_udpClient, Guid.NewGuid());
 
             m_tcpServer = new TcpServer();
             m_tcpServer.ServerStarted += ServerSocket_ServerStarted;
@@ -1177,7 +1182,7 @@ namespace TVA.Historian
         {
             m_totalPacketsReceived++;
             m_totalBytesReceived += e.Argument2;
-            m_parser.Parse(((IClient)sender).ClientID, e.Argument1, 0, e.Argument2);
+            m_parser.Parse(m_clientIDs[(IClient)sender], e.Argument1, 0, e.Argument2);
         }
 
         private void PacketParser_DataParsed(object sender, EventArgs<Guid, IList<IPacket>> e)

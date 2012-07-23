@@ -233,7 +233,6 @@ namespace TVA.Historian.Exporters
                     {
                         // Create the server socket for export context.
                         context.Socket = ServerBase.Create(string.Format("Protocol=TCP;Port={0}", serverPortSetting.Value));
-                        context.Socket.Handshake = false;   // Use regular TCP socket communication.
                         context.Socket.Start();             // Start the server; need to do only one time.
                         context.Socket.ClientConnected += CommunicationServer_ClientConnected;
                         context.Socket.ClientDisconnected += CommunicationServer_ClientDisconnected;

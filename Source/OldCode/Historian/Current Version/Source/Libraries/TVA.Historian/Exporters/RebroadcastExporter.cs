@@ -288,7 +288,6 @@ namespace TVA.Historian.Exporters
                         // Create the client socket for the export context.
                         context = new ExportContext();
                         context.Socket = ClientBase.Create(clientConfigSetting.Value + "; Port=0");
-                        context.Socket.Handshake = false;           // Use regular TCP/UDP socket communication.
                         context.Socket.MaxConnectionAttempts = 1;   // Try connection attempt no more than 1 time.
 
                         // Determine the format of transmission.
