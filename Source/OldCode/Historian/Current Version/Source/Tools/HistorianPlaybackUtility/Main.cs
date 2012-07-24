@@ -510,6 +510,7 @@ namespace HistorianPlaybackUtility
                 try
                 {
                     this.Cursor = Cursors.WaitCursor;
+                    // This issue has been raised in the Fortify report,And we dont see any security issue with it.
                     string[] matches = Directory.GetFiles(ArchiveLocationInput.Text, "*_archive.d");
                     if (matches.Length > 0)
                     {
@@ -676,6 +677,7 @@ namespace HistorianPlaybackUtility
                         m_transmitClient = ClientBase.Create(string.Format("Protocol=Serial;Port={0};BaudRate={1};Parity={2};StopBits={3};DataBits={4};DtrEnable={5};RtsEnable={6}", SerialPortInput.Text, SerialBaudRateInput.Text, SerialParityInput.Text, SerialStopBitsInput.Text, SerialDataBitsInput.Text, SerialDtrEnable.Checked, SerialRtsEnable.Checked));
                         break;
                 }
+                m_transmitClient.Handshake = false;
                 m_transmitClient.MaxConnectionAttempts = 10;
                 m_transmitClient.SendDataStart += m_transmitClient_SendDataStart;
                 m_transmitClient.SendDataComplete += m_transmitClient_SendDataComplete;
