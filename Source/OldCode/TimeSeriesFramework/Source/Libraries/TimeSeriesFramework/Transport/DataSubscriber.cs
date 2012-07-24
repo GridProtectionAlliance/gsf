@@ -40,7 +40,6 @@ using TVA.Collections;
 using TVA.Communication;
 using TVA.Data;
 using TVA.IO;
-using TVA.IO.Compression;
 using TVA.Reflection;
 using TVA.Security.Cryptography;
 
@@ -779,10 +778,6 @@ namespace TimeSeriesFramework.Transport
             StringBuilder connectionString = new StringBuilder();
             AssemblyInfo assemblyInfo = AssemblyInfo.ExecutingAssembly;
 
-            UnsynchronizedSubscriptionInfo unsynchronizedSubscription;
-            DateTime startTimeConstraint;
-            DateTime stopTimeConstraint;
-
             // Dispose of any previously established local concentrator
             DisposeLocalConcentrator();
 
@@ -829,48 +824,45 @@ namespace TimeSeriesFramework.Transport
             }
             else
             {
-                // Dispose of any previously established local concentrator
-                DisposeLocalConcentrator();
-
-                // Locally concentrated subscription simply uses an
-                // unsynchronized subscription and concentrates the
+                // Locally concentrated subscription simply uses an unsynchronized subscription and concentrates the
                 // measurements on the subscriber side
-                unsynchronizedSubscription = FromLocallySynchronizedInfo(info);
-
-                // Establish a local concentrator to synchronize received measurements
-                m_localConcentrator = new LocalConcentrator(this);
-                m_localConcentrator.ProcessException += m_localConcentrator_ProcessException;
-                m_localConcentrator.FramesPerSecond = info.FramesPerSecond;
-                m_localConcentrator.LagTime = info.LagTime;
-                m_localConcentrator.LeadTime = info.LeadTime;
-                m_localConcentrator.UseLocalClockAsRealTime = info.UseLocalClockAsRealTime;
-                m_localConcentrator.IgnoreBadTimestamps = info.IgnoreBadTimestamps;
-                m_localConcentrator.AllowSortsByArrival = info.AllowSortsByArrival;
-                m_localConcentrator.TimeResolution = info.TimeResolution;
-                m_localConcentrator.AllowPreemptivePublishing = info.AllowPreemptivePublishing;
-                m_localConcentrator.DownsamplingMethod = info.DownsamplingMethod;
-                m_localConcentrator.UsePrecisionTimer = false;
-
-                // Parse time constraints, if defined
-                startTimeConstraint = !string.IsNullOrWhiteSpace(info.StartTime) ? AdapterBase.ParseTimeTag(info.StartTime) : DateTime.MinValue;
-                stopTimeConstraint = !string.IsNullOrWhiteSpace(info.StopTime) ? AdapterBase.ParseTimeTag(info.StopTime) : DateTime.MaxValue;
-
-                // When processing historical data, timestamps should not be evaluated for reasonability
-                if (startTimeConstraint != DateTime.MinValue || stopTimeConstraint != DateTime.MaxValue)
+                if (Subscribe(FromLocallySynchronizedInfo(info)))
                 {
-                    m_localConcentrator.PerformTimestampReasonabilityCheck = false;
-                    m_localConcentrator.LeadTime = double.MaxValue;
-                }
+                    // Establish a local concentrator to synchronize received measurements
+                    LocalConcentrator localConcentrator = new LocalConcentrator(this);
+                    localConcentrator.ProcessException += m_localConcentrator_ProcessException;
+                    localConcentrator.FramesPerSecond = info.FramesPerSecond;
+                    localConcentrator.LagTime = info.LagTime;
+                    localConcentrator.LeadTime = info.LeadTime;
+                    localConcentrator.UseLocalClockAsRealTime = info.UseLocalClockAsRealTime;
+                    localConcentrator.IgnoreBadTimestamps = info.IgnoreBadTimestamps;
+                    localConcentrator.AllowSortsByArrival = info.AllowSortsByArrival;
+                    localConcentrator.TimeResolution = info.TimeResolution;
+                    localConcentrator.AllowPreemptivePublishing = info.AllowPreemptivePublishing;
+                    localConcentrator.DownsamplingMethod = info.DownsamplingMethod;
+                    localConcentrator.UsePrecisionTimer = false;
 
-                // Assign alternate processing interval, if defined
-                if (info.ProcessingInterval != -1)
-                    m_localConcentrator.ProcessingInterval = info.ProcessingInterval;
+                    // Parse time constraints, if defined
+                    DateTime startTimeConstraint = !string.IsNullOrWhiteSpace(info.StartTime) ? AdapterBase.ParseTimeTag(info.StartTime) : DateTime.MinValue;
+                    DateTime stopTimeConstraint = !string.IsNullOrWhiteSpace(info.StopTime) ? AdapterBase.ParseTimeTag(info.StopTime) : DateTime.MaxValue;
 
-                // Start subscription process
-                if (Subscribe(unsynchronizedSubscription))
-                {
-                    // If subscription succeeds, start local concentrator
-                    m_localConcentrator.Start();
+                    // When processing historical data, timestamps should not be evaluated for reasonability
+                    if (startTimeConstraint != DateTime.MinValue || stopTimeConstraint != DateTime.MaxValue)
+                    {
+                        localConcentrator.PerformTimestampReasonabilityCheck = false;
+                        localConcentrator.LeadTime = double.MaxValue;
+                    }
+
+                    // Assign alternate processing interval, if defined
+                    if (info.ProcessingInterval != -1)
+                        localConcentrator.ProcessingInterval = info.ProcessingInterval;
+
+                    // Start local concentrator
+                    localConcentrator.Start();
+                    
+                    // Move concentrator to member variable
+                    Interlocked.Exchange(ref m_localConcentrator, localConcentrator);
+
                     return true;
                 }
 
