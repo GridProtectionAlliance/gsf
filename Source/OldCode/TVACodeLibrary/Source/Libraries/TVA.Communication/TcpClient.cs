@@ -650,7 +650,9 @@ namespace TVA.Communication
         {
             if (CurrentState != ClientState.Disconnected)
             {
-                m_tcpClient.Provider.Disconnect(false);
+                if (m_tcpClient.Provider.Connected)
+                    m_tcpClient.Provider.Disconnect(false);
+
                 m_tcpClient.Reset();
                 OnConnectionTerminated();
             }

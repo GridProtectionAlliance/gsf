@@ -553,8 +553,12 @@ namespace TVA.Communication
                 }
                 finally
                 {
-                    m_receiveArgs.Completed -= m_receiveHandler;
-                    ReusableObjectPool<SocketAsyncEventArgs>.ReturnObject(m_receiveArgs);
+                    if ((object)m_receiveArgs != null)
+                    {
+                        m_receiveArgs.Completed -= m_receiveHandler;
+                        ReusableObjectPool<SocketAsyncEventArgs>.ReturnObject(m_receiveArgs);
+                        m_receiveArgs = null;
+                    }
                 }
             }
         }
