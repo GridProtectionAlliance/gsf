@@ -824,7 +824,8 @@ namespace TVA.Communication
         protected override WaitHandle SendDataAsync(byte[] data, int offset, int length)
         {
             // Send payload to the client asynchronously.
-            SocketAsyncEventArgs args = ReusableObjectPool<SocketAsyncEventArgs>.TakeObject();
+            SocketAsyncEventArgs args = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
+            //SocketAsyncEventArgs args = ReusableObjectPool<SocketAsyncEventArgs>.TakeObject();
             ManualResetEventSlim handle = ReusableObjectPool<ManualResetEventSlim>.TakeObject();
 
             args.SetBuffer(data, offset, length);
@@ -879,7 +880,8 @@ namespace TVA.Communication
             finally
             {
                 args.Completed -= m_sendHandler;
-                ReusableObjectPool<SocketAsyncEventArgs>.ReturnObject(args);
+                args.Dispose();
+                //ReusableObjectPool<SocketAsyncEventArgs>.ReturnObject(args);
                 ReusableObjectPool<ManualResetEventSlim>.ReturnObject(handle);
             }
         }

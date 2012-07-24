@@ -769,7 +769,8 @@ namespace TVA.Communication
             EventArgs<Guid, ManualResetEventSlim> userToken;
 
             // Send payload to the client asynchronously.
-            args = ReusableObjectPool<SocketAsyncEventArgs>.TakeObject();
+            args = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
+            //args = ReusableObjectPool<SocketAsyncEventArgs>.TakeObject();
             handle = ReusableObjectPool<ManualResetEventSlim>.TakeObject();
             userToken = ReusableObjectPool<EventArgs<Guid, ManualResetEventSlim>>.TakeObject();
 
@@ -821,7 +822,8 @@ namespace TVA.Communication
             finally
             {
                 args.Completed -= m_sendHandler;
-                ReusableObjectPool<SocketAsyncEventArgs>.ReturnObject(args);
+                args.Dispose();
+                //ReusableObjectPool<SocketAsyncEventArgs>.ReturnObject(args);
                 ReusableObjectPool<ManualResetEventSlim>.ReturnObject(handle);
                 ReusableObjectPool<EventArgs<Guid, ManualResetEventSlim>>.ReturnObject(userToken);
             }
