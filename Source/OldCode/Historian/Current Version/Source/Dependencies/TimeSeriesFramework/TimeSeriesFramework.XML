@@ -5554,6 +5554,99 @@
             destined for archival.
             </summary>
         </member>
+        <member name="T:TimeSeriesFramework.PrecisionInputTimer">
+            <summary>
+            Precision input timer.
+            </summary>
+            <remarks>
+            This class is used to create highly accurate simulated data inputs aligned to the local clock.<br/>
+            One static instance of this internal class is created per encountered frame rate.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.PrecisionInputTimer.#ctor(System.Int32)">
+            <summary>
+            Create a new <see cref="T:TimeSeriesFramework.PrecisionInputTimer"/> class.
+            </summary>
+            <param name="framesPerSecond">Desired frame rate for <see cref="T:TVA.PrecisionTimer"/>.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.PrecisionInputTimer.Finalize">
+            <summary>
+            Releases the unmanaged resources before the <see cref="T:TimeSeriesFramework.PrecisionInputTimer"/> object is reclaimed by <see cref="T:System.GC"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.PrecisionInputTimer.Dispose">
+            <summary>
+            Releases all the resources used by the <see cref="T:TimeSeriesFramework.PrecisionInputTimer"/> object.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.PrecisionInputTimer.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.PrecisionInputTimer"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.PrecisionInputTimer.AddReference">
+            <summary>
+            Adds a reference to this <see cref="T:TimeSeriesFramework.PrecisionInputTimer"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.PrecisionInputTimer.RemoveReference">
+            <summary>
+            Removes a reference to this <see cref="T:TimeSeriesFramework.PrecisionInputTimer"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.PrecisionInputTimer.Attach(System.Int32,System.Action{System.Exception})">
+            <summary>
+            Attach to a <see cref="T:TimeSeriesFramework.PrecisionInputTimer"/> for the specified <paramref name="framesPerSecond"/>.
+            </summary>
+            <param name="framesPerSecond">Desired frames per second for the input timer.</param>
+            <param name="exceptionHandler">Optional delegate to handle exception reporting from the timer.</param>        
+            /// <returns>A <see cref="T:TimeSeriesFramework.PrecisionInputTimer"/> that can be used for the specified <paramref name="framesPerSecond"/>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.PrecisionInputTimer.Detach(TimeSeriesFramework.PrecisionInputTimer@)">
+            <summary>
+            Detatch from the <see cref="T:TimeSeriesFramework.PrecisionInputTimer"/>.
+            </summary>
+            <param name="timer">Timer instance to detach from.</param>
+            <remarks>
+            Timer reference will be set to <c>null</c> after detatch.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.PrecisionInputTimer.FramesPerSecond">
+            <summary>
+            Gets frames per second for this <see cref="T:TimeSeriesFramework.PrecisionInputTimer"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.PrecisionInputTimer.FrameMilliseconds">
+            <summary>
+            Gets array of frame millisecond times for this <see cref="T:TimeSeriesFramework.PrecisionInputTimer"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.PrecisionInputTimer.ReferenceCount">
+            <summary>
+            Gets reference count for this <see cref="T:TimeSeriesFramework.PrecisionInputTimer"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.PrecisionInputTimer.Resynchronizations">
+            <summary>
+            Gets number of resynchronizations that have occurred for this <see cref="T:TimeSeriesFramework.PrecisionInputTimer"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.PrecisionInputTimer.LastFrameTime">
+            <summary>
+            Gets time of last frame, in ticks.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.PrecisionInputTimer.FrameWaitHandle">
+            <summary>
+            Gets a reference to the frame wait handle.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.PrecisionInputTimer.ExceptionHandler">
+            <summary>
+            Gets or sets function used to handle exceptions.
+            </summary>
+        </member>
         <member name="T:TimeSeriesFramework.Statistics.StatisticCalculationFunction">
             <summary>
             Method signature for function used to calculate a statistic for a given object.
