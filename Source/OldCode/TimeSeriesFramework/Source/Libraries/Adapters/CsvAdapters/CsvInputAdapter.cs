@@ -45,378 +45,12 @@ namespace CsvAdapters
     {
         #region [ Members ]
 
-        // Nested Types
-
-        // TODO: Move this into its own public class for use by MPFP and CSV input timer...
-        /// <summary>
-        /// Precision input timer.
-        /// </summary>
-        /// <remarks>
-        /// This class is used to create highly accurate simulated data inputs aligned to the local clock.<br/>
-        /// One static instance of this internal class is created per encountered frame rate.
-        /// </remarks>
-        private sealed class PrecisionInputTimer : IDisposable
-        {
-            #region [ Members ]
-
-            // Fields
-            private PrecisionTimer m_timer;
-            private bool m_useWaitHandleA;
-            private SpinLock m_timerTickLock;
-            private ManualResetEventSlim m_frameWaitHandleA;
-            private ManualResetEventSlim m_frameWaitHandleB;
-            private int m_framesPerSecond;
-            private int m_frameWindowSize;
-            private int[] m_frameMilliseconds;
-            private int m_lastFrameIndex;
-            private long m_lastFrameTime;
-            private long m_missedPublicationWindows;
-            private long m_lastMissedWindowTime;
-            private long m_resynchronizations;
-            private int m_referenceCount;
-            private Action<Exception> m_exceptionHandler;
-            private bool m_disposed;
-
-            #endregion
-
-            #region [ Constructors ]
-
-            /// <summary>
-            /// Create a new <see cref="PrecisionInputTimer"/> class.
-            /// </summary>
-            /// <param name="framesPerSecond">Desired frame rate for <see cref="PrecisionTimer"/>.</param>
-            public PrecisionInputTimer(int framesPerSecond)
-            {
-                // Create synchronization objects
-                m_timerTickLock = new SpinLock();
-                m_frameWaitHandleA = new ManualResetEventSlim(false);
-                m_frameWaitHandleB = new ManualResetEventSlim(false);
-                m_useWaitHandleA = true;
-                m_framesPerSecond = framesPerSecond;
-
-                // Create a new precision timer for this timer state
-                m_timer = new PrecisionTimer();
-                m_timer.Resolution = 1;
-                m_timer.Period = 1;
-                m_timer.AutoReset = true;
-
-                // Attach handler for timer ticks
-                m_timer.Tick += m_timer_Tick;
-
-                m_frameWindowSize = (int)Math.Round(1000.0D / framesPerSecond) * 2;
-                m_frameMilliseconds = new int[framesPerSecond];
-
-                for (int frameIndex = 0; frameIndex < framesPerSecond; frameIndex++)
-                {
-                    m_frameMilliseconds[frameIndex] = (int)(1.0D / framesPerSecond * (frameIndex * 1000.0D));
-                }
-
-                // Start high resolution timer on a separate thread so the start
-                // time can synchronized to the top of the millisecond
-                ThreadPool.QueueUserWorkItem(SynchronizeInputTimer);
-            }
-
-            /// <summary>
-            /// Releases the unmanaged resources before the <see cref="PrecisionInputTimer"/> object is reclaimed by <see cref="GC"/>.
-            /// </summary>
-            ~PrecisionInputTimer()
-            {
-                Dispose(false);
-            }
-
-            #endregion
-
-            #region [ Properties ]
-
-            /// <summary>
-            /// Gets frames per second for this <see cref="PrecisionInputTimer"/>.
-            /// </summary>
-            public int FramesPerSecond
-            {
-                get
-                {
-                    return m_framesPerSecond;
-                }
-            }
-
-            /// <summary>
-            /// Gets array of frame millisecond times for this <see cref="PrecisionInputTimer"/>.
-            /// </summary>
-            public int[] FrameMilliseconds
-            {
-                get
-                {
-                    return m_frameMilliseconds;
-                }
-            }
-
-            /// <summary>
-            /// Gets reference count for this <see cref="PrecisionInputTimer"/>.
-            /// </summary>
-            public int ReferenceCount
-            {
-                get
-                {
-                    return m_referenceCount;
-                }
-            }
-
-            /// <summary>
-            /// Gets number of resynchronizations that have occurred for this <see cref="PrecisionInputTimer"/>.
-            /// </summary>
-            public long Resynchronizations
-            {
-                get
-                {
-                    return m_resynchronizations;
-                }
-            }
-
-            /// <summary>
-            /// Gets time of last frame, in ticks.
-            /// </summary>
-            public long LastFrameTime
-            {
-                get
-                {
-                    return m_lastFrameTime;
-                }
-            }
-
-            /// <summary>
-            /// Gets a reference to the frame wait handle.
-            /// </summary>
-            public ManualResetEventSlim FrameWaitHandle
-            {
-                get
-                {
-                    if (m_useWaitHandleA)
-                        return m_frameWaitHandleA;
-
-                    return m_frameWaitHandleB;
-                }
-            }
-
-            /// <summary>
-            /// Gets or sets function used to handle exceptions.
-            /// </summary>
-            public Action<Exception> ExceptionHandler
-            {
-                get
-                {
-                    return m_exceptionHandler;
-                }
-                set
-                {
-                    m_exceptionHandler = value;
-                }
-            }
-
-            #endregion
-
-            #region [ Methods ]
-
-            /// <summary>
-            /// Releases all the resources used by the <see cref="PrecisionInputTimer"/> object.
-            /// </summary>
-            public void Dispose()
-            {
-                Dispose(true);
-                GC.SuppressFinalize(this);
-            }
-
-            /// <summary>
-            /// Releases the unmanaged resources used by the <see cref="PrecisionInputTimer"/> object and optionally releases the managed resources.
-            /// </summary>
-            /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-            private void Dispose(bool disposing)
-            {
-                if (!m_disposed)
-                {
-                    try
-                    {
-                        if (disposing)
-                        {
-                            if (m_timer != null)
-                            {
-                                m_timer.Tick -= m_timer_Tick;
-                                m_timer.Dispose();
-                            }
-                            m_timer = null;
-
-                            if (m_frameWaitHandleA != null)
-                            {
-                                m_frameWaitHandleA.Set();
-                                m_frameWaitHandleA.Dispose();
-                            }
-                            m_frameWaitHandleA = null;
-
-                            if (m_frameWaitHandleB != null)
-                            {
-                                m_frameWaitHandleB.Set();
-                                m_frameWaitHandleB.Dispose();
-                            }
-                            m_frameWaitHandleB = null;
-                        }
-                    }
-                    finally
-                    {
-                        m_disposed = true;  // Prevent duplicate dispose.
-                    }
-                }
-            }
-
-            /// <summary>
-            /// Adds a reference to this <see cref="PrecisionInputTimer"/>.
-            /// </summary>
-            public void AddReference()
-            {
-                m_referenceCount++;
-            }
-
-            /// <summary>
-            /// Removes a reference to this <see cref="PrecisionInputTimer"/>.
-            /// </summary>
-            public void RemoveReference()
-            {
-                m_referenceCount--;
-            }
-
-            // This timer function is called every millisecond so that frames can be published at the exact desired time 
-            private void m_timer_Tick(object sender, EventArgs e)
-            {
-                // Slower systems or systems under stress may have trouble keeping up with a 1-ms timer, so
-                // we only process this code if it's not already processing...
-                bool locked = false;
-
-                try
-                {
-                    m_timerTickLock.TryEnter(2, ref locked);
-
-                    if (locked)
-                    {
-                        DateTime now = PrecisionTimer.UtcNow;
-                        int frameMilliseconds, milliseconds = now.Millisecond;
-                        long ticks = now.Ticks;
-                        bool releaseTimer = false, resync = false;
-
-                        // Make sure current time is reasonably close to current frame index
-                        if (Math.Abs(milliseconds - m_frameMilliseconds[m_lastFrameIndex]) > m_frameWindowSize)
-                            m_lastFrameIndex = 0;
-
-                        // See if it is time to publish
-                        for (int frameIndex = m_lastFrameIndex; frameIndex < m_frameMilliseconds.Length; frameIndex++)
-                        {
-                            frameMilliseconds = m_frameMilliseconds[frameIndex];
-
-                            if (frameMilliseconds == milliseconds)
-                            {
-                                // See if system skipped a publication window
-                                if (m_lastFrameIndex != frameIndex)
-                                {
-                                    // We monitor for missed windows in quick succession (within 1.5 seconds)
-                                    if (ticks - m_lastMissedWindowTime > 15000000L)
-                                    {
-                                        // Threshold has passed since last missed window, so we reset counters
-                                        m_lastMissedWindowTime = ticks;
-                                        m_missedPublicationWindows = 0;
-                                    }
-
-                                    m_missedPublicationWindows++;
-
-                                    // If the system is starting to skip publications it could need resynchronization,
-                                    // so in this case we restart the high-resolution timer to get the timer started
-                                    // closer to the top of the millisecond
-                                    resync = (m_missedPublicationWindows > 4);
-                                }
-
-                                // Prepare index for next check, time moving forward
-                                m_lastFrameIndex = frameIndex + 1;
-
-                                if (m_lastFrameIndex >= m_frameMilliseconds.Length)
-                                    m_lastFrameIndex = 0;
-
-                                if (resync)
-                                {
-                                    if (m_timer != null)
-                                    {
-                                        m_timer.Stop();
-                                        ThreadPool.QueueUserWorkItem(SynchronizeInputTimer);
-                                        m_resynchronizations++;
-                                    }
-                                }
-
-                                releaseTimer = true;
-                                break;
-                            }
-                            else if (frameMilliseconds > milliseconds)
-                            {
-                                // Time has yet to pass, wait till the next tick
-                                break;
-                            }
-                        }
-
-                        if (releaseTimer)
-                        {
-                            // Baseline timestamp to the top of the millisecond for frame publication
-                            m_lastFrameTime = ticks - ticks % Ticks.PerMillisecond;
-
-                            // Pulse all waiting threads toggling between ready handles
-                            if (m_useWaitHandleA)
-                            {
-                                m_frameWaitHandleB.Reset();
-                                m_useWaitHandleA = false;
-                                m_frameWaitHandleA.Set();
-                            }
-                            else
-                            {
-                                m_frameWaitHandleA.Reset();
-                                m_useWaitHandleA = true;
-                                m_frameWaitHandleB.Set();
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    ExceptionHandler(new InvalidOperationException("Exception thrown by precision input timer: " + ex.Message, ex));
-                }
-                finally
-                {
-                    if (locked)
-                        m_timerTickLock.Exit(true);
-                }
-            }
-
-            private void SynchronizeInputTimer(object state)
-            {
-                // Start timer at as close to the top of the millisecond as possible 
-                bool repeat = true;
-                long last = 0, next;
-
-                while (repeat)
-                {
-                    next = PrecisionTimer.UtcNow.Ticks % Ticks.PerMillisecond % 1000;
-                    repeat = (next > last);
-                    last = next;
-                }
-
-                m_lastMissedWindowTime = 0;
-                m_missedPublicationWindows = 0;
-
-                if (m_timer != null)
-                    m_timer.Start();
-            }
-
-            #endregion
-        }
-
         // Fields
         private string m_fileName;
         private StreamReader m_inStream;
         private string m_header;
-        private Dictionary<string, int> m_columns;
-        private Dictionary<int, IMeasurement> m_columnMappings;
+        private readonly Dictionary<string, int> m_columns;
+        private readonly Dictionary<int, IMeasurement> m_columnMappings;
         private double m_inputInterval;
         private int m_measurementsPerInterval;
         private bool m_simulateTimestamp;
@@ -424,7 +58,6 @@ namespace CsvAdapters
         private bool m_autoRepeat;
         private System.Timers.Timer m_looseTimer;
         private PrecisionInputTimer m_precisionTimer;
-        private bool m_attachedToInputTimer;
         private bool m_disposed;
 
         #endregion
@@ -519,15 +152,15 @@ namespace CsvAdapters
         {
             get
             {
-                return (m_precisionTimer != null);
+                return ((object)m_precisionTimer != null);
             }
             set
             {
                 // Note that a 1-ms timer and debug mode don't mix, so the high-resolution timer is disabled while debugging
-                if (value && m_precisionTimer == null && !System.Diagnostics.Debugger.IsAttached)
-                    m_precisionTimer = AttachToInputTimer((int)(1000.0D / m_inputInterval));
+                if (value && (object)m_precisionTimer == null && !System.Diagnostics.Debugger.IsAttached)
+                    m_precisionTimer = PrecisionInputTimer.Attach((int)(1000.0D / m_inputInterval), OnProcessException);
                 else if (!value && m_precisionTimer != null)
-                    DetachFromInputTimer(ref m_precisionTimer);
+                    PrecisionInputTimer.Detach(ref m_precisionTimer);
             }
         }
 
@@ -674,7 +307,7 @@ namespace CsvAdapters
                     {
                         if (UseHighResolutionInputTimer)
                         {
-                            DetachFromInputTimer(ref m_precisionTimer);
+                            PrecisionInputTimer.Detach(ref m_precisionTimer);
                         }
                         else if ((object)m_looseTimer != null)
                         {
@@ -825,12 +458,7 @@ namespace CsvAdapters
 
             // Override input interval based on temporal processing interval if it's not set to default
             if (ProcessingInterval > -1)
-            {
-                if (ProcessingInterval == 0)
-                    m_inputInterval = 1;
-                else
-                    m_inputInterval = ProcessingInterval;
-            }
+                m_inputInterval = ProcessingInterval == 0 ? 1 : ProcessingInterval;
 
             if ((object)m_looseTimer != null)
             {
@@ -1009,77 +637,6 @@ namespace CsvAdapters
 
             return true;
         }
-
-        // Handle attach to input timer
-        private PrecisionInputTimer AttachToInputTimer(int framesPerSecond)
-        {
-            PrecisionInputTimer timer;
-
-            lock (s_inputTimers)
-            {
-                // Get static input timer for given frames per second creating it if needed
-                if (!s_inputTimers.TryGetValue(framesPerSecond, out timer))
-                {
-                    try
-                    {
-                        // Create a new precision input timer
-                        timer = new PrecisionInputTimer(framesPerSecond);
-                        timer.ExceptionHandler = OnProcessException;
-
-                        // Add timer state for given rate to static collection
-                        s_inputTimers.Add(framesPerSecond, timer);
-                    }
-                    catch (Exception ex)
-                    {
-                        // Process exception for logging
-                        OnProcessException(new InvalidOperationException("Failed to create precision input timer due to exception: " + ex.Message, ex));
-                    }
-                }
-
-                // Increment reference count for input timer at given frame rate
-                timer.AddReference();
-                m_attachedToInputTimer = true;
-            }
-
-            return timer;
-        }
-
-        // Handle detach from input timer
-        private void DetachFromInputTimer(ref PrecisionInputTimer timer)
-        {
-            if (timer != null)
-            {
-                lock (s_inputTimers)
-                {
-                    if (m_attachedToInputTimer)
-                    {
-                        // Verify static frame rate timer for given frames per second exists
-                        if (s_inputTimers.ContainsKey(timer.FramesPerSecond))
-                        {
-                            // Decrement reference count
-                            timer.RemoveReference();
-                            m_attachedToInputTimer = false;
-
-                            // If timer is no longer being referenced we stop it and remove it from static collection
-                            if (timer.ReferenceCount == 0)
-                            {
-                                timer.Dispose();
-                                s_inputTimers.Remove(timer.FramesPerSecond);
-                            }
-                        }
-                    }
-                }
-            }
-
-            timer = null;
-        }
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Fields
-        private static Dictionary<int, PrecisionInputTimer> s_inputTimers = new Dictionary<int, PrecisionInputTimer>();
 
         #endregion
     }
