@@ -396,6 +396,7 @@ namespace TVA.Communication
         private TransportProvider<Socket> m_tcpClient;
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectWaitHandle;
+        private object m_connectLock;
         private bool m_disposed;
 
         private EventHandler<SocketAsyncEventArgs> m_connectHandler;
@@ -427,6 +428,7 @@ namespace TVA.Communication
             m_integratedSecurity = DefaultIntegratedSecurity;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_tcpClient = new TransportProvider<Socket>();
+            m_connectLock = new object();
 
             m_connectHandler = (o, args) => ProcessConnect(args);
             m_sendHandler = (o, args) => ProcessSend(args);
@@ -648,13 +650,16 @@ namespace TVA.Communication
         /// </summary>
         public override void Disconnect()
         {
-            if (CurrentState != ClientState.Disconnected)
+            lock (m_connectLock)
             {
-                if (m_tcpClient.Provider.Connected)
-                    m_tcpClient.Provider.Disconnect(false);
+                if (CurrentState != ClientState.Disconnected)
+                {
+                    if (m_tcpClient.Provider.Connected)
+                        m_tcpClient.Provider.Disconnect(false);
 
-                m_tcpClient.Reset();
-                OnConnectionTerminated();
+                    m_tcpClient.Reset();
+                    OnConnectionTerminated();
+                }
             }
         }
 
@@ -665,35 +670,38 @@ namespace TVA.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         public override WaitHandle ConnectAsync()
         {
-            if (CurrentState == ClientState.Disconnected)
+            lock (m_connectLock)
             {
-                if (m_connectWaitHandle == null)
-                    m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
+                if (CurrentState == ClientState.Disconnected)
+                {
+                    if (m_connectWaitHandle == null)
+                        m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
 
-                OnConnectionAttempt();
+                    OnConnectionAttempt();
 
-                // Create client socket to establish presence
-                if (m_tcpClient.Provider == null)
-                    m_tcpClient.Provider = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
+                    // Create client socket to establish presence
+                    if (m_tcpClient.Provider == null)
+                        m_tcpClient.Provider = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
 
-                Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
+                    Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
 
-                // Begin asynchronous connect operation and return wait handle for the asynchronous operation
-                SocketAsyncEventArgs args = ReusableObjectPool<SocketAsyncEventArgs>.TakeObject();
+                    // Begin asynchronous connect operation and return wait handle for the asynchronous operation
+                    SocketAsyncEventArgs args = ReusableObjectPool<SocketAsyncEventArgs>.TakeObject();
 
-                args.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
-                args.SetBuffer(null, 0, 0);
-                args.SocketFlags = SocketFlags.None;
-                args.Completed += m_connectHandler;
+                    args.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
+                    args.SetBuffer(null, 0, 0);
+                    args.SocketFlags = SocketFlags.None;
+                    args.Completed += m_connectHandler;
 
-                if (!m_tcpClient.Provider.ConnectAsync(args))
-                    ThreadPool.QueueUserWorkItem(state => ProcessConnect((SocketAsyncEventArgs)state), args);
+                    if (!m_tcpClient.Provider.ConnectAsync(args))
+                        ThreadPool.QueueUserWorkItem(state => ProcessConnect((SocketAsyncEventArgs)state), args);
 
-                return m_connectWaitHandle;
-            }
-            else
-            {
-                throw new InvalidOperationException("Client is currently not disconnected");
+                    return m_connectWaitHandle;
+                }
+                else
+                {
+                    throw new InvalidOperationException("Client is currently not disconnected");
+                }
             }
         }
 
