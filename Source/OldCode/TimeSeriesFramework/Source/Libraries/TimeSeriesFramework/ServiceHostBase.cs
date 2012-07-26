@@ -1692,6 +1692,9 @@ namespace TimeSeriesFramework
                 helpMessage.Append("       -System".PadRight(20));
                 helpMessage.Append("Performs full system initialization");
                 helpMessage.AppendLine();
+                helpMessage.Append("       -SkipReloadConfig".PadRight(20));
+                helpMessage.Append("Skips configuration reload before initialize");
+                helpMessage.AppendLine();
 
                 DisplayResponseMessage(requestInfo, helpMessage.ToString());
             }
