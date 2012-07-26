@@ -739,7 +739,7 @@ namespace TimeSeriesFramework
                             // Update table name as defined in configuration entity
                             source.TableName = entityRow["RuntimeName"].ToString();
 
-                            DisplayStatusMessage("Loaded {0} row{1} of data from \"{2}\" in {3}...", UpdateType.Information, source.Rows.Count, source.Rows.Count == 1 ? "" : "s", source.TableName, elapsedTime < 0.01D ? "less than a second" : elapsedTime.ToString("0.00") + " seconds");
+                            DisplayStatusMessage("Loaded {0} row{1} from \"{2}\" in {3}...", UpdateType.Information, source.Rows.Count, source.Rows.Count == 1 ? "" : "s", source.TableName, elapsedTime < 0.01D ? "less than a second" : elapsedTime.ToString("0.00") + " seconds");
 
                             startTime = PrecisionTimer.UtcNow.Ticks;
 
