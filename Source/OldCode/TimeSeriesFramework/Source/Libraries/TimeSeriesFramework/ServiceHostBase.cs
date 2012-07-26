@@ -1708,7 +1708,7 @@ namespace TimeSeriesFramework
                     IAdapterCollection collection;
 
                     // Reload system configuration
-                    if (LoadSystemConfiguration())
+                    if (requestInfo.Request.Arguments.Exists("SkipReloadConfig") || LoadSystemConfiguration())
                     {
                         // See if specific ID for an adapter was requested
                         if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
@@ -1739,7 +1739,9 @@ namespace TimeSeriesFramework
                                         SendResponse(requestInfo, false, "Adapter \"{0}\" ({1}) failed to initialize.", adapter.Name, adapter.ID);
                                 }
                                 else
+                                {
                                     SendResponse(requestInfo, false, "Requested adapter was not found.");
+                                }
                             }
                         }
                         else
@@ -1755,14 +1757,18 @@ namespace TimeSeriesFramework
                                 SendResponse(requestInfo, true);
                             }
                             else
+                            {
                                 SendResponse(requestInfo, false, "Requested collection was unavailable.");
+                            }
                         }
 
                         // Spawn routing table calculation updates
                         m_iaonSession.RecalculateRoutingTables();
                     }
                     else
+                    {
                         SendResponse(requestInfo, false, "Failed to load system configuration.");
+                    }
                 }
             }
         }
