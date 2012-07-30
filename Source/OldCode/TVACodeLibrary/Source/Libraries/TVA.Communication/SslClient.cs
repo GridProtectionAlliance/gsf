@@ -320,6 +320,7 @@ namespace TVA.Communication
         private TransportProvider<SslStream> m_sslClient;
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectWaitHandle;
+        private object m_connectLock;
         private bool m_disposed;
 
         private EventHandler<SocketAsyncEventArgs> m_connectHandler;
@@ -352,6 +353,7 @@ namespace TVA.Communication
             m_payloadMarker = Payload.DefaultMarker;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_sslClient = new TransportProvider<SslStream>();
+            m_connectLock = new object();
 
             m_connectHandler = (sender, args) => ProcessConnect(args);
         }
@@ -642,10 +644,13 @@ namespace TVA.Communication
         /// </summary>
         public override void Disconnect()
         {
-            if (CurrentState != ClientState.Disconnected)
+            lock (m_connectLock)
             {
-                m_sslClient.Reset();
-                OnConnectionTerminated();
+                if (CurrentState != ClientState.Disconnected)
+                {
+                    m_sslClient.Reset();
+                    OnConnectionTerminated();
+                }
             }
         }
 
@@ -656,33 +661,36 @@ namespace TVA.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         public override WaitHandle ConnectAsync()
         {
-            if (CurrentState == ClientState.Disconnected)
+            lock (m_connectLock)
             {
-                if (m_connectWaitHandle == null)
-                    m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
+                if (CurrentState == ClientState.Disconnected)
+                {
+                    if (m_connectWaitHandle == null)
+                        m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
 
-                OnConnectionAttempt();
+                    OnConnectionAttempt();
 
-                // Create client socket to establish presence
-                Socket socket = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
-                Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
+                    // Create client socket to establish presence
+                    Socket socket = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
+                    Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
 
-                // Begin asynchronous connect operation and return wait handle for the asynchronous operation
-                SocketAsyncEventArgs args = ReusableObjectPool<SocketAsyncEventArgs>.TakeObject();
+                    // Begin asynchronous connect operation and return wait handle for the asynchronous operation
+                    SocketAsyncEventArgs args = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
 
-                args.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
-                args.SocketFlags = SocketFlags.None;
-                args.UserToken = socket;
-                args.Completed += m_connectHandler;
+                    args.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
+                    args.SocketFlags = SocketFlags.None;
+                    args.UserToken = socket;
+                    args.Completed += m_connectHandler;
 
-                if (!socket.ConnectAsync(args))
-                    ThreadPool.QueueUserWorkItem(state => ProcessConnect((SocketAsyncEventArgs)state), args);
+                    if (!socket.ConnectAsync(args))
+                        ThreadPool.QueueUserWorkItem(state => ProcessConnect((SocketAsyncEventArgs)state), args);
 
-                return m_connectWaitHandle;
-            }
-            else
-            {
-                throw new InvalidOperationException("Client is currently not disconnected");
+                    return m_connectWaitHandle;
+                }
+                else
+                {
+                    throw new InvalidOperationException("Client is currently not disconnected");
+                }
             }
         }
 
@@ -769,6 +777,25 @@ namespace TVA.Communication
         }
 
         /// <summary>
+        /// Raises the <see cref="ClientBase.ReceiveDataException"/> event.
+        /// </summary>
+        /// <param name="ex">Exception to send to <see cref="ClientBase.ReceiveDataException"/> event.</param>
+        protected override void OnReceiveDataException(Exception ex)
+        {
+            if (CurrentState != ClientState.Disconnected)
+                base.OnReceiveDataException(ex);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ClientBase.ConnectionTerminated"/> event.
+        /// </summary>
+        protected override void OnConnectionTerminated()
+        {
+            if (CurrentState != ClientState.Disconnected)
+                base.OnConnectionTerminated();
+        }
+
+        /// <summary>
         /// Callback method for asynchronous connect operation.
         /// </summary>
         private void ProcessConnect(SocketAsyncEventArgs args)
@@ -819,8 +846,7 @@ namespace TVA.Communication
             }
             finally
             {
-                args.Completed -= m_connectHandler;
-                ReusableObjectPool<SocketAsyncEventArgs>.ReturnObject(args);
+                args.Dispose();
             }
         }
 
@@ -1078,7 +1104,10 @@ namespace TVA.Communication
         /// </summary>
         private void TerminateConnection(bool raiseEvent)
         {
-            m_sslClient.Reset();
+            lock (m_connectLock)
+            {
+                m_sslClient.Reset();
+            }
 
             if (raiseEvent)
                 OnConnectionTerminated();

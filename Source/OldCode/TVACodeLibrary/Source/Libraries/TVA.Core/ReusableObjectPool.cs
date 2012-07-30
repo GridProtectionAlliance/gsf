@@ -426,7 +426,7 @@ namespace TVA
     /// <typeparam name="T">Type of object to pool.</typeparam>
     public class ReusableObjectPool<T> where T : class, new()
     {
-        private static ConcurrentQueue<T> s_objectPool = new ConcurrentQueue<T>();
+        private ConcurrentQueue<T> m_objectPool = new ConcurrentQueue<T>();
 
         /// <summary>
         /// Gets an object from the pool, or creates a new one if no pool items are available.
@@ -439,13 +439,13 @@ namespace TVA
         /// make sure <see cref="ISupportLifecycle.Initialize"/> makes the class ready for use as this method will
         /// always be called for an object being taken from the pool.
         /// </remarks>
-        public static T TakeObject()
+        public T TakeObject()
         {
             T item;
             bool newItem = false;
 
             // Attempt to provide user with a queued item
-            if (!s_objectPool.TryDequeue(out item))
+            if (!m_objectPool.TryDequeue(out item))
             {
                 // No items are available, create a new item for the object pool
                 item = FastObjectFactory<T>.CreateObjectFunction();
@@ -477,22 +477,22 @@ namespace TVA
         /// return the item to the pool when the <see cref="ISupportLifecycle.Disposed"/> event is raised, usually when
         /// the object's <see cref="IDisposable.Dispose"/> method is called.
         /// </remarks>
-        public static void ReturnObject(T item)
+        public void ReturnObject(T item)
         {
             if (item != null)
-                s_objectPool.Enqueue(item);
+                m_objectPool.Enqueue(item);
         }
 
         /// <summary>
         /// Releases all the objects currently cached in the pool.
         /// </summary>
-        public static void Clear()
+        public void Clear()
         {
             T item;
 
-            while (!s_objectPool.IsEmpty)
+            while (!m_objectPool.IsEmpty)
             {
-                s_objectPool.TryDequeue(out item);
+                m_objectPool.TryDequeue(out item);
             }
         }
 
@@ -501,12 +501,12 @@ namespace TVA
         /// </summary>
         /// <param name="size">Desired pool size.</param>
         /// <exception cref="ArgumentOutOfRangeException">Pool <paramref name="size"/> must at least be one.</exception>
-        public static void SetPoolSize(int size)
+        public void SetPoolSize(int size)
         {
             if (size < 1)
                 throw new ArgumentOutOfRangeException("size", "pool size must at least be one");
 
-            for (int i = 0; i < size - s_objectPool.Count; i++)
+            for (int i = 0; i < size - m_objectPool.Count; i++)
             {
                 T item = FastObjectFactory<T>.CreateObjectFunction();
 
@@ -517,15 +517,20 @@ namespace TVA
                 if (lifecycleItem != null)
                     lifecycleItem.Disposed += LifecycleItem_Disposed;
 
-                s_objectPool.Enqueue(item);
+                m_objectPool.Enqueue(item);
             }
         }
 
         // Handler to automatically to return items to the queue 
-        private static void LifecycleItem_Disposed(object sender, EventArgs e)
+        private void LifecycleItem_Disposed(object sender, EventArgs e)
         {
             ReturnObject(sender as T);
         }
+
+        /// <summary>
+        /// Default static instance which can be shared throughout the application.
+        /// </summary>
+        public static readonly ReusableObjectPool<T> Default = new ReusableObjectPool<T>(); 
     }
 
     /// <summary>

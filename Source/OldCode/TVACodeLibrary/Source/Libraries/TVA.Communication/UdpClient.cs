@@ -436,6 +436,7 @@ namespace TVA.Communication
         private bool m_allowDualStackSocket;
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectionHandle;
+        private ReusableObjectPool<SocketAsyncEventArgs> m_socketArgsPool; 
 #if ThreadTracking
         private ManagedThread m_connectionThread;
 #else
@@ -467,6 +468,7 @@ namespace TVA.Communication
         {
             base.ReceiveBufferSize = DefaultReceiveBufferSize;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
+            m_socketArgsPool = new ReusableObjectPool<SocketAsyncEventArgs>();
 
             m_sendHandler += (sender, args) => ProcessSend(args);
             m_receiveHandler += (sender, args) => ProcessReceive(args);
@@ -795,7 +797,7 @@ namespace TVA.Communication
                     // Listen for incoming data only if endpoint is bound to a local interface.
                     if (m_udpClient.Provider.LocalEndPoint != null)
                     {
-                        SocketAsyncEventArgs args = ReusableObjectPool<SocketAsyncEventArgs>.TakeObject();
+                        SocketAsyncEventArgs args = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
                         args.SocketFlags = SocketFlags.None;
                         args.Completed += m_receiveHandler;
                         ReceivePayloadAsync(args);
@@ -823,10 +825,15 @@ namespace TVA.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         protected override WaitHandle SendDataAsync(byte[] data, int offset, int length)
         {
+            SocketAsyncEventArgs args;
+            ManualResetEventSlim handle;
+
+            // Write to the send buffer.
+            m_udpClient.WriteToSendBuffer(ref data, ref offset, length);
+
             // Send payload to the client asynchronously.
-            SocketAsyncEventArgs args = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
-            //SocketAsyncEventArgs args = ReusableObjectPool<SocketAsyncEventArgs>.TakeObject();
-            ManualResetEventSlim handle = ReusableObjectPool<ManualResetEventSlim>.TakeObject();
+            args = m_socketArgsPool.TakeObject();
+            handle = ReusableObjectPool<ManualResetEventSlim>.Default.TakeObject();
 
             args.SetBuffer(data, offset, length);
             args.SocketFlags = SocketFlags.None;
@@ -880,9 +887,8 @@ namespace TVA.Communication
             finally
             {
                 args.Completed -= m_sendHandler;
-                args.Dispose();
-                //ReusableObjectPool<SocketAsyncEventArgs>.ReturnObject(args);
-                ReusableObjectPool<ManualResetEventSlim>.ReturnObject(handle);
+                m_socketArgsPool.ReturnObject(args);
+                ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
             }
         }
 
@@ -965,8 +971,7 @@ namespace TVA.Communication
             }
             finally
             {
-                args.Completed -= m_receiveHandler;
-                ReusableObjectPool<SocketAsyncEventArgs>.ReturnObject(args);
+                args.Dispose();
             }
         }
 

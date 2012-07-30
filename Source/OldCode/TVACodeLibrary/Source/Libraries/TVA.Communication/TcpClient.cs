@@ -397,6 +397,7 @@ namespace TVA.Communication
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectWaitHandle;
         private object m_connectLock;
+        private ReusableObjectPool<SocketAsyncEventArgs> m_socketArgsPool; 
         private bool m_disposed;
 
         private EventHandler<SocketAsyncEventArgs> m_connectHandler;
@@ -429,6 +430,7 @@ namespace TVA.Communication
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_tcpClient = new TransportProvider<Socket>();
             m_connectLock = new object();
+            m_socketArgsPool = new ReusableObjectPool<SocketAsyncEventArgs>();
 
             m_connectHandler = (o, args) => ProcessConnect(args);
             m_sendHandler = (o, args) => ProcessSend(args);
@@ -686,7 +688,7 @@ namespace TVA.Communication
                     Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
 
                     // Begin asynchronous connect operation and return wait handle for the asynchronous operation
-                    SocketAsyncEventArgs args = ReusableObjectPool<SocketAsyncEventArgs>.TakeObject();
+                    SocketAsyncEventArgs args = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
 
                     args.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
                     args.SetBuffer(null, 0, 0);
@@ -782,8 +784,8 @@ namespace TVA.Communication
                 Payload.AddHeader(ref data, ref offset, ref length, m_payloadMarker);
 
             // Send payload to the client asynchronously.
-            args = ReusableObjectPool<SocketAsyncEventArgs>.TakeObject();
-            handle = ReusableObjectPool<ManualResetEventSlim>.TakeObject();
+            args = m_socketArgsPool.TakeObject();
+            handle = ReusableObjectPool<ManualResetEventSlim>.Default.TakeObject();
 
             args.SetBuffer(data, offset, length);
             args.SocketFlags = SocketFlags.None;
@@ -922,8 +924,8 @@ namespace TVA.Communication
             finally
             {
                 args.Completed -= m_sendHandler;
-                ReusableObjectPool<SocketAsyncEventArgs>.ReturnObject(args);
-                ReusableObjectPool<ManualResetEventSlim>.ReturnObject(handle);
+                m_socketArgsPool.ReturnObject(args);
+                ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
             }
         }
 
@@ -1122,15 +1124,17 @@ namespace TVA.Communication
         {
             try
             {
-                m_tcpClient.Reset();
+                lock (m_connectLock)
+                {
+                    m_tcpClient.Reset();
+                }
 
                 if (raiseEvent)
                     OnConnectionTerminated();
             }
             finally
             {
-                args.Completed -= ReceiveHandler;
-                ReusableObjectPool<SocketAsyncEventArgs>.ReturnObject(args);
+                args.Dispose();
             }
         }
 

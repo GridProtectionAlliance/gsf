@@ -636,15 +636,16 @@ namespace TVA.Communication
         /// </summary>
         public override void Stop()
         {
+            SocketAsyncEventArgs acceptArgs = m_acceptArgs;
+            m_acceptArgs = null;
+
             if (CurrentState == ServerState.Running)
             {
                 DisconnectAll();        // Disconnection all clients.
                 m_tcpServer.Close();    // Stop accepting new connections.
 
                 // Clean up accept args.
-                m_acceptArgs.Completed -= m_acceptHandler;
-                ReusableObjectPool<SocketAsyncEventArgs>.ReturnObject(m_acceptArgs);
-                m_acceptArgs = null;
+                acceptArgs.Dispose();
 
                 OnServerStopped();
             }
@@ -667,7 +668,7 @@ namespace TVA.Communication
                 m_tcpServer.Listen(1);
 
                 // Begin accepting incoming connection asynchronously.
-                m_acceptArgs = ReusableObjectPool<SocketAsyncEventArgs>.TakeObject();
+                m_acceptArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
 
                 m_acceptArgs.AcceptSocket = null;
                 m_acceptArgs.SetBuffer(null, 0, 0);
@@ -773,6 +774,9 @@ namespace TVA.Communication
 
             try
             {
+                if (CurrentState == ServerState.NotRunning)
+                    return;
+
                 if (m_acceptArgs.SocketError != SocketError.Success)
                 {
                     // Error is unrecoverable.

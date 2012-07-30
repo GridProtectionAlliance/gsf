@@ -404,6 +404,7 @@ namespace TVA.Communication
         private IPStack m_ipStack;
         private bool m_allowDualStackSocket;
         private Dictionary<string, string> m_configData;
+        private ReusableObjectPool<SocketAsyncEventArgs> m_socketArgsPool; 
 
         private EventHandler<SocketAsyncEventArgs> m_sendHandler;
         private EventHandler<SocketAsyncEventArgs> m_receiveHandler;
@@ -430,6 +431,7 @@ namespace TVA.Communication
             base.ReceiveBufferSize = DefaultReceiveBufferSize;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_udpClients = new ConcurrentDictionary<Guid, TransportProvider<EndPoint>>();
+            m_socketArgsPool = new ReusableObjectPool<SocketAsyncEventArgs>();
 
             m_sendHandler = (sender, args) => ProcessSend(args);
             m_receiveHandler = (sender, args) => ProcessReceive(args);
@@ -555,8 +557,7 @@ namespace TVA.Communication
                 {
                     if ((object)m_receiveArgs != null)
                     {
-                        m_receiveArgs.Completed -= m_receiveHandler;
-                        ReusableObjectPool<SocketAsyncEventArgs>.ReturnObject(m_receiveArgs);
+                        m_receiveArgs.Dispose();
                         m_receiveArgs = null;
                     }
                 }
@@ -588,7 +589,7 @@ namespace TVA.Communication
 
                 if ((object)m_udpServer.Provider.LocalEndPoint != null)
                 {
-                    m_receiveArgs = ReusableObjectPool<SocketAsyncEventArgs>.TakeObject();
+                    m_receiveArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
                     m_receiveArgs.SocketFlags = SocketFlags.None;
                     m_receiveArgs.Completed += m_receiveHandler;
                     ReceivePayloadAsync(m_receiveArgs);
@@ -767,16 +768,20 @@ namespace TVA.Communication
             SocketAsyncEventArgs args;
             ManualResetEventSlim handle;
             EventArgs<Guid, ManualResetEventSlim> userToken;
+            TransportProvider<EndPoint> client;
+            
+            // Get the client object and write to the send buffer for that client.
+            client = Client(clientID);
+            client.WriteToSendBuffer(ref data, ref offset, length);
 
             // Send payload to the client asynchronously.
-            args = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
-            //args = ReusableObjectPool<SocketAsyncEventArgs>.TakeObject();
-            handle = ReusableObjectPool<ManualResetEventSlim>.TakeObject();
-            userToken = ReusableObjectPool<EventArgs<Guid, ManualResetEventSlim>>.TakeObject();
+            args = m_socketArgsPool.TakeObject();
+            handle = ReusableObjectPool<ManualResetEventSlim>.Default.TakeObject();
+            userToken = ReusableObjectPool<EventArgs<Guid, ManualResetEventSlim>>.Default.TakeObject();
 
             userToken.Argument1 = clientID;
             userToken.Argument2 = handle;
-            args.RemoteEndPoint = Client(clientID).Provider;
+            args.RemoteEndPoint = client.Provider;
             args.SetBuffer(data, offset, length);
             args.SocketFlags = SocketFlags.None;
             args.UserToken = userToken;
@@ -822,10 +827,9 @@ namespace TVA.Communication
             finally
             {
                 args.Completed -= m_sendHandler;
-                args.Dispose();
-                //ReusableObjectPool<SocketAsyncEventArgs>.ReturnObject(args);
-                ReusableObjectPool<ManualResetEventSlim>.ReturnObject(handle);
-                ReusableObjectPool<EventArgs<Guid, ManualResetEventSlim>>.ReturnObject(userToken);
+                m_socketArgsPool.ReturnObject(args);
+                ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
+                ReusableObjectPool<EventArgs<Guid, ManualResetEventSlim>>.Default.ReturnObject(userToken);
             }
         }
 

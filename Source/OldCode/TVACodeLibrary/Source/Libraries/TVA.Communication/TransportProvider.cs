@@ -267,6 +267,10 @@ namespace TVA.Communication
     {
         #region [ Members ]
 
+        // Constants
+
+        private const int SendBufferSize = 1048576;
+
         // Fields
 
         /// <summary>
@@ -295,6 +299,9 @@ namespace TVA.Communication
         public byte[] MulticastMembershipAddresses;
 
         // Internally managed I/O buffers
+        private byte[] m_sendBuffer;
+        private int m_sendBufferOffset;
+
         private byte[] m_receiveBuffer;
         private int m_receiveBufferSize;
 
@@ -309,6 +316,7 @@ namespace TVA.Communication
         {
             ID = Guid.NewGuid();
             Statistics = new TransportStatistics();
+            m_sendBuffer = new byte[SendBufferSize];
         }
 
         #endregion
@@ -343,6 +351,33 @@ namespace TVA.Communication
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Writes data to the send buffer.
+        /// </summary>
+        /// <param name="data">The data to be written.</param>
+        /// <param name="offset">The offset into the given data buffer at which the data to be written starts.</param>
+        /// <param name="length">The amount of data to be written.</param>
+        /// <remarks>
+        /// After the data is written to the send buffer, the given byte array
+        /// is replaced by the send buffer and the given offset is replaced by
+        /// the offset into the send buffer where the written data starts.
+        /// </remarks>
+        public void WriteToSendBuffer(ref byte[] data, ref int offset, int length)
+        {
+            data.ValidateParameters(offset, length);
+
+            if (length > SendBufferSize)
+                throw new ArgumentException("Not enough space in send buffer.", "length");
+
+            if (length > (SendBufferSize - m_sendBufferOffset))
+                m_sendBufferOffset = 0;
+
+            Buffer.BlockCopy(data, offset, m_sendBuffer, m_sendBufferOffset, length);
+            data = m_sendBuffer;
+            offset = m_sendBufferOffset;
+            m_sendBufferOffset += length;
+        }
 
         /// <summary>
         /// Establishes (or reestablishes) a receive buffer of a given size.
