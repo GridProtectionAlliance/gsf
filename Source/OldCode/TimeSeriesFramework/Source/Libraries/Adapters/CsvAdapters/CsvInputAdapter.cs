@@ -53,6 +53,7 @@ namespace CsvAdapters
         private readonly Dictionary<int, IMeasurement> m_columnMappings;
         private double m_inputInterval;
         private int m_measurementsPerInterval;
+        private int m_skipRows;
         private bool m_simulateTimestamp;
         private bool m_transverse;
         private bool m_autoRepeat;
@@ -134,6 +135,24 @@ namespace CsvAdapters
             set
             {
                 m_autoRepeat = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets number of lines to skip in the source file before the header line is encountered.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the number of lines to skip in the source file before the header line is encountered."),
+        DefaultValue(0)]
+        public int SkipRows
+        {
+            get
+            {
+                return m_skipRows;
+            }
+            set
+            {
+                m_skipRows = value;
             }
         }
 
@@ -268,6 +287,9 @@ namespace CsvAdapters
                 status.AppendLine();
                 status.AppendFormat("     Precision input timer: {0}", UseHighResolutionInputTimer ? "Enabled" : "Offline");
                 status.AppendLine();
+                status.AppendFormat("             Lines to skip: {0}", m_skipRows);
+                status.AppendLine();
+
                 if (m_precisionTimer != null)
                 {
                     status.AppendFormat("  Timer resynchronizations: {0}", m_precisionTimer.Resynchronizations);
@@ -365,6 +387,12 @@ namespace CsvAdapters
 
             if (settings.TryGetValue("autoRepeat", out setting))
                 m_autoRepeat = setting.ParseBoolean();
+
+            if (settings.TryGetValue("skipRows", out setting))
+                int.TryParse(setting, out m_skipRows);
+
+            if (m_skipRows < 0)
+                m_skipRows = 0;
 
             settings.TryGetValue("useHighResolutionInputTimer", out setting);
 
@@ -474,6 +502,12 @@ namespace CsvAdapters
         protected override void AttemptConnection()
         {
             m_inStream = new StreamReader(m_fileName);
+
+            // Skip specified number of header lines that exist before column heading definitions
+            for (int i = 0; i < m_skipRows; i++)
+            {
+                m_inStream.ReadLine();
+            }
 
             m_header = m_inStream.ReadLine();
 
