@@ -3374,6 +3374,17 @@
             <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
             <returns><see cref="T:System.Threading.WaitHandle"/> for the asynchronous operation.</returns>
         </member>
+        <member name="M:TVA.Communication.SslClient.OnReceiveDataException(System.Exception)">
+            <summary>
+            Raises the <see cref="E:TVA.Communication.ClientBase.ReceiveDataException"/> event.
+            </summary>
+            <param name="ex">Exception to send to <see cref="E:TVA.Communication.ClientBase.ReceiveDataException"/> event.</param>
+        </member>
+        <member name="M:TVA.Communication.SslClient.OnConnectionTerminated">
+            <summary>
+            Raises the <see cref="E:TVA.Communication.ClientBase.ConnectionTerminated"/> event.
+            </summary>
+        </member>
         <member name="M:TVA.Communication.SslClient.ProcessConnect(System.Net.Sockets.SocketAsyncEventArgs)">
             <summary>
             Callback method for asynchronous connect operation.
@@ -4127,6 +4138,19 @@
             <summary>
             Initializes a new instance of the <see cref="T:TVA.Communication.TransportProvider`1"/> class.
             </summary>
+        </member>
+        <member name="M:TVA.Communication.TransportProvider`1.WriteToSendBuffer(System.Byte[]@,System.Int32@,System.Int32)">
+            <summary>
+            Writes data to the send buffer.
+            </summary>
+            <param name="data">The data to be written.</param>
+            <param name="offset">The offset into the given data buffer at which the data to be written starts.</param>
+            <param name="length">The amount of data to be written.</param>
+            <remarks>
+            After the data is written to the send buffer, the given byte array
+            is replaced by the send buffer and the given offset is replaced by
+            the offset into the send buffer where the written data starts.
+            </remarks>
         </member>
         <member name="M:TVA.Communication.TransportProvider`1.SetReceiveBuffer(System.Int32)">
             <summary>

@@ -24150,6 +24150,11 @@
             <param name="size">Desired pool size.</param>
             <exception cref="T:System.ArgumentOutOfRangeException">Pool <paramref name="size"/> must at least be one.</exception>
         </member>
+        <member name="F:TVA.ReusableObjectPool`1.Default">
+            <summary>
+            Default static instance which can be shared throughout the application.
+            </summary>
+        </member>
         <member name="T:TVA.ReusableObjectPool">
             <summary>
             Represents a reusable object pool that can be used by an application.
