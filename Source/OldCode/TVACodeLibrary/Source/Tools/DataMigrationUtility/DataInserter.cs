@@ -565,393 +565,393 @@ namespace Database
             }
 
             // Execute source query
-            OleDbDataReader fromReader = FromTable.Connection.ExecuteReader(selectString, CommandBehavior.SequentialAccess, Timeout);
-
-            // Create Sql stubs
-            InsertSqlStub = "INSERT INTO " + ToTable.FullName + " (" + colFields.GetList(false) + ") VALUES (";
-            UpdateSqlStub = "UPDATE " + ToTable.FullName + " SET ";
-            CountSqlStub = "SELECT COUNT(*) AS Total FROM " + ToTable.FullName;
-
-            while (fromReader.Read())
+            using (OleDbDataReader fromReader = FromTable.Connection.ExecuteReader(selectString, CommandBehavior.SequentialAccess, Timeout))
             {
-                if (UseBulkInsert)
+                InsertSqlStub = "INSERT INTO " + ToTable.FullName + " (" + colFields.GetList(false) + ") VALUES (";
+                UpdateSqlStub = "UPDATE " + ToTable.FullName + " SET ";
+                CountSqlStub = "SELECT COUNT(*) AS Total FROM " + ToTable.FullName;
+
+                while (fromReader.Read())
                 {
-                    // Handle creating bulk insert file data for each row...
-                    BulkInsertRow = new StringBuilder();
-                    AddedFirstInsert = false;
-
-                    // Get all field data to create row for bulk insert
-                    foreach (Field fld in ToTable.Fields)
+                    if (UseBulkInsert)
                     {
-                        try
+                        // Handle creating bulk insert file data for each row...
+                        BulkInsertRow = new StringBuilder();
+                        AddedFirstInsert = false;
+
+                        // Get all field data to create row for bulk insert
+                        foreach (Field fld in ToTable.Fields)
                         {
-                            // Lookup field in common field list
-                            fldCommon = colFields[fld.Name];
-                            if ((fldCommon != null))
+                            try
                             {
-                                // Found it, so use it...
-                                fldCommon.Value = fromReader[fld.Name];
-                            }
-                            else
-                            {
-                                // Otherwise just use existing destination field
-                                fldCommon = fld;
-                                fldCommon.Value = "";
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            fldCommon.Value = "";
-                            RaiseEvent_SqlFailure("Failed to get field value for [" + tblSource.Name + "." + fldCommon.Name + "]", ex);
-                        }
-
-                        // Get translated auto-inc value for field if possible...
-                        fldCommon.Value = DereferenceValue(tblSource, fldCommon.Name, fldCommon.Value);
-
-                        // Get field value
-                        strValue = Convert.ToString(Common.NotNull(fldCommon.Value)).Trim();
-
-                        // We manually parse data type here instead of using SqlEncodedValue because data inserted
-                        // into bulk insert file doesn't need Sql encoding...
-                        switch (fldCommon.Type)
-                        {
-                            case OleDbType.Boolean:
-                                if (strValue.Length > 0)
+                                // Lookup field in common field list
+                                fldCommon = colFields[fld.Name];
+                                if ((fldCommon != null))
                                 {
-                                    int tempValue;
-                                    if (int.TryParse(strValue, out tempValue)) //if (Information.IsNumeric(strValue))
+                                    // Found it, so use it...
+                                    fldCommon.Value = fromReader[fld.Name];
+                                }
+                                else
+                                {
+                                    // Otherwise just use existing destination field
+                                    fldCommon = fld;
+                                    fldCommon.Value = "";
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                fldCommon.Value = "";
+                                RaiseEvent_SqlFailure("Failed to get field value for [" + tblSource.Name + "." + fldCommon.Name + "]", ex);
+                            }
+
+                            // Get translated auto-inc value for field if possible...
+                            fldCommon.Value = DereferenceValue(tblSource, fldCommon.Name, fldCommon.Value);
+
+                            // Get field value
+                            strValue = Convert.ToString(Common.NotNull(fldCommon.Value)).Trim();
+
+                            // We manually parse data type here instead of using SqlEncodedValue because data inserted
+                            // into bulk insert file doesn't need Sql encoding...
+                            switch (fldCommon.Type)
+                            {
+                                case OleDbType.Boolean:
+                                    if (strValue.Length > 0)
                                     {
-                                        if (Convert.ToInt32(tempValue) == 0)
+                                        int tempValue;
+                                        if (int.TryParse(strValue, out tempValue)) //if (Information.IsNumeric(strValue))
                                         {
-                                            strValue = "0";
+                                            if (Convert.ToInt32(tempValue) == 0)
+                                            {
+                                                strValue = "0";
+                                            }
+                                            else
+                                            {
+                                                strValue = "1";
+                                            }
                                         }
-                                        else
+                                        else if (Convert.ToBoolean(strValue))
                                         {
                                             strValue = "1";
                                         }
-                                    }
-                                    else if (Convert.ToBoolean(strValue))
-                                    {
-                                        strValue = "1";
-                                    }
-                                    else
-                                    {
-                                        switch (strValue.Substring(0, 1).ToUpper())
+                                        else
                                         {
-                                            case "Y":
-                                            case "T":
-                                                strValue = "1";
-                                                break;
-                                            case "N":
-                                            case "F":
-                                                strValue = "0";
-                                                break;
-                                            default:
-                                                strValue = "0";
-                                                break;
+                                            switch (strValue.Substring(0, 1).ToUpper())
+                                            {
+                                                case "Y":
+                                                case "T":
+                                                    strValue = "1";
+                                                    break;
+                                                case "N":
+                                                case "F":
+                                                    strValue = "0";
+                                                    break;
+                                                default:
+                                                    strValue = "0";
+                                                    break;
+                                            }
                                         }
                                     }
-                                }
-                                break;
-                            case OleDbType.DBTimeStamp:
-                            case OleDbType.DBDate:
-                            case OleDbType.Date:
-                                if (strValue.Length > 0)
-                                {
-                                    DateTime tempValue;
-                                    if (DateTime.TryParse(strValue, out tempValue)) //if (Information.IsDate(strValue))
+                                    break;
+                                case OleDbType.DBTimeStamp:
+                                case OleDbType.DBDate:
+                                case OleDbType.Date:
+                                    if (strValue.Length > 0)
                                     {
-                                        strValue = tempValue.ToString("MM/dd/yyyy HH:mm:ss");
-                                        //strValue = Strings.Format((DateTime)strValue, "MM/dd/yyyy HH:mm:ss");
+                                        DateTime tempValue;
+                                        if (DateTime.TryParse(strValue, out tempValue)) //if (Information.IsDate(strValue))
+                                        {
+                                            strValue = tempValue.ToString("MM/dd/yyyy HH:mm:ss");
+                                            //strValue = Strings.Format((DateTime)strValue, "MM/dd/yyyy HH:mm:ss");
+                                        }
                                     }
-                                }
-                                break;
-                            case OleDbType.DBTime:
-                                if (strValue.Length > 0)
-                                {
-                                    DateTime tempValue;
-                                    if (DateTime.TryParse(strValue, out tempValue)) //if (Information.IsDate(strValue))
+                                    break;
+                                case OleDbType.DBTime:
+                                    if (strValue.Length > 0)
                                     {
-                                        strValue = tempValue.ToString("HH:mm:ss");
-                                        //Strings.Format((DateTime)strValue, "HH:mm:ss");
+                                        DateTime tempValue;
+                                        if (DateTime.TryParse(strValue, out tempValue)) //if (Information.IsDate(strValue))
+                                        {
+                                            strValue = tempValue.ToString("HH:mm:ss");
+                                            //Strings.Format((DateTime)strValue, "HH:mm:ss");
+                                        }
                                     }
-                                }
-                                break;
-                        }
-
-                        // Make sure field value does not contain field terminator or row terminator
-                        strValue = strValue.Replace(FieldTerminator, m_delimeterReplacement);
-                        strValue = strValue.Replace(RowTerminator, m_delimeterReplacement);
-
-                        // Construct bulk insert row
-                        if (AddedFirstInsert)
-                        {
-                            BulkInsertRow.Append(FieldTerminator);
-                        }
-                        else
-                        {
-                            AddedFirstInsert = true;
-                        }
-                        BulkInsertRow.Append(strValue);
-                    }
-
-                    BulkInsertRow.Append(RowTerminator);
-
-                    // Add new row to temporary bulk insert file
-                    bytDataRow = m_bulkInsertEncoding.GetBytes(BulkInsertRow.ToString());
-                    fsBulkInsert.Write(bytDataRow, 0, bytDataRow.Length);
-                }
-                else
-                {
-                    // Handle creating Sql for inserts or updates for each row...
-                    InsertSql = new StringBuilder(InsertSqlStub);
-                    UpdateSql = new StringBuilder(UpdateSqlStub);
-                    CountSql = new StringBuilder(CountSqlStub);
-                    WhereSql = new StringBuilder();
-                    AddedFirstInsert = false;
-                    AddedFirstUpdate = false;
-
-                    // Coerce all field data into proper Sql formats
-                    foreach (Field fld in colFields)
-                    {
-                        try
-                        {
-                            fld.Value = fromReader[fld.Name];
-                        }
-                        catch (Exception ex)
-                        {
-                            fld.Value = "";
-                            RaiseEvent_SqlFailure("Failed to get field value for [" + tblSource.Name + "." + fld.Name + "]", ex);
-                        }
-
-                        // Get translated auto-inc value for field if necessary...
-                        fld.Value = DereferenceValue(tblSource, fld.Name, fld.Value);
-
-                        // We don't attempt to insert values into auto-inc fields
-                        if (fld.AutoIncrement)
-                        {
-                            if ((fldAutoInc != null))
-                            {
-                                // Even if database supports multiple autoinc fields, we can only support automatic
-                                // ID translation for one because the identity Sql can only return one value...
-                                if (String.Compare(fld.Name, fldAutoInc.Name) == 0) //, CompareMethod.Text) == 0)
-                                {
-                                    // Track original autoinc value
-                                    fldAutoInc.Value = fld.Value;
-                                }
+                                    break;
                             }
-                        }
-                        else
-                        {
-                            // Get Sql encoded field value
-                            strValue = fld.SqlEncodedValue;
 
-                            // Construct Sql statements
+                            // Make sure field value does not contain field terminator or row terminator
+                            strValue = strValue.Replace(FieldTerminator, m_delimeterReplacement);
+                            strValue = strValue.Replace(RowTerminator, m_delimeterReplacement);
+
+                            // Construct bulk insert row
                             if (AddedFirstInsert)
                             {
-                                InsertSql.Append(", ");
+                                BulkInsertRow.Append(FieldTerminator);
                             }
                             else
                             {
                                 AddedFirstInsert = true;
                             }
-                            InsertSql.Append(strValue);
-
-                            // Check to see if this is a key field
-                            fldLookup = tblSource.Fields[fld.Name];
-                            if ((fldLookup != null))
-                            {
-                                IsPrimary = fldLookup.IsPrimaryKey;
-                            }
-                            else
-                            {
-                                IsPrimary = false;
-                            }
-
-                            if (String.Compare(strValue, "NULL") != 0)//(Strings.StrComp(strValue, "NULL", CompareMethod.Text) != 0)
-                            {
-                                if (IsPrimary)
-                                {
-                                    if (WhereSql.Length == 0)
-                                    {
-                                        WhereSql.Append(" WHERE ");
-                                    }
-                                    else
-                                    {
-                                        WhereSql.Append(" AND ");
-                                    }
-
-                                    WhereSql.Append("[");
-                                    WhereSql.Append(fld.Name);
-                                    WhereSql.Append("] = ");
-                                    WhereSql.Append(strValue);
-                                }
-                                else
-                                {
-                                    if (AddedFirstUpdate)
-                                    {
-                                        UpdateSql.Append(", ");
-                                    }
-                                    else
-                                    {
-                                        AddedFirstUpdate = true;
-                                    }
-
-                                    UpdateSql.Append("[");
-                                    UpdateSql.Append(fld.Name);
-                                    UpdateSql.Append("] = ");
-                                    UpdateSql.Append(strValue);
-                                }
-                            }
+                            BulkInsertRow.Append(strValue);
                         }
-                    }
 
-                    InsertSql.Append(")");
+                        BulkInsertRow.Append(RowTerminator);
 
-                    if ((fldAutoInc != null) | WhereSql.Length == 0)
-                    {
-                        // For tables with autoinc fields that are referenced by foreign keys or
-                        // tables that have no primary key fields defined, we can only do inserts...
-                        try
-                        {
-                            // Insert record into destination table
-                            if (AddedFirstInsert | (fldAutoInc != null))
-                            {
-                                // Added check to preserve ID number for auto-inc fields
-                                if (!skipKeyValuePreservation && m_preservePrimaryKeyValue && fldAutoInc != null)
-                                {
-                                    //Commented Auto increment field for Primary key because if field is auto increment but not primary key then still need to preserve value before it insert to table
-                                    //if (ToTable.Fields[fldAutoInc.Name].IsPrimaryKey)
-                                    //{
-                                    //if (ToTable.Name.ToString().ToUpper().Trim() == "Device".ToUpper())
-                                    //{
-                                    //Check Record Count for destination table before insert and auto increment field value
-
-                                    OleDbCommand oCMD = ToTable.Connection.CreateCommand();
-                                    oCMD.CommandText = "SELECT MAX(" + fldAutoInc.Name + ") from " + ToTable.Name;
-                                    oCMD.CommandTimeout = Timeout;
-                                    oCMD.CommandType = CommandType.Text;
-
-                                    int ToTableRowCount = int.Parse(Common.NotNull(oCMD.ExecuteScalar(), "0")) + 1;
-                                    int SourceTablePrimaryFldValue = int.Parse(Common.NotNull(fldAutoInc.Value, "0"));
-
-                                    for (int i = ToTableRowCount; i < SourceTablePrimaryFldValue; i++)
-                                    {
-                                        // Insert record into destination table upto Identity Field Value
-                                        ToTable.Connection.ExecuteNonQuery(InsertSql.ToString(), Timeout);
-                                        int currentIdentityValue = int.Parse(Common.NotNull(ToTable.Connection.ExecuteScalar(ToTable.IdentitySql, Timeout), "0"));
-
-                                        // Delete record which was just inserted
-                                        ToTable.Connection.ExecuteNonQuery("DELETE FROM " + ToTable.Name + " WHERE " + fldAutoInc.Name + "=" + currentIdentityValue, Timeout);
-                                    }
-
-                                    //}
-                                    //}
-                                    //else
-                                    //{
-                                    //    //Just reset my auto increment number for Measuremnt Table Point ID currently because it is very importent field in system to keep value
-                                    //    OleDbCommand oCMD = ToTable.Connection.CreateCommand();
-                                    //    oCMD.CommandText = "SELECT MAX(" + fldAutoInc.Name + ") from " + ToTable.Name;
-                                    //    oCMD.CommandTimeout = Timeout;
-                                    //    oCMD.CommandType = CommandType.Text;
-                                    //    int ToTableRowCount = int.Parse(Common.NotNull(oCMD.ExecuteScalar(), "0")) + 1;
-                                    //    int SourceTablePrimaryFldValue = int.Parse(Common.NotNull(fldAutoInc.Value, "0"));
-                                    //    for (int i = ToTableRowCount; i < SourceTablePrimaryFldValue; i++)
-                                    //    {
-                                    //        // Insert record into destination table upto Identity Field Value
-                                    //        ToTable.Connection.ExecuteNonQuery(InsertSql.ToString(), Timeout);
-                                    //        int currentIdentityValue = int.Parse(Common.NotNull(ToTable.Connection.ExecuteScalar(ToTable.IdentitySql, Timeout), "0"));
-                                    //        //Delete record which is just inserted
-                                    //        ToTable.Connection.ExecuteNonQuery("DELETE FROM " + ToTable.Name + " WHERE " + fldAutoInc.Name + "=" + currentIdentityValue, Timeout);
-                                    //        //RaiseEvent_SqlFailure(ToTable.Name, new Exception("Data value set to table " + ToTable.Name + " for field " + fldAutoInc.Name));
-                                    //    }
-                                    //}
-                                }
-                                // Insert record into destination table
-                                ToTable.Connection.ExecuteNonQuery(InsertSql.ToString(), Timeout);
-                            }
-                            // Save new destination autoinc value
-                            if ((fldAutoInc != null))
-                            {
-                                try
-                                {
-                                    fldAutoInc.AutoIncrementTranslations.Add(Convert.ToString(fldAutoInc.Value), ToTable.Connection.ExecuteScalar(ToTable.IdentitySql, Timeout));
-                                }
-                                catch (Exception ex)
-                                {
-                                    RaiseEvent_SqlFailure(tblSource.IdentitySql, ex);
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            RaiseEvent_SqlFailure(InsertSql.ToString(), ex);
-                        }
+                        // Add new row to temporary bulk insert file
+                        bytDataRow = m_bulkInsertEncoding.GetBytes(BulkInsertRow.ToString());
+                        fsBulkInsert.Write(bytDataRow, 0, bytDataRow.Length);
                     }
                     else
                     {
-                        // Add where criteria to Sql count statement
-                        CountSql.Append(WhereSql.ToString());
+                        // Handle creating Sql for inserts or updates for each row...
+                        InsertSql = new StringBuilder(InsertSqlStub);
+                        UpdateSql = new StringBuilder(UpdateSqlStub);
+                        CountSql = new StringBuilder(CountSqlStub);
+                        WhereSql = new StringBuilder();
+                        AddedFirstInsert = false;
+                        AddedFirstUpdate = false;
 
-                        // Make sure record doesn't already exist
-                        try
+                        // Coerce all field data into proper Sql formats
+                        foreach (Field fld in colFields)
                         {
-                            // If record already exists due to triggers or other means we must update it instead of inserting it
-                            OleDbCommand oCMD = ToTable.Connection.CreateCommand();
-                            oCMD.CommandText = CountSql.ToString();
-                            oCMD.CommandTimeout = Timeout;
-                            oCMD.CommandType = CommandType.Text;
-                            //if (Common.NotNull(ToTable.Connection.ExecuteScalar(CountSql.ToString(), Timeout), "0") > 0) {
-                            if (int.Parse(Common.NotNull(oCMD.ExecuteScalar(), "0")) > 0)
+                            try
                             {
-                                // Add where criteria to Sql update statement
-                                UpdateSql.Append(WhereSql.ToString());
+                                fld.Value = fromReader[fld.Name];
+                            }
+                            catch (Exception ex)
+                            {
+                                fld.Value = "";
+                                RaiseEvent_SqlFailure("Failed to get field value for [" + tblSource.Name + "." + fld.Name + "]", ex);
+                            }
 
-                                try
+                            // Get translated auto-inc value for field if necessary...
+                            fld.Value = DereferenceValue(tblSource, fld.Name, fld.Value);
+
+                            // We don't attempt to insert values into auto-inc fields
+                            if (fld.AutoIncrement)
+                            {
+                                if ((fldAutoInc != null))
                                 {
-                                    // Update record in destination table
-                                    if (AddedFirstUpdate)
-                                        ToTable.Connection.ExecuteNonQuery(UpdateSql.ToString(), Timeout);
-                                }
-                                catch (Exception ex)
-                                {
-                                    RaiseEvent_SqlFailure(UpdateSql.ToString(), ex);
+                                    // Even if database supports multiple autoinc fields, we can only support automatic
+                                    // ID translation for one because the identity Sql can only return one value...
+                                    if (String.Compare(fld.Name, fldAutoInc.Name) == 0) //, CompareMethod.Text) == 0)
+                                    {
+                                        // Track original autoinc value
+                                        fldAutoInc.Value = fld.Value;
+                                    }
                                 }
                             }
                             else
                             {
-                                try
+                                // Get Sql encoded field value
+                                strValue = fld.SqlEncodedValue;
+
+                                // Construct Sql statements
+                                if (AddedFirstInsert)
                                 {
-                                    // Insert record into destination table
-                                    if (AddedFirstInsert)
-                                        ToTable.Connection.ExecuteNonQuery(InsertSql.ToString(), Timeout);
+                                    InsertSql.Append(", ");
                                 }
-                                catch (Exception ex)
+                                else
                                 {
-                                    RaiseEvent_SqlFailure(InsertSql.ToString(), ex);
+                                    AddedFirstInsert = true;
+                                }
+                                InsertSql.Append(strValue);
+
+                                // Check to see if this is a key field
+                                fldLookup = tblSource.Fields[fld.Name];
+                                if ((fldLookup != null))
+                                {
+                                    IsPrimary = fldLookup.IsPrimaryKey;
+                                }
+                                else
+                                {
+                                    IsPrimary = false;
+                                }
+
+                                if (String.Compare(strValue, "NULL") != 0)//(Strings.StrComp(strValue, "NULL", CompareMethod.Text) != 0)
+                                {
+                                    if (IsPrimary)
+                                    {
+                                        if (WhereSql.Length == 0)
+                                        {
+                                            WhereSql.Append(" WHERE ");
+                                        }
+                                        else
+                                        {
+                                            WhereSql.Append(" AND ");
+                                        }
+
+                                        WhereSql.Append("[");
+                                        WhereSql.Append(fld.Name);
+                                        WhereSql.Append("] = ");
+                                        WhereSql.Append(strValue);
+                                    }
+                                    else
+                                    {
+                                        if (AddedFirstUpdate)
+                                        {
+                                            UpdateSql.Append(", ");
+                                        }
+                                        else
+                                        {
+                                            AddedFirstUpdate = true;
+                                        }
+
+                                        UpdateSql.Append("[");
+                                        UpdateSql.Append(fld.Name);
+                                        UpdateSql.Append("] = ");
+                                        UpdateSql.Append(strValue);
+                                    }
                                 }
                             }
                         }
-                        catch (Exception ex)
+
+                        InsertSql.Append(")");
+
+                        if ((fldAutoInc != null) | WhereSql.Length == 0)
                         {
-                            RaiseEvent_SqlFailure(CountSql.ToString(), ex);
+                            // For tables with autoinc fields that are referenced by foreign keys or
+                            // tables that have no primary key fields defined, we can only do inserts...
+                            try
+                            {
+                                // Insert record into destination table
+                                if (AddedFirstInsert | (fldAutoInc != null))
+                                {
+                                    // Added check to preserve ID number for auto-inc fields
+                                    if (!skipKeyValuePreservation && m_preservePrimaryKeyValue && fldAutoInc != null)
+                                    {
+                                        //Commented Auto increment field for Primary key because if field is auto increment but not primary key then still need to preserve value before it insert to table
+                                        //if (ToTable.Fields[fldAutoInc.Name].IsPrimaryKey)
+                                        //{
+                                        //if (ToTable.Name.ToString().ToUpper().Trim() == "Device".ToUpper())
+                                        //{
+                                        //Check Record Count for destination table before insert and auto increment field value
+
+                                        OleDbCommand oCMD = ToTable.Connection.CreateCommand();
+                                        oCMD.CommandText = "SELECT MAX(" + fldAutoInc.Name + ") from " + ToTable.Name;
+                                        oCMD.CommandTimeout = Timeout;
+                                        oCMD.CommandType = CommandType.Text;
+
+                                        int ToTableRowCount = int.Parse(Common.NotNull(oCMD.ExecuteScalar(), "0")) + 1;
+                                        int SourceTablePrimaryFldValue = int.Parse(Common.NotNull(fldAutoInc.Value, "0"));
+
+                                        for (int i = ToTableRowCount; i < SourceTablePrimaryFldValue; i++)
+                                        {
+                                            // Insert record into destination table upto Identity Field Value
+                                            ToTable.Connection.ExecuteNonQuery(InsertSql.ToString(), Timeout);
+                                            int currentIdentityValue = int.Parse(Common.NotNull(ToTable.Connection.ExecuteScalar(ToTable.IdentitySql, Timeout), "0"));
+
+                                            // Delete record which was just inserted
+                                            ToTable.Connection.ExecuteNonQuery("DELETE FROM " + ToTable.Name + " WHERE " + fldAutoInc.Name + "=" + currentIdentityValue, Timeout);
+                                        }
+
+                                        //}
+                                        //}
+                                        //else
+                                        //{
+                                        //    //Just reset my auto increment number for Measuremnt Table Point ID currently because it is very importent field in system to keep value
+                                        //    OleDbCommand oCMD = ToTable.Connection.CreateCommand();
+                                        //    oCMD.CommandText = "SELECT MAX(" + fldAutoInc.Name + ") from " + ToTable.Name;
+                                        //    oCMD.CommandTimeout = Timeout;
+                                        //    oCMD.CommandType = CommandType.Text;
+                                        //    int ToTableRowCount = int.Parse(Common.NotNull(oCMD.ExecuteScalar(), "0")) + 1;
+                                        //    int SourceTablePrimaryFldValue = int.Parse(Common.NotNull(fldAutoInc.Value, "0"));
+                                        //    for (int i = ToTableRowCount; i < SourceTablePrimaryFldValue; i++)
+                                        //    {
+                                        //        // Insert record into destination table upto Identity Field Value
+                                        //        ToTable.Connection.ExecuteNonQuery(InsertSql.ToString(), Timeout);
+                                        //        int currentIdentityValue = int.Parse(Common.NotNull(ToTable.Connection.ExecuteScalar(ToTable.IdentitySql, Timeout), "0"));
+                                        //        //Delete record which is just inserted
+                                        //        ToTable.Connection.ExecuteNonQuery("DELETE FROM " + ToTable.Name + " WHERE " + fldAutoInc.Name + "=" + currentIdentityValue, Timeout);
+                                        //        //RaiseEvent_SqlFailure(ToTable.Name, new Exception("Data value set to table " + ToTable.Name + " for field " + fldAutoInc.Name));
+                                        //    }
+                                        //}
+                                    }
+                                    // Insert record into destination table
+                                    ToTable.Connection.ExecuteNonQuery(InsertSql.ToString(), Timeout);
+                                }
+                                // Save new destination autoinc value
+                                if ((fldAutoInc != null))
+                                {
+                                    try
+                                    {
+                                        fldAutoInc.AutoIncrementTranslations.Add(Convert.ToString(fldAutoInc.Value), ToTable.Connection.ExecuteScalar(ToTable.IdentitySql, Timeout));
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        RaiseEvent_SqlFailure(tblSource.IdentitySql, ex);
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                RaiseEvent_SqlFailure(InsertSql.ToString(), ex);
+                            }
                         }
+                        else
+                        {
+                            // Add where criteria to Sql count statement
+                            CountSql.Append(WhereSql.ToString());
+
+                            // Make sure record doesn't already exist
+                            try
+                            {
+                                // If record already exists due to triggers or other means we must update it instead of inserting it
+                                OleDbCommand oCMD = ToTable.Connection.CreateCommand();
+                                oCMD.CommandText = CountSql.ToString();
+                                oCMD.CommandTimeout = Timeout;
+                                oCMD.CommandType = CommandType.Text;
+                                //if (Common.NotNull(ToTable.Connection.ExecuteScalar(CountSql.ToString(), Timeout), "0") > 0) {
+                                if (int.Parse(Common.NotNull(oCMD.ExecuteScalar(), "0")) > 0)
+                                {
+                                    // Add where criteria to Sql update statement
+                                    UpdateSql.Append(WhereSql.ToString());
+
+                                    try
+                                    {
+                                        // Update record in destination table
+                                        if (AddedFirstUpdate)
+                                            ToTable.Connection.ExecuteNonQuery(UpdateSql.ToString(), Timeout);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        RaiseEvent_SqlFailure(UpdateSql.ToString(), ex);
+                                    }
+                                }
+                                else
+                                {
+                                    try
+                                    {
+                                        // Insert record into destination table
+                                        if (AddedFirstInsert)
+                                            ToTable.Connection.ExecuteNonQuery(InsertSql.ToString(), Timeout);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        RaiseEvent_SqlFailure(InsertSql.ToString(), ex);
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                RaiseEvent_SqlFailure(CountSql.ToString(), ex);
+                            }
+                        }
+                    }
+
+                    ProgressIndex += 1;
+                    intOverallProgress += 1;
+                    //Raise event to check status of each row 
+                    RaiseEvent_RowProgress(FromTable.Name, ProgressIndex, Total);
+
+                    if (ProgressIndex % RowReportInterval == 0)
+                    {
+                        RaiseEvent_RowProgress(FromTable.Name, ProgressIndex, Total);
+                        RaiseEvent_OverallProgress((int)intOverallProgress, (int)intOverallTotal);
                     }
                 }
 
-                ProgressIndex += 1;
-                intOverallProgress += 1;
-                //Raise event to check status of each row 
-                RaiseEvent_RowProgress(FromTable.Name, ProgressIndex, Total);
-
-                if (ProgressIndex % RowReportInterval == 0)
-                {
-                    RaiseEvent_RowProgress(FromTable.Name, ProgressIndex, Total);
-                    RaiseEvent_OverallProgress((int)intOverallProgress, (int)intOverallTotal);
-                }
+                fromReader.Close();
             }
-
-            fromReader.Close();
 
             if (UseBulkInsert & (fsBulkInsert != null))
             {

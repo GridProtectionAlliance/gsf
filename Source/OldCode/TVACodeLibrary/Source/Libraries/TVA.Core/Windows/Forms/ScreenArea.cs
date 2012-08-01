@@ -502,16 +502,17 @@ namespace TVA.Windows.Forms
         public static Bitmap Capture(Rectangle captureArea, ImageFormat imageFormat)
         {
             // Create a blank image of the specified size.
-            Bitmap screenCaptureImage = new Bitmap(captureArea.Width, captureArea.Height);
-
-            using (Graphics screenCaptureGraphics = Graphics.FromImage(screenCaptureImage))
+            using (Bitmap screenCaptureImage = new Bitmap(captureArea.Width, captureArea.Height))
             {
-                // Copy the area of the screen to the blank image.
-                screenCaptureGraphics.CopyFromScreen(captureArea.X, captureArea.Y, 0, 0, captureArea.Size);
-            }
+                using (Graphics screenCaptureGraphics = Graphics.FromImage(screenCaptureImage))
+                {
+                    // Copy the area of the screen to the blank image.
+                    screenCaptureGraphics.CopyFromScreen(captureArea.X, captureArea.Y, 0, 0, captureArea.Size);
+                }
 
-            // We'll return the captured screenshot in the specified image format.
-            return screenCaptureImage.ConvertTo(imageFormat, true);
+                // We'll return the captured screenshot in the specified image format.
+                return screenCaptureImage.ConvertTo(imageFormat, true);
+            }
         }
     }
 }

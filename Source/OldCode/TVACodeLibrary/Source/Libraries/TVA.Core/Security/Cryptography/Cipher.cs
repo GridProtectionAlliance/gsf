@@ -1086,19 +1086,19 @@ namespace TVA.Security.Cryptography
         /// <param name="progressHandler">Optional delegate to handle progress updates for encrypting large files.</param>
         public static void EncryptFile(string sourceFileName, string destinationFileName, string password, CipherStrength strength, Action<ProcessProgress<long>> progressHandler)
         {
-            FileStream sourceFileStream = File.Open(sourceFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-            FileStream destFileStream = File.Create(destinationFileName);
+            using (FileStream sourceFileStream = File.Open(sourceFileName, FileMode.Open, FileAccess.Read, FileShare.Read), destFileStream = File.Create(destinationFileName))
+            {
+                if (string.IsNullOrEmpty(password))
+                    throw new ArgumentNullException("password");
 
-            if (string.IsNullOrEmpty(password))
-                throw new ArgumentNullException("password");
+                byte[][] keyIV = s_keyIVCache.GetCryptoKeyIV(password, (int)strength);
 
-            byte[][] keyIV = s_keyIVCache.GetCryptoKeyIV(password, (int)strength);
+                sourceFileStream.Encrypt(destFileStream, keyIV[KeyIndex], keyIV[IVIndex], strength, progressHandler);
 
-            sourceFileStream.Encrypt(destFileStream, keyIV[KeyIndex], keyIV[IVIndex], strength, progressHandler);
-
-            destFileStream.Flush();
-            destFileStream.Close();
-            sourceFileStream.Close();
+                destFileStream.Flush();
+                destFileStream.Close();
+                sourceFileStream.Close();
+            }
         }
 
         /// <summary>
@@ -1302,19 +1302,19 @@ namespace TVA.Security.Cryptography
         /// <param name="progressHandler">Optional delegate to handle progress updates for decrypting large files.</param>
         public static void DecryptFile(string sourceFileName, string destinationFileName, string password, CipherStrength strength, Action<ProcessProgress<long>> progressHandler)
         {
-            FileStream sourceFileStream = File.Open(sourceFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-            FileStream destFileStream = File.Create(destinationFileName);
+            using (FileStream sourceFileStream = File.Open(sourceFileName, FileMode.Open, FileAccess.Read, FileShare.Read), destFileStream = File.Create(destinationFileName))
+            {
+                if (string.IsNullOrEmpty(password))
+                    throw new ArgumentNullException("password");
 
-            if (string.IsNullOrEmpty(password))
-                throw new ArgumentNullException("password");
+                byte[][] keyIV = s_keyIVCache.GetCryptoKeyIV(password, (int)strength);
 
-            byte[][] keyIV = s_keyIVCache.GetCryptoKeyIV(password, (int)strength);
+                sourceFileStream.Decrypt(destFileStream, keyIV[KeyIndex], keyIV[IVIndex], strength, progressHandler);
 
-            sourceFileStream.Decrypt(destFileStream, keyIV[KeyIndex], keyIV[IVIndex], strength, progressHandler);
-
-            destFileStream.Flush();
-            destFileStream.Close();
-            sourceFileStream.Close();
+                destFileStream.Flush();
+                destFileStream.Close();
+                sourceFileStream.Close();
+            }
         }
     }
 }

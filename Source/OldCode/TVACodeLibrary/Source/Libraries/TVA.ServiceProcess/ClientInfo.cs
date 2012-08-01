@@ -301,6 +301,7 @@ namespace TVA.ServiceProcess
             else
                 m_clientUser = new GenericPrincipal(new GenericIdentity(UserInfo.CurrentUserID), new string[] { });
 
+            // TODO: Must validate that SSL is enabled before sending unencrypted username/password across the wire.
             // Initialize user credentials.
             if (parent == null || string.IsNullOrEmpty(parent.Username) || string.IsNullOrEmpty(parent.Password))
                 m_clientUserCredentials = string.Empty;

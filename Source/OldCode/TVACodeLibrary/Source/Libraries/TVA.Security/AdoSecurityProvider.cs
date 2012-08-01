@@ -443,7 +443,11 @@ namespace TVA.Security
                         return false;
 
                     query = database.ParameterizedQueryString("SELECT ID, Name, Password, FirstName, LastName, Phone, Email, LockedOut, UseADAuthentication, ChangePasswordOn, CreatedOn FROM UserAccount WHERE Name = {0}", "name");
-                    userDataTable.Load(dbConnection.ExecuteReader(query, UserData.Username));
+
+                    using (IDataReader reader = dbConnection.ExecuteReader(query, UserData.Username))
+                    {
+                        userDataTable.Load(reader);
+                    }
 
                     if (userDataTable.Rows.Count <= 0)
                     {
@@ -507,7 +511,11 @@ namespace TVA.Security
 
                     // Load explicitly assigned groups
                     query = database.ParameterizedQueryString("SELECT SecurityGroupID, SecurityGroupName, SecurityGroupDescription FROM SecurityGroupUserAccountDetail WHERE UserName = {0}", "name");
-                    userGroupDataTable.Load(dbConnection.ExecuteReader(query, UserData.Username));
+
+                    using (IDataReader reader = dbConnection.ExecuteReader(query, UserData.Username))
+                    {
+                        userGroupDataTable.Load(reader);
+                    }
 
                     foreach (DataRow group in userGroupDataTable.Rows)
                     {
@@ -526,14 +534,26 @@ namespace TVA.Security
                     query = database.ParameterizedQueryString("SELECT ApplicationRoleID, ApplicationRoleName, ApplicationRoleDescription FROM AppRoleSecurityGroupDetail WHERE SecurityGroupName = {0}", "groupName");
                     foreach (string group in UserData.Groups)
                     {
-                        userRoleDataTable.Load(dbConnection.ExecuteReader(query, group));
+                        using (IDataReader reader = dbConnection.ExecuteReader(query, group))
+                        {
+                            userRoleDataTable.Load(reader);
+                        }
                     }
 
                     // Load explicitly assigned roles
                     query = database.ParameterizedQueryString("SELECT ApplicationRoleID, ApplicationRoleName, ApplicationRoleDescription FROM AppRoleUserAccountDetail WHERE UserName = {0}", "name");
-                    userRoleDataTable.Load(dbConnection.ExecuteReader(query, UserData.Username));
+
+                    using (IDataReader reader = dbConnection.ExecuteReader(query, UserData.Username))
+                    {
+                        userRoleDataTable.Load(reader);
+                    }
+
                     query = database.ParameterizedQueryString("SELECT AppRoleSecurityGroupDetail.ApplicationRoleID AS ApplicationRoleID, AppRoleSecurityGroupDetail.ApplicationRoleName AS ApplicationRoleName, AppRoleSecurityGroupDetail.ApplicationRoleDescription AS ApplicationRoleDescription FROM AppRoleSecurityGroupDetail, SecurityGroupUserAccountDetail WHERE AppRoleSecurityGroupDetail.SecurityGroupID = SecurityGroupUserAccountDetail.SecurityGroupID AND SecurityGroupUserAccountDetail.UserName = {0}", "name");
-                    userRoleDataTable.Load(dbConnection.ExecuteReader(query, UserData.Username));
+
+                    using (IDataReader reader = dbConnection.ExecuteReader(query, UserData.Username))
+                    {
+                        userRoleDataTable.Load(reader);
+                    }
 
                     foreach (DataRow role in userRoleDataTable.Rows)
                     {

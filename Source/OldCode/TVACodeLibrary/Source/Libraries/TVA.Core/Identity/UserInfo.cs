@@ -965,8 +965,10 @@ namespace TVA.Identity
 
                         foreach (object localGroup in (IEnumerable)localGroups)
                         {
-                            DirectoryEntry groupEntry = new DirectoryEntry(localGroup);
-                            groups.Add(m_domain + "\\" + groupEntry.Name);
+                            using (DirectoryEntry groupEntry = new DirectoryEntry(localGroup))
+                            {
+                                groups.Add(m_domain + "\\" + groupEntry.Name);
+                            }
                         }
                     }
                     else
@@ -1333,10 +1335,7 @@ namespace TVA.Identity
                     currentContext = ImpersonatePrivilegedAccount();
 
                     // Initialize the Active Directory searcher object
-                    DirectorySearcher searcher = CreateDirectorySearcher();
-
-                    // Get user's directory entry for active directory interactions
-                    using (searcher)
+                    using (DirectorySearcher searcher = CreateDirectorySearcher())
                     {
                         searcher.Filter = "(SAMAccountName=" + m_username + ")";
                         SearchResult result = searcher.FindOne();

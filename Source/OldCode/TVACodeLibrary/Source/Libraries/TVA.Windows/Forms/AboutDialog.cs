@@ -345,7 +345,12 @@ namespace TVA.Windows.Forms
         public void SetCompanyLogo(Stream logoStream)
         {
             if (logoStream != null)
-                PictureBoxLogo.Image = new System.Drawing.Bitmap(logoStream);
+            {
+                using (Image img = PictureBoxLogo.Image)
+                {
+                    PictureBoxLogo.Image = new System.Drawing.Bitmap(logoStream);
+                }
+            }
         }
 
         /// <summary>
