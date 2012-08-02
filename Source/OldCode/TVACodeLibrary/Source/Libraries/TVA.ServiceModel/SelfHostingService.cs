@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -41,6 +42,9 @@
 //  11/29/2011 - Pinal C. Patel
 //       Modified InitializeServiceHost() to not use a random port number for the service host address
 //       so that setting up security on the address is possible.
+//  08/02/2012 - J. Ritchie Carroll
+//       Added cross-domain access support for Silverlight and Flash application using self hosted
+//       web services (enables access to clientaccesspolicy.xml and crossdomain.xml).
 //
 //*******************************************************************************************************
 
@@ -260,9 +264,29 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Policy;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -270,6 +294,7 @@ using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Description;
 using System.ServiceModel.Web;
+using System.Text;
 using System.Text.RegularExpressions;
 using TVA.Adapters;
 using TVA.Configuration;
@@ -378,7 +403,7 @@ namespace TVA.ServiceModel
     /// ]]>
     /// </code>
     /// </example>
-    public class SelfHostingService : Adapter, ISelfHostingService
+    public class SelfHostingService : Adapter, ISelfHostingService, IPolicyRetriever
     {
         #region [ Members ]
 
@@ -411,6 +436,8 @@ namespace TVA.ServiceModel
         private bool m_singleton;
         private string m_securityPolicy;
         private bool m_publishMetadata;
+        private bool m_allowCrossDomainAccess;
+        private string m_allowedDomainList;
         private bool m_disposed;
         private bool m_initialized;
         private ServiceHost m_serviceHost;
@@ -427,6 +454,8 @@ namespace TVA.ServiceModel
         {
             Type type = this.GetType();
             m_contract = type.Namespace + ".I" + type.Name + ", " + type.AssemblyQualifiedName.Split(',')[1].Trim();
+            m_allowCrossDomainAccess = false;
+            m_allowedDomainList = "*";
         }
 
         /// <summary>
@@ -553,6 +582,39 @@ namespace TVA.ServiceModel
         }
 
         /// <summary>
+        /// Gets or sets flag that indicates if web services will enable cross-domain access for Silverlight and Flash applications. 
+        /// </summary>
+        public bool AllowCrossDomainAccess
+        {
+            get
+            {
+                return m_allowCrossDomainAccess;
+            }
+            set
+            {
+                m_allowCrossDomainAccess = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets comma separated list of allowed domains when <see cref="AllowCrossDomainAccess"/> is <c>true</c>. Use * for domain wildcards, e.g., *.consoto.com.
+        /// </summary>
+        /// <remarks>
+        /// To allow all domains just set this property to "*".
+        /// </remarks>
+        public string AllowedDomainList
+        {
+            get
+            {
+                return m_allowedDomainList;
+            }
+            set
+            {
+                m_allowedDomainList = value;
+            }
+        }
+
+        /// <summary>
         /// Gets the <see cref="WebServiceHost"/> hosting the web service.
         /// </summary>
         /// <remarks>
@@ -590,16 +652,21 @@ namespace TVA.ServiceModel
         public override void SaveSettings()
         {
             base.SaveSettings();
+
             if (PersistSettings)
             {
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+
                 settings["Endpoints", true].Update(m_endpoints);
                 settings["Contract", true].Update(m_contract);
                 settings["Singleton", true].Update(m_singleton);
                 settings["SecurityPolicy", true].Update(m_securityPolicy);
                 settings["PublishMetadata", true].Update(m_publishMetadata);
+                settings["AllowCrossDomainAccess", true].Update(m_allowCrossDomainAccess);
+                settings["AllowedDomainList", true].Update(m_allowedDomainList);
+
                 config.Save();
             }
         }
@@ -610,21 +677,28 @@ namespace TVA.ServiceModel
         public override void LoadSettings()
         {
             base.LoadSettings();
+
             if (PersistSettings)
             {
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+
                 settings.Add("Endpoints", m_endpoints, "Semicolon delimited list of URIs where the web service can be accessed.");
                 settings.Add("Contract", m_contract, "Assembly qualified name of the contract interface implemented by the web service.");
                 settings.Add("Singleton", m_singleton, "True if the web service is singleton; otherwise False.");
                 settings.Add("SecurityPolicy", m_securityPolicy, "Assembly qualified name of the authorization policy to be used for securing the web service.");
                 settings.Add("PublishMetadata", m_publishMetadata, "True if the web service metadata is to be published at all the endpoints; otherwise False.");
+                settings.Add("AllowCrossDomainAccess", m_allowCrossDomainAccess, "True to allow Silverlight and Flash cross-domain access to the web service.");
+                settings.Add("AllowedDomainList", m_allowedDomainList, "Comma separated list of domain names for Silverlight and Flash cross-domain access to use when allowCrossDomainAccess is true. Use * for domain wildcards, e.g., *.consoto.com.");
+
                 Endpoints = settings["Endpoints"].ValueAs(m_endpoints);
                 Contract = settings["Contract"].ValueAs(m_contract);
                 Singleton = settings["Singleton"].ValueAs(m_singleton);
                 SecurityPolicy = settings["SecurityPolicy"].ValueAs(m_securityPolicy);
                 PublishMetadata = settings["PublishMetadata"].ValueAs(m_publishMetadata);
+                AllowCrossDomainAccess = settings["AllowCrossDomainAccess"].ValueAs(m_allowCrossDomainAccess);
+                AllowedDomainList = settings["AllowedDomainList"].ValueAs(m_allowedDomainList);
             }
         }
 
@@ -679,6 +753,7 @@ namespace TVA.ServiceModel
             {
                 // Initialize service host.
                 string serviceUri = GetServiceAddress();
+
                 if (m_singleton)
                     m_serviceHost = new ServiceHost(this, new Uri(serviceUri));
                 else
@@ -755,6 +830,10 @@ namespace TVA.ServiceModel
                     }
                 }
 
+                // Enable cross domain access.
+                if (m_allowCrossDomainAccess)
+                    m_serviceHost.AddServiceEndpoint(typeof(IPolicyRetriever), new WebHttpBinding(), "").Behaviors.Add(new WebHttpBehavior());
+
                 // Allow for customization.
                 OnServiceHostCreated();
 
@@ -762,6 +841,69 @@ namespace TVA.ServiceModel
                 m_serviceHost.Open();
                 OnServiceHostStarted();
             }
+        }
+
+        // Converts a string of data to a UTF8 stream using "application/xml" as the content type
+        private Stream StringToStream(string result)
+        {
+            WebOperationContext.Current.OutgoingResponse.ContentType = "application/xml";
+            return new MemoryStream(Encoding.UTF8.GetBytes(result));
+        }
+
+        /// <summary>
+        /// Gets policy stream for Silverlight applications.
+        /// </summary>
+        /// <returns>Stream containing clientaccesspolicy.xml.</returns>
+        public Stream GetSilverlightPolicy()
+        {
+            if (m_allowCrossDomainAccess)
+            {
+                const string result = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n" +
+                    "<access-policy>\r\n" +
+                    "  <cross-domain-access>\r\n" +
+                    "    <policy>\r\n" +
+                    "      <allow-from http-request-headers=\"*\">\r\n" +
+                    "        <domain uri=\"{0}\"/>\r\n" +
+                    "      </allow-from>\r\n" +
+                    "      <grant-to>\r\n" +
+                    "        <resource path=\"/\" include-subpaths=\"true\"/>\r\n" +
+                    "      </grant-to>\r\n" +
+                    "      </policy>\r\n" +
+                    "    </cross-domain-access>\r\n" +
+                    "</access-policy>";
+
+                return StringToStream(string.Format(result, m_allowedDomainList));
+            }
+
+            return StringToStream("");
+        }
+
+        /// <summary>
+        /// Gets policy stream for Flash applications.
+        /// </summary>
+        /// <returns>Stream containing crossdomain.xml.</returns>
+        public Stream GetFlashPolicy()
+        {
+            if (m_allowCrossDomainAccess)
+            {
+                const string result = "<?xml version=\"1.0\"?>\r\n" +
+                    "<!DOCTYPE cross-domain-policy SYSTEM \"http://www.macromedia.com/xml/dtds/cross-domain-policy.dtd\">\r\n" +
+                    "<cross-domain-policy>\r\n{0}</cross-domain-policy>";
+
+                const string allowAccessTag = "  <allow-access-from domain=\"{0}\" to-ports=\"*\" />\r\n";
+
+                StringBuilder allowedDomains = new StringBuilder();
+                string[] domains = m_allowedDomainList.ToNonNullString("*").Split(',');
+
+                foreach (string domain in domains)
+                {
+                    allowedDomains.AppendFormat(allowAccessTag, domain);
+                }
+
+                return StringToStream(string.Format(result, allowedDomains));
+            }
+
+            return StringToStream("");
         }
 
         /// <summary>
