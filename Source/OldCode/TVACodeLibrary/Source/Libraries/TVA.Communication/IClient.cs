@@ -390,6 +390,15 @@ namespace TVA.Communication
         /// <summary>
         /// Gets or sets the size of the buffer used by the client for receiving data from the server.
         /// </summary>
+        int SendBufferSize
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the size of the buffer used by the client for receiving data from the server.
+        /// </summary>
         int ReceiveBufferSize
         {
             get;

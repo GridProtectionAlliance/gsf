@@ -277,6 +277,7 @@
 #endregion
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Net.Security;
@@ -364,6 +365,17 @@ namespace TVA.Communication
     {
         #region [ Members ]
 
+        // Nested Types
+
+        private class TcpClientPayload
+        {
+            public byte[] Data;
+            public int Offset;
+            public int Length;
+
+            public ManualResetEventSlim WaitHandle;
+        }
+
         // Constants
 
         /// <summary>
@@ -387,6 +399,7 @@ namespace TVA.Communication
         public const string DefaultConnectionString = "Server=localhost:8888";
 
         // Fields
+        private BlockingCollection<TcpClientPayload> m_sendQueue;
         private bool m_payloadAware;
         private byte[] m_payloadMarker;
         private bool m_integratedSecurity;
@@ -396,14 +409,16 @@ namespace TVA.Communication
         private TransportProvider<Socket> m_tcpClient;
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectWaitHandle;
-        private object m_connectLock;
-        private ReusableObjectPool<SocketAsyncEventArgs> m_socketArgsPool; 
-        private bool m_disposed;
 
+        private SocketAsyncEventArgs m_connectArgs;
+        private SocketAsyncEventArgs m_receiveArgs;
+        private SocketAsyncEventArgs m_sendArgs;
         private EventHandler<SocketAsyncEventArgs> m_connectHandler;
         private EventHandler<SocketAsyncEventArgs> m_sendHandler;
         private EventHandler<SocketAsyncEventArgs> m_receivePayloadAwareHandler;
         private EventHandler<SocketAsyncEventArgs> m_receivePayloadUnawareHandler;
+
+        private bool m_disposed;
 
         #endregion
 
@@ -424,18 +439,17 @@ namespace TVA.Communication
         public TcpClient(string connectString)
             : base(TransportProtocol.Tcp, connectString)
         {
+            m_sendQueue = new BlockingCollection<TcpClientPayload>();
             m_payloadAware = DefaultPayloadAware;
             m_payloadMarker = Payload.DefaultMarker;
             m_integratedSecurity = DefaultIntegratedSecurity;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_tcpClient = new TransportProvider<Socket>();
-            m_connectLock = new object();
-            m_socketArgsPool = new ReusableObjectPool<SocketAsyncEventArgs>();
 
-            m_connectHandler = (o, args) => ProcessConnect(args);
-            m_sendHandler = (o, args) => ProcessSend(args);
-            m_receivePayloadAwareHandler = (o, args) => ProcessReceivePayloadAware(args);
-            m_receivePayloadUnawareHandler = (o, args) => ProcessReceivePayloadUnaware(args);
+            m_connectHandler = (o, args) => ProcessConnect();
+            m_sendHandler = (o, args) => ProcessSend();
+            m_receivePayloadAwareHandler = (o, args) => ProcessReceivePayloadAware();
+            m_receivePayloadUnawareHandler = (o, args) => ProcessReceivePayloadUnaware();
         }
 
         /// <summary>
@@ -652,16 +666,13 @@ namespace TVA.Communication
         /// </summary>
         public override void Disconnect()
         {
-            lock (m_connectLock)
+            if (CurrentState != ClientState.Disconnected)
             {
-                if (CurrentState != ClientState.Disconnected)
-                {
-                    if (m_tcpClient.Provider.Connected)
-                        m_tcpClient.Provider.Disconnect(false);
+                if (m_tcpClient.Provider.Connected)
+                    m_tcpClient.Provider.Disconnect(false);
 
-                    m_tcpClient.Reset();
-                    OnConnectionTerminated();
-                }
+                m_tcpClient.Reset();
+                OnConnectionTerminated();
             }
         }
 
@@ -672,14 +683,15 @@ namespace TVA.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         public override WaitHandle ConnectAsync()
         {
-            lock (m_connectLock)
+            if (CurrentState == ClientState.Disconnected)
             {
-                if (CurrentState == ClientState.Disconnected)
+                try
                 {
                     if (m_connectWaitHandle == null)
                         m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
 
                     OnConnectionAttempt();
+                    m_connectWaitHandle.Reset();
 
                     // Create client socket to establish presence
                     if (m_tcpClient.Provider == null)
@@ -688,23 +700,26 @@ namespace TVA.Communication
                     Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
 
                     // Begin asynchronous connect operation and return wait handle for the asynchronous operation
-                    SocketAsyncEventArgs args = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
+                    using (SocketAsyncEventArgs connectArgs = m_connectArgs)
+                    {
+                        m_connectArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
+                    }
 
-                    args.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
-                    args.SetBuffer(null, 0, 0);
-                    args.SocketFlags = SocketFlags.None;
-                    args.Completed += m_connectHandler;
+                    m_connectArgs.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
+                    m_connectArgs.Completed += m_connectHandler;
 
-                    if (!m_tcpClient.Provider.ConnectAsync(args))
-                        ThreadPool.QueueUserWorkItem(state => ProcessConnect((SocketAsyncEventArgs)state), args);
+                    if (!m_tcpClient.Provider.ConnectAsync(m_connectArgs))
+                        ThreadPool.QueueUserWorkItem(state => ProcessConnect());
 
                     return m_connectWaitHandle;
                 }
-                else
+                catch (Exception ex)
                 {
-                    throw new InvalidOperationException("Client is currently not disconnected");
+                    OnConnectionException(ex);
                 }
             }
+
+            return null;
         }
 
         /// <summary>
@@ -722,7 +737,35 @@ namespace TVA.Communication
                     {
                         // This will be done only when the object is disposed by calling Dispose().
                         if ((object)m_connectWaitHandle != null)
+                        {
+                            m_connectWaitHandle.Set();
                             m_connectWaitHandle.Dispose();
+                            m_connectWaitHandle = null;
+                        }
+
+                        if ((object)m_sendQueue != null)
+                        {
+                            m_sendQueue.Dispose();
+                            m_sendQueue = null;
+                        }
+
+                        if ((object)m_connectArgs != null)
+                        {
+                            m_connectArgs.Dispose();
+                            m_connectArgs = null;
+                        }
+
+                        if ((object)m_sendArgs != null)
+                        {
+                            m_sendArgs.Dispose();
+                            m_sendArgs = null;
+                        }
+
+                        if ((object)m_receiveArgs != null)
+                        {
+                            m_receiveArgs.Dispose();
+                            m_receiveArgs = null;
+                        }
                     }
                 }
                 finally
@@ -776,31 +819,41 @@ namespace TVA.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         protected override WaitHandle SendDataAsync(byte[] data, int offset, int length)
         {
-            SocketAsyncEventArgs args;
+            TcpClientPayload payload;
             ManualResetEventSlim handle;
 
             // Prepare for payload-aware transmission.
             if (m_payloadAware)
                 Payload.AddHeader(ref data, ref offset, ref length, m_payloadMarker);
 
-            // Send payload to the client asynchronously.
-            args = m_socketArgsPool.TakeObject();
+            // Create payload and wait handle.
+            payload = ReusableObjectPool<TcpClientPayload>.Default.TakeObject();
             handle = ReusableObjectPool<ManualResetEventSlim>.Default.TakeObject();
 
-            args.SetBuffer(data, offset, length);
-            args.SocketFlags = SocketFlags.None;
-            args.UserToken = handle;
-            args.Completed += m_sendHandler;
+            payload.Data = data;
+            payload.Offset = offset;
+            payload.Length = length;
+            payload.WaitHandle = handle;
             handle.Reset();
 
-            if (!m_tcpClient.Provider.SendAsync(args))
-                ThreadPool.QueueUserWorkItem(state => ProcessSend((SocketAsyncEventArgs)state), args);
+            // Queue payload for sending.
+            m_sendQueue.Add(payload);
 
             // Notify that the send operation has started.
             OnSendDataStart();
 
             // Return the async handle that can be used to wait for the async operation to complete.
             return handle.WaitHandle;
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ClientBase.SendDataException"/> event.
+        /// </summary>
+        /// <param name="ex">Exception to send to <see cref="ClientBase.SendDataException"/> event.</param>
+        protected override void OnSendDataException(Exception ex)
+        {
+            if (CurrentState != ClientState.Disconnected)
+                base.OnSendDataException(ex);
         }
 
         /// <summary>
@@ -825,20 +878,15 @@ namespace TVA.Communication
         /// <summary>
         /// Callback method for asynchronous connect operation.
         /// </summary>
-        private void ProcessConnect(SocketAsyncEventArgs args)
+        private void ProcessConnect()
         {
             try
             {
-                // Replace the handler first thing so we know which
-                // handler is attached in case an error is thrown.
-                args.Completed -= m_connectHandler;
-                args.Completed += ReceiveHandler;
-
                 // Perform post-connect operations.
                 m_connectionAttempts++;
 
-                if (args.SocketError != SocketError.Success)
-                    throw new SocketException((int)args.SocketError);
+                if (m_connectArgs.SocketError != SocketError.Success)
+                    throw new SocketException((int)m_connectArgs.SocketError);
 
 #if !MONO
                 // Send current Windows credentials for authentication.
@@ -863,10 +911,27 @@ namespace TVA.Communication
                 }
 #endif
 
+                // Set up send and receive args.
+                using (SocketAsyncEventArgs sendArgs = m_sendArgs, receiveArgs = m_receiveArgs)
+                {
+                    m_sendArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
+                    m_receiveArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
+                }
+
+                m_tcpClient.SetSendBuffer(SendBufferSize);
+                m_sendArgs.SetBuffer(m_tcpClient.SendBuffer, 0, m_tcpClient.SendBufferSize);
+                m_sendArgs.Completed += m_sendHandler;
+                m_receiveArgs.Completed += ReceiveHandler;
+
+                // Initiate SendPayload thread.
+                SendPayloadAsync();
+
+                // Notify user of established connection.
                 m_connectWaitHandle.Set();
                 OnConnectionEstablished();
 
-                ReceivePayloadAsync(args);
+                // Set up send buffer and begin receiving.
+                ReceivePayloadAsync();
             }
             catch (SocketException ex)
             {
@@ -881,39 +946,113 @@ namespace TVA.Communication
                     }
                     catch
                     {
-                        TerminateConnection(args, false);
+                        TerminateConnection(false);
                     }
                 }
                 else
                 {
                     // For any other reason, clean-up as if the client was disconnected.
-                    TerminateConnection(args, false);
+                    TerminateConnection(false);
                 }
             }
             catch (Exception ex)
             {
                 // This is highly unlikely, but we must handle this situation just-in-case.
                 OnConnectionException(ex);
-                TerminateConnection(args, false);
+                TerminateConnection(false);
+            }
+        }
+
+        /// <summary>
+        /// Kicks off the send payload thread.
+        /// </summary>
+        private void SendPayloadAsync()
+        {
+            Thread sendPayloadThread = new Thread(SendPayload);
+            sendPayloadThread.IsBackground = true;
+            sendPayloadThread.Start();
+        }
+
+        /// <summary>
+        /// Loops waiting for payloads and sends them on the socket.
+        /// </summary>
+        private void SendPayload()
+        {
+            TcpClientPayload payload;
+            ManualResetEventSlim handle = null;
+
+            while (CurrentState != ClientState.Disconnected)
+            {
+                try
+                {
+                    if (m_sendQueue.TryTake(out payload, 1000))
+                    {
+                        try
+                        {
+                            // Get the handle for the send operation.
+                            handle = payload.WaitHandle;
+
+                            // Copy payload into send buffer.
+                            Buffer.BlockCopy(payload.Data, payload.Offset, m_tcpClient.SendBuffer, 0, payload.Length);
+
+                            // Set buffer and user token of send args.
+                            m_sendArgs.SetBuffer(0, payload.Length);
+                            m_sendArgs.UserToken = payload.WaitHandle;
+
+                            // Send data over socket.
+                            if (!m_tcpClient.Provider.SendAsync(m_sendArgs))
+                                ThreadPool.QueueUserWorkItem(state => ProcessSend());
+                        }
+                        finally
+                        {
+                            // Return used payload to the pool.
+                            payload.Data = null;
+                            payload.WaitHandle = null;
+                            ReusableObjectPool<TcpClientPayload>.Default.ReturnObject(payload);
+                        }
+
+                        // Wait for send operation to complete
+                        // before the next send attempt.
+                        handle.Wait();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    OnSendDataException(ex);
+                }
+                finally
+                {
+                    // Return the handle to the pool.
+                    if ((object)handle != null)
+                    {
+                        ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
+                        handle = null;
+                    }
+                }
             }
         }
 
         /// <summary>
         /// Callback method for asynchronous send operation.
         /// </summary>
-        private void ProcessSend(SocketAsyncEventArgs args)
+        private void ProcessSend()
         {
-            ManualResetEventSlim handle = (ManualResetEventSlim)args.UserToken;
+            ManualResetEventSlim handle;
 
             try
             {
                 // Send operation is complete.
+                handle = (ManualResetEventSlim)m_sendArgs.UserToken;
                 handle.Set();
 
-                if (args.SocketError != SocketError.Success)
-                    throw new SocketException((int)args.SocketError);
+                // Check for errors during send operation.
+                if (m_sendArgs.SocketError != SocketError.Success)
+                    throw new SocketException((int)m_sendArgs.SocketError);
 
-                m_tcpClient.Statistics.UpdateBytesSent(args.BytesTransferred);
+                // Update statistics and trigger callback.
+                m_tcpClient.Statistics.UpdateBytesSent(m_sendArgs.BytesTransferred);
+
+                // Trigger callback.
                 OnSendDataComplete();
             }
             catch (Exception ex)
@@ -921,18 +1060,12 @@ namespace TVA.Communication
                 // Send operation failed to complete.
                 OnSendDataException(ex);
             }
-            finally
-            {
-                args.Completed -= m_sendHandler;
-                m_socketArgsPool.ReturnObject(args);
-                ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
-            }
         }
 
         /// <summary>
         /// Initiate method for asynchronous receive operation of payload data.
         /// </summary>
-        private void ReceivePayloadAsync(SocketAsyncEventArgs args)
+        private void ReceivePayloadAsync()
         {
             // Initialize bytes received.
             m_tcpClient.BytesReceived = 0;
@@ -941,17 +1074,17 @@ namespace TVA.Communication
             if (m_payloadAware)
             {
                 // Set user token to indicate we are waiting for payload header.
-                args.UserToken = true;
+                m_receiveArgs.UserToken = true;
 
                 // Payload boundaries are to be preserved.
                 m_tcpClient.SetReceiveBuffer(m_payloadMarker.Length + Payload.LengthSegment);
-                ReceivePayloadAwareAsync(args);
+                ReceivePayloadAwareAsync(m_receiveArgs);
             }
             else
             {
                 // Payload boundaries are not to be preserved.
                 m_tcpClient.SetReceiveBuffer(ReceiveBufferSize);
-                ReceivePayloadUnawareAsync(args);
+                ReceivePayloadUnawareAsync(m_receiveArgs);
             }
         }
 
@@ -969,27 +1102,27 @@ namespace TVA.Communication
             args.SetBuffer(buffer, offset, length);
 
             if (!m_tcpClient.Provider.ReceiveAsync(args))
-                ThreadPool.QueueUserWorkItem(state => ProcessReceivePayloadAware((SocketAsyncEventArgs)state), args);
+                ThreadPool.QueueUserWorkItem(state => ProcessReceivePayloadAware());
         }
 
         /// <summary>
         /// Callback method for asynchronous receive operation of payload data in "payload-aware" mode.
         /// </summary>
-        private void ProcessReceivePayloadAware(SocketAsyncEventArgs args)
+        private void ProcessReceivePayloadAware()
         {
             try
             {
-                if (args.SocketError != SocketError.Success)
-                    throw new SocketException((int)args.SocketError);
+                if (m_receiveArgs.SocketError != SocketError.Success)
+                    throw new SocketException((int)m_receiveArgs.SocketError);
 
-                if (args.BytesTransferred == 0)
+                if (m_receiveArgs.BytesTransferred == 0)
                     throw new SocketException((int)SocketError.Disconnecting);
 
                 // Update statistics and bytes received.
-                m_tcpClient.Statistics.UpdateBytesReceived(args.BytesTransferred);
-                m_tcpClient.BytesReceived += args.BytesTransferred;
+                m_tcpClient.Statistics.UpdateBytesReceived(m_receiveArgs.BytesTransferred);
+                m_tcpClient.BytesReceived += m_receiveArgs.BytesTransferred;
 
-                if ((bool)args.UserToken)
+                if ((bool)m_receiveArgs.UserToken)
                 {
                     // We're waiting on the payload length, so we'll check if the received data has this information.
                     int payloadLength = Payload.ExtractLength(m_tcpClient.ReceiveBuffer, m_tcpClient.BytesReceived, m_payloadMarker);
@@ -1005,10 +1138,10 @@ namespace TVA.Communication
                     {
                         m_tcpClient.BytesReceived = 0;
                         m_tcpClient.SetReceiveBuffer(payloadLength);
-                        args.UserToken = false;
+                        m_receiveArgs.UserToken = false;
                     }
 
-                    ReceivePayloadAwareAsync(args);
+                    ReceivePayloadAwareAsync(m_receiveArgs);
                 }
                 else
                 {
@@ -1017,25 +1150,25 @@ namespace TVA.Communication
                     {
                         // We've received the entire payload.
                         OnReceiveDataComplete(m_tcpClient.ReceiveBuffer, m_tcpClient.BytesReceived);
-                        ReceivePayloadAsync(args);
+                        ReceivePayloadAsync();
                     }
                     else
                     {
                         // We've not yet received the entire payload.
-                        ReceivePayloadAwareAsync(args);
+                        ReceivePayloadAwareAsync(m_receiveArgs);
                     }
                 }
             }
             catch (ObjectDisposedException)
             {
                 // Make sure connection is terminated when client is disposed.
-                TerminateConnection(args, true);
+                TerminateConnection(true);
             }
             catch (SocketException ex)
             {
                 // Terminate connection when socket exception is encountered.
                 OnReceiveDataException(ex);
-                TerminateConnection(args, true);
+                TerminateConnection(true);
             }
             catch (Exception ex)
             {
@@ -1043,12 +1176,12 @@ namespace TVA.Communication
                 {
                     // For any other exception, notify and resume receive.
                     OnReceiveDataException(ex);
-                    ReceivePayloadAsync(args);
+                    ReceivePayloadAsync();
                 }
                 catch
                 {
                     // Terminate connection if resuming receiving fails.
-                    TerminateConnection(args, true);
+                    TerminateConnection(true);
                 }
             }
         }
@@ -1066,40 +1199,40 @@ namespace TVA.Communication
             args.SetBuffer(buffer, 0, length);
 
             if (!m_tcpClient.Provider.ReceiveAsync(args))
-                ThreadPool.QueueUserWorkItem(state => ProcessReceivePayloadUnaware((SocketAsyncEventArgs)state), args);
+                ThreadPool.QueueUserWorkItem(state => ProcessReceivePayloadUnaware());
         }
 
         /// <summary>
         /// Callback method for asynchronous receive operation of payload data in "payload-unaware" mode.
         /// </summary>
-        private void ProcessReceivePayloadUnaware(SocketAsyncEventArgs args)
+        private void ProcessReceivePayloadUnaware()
         {
             try
             {
-                if (args.SocketError != SocketError.Success)
-                    throw new SocketException((int)args.SocketError);
+                if (m_receiveArgs.SocketError != SocketError.Success)
+                    throw new SocketException((int)m_receiveArgs.SocketError);
 
-                if (args.BytesTransferred == 0)
+                if (m_receiveArgs.BytesTransferred == 0)
                     throw new SocketException((int)SocketError.Disconnecting);
 
                 // Update statistics and pointers.
-                m_tcpClient.Statistics.UpdateBytesReceived(args.BytesTransferred);
-                m_tcpClient.BytesReceived = args.BytesTransferred;
+                m_tcpClient.Statistics.UpdateBytesReceived(m_receiveArgs.BytesTransferred);
+                m_tcpClient.BytesReceived = m_receiveArgs.BytesTransferred;
 
                 // Notify of received data and resume receive operation.
                 OnReceiveDataComplete(m_tcpClient.ReceiveBuffer, m_tcpClient.BytesReceived);
-                ReceivePayloadUnawareAsync(args);
+                ReceivePayloadUnawareAsync(m_receiveArgs);
             }
             catch (ObjectDisposedException)
             {
                 // Make sure connection is terminated when client is disposed.
-                TerminateConnection(args, true);
+                TerminateConnection(true);
             }
             catch (SocketException ex)
             {
                 // Terminate connection when socket exception is encountered.
                 OnReceiveDataException(ex);
-                TerminateConnection(args, true);
+                TerminateConnection(true);
             }
             catch (Exception ex)
             {
@@ -1107,12 +1240,12 @@ namespace TVA.Communication
                 {
                     // For any other exception, notify and resume receive.
                     OnReceiveDataException(ex);
-                    ReceivePayloadAsync(args);
+                    ReceivePayloadAsync();
                 }
                 catch
                 {
                     // Terminate connection if resuming receiving fails.
-                    TerminateConnection(args, true);
+                    TerminateConnection(true);
                 }
             }
         }
@@ -1120,22 +1253,12 @@ namespace TVA.Communication
         /// <summary>
         /// Processes the termination of client.
         /// </summary>
-        private void TerminateConnection(SocketAsyncEventArgs args, bool raiseEvent)
+        private void TerminateConnection(bool raiseEvent)
         {
-            try
-            {
-                lock (m_connectLock)
-                {
-                    m_tcpClient.Reset();
-                }
+            if (raiseEvent)
+                OnConnectionTerminated();
 
-                if (raiseEvent)
-                    OnConnectionTerminated();
-            }
-            finally
-            {
-                args.Dispose();
-            }
+            m_tcpClient.Reset();
         }
 
         #endregion

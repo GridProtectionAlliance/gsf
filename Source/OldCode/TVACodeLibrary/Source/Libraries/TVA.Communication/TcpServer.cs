@@ -364,6 +364,23 @@ namespace TVA.Communication
     {
         #region [ Members ]
 
+        // Nested Types
+
+        private class TcpServerPayload
+        {
+            public byte[] Data;
+            public int Offset;
+            public int Length;
+
+            public ManualResetEventSlim WaitHandle;
+        }
+
+        private class TcpServerUserToken
+        {
+            public TransportProvider<Socket> Client;
+            public ManualResetEventSlim WaitHandle;
+        }
+
         // Constants
 
         /// <summary>
@@ -395,8 +412,8 @@ namespace TVA.Communication
         private Socket m_tcpServer;
         private SocketAsyncEventArgs m_acceptArgs;
         private ConcurrentDictionary<Guid, TransportProvider<Socket>> m_tcpClients;
+        private ConcurrentDictionary<Guid, BlockingCollection<TcpServerPayload>> m_sendQueues; 
         private Dictionary<string, string> m_configData;
-        private ReusableObjectPool<SocketAsyncEventArgs> m_socketArgsPool; 
 
         private EventHandler<SocketAsyncEventArgs> m_acceptHandler;
         private EventHandler<SocketAsyncEventArgs> m_sendHandler;
@@ -427,7 +444,7 @@ namespace TVA.Communication
             m_integratedSecurity = DefaultIntegratedSecurity;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_tcpClients = new ConcurrentDictionary<Guid, TransportProvider<Socket>>();
-            m_socketArgsPool = new ReusableObjectPool<SocketAsyncEventArgs>();
+            m_sendQueues = new ConcurrentDictionary<Guid, BlockingCollection<TcpServerPayload>>();
 
             m_acceptHandler = (sender, args) => ProcessAccept();
             m_sendHandler = (sender, args) => ProcessSend(args);
@@ -696,10 +713,6 @@ namespace TVA.Communication
                 // Notify that the server has been started successfully.
                 OnServerStarted();
             }
-            else
-            {
-                throw new InvalidOperationException("Server is currently running");
-            }
         }
 
         /// <summary>
@@ -709,8 +722,13 @@ namespace TVA.Communication
         /// <exception cref="InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
         public override void DisconnectOne(Guid clientID)
         {
-            Client(clientID).Reset();
+            TransportProvider<Socket> client = Client(clientID);
+
+            if ((object)client.Provider != null)
+                client.Provider.Disconnect(false);
+
             OnClientDisconnected(clientID);
+            client.Reset();
         }
 
         /// <summary>
@@ -759,37 +777,46 @@ namespace TVA.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         protected override WaitHandle SendDataToAsync(Guid clientID, byte[] data, int offset, int length)
         {
-            TransportProvider<Socket> tcpClient = Client(clientID);
-
-            SocketAsyncEventArgs args;
+            BlockingCollection<TcpServerPayload> sendQueue;
+            TcpServerPayload payload;
             ManualResetEventSlim handle;
-            EventArgs<TransportProvider<Socket>, ManualResetEventSlim> userToken;
+
+            if (!m_sendQueues.TryGetValue(clientID, out sendQueue))
+                throw new InvalidOperationException(string.Format("No client found for ID {0}.", clientID));
 
             // Prepare for payload-aware transmission.
             if (m_payloadAware)
                 Payload.AddHeader(ref data, ref offset, ref length, m_payloadMarker);
 
-            // Send payload to the client asynchronously.
-            args = m_socketArgsPool.TakeObject();
+            // Create payload and wait handle.
+            payload = ReusableObjectPool<TcpServerPayload>.Default.TakeObject();
             handle = ReusableObjectPool<ManualResetEventSlim>.Default.TakeObject();
-            userToken = ReusableObjectPool<EventArgs<TransportProvider<Socket>, ManualResetEventSlim>>.Default.TakeObject();
 
-            userToken.Argument1 = tcpClient;
-            userToken.Argument2 = handle;
-            args.SetBuffer(data, offset, length);
-            args.SocketFlags = SocketFlags.None;
-            args.UserToken = userToken;
-            args.Completed += m_sendHandler;
+            payload.Data = data;
+            payload.Offset = offset;
+            payload.Length = length;
+            payload.WaitHandle = handle;
             handle.Reset();
 
-            if (!tcpClient.Provider.SendAsync(args))
-                ThreadPool.QueueUserWorkItem(state => ProcessSend((SocketAsyncEventArgs)state), args);
+            // Queue payload for sending.
+            sendQueue.Add(payload);
 
             // Notify that the send operation has started.
-            OnSendClientDataStart(tcpClient.ID);
+            OnSendClientDataStart(clientID);
 
             // Return the async handle that can be used to wait for the async operation to complete.
             return handle.WaitHandle;
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ServerBase.SendClientDataException"/> event.
+        /// </summary>
+        /// <param name="clientID">ID of client to send to <see cref="ServerBase.SendClientDataException"/> event.</param>
+        /// <param name="ex">Exception to send to <see cref="ServerBase.SendClientDataException"/> event.</param>
+        protected override void OnSendClientDataException(Guid clientID, Exception ex)
+        {
+            if ((object)Client(clientID) != null || CurrentState != ServerState.NotRunning)
+                base.OnSendClientDataException(clientID, ex);
         }
 
         /// <summary>
@@ -799,7 +826,7 @@ namespace TVA.Communication
         /// <param name="ex">Exception to send to <see cref="ServerBase.ReceiveClientDataException"/> event.</param>
         protected virtual void OnReceiveClientDataException(Guid clientID, SocketException ex)
         {
-            if (ex.SocketErrorCode != SocketError.Disconnecting)
+            if ((object)Client(clientID) != null || ex.SocketErrorCode != SocketError.Disconnecting)
                 OnReceiveClientDataException(clientID, (Exception)ex);
         }
 
@@ -810,7 +837,7 @@ namespace TVA.Communication
         /// <param name="ex">Exception to send to <see cref="ServerBase.ReceiveClientDataException"/> event.</param>
         protected override void OnReceiveClientDataException(Guid clientID, Exception ex)
         {
-            if (CurrentState != ServerState.NotRunning)
+            if ((object)Client(clientID) != null || CurrentState != ServerState.NotRunning)
                 base.OnReceiveClientDataException(clientID, ex);
         }
 
@@ -887,6 +914,13 @@ namespace TVA.Communication
                 {
                     // We can proceed further with receiving data from the client.
                     m_tcpClients.TryAdd(client.ID, client);
+                    m_sendQueues.TryAdd(client.ID, new BlockingCollection<TcpServerPayload>());
+                    client.SetSendBuffer(SendBufferSize);
+
+                    // Initiate SendPayload thread so the
+                    // user can send data on the socket.
+                    SendPayloadAsync(client.ID);
+
                     OnClientConnected(client.ID);
 
                     if (!m_payloadAware)
@@ -921,14 +955,100 @@ namespace TVA.Communication
         }
 
         /// <summary>
+        /// Kicks off the send payload thread.
+        /// </summary>
+        private void SendPayloadAsync(Guid clientID)
+        {
+            Thread sendThread = new Thread(() => SendPayload(clientID));
+            sendThread.IsBackground = true;
+            sendThread.Start();
+        }
+
+        /// <summary>
+        /// Loops waiting for payloads and sends them on the socket.
+        /// </summary>
+        private void SendPayload(Guid clientID)
+        {
+            TransportProvider<Socket> client = Client(clientID);
+            TcpServerUserToken userToken = FastObjectFactory<TcpServerUserToken>.CreateObjectFunction();
+
+            BlockingCollection<TcpServerPayload> sendQueue;
+            SocketAsyncEventArgs args;
+            TcpServerPayload payload;
+            ManualResetEventSlim handle = null;
+
+            using (sendQueue = m_sendQueues[clientID])
+            {
+                using (args = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction())
+                {
+                    // Set up socket args.
+                    args.Completed += m_sendHandler;
+                    args.UserToken = userToken;
+                    args.SetBuffer(client.SendBuffer, 0, client.SendBufferSize);
+                    userToken.Client = client;
+
+                    while (CurrentState != ServerState.NotRunning)
+                    {
+                        try
+                        {
+                            if (sendQueue.TryTake(out payload, 1000))
+                            {
+                                try
+                                {
+                                    // Get the handle for the send operation.
+                                    handle = payload.WaitHandle;
+
+                                    // Copy payload into send buffer.
+                                    Buffer.BlockCopy(payload.Data, payload.Offset, client.SendBuffer, 0, payload.Length);
+
+                                    // Set buffer and user token of send args.
+                                    args.SetBuffer(0, payload.Length);
+                                    userToken.WaitHandle = handle;
+
+                                    // Send data over socket.
+                                    if (!client.Provider.SendAsync(args))
+                                        ThreadPool.QueueUserWorkItem(state => ProcessSend(args));
+                                }
+                                finally
+                                {
+                                    // Return used payload to the pool.
+                                    payload.Data = null;
+                                    payload.WaitHandle = null;
+                                    ReusableObjectPool<TcpServerPayload>.Default.ReturnObject(payload);
+                                }
+
+                                // Wait for send operation to complete
+                                // before the next send attempt.
+                                handle.Wait();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            OnSendClientDataException(client.ID, ex);
+                        }
+                        finally
+                        {
+                            // Return the handle to the pool.
+                            if ((object)handle != null)
+                            {
+                                ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
+                                handle = null;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Callback method for asynchronous send operation.
         /// </summary>
         private void ProcessSend(SocketAsyncEventArgs args)
         {
-            EventArgs<TransportProvider<Socket>, ManualResetEventSlim> userToken = (EventArgs<TransportProvider<Socket>, ManualResetEventSlim>)args.UserToken;
+            TcpServerUserToken userToken = (TcpServerUserToken)args.UserToken;
 
-            TransportProvider<Socket> client = userToken.Argument1;
-            ManualResetEventSlim handle = userToken.Argument2;
+            TransportProvider<Socket> client = userToken.Client;
+            ManualResetEventSlim handle = userToken.WaitHandle;
 
             try
             {
@@ -945,13 +1065,6 @@ namespace TVA.Communication
             {
                 // Send operation failed to complete.
                 OnSendClientDataException(client.ID, ex);
-            }
-            finally
-            {
-                args.Completed -= m_sendHandler;
-                m_socketArgsPool.ReturnObject(args);
-                ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
-                ReusableObjectPool<EventArgs<TransportProvider<Socket>, ManualResetEventSlim>>.Default.ReturnObject(userToken);
             }
         }
 
@@ -1152,12 +1265,11 @@ namespace TVA.Communication
         {
             try
             {
-                client.Reset();
-
                 if (raiseEvent)
                     OnClientDisconnected(client.ID);
 
                 m_tcpClients.TryRemove(client.ID, out client);
+                client.Reset();
             }
             finally
             {

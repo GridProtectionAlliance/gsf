@@ -375,12 +375,24 @@ namespace TVA.Communication
     {
         #region [ Members ]
 
-        // Constants
+        // Nested Types
 
-        /// <summary>
-        /// Specifies the default value for the <see cref="ServerBase.ReceiveBufferSize"/> property.
-        /// </summary>
-        public new const int DefaultReceiveBufferSize = 32768;
+        private class UdpServerPayload
+        {
+            public byte[] Data;
+            public int Offset;
+            public int Length;
+
+            public ManualResetEventSlim WaitHandle;
+        }
+
+        private class UdpServerUserToken
+        {
+            public TransportProvider<EndPoint> Client;
+            public ManualResetEventSlim WaitHandle;
+        }
+
+        // Constants
 
         /// <summary>
         /// Specifies the default value for the <see cref="AllowDualStackSocket"/> property.
@@ -401,10 +413,10 @@ namespace TVA.Communication
         private TransportProvider<Socket> m_udpServer;
         private SocketAsyncEventArgs m_receiveArgs;
         private ConcurrentDictionary<Guid, TransportProvider<EndPoint>> m_udpClients;
+        private ConcurrentDictionary<Guid, BlockingCollection<UdpServerPayload>> m_sendQueues;
         private IPStack m_ipStack;
         private bool m_allowDualStackSocket;
         private Dictionary<string, string> m_configData;
-        private ReusableObjectPool<SocketAsyncEventArgs> m_socketArgsPool; 
 
         private EventHandler<SocketAsyncEventArgs> m_sendHandler;
         private EventHandler<SocketAsyncEventArgs> m_receiveHandler;
@@ -428,10 +440,9 @@ namespace TVA.Communication
         public UdpServer(string configString)
             : base(TransportProtocol.Udp, configString)
         {
-            base.ReceiveBufferSize = DefaultReceiveBufferSize;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_udpClients = new ConcurrentDictionary<Guid, TransportProvider<EndPoint>>();
-            m_socketArgsPool = new ReusableObjectPool<SocketAsyncEventArgs>();
+            m_sendQueues = new ConcurrentDictionary<Guid, BlockingCollection<UdpServerPayload>>();
 
             m_sendHandler = (sender, args) => ProcessSend(args);
             m_receiveHandler = (sender, args) => ProcessReceive(args);
@@ -606,6 +617,7 @@ namespace TVA.Communication
                         {
                             TransportProvider<EndPoint> udpClient = new TransportProvider<EndPoint>();
                             udpClient.SetReceiveBuffer(ReceiveBufferSize);
+                            udpClient.SetSendBuffer(SendBufferSize);
                             udpClient.Provider = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
 
                             // If the IP specified for the client is a multicast IP, subscribe to the specified multicast group.
@@ -653,6 +665,8 @@ namespace TVA.Communication
                             }
 
                             m_udpClients.TryAdd(udpClient.ID, udpClient);
+                            m_sendQueues.TryAdd(udpClient.ID, new BlockingCollection<UdpServerPayload>());
+                            SendPayloadAsync(udpClient.ID);
                             OnClientConnected(udpClient.ID);
                         }
                     }
@@ -765,31 +779,25 @@ namespace TVA.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         protected override WaitHandle SendDataToAsync(Guid clientID, byte[] data, int offset, int length)
         {
-            SocketAsyncEventArgs args;
+            BlockingCollection<UdpServerPayload> sendQueue;
+            UdpServerPayload payload;
             ManualResetEventSlim handle;
-            EventArgs<Guid, ManualResetEventSlim> userToken;
-            TransportProvider<EndPoint> client;
-            
-            // Get the client object and write to the send buffer for that client.
-            client = Client(clientID);
-            client.WriteToSendBuffer(ref data, ref offset, length);
 
-            // Send payload to the client asynchronously.
-            args = m_socketArgsPool.TakeObject();
+            if (!m_sendQueues.TryGetValue(clientID, out sendQueue))
+                throw new InvalidOperationException(string.Format("No client found for ID {0}.", clientID));
+
+            // Create payload and wait handle.
+            payload = ReusableObjectPool<UdpServerPayload>.Default.TakeObject();
             handle = ReusableObjectPool<ManualResetEventSlim>.Default.TakeObject();
-            userToken = ReusableObjectPool<EventArgs<Guid, ManualResetEventSlim>>.Default.TakeObject();
 
-            userToken.Argument1 = clientID;
-            userToken.Argument2 = handle;
-            args.RemoteEndPoint = client.Provider;
-            args.SetBuffer(data, offset, length);
-            args.SocketFlags = SocketFlags.None;
-            args.UserToken = userToken;
-            args.Completed += m_sendHandler;
+            payload.Data = data;
+            payload.Offset = offset;
+            payload.Length = length;
+            payload.WaitHandle = handle;
             handle.Reset();
 
-            if (!m_udpServer.Provider.SendToAsync(args))
-                ThreadPool.QueueUserWorkItem(state => ProcessSend((SocketAsyncEventArgs)state), args);
+            // Queue payload for sending.
+            sendQueue.Add(payload);
 
             // Notify that the send operation has started.
             OnSendClientDataStart(clientID);
@@ -799,14 +807,123 @@ namespace TVA.Communication
         }
 
         /// <summary>
+        /// Raises the <see cref="ServerBase.SendClientDataException"/> event.
+        /// </summary>
+        /// <param name="clientID">ID of client to send to <see cref="ServerBase.SendClientDataException"/> event.</param>
+        /// <param name="ex">Exception to send to <see cref="ServerBase.SendClientDataException"/> event.</param>
+        protected override void OnSendClientDataException(Guid clientID, Exception ex)
+        {
+            if (CurrentState != ServerState.NotRunning)
+                base.OnSendClientDataException(clientID, ex);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ServerBase.ReceiveClientDataException"/> event.
+        /// </summary>
+        /// <param name="clientID">ID of client to send to <see cref="ServerBase.ReceiveClientDataException"/> event.</param>
+        /// <param name="ex">Exception to send to <see cref="ServerBase.ReceiveClientDataException"/> event.</param>
+        protected override void OnReceiveClientDataException(Guid clientID, Exception ex)
+        {
+            if (CurrentState != ServerState.NotRunning)
+                base.OnReceiveClientDataException(clientID, ex);
+        }
+
+        /// <summary>
+        /// Kicks off the send payload thread.
+        /// </summary>
+        private void SendPayloadAsync(Guid clientID)
+        {
+            Thread sendThread = new Thread(() => SendPayload(clientID));
+            sendThread.IsBackground = true;
+            sendThread.Start();
+        }
+
+        /// <summary>
+        /// Loops waiting for payloads and sends them on the socket.
+        /// </summary>
+        private void SendPayload(Guid clientID)
+        {
+            TransportProvider<EndPoint> client = Client(clientID);
+            UdpServerUserToken userToken = FastObjectFactory<UdpServerUserToken>.CreateObjectFunction();
+
+            BlockingCollection<UdpServerPayload> sendQueue;
+            SocketAsyncEventArgs args;
+            UdpServerPayload payload;
+            ManualResetEventSlim handle = null;
+
+            using (sendQueue = m_sendQueues[clientID])
+            {
+                using (args = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction())
+                {
+                    // Set up socket args.
+                    args.RemoteEndPoint = client.Provider;
+                    args.SetBuffer(client.SendBuffer, 0, client.SendBufferSize);
+                    args.UserToken = userToken;
+                    args.Completed += m_sendHandler;
+                    userToken.Client = client;
+
+                    while (CurrentState != ServerState.NotRunning)
+                    {
+                        try
+                        {
+                            if (sendQueue.TryTake(out payload, 1000))
+                            {
+                                try
+                                {
+                                    // Get the handle for the send operation.
+                                    handle = payload.WaitHandle;
+
+                                    // Copy payload into send buffer.
+                                    Buffer.BlockCopy(payload.Data, payload.Offset, client.SendBuffer, 0, payload.Length);
+
+                                    // Set buffer and user token of send args.
+                                    args.SetBuffer(0, payload.Length);
+                                    userToken.WaitHandle = handle;
+
+                                    // Send data over socket.
+                                    if (!m_udpServer.Provider.SendToAsync(args))
+                                        ThreadPool.QueueUserWorkItem(state => ProcessSend(args));
+                                }
+                                finally
+                                {
+                                    // Return used payload to the pool.
+                                    payload.Data = null;
+                                    payload.WaitHandle = null;
+                                    ReusableObjectPool<UdpServerPayload>.Default.ReturnObject(payload);
+                                }
+
+                                // Wait for send operation to complete
+                                // before the next send attempt.
+                                handle.Wait();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            OnSendClientDataException(client.ID, ex);
+                        }
+                        finally
+                        {
+                            // Return the handle to the pool.
+                            if ((object)handle != null)
+                            {
+                                ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
+                                handle = null;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Callback method for asynchronous send operation.
         /// </summary>
         private void ProcessSend(SocketAsyncEventArgs args)
         {
-            EventArgs<Guid, ManualResetEventSlim> userToken = (EventArgs<Guid, ManualResetEventSlim>)args.UserToken;
+            UdpServerUserToken userToken = (UdpServerUserToken)args.UserToken;
 
-            Guid clientID = userToken.Argument1;
-            ManualResetEventSlim handle = userToken.Argument2;
+            TransportProvider<EndPoint> client = userToken.Client;
+            ManualResetEventSlim handle = userToken.WaitHandle;
 
             try
             {
@@ -816,20 +933,13 @@ namespace TVA.Communication
                 if (args.SocketError != SocketError.Success)
                     throw new SocketException((int)args.SocketError);
 
-                Client(clientID).Statistics.UpdateBytesSent(args.BytesTransferred);
-                OnSendClientDataComplete(clientID);
+                client.Statistics.UpdateBytesSent(args.BytesTransferred);
+                OnSendClientDataComplete(client.ID);
             }
             catch (Exception ex)
             {
                 // Send operation failed to complete.
-                OnSendClientDataException(clientID, ex);
-            }
-            finally
-            {
-                args.Completed -= m_sendHandler;
-                m_socketArgsPool.ReturnObject(args);
-                ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
-                ReusableObjectPool<EventArgs<Guid, ManualResetEventSlim>>.Default.ReturnObject(userToken);
+                OnSendClientDataException(client.ID, ex);
             }
         }
 

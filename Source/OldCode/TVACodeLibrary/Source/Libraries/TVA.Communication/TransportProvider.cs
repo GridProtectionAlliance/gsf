@@ -267,10 +267,6 @@ namespace TVA.Communication
     {
         #region [ Members ]
 
-        // Constants
-
-        private const int SendBufferSize = 1048576;
-
         // Fields
 
         /// <summary>
@@ -300,8 +296,6 @@ namespace TVA.Communication
 
         // Internally managed I/O buffers
         private byte[] m_sendBuffer;
-        private int m_sendBufferOffset;
-
         private byte[] m_receiveBuffer;
         private int m_receiveBufferSize;
 
@@ -316,12 +310,36 @@ namespace TVA.Communication
         {
             ID = Guid.NewGuid();
             Statistics = new TransportStatistics();
-            m_sendBuffer = new byte[SendBufferSize];
         }
 
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets buffer used for sending data.
+        /// </summary>
+        /// <remarks>
+        /// Use <see cref="SetSendBuffer"/> to reset and/or establish send buffer size.
+        /// </remarks>
+        public byte[] SendBuffer
+        {
+            get
+            {
+                return m_sendBuffer;
+            }
+        }
+
+        /// <summary>
+        /// Gets send buffer requested size.
+        /// </summary>
+        public int SendBufferSize
+        {
+            get
+            {
+                return m_sendBuffer.Length;
+            }
+        }
 
         /// <summary>
         /// Gets buffer used for receiving data.
@@ -353,30 +371,14 @@ namespace TVA.Communication
         #region [ Methods ]
 
         /// <summary>
-        /// Writes data to the send buffer.
+        /// Establishes (or reestablishes) a send buffer of a given size.
         /// </summary>
-        /// <param name="data">The data to be written.</param>
-        /// <param name="offset">The offset into the given data buffer at which the data to be written starts.</param>
-        /// <param name="length">The amount of data to be written.</param>
-        /// <remarks>
-        /// After the data is written to the send buffer, the given byte array
-        /// is replaced by the send buffer and the given offset is replaced by
-        /// the offset into the send buffer where the written data starts.
-        /// </remarks>
-        public void WriteToSendBuffer(ref byte[] data, ref int offset, int length)
+        /// <param name="size">Desired minimum size of send buffer.</param>
+        /// <returns>New send buffer.</returns>
+        public byte[] SetSendBuffer(int size)
         {
-            data.ValidateParameters(offset, length);
-
-            if (length > SendBufferSize)
-                throw new ArgumentException("Not enough space in send buffer.", "length");
-
-            if (length > (SendBufferSize - m_sendBufferOffset))
-                m_sendBufferOffset = 0;
-
-            Buffer.BlockCopy(data, offset, m_sendBuffer, m_sendBufferOffset, length);
-            data = m_sendBuffer;
-            offset = m_sendBufferOffset;
-            m_sendBufferOffset += length;
+            m_sendBuffer = new byte[size];
+            return m_sendBuffer;
         }
 
         /// <summary>
@@ -386,14 +388,17 @@ namespace TVA.Communication
         /// <returns>New receive buffer.</returns>
         public byte[] SetReceiveBuffer(int size)
         {
-            if (m_receiveBuffer != null)
-                BufferPool.ReturnBuffer(m_receiveBuffer);
+            if (size != m_receiveBufferSize)
+            {
+                if (m_receiveBuffer != null)
+                    BufferPool.ReturnBuffer(m_receiveBuffer);
 
-            // Take a buffer from the pool of the desired size
-            m_receiveBuffer = BufferPool.TakeBuffer(size);
+                // Take a buffer from the pool of the desired size
+                m_receiveBuffer = BufferPool.TakeBuffer(size);
 
-            // The buffer returned may be bigger than the requested size, but only the specified size will be usable
-            m_receiveBufferSize = size;
+                // The buffer returned may be bigger than the requested size, but only the specified size will be usable
+                m_receiveBufferSize = size;
+            }
 
             return m_receiveBuffer;
         }
@@ -406,6 +411,7 @@ namespace TVA.Communication
             if (m_receiveBuffer != null)
                 BufferPool.ReturnBuffer(m_receiveBuffer);
             m_receiveBuffer = null;
+            m_sendBuffer = null;
 
             BytesReceived = -1;
 

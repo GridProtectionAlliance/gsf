@@ -314,9 +314,14 @@ namespace TVA.Communication
         public const int DefaultMaxConnectionAttempts = -1;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="SendBufferSize"/> property.
+        /// </summary>
+        public const int DefaultSendBufferSize = 32768;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="ReceiveBufferSize"/> property.
         /// </summary>
-        public const int DefaultReceiveBufferSize = 8192;
+        public const int DefaultReceiveBufferSize = 32768;
 
         /// <summary>
         /// Specifies the default value for the <see cref="PersistSettings"/> property.
@@ -433,6 +438,7 @@ namespace TVA.Communication
         // Fields
         private string m_connectionString;
         private int m_maxConnectionAttempts;
+        private int m_sendBufferSize;
         private int m_receiveBufferSize;
         private bool m_persistSettings;
         private string m_settingsCategory;
@@ -459,6 +465,7 @@ namespace TVA.Communication
             m_textEncoding = Encoding.ASCII;
             m_currentState = ClientState.Disconnected;
             m_maxConnectionAttempts = DefaultMaxConnectionAttempts;
+            m_sendBufferSize = DefaultSendBufferSize;
             m_receiveBufferSize = DefaultReceiveBufferSize;
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
@@ -528,6 +535,28 @@ namespace TVA.Communication
                     m_maxConnectionAttempts = -1;
                 else
                     m_maxConnectionAttempts = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the size of the buffer used by the client for sending data to the server.
+        /// </summary>
+        /// <exception cref="ArgumentException">The value being assigned is either zero or negative.</exception>
+        [Category("Data"),
+        DefaultValue(DefaultSendBufferSize),
+        Description("The size of the buffer used by the client for receiving data from the server.")]
+        public virtual int SendBufferSize
+        {
+            get
+            {
+                return m_sendBufferSize;
+            }
+            set
+            {
+                if (value < 1)
+                    throw new ArgumentException("Value cannot be zero or negative");
+
+                m_sendBufferSize = value;
             }
         }
 
@@ -849,6 +878,7 @@ namespace TVA.Communication
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 settings["ConnectionString", true].Update(m_connectionString);
                 settings["MaxConnectionAttempts", true].Update(m_maxConnectionAttempts);
+                settings["SendBufferSize", true].Update(m_sendBufferSize);
                 settings["ReceiveBufferSize", true].Update(m_receiveBufferSize);
                 config.Save();
             }
@@ -871,9 +901,11 @@ namespace TVA.Communication
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 settings.Add("ConnectionString", m_connectionString, "Data required by the client to connect to the server.");
                 settings.Add("MaxConnectionAttempts", m_maxConnectionAttempts, "Maximum number of times the client will attempt to connect to the server.");
+                settings.Add("SendBufferSize", m_sendBufferSize, "Size of the buffer used by the client for sending data from the server.");
                 settings.Add("ReceiveBufferSize", m_receiveBufferSize, "Size of the buffer used by the client for receiving data from the server.");
                 ConnectionString = settings["ConnectionString"].ValueAs(m_connectionString);
                 MaxConnectionAttempts = settings["MaxConnectionAttempts"].ValueAs(m_maxConnectionAttempts);
+                SendBufferSize = settings["SendBufferSize"].ValueAs(m_sendBufferSize);
                 ReceiveBufferSize = settings["ReceiveBufferSize"].ValueAs(m_receiveBufferSize);
             }
         }

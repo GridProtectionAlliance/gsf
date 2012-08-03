@@ -309,9 +309,14 @@ namespace TVA.Communication
         public const int DefaultMaxClientConnections = -1;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="SendBufferSize"/> property.
+        /// </summary>
+        public const int DefaultSendBufferSize = 32768;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="ReceiveBufferSize"/> property.
         /// </summary>
-        public const int DefaultReceiveBufferSize = 8192;
+        public const int DefaultReceiveBufferSize = 32768;
 
         /// <summary>
         /// Specifies the default value for the <see cref="PersistSettings"/> property.
@@ -455,6 +460,7 @@ namespace TVA.Communication
         // Fields
         private string m_configurationString;
         private int m_maxClientConnections;
+        private int m_sendBufferSize;
         private int m_receiveBufferSize;
         private bool m_persistSettings;
         private string m_settingsCategory;
@@ -483,6 +489,7 @@ namespace TVA.Communication
             m_textEncoding = Encoding.ASCII;
             m_currentState = ServerState.NotRunning;
             m_maxClientConnections = DefaultMaxClientConnections;
+            m_sendBufferSize = DefaultSendBufferSize;
             m_receiveBufferSize = DefaultReceiveBufferSize;
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
@@ -545,6 +552,28 @@ namespace TVA.Communication
                     m_maxClientConnections = -1;
                 else
                     m_maxClientConnections = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the size of the buffer used by the server for sending data to the clients.
+        /// </summary>
+        /// <exception cref="ArgumentException">The value being assigned is either zero or negative.</exception>
+        [Category("Data"),
+        DefaultValue(DefaultSendBufferSize),
+        Description("The size of the buffer used by the server for receiving data from the clients.")]
+        public virtual int SendBufferSize
+        {
+            get
+            {
+                return m_sendBufferSize;
+            }
+            set
+            {
+                if (value < 1)
+                    throw new ArgumentException("Value cannot be zero or negative");
+
+                m_sendBufferSize = value;
             }
         }
 
@@ -918,6 +947,7 @@ namespace TVA.Communication
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 settings["ConfigurationString", true].Update(m_configurationString);
                 settings["MaxClientConnections", true].Update(m_maxClientConnections);
+                settings["SendBufferSize", true].Update(m_sendBufferSize);
                 settings["ReceiveBufferSize", true].Update(m_receiveBufferSize);
                 config.Save();
             }
@@ -940,9 +970,11 @@ namespace TVA.Communication
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 settings.Add("ConfigurationString", m_configurationString, "Data required by the server to initialize.");
                 settings.Add("MaxClientConnections", m_maxClientConnections, "Maximum number of clients that can connect to the server.");
+                settings.Add("SendBufferSize", m_sendBufferSize, "Size of the buffer used by the server for sending data from the clients.");
                 settings.Add("ReceiveBufferSize", m_receiveBufferSize, "Size of the buffer used by the server for receiving data from the clients.");
                 ConfigurationString = settings["ConfigurationString"].ValueAs(m_configurationString);
                 MaxClientConnections = settings["MaxClientConnections"].ValueAs(m_maxClientConnections);
+                SendBufferSize = settings["SendBufferSize"].ValueAs(m_sendBufferSize);
                 ReceiveBufferSize = settings["ReceiveBufferSize"].ValueAs(m_receiveBufferSize);
             }
         }
