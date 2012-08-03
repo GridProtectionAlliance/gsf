@@ -289,9 +289,9 @@ namespace TVA.Historian.Exporters
         private void CommunicationServer_ClientConnected(object sender, EventArgs<Guid> e)
         {
             TcpServer server = (TcpServer)sender;
-            TransportProvider<Socket> client = server.Client(e.Argument);
+            TransportProvider<Socket> client;
 
-            if (client != null)
+            if (server.TryGetClient(e.Argument, out client))
             {
                 IPEndPoint serverEndPoint = (IPEndPoint)server.Server.LocalEndPoint;
                 IPEndPoint clientEndPoint = (IPEndPoint)client.Provider.RemoteEndPoint;
