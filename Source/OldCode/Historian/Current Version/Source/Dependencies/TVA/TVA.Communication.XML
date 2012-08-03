@@ -2945,11 +2945,12 @@
             <param name="clientID">ID of the client to be disconnected.</param>
             <exception cref="T:System.InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
         </member>
-        <member name="M:TVA.Communication.UdpServer.Client(System.Guid)">
+        <member name="M:TVA.Communication.UdpServer.TryGetClient(System.Guid,TVA.Communication.TransportProvider{System.Net.EndPoint}@)">
             <summary>
             Gets the <see cref="T:TVA.Communication.TransportProvider`1"/> object associated with the specified client ID.
             </summary>
             <param name="clientID">ID of the client.</param>
+            <param name="udpClient">The UDP client.</param>
             <returns>An <see cref="T:TVA.Communication.TransportProvider`1"/> object.</returns>
             <exception cref="T:System.InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
         </member>
@@ -3240,11 +3241,12 @@
             <param name="clientID">ID of the client to be disconnected.</param>
             <exception cref="T:System.InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
         </member>
-        <member name="M:TVA.Communication.TcpServer.Client(System.Guid)">
+        <member name="M:TVA.Communication.TcpServer.TryGetClient(System.Guid,TVA.Communication.TransportProvider{System.Net.Sockets.Socket}@)">
             <summary>
             Gets the <see cref="T:TVA.Communication.TransportProvider`1"/> object associated with the specified client ID.
             </summary>
             <param name="clientID">ID of the client.</param>
+            <param name="tcpClient">The TCP client.</param>
             <returns>An <see cref="T:TVA.Communication.TransportProvider`1"/> object.</returns>
             <exception cref="T:System.InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
         </member>
