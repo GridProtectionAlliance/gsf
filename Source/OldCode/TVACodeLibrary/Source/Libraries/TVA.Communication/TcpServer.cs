@@ -722,11 +722,12 @@ namespace TVA.Communication
         /// <exception cref="InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
         public override void DisconnectOne(Guid clientID)
         {
-            TransportProvider<Socket> client = Client(clientID);
+            TransportProvider<Socket> client;
 
-            if ((object)client.Provider != null)
-                client.Provider.Disconnect(false);
+            if (!TryGetClient(clientID, out client))
+                return;
 
+            client.Provider.Disconnect(false);
             OnClientDisconnected(clientID);
             client.Reset();
         }
@@ -735,16 +736,12 @@ namespace TVA.Communication
         /// Gets the <see cref="TransportProvider{Socket}"/> object associated with the specified client ID.
         /// </summary>
         /// <param name="clientID">ID of the client.</param>
+        /// <param name="tcpClient">The TCP client.</param>
         /// <returns>An <see cref="TransportProvider{Socket}"/> object.</returns>
         /// <exception cref="InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
-        public TransportProvider<Socket> Client(Guid clientID)
+        public bool TryGetClient(Guid clientID, out TransportProvider<Socket> tcpClient)
         {
-            TransportProvider<Socket> tcpClient;
-
-            if (m_tcpClients.TryGetValue(clientID, out tcpClient))
-                return tcpClient;
-
-            throw new InvalidOperationException(string.Format("No client exists for Client ID \"{0}\"", clientID));
+            return m_tcpClients.TryGetValue(clientID, out tcpClient);
         }
 
         /// <summary>
@@ -815,7 +812,7 @@ namespace TVA.Communication
         /// <param name="ex">Exception to send to <see cref="ServerBase.SendClientDataException"/> event.</param>
         protected override void OnSendClientDataException(Guid clientID, Exception ex)
         {
-            if ((object)Client(clientID) != null || CurrentState != ServerState.NotRunning)
+            if (m_tcpClients.ContainsKey(clientID) || CurrentState != ServerState.NotRunning)
                 base.OnSendClientDataException(clientID, ex);
         }
 
@@ -826,7 +823,7 @@ namespace TVA.Communication
         /// <param name="ex">Exception to send to <see cref="ServerBase.ReceiveClientDataException"/> event.</param>
         protected virtual void OnReceiveClientDataException(Guid clientID, SocketException ex)
         {
-            if ((object)Client(clientID) != null || ex.SocketErrorCode != SocketError.Disconnecting)
+            if (m_tcpClients.ContainsKey(clientID) || ex.SocketErrorCode != SocketError.Disconnecting)
                 OnReceiveClientDataException(clientID, (Exception)ex);
         }
 
@@ -837,7 +834,7 @@ namespace TVA.Communication
         /// <param name="ex">Exception to send to <see cref="ServerBase.ReceiveClientDataException"/> event.</param>
         protected override void OnReceiveClientDataException(Guid clientID, Exception ex)
         {
-            if ((object)Client(clientID) != null || CurrentState != ServerState.NotRunning)
+            if (m_tcpClients.ContainsKey(clientID) || CurrentState != ServerState.NotRunning)
                 base.OnReceiveClientDataException(clientID, ex);
         }
 
@@ -969,13 +966,18 @@ namespace TVA.Communication
         /// </summary>
         private void SendPayload(Guid clientID)
         {
-            TransportProvider<Socket> client = Client(clientID);
             TcpServerUserToken userToken = FastObjectFactory<TcpServerUserToken>.CreateObjectFunction();
 
+            TransportProvider<Socket> client;
             BlockingCollection<TcpServerPayload> sendQueue;
             SocketAsyncEventArgs args;
             TcpServerPayload payload;
             ManualResetEventSlim handle = null;
+
+            // Inability to find the client indicates the client
+            // was disconnected before we had a chance to send.
+            if (!TryGetClient(clientID, out client))
+                return;
 
             using (sendQueue = m_sendQueues[clientID])
             {

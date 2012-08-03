@@ -690,7 +690,10 @@ namespace TVA.Communication
         /// <exception cref="InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
         public override void DisconnectOne(Guid clientID)
         {
-            TransportProvider<EndPoint> client = Client(clientID);
+            TransportProvider<EndPoint> client;
+
+            if (!TryGetClient(clientID, out client))
+                return;
 
             try
             {
@@ -727,16 +730,12 @@ namespace TVA.Communication
         /// Gets the <see cref="TransportProvider{EndPoint}"/> object associated with the specified client ID.
         /// </summary>
         /// <param name="clientID">ID of the client.</param>
+        /// <param name="udpClient">The UDP client.</param>
         /// <returns>An <see cref="TransportProvider{EndPoint}"/> object.</returns>
         /// <exception cref="InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
-        public TransportProvider<EndPoint> Client(Guid clientID)
+        public bool TryGetClient(Guid clientID, out TransportProvider<EndPoint> udpClient)
         {
-            TransportProvider<EndPoint> udpClient;
-
-            if (m_udpClients.TryGetValue(clientID, out udpClient))
-                return udpClient;
-
-            throw new InvalidOperationException(string.Format("No client exists for Client ID \"{0}\"", clientID));
+            return m_udpClients.TryGetValue(clientID, out udpClient);
         }
 
         /// <summary>
@@ -843,13 +842,18 @@ namespace TVA.Communication
         /// </summary>
         private void SendPayload(Guid clientID)
         {
-            TransportProvider<EndPoint> client = Client(clientID);
             UdpServerUserToken userToken = FastObjectFactory<UdpServerUserToken>.CreateObjectFunction();
 
+            TransportProvider<EndPoint> client;
             BlockingCollection<UdpServerPayload> sendQueue;
             SocketAsyncEventArgs args;
             UdpServerPayload payload;
             ManualResetEventSlim handle = null;
+
+            // Inability to find the client indicates the client
+            // was disconnected before we had a chance to send.
+            if (!TryGetClient(clientID, out client))
+                return;
 
             using (sendQueue = m_sendQueues[clientID])
             {
