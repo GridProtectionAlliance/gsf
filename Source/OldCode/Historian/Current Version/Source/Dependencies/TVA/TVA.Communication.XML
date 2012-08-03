@@ -630,6 +630,11 @@
             Gets or sets the maximum number of times the client will attempt to connect to the server.
             </summary>
         </member>
+        <member name="P:TVA.Communication.IClient.SendBufferSize">
+            <summary>
+            Gets or sets the size of the buffer used by the client for receiving data from the server.
+            </summary>
+        </member>
         <member name="P:TVA.Communication.IClient.ReceiveBufferSize">
             <summary>
             Gets or sets the size of the buffer used by the client for receiving data from the server.
@@ -663,6 +668,11 @@
         <member name="F:TVA.Communication.ClientBase.DefaultMaxConnectionAttempts">
             <summary>
             Specifies the default value for the <see cref="P:TVA.Communication.ClientBase.MaxConnectionAttempts"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.ClientBase.DefaultSendBufferSize">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Communication.ClientBase.SendBufferSize"/> property.
             </summary>
         </member>
         <member name="F:TVA.Communication.ClientBase.DefaultReceiveBufferSize">
@@ -1018,6 +1028,12 @@
             </summary>
             <remarks>Set <see cref="P:TVA.Communication.ClientBase.MaxConnectionAttempts"/> to -1 for infinite connection attempts.</remarks>
         </member>
+        <member name="P:TVA.Communication.ClientBase.SendBufferSize">
+            <summary>
+            Gets or sets the size of the buffer used by the client for sending data to the server.
+            </summary>
+            <exception cref="T:System.ArgumentException">The value being assigned is either zero or negative.</exception>
+        </member>
         <member name="P:TVA.Communication.ClientBase.ReceiveBufferSize">
             <summary>
             Gets or sets the size of the buffer used by the client for receiving data from the server.
@@ -1176,22 +1192,49 @@
             <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
             <returns><see cref="T:System.Threading.WaitHandle"/> for the asynchronous operation.</returns>
         </member>
+        <member name="M:TVA.Communication.UdpClient.OnSendDataException(System.Exception)">
+            <summary>
+            Raises the <see cref="E:TVA.Communication.ClientBase.SendDataException"/> event.
+            </summary>
+            <param name="ex">Exception to send to <see cref="E:TVA.Communication.ClientBase.SendDataException"/> event.</param>
+        </member>
+        <member name="M:TVA.Communication.UdpClient.OnReceiveDataException(System.Exception)">
+            <summary>
+            Raises the <see cref="E:TVA.Communication.ClientBase.ReceiveDataException"/> event.
+            </summary>
+            <param name="ex">Exception to send to <see cref="E:TVA.Communication.ClientBase.ReceiveDataException"/> event.</param>
+        </member>
         <member name="M:TVA.Communication.UdpClient.OnConnectionTerminated">
             <summary>
             Raises the <see cref="E:TVA.Communication.ClientBase.ConnectionTerminated"/> event.
             </summary>
         </member>
-        <member name="M:TVA.Communication.UdpClient.ProcessSend(System.Net.Sockets.SocketAsyncEventArgs)">
+        <member name="M:TVA.Communication.UdpClient.SendPayloadAsync">
+            <summary>
+            Kicks off the send payload thread.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpClient.SendPayload">
+            <summary>
+            Loops waiting for payloads and sends them on the socket.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpClient.ProcessSend">
             <summary>
             Callback method for asynchronous send operation.
             </summary>
         </member>
-        <member name="M:TVA.Communication.UdpClient.ReceivePayloadAsync(System.Net.Sockets.SocketAsyncEventArgs)">
+        <member name="M:TVA.Communication.UdpClient.ReceivePayloadAsync">
             <summary>
             Initiate method for asynchronous receive operation of payload data.
             </summary>
         </member>
-        <member name="M:TVA.Communication.UdpClient.TerminateConnection(System.Net.Sockets.SocketAsyncEventArgs,System.Boolean)">
+        <member name="M:TVA.Communication.UdpClient.ProcessReceive">
+            <summary>
+            Callback method for asynchronous receive operation of payload data.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpClient.TerminateConnection(System.Boolean)">
             <summary>
             Processes the termination of client.
             </summary>
@@ -1625,6 +1668,12 @@
             <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
             <returns><see cref="T:System.Threading.WaitHandle"/> for the asynchronous operation.</returns>
         </member>
+        <member name="M:TVA.Communication.TcpClient.OnSendDataException(System.Exception)">
+            <summary>
+            Raises the <see cref="E:TVA.Communication.ClientBase.SendDataException"/> event.
+            </summary>
+            <param name="ex">Exception to send to <see cref="E:TVA.Communication.ClientBase.SendDataException"/> event.</param>
+        </member>
         <member name="M:TVA.Communication.TcpClient.OnReceiveDataException(System.Exception)">
             <summary>
             Raises the <see cref="E:TVA.Communication.ClientBase.ReceiveDataException"/> event.
@@ -1636,17 +1685,27 @@
             Raises the <see cref="E:TVA.Communication.ClientBase.ConnectionTerminated"/> event.
             </summary>
         </member>
-        <member name="M:TVA.Communication.TcpClient.ProcessConnect(System.Net.Sockets.SocketAsyncEventArgs)">
+        <member name="M:TVA.Communication.TcpClient.ProcessConnect">
             <summary>
             Callback method for asynchronous connect operation.
             </summary>
         </member>
-        <member name="M:TVA.Communication.TcpClient.ProcessSend(System.Net.Sockets.SocketAsyncEventArgs)">
+        <member name="M:TVA.Communication.TcpClient.SendPayloadAsync">
+            <summary>
+            Kicks off the send payload thread.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.TcpClient.SendPayload">
+            <summary>
+            Loops waiting for payloads and sends them on the socket.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.TcpClient.ProcessSend">
             <summary>
             Callback method for asynchronous send operation.
             </summary>
         </member>
-        <member name="M:TVA.Communication.TcpClient.ReceivePayloadAsync(System.Net.Sockets.SocketAsyncEventArgs)">
+        <member name="M:TVA.Communication.TcpClient.ReceivePayloadAsync">
             <summary>
             Initiate method for asynchronous receive operation of payload data.
             </summary>
@@ -1656,7 +1715,7 @@
             Initiate method for asynchronous receive operation of payload data in "payload-aware" mode.
             </summary>
         </member>
-        <member name="M:TVA.Communication.TcpClient.ProcessReceivePayloadAware(System.Net.Sockets.SocketAsyncEventArgs)">
+        <member name="M:TVA.Communication.TcpClient.ProcessReceivePayloadAware">
             <summary>
             Callback method for asynchronous receive operation of payload data in "payload-aware" mode.
             </summary>
@@ -1666,12 +1725,12 @@
             Initiate method for asynchronous receive operation of payload data in "payload-unaware" mode.
             </summary>
         </member>
-        <member name="M:TVA.Communication.TcpClient.ProcessReceivePayloadUnaware(System.Net.Sockets.SocketAsyncEventArgs)">
+        <member name="M:TVA.Communication.TcpClient.ProcessReceivePayloadUnaware">
             <summary>
             Callback method for asynchronous receive operation of payload data in "payload-unaware" mode.
             </summary>
         </member>
-        <member name="M:TVA.Communication.TcpClient.TerminateConnection(System.Net.Sockets.SocketAsyncEventArgs,System.Boolean)">
+        <member name="M:TVA.Communication.TcpClient.TerminateConnection(System.Boolean)">
             <summary>
             Processes the termination of client.
             </summary>
@@ -2227,6 +2286,11 @@
             Gets or sets the maximum number of clients that can connect to the server.
             </summary>
         </member>
+        <member name="P:TVA.Communication.IServer.SendBufferSize">
+            <summary>
+            Gets or sets the size of the buffer used by the client for receiving data from the server.
+            </summary>
+        </member>
         <member name="P:TVA.Communication.IServer.ReceiveBufferSize">
             <summary>
             Gets or sets the size of the buffer used by the server for receiving data from the clients.
@@ -2265,6 +2329,11 @@
         <member name="F:TVA.Communication.ServerBase.DefaultMaxClientConnections">
             <summary>
             Specifies the default value for the <see cref="P:TVA.Communication.ServerBase.MaxClientConnections"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.ServerBase.DefaultSendBufferSize">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Communication.ServerBase.SendBufferSize"/> property.
             </summary>
         </member>
         <member name="F:TVA.Communication.ServerBase.DefaultReceiveBufferSize">
@@ -2720,6 +2789,12 @@
             Set <see cref="P:TVA.Communication.ServerBase.MaxClientConnections"/> to -1 to allow infinite client connections.
             </remarks>
         </member>
+        <member name="P:TVA.Communication.ServerBase.SendBufferSize">
+            <summary>
+            Gets or sets the size of the buffer used by the server for sending data to the clients.
+            </summary>
+            <exception cref="T:System.ArgumentException">The value being assigned is either zero or negative.</exception>
+        </member>
         <member name="P:TVA.Communication.ServerBase.ReceiveBufferSize">
             <summary>
             Gets or sets the size of the buffer used by the server for receiving data from the clients.
@@ -2795,11 +2870,6 @@
             <summary>
             Gets a boolean value that indicates
             whether the server has been initialized.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.UdpServer.DefaultReceiveBufferSize">
-            <summary>
-            Specifies the default value for the <see cref="P:TVA.Communication.ServerBase.ReceiveBufferSize"/> property.
             </summary>
         </member>
         <member name="F:TVA.Communication.UdpServer.DefaultAllowDualStackSocket">
@@ -2900,6 +2970,30 @@
             <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
             <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
             <returns><see cref="T:System.Threading.WaitHandle"/> for the asynchronous operation.</returns>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.OnSendClientDataException(System.Guid,System.Exception)">
+            <summary>
+            Raises the <see cref="E:TVA.Communication.ServerBase.SendClientDataException"/> event.
+            </summary>
+            <param name="clientID">ID of client to send to <see cref="E:TVA.Communication.ServerBase.SendClientDataException"/> event.</param>
+            <param name="ex">Exception to send to <see cref="E:TVA.Communication.ServerBase.SendClientDataException"/> event.</param>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.OnReceiveClientDataException(System.Guid,System.Exception)">
+            <summary>
+            Raises the <see cref="E:TVA.Communication.ServerBase.ReceiveClientDataException"/> event.
+            </summary>
+            <param name="clientID">ID of client to send to <see cref="E:TVA.Communication.ServerBase.ReceiveClientDataException"/> event.</param>
+            <param name="ex">Exception to send to <see cref="E:TVA.Communication.ServerBase.ReceiveClientDataException"/> event.</param>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.SendPayloadAsync(System.Guid)">
+            <summary>
+            Kicks off the send payload thread.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.SendPayload(System.Guid)">
+            <summary>
+            Loops waiting for payloads and sends them on the socket.
+            </summary>
         </member>
         <member name="M:TVA.Communication.UdpServer.ProcessSend(System.Net.Sockets.SocketAsyncEventArgs)">
             <summary>
@@ -3172,6 +3266,13 @@
             <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
             <returns><see cref="T:System.Threading.WaitHandle"/> for the asynchronous operation.</returns>
         </member>
+        <member name="M:TVA.Communication.TcpServer.OnSendClientDataException(System.Guid,System.Exception)">
+            <summary>
+            Raises the <see cref="E:TVA.Communication.ServerBase.SendClientDataException"/> event.
+            </summary>
+            <param name="clientID">ID of client to send to <see cref="E:TVA.Communication.ServerBase.SendClientDataException"/> event.</param>
+            <param name="ex">Exception to send to <see cref="E:TVA.Communication.ServerBase.SendClientDataException"/> event.</param>
+        </member>
         <member name="M:TVA.Communication.TcpServer.OnReceiveClientDataException(System.Guid,System.Net.Sockets.SocketException)">
             <summary>
             Raises the <see cref="E:TVA.Communication.ServerBase.ReceiveClientDataException"/> event.
@@ -3189,6 +3290,16 @@
         <member name="M:TVA.Communication.TcpServer.ProcessAccept">
             <summary>
             Callback method for asynchronous accept operation.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.TcpServer.SendPayloadAsync(System.Guid)">
+            <summary>
+            Kicks off the send payload thread.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.TcpServer.SendPayload(System.Guid)">
+            <summary>
+            Loops waiting for payloads and sends them on the socket.
             </summary>
         </member>
         <member name="M:TVA.Communication.TcpServer.ProcessSend(System.Net.Sockets.SocketAsyncEventArgs)">
@@ -4139,18 +4250,12 @@
             Initializes a new instance of the <see cref="T:TVA.Communication.TransportProvider`1"/> class.
             </summary>
         </member>
-        <member name="M:TVA.Communication.TransportProvider`1.WriteToSendBuffer(System.Byte[]@,System.Int32@,System.Int32)">
+        <member name="M:TVA.Communication.TransportProvider`1.SetSendBuffer(System.Int32)">
             <summary>
-            Writes data to the send buffer.
+            Establishes (or reestablishes) a send buffer of a given size.
             </summary>
-            <param name="data">The data to be written.</param>
-            <param name="offset">The offset into the given data buffer at which the data to be written starts.</param>
-            <param name="length">The amount of data to be written.</param>
-            <remarks>
-            After the data is written to the send buffer, the given byte array
-            is replaced by the send buffer and the given offset is replaced by
-            the offset into the send buffer where the written data starts.
-            </remarks>
+            <param name="size">Desired minimum size of send buffer.</param>
+            <returns>New send buffer.</returns>
         </member>
         <member name="M:TVA.Communication.TransportProvider`1.SetReceiveBuffer(System.Int32)">
             <summary>
@@ -4162,6 +4267,19 @@
         <member name="M:TVA.Communication.TransportProvider`1.Reset">
             <summary>
             Resets <see cref="T:TVA.Communication.TransportProvider`1"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Communication.TransportProvider`1.SendBuffer">
+            <summary>
+            Gets buffer used for sending data.
+            </summary>
+            <remarks>
+            Use <see cref="M:TVA.Communication.TransportProvider`1.SetSendBuffer(System.Int32)"/> to reset and/or establish send buffer size.
+            </remarks>
+        </member>
+        <member name="P:TVA.Communication.TransportProvider`1.SendBufferSize">
+            <summary>
+            Gets send buffer requested size.
             </summary>
         </member>
         <member name="P:TVA.Communication.TransportProvider`1.ReceiveBuffer">
