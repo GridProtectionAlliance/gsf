@@ -1859,19 +1859,15 @@ namespace TimeSeriesFramework.Transport
 
                             if (subscription.Settings.TryGetValue("dataChannel", out setting))
                             {
+                                TransportProvider<Socket> client;
                                 Dictionary<string, string> settings = setting.ParseKeyValuePairs();
                                 string networkInterface;
 
                                 // Make sure return interface matches incoming client connection
-                                try
-                                {
-                                    Socket socket = m_commandChannel.Client(connection.ClientID).Provider;
-                                    networkInterface = socket.LocalEndPoint.ToString();
-                                }
-                                catch
-                                {
+                                if (m_commandChannel.TryGetClient(connection.ClientID, out client))
+                                    networkInterface = client.Provider.LocalEndPoint.ToString();
+                                else
                                     networkInterface = m_commandChannel.Server.LocalEndPoint.ToString();
-                                }
 
                                 if (settings.TryGetValue("port", out setting) || settings.TryGetValue("localport", out setting))
                                 {

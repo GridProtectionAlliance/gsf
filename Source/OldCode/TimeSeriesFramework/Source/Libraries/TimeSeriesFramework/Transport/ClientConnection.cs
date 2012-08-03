@@ -110,12 +110,13 @@ namespace TimeSeriesFramework.Transport
             // Attempt to lookup remote connection identification for logging purposes
             try
             {
+                TransportProvider<Socket> client;
                 IPEndPoint remoteEndPoint = null;
 
-                if (commandChannel != null)
-                    remoteEndPoint = commandChannel.Client(clientID).Provider.RemoteEndPoint as IPEndPoint;
+                if ((object)commandChannel != null && commandChannel.TryGetClient(clientID, out client))
+                    remoteEndPoint = client.Provider.RemoteEndPoint as IPEndPoint;
 
-                if (remoteEndPoint != null)
+                if ((object)remoteEndPoint != null)
                 {
                     m_ipAddress = remoteEndPoint.Address;
 
@@ -242,12 +243,13 @@ namespace TimeSeriesFramework.Transport
         {
             get
             {
+                TransportProvider<Socket> client;
                 bool isConnected = false;
 
                 try
                 {
-                    if ((object)m_commandChannel != null)
-                        isConnected = m_commandChannel.Client(m_clientID).Provider.Connected;
+                    if ((object)m_commandChannel != null && m_commandChannel.TryGetClient(m_clientID, out client))
+                        isConnected = client.Provider.Connected;
                 }
                 catch
                 {
