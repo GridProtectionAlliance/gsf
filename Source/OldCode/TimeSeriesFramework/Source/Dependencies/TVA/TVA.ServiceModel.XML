@@ -46,6 +46,24 @@
             Gets or sets a boolean value that indicates whether security on the service is to be disabled. 
             </summary>
         </member>
+        <member name="T:TVA.ServiceModel.IPolicyRetriever">
+            <summary>
+            Defines a web service interface to allow policy retrieval for cross-domain access from
+            Silverlight and Flash browser controls.
+            </summary>
+        </member>
+        <member name="M:TVA.ServiceModel.IPolicyRetriever.GetSilverlightPolicy">
+            <summary>
+            Gets policy stream for Silverlight applications.
+            </summary>
+            <returns>Stream containing clientaccesspolicy.xml.</returns>
+        </member>
+        <member name="M:TVA.ServiceModel.IPolicyRetriever.GetFlashPolicy">
+            <summary>
+            Gets policy stream for Flash applications.
+            </summary>
+            <returns>Stream containing crossdomain.xml.</returns>
+        </member>
         <member name="T:TVA.ServiceModel.ISelfHostingService">
             <summary>
             Defines a web service that can send and receive data over REST (Representational State Transfer) interface.
@@ -424,6 +442,18 @@
             Initializes the <see cref="P:TVA.ServiceModel.SelfHostingService.ServiceHost"/>.
             </summary>
         </member>
+        <member name="M:TVA.ServiceModel.SelfHostingService.GetSilverlightPolicy">
+            <summary>
+            Gets policy stream for Silverlight applications.
+            </summary>
+            <returns>Stream containing clientaccesspolicy.xml.</returns>
+        </member>
+        <member name="M:TVA.ServiceModel.SelfHostingService.GetFlashPolicy">
+            <summary>
+            Gets policy stream for Flash applications.
+            </summary>
+            <returns>Stream containing crossdomain.xml.</returns>
+        </member>
         <member name="M:TVA.ServiceModel.SelfHostingService.Dispose(System.Boolean)">
             <summary>
             Releases the unmanaged resources used by the web service and optionally releases the managed resources.
@@ -502,6 +532,19 @@
             <summary>
             Gets or sets a boolean value that indicates whether web service metadata is to made available at all web service <see cref="P:TVA.ServiceModel.SelfHostingService.Endpoints"/>.
             </summary>
+        </member>
+        <member name="P:TVA.ServiceModel.SelfHostingService.AllowCrossDomainAccess">
+            <summary>
+            Gets or sets flag that indicates if web services will enable cross-domain access for Silverlight and Flash applications. 
+            </summary>
+        </member>
+        <member name="P:TVA.ServiceModel.SelfHostingService.AllowedDomainList">
+            <summary>
+            Gets or sets comma separated list of allowed domains when <see cref="P:TVA.ServiceModel.SelfHostingService.AllowCrossDomainAccess"/> is <c>true</c>. Use * for domain wildcards, e.g., *.consoto.com.
+            </summary>
+            <remarks>
+            To allow all domains just set this property to "*".
+            </remarks>
         </member>
         <member name="P:TVA.ServiceModel.SelfHostingService.ServiceHost">
             <summary>
