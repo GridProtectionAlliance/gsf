@@ -41,6 +41,7 @@ namespace WavInputAdapter
     /// Represents an input adapter that reads measurements from a WAV file.
     /// </summary>
     [Description("WAV: Reads measurements from a WAV file.")]
+    [EditorBrowsable(EditorBrowsableState.Advanced)] // Normally defined as an input device protocol
     public class WavInputAdapter : InputAdapterBase
     {
         #region [ Members ]

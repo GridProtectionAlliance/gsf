@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System.Collections.Generic;
+using System.ComponentModel;
 using TimeSeriesFramework.Adapters;
 
 namespace TimeSeriesFramework.Transport
@@ -29,6 +30,7 @@ namespace TimeSeriesFramework.Transport
     /// <summary>
     /// Represents an action adapter that exists within a temporal <see cref="IaonSession"/> to proxy data back to its parent <see cref="IClientSubscription"/> instance.
     /// </summary>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public class TemporalClientSubscriptionProxy : FacileActionAdapterBase
     {
         #region [ Members ]

@@ -26,6 +26,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.IO;
 using System.IO.Compression;
@@ -48,6 +49,8 @@ namespace TimeSeriesFramework.Transport
     /// <summary>
     /// Represents a data subscribing client that will connect to a data publisher for a data subscription.
     /// </summary>
+    [Description("DataSubscriber: client that subscribes to a publishing server for a streaming data.")]
+    [EditorBrowsable(EditorBrowsableState.Advanced)] // Normally defined as an input device protocol
     public class DataSubscriber : InputAdapterBase
     {
         #region [ Members ]
@@ -859,7 +862,7 @@ namespace TimeSeriesFramework.Transport
 
                     // Start local concentrator
                     localConcentrator.Start();
-                    
+
                     // Move concentrator to member variable
                     Interlocked.Exchange(ref m_localConcentrator, localConcentrator);
 

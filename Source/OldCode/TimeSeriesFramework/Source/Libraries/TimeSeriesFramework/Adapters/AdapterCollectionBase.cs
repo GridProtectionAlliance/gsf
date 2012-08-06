@@ -42,6 +42,7 @@ namespace TimeSeriesFramework.Adapters
     /// Represents a collection of <see cref="IAdapter"/> implementations.
     /// </summary>
     /// <typeparam name="T">Type of <see cref="IAdapter"/> this collection contains.</typeparam>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public abstract class AdapterCollectionBase<T> : Collection<T>, IAdapterCollection where T : IAdapter
     {
         #region [ Members ]

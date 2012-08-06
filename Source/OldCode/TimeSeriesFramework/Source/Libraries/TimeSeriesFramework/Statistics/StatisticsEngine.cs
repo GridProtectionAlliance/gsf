@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -50,6 +51,7 @@ namespace TimeSeriesFramework.Statistics
     /// <summary>
     /// Represents the engine that computes statistics within applications of the TimeSeriesFramework.
     /// </summary>
+    [Description("Statistics: defines the engine that computes all statistics within the system.")]
     public class StatisticsEngine : FacileActionAdapterBase
     {
         #region [ Members ]

@@ -49,7 +49,6 @@ using TimeSeriesFramework.Adapters;
 using TVA;
 using TVA.Communication;
 using TVA.Data;
-using TVA.IO.Compression;
 using TVA.Security.Cryptography;
 
 namespace TimeSeriesFramework.Transport
@@ -341,6 +340,8 @@ namespace TimeSeriesFramework.Transport
     /// <summary>
     /// Represents a data publishing server that allows multiple connections for data subscriptions.
     /// </summary>
+    [Description("DataPublisher: server component that allows gateway-style subscription connections.")]
+    [EditorBrowsable(EditorBrowsableState.Always)]
     public class DataPublisher : ActionAdapterCollection
     {
         #region [ Members ]
