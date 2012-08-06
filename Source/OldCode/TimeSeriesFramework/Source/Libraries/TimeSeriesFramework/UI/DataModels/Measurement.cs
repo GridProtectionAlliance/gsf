@@ -1132,7 +1132,7 @@ namespace TimeSeriesFramework.UI.DataModels
                             Internal = Convert.ToBoolean(row.Field<object>("Internal")),
                             Subscribed = Convert.ToBoolean(row.Field<object>("Subscribed")),
                             Description = row.Field<string>("Description"),
-                            Enabled = false,    // We set this false here because we are going to use this flag to see if user has selected it on the wizard.
+                            Enabled = row.ConvertField<bool>("Enabled"),
                             m_historianAcronym = row.Field<string>("HistorianAcronym"),
                             m_deviceAcronym = row.Field<object>("DeviceAcronym") == null ? string.Empty : row.Field<string>("DeviceAcronym"),
                             m_signalName = row.Field<string>("SignalName"),
@@ -1205,7 +1205,7 @@ namespace TimeSeriesFramework.UI.DataModels
                             Internal = Convert.ToBoolean(row.Field<object>("Internal")),
                             Subscribed = Convert.ToBoolean(row.Field<object>("Subscribed")),
                             Description = row.Field<string>("Description"),
-                            Enabled = false,    // We set this false here because we are going to use this flag to see if user has selected it on the wizard.
+                            Enabled = row.ConvertField<bool>("Enabled"),
                             m_historianAcronym = row.Field<string>("HistorianAcronym"),
                             m_deviceAcronym = row.Field<object>("DeviceAcronym") == null ? string.Empty : row.Field<string>("DeviceAcronym"),
                             m_signalName = row.Field<string>("SignalName"),
@@ -1282,7 +1282,7 @@ namespace TimeSeriesFramework.UI.DataModels
                                 Internal = Convert.ToBoolean(row.Field<object>("Internal")),
                                 Subscribed = Convert.ToBoolean(row.Field<object>("Subscribed")),
                                 Description = row.Field<string>("Description"),
-                                Enabled = false,    // We set this false here because we are going to use this flag to see if user has selected it on the wizard.
+                                Enabled = row.ConvertField<bool>("Enabled"),
                                 m_historianAcronym = row.Field<string>("HistorianAcronym"),
                                 m_deviceAcronym = row.Field<object>("DeviceAcronym") == null ? string.Empty : row.Field<string>("DeviceAcronym"),
                                 m_signalName = row.Field<string>("SignalName"),
