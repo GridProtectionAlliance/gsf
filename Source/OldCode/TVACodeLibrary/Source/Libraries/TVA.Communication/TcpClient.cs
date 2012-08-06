@@ -671,6 +671,9 @@ namespace TVA.Communication
                 if (m_tcpClient.Provider.Connected)
                     m_tcpClient.Provider.Disconnect(false);
 
+                if ((object)m_connectWaitHandle != null)
+                    m_connectWaitHandle.Set();
+
                 m_tcpClient.Reset();
                 OnConnectionTerminated();
             }
@@ -687,7 +690,7 @@ namespace TVA.Communication
             {
                 try
                 {
-                    if (m_connectWaitHandle == null)
+                    if ((object)m_connectWaitHandle == null)
                         m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
 
                     OnConnectionAttempt();
@@ -710,16 +713,17 @@ namespace TVA.Communication
 
                     if (!m_tcpClient.Provider.ConnectAsync(m_connectArgs))
                         ThreadPool.QueueUserWorkItem(state => ProcessConnect());
-
-                    return m_connectWaitHandle;
                 }
                 catch (Exception ex)
                 {
+                    if ((object)m_connectWaitHandle != null)
+                        m_connectWaitHandle.Set();
+
                     OnConnectionException(ex);
                 }
             }
 
-            return null;
+            return m_connectWaitHandle;
         }
 
         /// <summary>
@@ -1255,6 +1259,9 @@ namespace TVA.Communication
         /// </summary>
         private void TerminateConnection(bool raiseEvent)
         {
+            if ((object)m_connectWaitHandle != null)
+                m_connectWaitHandle.Set();
+
             if (raiseEvent)
                 OnConnectionTerminated();
 
