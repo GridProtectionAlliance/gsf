@@ -1657,7 +1657,7 @@ namespace TVA.Data
             else
             {
                 // Pick up all parameters that start with @ or : but skip key words such as @@IDENTITY
-                string[] tokens = sql.Split(' ', '(', ')', ',', '=').Where(token => token.StartsWith(":") || token.StartsWith("@") && !token.StartsWith("@@")).ToArray();
+                string[] tokens = sql.Split(' ', '(', ')', ',', '=').Where(token => token.StartsWith(":") || token.StartsWith("@") && !token.StartsWith("@@")).Distinct().ToArray();
                 int i = 0;
 
                 if (tokens.Length != values.Length)
