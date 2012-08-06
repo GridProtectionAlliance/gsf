@@ -92,12 +92,12 @@ namespace TimeSeriesFramework.UI.UserControls
                 }
                 else
                 {
-                    MessageBox.Show("Please provide an integer value between 1 and " + Int32.MaxValue / 1000, "ERROR: Invalid Value", MessageBoxButton.OK);
+                    m_dataContext.DisplayStatusMessage("Please provide an integer value between 1 and " + Int32.MaxValue / 1000);
                 }
             }
             catch
             {
-                MessageBox.Show("Please provide an integer value between 1 and " + Int32.MaxValue / 1000, "ERROR: Invalid Value", MessageBoxButton.OK);
+                m_dataContext.DisplayStatusMessage("Please provide an integer value between 1 and " + Int32.MaxValue / 1000);
             }
             finally
             {

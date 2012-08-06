@@ -130,7 +130,7 @@ namespace TimeSeriesFramework.UI.UserControls
             }
             else
             {
-                MessageBox.Show("Please provide integer value.", "ERROR: Invalid Value", MessageBoxButton.OK);
+                m_dataContext.DisplayStatusMessage("Please provide integer value.");
             }
         }
 
