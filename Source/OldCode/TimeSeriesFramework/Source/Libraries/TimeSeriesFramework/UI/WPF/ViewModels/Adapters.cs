@@ -479,7 +479,8 @@ namespace TimeSeriesFramework.UI.ViewModels
         private Dictionary<Type, string> GetAdapterTypeList(string searchDirectory, Type adapterType)
         {
             return adapterType.LoadImplementations(searchDirectory, true)
-                .ToDictionary(type => type, type => GetDescription(type));
+                .Distinct()
+                .ToDictionary(type => type, GetDescription);
         }
 
         /// <summary>
