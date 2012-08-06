@@ -37,6 +37,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using System.Linq;
 using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
@@ -543,6 +544,229 @@ namespace TimeSeriesFramework.UI.DataModels
         #endregion
 
         #region [ Static ]
+
+        /// <summary>
+        /// Loads <see cref="Measurement"/> signal IDs as an <see cref="ObservableCollection{T}"/> style list.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="deviceID">ID of the Device to filter data.</param>
+        /// <param name="filterByInternalFlag">boolean flag to indicate if only non internal data requested.</param>
+        /// <param name="includeInternal">boolean flag to indicate if internal measurements are included.</param>
+        /// <returns>Collection of <see cref="Measurement"/>.</returns>
+        public static List<Guid> LoadSignalIDs(AdoDataConnection database, int deviceID = 0, bool filterByInternalFlag = false, bool includeInternal = false, string searchText = "")
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                List<Guid> signalIDList = new List<Guid>();
+                DataTable measurementTable;
+
+                string queryFormat;
+                string[] paramNames;
+                object[] parameters;
+                string query;
+
+                string searchParam = null;
+                string searchQuery = null;
+
+                if (!string.IsNullOrEmpty(searchText))
+                {
+                    searchParam = string.Format("%{0}%", searchText);
+                    searchQuery = database.ParameterizedQueryString("UPPER(DESCRIPTION) LIKE UPPER({0}) OR DeviceID LIKE {0} " +
+                        "OR UPPER(SignalAcronym) LIKE UPPER({0}) OR UPPER(SignalID) LIKE UPPER({0}) OR UPPER(PointTag) LIKE UPPER({0}) OR UPPER(CompanyName) LIKE UPPER({0}) " +
+                        "OR UPPER(CompanyAcronym) LIKE UPPER({0}) OR UPPER(DeviceAcronym) LIKE UPPER({0}) OR UPPER(SignalName) LIKE UPPER({0}) OR UPPER(ID) LIKE UPPER({0})", "searchParam");
+                }
+
+                if (filterByInternalFlag)
+                {
+                    if (deviceID > 0)
+                    {
+                        if (includeInternal)
+                        {
+                            if (string.IsNullOrEmpty(searchText))
+                            {
+                                queryFormat = "SELECT SignalID FROM MeasurementDetail WHERE DeviceID = {0} AND Subscribed = {1} ORDER BY PointID";
+                                paramNames = new string[] { "deviceID", "subscribed" };
+                                parameters = new object[] { deviceID, database.Bool(false) };
+                            }
+                            else
+                            {
+                                queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE DeviceID = {{0}} AND Subscribed = {{1}} AND ({0}) ORDER BY PointID", searchQuery);
+                                paramNames = new string[] { "deviceID", "subscribed" };
+                                parameters = new object[] { deviceID, database.Bool(false), searchParam };
+                            }
+                        }
+                        else
+                        {
+                            if (string.IsNullOrEmpty(searchText))
+                            {
+                                queryFormat = "SELECT SignalID FROM MeasurementDetail WHERE DeviceID = {0} AND Internal = {1} AND Subscribed = {2} ORDER BY PointID";
+                                paramNames = new string[] { "deviceID", "internal", "subscribed" };
+                                parameters = new object[] { deviceID, database.Bool(false), database.Bool(false) };
+                            }
+                            else
+                            {
+                                queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE DeviceID = {{0}} AND Internal = {{1}} AND Subscribed = {{2}} AND ({0}) ORDER BY PointID", searchQuery);
+                                paramNames = new string[] { "deviceID", "internal", "subscribed" };
+                                parameters = new object[] { deviceID, database.Bool(false), database.Bool(false), searchParam };
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (includeInternal)
+                        {
+                            if (string.IsNullOrEmpty(searchText))
+                            {
+                                queryFormat = "SELECT SignalID FROM MeasurementDetail WHERE Subscribed = {0} ORDER BY PointTag";
+                                paramNames = new string[] { "subscribed" };
+                                parameters = new object[] { database.Bool(false) };
+                            }
+                            else
+                            {
+                                queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE Subscribed = {{0}} AND ({0}) ORDER BY PointTag", searchQuery);
+                                paramNames = new string[] { "subscribed" };
+                                parameters = new object[] { database.Bool(false), searchParam };
+                            }
+                        }
+                        else
+                        {
+                            if (string.IsNullOrEmpty(searchText))
+                            {
+                                queryFormat = "SELECT SignalID FROM MeasurementDetail WHERE Internal = {0} AND Subscribed = {1} ORDER BY PointTag";
+                                paramNames = new string[] { "internal", "subscribed" };
+                                parameters = new object[] { database.Bool(false), database.Bool(false) };
+                            }
+                            else
+                            {
+                                queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE Internal = {{0}} AND Subscribed = {{1}} AND ({0}) ORDER BY PointTag", searchQuery);
+                                paramNames = new string[] { "internal", "subscribed" };
+                                parameters = new object[] { database.Bool(false), database.Bool(false), searchParam };
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if (deviceID > 0)
+                    {
+                        if (string.IsNullOrEmpty(searchText))
+                        {
+                            queryFormat = "SELECT SignalID FROM MeasurementDetail WHERE DeviceID = {0} ORDER BY PointID";
+                            paramNames = new string[] { "deviceID" };
+                            parameters = new object[] { deviceID };
+                        }
+                        else
+                        {
+                            queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE DeviceID = {{0}} AND ({0}) ORDER BY PointID", searchQuery);
+                            paramNames = new string[] { "deviceID" };
+                            parameters = new object[] { deviceID, searchParam };
+                        }
+                    }
+                    else
+                    {
+                        if (string.IsNullOrEmpty(searchText))
+                        {
+                            queryFormat = "SELECT SignalID FROM MeasurementDetail ORDER BY PointTag";
+                            paramNames = new string[] { };
+                            parameters = new object[] { };
+                        }
+                        else
+                        {
+                            queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE {0} ORDER BY PointTag", searchQuery);
+                            paramNames = new string[] { };
+                            parameters = new object[] { searchParam };
+                        }
+                    }
+                }
+
+                query = database.ParameterizedQueryString(queryFormat, paramNames);
+                measurementTable = database.Connection.RetrieveData(database.AdapterType, query, parameters);
+
+                foreach (DataRow row in measurementTable.Rows)
+                {
+                    signalIDList.Add(database.Guid(row, "SignalID"));
+                }
+
+                return signalIDList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Loads <see cref="Measurement"/> information as an <see cref="ObservableCollection{T}"/> style list.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="keys">Keys of the measurements to be loaded from the database.</param>
+        /// <returns>Collection of <see cref="Measurement"/>.</returns>
+        public static ObservableCollection<Measurement> LoadFromKeys(AdoDataConnection database, List<Guid> keys)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                ObservableCollection<Measurement> measurementList = new ObservableCollection<Measurement>();
+                DataTable measurementTable;
+                string query;
+                string commaSeparatedKeys;
+
+                if ((object)keys != null && keys.Count > 0)
+                {
+                    commaSeparatedKeys = keys.Select(key => "'" + key.ToString() + "'").Aggregate((str1, str2) => str1 + "," + str2);
+                    query = string.Format("SELECT * FROM MeasurementDetail WHERE SignalID IN ({0})", commaSeparatedKeys);
+                    measurementTable = database.Connection.RetrieveData(database.AdapterType, query);
+
+                    foreach (DataRow row in measurementTable.Rows)
+                    {
+                        measurementList.Add(new Measurement()
+                        {
+                            SignalID = database.Guid(row, "SignalID"),
+                            HistorianID = row.ConvertNullableField<int>("HistorianID"),
+                            PointID = row.ConvertField<int>("PointID"),
+                            DeviceID = row.ConvertNullableField<int>("DeviceID"),
+                            PointTag = row.Field<string>("PointTag"),
+                            AlternateTag = row.Field<string>("AlternateTag"),
+                            SignalTypeID = row.ConvertField<int>("SignalTypeID"),
+                            PhasorSourceIndex = row.ConvertNullableField<int>("PhasorSourceIndex"),
+                            SignalReference = row.Field<string>("SignalReference"),
+                            Adder = row.ConvertField<double>("Adder"),
+                            Multiplier = row.ConvertField<double>("Multiplier"),
+                            Internal = Convert.ToBoolean(row.Field<object>("Internal")),
+                            Subscribed = Convert.ToBoolean(row.Field<object>("Subscribed")),
+                            Description = row.Field<string>("Description"),
+                            Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
+                            m_historianAcronym = row.Field<string>("HistorianAcronym"),
+                            m_deviceAcronym = row.Field<object>("DeviceAcronym") == null ? string.Empty : row.Field<string>("DeviceAcronym"),
+                            m_signalName = row.Field<string>("SignalName"),
+                            m_signalAcronym = row.Field<string>("SignalAcronym"),
+                            m_signalSuffix = row.Field<string>("SignalTypeSuffix"),
+                            m_phasorLabel = row.Field<string>("PhasorLabel"),
+                            m_framesPerSecond = Convert.ToInt32(row.Field<object>("FramesPerSecond") ?? 30),
+                            m_id = row.Field<string>("ID"),
+                            m_companyAcronym = row.Field<object>("CompanyAcronym") == null ? string.Empty : row.Field<string>("CompanyAcronym"),
+                            m_companyName = row.Field<object>("CompanyName") == null ? string.Empty : row.Field<string>("CompanyName"),
+                            Selected = false
+                        });
+                    }
+                }
+
+                return measurementList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
 
         /// <summary>
         /// Loads <see cref="Measurement"/> information as an <see cref="ObservableCollection{T}"/> style list.

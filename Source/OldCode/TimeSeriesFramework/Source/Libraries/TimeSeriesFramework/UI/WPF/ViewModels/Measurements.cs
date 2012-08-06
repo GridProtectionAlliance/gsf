@@ -45,7 +45,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         private Dictionary<int, string> m_historianLookupList;
         private Dictionary<int, string> m_signalTypeLookupList;
         private int m_deviceID;
-        private ObservableCollection<DataModels.Measurement> m_measurements;
+        private List<Guid> m_allKeys; 
         private RelayCommand m_searchCommand;
         private RelayCommand m_showAllCommand;
 
@@ -134,21 +134,6 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Gets or sets all the measurements retrieved during Load().
-        /// </summary>
-        public ObservableCollection<DataModels.Measurement> AllMeasurements
-        {
-            get
-            {
-                return m_measurements;
-            }
-            set
-            {
-                m_measurements = value;
-            }
-        }
-
         #endregion
 
         #region [ Methods ]
@@ -193,10 +178,18 @@ namespace TimeSeriesFramework.UI.ViewModels
         public override void Load()
         {
             Mouse.OverrideCursor = Cursors.Wait;
+            List<Guid> pageKeys;
+
             try
             {
-                m_measurements = TimeSeriesFramework.UI.DataModels.Measurement.Load(null, m_deviceID);
-                ItemsSource = m_measurements;
+                if ((object)m_allKeys == null)
+                {
+                    m_allKeys = DataModels.Measurement.LoadSignalIDs(null, m_deviceID);
+                    ItemsKeys = m_allKeys;
+                }
+
+                pageKeys = ItemsKeys.Skip((CurrentPageNumber - 1) * ItemsPerPage).Take(ItemsPerPage).ToList();
+                ItemsSource = DataModels.Measurement.LoadFromKeys(null, pageKeys);
             }
             catch (Exception ex)
             {
@@ -220,24 +213,16 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// <summary>
         /// Hanldes <see cref="SearchCommand"/>.
         /// </summary>
-        /// <param name="paramter">string value to search for in measurement collection.</param>
-        public virtual void Search(object paramter)
+        /// <param name="parameter">string value to search for in measurement collection.</param>
+        public virtual void Search(object parameter)
         {
-            if (paramter != null && !string.IsNullOrEmpty(paramter.ToString()))
+            if (parameter != null && !string.IsNullOrEmpty(parameter.ToString()))
             {
-                string searchText = paramter.ToString().ToLower();
-                ItemsSource = new ObservableCollection<DataModels.Measurement>
-                    (m_measurements.Where(m => m.ID.ToLower().Contains(searchText) ||
-                                            m.PointTag.ToLower().Contains(searchText) ||
-                                            m.SignalReference.ToLower().Contains(searchText) ||
-                                            m.Description.ToNonNullString().ToLower().Contains(searchText) ||
-                                            m.DeviceAcronym.ToNonNullString().ToLower().Contains(searchText) ||
-                                            m.PhasorLabel.ToNonNullString().ToLower().Contains(searchText) ||
-                                            m.SignalName.ToNonNullString().ToLower().Contains(searchText) ||
-                                            m.SignalAcronym.ToNonNullString().ToLower().Contains(searchText) ||
-                                            m.CompanyName.ToNonNullString().ToLower().Contains(searchText) ||
-                                            m.CompanyAcronym.ToNonNullString().ToLower().Contains(searchText)
-                                            ));
+                string searchText = parameter.ToString();
+
+                CurrentPageNumber = 1;
+                ItemsKeys = DataModels.Measurement.LoadSignalIDs(null, m_deviceID, false, false, searchText);
+                Load();
             }
         }
 
@@ -246,7 +231,12 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// </summary>
         public void ShowAll()
         {
-            ItemsSource = m_measurements;
+            if (m_allKeys != ItemsKeys)
+            {
+                CurrentPageNumber = 1;
+                ItemsKeys = m_allKeys;
+                Load();
+            }
         }
 
         #endregion

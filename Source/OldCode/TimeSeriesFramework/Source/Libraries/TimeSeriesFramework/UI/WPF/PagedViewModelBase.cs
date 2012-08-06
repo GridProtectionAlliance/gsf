@@ -27,6 +27,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -87,6 +88,7 @@ namespace TimeSeriesFramework.UI
 
         // Fields
         private int m_pageCount, m_currentPageNumber, m_itemsPerPage, m_currentSelectedIndex;
+        private IList<TPrimaryKey> m_itemsKeys; 
         private ObservableCollection<TDataModel> m_currentPage, m_itemsSource;
         private ObservableCollection<ObservableCollection<TDataModel>> m_pages;
         private ICommand m_firstCommand, m_previousCommand, m_nextCommand, m_lastCommand;
@@ -217,6 +219,21 @@ namespace TimeSeriesFramework.UI
         }
 
         /// <summary>
+        /// Gets or sets the collection of primary keys retrieved fromt he database.
+        /// </summary>
+        public IList<TPrimaryKey> ItemsKeys
+        {
+            get
+            {
+                return m_itemsKeys;
+            }
+            set
+            {
+                m_itemsKeys = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the entire collection retrieved from the database.
         /// </summary>
         public ObservableCollection<TDataModel> ItemsSource
@@ -244,10 +261,10 @@ namespace TimeSeriesFramework.UI
             }
             set
             {
-                if (value != null)
+                if ((object)value != null)
                 {
 
-                    if (m_currentItem != null)
+                    if ((object)m_currentItem != null)
                     {
                         ProcessPropertyChange();
                         m_currentItem.PropertyChanged -= m_currentItem_PropertyChanged;
@@ -255,7 +272,7 @@ namespace TimeSeriesFramework.UI
 
                     m_currentItem = value;
 
-                    if (m_currentItem != null)
+                    if ((object)m_currentItem != null)
                         m_currentItem.PropertyChanged += m_currentItem_PropertyChanged;
 
                     OnPropertyChanged("CurrentItem");
@@ -266,7 +283,7 @@ namespace TimeSeriesFramework.UI
 
                     // If CurrentItem changes then raise OnPropertyChanged on IsNewRecord property.
                     // This will help us enable or disable Initialize button where applicable.
-                    if (m_currentItem != null)
+                    if ((object)m_currentItem != null)
                         OnPropertyChanged("IsNewRecord");
                 }
             }
@@ -357,6 +374,7 @@ namespace TimeSeriesFramework.UI
                             {
                                 CurrentPage = m_pages[0];
                                 CurrentPageNumber = 1;
+                                Load();
                             }
 
                         },
@@ -387,6 +405,7 @@ namespace TimeSeriesFramework.UI
                             {
                                 CurrentPageNumber = (CurrentPageNumber - 1) < 1 ? 1 : CurrentPageNumber - 1;
                                 CurrentPage = m_pages[CurrentPageNumber - 1];
+                                Load();
                             }
                         },
                         () =>
@@ -416,6 +435,7 @@ namespace TimeSeriesFramework.UI
                             {
                                 CurrentPageNumber = (CurrentPageNumber + 1) > m_pageCount ? m_pageCount : CurrentPageNumber + 1;
                                 CurrentPage = m_pages[CurrentPageNumber - 1];
+                                Load();
                             }
                         },
                         () =>
@@ -445,6 +465,7 @@ namespace TimeSeriesFramework.UI
                             {
                                 CurrentPage = m_pages[m_pageCount - 1];
                                 CurrentPageNumber = m_pageCount;
+                                Load();
                             }
                         },
                         () =>
@@ -631,12 +652,27 @@ namespace TimeSeriesFramework.UI
         public virtual void Load()
         {
             Mouse.OverrideCursor = Cursors.Wait;
+            List<TPrimaryKey> pageKeys = null;
+
             try
             {
                 if (OnBeforeLoadCanceled())
                     throw new OperationCanceledException("Load was canceled.");
 
-                ItemsSource = (ObservableCollection<TDataModel>)s_loadRecords.Invoke(this, new object[] { (AdoDataConnection)null });
+                // Load keys if LoadKeys method exists in data model
+                if ((object)m_itemsKeys == null && (object)s_loadKeys != null)
+                    m_itemsKeys = (IList<TPrimaryKey>)s_loadKeys.Invoke(this, new object[] { (AdoDataConnection)null });
+
+                // Extract a single page of keys
+                if ((object)m_itemsKeys != null)
+                    pageKeys = m_itemsKeys.Skip((CurrentPageNumber - 1) * ItemsPerPage).Take(ItemsPerPage).ToList();
+
+                // If we were able to extract a page of keys, load only that page.
+                // Otherwise, load the whole recordset.
+                if ((object)pageKeys != null)
+                    ItemsSource = (ObservableCollection<TDataModel>)s_loadRecords.Invoke(this, new object[] { (AdoDataConnection)null, pageKeys });
+                else
+                    ItemsSource = (ObservableCollection<TDataModel>)s_loadRecords.Invoke(this, new object[] { (AdoDataConnection)null });
 
                 OnLoaded();
             }
@@ -719,7 +755,9 @@ namespace TimeSeriesFramework.UI
                     if (OnBeforeDeleteCanceled())
                         throw new OperationCanceledException("Delete was canceled.");
 
-                    string result = (string)s_deleteRecord.Invoke(this, new object[] { (AdoDataConnection)null, GetCurrentItemKey() });
+                    TPrimaryKey currentItemKey = GetCurrentItemKey();
+                    string result = (string)s_deleteRecord.Invoke(this, new object[] { (AdoDataConnection)null, currentItemKey });
+                    m_itemsKeys.Remove(currentItemKey);
 
                     OnDeleted();
 
@@ -912,31 +950,44 @@ namespace TimeSeriesFramework.UI
             {
                 if (ItemsPerPage > 0)
                 {
-                    PageCount = (int)Math.Ceiling(ItemsSource.Count / (double)ItemsPerPage);
                     m_pages = new ObservableCollection<ObservableCollection<TDataModel>>();
 
-                    for (int i = 0; i < m_pageCount; i++)
+                    if ((object)ItemsKeys != null)
                     {
-                        ObservableCollection<TDataModel> page = new ObservableCollection<TDataModel>();
-                        for (int j = 0; j < ItemsPerPage; j++)
-                        {
-                            if (i * ItemsPerPage + j > ItemsSource.Count - 1)
-                                break;
-                            page.Add(ItemsSource[i * ItemsPerPage + j]);
-                        }
-                        m_pages.Add(page);
-                    }
-
-                    if (CurrentPage == null || CurrentPageNumber == 0)
-                    {
-                        CurrentPage = m_pages[0];
-                        CurrentPageNumber = 1;
+                        // TODO: Too much overhead?
+                        PageCount = (int)Math.Ceiling(ItemsKeys.Count / (double)ItemsPerPage);
+                        m_pages = new ObservableCollection<ObservableCollection<TDataModel>>(Enumerable.Range(0, m_pageCount).Select(index => new ObservableCollection<TDataModel>()));
+                        CurrentPageNumber = Math.Max(Math.Min(CurrentPageNumber, m_pageCount), 1);
+                        m_pages[CurrentPageNumber - 1] = ItemsSource;
+                        CurrentPage = m_pages[CurrentPageNumber - 1];
                     }
                     else
                     {
-                        // Retain current page when user deletes any record from the collection
-                        CurrentPageNumber = (CurrentPageNumber + 1) > m_pageCount ? m_pageCount : CurrentPageNumber;
-                        CurrentPage = m_pages[CurrentPageNumber - 1];
+                        PageCount = (int)Math.Ceiling(ItemsSource.Count / (double)ItemsPerPage);
+
+                        for (int i = 0; i < m_pageCount; i++)
+                        {
+                            ObservableCollection<TDataModel> page = new ObservableCollection<TDataModel>();
+                            for (int j = 0; j < ItemsPerPage; j++)
+                            {
+                                if (i * ItemsPerPage + j > ItemsSource.Count - 1)
+                                    break;
+                                page.Add(ItemsSource[i * ItemsPerPage + j]);
+                            }
+                            m_pages.Add(page);
+                        }
+
+                        if (CurrentPage == null || CurrentPageNumber == 0)
+                        {
+                            CurrentPage = m_pages[0];
+                            CurrentPageNumber = 1;
+                        }
+                        else
+                        {
+                            // Retain current page when user deletes any record from the collection
+                            CurrentPageNumber = (CurrentPageNumber + 1) > m_pageCount ? m_pageCount : CurrentPageNumber;
+                            CurrentPage = m_pages[CurrentPageNumber - 1];
+                        }
                     }
                 }
             }
@@ -971,6 +1022,7 @@ namespace TimeSeriesFramework.UI
         private static MethodInfo s_loadRecords = s_dataModelType.GetMethod("Load");
         private static MethodInfo s_saveRecord = s_dataModelType.GetMethod("Save");
         private static MethodInfo s_deleteRecord = s_dataModelType.GetMethod("Delete");
+        private static MethodInfo s_loadKeys = s_dataModelType.GetMethod("LoadKeys");
 
         #endregion
     }
