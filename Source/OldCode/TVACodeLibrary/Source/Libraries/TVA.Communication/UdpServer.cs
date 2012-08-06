@@ -866,7 +866,7 @@ namespace TVA.Communication
                     args.Completed += m_sendHandler;
                     userToken.Client = client;
 
-                    while (CurrentState != ServerState.NotRunning)
+                    while (m_udpClients.ContainsKey(clientID))
                     {
                         try
                         {
@@ -917,6 +917,8 @@ namespace TVA.Communication
                     }
                 }
             }
+
+            m_sendQueues.TryRemove(clientID, out sendQueue);
         }
 
         /// <summary>
