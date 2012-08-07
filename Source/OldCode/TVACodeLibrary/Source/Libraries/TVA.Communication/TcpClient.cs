@@ -686,7 +686,7 @@ namespace TVA.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         public override WaitHandle ConnectAsync()
         {
-            if (CurrentState == ClientState.Disconnected)
+            if (CurrentState == ClientState.Disconnected && !m_disposed)
             {
                 try
                 {
@@ -868,15 +868,6 @@ namespace TVA.Communication
         {
             if (CurrentState != ClientState.Disconnected)
                 base.OnReceiveDataException(ex);
-        }
-
-        /// <summary>
-        /// Raises the <see cref="ClientBase.ConnectionTerminated"/> event.
-        /// </summary>
-        protected override void OnConnectionTerminated()
-        {
-            if (CurrentState != ClientState.Disconnected)
-                base.OnConnectionTerminated();
         }
 
         /// <summary>
