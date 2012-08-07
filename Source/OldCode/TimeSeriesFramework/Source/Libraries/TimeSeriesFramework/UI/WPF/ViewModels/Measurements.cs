@@ -182,7 +182,7 @@ namespace TimeSeriesFramework.UI.ViewModels
 
             try
             {
-                if ((object)m_allKeys == null)
+                if ((object)ItemsKeys == null)
                 {
                     m_allKeys = DataModels.Measurement.LoadSignalIDs(null, m_deviceID);
                     ItemsKeys = m_allKeys;

@@ -143,10 +143,7 @@ namespace TimeSeriesFramework.UI
             }
             set
             {
-                if (value != -1)
-                {
-                    m_currentSelectedIndex = value;
-                }
+                m_currentSelectedIndex = value;
                 OnPropertyChanged("CurrentSelectedIndex");
             }
         }
@@ -707,6 +704,7 @@ namespace TimeSeriesFramework.UI
                     if (OnBeforeSaveCanceled())
                         throw new OperationCanceledException("Save was canceled.");
 
+                    bool isNewRecord = IsNewRecord;
                     string result = (string)s_saveRecord.Invoke(this, new object[] { (AdoDataConnection)null, CurrentItem });
 
                     OnSaved();
@@ -723,7 +721,11 @@ namespace TimeSeriesFramework.UI
                         {
                             Popup(result, "Save " + DataModelName, MessageBoxImage.Information);
                         }
+                    }
 
+                    if (isNewRecord)
+                    {
+                        ItemsKeys = null;
                         Load();
                     }
                 }
@@ -806,6 +808,8 @@ namespace TimeSeriesFramework.UI
         {
             if (m_propertyChanged)
             {
+                int currentSelectedIndex = CurrentSelectedIndex;
+
                 m_propertyChanged = false;
 
                 if (CanSave)
@@ -823,11 +827,13 @@ namespace TimeSeriesFramework.UI
                     else
                     {
                         Load();
+                        Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() => CurrentSelectedIndex = currentSelectedIndex));
                     }
                 }
                 else
                 {
                     Load();
+                    Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() => CurrentSelectedIndex = currentSelectedIndex));
                 }
             }
         }
