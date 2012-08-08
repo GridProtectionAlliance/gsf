@@ -23,6 +23,8 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -38,6 +40,9 @@ namespace TimeSeriesFramework.UI.UserControls
         #region [ Members ]
 
         private Measurements m_dataContext;
+        private DataGridColumn m_sortColumn;
+        private string m_sortMemberPath;
+        private ListSortDirection m_sortDirection;
 
         #endregion
 
@@ -60,6 +65,7 @@ namespace TimeSeriesFramework.UI.UserControls
             InitializeComponent();
             this.Unloaded += new RoutedEventHandler(MeasurementUserControl_Unloaded);
             m_dataContext = new Measurements(deviceID, 17);
+            m_dataContext.PropertyChanged += new PropertyChangedEventHandler(ViewModel_PropertyChanged);
             this.DataContext = m_dataContext;
         }
 
@@ -97,7 +103,33 @@ namespace TimeSeriesFramework.UI.UserControls
 
         private void DataGrid_Sorting(object sender, DataGridSortingEventArgs e)
         {
-            m_dataContext.SortData(e.Column.SortMemberPath);
+            if (e.Column.SortMemberPath != m_sortMemberPath)
+                m_sortDirection = ListSortDirection.Ascending;
+            else if (m_sortDirection == ListSortDirection.Ascending)
+                m_sortDirection = ListSortDirection.Descending;
+            else
+                m_sortDirection = ListSortDirection.Ascending;
+
+            m_sortColumn = e.Column;
+            m_sortMemberPath = e.Column.SortMemberPath;
+            m_dataContext.SortData(m_sortMemberPath);
+        }
+
+        private void ViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "ItemsSource")
+                Dispatcher.BeginInvoke(new Action(SortDataGrid));
+        }
+
+        private void SortDataGrid()
+        {
+            if ((object)m_sortColumn != null)
+            {
+                m_sortColumn.SortDirection = m_sortDirection;
+                DataGridList.Items.SortDescriptions.Clear();
+                DataGridList.Items.SortDescriptions.Add(new SortDescription(m_sortMemberPath, m_sortDirection));
+                DataGridList.Items.Refresh();
+            }
         }
 
         private void GridDetailView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)

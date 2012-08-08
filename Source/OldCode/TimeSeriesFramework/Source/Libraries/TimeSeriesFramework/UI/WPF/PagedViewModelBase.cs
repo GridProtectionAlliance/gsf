@@ -100,6 +100,8 @@ namespace TimeSeriesFramework.UI
         private DispatcherTimer m_timer;
         private TextBlock m_statusTextBlock;
         private TsfPopup m_statusPopup;
+        private string m_sortMember;
+        private string m_sortDirection;
 
         #endregion
 
@@ -578,6 +580,36 @@ namespace TimeSeriesFramework.UI
             get;
         }
 
+        /// <summary>
+        /// Gets or sets the member by which to sort the page.
+        /// </summary>
+        public string SortMember
+        {
+            get
+            {
+                return m_sortMember;
+            }
+            set
+            {
+                m_sortMember = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the direction in which to sort the page.
+        /// </summary>
+        public string SortDirection
+        {
+            get
+            {
+                return m_sortDirection;
+            }
+            set
+            {
+                m_sortDirection = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -658,7 +690,7 @@ namespace TimeSeriesFramework.UI
 
                 // Load keys if LoadKeys method exists in data model
                 if ((object)m_itemsKeys == null && (object)s_loadKeys != null)
-                    m_itemsKeys = (IList<TPrimaryKey>)s_loadKeys.Invoke(this, new object[] { (AdoDataConnection)null });
+                    m_itemsKeys = (IList<TPrimaryKey>)s_loadKeys.Invoke(this, new object[] { (AdoDataConnection)null, SortMember, SortDirection });
 
                 // Extract a single page of keys
                 if ((object)m_itemsKeys != null)
@@ -956,19 +988,23 @@ namespace TimeSeriesFramework.UI
             {
                 if (ItemsPerPage > 0)
                 {
-                    m_pages = new ObservableCollection<ObservableCollection<TDataModel>>();
-
                     if ((object)ItemsKeys != null)
                     {
-                        // TODO: Too much overhead?
                         PageCount = (int)Math.Ceiling(ItemsKeys.Count / (double)ItemsPerPage);
-                        m_pages = new ObservableCollection<ObservableCollection<TDataModel>>(Enumerable.Range(0, m_pageCount).Select(index => new ObservableCollection<TDataModel>()));
+
+                        if ((object)m_pages == null)
+                            m_pages = new ObservableCollection<ObservableCollection<TDataModel>>();
+
+                        while (m_pages.Count < m_pageCount)
+                            m_pages.Add(new ObservableCollection<TDataModel>());
+
                         CurrentPageNumber = Math.Max(Math.Min(CurrentPageNumber, m_pageCount), 1);
                         m_pages[CurrentPageNumber - 1] = ItemsSource;
                         CurrentPage = m_pages[CurrentPageNumber - 1];
                     }
                     else
                     {
+                        m_pages = new ObservableCollection<ObservableCollection<TDataModel>>();
                         PageCount = (int)Math.Ceiling(ItemsSource.Count / (double)ItemsPerPage);
 
                         for (int i = 0; i < m_pageCount; i++)
@@ -1017,6 +1053,19 @@ namespace TimeSeriesFramework.UI
                 orderby typeof(TDataModel).GetProperty(sortMemberPath).GetValue(item, null)
                 select item
                 );
+        }
+
+        /// <summary>
+        /// Sorts model data.
+        /// </summary>
+        /// <param name="sortMemberPath">Member path for sorting.</param>
+        /// <param name="sortDirection">Ascending or descending.</param>
+        public virtual void SortData(string sortMemberPath, ListSortDirection sortDirection)
+        {
+            SortMember = sortMemberPath;
+            SortDirection = (sortDirection == ListSortDirection.Descending) ? "DESC" : "ASC";
+            ItemsKeys = null;
+            Load();
         }
 
         #endregion

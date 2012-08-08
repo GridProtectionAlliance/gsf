@@ -25,13 +25,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using TimeSeriesFramework.UI.Commands;
 using TimeSeriesFramework.UI.DataModels;
-using TVA;
 
 namespace TimeSeriesFramework.UI.ViewModels
 {
@@ -45,9 +44,10 @@ namespace TimeSeriesFramework.UI.ViewModels
         private Dictionary<int, string> m_historianLookupList;
         private Dictionary<int, string> m_signalTypeLookupList;
         private int m_deviceID;
-        private List<Guid> m_allKeys; 
+        private IList<Guid> m_allKeys; 
         private RelayCommand m_searchCommand;
         private RelayCommand m_showAllCommand;
+        private string m_searchText;
 
         #endregion
 
@@ -134,6 +134,24 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets the list of all keys without the search text applied.
+        /// </summary>
+        public IList<Guid> AllKeys
+        {
+            get
+            {
+                if ((object)m_allKeys == null)
+                    m_allKeys = DataModels.Measurement.LoadSignalIDs(null, m_deviceID, false, false, "", SortMember, SortDirection);
+
+                return m_allKeys;
+            }
+            set
+            {
+                m_allKeys = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -173,6 +191,16 @@ namespace TimeSeriesFramework.UI.ViewModels
         }
 
         /// <summary>
+        /// Initialization to be done before the initial call to <see cref="Load"/>.
+        /// </summary>
+        public override void Initialize()
+        {
+            base.Initialize();
+            SortMember = "PointID";
+            SortDirection = "ASC";
+        }
+
+        /// <summary>
         /// Loads collection of <see cref="TimeSeriesFramework.UI.DataModels.Measurement"/> defined in the database.
         /// </summary>
         public override void Load()
@@ -184,8 +212,10 @@ namespace TimeSeriesFramework.UI.ViewModels
             {
                 if ((object)ItemsKeys == null)
                 {
-                    m_allKeys = DataModels.Measurement.LoadSignalIDs(null, m_deviceID);
-                    ItemsKeys = m_allKeys;
+                    ItemsKeys = DataModels.Measurement.LoadSignalIDs(null, m_deviceID, false, false, m_searchText, SortMember, SortDirection);
+
+                    if (string.IsNullOrEmpty(m_searchText))
+                        AllKeys = ItemsKeys;
                 }
 
                 pageKeys = ItemsKeys.Skip((CurrentPageNumber - 1) * ItemsPerPage).Take(ItemsPerPage).ToList();
@@ -218,10 +248,9 @@ namespace TimeSeriesFramework.UI.ViewModels
         {
             if (parameter != null && !string.IsNullOrEmpty(parameter.ToString()))
             {
-                string searchText = parameter.ToString();
-
                 CurrentPageNumber = 1;
-                ItemsKeys = DataModels.Measurement.LoadSignalIDs(null, m_deviceID, false, false, searchText);
+                m_searchText = parameter.ToString();
+                ItemsKeys = null;
                 Load();
             }
         }
@@ -231,12 +260,27 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// </summary>
         public void ShowAll()
         {
-            if (m_allKeys != ItemsKeys)
+            if (AllKeys != ItemsKeys)
             {
                 CurrentPageNumber = 1;
-                ItemsKeys = m_allKeys;
+                m_searchText = null;
+                ItemsKeys = AllKeys;
                 Load();
             }
+        }
+
+        /// <summary>
+        /// Sorts the keys by the given sort member in the given direction.
+        /// </summary>
+        /// <param name="sortMember">The member by which to sort the data.</param>
+        /// <param name="sortDirection">The direction in which to sort the data.</param>
+        public override void SortData(string sortMember, ListSortDirection sortDirection)
+        {
+            SortMember = sortMember;
+            SortDirection = (sortDirection == ListSortDirection.Descending) ? "DESC" : "ASC";
+            AllKeys = null;
+            ItemsKeys = null;
+            Load();
         }
 
         #endregion

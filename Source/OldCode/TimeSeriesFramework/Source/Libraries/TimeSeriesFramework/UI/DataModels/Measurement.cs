@@ -552,8 +552,11 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <param name="deviceID">ID of the Device to filter data.</param>
         /// <param name="filterByInternalFlag">boolean flag to indicate if only non internal data requested.</param>
         /// <param name="includeInternal">boolean flag to indicate if internal measurements are included.</param>
+        /// <param name="searchText">The text to search by.</param>
+        /// <param name="sortMember">The field to sort by.</param>
+        /// <param name="sortDirection"><c>ASC</c> or <c>DESC</c> for ascending or descending respectively.</param>
         /// <returns>Collection of <see cref="Measurement"/>.</returns>
-        public static List<Guid> LoadSignalIDs(AdoDataConnection database, int deviceID = 0, bool filterByInternalFlag = false, bool includeInternal = false, string searchText = "")
+        public static List<Guid> LoadSignalIDs(AdoDataConnection database, int deviceID = 0, bool filterByInternalFlag = false, bool includeInternal = false, string searchText = "", string sortMember = "", string sortDirection = "")
         {
             bool createdConnection = false;
 
@@ -572,6 +575,8 @@ namespace TimeSeriesFramework.UI.DataModels
                 string searchParam = null;
                 string searchQuery = null;
 
+                string sortClause = string.Empty;
+
                 if (!string.IsNullOrEmpty(searchText))
                 {
                     searchParam = string.Format("%{0}%", searchText);
@@ -579,6 +584,9 @@ namespace TimeSeriesFramework.UI.DataModels
                         "OR UPPER(SignalAcronym) LIKE UPPER({0}) OR UPPER(SignalID) LIKE UPPER({0}) OR UPPER(PointTag) LIKE UPPER({0}) OR UPPER(CompanyName) LIKE UPPER({0}) " +
                         "OR UPPER(CompanyAcronym) LIKE UPPER({0}) OR UPPER(DeviceAcronym) LIKE UPPER({0}) OR UPPER(SignalName) LIKE UPPER({0}) OR UPPER(ID) LIKE UPPER({0})", "searchParam");
                 }
+
+                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
 
                 if (filterByInternalFlag)
                 {
@@ -588,13 +596,13 @@ namespace TimeSeriesFramework.UI.DataModels
                         {
                             if (string.IsNullOrEmpty(searchText))
                             {
-                                queryFormat = "SELECT SignalID FROM MeasurementDetail WHERE DeviceID = {0} AND Subscribed = {1} ORDER BY PointID";
+                                queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE DeviceID = {{0}} AND Subscribed = {{1}} {0}", sortClause);
                                 paramNames = new string[] { "deviceID", "subscribed" };
                                 parameters = new object[] { deviceID, database.Bool(false) };
                             }
                             else
                             {
-                                queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE DeviceID = {{0}} AND Subscribed = {{1}} AND ({0}) ORDER BY PointID", searchQuery);
+                                queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE DeviceID = {{0}} AND Subscribed = {{1}} AND ({0}) {1}", searchQuery, sortClause);
                                 paramNames = new string[] { "deviceID", "subscribed" };
                                 parameters = new object[] { deviceID, database.Bool(false), searchParam };
                             }
@@ -603,13 +611,13 @@ namespace TimeSeriesFramework.UI.DataModels
                         {
                             if (string.IsNullOrEmpty(searchText))
                             {
-                                queryFormat = "SELECT SignalID FROM MeasurementDetail WHERE DeviceID = {0} AND Internal = {1} AND Subscribed = {2} ORDER BY PointID";
+                                queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE DeviceID = {{0}} AND Internal = {{1}} AND Subscribed = {{2}} {0}", sortClause);
                                 paramNames = new string[] { "deviceID", "internal", "subscribed" };
                                 parameters = new object[] { deviceID, database.Bool(false), database.Bool(false) };
                             }
                             else
                             {
-                                queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE DeviceID = {{0}} AND Internal = {{1}} AND Subscribed = {{2}} AND ({0}) ORDER BY PointID", searchQuery);
+                                queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE DeviceID = {{0}} AND Internal = {{1}} AND Subscribed = {{2}} AND ({0}) {1}", searchQuery, sortClause);
                                 paramNames = new string[] { "deviceID", "internal", "subscribed" };
                                 parameters = new object[] { deviceID, database.Bool(false), database.Bool(false), searchParam };
                             }
@@ -621,13 +629,13 @@ namespace TimeSeriesFramework.UI.DataModels
                         {
                             if (string.IsNullOrEmpty(searchText))
                             {
-                                queryFormat = "SELECT SignalID FROM MeasurementDetail WHERE Subscribed = {0} ORDER BY PointTag";
+                                queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE Subscribed = {{0}} {0}", sortClause);
                                 paramNames = new string[] { "subscribed" };
                                 parameters = new object[] { database.Bool(false) };
                             }
                             else
                             {
-                                queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE Subscribed = {{0}} AND ({0}) ORDER BY PointTag", searchQuery);
+                                queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE Subscribed = {{0}} AND ({0}) {1}", searchQuery, sortClause);
                                 paramNames = new string[] { "subscribed" };
                                 parameters = new object[] { database.Bool(false), searchParam };
                             }
@@ -636,13 +644,13 @@ namespace TimeSeriesFramework.UI.DataModels
                         {
                             if (string.IsNullOrEmpty(searchText))
                             {
-                                queryFormat = "SELECT SignalID FROM MeasurementDetail WHERE Internal = {0} AND Subscribed = {1} ORDER BY PointTag";
+                                queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE Internal = {{0}} AND Subscribed = {{1}} {0}", sortClause);
                                 paramNames = new string[] { "internal", "subscribed" };
                                 parameters = new object[] { database.Bool(false), database.Bool(false) };
                             }
                             else
                             {
-                                queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE Internal = {{0}} AND Subscribed = {{1}} AND ({0}) ORDER BY PointTag", searchQuery);
+                                queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE Internal = {{0}} AND Subscribed = {{1}} AND ({0}) {1}", searchQuery, sortClause);
                                 paramNames = new string[] { "internal", "subscribed" };
                                 parameters = new object[] { database.Bool(false), database.Bool(false), searchParam };
                             }
@@ -655,13 +663,13 @@ namespace TimeSeriesFramework.UI.DataModels
                     {
                         if (string.IsNullOrEmpty(searchText))
                         {
-                            queryFormat = "SELECT SignalID FROM MeasurementDetail WHERE DeviceID = {0} ORDER BY PointID";
+                            queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE DeviceID = {{0}} {0}", sortClause);
                             paramNames = new string[] { "deviceID" };
                             parameters = new object[] { deviceID };
                         }
                         else
                         {
-                            queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE DeviceID = {{0}} AND ({0}) ORDER BY PointID", searchQuery);
+                            queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE DeviceID = {{0}} AND ({0}) {1}", searchQuery, sortClause);
                             paramNames = new string[] { "deviceID" };
                             parameters = new object[] { deviceID, searchParam };
                         }
@@ -670,13 +678,13 @@ namespace TimeSeriesFramework.UI.DataModels
                     {
                         if (string.IsNullOrEmpty(searchText))
                         {
-                            queryFormat = "SELECT SignalID FROM MeasurementDetail ORDER BY PointTag";
+                            queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail {0}", sortClause);
                             paramNames = new string[] { };
                             parameters = new object[] { };
                         }
                         else
                         {
-                            queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE {0} ORDER BY PointTag", searchQuery);
+                            queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE {0} {1}", searchQuery, sortClause);
                             paramNames = new string[] { };
                             parameters = new object[] { searchParam };
                         }
