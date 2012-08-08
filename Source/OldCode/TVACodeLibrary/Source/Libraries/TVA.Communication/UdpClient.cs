@@ -965,7 +965,7 @@ namespace TVA.Communication
 
                             // Send data over socket.
                             if (!m_udpClient.Provider.SendAsync(m_sendArgs))
-                                ThreadPool.QueueUserWorkItem(state => ProcessSend());
+                                ProcessSend();
                         }
                         finally
                         {
@@ -1001,24 +1001,31 @@ namespace TVA.Communication
         /// </summary>
         private void ProcessSend()
         {
-            ManualResetEventSlim handle;
+            ManualResetEventSlim handle = null;
 
             try
             {
                 // Send operation is complete.
                 handle = (ManualResetEventSlim)m_sendArgs.UserToken;
-                handle.Set();
 
                 if (m_sendArgs.SocketError != SocketError.Success)
                     throw new SocketException((int)m_sendArgs.SocketError);
 
                 m_udpClient.Statistics.UpdateBytesSent(m_sendArgs.BytesTransferred);
+                handle.Set();
+                handle = null;
+
                 OnSendDataComplete();
             }
             catch (Exception ex)
             {
                 // Send operation failed to complete.
                 OnSendDataException(ex);
+            }
+            finally
+            {
+                if ((object)handle != null)
+                    handle.Set();
             }
         }
 

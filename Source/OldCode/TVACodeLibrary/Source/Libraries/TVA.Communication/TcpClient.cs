@@ -996,7 +996,7 @@ namespace TVA.Communication
 
                             // Send data over socket.
                             if (!m_tcpClient.Provider.SendAsync(m_sendArgs))
-                                ThreadPool.QueueUserWorkItem(state => ProcessSend());
+                                ProcessSend();
                         }
                         finally
                         {
@@ -1032,13 +1032,12 @@ namespace TVA.Communication
         /// </summary>
         private void ProcessSend()
         {
-            ManualResetEventSlim handle;
+            ManualResetEventSlim handle = null;
 
             try
             {
                 // Send operation is complete.
                 handle = (ManualResetEventSlim)m_sendArgs.UserToken;
-                handle.Set();
 
                 // Check for errors during send operation.
                 if (m_sendArgs.SocketError != SocketError.Success)
@@ -1046,6 +1045,8 @@ namespace TVA.Communication
 
                 // Update statistics and trigger callback.
                 m_tcpClient.Statistics.UpdateBytesSent(m_sendArgs.BytesTransferred);
+                handle.Set();
+                handle = null;
 
                 // Trigger callback.
                 OnSendDataComplete();
@@ -1054,6 +1055,11 @@ namespace TVA.Communication
             {
                 // Send operation failed to complete.
                 OnSendDataException(ex);
+            }
+            finally
+            {
+                if ((object)handle != null)
+                    handle.Set();
             }
         }
 

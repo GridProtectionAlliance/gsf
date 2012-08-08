@@ -1009,7 +1009,7 @@ namespace TVA.Communication
 
                                     // Send data over socket.
                                     if (!client.Provider.SendAsync(args))
-                                        ThreadPool.QueueUserWorkItem(state => ProcessSend(args));
+                                        ProcessSend(args);
                                 }
                                 finally
                                 {
@@ -1040,6 +1040,8 @@ namespace TVA.Communication
                     }
                 }
             }
+
+            m_sendQueues.TryRemove(clientID, out sendQueue);
         }
 
         /// <summary>
@@ -1055,18 +1057,24 @@ namespace TVA.Communication
             try
             {
                 // Send operation is complete.
-                handle.Set();
-
                 if (args.SocketError != SocketError.Success)
                     throw new SocketException((int)args.SocketError);
 
                 client.Statistics.UpdateBytesSent(args.BytesTransferred);
+                handle.Set();
+                handle = null;
+
                 OnSendClientDataComplete(client.ID);
             }
             catch (Exception ex)
             {
                 // Send operation failed to complete.
                 OnSendClientDataException(client.ID, ex);
+            }
+            finally
+            {
+                if ((object)handle != null)
+                    handle.Set();
             }
         }
 
