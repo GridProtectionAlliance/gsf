@@ -1680,11 +1680,6 @@
             </summary>
             <param name="ex">Exception to send to <see cref="E:TVA.Communication.ClientBase.ReceiveDataException"/> event.</param>
         </member>
-        <member name="M:TVA.Communication.TcpClient.OnConnectionTerminated">
-            <summary>
-            Raises the <see cref="E:TVA.Communication.ClientBase.ConnectionTerminated"/> event.
-            </summary>
-        </member>
         <member name="M:TVA.Communication.TcpClient.ProcessConnect">
             <summary>
             Callback method for asynchronous connect operation.
