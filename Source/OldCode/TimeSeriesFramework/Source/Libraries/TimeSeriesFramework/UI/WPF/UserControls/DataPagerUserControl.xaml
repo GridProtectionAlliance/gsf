@@ -11,7 +11,7 @@
             <TextBlock Text="{Binding ItemsPerPage}" TextAlignment="Left" Width="30" Margin="2,2,10,2" Padding="2" />
             <Button Command="{Binding FirstCommand}" Content="&lt;&lt;" Width="50" Margin="2" ToolTip="Go to first page" />
             <Button Command="{Binding PreviousCommand}" Content="&lt;" Width="50" Margin="2" ToolTip="Go to previous page" />
-            <TextBlock Text="{Binding CurrentPageNumber}" TextAlignment="Center" Width="50" Margin="2" Padding="2" />
+            <TextBox Text="{Binding Path=CurrentPageNumber, Mode=TwoWay}" TextAlignment="Center" Width="50" Margin="2" Padding="2" KeyDown="CurrentPageTextBox_KeyDown" />
             <TextBlock Text="of" TextAlignment="Center" Width="25" Margin="2" Padding="2" />
             <TextBlock Text="{Binding PageCount}" TextAlignment="Center" Width="50" Margin="2" Padding="2" />
             <Button Command="{Binding NextCommand}" Content="&gt;" Width="50" Margin="2" ToolTip="Go to next page" />

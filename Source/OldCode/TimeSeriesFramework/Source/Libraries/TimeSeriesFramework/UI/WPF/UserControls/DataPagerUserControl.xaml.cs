@@ -23,6 +23,7 @@
 
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 
 namespace TimeSeriesFramework.UI.UserControls
@@ -158,7 +159,7 @@ namespace TimeSeriesFramework.UI.UserControls
 
         #endregion
 
-        #region [ Constructor]
+        #region [ Constructor ]
 
         /// <summary>
         /// Creates a new instance of <see cref="DataPagerUserControl"/>.
@@ -166,6 +167,21 @@ namespace TimeSeriesFramework.UI.UserControls
         public DataPagerUserControl()
         {
             InitializeComponent();
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        private void CurrentPageTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Return)
+            {
+                BindingExpression bindingExpression = ((TextBox)sender).GetBindingExpression(TextBox.TextProperty);
+
+                if (bindingExpression != null)
+                    bindingExpression.UpdateSource();
+            }
         }
 
         #endregion

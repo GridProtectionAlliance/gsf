@@ -248,7 +248,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         {
             if (parameter != null && !string.IsNullOrEmpty(parameter.ToString()))
             {
-                CurrentPageNumber = 1;
+                SetCurrentPageNumber(1);
                 m_searchText = parameter.ToString();
                 ItemsKeys = null;
                 Load();
@@ -262,7 +262,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         {
             if (AllKeys != ItemsKeys)
             {
-                CurrentPageNumber = 1;
+                SetCurrentPageNumber(1);
                 m_searchText = null;
                 ItemsKeys = AllKeys;
                 Load();

@@ -335,8 +335,10 @@ namespace TimeSeriesFramework.UI
                 if (m_currentPageNumber != value)
                     CurrentSelectedIndex = 0;
 
-                m_currentPageNumber = value;
+                m_currentPageNumber = Math.Max(Math.Min(value, m_pageCount), 1);
                 OnPropertyChanged("CurrentPageNumber");
+
+                Load();
             }
         }
 
@@ -372,7 +374,7 @@ namespace TimeSeriesFramework.UI
                             if (m_pages != null)
                             {
                                 CurrentPage = m_pages[0];
-                                CurrentPageNumber = 1;
+                                SetCurrentPageNumber(1);
                                 Load();
                             }
 
@@ -402,7 +404,7 @@ namespace TimeSeriesFramework.UI
                         {
                             if (m_pages != null)
                             {
-                                CurrentPageNumber = (CurrentPageNumber - 1) < 1 ? 1 : CurrentPageNumber - 1;
+                                SetCurrentPageNumber((CurrentPageNumber - 1) < 1 ? 1 : CurrentPageNumber - 1);
                                 CurrentPage = m_pages[CurrentPageNumber - 1];
                                 Load();
                             }
@@ -432,7 +434,7 @@ namespace TimeSeriesFramework.UI
                         {
                             if (m_pages != null)
                             {
-                                CurrentPageNumber = (CurrentPageNumber + 1) > m_pageCount ? m_pageCount : CurrentPageNumber + 1;
+                                SetCurrentPageNumber((CurrentPageNumber + 1) > m_pageCount ? m_pageCount : CurrentPageNumber + 1);
                                 CurrentPage = m_pages[CurrentPageNumber - 1];
                                 Load();
                             }
@@ -463,7 +465,7 @@ namespace TimeSeriesFramework.UI
                             if (m_pages != null)
                             {
                                 CurrentPage = m_pages[m_pageCount - 1];
-                                CurrentPageNumber = m_pageCount;
+                                SetCurrentPageNumber(m_pageCount);
                                 Load();
                             }
                         },
@@ -672,7 +674,7 @@ namespace TimeSeriesFramework.UI
             PageCount = 0;
             CurrentPage = new ObservableCollection<TDataModel>();
             CurrentItem = new TDataModel();
-            CurrentPageNumber = 0;
+            SetCurrentPageNumber(0);
         }
 
         /// <summary>
@@ -871,6 +873,19 @@ namespace TimeSeriesFramework.UI
         }
 
         /// <summary>
+        /// Sets the current page number without initiating a call to <see cref="Load"/>.
+        /// </summary>
+        /// <param name="currentPageNumber">The new value for the current page number.</param>
+        protected void SetCurrentPageNumber(int currentPageNumber)
+        {
+            if (m_currentPageNumber != currentPageNumber)
+                CurrentSelectedIndex = 0;
+
+            m_currentPageNumber = currentPageNumber;
+            OnPropertyChanged("CurrentPageNumber");
+        }
+
+        /// <summary>
         /// Raises the <see cref="PropertyChanged"/> event.
         /// </summary>
         /// <param name="propertyName">Property name that has changed.</param>
@@ -998,7 +1013,7 @@ namespace TimeSeriesFramework.UI
                         while (m_pages.Count < m_pageCount)
                             m_pages.Add(new ObservableCollection<TDataModel>());
 
-                        CurrentPageNumber = Math.Max(Math.Min(CurrentPageNumber, m_pageCount), 1);
+                        SetCurrentPageNumber(Math.Max(Math.Min(CurrentPageNumber, m_pageCount), 1));
                         m_pages[CurrentPageNumber - 1] = ItemsSource;
                         CurrentPage = m_pages[CurrentPageNumber - 1];
                     }
@@ -1022,12 +1037,12 @@ namespace TimeSeriesFramework.UI
                         if (CurrentPage == null || CurrentPageNumber == 0)
                         {
                             CurrentPage = m_pages[0];
-                            CurrentPageNumber = 1;
+                            SetCurrentPageNumber(1);
                         }
                         else
                         {
                             // Retain current page when user deletes any record from the collection
-                            CurrentPageNumber = (CurrentPageNumber + 1) > m_pageCount ? m_pageCount : CurrentPageNumber;
+                            SetCurrentPageNumber((CurrentPageNumber + 1) > m_pageCount ? m_pageCount : CurrentPageNumber);
                             CurrentPage = m_pages[CurrentPageNumber - 1];
                         }
                     }
@@ -1037,7 +1052,7 @@ namespace TimeSeriesFramework.UI
             {
                 PageCount = 0;
                 CurrentPage = new ObservableCollection<TDataModel>();
-                CurrentPageNumber = 0;
+                SetCurrentPageNumber(0);
                 Clear();
             }
         }
