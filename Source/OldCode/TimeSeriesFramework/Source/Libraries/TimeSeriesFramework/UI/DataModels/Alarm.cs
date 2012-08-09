@@ -504,8 +504,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
                     sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
 
-                query = database.ParameterizedQueryString(string.Format("SELECT NodeID, TagName, ID, SignalID, AssociatedMeasurementID, Description, Severity, " +
-                    "Operation, SetPoint, Tolerance, Delay, Hysteresis, LoadOrder, Enabled FROM Alarm WHERE NodeID = {{0}} {0}", sortClause), "nodeID");
+                query = database.ParameterizedQueryString(string.Format("SELECT ID FROM Alarm WHERE NodeID = {{0}} {0}", sortClause), "nodeID");
 
                 adapterTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
 

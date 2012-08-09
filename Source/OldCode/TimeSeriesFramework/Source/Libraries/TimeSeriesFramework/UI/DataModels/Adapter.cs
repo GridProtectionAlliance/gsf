@@ -371,8 +371,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
                     sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
 
-                query = database.ParameterizedQueryString(string.Format("SELECT NodeID, ID, AdapterName, AssemblyName, TypeName, " +
-                    "ConnectionString, LoadOrder, Enabled, NodeName FROM {0} WHERE NodeID = {{0}} {1}", viewName, sortClause), "nodeID");
+                query = database.ParameterizedQueryString(string.Format("SELECT ID FROM {0} WHERE NodeID = {{0}} {1}", viewName, sortClause), "nodeID");
 
                 adapterTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
 

@@ -37,6 +37,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using System.Linq;
 using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
@@ -359,11 +360,51 @@ namespace TimeSeriesFramework.UI.DataModels
         // Static Methods
 
         /// <summary>
+        /// Loads <see cref="Historian"/> IDs as an <see cref="IList{T}"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="sortMember">The field to sort by.</param>
+        /// <param name="sortDirection"><c>ASC</c> or <c>DESC</c> for ascending or descending respectively.</param>
+        /// <returns>Collection of <see cref="Int32"/>.</returns>
+        public static IList<int> LoadKeys(AdoDataConnection database, string sortMember = "", string sortDirection = "")
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                IList<int> historianList = new List<int>();
+                string sortClause = string.Empty;
+                DataTable historianTable;
+                string query;
+
+                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
+                
+                query = database.ParameterizedQueryString(string.Format("SELECT ID FROM HistorianDetail WHERE NodeID = {{0}} {0}", sortClause), "nodeID");
+                historianTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+
+                foreach (DataRow row in historianTable.Rows)
+                {
+                    historianList.Add(row.ConvertField<int>("ID"));
+                }
+
+                return historianList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
         /// Loads <see cref="Historian"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>        
         /// <returns>Collection of <see cref="Historian"/>.</returns>
-        public static ObservableCollection<Historian> Load(AdoDataConnection database)
+        public static ObservableCollection<Historian> Load(AdoDataConnection database, IList<int> keys)
         {
             bool createdConnection = false;
 
@@ -372,16 +413,22 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 ObservableCollection<Historian> historianList = new ObservableCollection<Historian>();
+                DataTable historianTable;
+                string query;
+                string commaSeparatedKeys;
 
-                string query = database.ParameterizedQueryString("SELECT NodeID, ID, Acronym, Name, AssemblyName, TypeName, ConnectionString, IsLocal, " +
-                    "Description, LoadOrder, Enabled, MeasurementReportingInterval, NodeName FROM HistorianDetail WHERE NodeID = {0} ORDER BY LoadOrder",
-                    "nodeID");
-
-                DataTable historianTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
-
-                foreach (DataRow row in historianTable.Rows)
+                if ((object)keys != null && keys.Count > 0)
                 {
-                    historianList.Add(new Historian()
+                    commaSeparatedKeys = keys.Select(key => "'" + key.ToString() + "'").Aggregate((str1, str2) => str1 + "," + str2);
+                    query = database.ParameterizedQueryString(string.Format("SELECT NodeID, ID, Acronym, Name, AssemblyName, TypeName, " +
+                        "ConnectionString, IsLocal, Description, LoadOrder, Enabled, MeasurementReportingInterval, NodeName" +
+                        " FROM HistorianDetail WHERE NodeID = {{0}} AND ID IN ({0})", commaSeparatedKeys), "nodeID");
+
+                    historianTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+
+                    foreach (DataRow row in historianTable.Rows)
+                    {
+                        historianList.Add(new Historian()
                         {
                             NodeID = database.Guid(row, "NodeID"),
                             ID = row.ConvertField<int>("ID"),
@@ -397,6 +444,7 @@ namespace TimeSeriesFramework.UI.DataModels
                             MeasurementReportingInterval = row.ConvertField<int>("MeasurementReportingInterval"),
                             m_nodeName = row.Field<string>("NodeName")
                         });
+                    }
                 }
 
                 return historianList;
