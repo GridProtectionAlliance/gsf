@@ -25,6 +25,7 @@
 //******************************************************************************************************
 
 using System;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using TimeSeriesFramework.UI.ViewModels;
@@ -39,7 +40,10 @@ namespace TimeSeriesFramework.UI.UserControls
         #region [ Members ]
 
         private ErrorLogViewModel m_dataContext;
-        private ErrorMonitor m_ErrorMonitor;
+        private ErrorMonitor m_errorMonitor;
+        private DataGridColumn m_sortColumn;
+        private string m_sortMemberPath;
+        private ListSortDirection m_sortDirection;
 
         #endregion
 
@@ -53,6 +57,7 @@ namespace TimeSeriesFramework.UI.UserControls
         {
             InitializeComponent();
             m_dataContext = new ErrorLogViewModel(18);
+            m_dataContext.PropertyChanged += new PropertyChangedEventHandler(ViewModel_PropertyChanged);
             this.DataContext = m_dataContext;
         }
 
@@ -62,8 +67,33 @@ namespace TimeSeriesFramework.UI.UserControls
 
         private void DataGrid_Sorting(object sender, DataGridSortingEventArgs e)
         {
-            m_dataContext.LastSortMemberPath = e.Column.SortMemberPath;
-            m_dataContext.Sort(m_dataContext.GetCurrentItemKey());
+            if (e.Column.SortMemberPath != m_sortMemberPath)
+                m_sortDirection = ListSortDirection.Ascending;
+            else if (m_sortDirection == ListSortDirection.Ascending)
+                m_sortDirection = ListSortDirection.Descending;
+            else
+                m_sortDirection = ListSortDirection.Ascending;
+
+            m_sortColumn = e.Column;
+            m_sortMemberPath = e.Column.SortMemberPath;
+            m_dataContext.SortData(m_sortMemberPath, m_sortDirection);
+        }
+
+        private void ViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "ItemsSource")
+                Dispatcher.BeginInvoke(new Action(SortDataGrid));
+        }
+
+        private void SortDataGrid()
+        {
+            if ((object)m_sortColumn != null)
+            {
+                m_sortColumn.SortDirection = m_sortDirection;
+                DataGridList.Items.SortDescriptions.Clear();
+                DataGridList.Items.SortDescriptions.Add(new SortDescription(m_sortMemberPath, m_sortDirection));
+                DataGridList.Items.Refresh();
+            }
         }
 
         private void ButtonRestore_Click(object sender, RoutedEventArgs e)
@@ -113,9 +143,9 @@ namespace TimeSeriesFramework.UI.UserControls
         private void ErrorViewer_Loaded(object sender, RoutedEventArgs e)
         {
             if ((object)ErrorMonitor.Default == null)
-                m_ErrorMonitor = new ErrorMonitor(true);
+                m_errorMonitor = new ErrorMonitor(true);
 
-            m_dataContext.Monitor = ErrorMonitor.Default ?? m_ErrorMonitor;
+            m_dataContext.Monitor = ErrorMonitor.Default ?? m_errorMonitor;
 
             TextBlockErrorRefreshInterval.Text = m_dataContext.Monitor.RefreshInterval.ToString();
             TextBoxRefreshInterval.Text = m_dataContext.Monitor.RefreshInterval.ToString();

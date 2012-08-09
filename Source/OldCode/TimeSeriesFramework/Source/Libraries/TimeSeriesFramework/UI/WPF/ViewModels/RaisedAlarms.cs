@@ -184,7 +184,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         {
             m_currentSortMemberPath = sortMemberPath;
             m_currentSortDirection = sortDirection;
-            SortData();
+            SortData(GetCurrentItemKey());
         }
 
         // Handles the alarm monitor's RefreshedAlarms event.
@@ -197,31 +197,19 @@ namespace TimeSeriesFramework.UI.ViewModels
         private void UpdateList()
         {
             int key;
-            RaisedAlarm newCurrentItem;
 
             if ((object)m_monitor != null)
             {
                 key = GetCurrentItemKey();
                 ItemsSource = m_monitor.GetAlarmList();
-                newCurrentItem = ItemsSource.SingleOrDefault(alarm => alarm.ID == key);
-                SortData();
-
-                if ((object)newCurrentItem != null)
-                {
-                    CurrentItem = newCurrentItem;
-                }
-                else
-                {
-                    Clear();
-                    CurrentSelectedIndex = -1;
-                }
+                SortData(key);
             }
         }
 
-        private void SortData()
+        private void SortData(int currentItemKey)
         {
             List<RaisedAlarm> itemsSource;
-            int currentSelectedIndex = CurrentSelectedIndex;
+            RaisedAlarm newItem = ItemsSource.SingleOrDefault(alarm => alarm.ID == currentItemKey);
 
             if ((object)m_currentSortMemberPath == null)
                 return;
@@ -261,10 +249,15 @@ namespace TimeSeriesFramework.UI.ViewModels
 
             ItemsSource = new ObservableCollection<RaisedAlarm>(itemsSource);
 
-            if (currentSelectedIndex == -1)
+            if ((object)newItem != null)
+            {
+                CurrentItem = newItem;
+            }
+            else
+            {
                 Clear();
-
-            CurrentSelectedIndex = currentSelectedIndex;
+                CurrentSelectedIndex = -1;
+            }
         }
 
         #endregion

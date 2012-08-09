@@ -25,6 +25,9 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -40,8 +43,9 @@ namespace TimeSeriesFramework.UI.ViewModels
 
         private ErrorMonitor m_exMonitor;
         private Dispatcher m_dispatcher;
-        private string m_LastSortMemberPath;
         private RelayCommand m_showCommand;
+        private string m_currentSortMemberPath;
+        private ListSortDirection m_currentSortDirection;
 
         #endregion
 
@@ -56,26 +60,10 @@ namespace TimeSeriesFramework.UI.ViewModels
             : base(itemsPerPage, autoSave)
         {
             m_dispatcher = Dispatcher.CurrentDispatcher;
-            LastSortMemberPath = String.Empty;
         }
         #endregion
 
         #region [ Properties ]
-        /// <summary>
-        /// Gets or sets <see cref="LastSortMemberPath"/> Sort Member Path of DataGrid.
-        /// </summary>
-        public String LastSortMemberPath
-        {
-            get
-            {
-                return m_LastSortMemberPath;
-            }
-
-            set
-            {
-                m_LastSortMemberPath = value;
-            }
-        }
 
         /// <summary>
         /// Gets or sets the <see cref="ErrorMonitor"/> used to receive
@@ -153,16 +141,44 @@ namespace TimeSeriesFramework.UI.ViewModels
         }
 
         /// <summary>
+        /// Sorts model data.
+        /// </summary>
+        /// <param name="sortMemberPath">Member path for sorting.</param>
+        /// <param name="sortDirection">Ascending or descending.</param>
+        public override void SortData(string sortMemberPath, ListSortDirection sortDirection)
+        {
+            m_currentSortMemberPath = sortMemberPath;
+            m_currentSortDirection = sortDirection;
+            Sort(GetCurrentItemKey());
+        }
+
+        /// <summary>
         /// Initiates parent sortmethod.
         /// Set current selected item after sort based on display index.
         /// </summary>
-        /// <param name="idxCurItem">Index of selected item before sort</param>
-        public void Sort(int idxCurItem)
+        /// <param name="currentItemKey">Index of selected item before sort</param>
+        private void Sort(int currentItemKey)
         {
-            ErrorLog newItem = ItemsSource.SingleOrDefault(ex => ex.ID == idxCurItem);
+            List<ErrorLog> itemsSource;
+            ErrorLog newItem = ItemsSource.SingleOrDefault(error => error.ID == currentItemKey);
 
-            if ((object)LastSortMemberPath != null && LastSortMemberPath != String.Empty)
-                SortData(LastSortMemberPath);
+            if ((object)m_currentSortMemberPath == null)
+                return;
+
+            if (m_currentSortDirection == ListSortDirection.Ascending)
+            {
+                itemsSource = ItemsSource
+                    .OrderBy(item => item.GetType().GetProperty(m_currentSortMemberPath).GetValue(item, null))
+                    .ToList();
+            }
+            else
+            {
+                itemsSource = ItemsSource
+                    .OrderByDescending(item => item.GetType().GetProperty(m_currentSortMemberPath).GetValue(item, null))
+                    .ToList();
+            }
+
+            ItemsSource = new ObservableCollection<ErrorLog>(itemsSource);
 
             if ((object)newItem != null)
             {
@@ -170,6 +186,7 @@ namespace TimeSeriesFramework.UI.ViewModels
             }
             else
             {
+                Clear();
                 CurrentSelectedIndex = -1;
             }
         }
