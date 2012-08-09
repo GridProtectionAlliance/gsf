@@ -24,14 +24,16 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
+using TimeSeriesFramework.UI.DataModels;
 
 namespace TimeSeriesFramework.UI.ViewModels
 {
-    internal class RaisedAlarms : PagedViewModelBase<DataModels.RaisedAlarm, int>
+    internal class RaisedAlarms : PagedViewModelBase<RaisedAlarm, int>
     {
         #region [ Members ]
 
@@ -39,6 +41,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         private AlarmMonitor m_monitor;
         private Dispatcher m_dispatcher;
         private string m_currentSortMemberPath;
+        private ListSortDirection m_currentSortDirection;
 
         #endregion
 
@@ -126,7 +129,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// <param name="row">The row whose color is to be set.</param>
         public void SetRowColor(DataGridRow row)
         {
-            DataModels.RaisedAlarm item = row.Item as DataModels.RaisedAlarm;
+            RaisedAlarm item = row.Item as RaisedAlarm;
 
             if ((object)item != null)
             {
@@ -176,27 +179,12 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// Sorts model data.
         /// </summary>
         /// <param name="sortMemberPath">Member path for sorting.</param>
-        public override void SortData(string sortMemberPath)
+        /// <param name="sortDirection">Ascending or descending.</param>
+        public override void SortData(string sortMemberPath, ListSortDirection sortDirection)
         {
-            List<DataModels.RaisedAlarm> itemsSource;
-
             m_currentSortMemberPath = sortMemberPath;
-
-            if (sortMemberPath != "Severity")
-            {
-                base.SortData(sortMemberPath);
-            }
-            else
-            {
-                if ((object)m_monitor != null)
-                {
-                    itemsSource = ItemsSource.OrderBy(alarm => alarm.Severity)
-                        .OrderBy(alarm => alarm.Severity == (int)AlarmSeverity.Error)
-                        .ToList();
-
-                    ItemsSource = new ObservableCollection<DataModels.RaisedAlarm>(itemsSource);
-                }
-            }
+            m_currentSortDirection = sortDirection;
+            SortData();
         }
 
         // Handles the alarm monitor's RefreshedAlarms event.
@@ -209,16 +197,14 @@ namespace TimeSeriesFramework.UI.ViewModels
         private void UpdateList()
         {
             int key;
-            DataModels.RaisedAlarm newCurrentItem;
+            RaisedAlarm newCurrentItem;
 
             if ((object)m_monitor != null)
             {
                 key = GetCurrentItemKey();
                 ItemsSource = m_monitor.GetAlarmList();
                 newCurrentItem = ItemsSource.SingleOrDefault(alarm => alarm.ID == key);
-
-                if ((object)m_currentSortMemberPath != null)
-                    SortData(m_currentSortMemberPath);
+                SortData();
 
                 if ((object)newCurrentItem != null)
                 {
@@ -230,6 +216,55 @@ namespace TimeSeriesFramework.UI.ViewModels
                     CurrentSelectedIndex = -1;
                 }
             }
+        }
+
+        private void SortData()
+        {
+            List<RaisedAlarm> itemsSource;
+            int currentSelectedIndex = CurrentSelectedIndex;
+
+            if ((object)m_currentSortMemberPath == null)
+                return;
+
+            if (m_currentSortMemberPath != "Severity")
+            {
+                if (m_currentSortDirection == ListSortDirection.Ascending)
+                {
+                    itemsSource = ItemsSource
+                        .OrderBy(item => item.GetType().GetProperty(m_currentSortMemberPath).GetValue(item, null))
+                        .ToList();
+                }
+                else
+                {
+                    itemsSource = ItemsSource
+                        .OrderByDescending(item => item.GetType().GetProperty(m_currentSortMemberPath).GetValue(item, null))
+                        .ToList();
+                }
+            }
+            else
+            {
+                if (m_currentSortDirection == ListSortDirection.Ascending)
+                {
+                    itemsSource = ItemsSource
+                        .OrderBy(alarm => alarm.Severity)
+                        .OrderBy(alarm => alarm.Severity == (int)AlarmSeverity.Error)
+                        .ToList();
+                }
+                else
+                {
+                    itemsSource = ItemsSource
+                        .OrderByDescending(alarm => alarm.Severity)
+                        .OrderByDescending(alarm => alarm.Severity == (int)AlarmSeverity.Error)
+                        .ToList();
+                }
+            }
+
+            ItemsSource = new ObservableCollection<RaisedAlarm>(itemsSource);
+
+            if (currentSelectedIndex == -1)
+                Clear();
+
+            CurrentSelectedIndex = currentSelectedIndex;
         }
 
         #endregion
