@@ -27,6 +27,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using System.Linq;
 using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
@@ -481,11 +482,54 @@ namespace TimeSeriesFramework.UI.DataModels
         // Static Methods
 
         /// <summary>
+        /// Loads <see cref="Alarm"/> IDs as an <see cref="IList{T}"/>.
+        /// </summary>        
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="sortMember">The field to sort by.</param>
+        /// <param name="sortDirection"><c>ASC</c> or <c>DESC</c> for ascending or descending respectively.</param>
+        /// <returns>Collection of <see cref="Int32"/>.</returns>
+        public static IList<int> LoadKeys(AdoDataConnection database, string sortMember = "", string sortDirection = "")
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                IList<int> alarmList = new List<int>();
+                string sortClause = string.Empty;
+                DataTable adapterTable;
+                string query;
+
+                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
+
+                query = database.ParameterizedQueryString(string.Format("SELECT NodeID, TagName, ID, SignalID, AssociatedMeasurementID, Description, Severity, " +
+                    "Operation, SetPoint, Tolerance, Delay, Hysteresis, LoadOrder, Enabled FROM Alarm WHERE NodeID = {{0}} {0}", sortClause), "nodeID");
+
+                adapterTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+
+                foreach (DataRow row in adapterTable.Rows)
+                {
+                    alarmList.Add(row.ConvertField<int>("ID"));
+                }
+
+                return alarmList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
         /// Loads <see cref="Alarm"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>        
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="keys">Keys of the adapters to be loaded from the database.</param>
         /// <returns>Collection of <see cref="Alarm"/>.</returns>
-        public static ObservableCollection<Alarm> Load(AdoDataConnection database)
+        public static ObservableCollection<Alarm> Load(AdoDataConnection database, IList<int> keys)
         {
             bool createdConnection = false;
 
@@ -494,34 +538,42 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 ObservableCollection<Alarm> alarmList = new ObservableCollection<Alarm>();
-                string query = database.ParameterizedQueryString("SELECT NodeID, TagName, ID, SignalID, AssociatedMeasurementID, Description, Severity, Operation, " +
-                    "SetPoint, Tolerance, Delay, Hysteresis, LoadOrder, Enabled FROM Alarm WHERE NodeID = {0} ORDER BY LoadOrder", "nodeID");
-
-                DataTable adapterTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+                DataTable adapterTable;
+                string query;
+                string commaSeparatedKeys;
                 object associatedMeasurementId;
 
-                foreach (DataRow row in adapterTable.Rows)
+                if ((object)keys != null && keys.Count > 0)
                 {
-                    associatedMeasurementId = row.Field<object>("AssociatedMeasurementID");
+                    commaSeparatedKeys = keys.Select(key => "'" + key.ToString() + "'").Aggregate((str1, str2) => str1 + "," + str2);
+                    query = database.ParameterizedQueryString(string.Format("SELECT NodeID, TagName, ID, SignalID, AssociatedMeasurementID, Description, Severity, Operation, " +
+                        "SetPoint, Tolerance, Delay, Hysteresis, LoadOrder, Enabled FROM Alarm WHERE NodeID = {{0}} AND ID IN ({0})", commaSeparatedKeys), "nodeID");
 
-                    alarmList.Add(new Alarm()
+                    adapterTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+
+                    foreach (DataRow row in adapterTable.Rows)
                     {
-                        NodeID = database.Guid(row, "NodeID"),
-                        ID = row.ConvertField<int>("ID"),
-                        TagName = row.Field<string>("TagName"),
-                        SignalID = database.Guid(row, "SignalID"),
-                        AssociatedMeasurementID = ((object)associatedMeasurementId != null) ? Guid.Parse(associatedMeasurementId.ToString()) : (Guid?)null,
-                        Description = row.Field<string>("Description"),
-                        Severity = row.ConvertField<int>("Severity"),
-                        Operation = row.ConvertField<int>("Operation"),
-                        SetPoint = row.ConvertNullableField<double>("SetPoint"),
-                        Tolerance = row.ConvertNullableField<double>("Tolerance"),
-                        Delay = row.ConvertNullableField<double>("Delay"),
-                        Hysteresis = row.ConvertNullableField<double>("Hysteresis"),
-                        LoadOrder = row.ConvertField<int>("LoadOrder"),
-                        Enabled = row.ConvertField<bool>("Enabled"),
-                        CreateAssociatedMeasurement = (object)associatedMeasurementId != null
-                    });
+                        associatedMeasurementId = row.Field<object>("AssociatedMeasurementID");
+
+                        alarmList.Add(new Alarm()
+                        {
+                            NodeID = database.Guid(row, "NodeID"),
+                            ID = row.ConvertField<int>("ID"),
+                            TagName = row.Field<string>("TagName"),
+                            SignalID = database.Guid(row, "SignalID"),
+                            AssociatedMeasurementID = (associatedMeasurementId != null) ? Guid.Parse(associatedMeasurementId.ToString()) : (Guid?)null,
+                            Description = row.Field<string>("Description"),
+                            Severity = row.ConvertField<int>("Severity"),
+                            Operation = row.ConvertField<int>("Operation"),
+                            SetPoint = row.ConvertNullableField<double>("SetPoint"),
+                            Tolerance = row.ConvertNullableField<double>("Tolerance"),
+                            Delay = row.ConvertNullableField<double>("Delay"),
+                            Hysteresis = row.ConvertNullableField<double>("Hysteresis"),
+                            LoadOrder = row.ConvertField<int>("LoadOrder"),
+                            Enabled = row.ConvertField<bool>("Enabled"),
+                            CreateAssociatedMeasurement = (associatedMeasurementId != null)
+                        });
+                    }
                 }
 
                 return alarmList;

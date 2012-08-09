@@ -138,13 +138,10 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// </summary>
         public override void Load()
         {
-            ObservableCollection<DataModels.Alarm> alarms;
-
             try
             {
-                alarms = DataModels.Alarm.Load(null);
-                alarms.ToList().ForEach(alarm => alarm.OperationDescription = GetOperationDescription(alarm));
-                ItemsSource = alarms;
+                base.Load();
+                ItemsSource.ToList().ForEach(alarm => alarm.OperationDescription = GetOperationDescription(alarm));
             }
             catch (Exception ex)
             {
@@ -206,7 +203,19 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// <param name="e">Event arguments.</param>
         protected override void m_currentItem_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            base.m_currentItem_PropertyChanged(sender, e);
+            switch (e.PropertyName)
+            {
+                case "OperationDescription":
+                case "SetPointEnabled":
+                case "ToleranceEnabled":
+                case "HysteresisEnabled":
+                case "DelayEnabled":
+                    break;
+
+                default:
+                    base.m_currentItem_PropertyChanged(sender, e);
+                    break;
+            }
 
             if (e.PropertyName == "Operation" || e.PropertyName == "SetPoint" || e.PropertyName == "Delay")
                 CurrentItem.OperationDescription = GetOperationDescription(CurrentItem);

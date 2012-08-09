@@ -54,21 +54,20 @@
                 <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
             <TextBox Grid.Row="0" Grid.Column="1" Text="{tsfBinding:Column Path=TagName}" Width="{StaticResource ItemSize}" />
-            <TextBlock Text="SetPoint" Grid.Row="0" Grid.Column="2" />
-            <TextBox Name="SetPointBox" Grid.Row="0" Grid.Column="3" Text="{tsfBinding:Column Path=SetPoint}" Width="{StaticResource XSmallItemSize}" TextAlignment="Right" IsEnabled="{Binding Path=SetPointEnabled}" />
+            
             <TextBlock Text="Signal" Grid.Row="1" Grid.Column="0" />
             <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Source={StaticResource MeasurementLookupList}}" DisplayMemberPath="Value"
                       SelectedItem="{tsfBinding:Column Path=SignalID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource MeasurementLookupList}}"/>
 
-            <TextBlock Text="Tolerance" Grid.Row="1" Grid.Column="2" />
-            <TextBox Name="ToleranceBox" Grid.Row="1" Grid.Column="3" Text="{tsfBinding:Column Path=Tolerance}" Width="{StaticResource XSmallItemSize}" TextAlignment="Right" IsEnabled="{Binding Path=ToleranceEnabled}" />
-
             <TextBlock Text="Operation" Grid.Row="2" Grid.Column="0" />
             <ComboBox Name="OperationBox"  Grid.Row="2" Grid.Column="1" ItemsSource="{Binding Source={StaticResource OperationList}}" DisplayMemberPath="Value"
                       SelectedItem="{tsfBinding:Column Path=Operation, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource OperationList}}" />
+            
+            <TextBlock Text="SetPoint" Grid.Row="2" Grid.Column="2" />
+            <TextBox Name="SetPointBox" Grid.Row="2" Grid.Column="3" Text="{tsfBinding:Column Path=SetPoint}" Width="{StaticResource XSmallItemSize}" TextAlignment="Right" IsEnabled="{Binding Path=SetPointEnabled}" />
 
-            <TextBlock Name="HysteresisBox" Text="Hysteresis" Grid.Row="2" Grid.Column="2" />
-            <TextBox Grid.Row="2" Grid.Column="3" Text="{tsfBinding:Column Path=Hysteresis}" Width="{StaticResource XSmallItemSize}" TextAlignment="Right" IsEnabled="{Binding Path=HysteresisEnabled}" />
+            <TextBlock Text="Tolerance" Grid.Row="3" Grid.Column="2" />
+            <TextBox Name="ToleranceBox" Grid.Row="3" Grid.Column="3" Text="{tsfBinding:Column Path=Tolerance}" Width="{StaticResource XSmallItemSize}" TextAlignment="Right" IsEnabled="{Binding Path=ToleranceEnabled}" />
 
             <TextBlock Text="Delay" Grid.Row="4" Grid.Column="0" />
             <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal">
@@ -76,23 +75,25 @@
                 <TextBlock Text="seconds" Margin="2,5,5,5" />
             </StackPanel>
 
-            <CheckBox Content="Enabled" Grid.Row="4" Grid.Column="3" IsChecked="{tsfBinding:Column Path=Enabled}"/>
-
-            <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="0" HorizontalAlignment="Right">
-                <TextBlock Text="Load Order" Style="{StaticResource RequiredLabel}" />
-                <TextBlock Style="{StaticResource RequiredMarker}" />
-            </StackPanel>
-            
-            <TextBox Grid.Row="3" Grid.Column="1" Text="{tsfBinding:Column Path=LoadOrder}" Width="35" />
-
-            <TextBlock Text="Severity" Grid.Row="3" Grid.Column="2" />
-            <ComboBox Grid.Row="3" Grid.Column="3" ItemsSource="{Binding Source={StaticResource SeverityList}}" DisplayMemberPath="Value"
-                      SelectedItem="{tsfBinding:Column Path=Severity, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource SeverityList}}"/>
+            <TextBlock Name="HysteresisBox" Text="Hysteresis" Grid.Row="4" Grid.Column="2" />
+            <TextBox Grid.Row="4" Grid.Column="3" Text="{tsfBinding:Column Path=Hysteresis}" Width="{StaticResource XSmallItemSize}" TextAlignment="Right" IsEnabled="{Binding Path=HysteresisEnabled}" />
 
             <TextBlock Text="Description" Grid.Row="5" Grid.Column="0" VerticalAlignment="Top" />
             <TextBox Grid.Row="5" Grid.Column="1" Text="{tsfBinding:Column Path=Description}" TextWrapping="Wrap" />
 
-            <CheckBox Content="Create Associated Measurement" Grid.Row="5" Grid.Column="3" Margin="5,15,5,5" IsChecked="{tsfBinding:Column Path=CreateAssociatedMeasurement}" />     
+            <TextBlock Text="Severity" Grid.Row="5" Grid.Column="2" />
+            <ComboBox Grid.Row="5" Grid.Column="3" ItemsSource="{Binding Source={StaticResource SeverityList}}" DisplayMemberPath="Value"
+                      SelectedItem="{tsfBinding:Column Path=Severity, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource SeverityList}}"/>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="6" Grid.Column="0" HorizontalAlignment="Right">
+                <TextBlock Text="Load Order" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Style="{StaticResource RequiredMarker}" />
+            </StackPanel>
+            <TextBox Grid.Row="6" Grid.Column="1" Text="{tsfBinding:Column Path=LoadOrder}" Width="35" />
+
+            <CheckBox Content="Enabled" Grid.Row="6" Grid.Column="3" IsChecked="{tsfBinding:Column Path=Enabled}"/>
+
+            <CheckBox Content="Create Associated Measurement" Grid.Row="7" Grid.Column="3" Margin="5,15,5,5" IsChecked="{tsfBinding:Column Path=CreateAssociatedMeasurement}" />     
         </Grid>
 
         <uc:DetailViewFooterUserControl x:Name="UserControlDetailViewFooter" DeleteCommand="{Binding DeleteCommand}" ClearCommand="{Binding ClearCommand}" SaveCommand="{Binding SaveCommand}"
