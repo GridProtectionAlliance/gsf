@@ -33,6 +33,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using System.Linq;
 using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
@@ -442,12 +443,45 @@ namespace TimeSeriesFramework.UI.DataModels
 
         // Static Methods
 
+        public static IList<Guid> LoadKeys(AdoDataConnection database, string sortMember, string sortDirection)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                IList<Guid> nodeList = new List<Guid>();
+                DataTable nodeTable;
+
+                string sortClause = string.Empty;
+
+                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
+
+                nodeTable = database.Connection.RetrieveData(database.AdapterType, string.Format("Select ID From NodeDetail {0}", sortClause));
+
+
+                foreach (DataRow row in nodeTable.Rows)
+                {
+                    nodeList.Add(database.Guid(row, "ID"));
+                }
+
+                return nodeList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
         /// <summary>
         /// Loads <see cref="Node"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>        
         /// <returns>Collection of <see cref="Node"/>.</returns>
-        public static ObservableCollection<Node> Load(AdoDataConnection database)
+        public static ObservableCollection<Node> Load(AdoDataConnection database, IList<Guid> keys)
         {
             bool createdConnection = false;
 
@@ -457,14 +491,20 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 ObservableCollection<Node> nodeList = new ObservableCollection<Node>();
                 DataTable nodeTable;
+                string query;
+                string commaSeparatedKeys;
 
-                nodeTable = database.Connection.RetrieveData(database.AdapterType, "Select ID, Name, CompanyID, " +
-                        "Longitude, Latitude, Description, ImagePath, Settings, MenuData, MenuType, Master, LoadOrder, Enabled, " +
-                        "CompanyName From NodeDetail ORDER BY LoadOrder");
-
-                foreach (DataRow row in nodeTable.Rows)
+                if ((object)keys != null && keys.Count > 0)
                 {
-                    nodeList.Add(new Node()
+                    commaSeparatedKeys = keys.Select(key => "'" + key.ToString() + "'").Aggregate((str1, str2) => str1 + "," + str2);
+                    query = string.Format("Select ID, Name, CompanyID, Longitude, Latitude, Description, ImagePath, Settings, MenuData, " +
+                        "MenuType, Master, LoadOrder, Enabled, CompanyName From NodeDetail WHERE ID IN ({0})", commaSeparatedKeys);
+
+                    nodeTable = database.Connection.RetrieveData(database.AdapterType, query);
+
+                    foreach (DataRow row in nodeTable.Rows)
+                    {
+                        nodeList.Add(new Node()
                         {
                             ID = database.Guid(row, "ID"),
                             Name = row.Field<string>("Name"),
@@ -484,6 +524,7 @@ namespace TimeSeriesFramework.UI.DataModels
                             //RealTimeStatisticServiceUrl = row.Field<string>("RealTimeStatisticServiceUrl"),
                             m_companyName = row.Field<string>("CompanyName")
                         });
+                    }
                 }
 
                 return nodeList;

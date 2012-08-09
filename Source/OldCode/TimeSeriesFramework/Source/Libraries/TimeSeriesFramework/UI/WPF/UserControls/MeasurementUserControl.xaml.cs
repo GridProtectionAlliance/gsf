@@ -112,7 +112,7 @@ namespace TimeSeriesFramework.UI.UserControls
 
             m_sortColumn = e.Column;
             m_sortMemberPath = e.Column.SortMemberPath;
-            m_dataContext.SortData(m_sortMemberPath);
+            m_dataContext.SortData(m_sortMemberPath, m_sortDirection);
         }
 
         private void ViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
