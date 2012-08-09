@@ -35,6 +35,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using System.Linq;
 using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
@@ -338,12 +339,65 @@ namespace TimeSeriesFramework.UI.DataModels
         // Static Methods      
 
         /// <summary>
+        /// Loads <see cref="Adapter"/> IDs as an <see cref="IList{T}"/>.
+        /// </summary>        
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="adapterType"><see cref="AdapterType"/> collection to be returned.</param>      
+        /// <param name="sortMember">The field to sort by.</param>
+        /// <param name="sortDirection"><c>ASC</c> or <c>DESC</c> for ascending or descending respectively.</param>  
+        /// <returns>Collection of <see cref="Int32"/>.</returns>
+        public static IList<int> LoadIDs(AdoDataConnection database, AdapterType adapterType, string sortMember, string sortDirection)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                string viewName;
+
+                if (adapterType == AdapterType.Action)
+                    viewName = "CustomActionAdapterDetail";
+                else if (adapterType == AdapterType.Input)
+                    viewName = "CustomInputAdapterDetail";
+                else
+                    viewName = "CustomOutputAdapterDetail";
+
+                IList<int> adapterList = new List<int>();
+                string sortClause = string.Empty;
+                DataTable adapterTable;
+                string query;
+
+                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
+
+                query = database.ParameterizedQueryString(string.Format("SELECT NodeID, ID, AdapterName, AssemblyName, TypeName, " +
+                    "ConnectionString, LoadOrder, Enabled, NodeName FROM {0} WHERE NodeID = {{0}} {1}", viewName, sortClause), "nodeID");
+
+                adapterTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+
+                foreach (DataRow row in adapterTable.Rows)
+                {
+                    adapterList.Add(row.ConvertField<int>("ID"));
+                }
+
+                return adapterList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
         /// Loads <see cref="Adapter"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>        
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="adapterType"><see cref="AdapterType"/> collection to be returned.</param>        
+        /// <param name="adapterType"><see cref="AdapterType"/> collection to be returned.</param>     
+        /// <param name="keys">Keys of the adapters to be loaded from the database.</param>   
         /// <returns>Collection of <see cref="Adapter"/>.</returns>
-        public static ObservableCollection<Adapter> Load(AdoDataConnection database, AdapterType adapterType)
+        public static ObservableCollection<Adapter> Load(AdoDataConnection database, AdapterType adapterType, IList<int> keys)
         {
             bool createdConnection = false;
 
@@ -361,27 +415,34 @@ namespace TimeSeriesFramework.UI.DataModels
                     viewName = "CustomOutputAdapterDetail";
 
                 ObservableCollection<Adapter> adapterList = new ObservableCollection<Adapter>();
+                DataTable adapterTable;
+                string query;
+                string commaSeparatedKeys;
 
-                string query = database.ParameterizedQueryString("SELECT NodeID, ID, AdapterName, AssemblyName, TypeName, ConnectionString, LoadOrder, " +
-                    "Enabled, NodeName FROM " + viewName + " WHERE NodeID = {0} ORDER BY LoadOrder", "nodeID");
-
-                DataTable adapterTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
-
-                foreach (DataRow row in adapterTable.Rows)
+                if ((object)keys != null && keys.Count > 0)
                 {
-                    adapterList.Add(new Adapter()
+                    commaSeparatedKeys = keys.Select(key => "'" + key.ToString() + "'").Aggregate((str1, str2) => str1 + "," + str2);
+                    query = database.ParameterizedQueryString(string.Format("SELECT NodeID, ID, AdapterName, AssemblyName, TypeName, ConnectionString, " +
+                        "LoadOrder, Enabled, NodeName FROM {0} WHERE NodeID = {{0}} AND ID IN ({1})", viewName, commaSeparatedKeys), "nodeID");
+
+                    adapterTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+
+                    foreach (DataRow row in adapterTable.Rows)
                     {
-                        NodeID = database.Guid(row, "NodeID"),
-                        ID = row.ConvertField<int>("ID"),
-                        AdapterName = row.Field<string>("AdapterName"),
-                        AssemblyName = row.Field<string>("AssemblyName"),
-                        TypeName = row.Field<string>("TypeName"),
-                        ConnectionString = row.Field<string>("ConnectionString"),
-                        LoadOrder = row.ConvertField<int>("LoadOrder"),
-                        Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
-                        NodeName = row.Field<string>("NodeName"),
-                        Type = adapterType
-                    });
+                        adapterList.Add(new Adapter()
+                        {
+                            NodeID = database.Guid(row, "NodeID"),
+                            ID = row.ConvertField<int>("ID"),
+                            AdapterName = row.Field<string>("AdapterName"),
+                            AssemblyName = row.Field<string>("AssemblyName"),
+                            TypeName = row.Field<string>("TypeName"),
+                            ConnectionString = row.Field<string>("ConnectionString"),
+                            LoadOrder = row.ConvertField<int>("LoadOrder"),
+                            Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
+                            NodeName = row.Field<string>("NodeName"),
+                            Type = adapterType
+                        });
+                    }
                 }
 
                 return adapterList;

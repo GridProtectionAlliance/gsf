@@ -268,9 +268,16 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// </summary>
         public override void Load()
         {
+            Mouse.OverrideCursor = Cursors.Wait;
+            List<int> pageKeys;
+
             try
             {
-                ItemsSource = Adapter.Load(null, m_adapterType);
+                if ((object)ItemsKeys == null)
+                    ItemsKeys = Adapter.LoadIDs(null, m_adapterType, SortMember, SortDirection);
+
+                pageKeys = ItemsKeys.Skip((CurrentPageNumber - 1) * ItemsPerPage).Take(ItemsPerPage).ToList();
+                ItemsSource = DataModels.Adapter.Load(null, m_adapterType, pageKeys);
                 CurrentItem.Type = m_adapterType;
             }
             catch (Exception ex)
@@ -286,6 +293,10 @@ namespace TimeSeriesFramework.UI.ViewModels
                     CommonFunctions.LogException(null, "Load " + DataModelName, ex);
                 }
             }
+            finally
+            {
+                Mouse.OverrideCursor = null;
+            }
         }
 
         /// <summary>
@@ -293,22 +304,34 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// </summary>
         public override void Delete()
         {
-            try
+            if (CanDelete && Confirm("Are you sure you want to delete \'" + GetCurrentItemName() + "\'?", "Delete " + DataModelName))
             {
-                Popup(Adapter.Delete(null, m_adapterType, GetCurrentItemKey()), "Delete Adapter", MessageBoxImage.Information);
-                Load();
-            }
-            catch (Exception ex)
-            {
-                if (ex.InnerException != null)
+                try
                 {
-                    Popup(ex.Message + Environment.NewLine + "Inner Exception: " + ex.InnerException.Message, "Delete " + DataModelName + " Exception:", MessageBoxImage.Error);
-                    CommonFunctions.LogException(null, "Delete " + DataModelName, ex.InnerException);
+                    if (OnBeforeDeleteCanceled())
+                        throw new OperationCanceledException("Delete was canceled.");
+
+                    int currentItemKey = GetCurrentItemKey();
+                    string result = Adapter.Delete(null, m_adapterType, GetCurrentItemKey());
+                    ItemsKeys.Remove(currentItemKey);
+
+                    OnDeleted();
+
+                    Load();
+                    DisplayStatusMessage(result);
                 }
-                else
+                catch (Exception ex)
                 {
-                    Popup(ex.Message, "Delete " + DataModelName + " Exception:", MessageBoxImage.Error);
-                    CommonFunctions.LogException(null, "Delete " + DataModelName, ex);
+                    if (ex.InnerException != null)
+                    {
+                        Popup(ex.Message + Environment.NewLine + "Inner Exception: " + ex.InnerException.Message, "Delete " + DataModelName + " Exception:", MessageBoxImage.Error);
+                        CommonFunctions.LogException(null, "Delete " + DataModelName, ex.InnerException);
+                    }
+                    else
+                    {
+                        Popup(ex.Message, "Delete " + DataModelName + " Exception:", MessageBoxImage.Error);
+                        CommonFunctions.LogException(null, "Delete " + DataModelName, ex);
+                    }
                 }
             }
         }
