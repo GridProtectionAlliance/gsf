@@ -33,6 +33,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using System.Linq;
 using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
@@ -237,11 +238,50 @@ namespace TimeSeriesFramework.UI.DataModels
         // Static Methods      
 
         /// <summary>
+        /// Loads <see cref="Company"/> IDs as an <see cref="IList{T}"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="sortMember">The field to sort by.</param>
+        /// <param name="sortDirection"><c>ASC</c> or <c>DESC</c> for ascending or descending respectively.</param>
+        /// <returns>Collection of <see cref="Int32"/>.</returns>
+        public static IList<int> LoadKeys(AdoDataConnection database, string sortMember = "", string sortDirection = "")
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                IList<int> companyList = new List<int>();
+                string sortClause = string.Empty;
+                DataTable companyTable;
+
+                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
+
+                companyTable = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT ID FROM Company {0}", sortClause));
+
+                foreach (DataRow row in companyTable.Rows)
+                {
+                    companyList.Add(row.ConvertField<int>("ID"));
+                }
+
+                return companyList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
         /// Loads <see cref="Company"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="keys">Keys of the companies to be loaded from the database.</param>
         /// <returns>Collection of <see cref="Company"/>.</returns>
-        public static ObservableCollection<Company> Load(AdoDataConnection database)
+        public static ObservableCollection<Company> Load(AdoDataConnection database, IList<int> keys)
         {
             bool createdConnection = false;
 
@@ -250,20 +290,28 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 ObservableCollection<Company> companyList = new ObservableCollection<Company>();
-                DataTable companyTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym, MapAcronym, Name, URL, LoadOrder " +
-                    "FROM Company ORDER BY LoadOrder");
+                DataTable companyTable;
+                string query;
+                string commaSeparatedKeys;
 
-                foreach (DataRow row in companyTable.Rows)
+                if ((object)keys != null && keys.Count > 0)
                 {
-                    companyList.Add(new Company()
+                    commaSeparatedKeys = keys.Select(key => "'" + key.ToString() + "'").Aggregate((str1, str2) => str1 + "," + str2);
+                    query = string.Format("SELECT ID, Acronym, MapAcronym, Name, URL, LoadOrder FROM Company WHERE ID IN ({0})", commaSeparatedKeys);
+                    companyTable = database.Connection.RetrieveData(database.AdapterType, query);
+
+                    foreach (DataRow row in companyTable.Rows)
                     {
-                        ID = row.ConvertField<int>("ID"),
-                        Acronym = row.Field<string>("Acronym"),
-                        MapAcronym = row.Field<string>("MapAcronym"),
-                        Name = row.Field<string>("Name"),
-                        URL = row.Field<string>("URL"),
-                        LoadOrder = row.ConvertField<int>("LoadOrder")
-                    });
+                        companyList.Add(new Company()
+                        {
+                            ID = row.ConvertField<int>("ID"),
+                            Acronym = row.Field<string>("Acronym"),
+                            MapAcronym = row.Field<string>("MapAcronym"),
+                            Name = row.Field<string>("Name"),
+                            URL = row.Field<string>("URL"),
+                            LoadOrder = row.ConvertField<int>("LoadOrder")
+                        });
+                    }
                 }
 
                 return companyList;

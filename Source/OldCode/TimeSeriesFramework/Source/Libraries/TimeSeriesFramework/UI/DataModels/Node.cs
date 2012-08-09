@@ -443,7 +443,14 @@ namespace TimeSeriesFramework.UI.DataModels
 
         // Static Methods
 
-        public static IList<Guid> LoadKeys(AdoDataConnection database, string sortMember, string sortDirection)
+        /// <summary>
+        /// Loads <see cref="Node"/> IDs as an <see cref="IList{T}"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="sortMember">The field to sort by.</param>
+        /// <param name="sortDirection"><c>ASC</c> or <c>DESC</c> for ascending or descending respectively.</param>
+        /// <returns>Collection of <see cref="Guid"/>.</returns>
+        public static IList<Guid> LoadKeys(AdoDataConnection database, string sortMember = "", string sortDirection = "")
         {
             bool createdConnection = false;
 
@@ -452,9 +459,8 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 IList<Guid> nodeList = new List<Guid>();
-                DataTable nodeTable;
-
                 string sortClause = string.Empty;
+                DataTable nodeTable;
 
                 if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
                     sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
@@ -479,7 +485,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Loads <see cref="Node"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
-        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>        
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="keys">Keys of the nodes to be loaded from the database.</param>
         /// <returns>Collection of <see cref="Node"/>.</returns>
         public static ObservableCollection<Node> Load(AdoDataConnection database, IList<Guid> keys)
         {

@@ -546,7 +546,7 @@ namespace TimeSeriesFramework.UI.DataModels
         #region [ Static ]
 
         /// <summary>
-        /// Loads <see cref="Measurement"/> signal IDs as an <see cref="ObservableCollection{T}"/> style list.
+        /// Loads <see cref="Measurement"/> signal IDs as an <see cref="IList{T}"/>.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="deviceID">ID of the Device to filter data.</param>
@@ -555,7 +555,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <param name="searchText">The text to search by.</param>
         /// <param name="sortMember">The field to sort by.</param>
         /// <param name="sortDirection"><c>ASC</c> or <c>DESC</c> for ascending or descending respectively.</param>
-        /// <returns>Collection of <see cref="Measurement"/>.</returns>
+        /// <returns>Collection of <see cref="Guid"/>.</returns>
         public static List<Guid> LoadSignalIDs(AdoDataConnection database, int deviceID = 0, bool filterByInternalFlag = false, bool includeInternal = false, string searchText = "", string sortMember = "", string sortDirection = "")
         {
             bool createdConnection = false;
