@@ -1306,6 +1306,11 @@
             </summary>
             <exception cref="T:System.ArgumentException">The value being assigned is either zero or negative.</exception>
         </member>
+        <member name="P:TVA.Communication.UdpClient.Status">
+            <summary>
+            Gets the descriptive status of the client.
+            </summary>
+        </member>
         <member name="T:TVA.Communication.SerialClient">
             <summary>
             Represents a communication client based on <see cref="T:System.IO.Ports.SerialPort"/>.
@@ -1674,6 +1679,12 @@
             </summary>
             <param name="ex">Exception to send to <see cref="E:TVA.Communication.ClientBase.SendDataException"/> event.</param>
         </member>
+        <member name="M:TVA.Communication.TcpClient.OnReceiveDataException(System.Net.Sockets.SocketException)">
+            <summary>
+            Raises the <see cref="E:TVA.Communication.ClientBase.ReceiveDataException"/> event.
+            </summary>
+            <param name="ex">Exception to send to <see cref="E:TVA.Communication.ClientBase.ReceiveDataException"/> event.</param>
+        </member>
         <member name="M:TVA.Communication.TcpClient.OnReceiveDataException(System.Exception)">
             <summary>
             Raises the <see cref="E:TVA.Communication.ClientBase.ReceiveDataException"/> event.
@@ -1767,6 +1778,11 @@
         <member name="P:TVA.Communication.TcpClient.ReceiveHandler">
             <summary>
             Gets the receive handler for receiving data on the socket.
+            </summary>
+        </member>
+        <member name="P:TVA.Communication.TcpClient.Status">
+            <summary>
+            Gets the descriptive status of the client.
             </summary>
         </member>
         <member name="T:TVA.Communication.Radius.PacketType">
@@ -3016,6 +3032,11 @@
             Gets the <see cref="T:System.Net.Sockets.Socket"/> object for the <see cref="T:TVA.Communication.UdpServer"/>.
             </summary>
         </member>
+        <member name="P:TVA.Communication.UdpServer.Status">
+            <summary>
+            Gets the descriptive status of the client.
+            </summary>
+        </member>
         <member name="T:TVA.Communication.TransportStatistics">
             <summary>
             A class for statistics related to server-client communication.
@@ -3334,7 +3355,7 @@
             Processes the termination of client.
             </summary>
         </member>
-        <member name="M:TVA.Communication.TcpServer.ReturnReceiveArgs(System.Net.Sockets.SocketAsyncEventArgs)">
+        <member name="M:TVA.Communication.TcpServer.DisposeReceiveArgs(System.Net.Sockets.SocketAsyncEventArgs)">
             <summary>
             Returns the <see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/> used for receiving data on the socket.
             </summary>
@@ -3371,6 +3392,11 @@
         <member name="P:TVA.Communication.TcpServer.ReceiveHandler">
             <summary>
             Gets the receive handler used to handle data received on the connected sockets.
+            </summary>
+        </member>
+        <member name="P:TVA.Communication.TcpServer.Status">
+            <summary>
+            Gets the descriptive status of the client.
             </summary>
         </member>
         <member name="T:TVA.Communication.ServerState">
