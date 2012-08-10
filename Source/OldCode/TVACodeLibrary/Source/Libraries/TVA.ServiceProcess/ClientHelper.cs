@@ -664,11 +664,14 @@ namespace TVA.ServiceProcess
             m_attemptReconnection = true;
             m_authenticationComplete = false;
             m_remotingClient.Connect();                                     // Wait for connection.
+
             if (m_remotingClient.Enabled)
+            {
                 while (!m_authenticationComplete)
                 {
                     Thread.Sleep(100);
-                }    // Wait for authentication.
+                } // Wait for authentication.
+            }
         }
 
         /// <summary>
@@ -832,7 +835,7 @@ namespace TVA.ServiceProcess
         {
             // Upon establishing connection with the service's communication client, we'll send our information to the
             // service so the service can keep track of all the client that are connected to its communication server.
-            m_remotingClient.Send(new ClientInfo(this));
+            m_remotingClient.SendAsync(new ClientInfo(this));
 
             StringBuilder status = new StringBuilder();
             status.AppendFormat("Connected to {0}:", m_remotingClient.ServerUri);

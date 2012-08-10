@@ -849,6 +849,7 @@ namespace TVA.Communication
             SocketAsyncEventArgs args;
             UdpServerPayload payload;
             ManualResetEventSlim handle = null;
+            int copyLength;
 
             // Inability to find the client indicates the client
             // was disconnected before we had a chance to send.
@@ -876,17 +877,30 @@ namespace TVA.Communication
                                 {
                                     // Get the handle for the send operation.
                                     handle = payload.WaitHandle;
-
-                                    // Copy payload into send buffer.
-                                    Buffer.BlockCopy(payload.Data, payload.Offset, client.SendBuffer, 0, payload.Length);
-
-                                    // Set buffer and user token of send args.
-                                    args.SetBuffer(0, payload.Length);
                                     userToken.WaitHandle = handle;
 
-                                    // Send data over socket.
-                                    if (!m_udpServer.Provider.SendToAsync(args))
-                                        ProcessSend(args);
+                                    while (payload.Length > 0)
+                                    {
+                                        // Copy payload into send buffer.
+                                        copyLength = Math.Min(payload.Length, client.SendBufferSize);
+                                        Buffer.BlockCopy(payload.Data, payload.Offset, client.SendBuffer, 0, copyLength);
+
+                                        // Set buffer and user token of send args.
+                                        args.SetBuffer(0, copyLength);
+
+                                        // Send data over socket.
+                                        if (!m_udpServer.Provider.SendToAsync(args))
+                                            ProcessSend(args);
+
+                                        // Wait for send operation to complete
+                                        // before the next send attempt.
+                                        handle.Wait();
+                                        handle.Reset();
+
+                                        // Update offset and length.
+                                        payload.Offset += copyLength;
+                                        payload.Length -= copyLength;
+                                    }
                                 }
                                 finally
                                 {
@@ -895,10 +909,6 @@ namespace TVA.Communication
                                     payload.WaitHandle = null;
                                     ReusableObjectPool<UdpServerPayload>.Default.ReturnObject(payload);
                                 }
-
-                                // Wait for send operation to complete
-                                // before the next send attempt.
-                                handle.Wait();
                             }
                         }
                         catch (Exception ex)

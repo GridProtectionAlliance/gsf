@@ -666,16 +666,23 @@ namespace TVA.Communication
         /// </summary>
         public override void Disconnect()
         {
-            if (CurrentState != ClientState.Disconnected)
+            try
             {
-                if (m_tcpClient.Provider.Connected)
-                    m_tcpClient.Provider.Disconnect(false);
+                if (CurrentState != ClientState.Disconnected)
+                {
+                    if ((object)m_tcpClient.Provider != null && m_tcpClient.Provider.Connected)
+                        m_tcpClient.Provider.Disconnect(false);
 
-                if ((object)m_connectWaitHandle != null)
-                    m_connectWaitHandle.Set();
+                    if ((object)m_connectWaitHandle != null)
+                        m_connectWaitHandle.Set();
 
-                m_tcpClient.Reset();
-                OnConnectionTerminated();
+                    m_tcpClient.Reset();
+                    OnConnectionTerminated();
+                }
+            }
+            catch (Exception ex)
+            {
+                OnSendDataException(new InvalidOperationException(string.Format("Disconnect exception: {0}", ex.Message), ex));
             }
         }
 
@@ -975,6 +982,7 @@ namespace TVA.Communication
         {
             TcpClientPayload payload;
             ManualResetEventSlim handle = null;
+            int copyLength;
 
             while (CurrentState != ClientState.Disconnected)
             {
@@ -986,17 +994,30 @@ namespace TVA.Communication
                         {
                             // Get the handle for the send operation.
                             handle = payload.WaitHandle;
+                            m_sendArgs.UserToken = handle;
 
-                            // Copy payload into send buffer.
-                            Buffer.BlockCopy(payload.Data, payload.Offset, m_tcpClient.SendBuffer, 0, payload.Length);
+                            while (payload.Length > 0)
+                            {
+                                // Copy payload into send buffer.
+                                copyLength = Math.Min(payload.Length, m_tcpClient.SendBufferSize);
+                                Buffer.BlockCopy(payload.Data, payload.Offset, m_tcpClient.SendBuffer, 0, copyLength);
 
-                            // Set buffer and user token of send args.
-                            m_sendArgs.SetBuffer(0, payload.Length);
-                            m_sendArgs.UserToken = payload.WaitHandle;
+                                // Set buffer and user token of send args.
+                                m_sendArgs.SetBuffer(0, copyLength);
 
-                            // Send data over socket.
-                            if (!m_tcpClient.Provider.SendAsync(m_sendArgs))
-                                ProcessSend();
+                                // Send data over socket.
+                                if (!m_tcpClient.Provider.SendAsync(m_sendArgs))
+                                    ProcessSend();
+
+                                // Wait for send operation to complete
+                                // before the next send attempt.
+                                handle.Wait();
+                                handle.Reset();
+
+                                // Update offset and length.
+                                payload.Offset += copyLength;
+                                payload.Length -= copyLength;
+                            }
                         }
                         finally
                         {
@@ -1005,10 +1026,6 @@ namespace TVA.Communication
                             payload.WaitHandle = null;
                             ReusableObjectPool<TcpClientPayload>.Default.ReturnObject(payload);
                         }
-
-                        // Wait for send operation to complete
-                        // before the next send attempt.
-                        handle.Wait();
                     }
                 }
                 catch (Exception ex)
