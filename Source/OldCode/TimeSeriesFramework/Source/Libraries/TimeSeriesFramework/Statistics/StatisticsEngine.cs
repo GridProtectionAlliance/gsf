@@ -607,14 +607,14 @@ namespace TimeSeriesFramework.Statistics
                     acronymFunction = m_sourceAcronymFunctions[stat.Source];
 
                     if (measurements.Any() && !sources.Any())
-                        OnStatusMessage("WARNING: Source collection not found for {0} measurements.", stat.Source);
+                        OnStatusMessage("WARNING: Source collection not found for {0}-ST{1} measurements.", stat.Source, stat.Index);
 
                     // Run calculations
                     foreach (object source in sources)
                     {
                         sourceAcronym = acronymFunction(source);
                         signalReferencePattern = string.Format(@"^{0}![^!]+-ST{1}", sourceAcronym, stat.Index);
-                        measurement = measurements.SingleOrDefault(m => Regex.IsMatch(m_measurementSignalReferenceMap[m.Key], signalReferencePattern));
+                        measurement = measurements.SingleOrDefault(m => Regex.IsMatch(m_measurementSignalReferenceMap[m.Key], signalReferencePattern, RegexOptions.CultureInvariant | RegexOptions.IgnoreCase));
 
                         try
                         {
@@ -644,9 +644,12 @@ namespace TimeSeriesFramework.Statistics
         {
             string signalReferenceSuffix = string.Format("-ST{0}", stat.Index);
 
-            return m_definedMeasurements.Where(definedMeasurement => m_measurementSourceMap.ContainsKey(definedMeasurement.Key))
+            return m_definedMeasurements
+                .Where(definedMeasurement => m_measurementSourceMap.ContainsKey(definedMeasurement.Key))
                 .Where(definedMeasurement => m_measurementSourceMap[definedMeasurement.Key] == stat.Source)
-                .Where(definedMeasurement => m_measurementSignalReferenceMap[definedMeasurement.Key].EndsWith(signalReferenceSuffix));
+                .Where(definedMeasurement => m_measurementSignalReferenceMap[definedMeasurement.Key].EndsWith(signalReferenceSuffix))
+                .Where(definedMeasurement => definedMeasurement.Key.Source.ToUpper() == "STAT")
+                .ToList();
         }
 
         private IEnumerable<object> GetSourceCollection(Statistic stat)

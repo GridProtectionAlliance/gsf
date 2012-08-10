@@ -45,7 +45,7 @@ namespace TimeSeriesFramework
         /// <summary>
         /// Delegates control to the data operations that are to be performed at startup.
         /// </summary>
-        private static void PerformTimeSeriesStartupOperations(IDbConnection connection, Type adapterType, string nodeIDQueryString, Action<object, EventArgs<string>> statusMessage, Action<object, EventArgs<Exception>> processException)
+        private static void PerformTimeSeriesStartupOperations(IDbConnection connection, Type adapterType, string nodeIDQueryString, string arguments, Action<object, EventArgs<string>> statusMessage, Action<object, EventArgs<Exception>> processException)
         {
             // Set up messaging to the service
             s_statusMessage = statusMessage;

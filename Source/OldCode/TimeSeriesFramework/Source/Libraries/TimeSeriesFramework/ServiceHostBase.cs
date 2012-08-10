@@ -84,9 +84,10 @@ namespace TimeSeriesFramework
     /// <param name="connection">Connection to database.</param>
     /// <param name="adapterType">Adapter type for database connection.</param>
     /// <param name="nodeIDQueryString">Formatted node ID guid query string.</param>
+    /// <param name="arguments">Optional data operation arguments.</param>
     /// <param name="statusMessage">Reference to host status message function.</param>
     /// <param name="processException">Reference to host process exception function.</param>
-    public delegate void DataOperationFunction(IDbConnection connection, Type adapterType, string nodeIDQueryString, Action<object, EventArgs<string>> statusMessage, Action<object, EventArgs<Exception>> processException);
+    public delegate void DataOperationFunction(IDbConnection connection, Type adapterType, string nodeIDQueryString, string arguments, Action<object, EventArgs<string>> statusMessage, Action<object, EventArgs<Exception>> processException);
 
     /// <summary>
     /// Represents the time-series framework service host.
@@ -895,7 +896,7 @@ namespace TimeSeriesFramework
                         method = type.GetMethod(methodName, BindingFlags.IgnoreCase | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.InvokeMethod);
 
                         // Execute data operation via loaded assembly method
-                        ((DataOperationFunction)Delegate.CreateDelegate(typeof(DataOperationFunction), method))(connection, adapterType, m_nodeIDQueryString, new Action<object, EventArgs<string>>(m_iaonSession.StatusMessageHandler), new Action<object, EventArgs<Exception>>(m_iaonSession.ProcessExceptionHandler));
+                        ((DataOperationFunction)Delegate.CreateDelegate(typeof(DataOperationFunction), method))(connection, adapterType, m_nodeIDQueryString, arguments, m_iaonSession.StatusMessageHandler, m_iaonSession.ProcessExceptionHandler);
                     }
                     catch (Exception ex)
                     {
