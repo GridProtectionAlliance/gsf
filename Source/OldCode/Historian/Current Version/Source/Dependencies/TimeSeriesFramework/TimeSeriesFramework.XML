@@ -5887,7 +5887,7 @@
             Defines a data operations to be performed at startup.
             </summary>
         </member>
-        <member name="M:TimeSeriesFramework.TimeSeriesStartupOperations.PerformTimeSeriesStartupOperations(System.Data.IDbConnection,System.Type,System.String,System.Action{System.Object,TVA.EventArgs{System.String}},System.Action{System.Object,TVA.EventArgs{System.Exception}})">
+        <member name="M:TimeSeriesFramework.TimeSeriesStartupOperations.PerformTimeSeriesStartupOperations(System.Data.IDbConnection,System.Type,System.String,System.String,System.Action{System.Object,TVA.EventArgs{System.String}},System.Action{System.Object,TVA.EventArgs{System.Exception}})">
             <summary>
             Delegates control to the data operations that are to be performed at startup.
             </summary>
@@ -7440,6 +7440,7 @@
             <param name="connection">Connection to database.</param>
             <param name="adapterType">Adapter type for database connection.</param>
             <param name="nodeIDQueryString">Formatted node ID guid query string.</param>
+            <param name="arguments">Optional data operation arguments.</param>
             <param name="statusMessage">Reference to host status message function.</param>
             <param name="processException">Reference to host process exception function.</param>
         </member>
