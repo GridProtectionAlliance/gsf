@@ -286,6 +286,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 
@@ -562,6 +563,30 @@ namespace TVA.Communication
 
                 if ((object)m_udpClient != null)
                     m_udpClient.SetReceiveBuffer(value);
+            }
+        }
+
+        /// <summary>
+        /// Gets the descriptive status of the client.
+        /// </summary>
+        public override string Status
+        {
+            get
+            {
+                StringBuilder statusBuilder = new StringBuilder(base.Status);
+
+                if ((object)m_sendQueue != null)
+                {
+                    statusBuilder.AppendFormat("           Queued payloads: {0}", m_sendQueue.Count);
+                    statusBuilder.AppendLine();
+                }
+
+                statusBuilder.AppendFormat("     Wait handle pool size: {0}", ReusableObjectPool<ManualResetEventSlim>.Default.GetPoolSize());
+                statusBuilder.AppendLine();
+                statusBuilder.AppendFormat("         Payload pool size: {0}", ReusableObjectPool<UdpClientPayload>.Default.GetPoolSize());
+                statusBuilder.AppendLine();
+
+                return statusBuilder.ToString();
             }
         }
 

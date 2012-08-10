@@ -778,7 +778,7 @@ namespace TVA.Communication
         /// Gets the descriptive status of the server.
         /// </summary>
         [Browsable(false)]
-        public string Status
+        public virtual string Status
         {
             get
             {

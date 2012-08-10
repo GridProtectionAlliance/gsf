@@ -282,6 +282,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using TVA.Configuration;
@@ -580,6 +581,30 @@ namespace TVA.Communication
             }
         }
 
+        /// <summary>
+        /// Gets the descriptive status of the client.
+        /// </summary>
+        public override string Status
+        {
+            get
+            {
+                StringBuilder statusBuilder = new StringBuilder(base.Status);
+
+                if ((object)m_sendQueue != null)
+                {
+                    statusBuilder.AppendFormat("           Queued payloads: {0}", m_sendQueue.Count);
+                    statusBuilder.AppendLine();
+                }
+
+                statusBuilder.AppendFormat("     Wait handle pool size: {0}", ReusableObjectPool<ManualResetEventSlim>.Default.GetPoolSize());
+                statusBuilder.AppendLine();
+                statusBuilder.AppendFormat("         Payload pool size: {0}", ReusableObjectPool<TcpClientPayload>.Default.GetPoolSize());
+                statusBuilder.AppendLine();
+
+                return statusBuilder.ToString();
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -833,28 +858,37 @@ namespace TVA.Communication
             TcpClientPayload payload;
             ManualResetEventSlim handle;
 
-            // Prepare for payload-aware transmission.
-            if (m_payloadAware)
-                Payload.AddHeader(ref data, ref offset, ref length, m_payloadMarker);
+            try
+            {
+                // Prepare for payload-aware transmission.
+                if (m_payloadAware)
+                    Payload.AddHeader(ref data, ref offset, ref length, m_payloadMarker);
 
-            // Create payload and wait handle.
-            payload = ReusableObjectPool<TcpClientPayload>.Default.TakeObject();
-            handle = ReusableObjectPool<ManualResetEventSlim>.Default.TakeObject();
+                // Create payload and wait handle.
+                payload = ReusableObjectPool<TcpClientPayload>.Default.TakeObject();
+                handle = ReusableObjectPool<ManualResetEventSlim>.Default.TakeObject();
 
-            payload.Data = data;
-            payload.Offset = offset;
-            payload.Length = length;
-            payload.WaitHandle = handle;
-            handle.Reset();
+                payload.Data = data;
+                payload.Offset = offset;
+                payload.Length = length;
+                payload.WaitHandle = handle;
+                handle.Reset();
 
-            // Queue payload for sending.
-            m_sendQueue.Add(payload);
+                // Queue payload for sending.
+                m_sendQueue.Add(payload);
 
-            // Notify that the send operation has started.
-            OnSendDataStart();
+                // Notify that the send operation has started.
+                OnSendDataStart();
 
-            // Return the async handle that can be used to wait for the async operation to complete.
-            return handle.WaitHandle;
+                // Return the async handle that can be used to wait for the async operation to complete.
+                return handle.WaitHandle;
+            }
+            catch (Exception ex)
+            {
+                OnSendDataException(ex);
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -865,6 +899,16 @@ namespace TVA.Communication
         {
             if (CurrentState != ClientState.Disconnected)
                 base.OnSendDataException(ex);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ClientBase.ReceiveDataException"/> event.
+        /// </summary>
+        /// <param name="ex">Exception to send to <see cref="ClientBase.ReceiveDataException"/> event.</param>
+        protected void OnReceiveDataException(SocketException ex)
+        {
+            if (ex.SocketErrorCode != SocketError.Disconnecting)
+                OnReceiveDataException((Exception)ex);
         }
 
         /// <summary>
@@ -1273,13 +1317,25 @@ namespace TVA.Communication
         /// </summary>
         private void TerminateConnection(bool raiseEvent)
         {
-            if ((object)m_connectWaitHandle != null)
-                m_connectWaitHandle.Set();
+            try
+            {
+                if ((object)m_connectWaitHandle != null)
+                    m_connectWaitHandle.Set();
 
-            if (raiseEvent)
-                OnConnectionTerminated();
+                if (raiseEvent)
+                    OnConnectionTerminated();
 
-            m_tcpClient.Reset();
+                m_tcpClient.Reset();
+            }
+            catch (ThreadAbortException)
+            {
+                // This is a normal exception
+                throw;
+            }
+            catch
+            {
+                // Other exceptions can happen (e.g., NullReferenceException) if thread resumes and the class is disposed middle way through this method
+            }
         }
 
         #endregion

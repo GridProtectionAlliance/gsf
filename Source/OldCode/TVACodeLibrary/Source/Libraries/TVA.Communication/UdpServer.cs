@@ -280,6 +280,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 
@@ -493,6 +494,33 @@ namespace TVA.Communication
             }
         }
 
+        /// <summary>
+        /// Gets the descriptive status of the client.
+        /// </summary>
+        public override string Status
+        {
+            get
+            {
+                StringBuilder statusBuilder = new StringBuilder(base.Status);
+                int count = 0;
+
+                foreach (BlockingCollection<UdpServerPayload> sendQueue in m_sendQueues.Values)
+                {
+                    statusBuilder.AppendFormat("           Queued payloads: {0} for client {1}", sendQueue.Count, ++count);
+                    statusBuilder.AppendLine();
+                }
+
+                statusBuilder.AppendFormat("     Wait handle pool size: {0}", ReusableObjectPool<ManualResetEventSlim>.Default.GetPoolSize());
+                statusBuilder.AppendLine();
+                statusBuilder.AppendFormat("         Payload pool size: {0}", ReusableObjectPool<UdpServerPayload>.Default.GetPoolSize());
+                statusBuilder.AppendLine();
+                statusBuilder.AppendFormat("      User token pool size: {0}", ReusableObjectPool<UdpServerUserToken>.Default.GetPoolSize());
+                statusBuilder.AppendLine();
+
+                return statusBuilder.ToString();
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -692,7 +720,7 @@ namespace TVA.Communication
         {
             TransportProvider<EndPoint> client;
 
-            if (!TryGetClient(clientID, out client))
+            if (!m_udpClients.TryRemove(clientID, out client))
                 return;
 
             try
@@ -812,7 +840,7 @@ namespace TVA.Communication
         /// <param name="ex">Exception to send to <see cref="ServerBase.SendClientDataException"/> event.</param>
         protected override void OnSendClientDataException(Guid clientID, Exception ex)
         {
-            if (CurrentState != ServerState.NotRunning)
+            if (m_udpClients.ContainsKey(clientID) && CurrentState == ServerState.Running)
                 base.OnSendClientDataException(clientID, ex);
         }
 
@@ -823,7 +851,7 @@ namespace TVA.Communication
         /// <param name="ex">Exception to send to <see cref="ServerBase.ReceiveClientDataException"/> event.</param>
         protected override void OnReceiveClientDataException(Guid clientID, Exception ex)
         {
-            if (CurrentState != ServerState.NotRunning)
+            if (m_udpClients.ContainsKey(clientID) && CurrentState == ServerState.Running)
                 base.OnReceiveClientDataException(clientID, ex);
         }
 

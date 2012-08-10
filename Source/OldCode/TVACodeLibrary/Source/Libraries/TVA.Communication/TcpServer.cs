@@ -277,6 +277,7 @@ using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Principal;
+using System.Text;
 using System.Threading;
 using TVA.Configuration;
 
@@ -568,6 +569,33 @@ namespace TVA.Communication
             }
         }
 
+        /// <summary>
+        /// Gets the descriptive status of the client.
+        /// </summary>
+        public override string Status
+        {
+            get
+            {
+                StringBuilder statusBuilder = new StringBuilder(base.Status);
+                int count = 0;
+
+                foreach (BlockingCollection<TcpServerPayload> sendQueue in m_sendQueues.Values)
+                {
+                    statusBuilder.AppendFormat("           Queued payloads: {0} for client {1}", sendQueue.Count, ++count);
+                    statusBuilder.AppendLine();
+                }
+
+                statusBuilder.AppendFormat("     Wait handle pool size: {0}", ReusableObjectPool<ManualResetEventSlim>.Default.GetPoolSize());
+                statusBuilder.AppendLine();
+                statusBuilder.AppendFormat("         Payload pool size: {0}", ReusableObjectPool<TcpServerPayload>.Default.GetPoolSize());
+                statusBuilder.AppendLine();
+                statusBuilder.AppendFormat("      User token pool size: {0}", ReusableObjectPool<TcpServerUserToken>.Default.GetPoolSize());
+                statusBuilder.AppendLine();
+
+                return statusBuilder.ToString();
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -821,7 +849,7 @@ namespace TVA.Communication
         /// <param name="ex">Exception to send to <see cref="ServerBase.SendClientDataException"/> event.</param>
         protected override void OnSendClientDataException(Guid clientID, Exception ex)
         {
-            if (m_tcpClients.ContainsKey(clientID) || CurrentState != ServerState.NotRunning)
+            if (m_tcpClients.ContainsKey(clientID) && CurrentState == ServerState.Running)
                 base.OnSendClientDataException(clientID, ex);
         }
 
@@ -832,7 +860,7 @@ namespace TVA.Communication
         /// <param name="ex">Exception to send to <see cref="ServerBase.ReceiveClientDataException"/> event.</param>
         protected virtual void OnReceiveClientDataException(Guid clientID, SocketException ex)
         {
-            if (m_tcpClients.ContainsKey(clientID) || ex.SocketErrorCode != SocketError.Disconnecting)
+            if (m_tcpClients.ContainsKey(clientID) && ex.SocketErrorCode != SocketError.Disconnecting)
                 OnReceiveClientDataException(clientID, (Exception)ex);
         }
 
@@ -843,7 +871,7 @@ namespace TVA.Communication
         /// <param name="ex">Exception to send to <see cref="ServerBase.ReceiveClientDataException"/> event.</param>
         protected override void OnReceiveClientDataException(Guid clientID, Exception ex)
         {
-            if (m_tcpClients.ContainsKey(clientID) || CurrentState != ServerState.NotRunning)
+            if (m_tcpClients.ContainsKey(clientID) && CurrentState == ServerState.Running)
                 base.OnReceiveClientDataException(clientID, ex);
         }
 
@@ -1297,19 +1325,19 @@ namespace TVA.Communication
                 if (raiseEvent)
                     OnClientDisconnected(client.ID);
 
-                m_tcpClients.TryRemove(client.ID, out client);
-                client.Reset();
+                if (m_tcpClients.TryRemove(client.ID, out client))
+                    client.Reset();
             }
             finally
             {
-                ReturnReceiveArgs(args);
+                DisposeReceiveArgs(args);
             }
         }
 
         /// <summary>
         /// Returns the <see cref="SocketAsyncEventArgs"/> used for receiving data on the socket.
         /// </summary>
-        private void ReturnReceiveArgs(SocketAsyncEventArgs receiveArgs)
+        private void DisposeReceiveArgs(SocketAsyncEventArgs receiveArgs)
         {
             EventArgs<TransportProvider<Socket>, bool> userToken = receiveArgs.UserToken as EventArgs<TransportProvider<Socket>, bool>;
 

@@ -521,6 +521,15 @@ namespace TVA
             }
         }
 
+        /// <summary>
+        /// Gets the number of items currently contained in the pool.
+        /// </summary>
+        /// <returns>The size of the pool.</returns>
+        public int GetPoolSize()
+        {
+            return m_objectPool.Count;
+        }
+
         // Handler to automatically to return items to the queue 
         private void LifecycleItem_Disposed(object sender, EventArgs e)
         {
