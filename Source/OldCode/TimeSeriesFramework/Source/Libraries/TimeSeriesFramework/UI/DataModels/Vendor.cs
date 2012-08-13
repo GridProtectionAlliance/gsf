@@ -33,6 +33,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using TVA.Data;
+using System.Linq;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
@@ -233,11 +234,53 @@ namespace TimeSeriesFramework.UI.DataModels
         // Static Methods
 
         /// <summary>
+        /// LoadKeys <see cref="Vendor"/> information as an <see cref="ObservableCollection{T}"/> style list.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="deviceID">ID of the <see cref="Device"/> to filter data.</param>
+        /// <param name="sortMember">The field to sort by.</param>
+        /// <param name="sortDirection"><c>ASC</c> or <c>DESC</c> for ascending or descending respectively.</param>
+        /// <returns>Collection of <see cref="Phasor"/>.</returns>
+        public static IList<int> LoadKeys(AdoDataConnection database, string sortMember, string sortDirection)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                IList<int> vendorList = new List<int>();
+                DataTable vendorTable;
+
+                string sortClause = string.Empty;
+
+                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
+
+                // check the query once again , Does it have to be details or somethng else
+                vendorTable = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT ID From VendorDetail {0}", sortClause));
+
+                foreach (DataRow row in vendorTable.Rows)
+                {
+                    vendorList.Add(row.ConvertField<int>("ID"));
+                }
+                return vendorList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+
+        /// <summary>
         /// Loads <see cref="Vendor"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="Keys">Keys of the Measurement to be loaded from the database</param>
         /// <returns>Collection of <see cref="Vendor"/>.</returns>
-        public static ObservableCollection<Vendor> Load(AdoDataConnection database)
+        public static ObservableCollection<Vendor> Load(AdoDataConnection database, IList<int> Keys)
         {
             bool createdConnection = false;
 
@@ -246,22 +289,35 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 ObservableCollection<Vendor> vendorList = new ObservableCollection<Vendor>();
-                DataTable vendorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym, Name, PhoneNumber, ContactEmail, URL " +
-                    "FROM VendorDetail ORDER BY Name");
+                DataTable vendorTable;
+                string query;
+                string commaSeparatedKeys;
 
-                foreach (DataRow row in vendorTable.Rows)
+                if ((object)Keys != null && Keys.Count > 0)
                 {
-                    vendorList.Add(new Vendor()
-                        {
-                            ID = row.ConvertField<int>("ID"),
-                            Acronym = row.Field<string>("Acronym"),
-                            Name = row.Field<string>("Name"),
-                            PhoneNumber = row.Field<string>("PhoneNumber"),
-                            ContactEmail = row.Field<string>("ContactEmail"),
-                            URL = row.Field<string>("URL")
-                        });
-                }
+                    commaSeparatedKeys = Keys.Select(key => "'" + key.ToString() + "'").Aggregate((str1, str2) => str1 + "," + str2);
+                    query = string.Format("SELECT ID, Acronym, Name, PhoneNumber, ContactEmail, URL " +
+                              "FROM VendorDetail WHERE ID IN ({0})", commaSeparatedKeys);
+                    vendorTable = database.Connection.RetrieveData(database.AdapterType, query);
 
+                    //DataTable vendorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym, Name, PhoneNumber, ContactEmail, URL " +
+                    //    "FROM VendorDetail ORDER BY Name");
+
+                    foreach (DataRow row in vendorTable.Rows)
+                    {
+                        vendorList.Add(new Vendor()
+                            {
+                                ID = row.ConvertField<int>("ID"),
+                                Acronym = row.Field<string>("Acronym"),
+                                Name = row.Field<string>("Name"),
+                                PhoneNumber = row.Field<string>("PhoneNumber"),
+                                ContactEmail = row.Field<string>("ContactEmail"),
+                                URL = row.Field<string>("URL")
+                            });
+                    }
+
+                    return vendorList;
+                }
                 return vendorList;
             }
             finally
