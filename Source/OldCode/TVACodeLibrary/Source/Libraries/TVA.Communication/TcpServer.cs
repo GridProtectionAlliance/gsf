@@ -1322,11 +1322,11 @@ namespace TVA.Communication
         {
             try
             {
-                if (raiseEvent)
-                    OnClientDisconnected(client.ID);
-
                 if (m_tcpClients.TryRemove(client.ID, out client))
                     client.Reset();
+
+                if (raiseEvent)
+                    OnClientDisconnected(client.ID);
             }
             finally
             {

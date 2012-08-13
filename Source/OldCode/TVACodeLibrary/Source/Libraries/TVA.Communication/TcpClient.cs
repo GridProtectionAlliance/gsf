@@ -1322,10 +1322,10 @@ namespace TVA.Communication
                 if ((object)m_connectWaitHandle != null)
                     m_connectWaitHandle.Set();
 
+                m_tcpClient.Reset();
+
                 if (raiseEvent)
                     OnConnectionTerminated();
-
-                m_tcpClient.Reset();
             }
             catch (ThreadAbortException)
             {
