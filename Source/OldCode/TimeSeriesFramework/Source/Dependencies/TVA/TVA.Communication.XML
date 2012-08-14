@@ -715,11 +715,6 @@
             will have unexpected results.
             </remarks>
         </member>
-        <member name="M:TVA.Communication.ClientBase.Disconnect">
-            <summary>
-            When overridden in a derived class, disconnects client from the server synchronously.
-            </summary>
-        </member>
         <member name="M:TVA.Communication.ClientBase.ValidateConnectionString(System.String)">
             <summary>
             When overridden in a derived class, validates the specified <paramref name="connectionString"/>.
@@ -845,6 +840,11 @@
             <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
             <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
             <returns><see cref="T:System.Threading.WaitHandle"/> for the asynchronous operation.</returns>
+        </member>
+        <member name="M:TVA.Communication.ClientBase.Disconnect">
+            <summary>
+            When overridden in a derived class, disconnects client from the server synchronously.
+            </summary>
         </member>
         <member name="M:TVA.Communication.ClientBase.OnConnectionAttempt">
             <summary>
@@ -1716,7 +1716,7 @@
             Initiate method for asynchronous receive operation of payload data.
             </summary>
         </member>
-        <member name="M:TVA.Communication.TcpClient.ReceivePayloadAwareAsync(System.Net.Sockets.SocketAsyncEventArgs)">
+        <member name="M:TVA.Communication.TcpClient.ReceivePayloadAwareAsync">
             <summary>
             Initiate method for asynchronous receive operation of payload data in "payload-aware" mode.
             </summary>
@@ -1726,7 +1726,7 @@
             Callback method for asynchronous receive operation of payload data in "payload-aware" mode.
             </summary>
         </member>
-        <member name="M:TVA.Communication.TcpClient.ReceivePayloadUnawareAsync(System.Net.Sockets.SocketAsyncEventArgs)">
+        <member name="M:TVA.Communication.TcpClient.ReceivePayloadUnawareAsync">
             <summary>
             Initiate method for asynchronous receive operation of payload data in "payload-unaware" mode.
             </summary>
@@ -1736,7 +1736,7 @@
             Callback method for asynchronous receive operation of payload data in "payload-unaware" mode.
             </summary>
         </member>
-        <member name="M:TVA.Communication.TcpClient.TerminateConnection(System.Boolean)">
+        <member name="M:TVA.Communication.TcpClient.TerminateConnection">
             <summary>
             Processes the termination of client.
             </summary>
