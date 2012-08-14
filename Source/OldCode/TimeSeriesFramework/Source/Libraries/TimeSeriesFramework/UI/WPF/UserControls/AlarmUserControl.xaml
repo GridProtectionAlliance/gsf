@@ -63,7 +63,7 @@
             <ComboBox Name="OperationBox"  Grid.Row="2" Grid.Column="1" ItemsSource="{Binding Source={StaticResource OperationList}}" DisplayMemberPath="Value"
                       SelectedItem="{tsfBinding:Column Path=Operation, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource OperationList}}" />
             
-            <TextBlock Text="SetPoint" Grid.Row="2" Grid.Column="2" />
+            <TextBlock Text="Alarm Point" Grid.Row="2" Grid.Column="2" />
             <TextBox Name="SetPointBox" Grid.Row="2" Grid.Column="3" Text="{tsfBinding:Column Path=SetPoint}" Width="{StaticResource XSmallItemSize}" TextAlignment="Right" IsEnabled="{Binding Path=SetPointEnabled}" />
 
             <TextBlock Text="Tolerance" Grid.Row="3" Grid.Column="2" />
@@ -104,7 +104,7 @@
             <sdk:DataGrid.Columns>
                 <sdk:DataGridTextColumn Header="TagName" Width="*" Binding="{tsfBinding:Column Path=TagName}" />
                 <sdk:DataGridTextColumn Header="Operation" Width="*" Binding="{tsfBinding:Column Path=OperationDescription}" IsReadOnly="True" />
-                <sdk:DataGridTextColumn Header="Severity" Width="*" Binding="{tsfBinding:Column Path=Severity}" />
+                <sdk:DataGridTextColumn Header="Severity" Width="*" Binding="{tsfBinding:Column Path=SeverityName}" />
                 <sdk:DataGridTextColumn Header="Description" Width="2*" Binding="{tsfBinding:Column Path=Description}" />
                 <sdk:DataGridCheckBoxColumn Header="Enabled" Width="*" Binding="{tsfBinding:Column Path=Enabled}" />
             </sdk:DataGrid.Columns>

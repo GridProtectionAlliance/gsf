@@ -141,7 +141,12 @@ namespace TimeSeriesFramework.UI.ViewModels
             try
             {
                 base.Load();
-                ItemsSource.ToList().ForEach(alarm => alarm.OperationDescription = GetOperationDescription(alarm));
+
+                foreach (DataModels.Alarm alarm in ItemsSource)
+                {
+                    alarm.OperationDescription = GetOperationDescription(alarm);
+                    alarm.SeverityName = SeverityList[alarm.Severity];
+                }
             }
             catch (Exception ex)
             {
@@ -206,6 +211,7 @@ namespace TimeSeriesFramework.UI.ViewModels
             switch (e.PropertyName)
             {
                 case "OperationDescription":
+                case "SeverityName":
                 case "SetPointEnabled":
                 case "ToleranceEnabled":
                 case "HysteresisEnabled":
@@ -219,6 +225,9 @@ namespace TimeSeriesFramework.UI.ViewModels
 
             if (e.PropertyName == "Operation" || e.PropertyName == "SetPoint" || e.PropertyName == "Delay")
                 CurrentItem.OperationDescription = GetOperationDescription(CurrentItem);
+
+            if (e.PropertyName == "Severity")
+                CurrentItem.SeverityName = SeverityList[CurrentItem.Severity];
 
             if (e.PropertyName == "Operation")
                 UpdateEnableFlags();

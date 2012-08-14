@@ -60,6 +60,7 @@ namespace TimeSeriesFramework.UI.DataModels
         private string m_updatedBy;
 
         private string m_operationDescription;
+        private string m_severityName;
         private bool m_createAssociatedMeasurement;
         private bool m_setPointEnabled;
         private bool m_toleranceEnabled;
@@ -392,6 +393,22 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 m_operationDescription = value;
                 OnPropertyChanged("OperationDescription");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="Alarm"/> SeverityName
+        /// </summary>
+        public string SeverityName
+        {
+            get
+            {
+                return m_severityName;
+            }
+            set
+            {
+                m_severityName = value;
+                OnPropertyChanged("SeverityName");
             }
         }
 

@@ -81,6 +81,8 @@ namespace TimeSeriesFramework.UI.UserControls
 
         private void DataGrid_Sorting(object sender, DataGridSortingEventArgs e)
         {
+            string sortMember;
+
             if (e.Column.SortMemberPath != m_sortMemberPath)
                 m_sortDirection = ListSortDirection.Ascending;
             else if (m_sortDirection == ListSortDirection.Ascending)
@@ -90,7 +92,23 @@ namespace TimeSeriesFramework.UI.UserControls
 
             m_sortColumn = e.Column;
             m_sortMemberPath = e.Column.SortMemberPath;
-            m_dataContext.SortData(m_sortMemberPath, m_sortDirection);
+
+            switch (m_sortMemberPath)
+            {
+                case "OperationDescription":
+                    sortMember = "Operation";
+                    break;
+
+                case "SeverityName":
+                    sortMember = "Severity";
+                    break;
+
+                default:
+                    sortMember = m_sortMemberPath;
+                    break;
+            }
+
+            m_dataContext.SortData(sortMember, m_sortDirection);
         }
 
         private void ViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
