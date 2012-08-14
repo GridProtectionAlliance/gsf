@@ -337,7 +337,7 @@ namespace TVA.Communication
         {
             get
             {
-                return m_sendBuffer.Length;
+                return (object)m_sendBuffer != null ? m_sendBuffer.Length : 0;
             }
         }
 
@@ -411,6 +411,7 @@ namespace TVA.Communication
             if (m_receiveBuffer != null)
                 BufferPool.ReturnBuffer(m_receiveBuffer);
             m_receiveBuffer = null;
+            m_receiveBufferSize = 0;
             m_sendBuffer = null;
 
             BytesReceived = -1;
