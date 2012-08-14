@@ -300,8 +300,6 @@ namespace TimeSeriesFramework.UI.DataModels
                             m_vendorName = row.Field<string>("VendorName")
                         });
                     }
-
-                    return vendorDeviceList;
                 }
                 return vendorDeviceList;
             }

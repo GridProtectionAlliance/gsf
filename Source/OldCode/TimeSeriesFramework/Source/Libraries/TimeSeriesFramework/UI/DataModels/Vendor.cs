@@ -315,8 +315,6 @@ namespace TimeSeriesFramework.UI.DataModels
                                 URL = row.Field<string>("URL")
                             });
                     }
-
-                    return vendorList;
                 }
                 return vendorList;
             }
