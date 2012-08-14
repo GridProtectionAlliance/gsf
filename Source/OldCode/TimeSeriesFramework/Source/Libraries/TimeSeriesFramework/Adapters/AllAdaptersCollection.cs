@@ -137,7 +137,18 @@ namespace TimeSeriesFramework.Adapters
                             DataRow[] adapterRows = DataSource.Tables[dataMember].Select(string.Format("ID = {0}", adapter.ID));
 
                             if (adapterRows.Length == 0 && adapter.ID != 0)
+                            {
+                                try
+                                {
+                                    adapter.Stop();
+                                }
+                                catch (Exception ex)
+                                {
+                                    OnProcessException(new InvalidOperationException(string.Format("Exception while stopping adapter {0}: {1}", adapter.Name, ex.Message), ex));
+                                }
+
                                 adapterCollection.Remove(adapter);
+                            }
                         }
 
                         // Create newly defined adapters
