@@ -1027,7 +1027,7 @@ namespace TVA.Communication
                     args.SetBuffer(client.SendBuffer, 0, client.SendBufferSize);
                     userToken.Client = client;
 
-                    while (CurrentState != ServerState.NotRunning)
+                    while (m_tcpClients.ContainsKey(clientID))
                     {
                         try
                         {

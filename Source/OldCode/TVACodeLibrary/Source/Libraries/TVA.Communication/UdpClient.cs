@@ -669,10 +669,10 @@ namespace TVA.Communication
 
                 m_udpClient.Reset();
 
-                if (m_connectionThread != null)
+                if ((object)m_connectionThread != null)
                     m_connectionThread.Abort();
 
-                OnConnectionTerminated();
+                base.Disconnect();
             }
         }
 

@@ -786,11 +786,6 @@ namespace TVA.Communication
         public abstract int Read(byte[] buffer, int startIndex, int length);
 
         /// <summary>
-        /// When overridden in a derived class, disconnects client from the server synchronously.
-        /// </summary>
-        public abstract void Disconnect();
-
-        /// <summary>
         /// When overridden in a derived class, validates the specified <paramref name="connectionString"/>.
         /// </summary>
         /// <param name="connectionString">The connection string to be validated.</param>
@@ -1038,6 +1033,14 @@ namespace TVA.Communication
             {
                 throw new InvalidOperationException("Client is not connected");
             }
+        }
+
+        /// <summary>
+        /// When overridden in a derived class, disconnects client from the server synchronously.
+        /// </summary>
+        public virtual void Disconnect()
+        {
+            m_currentState = ClientState.Disconnected;
         }
 
         /// <summary>

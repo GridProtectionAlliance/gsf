@@ -665,13 +665,10 @@ namespace TVA.ServiceProcess
             m_authenticationComplete = false;
             m_remotingClient.Connect();                                     // Wait for connection.
 
-            if (m_remotingClient.Enabled)
+            while (!m_authenticationComplete && m_remotingClient.Enabled)
             {
-                while (!m_authenticationComplete)
-                {
-                    Thread.Sleep(100);
-                } // Wait for authentication.
-            }
+                Thread.Sleep(100);
+            } // Wait for authentication.
         }
 
         /// <summary>

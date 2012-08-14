@@ -702,12 +702,15 @@ namespace TVA.Communication
                         m_connectWaitHandle.Set();
 
                     m_tcpClient.Reset();
-                    OnConnectionTerminated();
                 }
             }
             catch (Exception ex)
             {
                 OnSendDataException(new InvalidOperationException(string.Format("Disconnect exception: {0}", ex.Message), ex));
+            }
+            finally
+            {
+                base.Disconnect();
             }
         }
 
@@ -992,20 +995,20 @@ namespace TVA.Communication
                     }
                     catch
                     {
-                        TerminateConnection(false);
+                        TerminateConnection();
                     }
                 }
                 else
                 {
                     // For any other reason, clean-up as if the client was disconnected.
-                    TerminateConnection(false);
+                    TerminateConnection();
                 }
             }
             catch (Exception ex)
             {
                 // This is highly unlikely, but we must handle this situation just-in-case.
                 OnConnectionException(ex);
-                TerminateConnection(false);
+                TerminateConnection();
             }
         }
 
@@ -1140,20 +1143,20 @@ namespace TVA.Communication
 
                 // Payload boundaries are to be preserved.
                 m_tcpClient.SetReceiveBuffer(m_payloadMarker.Length + Payload.LengthSegment);
-                ReceivePayloadAwareAsync(m_receiveArgs);
+                ReceivePayloadAwareAsync();
             }
             else
             {
                 // Payload boundaries are not to be preserved.
                 m_tcpClient.SetReceiveBuffer(ReceiveBufferSize);
-                ReceivePayloadUnawareAsync(m_receiveArgs);
+                ReceivePayloadUnawareAsync();
             }
         }
 
         /// <summary>
         /// Initiate method for asynchronous receive operation of payload data in "payload-aware" mode.
         /// </summary>
-        private void ReceivePayloadAwareAsync(SocketAsyncEventArgs args)
+        private void ReceivePayloadAwareAsync()
         {
             // Set buffer, offset, and length so that we write
             // into buffer space that has not yet been filled.
@@ -1161,9 +1164,9 @@ namespace TVA.Communication
             int offset = m_tcpClient.BytesReceived;
             int length = m_tcpClient.ReceiveBufferSize - offset;
 
-            args.SetBuffer(buffer, offset, length);
+            m_receiveArgs.SetBuffer(buffer, offset, length);
 
-            if (!m_tcpClient.Provider.ReceiveAsync(args))
+            if (!m_tcpClient.Provider.ReceiveAsync(m_receiveArgs))
                 ThreadPool.QueueUserWorkItem(state => ProcessReceivePayloadAware());
         }
 
@@ -1203,7 +1206,7 @@ namespace TVA.Communication
                         m_receiveArgs.UserToken = false;
                     }
 
-                    ReceivePayloadAwareAsync(m_receiveArgs);
+                    ReceivePayloadAwareAsync();
                 }
                 else
                 {
@@ -1217,20 +1220,20 @@ namespace TVA.Communication
                     else
                     {
                         // We've not yet received the entire payload.
-                        ReceivePayloadAwareAsync(m_receiveArgs);
+                        ReceivePayloadAwareAsync();
                     }
                 }
             }
             catch (ObjectDisposedException)
             {
                 // Make sure connection is terminated when client is disposed.
-                TerminateConnection(true);
+                TerminateConnection();
             }
             catch (SocketException ex)
             {
                 // Terminate connection when socket exception is encountered.
                 OnReceiveDataException(ex);
-                TerminateConnection(true);
+                TerminateConnection();
             }
             catch (Exception ex)
             {
@@ -1243,7 +1246,7 @@ namespace TVA.Communication
                 catch
                 {
                     // Terminate connection if resuming receiving fails.
-                    TerminateConnection(true);
+                    TerminateConnection();
                 }
             }
         }
@@ -1251,16 +1254,16 @@ namespace TVA.Communication
         /// <summary>
         /// Initiate method for asynchronous receive operation of payload data in "payload-unaware" mode.
         /// </summary>
-        private void ReceivePayloadUnawareAsync(SocketAsyncEventArgs args)
+        private void ReceivePayloadUnawareAsync()
         {
             // Set buffer and length so that we write into
             // buffer space that has not yet been filled.
             byte[] buffer = m_tcpClient.ReceiveBuffer;
             int length = m_tcpClient.ReceiveBufferSize;
 
-            args.SetBuffer(buffer, 0, length);
+            m_receiveArgs.SetBuffer(buffer, 0, length);
 
-            if (!m_tcpClient.Provider.ReceiveAsync(args))
+            if (!m_tcpClient.Provider.ReceiveAsync(m_receiveArgs))
                 ThreadPool.QueueUserWorkItem(state => ProcessReceivePayloadUnaware());
         }
 
@@ -1283,18 +1286,18 @@ namespace TVA.Communication
 
                 // Notify of received data and resume receive operation.
                 OnReceiveDataComplete(m_tcpClient.ReceiveBuffer, m_tcpClient.BytesReceived);
-                ReceivePayloadUnawareAsync(m_receiveArgs);
+                ReceivePayloadUnawareAsync();
             }
             catch (ObjectDisposedException)
             {
                 // Make sure connection is terminated when client is disposed.
-                TerminateConnection(true);
+                TerminateConnection();
             }
             catch (SocketException ex)
             {
                 // Terminate connection when socket exception is encountered.
                 OnReceiveDataException(ex);
-                TerminateConnection(true);
+                TerminateConnection();
             }
             catch (Exception ex)
             {
@@ -1307,7 +1310,7 @@ namespace TVA.Communication
                 catch
                 {
                     // Terminate connection if resuming receiving fails.
-                    TerminateConnection(true);
+                    TerminateConnection();
                 }
             }
         }
@@ -1315,7 +1318,7 @@ namespace TVA.Communication
         /// <summary>
         /// Processes the termination of client.
         /// </summary>
-        private void TerminateConnection(bool raiseEvent)
+        private void TerminateConnection()
         {
             try
             {
@@ -1323,9 +1326,7 @@ namespace TVA.Communication
                     m_connectWaitHandle.Set();
 
                 m_tcpClient.Reset();
-
-                if (raiseEvent)
-                    OnConnectionTerminated();
+                OnConnectionTerminated();
             }
             catch (ThreadAbortException)
             {
