@@ -1429,7 +1429,7 @@ namespace TimeSeriesFramework.Transport
                 catch (InvalidOperationException ex)
                 {
                     // Could still be processing threads with client data after client has been disconnected, this can be safely ignored
-                    if (!ex.Message.StartsWith("No client exists"))
+                    if (!ex.Message.StartsWith("No client found"))
                         OnProcessException(new InvalidOperationException("Failed to send response packet to client due to exception: " + ex.Message, ex));
                 }
                 catch (Exception ex)

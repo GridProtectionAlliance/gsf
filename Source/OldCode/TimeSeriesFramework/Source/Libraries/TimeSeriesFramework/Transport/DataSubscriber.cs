@@ -2439,7 +2439,6 @@ namespace TimeSeriesFramework.Transport
         {
             Exception ex = e.Argument;
             OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while attempting command channel publisher connection: " + ex.Message, ex));
-            DisconnectClient();
         }
 
         private void m_commandChannel_ConnectionAttempt(object sender, EventArgs e)
