@@ -34,6 +34,7 @@ using TimeSeriesFramework.UI.DataModels;
 using TVA;
 using TVA.Data;
 using TVA.Security;
+using System.Windows.Threading;
 
 namespace TimeSeriesFramework.UI
 {
@@ -61,6 +62,9 @@ namespace TimeSeriesFramework.UI
         private static string s_timeSeriesDataServiceUrl;
         private static WindowsServiceClient s_windowsServiceClient;
         private static bool s_retryServiceConnection;
+        //private DispatcherTimer m_timer;
+        //private TextBlock m_statusTextBlock;
+        //private TsfPopup m_statusPopup;
 
         // Static Properties
 
@@ -522,6 +526,18 @@ namespace TimeSeriesFramework.UI
         }
 
         /// <summary>
+        /// Gets a message box to display message to users.
+        /// </summary>
+        public static Action<string, string, MessageBoxImage> Popup
+        {
+            get
+            {
+                return (Action<string, string, MessageBoxImage>)((message, caption, messageBoxImage) =>
+                     MessageBox.Show(Application.Current.MainWindow, message, caption, MessageBoxButton.OK, messageBoxImage));
+            }
+        }
+
+        /// <summary>
         /// Connects asynchronously to backend windows service.
         /// </summary>
         /// <param name="state">paramter used.</param>
@@ -534,9 +550,13 @@ namespace TimeSeriesFramework.UI
             }
             catch (Exception ex)
             {
-                //throw new ApplicationException("Failed to connect to service: " + ex.Message, ex.InnerException ?? ex);
-                MessageBox.Show("Failed to connect to service. " + ex.Message, "Connecting to node", MessageBoxButton.OK, MessageBoxImage.Error);
+                 Popup("The IP address is not Valid,Please Re-check your IP address." + ex.Message + Environment.NewLine, " Exception:", MessageBoxImage.Error);
             }
+        }
+
+        static void dispatcherOp_Completed(object sender, EventArgs e)
+        {
+            Console.WriteLine("The checkbox has finished being updated!");
         }
 
         /// <summary>
