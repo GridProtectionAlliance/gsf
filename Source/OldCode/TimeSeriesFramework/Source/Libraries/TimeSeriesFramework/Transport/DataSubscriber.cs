@@ -33,7 +33,6 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Xml;
 using TimeSeriesFramework.Adapters;
 using TVA;
@@ -1504,6 +1503,19 @@ namespace TimeSeriesFramework.Transport
             return m_encoding.GetString(buffer, startIndex, length);
         }
 
+        // Restarts the subscriber.
+        private void Restart()
+        {
+            try
+            {
+                base.Start();
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(ex);
+            }
+        }
+
         private void ProcessServerResponse(byte[] buffer, int length)
         {
             // Currently this work is done on the async socket completion thread, make sure work to be done is timely and if the response processing
@@ -2390,7 +2402,7 @@ namespace TimeSeriesFramework.Transport
                 // If we've received no data in the last timespan, we restart connect cycle...
                 m_dataStreamMonitor.Enabled = false;
                 OnStatusMessage("\r\nNo data received in {0} seconds, restarting connect cycle...\r\n", (m_dataStreamMonitor.Interval / 1000.0D).ToString("0.0"));
-                Task.Factory.StartNew(Start);
+                ThreadPool.QueueUserWorkItem(state => Restart());
             }
 
             // Reset bytes received bytes being monitored
