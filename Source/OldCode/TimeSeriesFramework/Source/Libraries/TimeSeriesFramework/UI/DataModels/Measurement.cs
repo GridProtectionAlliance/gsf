@@ -580,7 +580,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 if (!string.IsNullOrEmpty(searchText))
                 {
                     searchParam = string.Format("%{0}%", searchText);
-                    searchQuery = database.ParameterizedQueryString("UPPER(DESCRIPTION) LIKE UPPER({0}) OR DeviceID LIKE {0} " +
+                    searchQuery = database.ParameterizedQueryString("UPPER(DESCRIPTION) LIKE UPPER({0}) OR DeviceID LIKE {0} OR UPPER(SignalReference) LIKE UPPER({0}) " +
                         "OR UPPER(SignalAcronym) LIKE UPPER({0}) OR UPPER(SignalID) LIKE UPPER({0}) OR UPPER(PointTag) LIKE UPPER({0}) OR UPPER(CompanyName) LIKE UPPER({0}) " +
                         "OR UPPER(CompanyAcronym) LIKE UPPER({0}) OR UPPER(DeviceAcronym) LIKE UPPER({0}) OR UPPER(SignalName) LIKE UPPER({0}) OR UPPER(ID) LIKE UPPER({0})", "searchParam");
                 }
