@@ -23,6 +23,8 @@
 //       Modified state alterning properties to reopen the file when changed.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  07/30/2012 - Vijay Sukhavasi
+//       Added user option to control time duration of rollover. 
 //
 //*******************************************************************************************************
 
@@ -248,6 +250,7 @@ using System.ComponentModel;
 using System.Configuration;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using TVA.Collections;
@@ -337,6 +340,11 @@ namespace TVA.IO
         public const bool DefaultPersistSettings = false;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="LogFilesDuration"/> property.
+        /// </summary>
+        public const double DefaultLogFilesDuration = 0.0;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="SettingsCategory"/> property.
         /// </summary>
         public const string DefaultSettingsCategory = "LogFile";
@@ -370,6 +378,8 @@ namespace TVA.IO
         private Encoding m_textEncoding;
         private bool m_disposed;
         private bool m_initialized;
+        private double m_logFilesDuration;
+        private Dictionary<DateTime, string> m_savedFilesWithTime;
 
         #endregion
 
@@ -384,11 +394,13 @@ namespace TVA.IO
             m_fileName = DefaultFileName;
             m_fileSize = DefaultFileSize;
             m_fileFullOperation = DefaultFileFullOperation;
+            m_logFilesDuration = DefaultLogFilesDuration;
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
             m_textEncoding = Encoding.Default;
             m_operationWaitHandle = new ManualResetEvent(true);
             m_logEntryQueue = ProcessQueue<string>.CreateSynchronousQueue(WriteLogEntries);
+            m_savedFilesWithTime = new Dictionary<DateTime, string>();
 
             this.FileFull += LogFile_FileFull;
             m_logEntryQueue.ProcessException += ProcessExceptionHandler;
@@ -469,6 +481,24 @@ namespace TVA.IO
             set
             {
                 m_fileFullOperation = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the time duration, in hours, to save the <see cref="LogFile"/> .
+        /// </summary>
+        [Category("Behavior"),
+        DefaultValue(DefaultLogFilesDuration),
+        Description("Time duration in hours to save the log files.")]
+        public double LogFilesDuration
+        {
+            get
+            {
+                return m_logFilesDuration;
+            }
+            set
+            {
+                m_logFilesDuration = value;
             }
         }
 
@@ -690,6 +720,7 @@ namespace TVA.IO
                 settings["FileName", true].Update(m_fileName);
                 settings["FileSize", true].Update(m_fileSize);
                 settings["FileFullOperation", true].Update(m_fileFullOperation);
+                settings["LogFilesDuration", true].Update(m_logFilesDuration);
                 config.Save();
             }
         }
@@ -713,9 +744,11 @@ namespace TVA.IO
                 settings.Add("FileName", m_fileName, "Name of the log file including its path.");
                 settings.Add("FileSize", m_fileSize, "Maximum size of the log file in MB.");
                 settings.Add("FileFullOperation", m_fileFullOperation, "Operation (Truncate; Rollover) that is to be performed on the file when it is full.");
+                settings.Add("LogFilesDuration", m_logFilesDuration, "Time duration in hours to save the log files,files older than this duration are purged automatically");
                 FileName = settings["FileName"].ValueAs(m_fileName);
                 FileSize = settings["FileSize"].ValueAs(m_fileSize);
                 FileFullOperation = settings["FileFullOperation"].ValueAs(m_fileFullOperation);
+                LogFilesDuration = settings["LogFilesDuration"].ValueAs(m_logFilesDuration);
             }
         }
 
@@ -1011,15 +1044,44 @@ namespace TVA.IO
                     // Rolls over to a new log file, and keeps the current file for history.
                     try
                     {
+                        string directoryName = FilePath.GetDirectoryName(m_fileName);
+                        string rootFileName = FilePath.GetFileNameWithoutExtension(m_fileName);
+
+                        // We want this to run only once, when openPDC starts.
+                        if (m_savedFilesWithTime.Count < 1)
+                        {
+                            string expression = string.Format("{0}*", rootFileName);
+                            string[] files = Directory.GetFiles(directoryName, expression);
+
+                            foreach (string prestartLogFile in files)
+                            {
+                                if (!m_savedFilesWithTime.ContainsKey(File.GetLastWriteTime(prestartLogFile)))
+                                    m_savedFilesWithTime.Add(File.GetLastWriteTime(prestartLogFile), prestartLogFile);
+                            }
+                        }
+
                         Close(false);
-                        File.Move(m_fileName, FilePath.GetDirectoryName(m_fileName) +
-                                              FilePath.GetFileNameWithoutExtension(m_fileName) + "_" +
-                                              File.GetCreationTime(m_fileName).ToString("yyyy-MM-dd hh!mm!ss") + "_to_" +
-                                              File.GetLastWriteTime(m_fileName).ToString("yyyy-MM-dd hh!mm!ss") + FilePath.GetExtension(m_fileName));
-                    }
-                    catch
-                    {
-                        throw;
+
+                        List<DateTime> savedTimes;
+                        string destinationfile = Path.Combine(directoryName, rootFileName) + "_" +
+                            File.GetCreationTime(m_fileName).ToString("yyyy-MM-dd hh!mm!ss") + "_to_" +
+                            File.GetLastWriteTime(m_fileName).ToString("yyyy-MM-dd hh!mm!ss") + FilePath.GetExtension(m_fileName);
+
+                        File.Move(m_fileName, destinationfile);
+                        m_savedFilesWithTime.Add(File.GetLastWriteTime(destinationfile), destinationfile);
+                        savedTimes = m_savedFilesWithTime.Keys.ToList();
+                        savedTimes.Sort();
+
+                        // Save at least one file even if duration is 0 or negative.
+                        for (int i = 0; i < savedTimes.Count - 1; i++)
+                        {
+                            // True only when time difference is reached.
+                            if (DateTime.Compare(DateTime.Now.AddHours(-m_logFilesDuration), savedTimes[i]) > 0)
+                            {
+                                File.Delete(m_savedFilesWithTime[savedTimes[i]]);
+                                m_savedFilesWithTime.Remove(savedTimes[i]);
+                            }
+                        }
                     }
                     finally
                     {
