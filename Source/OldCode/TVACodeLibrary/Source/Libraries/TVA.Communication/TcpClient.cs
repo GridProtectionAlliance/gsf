@@ -395,6 +395,11 @@ namespace TVA.Communication
         public const bool DefaultAllowDualStackSocket = true;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="MaxSendQueueSize"/> property.
+        /// </summary>
+        public const int DefaultMaxSendQueueSize = -1;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="ClientBase.ConnectionString"/> property.
         /// </summary>
         public const string DefaultConnectionString = "Server=localhost:8888";
@@ -406,6 +411,7 @@ namespace TVA.Communication
         private bool m_integratedSecurity;
         private IPStack m_ipStack;
         private bool m_allowDualStackSocket;
+        private int m_maxSendQueueSize;
         private int m_connectionAttempts;
         private TransportProvider<Socket> m_tcpClient;
         private Dictionary<string, string> m_connectData;
@@ -445,6 +451,7 @@ namespace TVA.Communication
             m_payloadMarker = Payload.DefaultMarker;
             m_integratedSecurity = DefaultIntegratedSecurity;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
+            m_maxSendQueueSize = DefaultMaxSendQueueSize;
             m_tcpClient = new TransportProvider<Socket>();
 
             m_connectHandler = (o, args) => ProcessConnect();
@@ -543,6 +550,24 @@ namespace TVA.Communication
             set
             {
                 m_allowDualStackSocket = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum size for the send queue before payloads are dumped from the queue.
+        /// </summary>
+        [Category("Settings"),
+        DefaultValue(DefaultMaxSendQueueSize),
+        Description("The maximum size for the send queue before payloads are dumped from the queue.")]
+        public int MaxSendQueueSize
+        {
+            get
+            {
+                return m_maxSendQueueSize;
+            }
+            set
+            {
+                m_maxSendQueueSize = value;
             }
         }
 
@@ -662,6 +687,7 @@ namespace TVA.Communication
                 settings["PayloadAware", true].Update(m_payloadAware);
                 settings["IntegratedSecurity", true].Update(m_integratedSecurity);
                 settings["AllowDualStackSocket", true].Update(m_allowDualStackSocket);
+                settings["MaxSendQueueSize", true].Update(m_maxSendQueueSize);
                 config.Save();
             }
         }
@@ -680,9 +706,11 @@ namespace TVA.Communication
                 settings.Add("PayloadAware", m_payloadAware, "True if payload boundaries are to be preserved during transmission, otherwise False.");
                 settings.Add("IntegratedSecurity", m_integratedSecurity, "True if the current Windows account credentials are used for authentication, otherwise False.");
                 settings.Add("AllowDualStackSocket", m_allowDualStackSocket, "True if dual-mode socket is allowed when IP address is IPv6, otherwise False.");
+                settings.Add("MaxSendQueueSize", m_allowDualStackSocket, "The maximum size of the send queue before payloads are dumped from the queue.");
                 PayloadAware = settings["PayloadAware"].ValueAs(m_payloadAware);
                 IntegratedSecurity = settings["IntegratedSecurity"].ValueAs(m_integratedSecurity);
                 AllowDualStackSocket = settings["AllowDualStackSocket"].ValueAs(m_allowDualStackSocket);
+                MaxSendQueueSize = settings["MaxSendQueueSize"].ValueAs(m_maxSendQueueSize);
             }
         }
 
@@ -863,6 +891,22 @@ namespace TVA.Communication
 
             try
             {
+                // Check to see if the client has reached the maximum send queue size.
+                if (m_maxSendQueueSize > 0 && m_sendQueue.Count >= m_maxSendQueueSize)
+                {
+                    for (int i = 0; i < m_maxSendQueueSize; i++)
+                    {
+                        if (m_sendQueue.TryTake(out payload))
+                        {
+                            payload.WaitHandle.Set();
+                            payload.WaitHandle.Dispose();
+                            payload.WaitHandle = null;
+                        }
+                    }
+
+                    throw new InvalidOperationException(string.Format("TCP client reached maximum send queue size. {0} payloads dumped from the queue.", m_maxSendQueueSize));
+                }
+
                 // Prepare for payload-aware transmission.
                 if (m_payloadAware)
                     Payload.AddHeader(ref data, ref offset, ref length, m_payloadMarker);

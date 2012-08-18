@@ -289,6 +289,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using TVA.Configuration;
 
 namespace TVA.Communication
 {
@@ -400,6 +401,11 @@ namespace TVA.Communication
         public const bool DefaultAllowDualStackSocket = true;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="MaxSendQueueSize"/> property.
+        /// </summary>
+        public const int DefaultMaxSendQueueSize = -1;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="ClientBase.ConnectionString"/> property.
         /// </summary>
         public const string DefaultConnectionString = "Server=localhost:8888; Port=8989";
@@ -447,6 +453,7 @@ namespace TVA.Communication
         private TransportProvider<Socket> m_udpClient;
         private IPStack m_ipStack;
         private bool m_allowDualStackSocket;
+        private int m_maxSendQueueSize;
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectionHandle;
 #if ThreadTracking
@@ -484,6 +491,7 @@ namespace TVA.Communication
         {
             base.ReceiveBufferSize = DefaultReceiveBufferSize;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
+            m_maxSendQueueSize = DefaultMaxSendQueueSize;
 
             m_sendQueue = new BlockingCollection<UdpClientPayload>();
             m_sendHandler += (sender, args) => ProcessSend();
@@ -520,6 +528,24 @@ namespace TVA.Communication
             set
             {
                 m_allowDualStackSocket = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum size for the send queue before payloads are dumped from the queue.
+        /// </summary>
+        [Category("Settings"),
+        DefaultValue(DefaultMaxSendQueueSize),
+        Description("The maximum size for the send queue before payloads are dumped from the queue.")]
+        public int MaxSendQueueSize
+        {
+            get
+            {
+                return m_maxSendQueueSize;
+            }
+            set
+            {
+                m_maxSendQueueSize = value;
             }
         }
 
@@ -631,6 +657,41 @@ namespace TVA.Communication
             }
 
             throw new InvalidOperationException("No received data buffer has been defined to read.");
+        }
+
+        /// <summary>
+        /// Saves <see cref="TcpServer"/> settings to the config file if the <see cref="ServerBase.PersistSettings"/> property is set to true.
+        /// </summary>
+        public override void SaveSettings()
+        {
+            base.SaveSettings();
+            if (PersistSettings)
+            {
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                settings["AllowDualStackSocket", true].Update(m_allowDualStackSocket);
+                settings["MaxSendQueueSize", true].Update(m_maxSendQueueSize);
+                config.Save();
+            }
+        }
+
+        /// <summary>
+        /// Loads saved <see cref="TcpServer"/> settings from the config file if the <see cref="ServerBase.PersistSettings"/> property is set to true.
+        /// </summary>
+        public override void LoadSettings()
+        {
+            base.LoadSettings();
+            if (PersistSettings)
+            {
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                settings.Add("AllowDualStackSocket", m_allowDualStackSocket, "True if dual-mode socket is allowed when IP address is IPv6, otherwise False.");
+                settings.Add("MaxSendQueueSize", m_allowDualStackSocket, "The maximum size of the send queue before payloads are dumped from the queue.");
+                AllowDualStackSocket = settings["AllowDualStackSocket"].ValueAs(m_allowDualStackSocket);
+                MaxSendQueueSize = settings["MaxSendQueueSize"].ValueAs(m_maxSendQueueSize);
+            }
         }
 
         /// <summary>
@@ -901,6 +962,22 @@ namespace TVA.Communication
         {
             UdpClientPayload payload;
             ManualResetEventSlim handle;
+
+            // Check to see if the client has reached the maximum send queue size.
+            if (m_maxSendQueueSize > 0 && m_sendQueue.Count >= m_maxSendQueueSize)
+            {
+                for (int i = 0; i < m_maxSendQueueSize; i++)
+                {
+                    if (m_sendQueue.TryTake(out payload))
+                    {
+                        payload.WaitHandle.Set();
+                        payload.WaitHandle.Dispose();
+                        payload.WaitHandle = null;
+                    }
+                }
+
+                throw new InvalidOperationException(string.Format("UDP client reached maximum send queue size. {0} payloads dumped from the queue.", m_maxSendQueueSize));
+            }
 
             // Create payload and wait handle.
             payload = ReusableObjectPool<UdpClientPayload>.Default.TakeObject();
