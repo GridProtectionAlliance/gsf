@@ -26,6 +26,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -56,9 +57,25 @@ namespace HistorianView
         /// This is a wrapper around a MetadataRecord that allows auto-generation
         /// of columns in the data grid based on the public properties of this class.
         /// </summary>
-        public class MetadataWrapper
+        public class MetadataWrapper : INotifyPropertyChanged
         {
+            #region [ Members ]
+
+            // Events
+
+            /// <summary>
+            /// Event triggered when a property is changed.
+            /// </summary>
+            public event PropertyChangedEventHandler PropertyChanged;
+
+            // Fields
             private MetadataRecord m_metadata;
+            private bool m_export;
+            private bool m_display;
+
+            #endregion
+
+            #region [ Constructors ]
 
             /// <summary>
             /// Creates a new instance of the <see cref="MetadataWrapper"/> class.
@@ -69,14 +86,25 @@ namespace HistorianView
                 m_metadata = metadata;
             }
 
+            #endregion
+
+            #region [ Properties ]
+
             /// <summary>
             /// Determines whether the measurement represented by this metadata record
             /// should be exported to CSV by the Historian Data Viewer.
             /// </summary>
             public bool Export
             {
-                get;
-                set;
+                get
+                {
+                    return m_export;
+                }
+                set
+                {
+                    m_export = value;
+                    OnPropertyChanged("Export");
+                }
             }
 
             /// <summary>
@@ -85,8 +113,15 @@ namespace HistorianView
             /// </summary>
             public bool Display
             {
-                get;
-                set;
+                get
+                {
+                    return m_display;
+                }
+                set
+                {
+                    m_display = value;
+                    OnPropertyChanged("Display");
+                }
             }
 
             /// <summary>
@@ -218,6 +253,19 @@ namespace HistorianView
             {
                 return m_metadata;
             }
+
+            #endregion
+
+            #region [ Methods ]
+
+            // Triggers the PropertyChanged event.
+            private void OnPropertyChanged(string propertyName)
+            {
+                if ((object)PropertyChanged != null)
+                    PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+
+            #endregion
         }
 
         // Fields
@@ -227,6 +275,7 @@ namespace HistorianView
         private List<MetadataWrapper> m_metadata;
         private DateTime m_startTime;
         private DateTime m_endTime;
+        private string[] m_tokens;
 
         private ICollection<MenuItem> m_contextMenuItems;
         private ICollection<string> m_visibleColumns;
@@ -648,20 +697,24 @@ namespace HistorianView
         //The records are also arranged in Ascending order. 
         private void FilterBySearchResults()
         {
-            string[] tokens = m_searchBox.Text.Split(' ');
+            m_tokens = m_searchBox.Text.Split(' ');
 
-            //m_dataGrid.ItemsSource = m_metadata.ToDictionary(metadata => metadata, metadata => SearchProperties(metadata, tokens))
-            //    .Where(pair => pair.Key.Export || pair.Key.Display || pair.Value)
-            //    .OrderBy(pair => pair.Key.Export)
-            //    .OrderBy(pair => pair.Key.Display)
-            //    .OrderByDescending(pair => pair.Value)
-            //    .Select(pair => pair.Key)
-            //    .ToList();
-            m_dataGrid.ItemsSource = m_metadata.ToDictionary(metadata => metadata, metadata => SearchProperties(metadata, tokens))
-                .Where(pair => (pair.Key.Export || pair.Key.Display || pair.Value) && !string.IsNullOrEmpty(pair.Key.Name))
-                .Select(pair => pair.Key)
-                .ToList(); //svk_5/29/12
+            m_dataGrid.ItemsSource = m_metadata.Where(metadata => !string.IsNullOrEmpty(metadata.Name))
+                .Select(metadata => new Tuple<MetadataWrapper, bool>(metadata, SearchProperties(metadata, m_tokens)))
+                .Where(tuple => tuple.Item1.Export || tuple.Item1.Display || tuple.Item2)
+                .OrderBy(tuple => tuple.Item1.PointNumber)
+                .OrderBy(tuple => tuple.Item1.Export)
+                .OrderBy(tuple => tuple.Item1.Display)
+                .OrderByDescending(tuple => tuple.Item2)
+                .Select(tuple => tuple.Item1)
+                .ToList();
+        }
 
+        // Selects or deselects the export field for all records in the data grid.
+        private void SetExportForAll(bool selected)
+        {
+            m_dataGrid.ItemsSource.Cast<MetadataWrapper>().ToList()
+                .ForEach(metadata => metadata.Export = selected);
         }
 
         // Searches the non-boolean properties of an object to determine if their string representations collectively contain a set of tokens.
@@ -1169,6 +1222,18 @@ namespace HistorianView
         private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             FilterBySearchResults();
+        }
+
+        // Selects the export field for all records in the data grid.
+        private void SelectAllButton_Clicked(object sender, RoutedEventArgs e)
+        {
+            SetExportForAll(true);
+        }
+
+        // Deselects the export field for all records in the data grid.
+        private void DeselectAllButton_Click(object sender, RoutedEventArgs e)
+        {
+            SetExportForAll(false);
         }
 
         // Displays the chart window.

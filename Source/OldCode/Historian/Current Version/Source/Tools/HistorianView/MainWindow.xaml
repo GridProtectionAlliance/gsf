@@ -132,6 +132,8 @@
                 <ToolBarPanel Orientation="Horizontal">
                     <Label Content="Search:" />
                     <TextBox Width="100" TextChanged="SearchBox_TextChanged" Name="m_searchBox" />
+                    <Button Content="Select All" Height="23" Width="75" Click="SelectAllButton_Clicked" />
+                    <Button Content="Deselect All" Height="23" Width="75" Click="DeselectAllButton_Click" />
                 </ToolBarPanel>
                 <ToolBar.Background>
                     <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
