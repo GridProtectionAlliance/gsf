@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text;
 using TVA;
 
@@ -260,6 +261,9 @@ namespace TimeSeriesFramework.Adapters
         /// <remarks>
         /// This value is only tracked in the <see cref="FacileActionAdapterBase"/>, derived class will determine its use.
         /// </remarks>
+        [ConnectionStringParameter,
+        DefaultValue(0),
+        Description("Defines the number of frames per second expected by the adapter.")]
         public virtual int FramesPerSecond
         {
             get
@@ -269,6 +273,54 @@ namespace TimeSeriesFramework.Adapters
             set
             {
                 m_framesPerSecond = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the allowed past time deviation tolerance, in seconds (can be subsecond).
+        /// </summary>
+        /// <remarks>
+        /// <para>Defines the time sensitivity to past measurement timestamps.</para>
+        /// <para>The number of seconds allowed before assuming a measurement timestamp is too old.</para>
+        /// <para>This becomes the amount of delay introduced by the concentrator to allow time for data to flow into the system.</para>
+        /// </remarks>
+        /// <exception cref="ArgumentOutOfRangeException">LagTime must be greater than zero, but it can be less than one.</exception>
+        [ConnectionStringParameter,
+        DefaultValue(10.0D),
+        Description("Defines the allowed past time deviation tolerance, in seconds (can be subsecond).")]
+        public double LagTime
+        {
+            get
+            {
+                return LatestMeasurements.LagTime;
+            }
+            set
+            {
+                LatestMeasurements.LagTime = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the allowed future time deviation tolerance, in seconds (can be subsecond).
+        /// </summary>
+        /// <remarks>
+        /// <para>Defines the time sensitivity to future measurement timestamps.</para>
+        /// <para>The number of seconds allowed before assuming a measurement timestamp is too advanced.</para>
+        /// <para>This becomes the tolerated +/- accuracy of the local clock to real-time.</para>
+        /// </remarks>
+        /// <exception cref="ArgumentOutOfRangeException">LeadTime must be greater than zero, but it can be less than one.</exception>
+        [ConnectionStringParameter,
+        DefaultValue(5.0D),
+        Description("Defines the allowed future time deviation tolerance, in seconds (can be subsecond).")]
+        public double LeadTime
+        {
+            get
+            {
+                return LatestMeasurements.LeadTime;
+            }
+            set
+            {
+                LatestMeasurements.LeadTime = value;
             }
         }
 

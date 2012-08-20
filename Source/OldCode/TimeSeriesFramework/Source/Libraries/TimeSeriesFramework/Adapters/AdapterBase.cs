@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Data;
 using System.Globalization;
 using System.Linq;
@@ -335,6 +336,9 @@ namespace TimeSeriesFramework.Adapters
         /// <remarks>
         /// If your adapter needs to receive all measurements, you must explicitly set InputMeasurementKeys to null.
         /// </remarks>
+        [ConnectionStringParameter,
+        DefaultValue(null),
+        Description("Defines primary keys of input measurements the adapter expects; can be one of a filter expression, measurement key, point tag or Guid.")]
         public virtual MeasurementKey[] InputMeasurementKeys
         {
             get
@@ -361,6 +365,9 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Gets or sets output measurements that the <see cref="AdapterBase"/> will produce, if any.
         /// </summary>
+        [ConnectionStringParameter,
+        DefaultValue(null),
+        Description("Defines primary keys of output measurements the adapter expects; can be one of a filter expression, measurement key, point tag or Guid.")]
         public virtual IMeasurement[] OutputMeasurements
         {
             get
@@ -1518,7 +1525,22 @@ namespace TimeSeriesFramework.Adapters
                             }
                             else
                             {
-                                throw new InvalidOperationException(string.Format("Could not parse input measurement definition \"{0}\" as a filter expression, measurement key or Guid", item));
+                                // Attempt to update empty signal ID if available
+                                if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
+                                {
+                                    DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("PointTag = '{0}'", item));
+
+                                    if (filteredRows.Length > 0)
+                                    {
+                                        key = MeasurementKey.LookupBySignalID(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>());
+                                        keys.Add(key);
+                                    }
+                                }
+
+                                if (key == default(MeasurementKey))
+                                {
+                                    throw new InvalidOperationException(string.Format("Could not parse input measurement definition \"{0}\" as a filter expression, measurement key, point tag or Guid", item));
+                                }
                             }
                         }
                     }
@@ -1619,7 +1641,21 @@ namespace TimeSeriesFramework.Adapters
                                 }
                                 else
                                 {
-                                    throw new InvalidOperationException(string.Format("Could not parse output measurement definition \"{0}\" as a filter expression, measurement key or Guid", item));
+                                    // Attempt to update empty signal ID if available
+                                    if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
+                                    {
+                                        DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("PointTag = '{0}'", item));
+
+                                        if (filteredRows.Length > 0)
+                                        {
+                                            key = MeasurementKey.LookupBySignalID(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>());
+                                        }
+                                    }
+
+                                    if (key == default(MeasurementKey))
+                                    {
+                                        throw new InvalidOperationException(string.Format("Could not parse output measurement definition \"{0}\" as a filter expression, measurement key, point tag or Guid", item));
+                                    }
                                 }
                             }
 

@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Text;
@@ -321,11 +322,80 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
+        /// Gets or sets the number of frames per second.
+        /// </summary>
+        /// <remarks>
+        /// Valid frame rates for a <see cref="ConcentratorBase"/> are greater than 0 frames per second.
+        /// </remarks>
+        [ConnectionStringParameter,
+        Description("Defines the number of frames per second expected by the adapter.")]
+        public new int FramesPerSecond
+        {
+            get
+            {
+                return base.FramesPerSecond;
+            }
+            set
+            {
+                base.FramesPerSecond = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the allowed past time deviation tolerance, in seconds (can be subsecond).
+        /// </summary>
+        /// <remarks>
+        /// <para>Defines the time sensitivity to past measurement timestamps.</para>
+        /// <para>The number of seconds allowed before assuming a measurement timestamp is too old.</para>
+        /// <para>This becomes the amount of delay introduced by the concentrator to allow time for data to flow into the system.</para>
+        /// </remarks>
+        /// <exception cref="ArgumentOutOfRangeException">LagTime must be greater than zero, but it can be less than one.</exception>
+        [ConnectionStringParameter,
+        Description("Defines the allowed past time deviation tolerance, in seconds (can be subsecond).")]
+        public new double LagTime
+        {
+            get
+            {
+                return base.LagTime;
+            }
+            set
+            {
+                base.LagTime = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the allowed future time deviation tolerance, in seconds (can be subsecond).
+        /// </summary>
+        /// <remarks>
+        /// <para>Defines the time sensitivity to future measurement timestamps.</para>
+        /// <para>The number of seconds allowed before assuming a measurement timestamp is too advanced.</para>
+        /// <para>This becomes the tolerated +/- accuracy of the local clock to real-time.</para>
+        /// </remarks>
+        /// <exception cref="ArgumentOutOfRangeException">LeadTime must be greater than zero, but it can be less than one.</exception>
+        [ConnectionStringParameter,
+        Description("Defines the allowed future time deviation tolerance, in seconds (can be subsecond).")]
+        public new double LeadTime
+        {
+            get
+            {
+                return base.LeadTime;
+            }
+            set
+            {
+                base.LeadTime = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets primary keys of input measurements the action adapter expects.
         /// </summary>
         /// <remarks>
         /// If your adapter needs to receive all measurements, you must explicitly set InputMeasurementKeys to null.
         /// </remarks>
+        [ConnectionStringParameter,
+        DefaultValue(null),
+        Description("Defines primary keys of input measurements the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid.")]
         public virtual MeasurementKey[] InputMeasurementKeys
         {
             get
@@ -359,6 +429,9 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Gets or sets output measurements that the action adapter will produce, if any.
         /// </summary>
+        [ConnectionStringParameter,
+        DefaultValue(null),
+        Description("Defines primary keys of output measurements the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid.")]
         public virtual IMeasurement[] OutputMeasurements
         {
             get
