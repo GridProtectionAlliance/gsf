@@ -1105,6 +1105,11 @@
             Specifies the default value for the <see cref="P:TVA.Communication.UdpClient.AllowDualStackSocket"/> property.
             </summary>
         </member>
+        <member name="F:TVA.Communication.UdpClient.DefaultMaxSendQueueSize">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Communication.UdpClient.MaxSendQueueSize"/> property.
+            </summary>
+        </member>
         <member name="F:TVA.Communication.UdpClient.DefaultConnectionString">
             <summary>
             Specifies the default value for the <see cref="P:TVA.Communication.ClientBase.ConnectionString"/> property.
@@ -1150,6 +1155,16 @@
             <paramref name="startIndex"/> or <paramref name="length"/> is less than 0 -or- 
             <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
             </exception>
+        </member>
+        <member name="M:TVA.Communication.UdpClient.SaveSettings">
+            <summary>
+            Saves <see cref="T:TVA.Communication.TcpServer"/> settings to the config file if the <see cref="P:TVA.Communication.ServerBase.PersistSettings"/> property is set to true.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpClient.LoadSettings">
+            <summary>
+            Loads saved <see cref="T:TVA.Communication.TcpServer"/> settings from the config file if the <see cref="P:TVA.Communication.ServerBase.PersistSettings"/> property is set to true.
+            </summary>
         </member>
         <member name="M:TVA.Communication.UdpClient.Disconnect">
             <summary>
@@ -1288,6 +1303,11 @@
         <member name="P:TVA.Communication.UdpClient.AllowDualStackSocket">
             <summary>
             Gets or sets a boolean value that determines if dual-mode socket is allowed when endpoint address is IPv6.
+            </summary>
+        </member>
+        <member name="P:TVA.Communication.UdpClient.MaxSendQueueSize">
+            <summary>
+            Gets or sets the maximum size for the send queue before payloads are dumped from the queue.
             </summary>
         </member>
         <member name="P:TVA.Communication.UdpClient.Client">
@@ -1586,6 +1606,11 @@
             Specifies the default value for the <see cref="P:TVA.Communication.TcpClient.AllowDualStackSocket"/> property.
             </summary>
         </member>
+        <member name="F:TVA.Communication.TcpClient.DefaultMaxSendQueueSize">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Communication.TcpClient.MaxSendQueueSize"/> property.
+            </summary>
+        </member>
         <member name="F:TVA.Communication.TcpClient.DefaultConnectionString">
             <summary>
             Specifies the default value for the <see cref="P:TVA.Communication.ClientBase.ConnectionString"/> property.
@@ -1763,6 +1788,11 @@
         <member name="P:TVA.Communication.TcpClient.AllowDualStackSocket">
             <summary>
             Gets or sets a boolean value that determines if dual-mode socket is allowed when endpoint address is IPv6.
+            </summary>
+        </member>
+        <member name="P:TVA.Communication.TcpClient.MaxSendQueueSize">
+            <summary>
+            Gets or sets the maximum size for the send queue before payloads are dumped from the queue.
             </summary>
         </member>
         <member name="P:TVA.Communication.TcpClient.Client">
@@ -2888,6 +2918,11 @@
             Specifies the default value for the <see cref="P:TVA.Communication.UdpServer.AllowDualStackSocket"/> property.
             </summary>
         </member>
+        <member name="F:TVA.Communication.UdpServer.DefaultMaxSendQueueSize">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Communication.UdpServer.MaxSendQueueSize"/> property.
+            </summary>
+        </member>
         <member name="F:TVA.Communication.UdpServer.DefaultConfigurationString">
             <summary>
             Specifies the default value for the <see cref="P:TVA.Communication.ServerBase.ConfigurationString"/> property.
@@ -2937,6 +2972,16 @@
             <paramref name="startIndex"/> or <paramref name="length"/> is less than 0 -or- 
             <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
             </exception>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.SaveSettings">
+            <summary>
+            Saves <see cref="T:TVA.Communication.TcpServer"/> settings to the config file if the <see cref="P:TVA.Communication.ServerBase.PersistSettings"/> property is set to true.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.LoadSettings">
+            <summary>
+            Loads saved <see cref="T:TVA.Communication.TcpServer"/> settings from the config file if the <see cref="P:TVA.Communication.ServerBase.PersistSettings"/> property is set to true.
+            </summary>
         </member>
         <member name="M:TVA.Communication.UdpServer.Stop">
             <summary>
@@ -3025,6 +3070,11 @@
         <member name="P:TVA.Communication.UdpServer.AllowDualStackSocket">
             <summary>
             Gets or sets a boolean value that determines if dual-mode socket is allowed when endpoint address is IPv6.
+            </summary>
+        </member>
+        <member name="P:TVA.Communication.UdpServer.MaxSendQueueSize">
+            <summary>
+            Gets or sets the maximum size for the send queue before payloads are dumped from the queue.
             </summary>
         </member>
         <member name="P:TVA.Communication.UdpServer.Server">
@@ -3182,6 +3232,11 @@
         <member name="F:TVA.Communication.TcpServer.DefaultAllowDualStackSocket">
             <summary>
             Specifies the default value for the <see cref="P:TVA.Communication.TcpServer.AllowDualStackSocket"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.TcpServer.DefaultMaxSendQueueSize">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Communication.TcpServer.MaxSendQueueSize"/> property.
             </summary>
         </member>
         <member name="F:TVA.Communication.TcpServer.DefaultConfigurationString">
@@ -3382,6 +3437,11 @@
         <member name="P:TVA.Communication.TcpServer.AllowDualStackSocket">
             <summary>
             Gets or sets a boolean value that determines if dual-mode socket is allowed when endpoint address is IPv6.
+            </summary>
+        </member>
+        <member name="P:TVA.Communication.TcpServer.MaxSendQueueSize">
+            <summary>
+            Gets or sets the maximum size for the send queue before payloads are dumped from the queue.
             </summary>
         </member>
         <member name="P:TVA.Communication.TcpServer.Server">

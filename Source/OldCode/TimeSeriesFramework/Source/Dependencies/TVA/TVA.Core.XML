@@ -16308,6 +16308,11 @@
             Specifies the default value for the <see cref="P:TVA.IO.LogFile.PersistSettings"/> property.
             </summary>
         </member>
+        <member name="F:TVA.IO.LogFile.DefaultLogFilesDuration">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.IO.LogFile.LogFilesDuration"/> property.
+            </summary>
+        </member>
         <member name="F:TVA.IO.LogFile.DefaultSettingsCategory">
             <summary>
             Specifies the default value for the <see cref="P:TVA.IO.LogFile.SettingsCategory"/> property.
@@ -16476,6 +16481,11 @@
         <member name="P:TVA.IO.LogFile.FileFullOperation">
             <summary>
             Gets or sets the type of operation to be performed when the <see cref="T:TVA.IO.LogFile"/> is full.
+            </summary>
+        </member>
+        <member name="P:TVA.IO.LogFile.LogFilesDuration">
+            <summary>
+            Gets or sets the time duration, in hours, to save the <see cref="T:TVA.IO.LogFile"/> .
             </summary>
         </member>
         <member name="P:TVA.IO.LogFile.PersistSettings">
