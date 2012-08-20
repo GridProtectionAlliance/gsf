@@ -107,7 +107,7 @@ namespace OneSecondFrequencyAverager
 
                 outMeasurement = Measurement.Clone(OutputMeasurements[i]);
                 outMeasurement.Value = inMeasurement.Value;
-                outMeasurement.Timestamp = frame.Timestamp;
+                outMeasurement.Timestamp = frame.Timestamp + Ticks.PerSecond;
                 newMeasurements.Add(outMeasurement);
             }
 
