@@ -27,14 +27,14 @@ using TimeSeriesFramework;
 using TimeSeriesFramework.Adapters;
 using TVA;
 
-namespace FrequencyAverager
+namespace OneSecondFrequencyAverager
 {
     /// <summary>
     /// Represents an adapter that calculates the average
     /// of the input frequencies over each full second.
     /// </summary>
-    [Description("FrequencyAverager: averages frequencies over one second intervals")]
-    public class FrequencyAverager : ActionAdapterBase
+    [Description("One Second Frequency Averager: averages frequencies over one second intervals")]
+    public class OneSecondFrequencyAverager : ActionAdapterBase
     {
         #region [ Members ]
 
@@ -64,7 +64,7 @@ namespace FrequencyAverager
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes this <see cref="FrequencyAverager"/>.
+        /// Initializes this <see cref="OneSecondFrequencyAverager"/>.
         /// </summary>
         public override void Initialize()
         {

@@ -8,8 +8,8 @@
     <ProjectGuid>{AF33B063-D523-493E-951A-29C930A49002}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>FrequencyAverager</RootNamespace>
-    <AssemblyName>FrequencyAverager</AssemblyName>
+    <RootNamespace>OneSecondFrequencyAverager</RootNamespace>
+    <AssemblyName>OneSecondFrequencyAverager</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SccProjectName>SAK</SccProjectName>
@@ -25,7 +25,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\..\..\Build\Output\Debug\Libraries\FrequencyAverager.XML</DocumentationFile>
+    <DocumentationFile>..\..\..\..\Build\Output\Debug\Libraries\OneSecondFrequencyAverager.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -34,7 +34,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\..\..\Build\Output\Release\Libraries\FrequencyAverager.XML</DocumentationFile>
+    <DocumentationFile>..\..\..\..\Build\Output\Release\Libraries\OneSecondFrequencyAverager.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -81,7 +81,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FrequencyAverager.cs" />
+    <Compile Include="OneSecondFrequencyAverager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
