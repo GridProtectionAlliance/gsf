@@ -3373,6 +3373,36 @@
             Gets or sets flag that determines if measurements being queued for processing should be tested to see if they are in the <see cref="P:TimeSeriesFramework.Adapters.ActionAdapterBase.InputMeasurementKeys"/>.
             </summary>
         </member>
+        <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.FramesPerSecond">
+            <summary>
+            Gets or sets the number of frames per second.
+            </summary>
+            <remarks>
+            Valid frame rates for a <see cref="T:TimeSeriesFramework.ConcentratorBase"/> are greater than 0 frames per second.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.LagTime">
+            <summary>
+            Gets or sets the allowed past time deviation tolerance, in seconds (can be subsecond).
+            </summary>
+            <remarks>
+            <para>Defines the time sensitivity to past measurement timestamps.</para>
+            <para>The number of seconds allowed before assuming a measurement timestamp is too old.</para>
+            <para>This becomes the amount of delay introduced by the concentrator to allow time for data to flow into the system.</para>
+            </remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException">LagTime must be greater than zero, but it can be less than one.</exception>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.LeadTime">
+            <summary>
+            Gets or sets the allowed future time deviation tolerance, in seconds (can be subsecond).
+            </summary>
+            <remarks>
+            <para>Defines the time sensitivity to future measurement timestamps.</para>
+            <para>The number of seconds allowed before assuming a measurement timestamp is too advanced.</para>
+            <para>This becomes the tolerated +/- accuracy of the local clock to real-time.</para>
+            </remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException">LeadTime must be greater than zero, but it can be less than one.</exception>
+        </member>
         <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.InputMeasurementKeys">
             <summary>
             Gets or sets primary keys of input measurements the action adapter expects.
@@ -4858,6 +4888,28 @@
             <remarks>
             This value is only tracked in the <see cref="T:TimeSeriesFramework.Adapters.FacileActionAdapterBase"/>, derived class will determine its use.
             </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.FacileActionAdapterBase.LagTime">
+            <summary>
+            Gets or sets the allowed past time deviation tolerance, in seconds (can be subsecond).
+            </summary>
+            <remarks>
+            <para>Defines the time sensitivity to past measurement timestamps.</para>
+            <para>The number of seconds allowed before assuming a measurement timestamp is too old.</para>
+            <para>This becomes the amount of delay introduced by the concentrator to allow time for data to flow into the system.</para>
+            </remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException">LagTime must be greater than zero, but it can be less than one.</exception>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.FacileActionAdapterBase.LeadTime">
+            <summary>
+            Gets or sets the allowed future time deviation tolerance, in seconds (can be subsecond).
+            </summary>
+            <remarks>
+            <para>Defines the time sensitivity to future measurement timestamps.</para>
+            <para>The number of seconds allowed before assuming a measurement timestamp is too advanced.</para>
+            <para>This becomes the tolerated +/- accuracy of the local clock to real-time.</para>
+            </remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException">LeadTime must be greater than zero, but it can be less than one.</exception>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.FacileActionAdapterBase.TrackLatestMeasurements">
             <summary>
