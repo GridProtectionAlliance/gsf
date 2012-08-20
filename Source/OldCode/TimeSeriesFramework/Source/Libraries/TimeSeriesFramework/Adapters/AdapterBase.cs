@@ -417,7 +417,7 @@ namespace TimeSeriesFramework.Adapters
                 m_initialized = value;
 
                 // When initialization is complete we send notification
-                if (m_initializeWaitHandle != null)
+                if ((object)m_initializeWaitHandle != null)
                 {
                     if (value)
                         m_initializeWaitHandle.Set();
@@ -765,7 +765,7 @@ namespace TimeSeriesFramework.Adapters
                 {
                     if (disposing)
                     {
-                        if (m_initializeWaitHandle != null)
+                        if ((object)m_initializeWaitHandle != null)
                             m_initializeWaitHandle.Close();
 
                         m_initializeWaitHandle = null;
@@ -949,7 +949,7 @@ namespace TimeSeriesFramework.Adapters
         /// <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
         public virtual bool WaitForInitialize(int timeout)
         {
-            if (m_initializeWaitHandle != null)
+            if ((object)m_initializeWaitHandle != null)
                 return m_initializeWaitHandle.WaitOne(timeout);
 
             return false;
