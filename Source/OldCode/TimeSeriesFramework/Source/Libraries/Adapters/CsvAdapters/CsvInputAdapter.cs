@@ -501,7 +501,9 @@ namespace CsvAdapters
         /// </summary>
         protected override void AttemptConnection()
         {
-            m_inStream = new StreamReader(m_fileName);
+            string[] headings;
+
+            m_inStream = new StreamReader(File.Open(m_fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
 
             // Skip specified number of header lines that exist before column heading definitions
             for (int i = 0; i < m_skipRows; i++)
@@ -509,9 +511,9 @@ namespace CsvAdapters
                 m_inStream.ReadLine();
             }
 
+            m_columns.Clear();
             m_header = m_inStream.ReadLine();
-
-            string[] headings = m_header.ToNonNullString().Split(',');
+            headings = m_header.ToNonNullString().Split(',');
 
             for (int i = 0; i < headings.Length; i++)
             {
@@ -595,7 +597,7 @@ namespace CsvAdapters
                 int timestampColumn = 0;
                 string[] fields = m_inStream.ReadLine().ToNonNullString().Split(',');
 
-                if (fields.Length <= 0)
+                if (m_inStream.EndOfStream || fields.Length < m_columns.Count)
                     return false;
 
                 // Read time from Timestamp column in transverse mode
