@@ -681,6 +681,8 @@ namespace TVA.Communication
         /// </summary>
         public override void LoadSettings()
         {
+            int maxSendQueueSize;
+
             base.LoadSettings();
             if (PersistSettings)
             {
@@ -691,6 +693,10 @@ namespace TVA.Communication
                 settings.Add("MaxSendQueueSize", m_allowDualStackSocket, "The maximum size of the send queue before payloads are dumped from the queue.");
                 AllowDualStackSocket = settings["AllowDualStackSocket"].ValueAs(m_allowDualStackSocket);
                 MaxSendQueueSize = settings["MaxSendQueueSize"].ValueAs(m_maxSendQueueSize);
+
+                // Overwrite config file if max send queue size exists in connection string.
+                if (m_connectData.ContainsKey("maxSendQueueSize") && int.TryParse(m_connectData["maxSendQueueSize"], out maxSendQueueSize))
+                    m_maxSendQueueSize = maxSendQueueSize;
             }
         }
 

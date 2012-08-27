@@ -672,9 +672,15 @@ namespace TVA.Communication
         {
             if (CurrentState == ServerState.NotRunning)
             {
+                int maxSendQueueSize;
+
                 // Initialize if unitialized
                 if (!Initialized)
                     Initialize();
+
+                // Overwrite config file if max send queue size exists in connection string.
+                if (m_configData.ContainsKey("maxSendQueueSize") && int.TryParse(m_configData["maxSendQueueSize"], out maxSendQueueSize))
+                    m_maxSendQueueSize = maxSendQueueSize;
 
                 // Bind server socket to local end-point
                 m_udpServer = new TransportProvider<Socket>();
