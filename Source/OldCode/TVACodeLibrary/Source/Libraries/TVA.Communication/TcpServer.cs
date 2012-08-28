@@ -419,7 +419,7 @@ namespace TVA.Communication
         private Socket m_tcpServer;
         private SocketAsyncEventArgs m_acceptArgs;
         private ConcurrentDictionary<Guid, TransportProvider<Socket>> m_tcpClients;
-        private ConcurrentDictionary<Guid, BlockingCollection<TcpServerPayload>> m_sendQueues; 
+        private ConcurrentDictionary<Guid, BlockingCollection<TcpServerPayload>> m_sendQueues;
         private Dictionary<string, string> m_configData;
 
         private EventHandler<SocketAsyncEventArgs> m_acceptHandler;
@@ -747,11 +747,15 @@ namespace TVA.Communication
         {
             if (CurrentState == ServerState.NotRunning)
             {
-                int maxSendQueueSize;
+                int maxClientConnections, maxSendQueueSize;
 
                 // Initialize if unitialized.
                 if (!Initialized)
                     Initialize();
+
+                // Overwrite config file if max client connections exists in connection string.
+                if (m_configData.ContainsKey("maxClientConnections") && int.TryParse(m_configData["maxClientConnections"], out maxClientConnections))
+                    MaxClientConnections = maxClientConnections;
 
                 // Overwrite config file if max send queue size exists in connection string.
                 if (m_configData.ContainsKey("maxSendQueueSize") && int.TryParse(m_configData["maxSendQueueSize"], out maxSendQueueSize))
