@@ -20,11 +20,18 @@
 //       Generated original version of source code.
 //  05/02/2011 - J. Ritchie Carroll
 //       Updated for coding consistency.
+// 09/10/2012 - Aniket Salver
+//       Added paging technique and implemented sorting.
 //
 //******************************************************************************************************
 
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Data;
+using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using TVA.Data;
+using System.Linq;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
@@ -145,6 +152,96 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_createdOn = value;
+            }
+        }
+
+        #endregion
+
+        #region[ Static ]
+
+        /// <summary>
+        /// Loads <see cref="ErrorLog"/> IDs as an <see cref="IList{T}"/>.
+        /// </summary>        
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="sortMember">The field to sort by.</param>
+        /// <param name="sortDirection"><c>ASC</c> or <c>DESC</c> for ascending or descending respectively.</param>
+        /// <returns>Collection of <see cref="Int32"/>.</returns>
+        public static IList<int> LoadKeys(AdoDataConnection database, string sortMember = "", string sortDirection = "")
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                IList<int> ErrorLogList = new List<int>();
+                string sortClause = string.Empty;
+                DataTable ErrorLogTable;
+
+                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
+
+                ErrorLogTable = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT ID FROM ErrorLog {0} ", sortClause));
+
+                foreach (DataRow row in ErrorLogTable.Rows)
+                {
+                    ErrorLogList.Add(row.ConvertField<int>("ID"));
+                }
+
+                return ErrorLogList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Loads <see cref="ErrorLog"/> information as an <see cref="ObservableCollection{T}"/> style list.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="keys">Keys of the ErrorLogs to be loaded from the database.</param>
+        /// <returns>Collection of <see cref="ErrorLog"/>.</returns>
+        public static ObservableCollection<ErrorLog> Load(AdoDataConnection database, IList<int> keys)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                ObservableCollection<ErrorLog> ErrorLogList = new ObservableCollection<ErrorLog>();
+                DataTable ErrorLogTable;
+                string query;
+                string commaSeparatedKeys;
+
+                if ((object)keys != null && keys.Count > 0)
+                {
+                    commaSeparatedKeys = keys.Select(key => "" + key.ToString() + "").Aggregate((str1, str2) => str1 + "," + str2);
+                    query = string.Format("SELECT ID, Source, Type, Message, Detail, CreatedOn  FROM ErrorLog WHERE ID IN ({0})", commaSeparatedKeys);
+                    ErrorLogTable = database.Connection.RetrieveData(database.AdapterType, query);
+
+                    foreach (DataRow row in ErrorLogTable.Rows)
+                    {
+                        ErrorLogList.Add(new ErrorLog()
+                        {
+                            ID = row.ConvertField<int>("ID"),
+                            Source = row.Field<String>("Source"),
+                            Type = row.Field<String>("Type"),
+                            Message = row.Field<String>("Message"),
+                            Detail = row.Field<String>("Detail"),
+                            CreatedOn = row.Field<DateTime>("CreatedOn")
+                        });
+                    }
+                }
+
+                return ErrorLogList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
             }
         }
 

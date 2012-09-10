@@ -114,7 +114,6 @@
     <Compile Include="Converters\RoleBasedVisibilityConverter.cs" />
     <Compile Include="Converters\StringToBooleanConverter.cs" />
     <Compile Include="Converters\StringToStatusColorConverter.cs" />
-    <Compile Include="ErrorMonitor.cs" />
     <Compile Include="SubscriberStatusQuery.cs" />
     <Compile Include="DataModelBase.cs" />
     <Compile Include="DataModels\Adapter.cs" />

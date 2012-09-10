@@ -21,6 +21,8 @@
 //  04/12/2012 - prasanthgs
 //       Reworked as per the comments of codeplex reviewers.
 //       Code Optimized.
+//  09/10/2012 - Aniket Salver
+//       Added paging technique and implemented sorting.
 //
 //******************************************************************************************************
 
@@ -28,6 +30,8 @@ using System;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Linq;
 using TimeSeriesFramework.UI.ViewModels;
 
 namespace TimeSeriesFramework.UI.UserControls
@@ -40,7 +44,6 @@ namespace TimeSeriesFramework.UI.UserControls
         #region [ Members ]
 
         private ErrorLogViewModel m_dataContext;
-        private ErrorMonitor m_errorMonitor;
         private DataGridColumn m_sortColumn;
         private string m_sortMemberPath;
         private ListSortDirection m_sortDirection;
@@ -59,6 +62,11 @@ namespace TimeSeriesFramework.UI.UserControls
             m_dataContext = new ErrorLogViewModel(18);
             m_dataContext.PropertyChanged += new PropertyChangedEventHandler(ViewModel_PropertyChanged);
             this.DataContext = m_dataContext;
+
+            m_sortColumn = DataGridList.Columns.Single(column => (string)column.Header == "Sl No.");
+            m_sortMemberPath = "ID";
+            m_sortDirection = ListSortDirection.Descending;
+            m_dataContext.SortData(m_sortMemberPath, m_sortDirection);
         }
 
         #endregion
@@ -94,68 +102,6 @@ namespace TimeSeriesFramework.UI.UserControls
                 DataGridList.Items.SortDescriptions.Add(new SortDescription(m_sortMemberPath, m_sortDirection));
                 DataGridList.Items.Refresh();
             }
-        }
-
-        private void ButtonRestore_Click(object sender, RoutedEventArgs e)
-        {
-            m_dataContext.Monitor.ResetRefreshInterval();
-            TextBlockErrorRefreshInterval.Text = m_dataContext.Monitor.RefreshInterval.ToString();
-            TextBoxRefreshInterval.Text = m_dataContext.Monitor.RefreshInterval.ToString();
-            PopupSettings.IsOpen = false;
-        }
-
-        private void ButtonCancel_Click(object sender, RoutedEventArgs e)
-        {
-            PopupSettings.IsOpen = false;
-        }
-
-        private void ButtonOk_Click(object sender, RoutedEventArgs e)
-        {
-            int refreshInterval = default(int);
-
-            try
-            {
-                if (int.TryParse(TextBoxRefreshInterval.Text, out refreshInterval) && (refreshInterval > 0))
-                {
-                    m_dataContext.Monitor.RefreshInterval = refreshInterval;
-                    TextBlockErrorRefreshInterval.Text = refreshInterval.ToString();
-                }
-                else
-                {
-                    m_dataContext.DisplayStatusMessage("Please provide an integer value between 1 and " + Int32.MaxValue / 1000);
-                }
-            }
-            catch
-            {
-                m_dataContext.DisplayStatusMessage("Please provide an integer value between 1 and " + Int32.MaxValue / 1000);
-            }
-            finally
-            {
-                PopupSettings.IsOpen = false;
-            }
-        }
-
-        private void ButtonDisplaySettings_Click(object sender, RoutedEventArgs e)
-        {
-            PopupSettings.IsOpen = true;
-        }
-
-        private void ErrorViewer_Loaded(object sender, RoutedEventArgs e)
-        {
-            if ((object)ErrorMonitor.Default == null)
-                m_errorMonitor = new ErrorMonitor(true);
-
-            m_dataContext.Monitor = ErrorMonitor.Default ?? m_errorMonitor;
-
-            TextBlockErrorRefreshInterval.Text = m_dataContext.Monitor.RefreshInterval.ToString();
-            TextBoxRefreshInterval.Text = m_dataContext.Monitor.RefreshInterval.ToString();
-            m_dataContext.Monitor.Start();
-        }
-
-        private void ErrorViewer_UnLoaded(object sender, RoutedEventArgs e)
-        {
-            if ((object)m_dataContext.Monitor != null)
-                m_dataContext.Monitor.Dispose();
         }
 
         #endregion

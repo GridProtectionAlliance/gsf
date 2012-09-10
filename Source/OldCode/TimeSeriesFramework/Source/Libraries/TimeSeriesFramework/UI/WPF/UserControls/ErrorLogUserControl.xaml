@@ -8,45 +8,12 @@
              xmlns:uc="clr-namespace:TimeSeriesFramework.UI.UserControls"
              xmlns:tsf="clr-namespace:TimeSeriesFramework.UI"
              mc:Ignorable="d" 
-             d:DesignHeight="550" d:DesignWidth="700" Background="Transparent" Loaded="ErrorViewer_Loaded"
-             Unloaded="ErrorViewer_UnLoaded">
+             d:DesignHeight="650" d:DesignWidth="750" Background="Transparent" >
     <StackPanel Orientation="Vertical">
-        <tsf:TsfPopup x:Name="PopupSettings" Topmost="False" Placement="Center">
-            <Border CornerRadius="5" BorderThickness="1" Background="White" BorderBrush="Blue" >
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="2*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-
-                    <TextBlock Text="Exception Viewer Refresh Interval (in seconds)" Grid.Column="0" Grid.Row="0"/>
-                    <TextBox x:Name="TextBoxRefreshInterval" Grid.Row="0" Grid.Column="1" Width="50"/>
-
-                    <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Right">
-                        <Button x:Name="ButtonRestore" Content="Restore Default" Margin="2" Width="Auto" Click="ButtonRestore_Click"/>
-                        <Button Content="Cancel" Margin="2" Click="ButtonCancel_Click"/>
-                        <Button x:Name="ButtonSave" Content="Ok" Margin="2" IsDefault="True" Click="ButtonOk_Click"/>
-                    </StackPanel>
-                </Grid>
-            </Border>
-        </tsf:TsfPopup>
-
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button x:Name="ButtonDisplaySettings" Content="Display Settings" Template="{StaticResource HyperlinkStyleButtonTemplate}" 
-                     Width="Auto" Click="ButtonDisplaySettings_Click"/>
-            <TextBlock Text="Refresh Interval: " Width="Auto" />
-            <TextBlock x:Name="TextBlockErrorRefreshInterval" Width="Auto"/>
-            <TextBlock Text="{Binding Path=DataContext.LastRefresh, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}}" />
-        </StackPanel>
-
+       
         <sdk:DataGrid x:Name="DataGridList" ItemsSource="{Binding CurrentPage}"
                       SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Sorting="DataGrid_Sorting"  
-                      Height="Auto" HeadersVisibility="Column" CanUserReorderColumns="False" UseLayoutRounding="False" MaxHeight="560">
+                      Height="Auto" HeadersVisibility="Column" CanUserReorderColumns="False" UseLayoutRounding="False" MaxHeight="850"  ScrollViewer.HorizontalScrollBarVisibility="Auto">
             <sdk:DataGrid.Columns>
                 <DataGridTemplateColumn Header="Sl No." Width="45" SortMemberPath="ID">
                     <DataGridTemplateColumn.CellTemplate>

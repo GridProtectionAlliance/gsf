@@ -25,6 +25,7 @@
       <MenuDataItem Icon="" MenuText="Vendor Devices" Description="Manage Vendor Devices" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.VendorDeviceUserControl" />
       <MenuDataItem Icon="" MenuText="" Description="" Roles="*" UserControlAssembly="" UserControlPath="" />
       <MenuDataItem Icon="" MenuText="Security" Description="Manage Application Security" Roles="Administrator" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.SecurityUserControl" />
+      <MenuDataItem Icon="" MenuText="_Exception Log" Description="Exception Log" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.ErrorLogUserControl" />
     </SubMenuItems>
   </MenuDataItem>
 </MenuDataItems>

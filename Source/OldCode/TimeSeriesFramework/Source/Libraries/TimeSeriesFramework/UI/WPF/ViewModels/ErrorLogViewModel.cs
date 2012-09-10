@@ -21,7 +21,8 @@
 //  04/12/2012 - prasanthgs
 //       Reworked as per the comments of codeplex reviewers.
 //       Code Optimized.
-//
+//  09/10/2012 - Aniket Salver
+//       Added paging technique and implemented sorting.
 //******************************************************************************************************
 
 using System;
@@ -34,6 +35,7 @@ using System.Windows.Threading;
 using TimeSeriesFramework.UI.Commands;
 using TimeSeriesFramework.UI.DataModels;
 using TimeSeriesFramework.UI.Modal;
+using System.Windows;
 
 namespace TimeSeriesFramework.UI.ViewModels
 {
@@ -41,11 +43,11 @@ namespace TimeSeriesFramework.UI.ViewModels
     {
         #region [ Members ]
 
-        private ErrorMonitor m_exMonitor;
-        private Dispatcher m_dispatcher;
-        private RelayCommand m_showCommand;
-        private string m_currentSortMemberPath;
-        private ListSortDirection m_currentSortDirection;
+        //private ErrorMonitor m_exMonitor;
+          private Dispatcher m_dispatcher;
+       //private RelayCommand m_showCommand;
+        //private string m_currentSortMemberPath;
+        //private ListSortDirection m_currentSortDirection;
 
         #endregion
 
@@ -66,50 +68,6 @@ namespace TimeSeriesFramework.UI.ViewModels
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the <see cref="ErrorMonitor"/> used to receive
-        /// updates about recent Errors.
-        /// </summary>
-        public ErrorMonitor Monitor
-        {
-            get
-            {
-                return m_exMonitor;
-            }
-            set
-            {
-                if ((object)m_exMonitor != null)
-                    m_exMonitor.UpdatedErrors -= Monitor_UpdatedErrors;
-
-                m_exMonitor = value;
-
-                if ((object)m_exMonitor != null)
-                {
-                    LoadErrors();
-                    m_exMonitor.UpdatedErrors += Monitor_UpdatedErrors;
-                }
-            }
-        }
-
-        void Monitor_UpdatedErrors(object sender, EventArgs e)
-        {
-            m_dispatcher.Invoke(new Action(LoadErrors));
-        }
-
-        /// <summary>
-        /// Gets Show command.
-        /// </summary>
-        public ICommand ShowCommand
-        {
-            get
-            {
-                if (m_showCommand == null)
-                    m_showCommand = new RelayCommand(ShowErrorLog);
-
-                return m_showCommand;
-            }
-        }
-
-        /// <summary>
         /// Checks for new item in Error list.
         /// Since this is an error viewer, no new records can be added.
         /// Always returns false.
@@ -122,22 +80,14 @@ namespace TimeSeriesFramework.UI.ViewModels
         #endregion
 
         #region [ Methods ]
-        /// <summary>
-        /// Update the DataGrid with latest error list.
-        /// Also sorts the data if sort is applied before refresh.
-        /// </summary>
-        private void LoadErrors()
-        {
-            int CurIdx = default(int);
 
-            if ((object)m_exMonitor != null)
-            {
-                CurIdx = GetCurrentItemKey();
-                ItemsSource = m_exMonitor.GetRecentErrors();
-                
-                //Sort and select current item.
-                Sort(CurIdx);
-            }
+        /// Initialization to be done before the initial call to <see cref="Load"/>.
+        /// </summary>
+        public override void Initialize()
+        {
+            base.Initialize();
+            SortMember = "ID";
+            SortDirection = "DESC";
         }
 
         /// <summary>
@@ -147,57 +97,11 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// <param name="sortDirection">Ascending or descending.</param>
         public override void SortData(string sortMemberPath, ListSortDirection sortDirection)
         {
-            m_currentSortMemberPath = sortMemberPath;
-            m_currentSortDirection = sortDirection;
-            Sort(GetCurrentItemKey());
-        }
 
-        /// <summary>
-        /// Initiates parent sortmethod.
-        /// Set current selected item after sort based on display index.
-        /// </summary>
-        /// <param name="currentItemKey">Index of selected item before sort</param>
-        private void Sort(int currentItemKey)
-        {
-            List<ErrorLog> itemsSource;
-            ErrorLog newItem = ItemsSource.SingleOrDefault(error => error.ID == currentItemKey);
-
-            if ((object)m_currentSortMemberPath == null)
-                return;
-
-            if (m_currentSortDirection == ListSortDirection.Ascending)
-            {
-                itemsSource = ItemsSource
-                    .OrderBy(item => item.GetType().GetProperty(m_currentSortMemberPath).GetValue(item, null))
-                    .ToList();
-            }
-            else
-            {
-                itemsSource = ItemsSource
-                    .OrderByDescending(item => item.GetType().GetProperty(m_currentSortMemberPath).GetValue(item, null))
-                    .ToList();
-            }
-
-            ItemsSource = new ObservableCollection<ErrorLog>(itemsSource);
-
-            if ((object)newItem != null)
-            {
-                CurrentItem = newItem;
-            }
-            else
-            {
-                Clear();
-                CurrentSelectedIndex = -1;
-            }
-        }
-
-        /// <summary>
-        /// Show brief error log details.
-        /// </summary>
-        private void ShowErrorLog()
-        {
-            ErrorDetailDisplay logDisplay = new ErrorDetailDisplay(CurrentItem.Detail);
-            logDisplay.ShowDialog();
+            SortMember = sortMemberPath;
+            SortDirection = (sortDirection == ListSortDirection.Descending) ? "DESC" : "ASC";
+            ItemsKeys = null;
+            Load();
         }
 
         /// <summary>
@@ -205,6 +109,33 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// </summary>
         public override void Load()
         {
+            List<int> pageKeys;
+
+            try
+            {
+                if ((object)ItemsKeys == null)
+                    ItemsKeys = ErrorLog.LoadKeys(null, SortMember, SortDirection);
+
+                pageKeys = ItemsKeys.Skip((CurrentPageNumber - 1) * ItemsPerPage).Take(ItemsPerPage).ToList();
+                ItemsSource = DataModels.ErrorLog.Load(null, pageKeys);
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException != null)
+                {
+                    Popup(ex.Message + Environment.NewLine + "Inner Exception: " + ex.InnerException.Message, "Load " + DataModelName + " Exception:", MessageBoxImage.Error);
+                    CommonFunctions.LogException(null, "Load " + DataModelName, ex.InnerException);
+                }
+                else
+                {
+                    Popup(ex.Message, "Load " + DataModelName + " Exception:", MessageBoxImage.Error);
+                    CommonFunctions.LogException(null, "Load " + DataModelName, ex);
+                }
+            }
+            finally
+            {
+                Mouse.OverrideCursor = null;
+            }
         }
 
         /// <summary>
