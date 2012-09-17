@@ -2069,20 +2069,21 @@ namespace TimeSeriesFramework.Transport
 
         private SignalIndexCache DeserializeSignalIndexCache(byte[] buffer)
         {
+            GatewayCompressionMode gatewayCompressionMode = (GatewayCompressionMode)(m_operationalModes & OperationalModes.CompressionModeMask);
             bool useCommonSerializationFormat = (m_operationalModes & OperationalModes.UseCommonSerializationFormat) > 0;
             bool compressSignalIndexCache = (m_operationalModes & OperationalModes.CompressSignalIndexCache) > 0;
 
             SignalIndexCache deserializedCache;
 
             MemoryStream compressedData = null;
-            DeflateStream inflater = null;
+            GZipStream inflater = null;
 
-            if (compressSignalIndexCache)
+            if (compressSignalIndexCache && gatewayCompressionMode == GatewayCompressionMode.GZip)
             {
                 try
                 {
                     compressedData = new MemoryStream(buffer);
-                    inflater = new DeflateStream(compressedData, CompressionMode.Decompress);
+                    inflater = new GZipStream(compressedData, CompressionMode.Decompress);
                     buffer = inflater.ReadStream();
                 }
                 finally
@@ -2111,24 +2112,25 @@ namespace TimeSeriesFramework.Transport
 
         private DataSet DeserializeMetadata(byte[] buffer)
         {
+            GatewayCompressionMode gatewayCompressionMode = (GatewayCompressionMode)(m_operationalModes & OperationalModes.CompressionModeMask);
             bool useCommonSerializationFormat = (m_operationalModes & OperationalModes.UseCommonSerializationFormat) > 0;
             bool compressMetadata = (m_operationalModes & OperationalModes.CompressMetadata) > 0;
 
             DataSet deserializedMetadata;
 
             MemoryStream compressedData = null;
-            DeflateStream inflater = null;
+            GZipStream inflater = null;
 
             MemoryStream encodedData = null;
             XmlTextReader unicodeReader = null;
 
-            if (compressMetadata)
+            if (compressMetadata && gatewayCompressionMode == GatewayCompressionMode.GZip)
             {
                 try
                 {
                     // Insert compressed data into compressed buffer
                     compressedData = new MemoryStream(buffer);
-                    inflater = new DeflateStream(compressedData, CompressionMode.Decompress);
+                    inflater = new GZipStream(compressedData, CompressionMode.Decompress);
                     buffer = inflater.ReadStream();
                 }
                 finally

@@ -335,6 +335,21 @@ namespace TimeSeriesFramework.Transport
         ANSI = (uint)(Bits.Bit09 | Bits.Bit08)
     }
 
+    /// <summary>
+    /// Enumeration for compression modes supported by the Gateway Exchange Protocol.
+    /// </summary>
+    public enum GatewayCompressionMode : uint
+    {
+        /// <summary>
+        /// GZip compression
+        /// </summary>
+        GZip = (uint)Bits.Bit05,
+        /// <summary>
+        /// No compression
+        /// </summary>
+        None = (uint)Bits.Nil
+    }
+
     #endregion
 
     /// <summary>
@@ -2137,11 +2152,12 @@ namespace TimeSeriesFramework.Transport
             if (m_clientConnections.TryGetValue(clientID, out connection))
             {
                 OperationalModes operationalModes = connection.OperationalModes;
+                GatewayCompressionMode gatewayCompressionMode = (GatewayCompressionMode)(operationalModes & OperationalModes.CompressionModeMask);
                 bool useCommonSerializationFormat = (operationalModes & OperationalModes.UseCommonSerializationFormat) > 0;
                 bool compressSignalIndexCache = (operationalModes & OperationalModes.CompressSignalIndexCache) > 0;
 
                 MemoryStream compressedData = null;
-                DeflateStream deflater = null;
+                GZipStream deflater = null;
 
                 if (!useCommonSerializationFormat)
                 {
@@ -2156,13 +2172,13 @@ namespace TimeSeriesFramework.Transport
                     signalIndexCache.GenerateBinaryImage(serializedSignalIndexCache, 0);
                 }
 
-                if (compressSignalIndexCache)
+                if (compressSignalIndexCache && gatewayCompressionMode == GatewayCompressionMode.GZip)
                 {
                     try
                     {
                         // Compress serialized signal index cache into compressed data buffer
                         compressedData = new MemoryStream();
-                        deflater = new DeflateStream(compressedData, CompressionMode.Compress);
+                        deflater = new GZipStream(compressedData, CompressionMode.Compress);
                         deflater.Write(serializedSignalIndexCache, 0, serializedSignalIndexCache.Length);
                         deflater.Close();
                         deflater = null;
@@ -2191,6 +2207,7 @@ namespace TimeSeriesFramework.Transport
             if (m_clientConnections.TryGetValue(clientID, out connection))
             {
                 OperationalModes operationalModes = connection.OperationalModes;
+                GatewayCompressionMode gatewayCompressionMode = (GatewayCompressionMode)(operationalModes & OperationalModes.CompressionModeMask);
                 bool useCommonSerializationFormat = (operationalModes & OperationalModes.UseCommonSerializationFormat) > 0;
                 bool compressMetadata = (operationalModes & OperationalModes.CompressMetadata) > 0;
 
@@ -2198,7 +2215,7 @@ namespace TimeSeriesFramework.Transport
                 XmlTextWriter unicodeWriter = null;
 
                 MemoryStream compressedData = null;
-                DeflateStream deflater = null;
+                GZipStream deflater = null;
 
                 if (!useCommonSerializationFormat)
                 {
@@ -2228,13 +2245,13 @@ namespace TimeSeriesFramework.Transport
                     }
                 }
 
-                if (compressMetadata)
+                if (compressMetadata && gatewayCompressionMode == GatewayCompressionMode.GZip)
                 {
                     try
                     {
                         // Compress serialized metadata into compressed data buffer
                         compressedData = new MemoryStream();
-                        deflater = new DeflateStream(compressedData, CompressionMode.Compress);
+                        deflater = new GZipStream(compressedData, CompressionMode.Compress);
                         deflater.Write(serializedMetadata, 0, serializedMetadata.Length);
                         deflater.Close();
                         deflater = null;
