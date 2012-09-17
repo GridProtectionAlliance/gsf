@@ -927,6 +927,7 @@ namespace TVA.Communication
 
                     m_udpClient.SetSendBuffer(SendBufferSize);
                     m_sendArgs.SetBuffer(m_udpClient.SendBuffer, 0, m_udpClient.SendBufferSize);
+                    m_sendArgs.Completed += m_sendHandler;
                     SendPayloadAsync();
 
                     m_connectionHandle.Set();
