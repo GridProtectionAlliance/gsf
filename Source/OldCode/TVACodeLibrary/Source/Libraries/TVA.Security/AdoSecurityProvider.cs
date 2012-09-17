@@ -259,6 +259,7 @@
 using System;
 using System.Configuration;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Security;
 using System.Text.RegularExpressions;
@@ -737,13 +738,32 @@ namespace TVA.Security
         /// <returns>true if logging was successful, otherwise false.</returns>
         protected virtual bool LogLogin(bool loginSuccess)
         {
-            if (!string.IsNullOrWhiteSpace(SettingsCategory) && UserData != null && UserData.IsDefined && !string.IsNullOrWhiteSpace(UserData.Username))
+            if (UserData != null && UserData.IsDefined && !string.IsNullOrWhiteSpace(UserData.Username))
             {
-                AdoDataConnection database = new AdoDataConnection(SettingsCategory);
+                string message = string.Format("User \"{0}\" login attempt {1}.", UserData.Username, loginSuccess ? "succeeded" : "failed");
+                EventLogEntryType entryType = loginSuccess ? EventLogEntryType.SuccessAudit : EventLogEntryType.FailureAudit;
 
-                using (IDbConnection connection = database.Connection)
+                // Attempt to write success or failure to the event log
+                try
                 {
-                    connection.ExecuteNonQuery(database.ParameterizedQueryString("INSERT INTO AccessLog (UserName, AccessGranted) VALUES ({0}, {1})", "userName", "accessGranted"), UserData.Username, loginSuccess ? 1 : 0);
+                    EventLog.WriteEntry(ApplicationName, message, entryType, 1);
+                }
+                catch (Exception ex)
+                {
+                    LogError(ex.Source, ex.ToString());
+                }
+
+                // Attempt to write success or failure to the database - we allow caller to catch any possible exceptions here so that
+                // database exceptions can be tracked separately (via LastException property) from other login exceptions, e.g., when
+                // a read-only database is being used or current user only has read-only access to database.
+                if (!string.IsNullOrWhiteSpace(SettingsCategory))
+                {
+                    AdoDataConnection database = new AdoDataConnection(SettingsCategory);
+
+                    using (IDbConnection connection = database.Connection)
+                    {
+                        connection.ExecuteNonQuery(database.ParameterizedQueryString("INSERT INTO AccessLog (UserName, AccessGranted) VALUES ({0}, {1})", "userName", "accessGranted"), UserData.Username, loginSuccess ? 1 : 0);
+                    }
                 }
 
                 return true;
