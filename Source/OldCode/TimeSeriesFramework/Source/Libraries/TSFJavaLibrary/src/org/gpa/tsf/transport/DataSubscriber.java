@@ -23,6 +23,7 @@
 
 package org.gpa.tsf.transport;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -41,8 +42,10 @@ import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.GZIPInputStream;
 
 import org.gpa.tsf.Measurement;
+import org.gpa.tsf.transport.constant.CompressionMode;
 import org.gpa.tsf.transport.constant.DataPacketFlags;
 import org.gpa.tsf.transport.constant.OperationalEncoding;
 import org.gpa.tsf.transport.constant.OperationalModes;
@@ -174,12 +177,8 @@ public class DataSubscriber
 		int operationalEncoding;
 		
 		// .NET serialization format not supported
-		if ((m_operationalModes & OperationalModes.UseCommonSerializationFormat) != 0)
-			throw new UnsupportedOperationException("Cannot use .NET serialization format. Use command serialization format instead.");
-
-		// Signal index cache compression is currently unsupported
-		if ((m_operationalModes & OperationalModes.CompressSignalIndexCache) != 0)
-			throw new UnsupportedOperationException("Cannot request compressed signal index cache");
+		if ((operationalModes & OperationalModes.UseCommonSerializationFormat) == 0)
+			throw new UnsupportedOperationException("Cannot use .NET serialization format. Use common serialization format instead.");
 
 		// Update operational modes and character encoding
 		m_operationalModes = operationalModes;
@@ -858,23 +857,17 @@ public class DataSubscriber
 	// Handle metadata received from the publisher.
 	private void handleMetadataRefresh(ByteBuffer buffer)
 	{
-		byte[] compressedMetadata;
-		int length;
+		ByteBuffer buf = buffer;
 		
-		if ((m_operationalModes & OperationalModes.CompressMetadata) == 0)
+		if ((m_operationalModes & OperationalModes.CompressMetadata) != 0)
 		{
-			dispatchMetadata(m_characterEncoding.decode(buffer).toString());
+			if ((m_operationalModes & OperationalModes.CompressionModeMask) == CompressionMode.GZIP)
+			{
+				buf = decompress(buffer);
+			}
 		}
-		else
-		{
-			length = buffer.remaining();
-			compressedMetadata = new byte[length];
-			
-			for(int i = 0; i < length; i++)
-				compressedMetadata[i] = buffer.get();
-			
-			dispatchMetadata(compressedMetadata);
-		}
+		
+		dispatchMetadata(m_characterEncoding.decode(buf).toString());
 	}
 	
 	// Handle data packets received from the publisher.
@@ -964,6 +957,7 @@ public class DataSubscriber
 	// Updates the signal index cache with new values received from the publisher.
 	private void handleUpdateSignalIndexCache(ByteBuffer buffer)
 	{
+		ByteBuffer buf = buffer;
 		SignalIndexCache newCache = new SignalIndexCache();
 		int referenceCount;
 		
@@ -973,19 +967,27 @@ public class DataSubscriber
 		String source;
 		int id;
 		
+		if ((m_operationalModes & OperationalModes.CompressSignalIndexCache) != 0)
+		{
+			if ((m_operationalModes & OperationalModes.CompressionModeMask) == CompressionMode.GZIP)
+			{
+				buf = decompress(buffer);
+			}
+		}
+		
 		// Skip 4-byte length and 16-byte subscriber ID
 		// We may need to parse these in the future...
-		buffer.position(buffer.position() + 20);
+		buf.position(buf.position() + 20);
 		
-		referenceCount = buffer.getInt();
+		referenceCount = buf.getInt();
 		
 		for (int i = 0; i < referenceCount; i++)
 		{
-			signalIndex = buffer.getShort();
-			signalId = new UUID(buffer.getLong(), buffer.getLong());
-			sourceSize = buffer.getInt();
-			source = m_characterEncoding.decode((ByteBuffer)buffer.slice().limit(sourceSize)).toString();
-			id = ((ByteBuffer)buffer.position(buffer.position() + sourceSize)).getInt();
+			signalIndex = buf.getShort();
+			signalId = new UUID(buf.getLong(), buf.getLong());
+			sourceSize = buf.getInt();
+			source = m_characterEncoding.decode((ByteBuffer)buf.slice().limit(sourceSize)).toString();
+			id = ((ByteBuffer)buf.position(buf.position() + sourceSize)).getInt();
 			
 			newCache.addMeasurementKey(signalIndex, signalId, source, id);
 		}
@@ -1116,6 +1118,66 @@ public class DataSubscriber
 		};
 		
 		connectionTerminatedThread.start();
+	}
+	
+	// Decompresses the data in the given buffer.
+	private ByteBuffer decompress(ByteBuffer buffer)
+	{
+		ByteArrayInputStream inputStream = null;
+		GZIPInputStream inflater = null;
+		ArrayList<Byte> byteList;
+		byte[] swap;
+		int bytesRead;
+		
+		try
+		{
+			inputStream = new ByteArrayInputStream(buffer.array(), buffer.position() + buffer.arrayOffset(), buffer.remaining());
+			inflater = new GZIPInputStream(inputStream);
+			byteList = new ArrayList<Byte>((int)(buffer.remaining() * 1.5));
+			swap = new byte[1024];
+			
+			do
+			{
+				// Decompress data and place it into swap array.
+				bytesRead = inflater.read(swap, 0, swap.length);
+
+				// Swap the decompressed data into the byte list.
+				for (int i = 0; i < bytesRead; i++)
+					byteList.add(swap[i]);
+			} while (bytesRead > 0);
+			
+			// Increase swap size to contain the fully decompressed data.
+			swap = new byte[byteList.size()];
+			
+			// Copy the data into the swap array.
+			for (int i = 0; i < swap.length; i++)
+				swap[i] = byteList.get(i);
+			
+			return ByteBuffer.wrap(swap);
+		}
+		catch (IOException ex)
+		{
+			
+			dispatchException(ex);
+		}
+		finally
+		{
+			try
+			{
+				// Attempt to close the input
+				// streams to release resources.
+				if (inflater != null)
+					inflater.close();
+				
+				if (inputStream != null)
+					inputStream.close();
+			} catch (IOException ex)
+			{
+				dispatchException(ex);
+			}
+		}
+		
+		return buffer;
 	}
 	
 	// Determines whether the given IP address is
