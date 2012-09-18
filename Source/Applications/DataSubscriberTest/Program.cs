@@ -1,0 +1,199 @@
+﻿//******************************************************************************************************
+//  Program.cs - Gbtc
+//
+//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  06/30/2011 - J. Ritchie Carroll
+//       Generated original version of source code.
+//
+//******************************************************************************************************
+
+using GSF;
+using GSF.TimeSeriesFramework;
+using GSF.TimeSeriesFramework.Transport;
+using System;
+using System.Collections.Generic;
+
+namespace DataSubscriberTest
+{
+    class Program
+    {
+        static SynchronizedSubscriptionInfo remotelySynchronizedInfo = new SynchronizedSubscriptionInfo(true, 30);
+        static SynchronizedSubscriptionInfo locallySynchronizedInfo = new SynchronizedSubscriptionInfo(false, 30);
+        static UnsynchronizedSubscriptionInfo unsynchronizedInfo = new UnsynchronizedSubscriptionInfo(false);
+        static UnsynchronizedSubscriptionInfo throttledInfo = new UnsynchronizedSubscriptionInfo(true);
+
+        static DataSubscriber subscriber = new DataSubscriber();
+        static long dataCount = 0;
+        static System.Timers.Timer timer = new System.Timers.Timer(10000);
+        static object displayLock = new object();
+
+        static void Main(string[] args)
+        {
+            // Attach to subscriber events
+            subscriber.StatusMessage += subscriber_StatusMessage;
+            subscriber.ProcessException += subscriber_ProcessException;
+            subscriber.ConnectionEstablished += subscriber_ConnectionEstablished;
+            subscriber.ConnectionTerminated += subscriber_ConnectionTerminated;
+            subscriber.NewMeasurements += subscriber_NewMeasurements;
+
+            // Set up subscription info objects
+            remotelySynchronizedInfo.LagTime = 0.5D;
+            remotelySynchronizedInfo.LeadTime = 1.0D;
+            remotelySynchronizedInfo.FilterExpression = "DEVARCHIVE:1;DEVARCHIVE:2";
+
+            locallySynchronizedInfo.LagTime = 0.5D;
+            locallySynchronizedInfo.LeadTime = 1.0D;
+            locallySynchronizedInfo.FilterExpression = "DEVARCHIVE:1;DEVARCHIVE:2";
+
+            unsynchronizedInfo.FilterExpression = "DEVARCHIVE:1;DEVARCHIVE:2";
+
+            throttledInfo.LagTime = 5.0D;
+            throttledInfo.LeadTime = 1.0D;
+            throttledInfo.FilterExpression = "DEVARCHIVE:1;DEVARCHIVE:2";
+
+            // Initialize subscriber
+            subscriber.ConnectionString = "server=localhost:6177";
+            //subscriber.OperationalModes |= OperationalModes.UseCommonSerializationFormat | OperationalModes.CompressMetadata | OperationalModes.CompressSignalIndexCache;
+            subscriber.Initialize();
+
+            // Start subscriber connection cycle
+            subscriber.Start();
+
+            timer.Elapsed += new System.Timers.ElapsedEventHandler(timer_Elapsed);
+            timer.Start();
+
+            Console.ReadLine();
+
+            subscriber.Unsubscribe();
+
+            subscriber.StatusMessage -= subscriber_StatusMessage;
+            subscriber.ProcessException -= subscriber_ProcessException;
+            subscriber.ConnectionEstablished -= subscriber_ConnectionEstablished;
+            subscriber.ConnectionTerminated -= subscriber_ConnectionTerminated;
+            subscriber.NewMeasurements -= subscriber_NewMeasurements;
+
+            timer.Elapsed -= timer_Elapsed;
+            timer.Stop();
+        }
+
+        static void timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            if (subscriber.IsConnected)
+            {
+                if (GSF.Security.Cryptography.Random.Boolean)
+                {
+                    if (GSF.Security.Cryptography.Random.Boolean)
+                    {
+                        lock (displayLock)
+                        {
+                            Console.WriteLine("Initiating remotely synchronized subscription...");
+                        }
+                        subscriber.SynchronizedSubscribe(remotelySynchronizedInfo);
+                    }
+                    else
+                    {
+                        lock (displayLock)
+                        {
+                            Console.WriteLine("Initiating locally synchronized subscription...");
+                        }
+                        subscriber.SynchronizedSubscribe(locallySynchronizedInfo);
+                    }
+                }
+                else
+                {
+                    if (GSF.Security.Cryptography.Random.Boolean)
+                    {
+                        lock (displayLock)
+                        {
+                            Console.WriteLine("Initiating on-change unsynchronized subscription...");
+                        }
+                        subscriber.UnsynchronizedSubscribe(unsynchronizedInfo);
+                    }
+                    else
+                    {
+                        lock (displayLock)
+                        {
+                            Console.WriteLine("Initiating throttled unsynchronized subscription...");
+                        }
+                        subscriber.UnsynchronizedSubscribe(throttledInfo);
+                    }
+                }
+            }
+        }
+
+        static void subscriber_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
+        {
+            // Check to see if total number of added points will exceed process interval used to show periodic
+            // messages of how many points have been archived so far...
+            const int interval = 5 * 60;
+
+            bool showMessage = dataCount + e.Argument.Count >= (dataCount / interval + 1) * interval;
+
+            dataCount += e.Argument.Count;
+
+            if (showMessage)
+            {
+                lock (displayLock)
+                {
+                    Console.WriteLine(string.Format("{0:N0} measurements have been processed so far...", dataCount));
+                }
+
+                //// Occasionally request another cipher key rotation
+                //if (GSF.Security.Cryptography.Random.Boolean)
+                //    subscriber.SendServerCommand(ServerCommand.RotateCipherKeys);
+            }
+        }
+
+        static void subscriber_ConnectionEstablished(object sender, EventArgs e)
+        {
+            //// Request cipher key rotation
+            //subscriber.SendServerCommand(ServerCommand.RotateCipherKeys);
+
+            //subscriber.SynchronizedSubscribe(true, 30, 0.5D, 1.0D, "DEVARCHIVE:1;DEVARCHIVE:2;DEVARCHIVE:3;DEVARCHIVE:4;DEVARCHIVE:5");
+            //subscriber.SynchronizedSubscribe(true, 30, 0.5D, 1.0D, "DEVARCHIVE:1");
+            //subscriber.UnsynchronizedSubscribe(true, "DEVARCHIVE:1;DEVARCHIVE:2;DEVARCHIVE:3;DEVARCHIVE:4;DEVARCHIVE:5");
+        }
+
+        static void subscriber_ConnectionTerminated(object sender, EventArgs e)
+        {
+            subscriber.Start();
+
+            lock (displayLock)
+            {
+                Console.WriteLine("Connection to publisher was terminated, restarting connection cycle...");
+            }
+        }
+
+        static void subscriber_ProcessException(object sender, GSF.EventArgs<Exception> e)
+        {
+            lock (displayLock)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("EXCEPTION: " + e.Argument.Message);
+                Console.ResetColor();
+            }
+        }
+
+        static void subscriber_StatusMessage(object sender, GSF.EventArgs<string> e)
+        {
+            lock (displayLock)
+            {
+                Console.WriteLine(e.Argument);
+            }
+        }
+    }
+}
