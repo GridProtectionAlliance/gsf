@@ -6449,6 +6449,21 @@
             ANSI
             </summary>
         </member>
+        <member name="T:TimeSeriesFramework.Transport.GatewayCompressionMode">
+            <summary>
+            Enumeration for compression modes supported by the Gateway Exchange Protocol.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.GatewayCompressionMode.GZip">
+            <summary>
+            GZip compression
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.GatewayCompressionMode.None">
+            <summary>
+            No compression
+            </summary>
+        </member>
         <member name="T:TimeSeriesFramework.Transport.DataPublisher">
             <summary>
             Represents a data publishing server that allows multiple connections for data subscriptions.
