@@ -26,13 +26,13 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeriesFramework.UI.ViewModels;
+using GSF.TimeSeries.UI.ViewModels;
 using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Controls;
 
-namespace GSF.TimeSeriesFramework.UI.UserControls
+namespace GSF.TimeSeries.UI.UserControls
 {
     /// <summary>
     /// Interaction logic for ErrorLogUserControl.xaml

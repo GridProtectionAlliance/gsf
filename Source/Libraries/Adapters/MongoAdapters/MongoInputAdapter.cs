@@ -21,8 +21,8 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeriesFramework;
-using GSF.TimeSeriesFramework.Adapters;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 using MongoDB;
 using System;
 using System.Collections.Generic;

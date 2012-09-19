@@ -31,7 +31,7 @@ using System.IO;
 using System.Windows.Forms;
 using System.Xml;
 
-namespace GSF.TimeSeriesFramework
+namespace GSF.TimeSeries
 {
     /// <summary>
     /// Defines a common installer class for the applications based on the time-series framework.

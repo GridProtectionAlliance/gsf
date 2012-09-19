@@ -32,7 +32,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace GSF.TimeSeriesFramework.Adapters
+namespace GSF.TimeSeries.Adapters
 {
     /// <summary>
     /// Represents the base class for action adapters.

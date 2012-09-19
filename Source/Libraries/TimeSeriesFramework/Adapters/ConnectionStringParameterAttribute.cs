@@ -23,7 +23,7 @@
 
 using System;
 
-namespace GSF.TimeSeriesFramework.Adapters
+namespace GSF.TimeSeries.Adapters
 {
     /// <summary>
     /// Marks a parameter as being a connection string parameter used to configure an <see cref="IAdapter"/>.

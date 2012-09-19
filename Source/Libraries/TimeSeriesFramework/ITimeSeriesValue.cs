@@ -23,7 +23,7 @@
 
 using System;
 
-namespace GSF.TimeSeriesFramework
+namespace GSF.TimeSeries
 {
     /// <summary>
     /// Represents the fundamental binary value interface for a time-series value.

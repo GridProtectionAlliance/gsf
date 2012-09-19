@@ -24,7 +24,7 @@
 using System;
 using System.Windows.Data;
 
-namespace GSF.TimeSeriesFramework.UI.Converters
+namespace GSF.TimeSeries.UI.Converters
 {
     /// <summary>
     /// Represents an <see cref="IValueConverter"/> class, which takes string value and converts it to boolean.

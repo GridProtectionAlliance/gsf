@@ -23,7 +23,7 @@
 
 using System;
 
-namespace GSF.TimeSeriesFramework.Transport
+namespace GSF.TimeSeries.Transport
 {
 
     /// <summary>

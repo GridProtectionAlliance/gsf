@@ -34,7 +34,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace GSF.TimeSeriesFramework
+namespace GSF.TimeSeries
 {
     #region [ Enumerations ]
 
@@ -982,7 +982,7 @@ namespace GSF.TimeSeriesFramework
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="GSF.TimeSeriesFramework.DownsamplingMethod"/> to be used by the concentrator.
+        /// Gets or sets the <see cref="GSF.TimeSeries.DownsamplingMethod"/> to be used by the concentrator.
         /// </summary>
         /// <remarks>
         /// The downsampling method determines the algorithm to use if input is being received at a higher-resolution than the defined output.

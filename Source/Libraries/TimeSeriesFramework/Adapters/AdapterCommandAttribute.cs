@@ -23,7 +23,7 @@
 
 using System;
 
-namespace GSF.TimeSeriesFramework.Adapters
+namespace GSF.TimeSeries.Adapters
 {
     /// <summary>
     /// Represents an attribute that allows a method in an <see cref="IAdapter"/> class to be exposed as

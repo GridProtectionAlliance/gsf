@@ -23,7 +23,7 @@
 
 using System;
 
-namespace GSF.TimeSeriesFramework
+namespace GSF.TimeSeries
 {
     /// <summary>
     /// Represents a time constrained measured value.

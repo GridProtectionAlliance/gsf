@@ -31,7 +31,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace GSF.TimeSeriesFramework.Adapters
+namespace GSF.TimeSeries.Adapters
 {
     /// <summary>
     /// Represents a new Input, Action, Output interface session.

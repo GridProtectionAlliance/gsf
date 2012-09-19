@@ -21,12 +21,12 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeriesFramework.UI.Commands;
+using GSF.TimeSeries.UI.Commands;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using System.Xml.Serialization;
 
-namespace GSF.TimeSeriesFramework.UI
+namespace GSF.TimeSeries.UI
 {
     /// <summary>
     /// Represents a menu item in a WPF Menu control.

@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 using GSF.Data;
-using GSF.TimeSeriesFramework.UI.DataModels;
+using GSF.TimeSeries.UI.DataModels;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -30,7 +30,7 @@ using System.IO;
 using System.Net;
 using System.Xml.Linq;
 
-namespace GSF.TimeSeriesFramework.UI
+namespace GSF.TimeSeries.UI
 {
     /// <summary>
     /// Represents a monitor that checks a web service in order to

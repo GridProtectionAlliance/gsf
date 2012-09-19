@@ -23,8 +23,8 @@
 
 using DataQualityMonitoring.Services;
 using GSF;
-using GSF.TimeSeriesFramework;
-using GSF.TimeSeriesFramework.Adapters;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -306,7 +306,7 @@ namespace DataQualityMonitoring
         /// concentration will fall behind. A small amount of this time is required by the <see cref="ConcentratorBase"/> for processing overhead, so actual total time
         /// available for user function process will always be slightly less than <c>1 / <see cref="ConcentratorBase.FramesPerSecond"/></c> seconds.
         /// </remarks>
-        protected override void PublishFrame(GSF.TimeSeriesFramework.IFrame frame, int index)
+        protected override void PublishFrame(GSF.TimeSeries.IFrame frame, int index)
         {
             IMeasurement measurement = null;
 

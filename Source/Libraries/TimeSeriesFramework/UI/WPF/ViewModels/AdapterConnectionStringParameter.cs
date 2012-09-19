@@ -28,14 +28,14 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Media;
 
-namespace GSF.TimeSeriesFramework.UI.ViewModels
+namespace GSF.TimeSeries.UI.ViewModels
 {
     /// <summary>
     /// View-model for a key-value pair in an adapter connection string.
     /// This can also represent key-value pairs which aren't necessarily
     /// in the connection string, but rather are defined by properties
     /// in an adapter class. This view-model is used by the
-    /// <see cref="GSF.TimeSeriesFramework.UI.UserControls.AdapterUserControl"/>.
+    /// <see cref="GSF.TimeSeries.UI.UserControls.AdapterUserControl"/>.
     /// </summary>
     public class AdapterConnectionStringParameter : ViewModelBase
     {
@@ -55,7 +55,7 @@ namespace GSF.TimeSeriesFramework.UI.ViewModels
 
         /// <summary>
         /// Gets or sets the <see cref="PropertyInfo"/> of the
-        /// <see cref="GSF.TimeSeriesFramework.Adapters.ConnectionStringParameterAttribute"/>
+        /// <see cref="GSF.TimeSeries.Adapters.ConnectionStringParameterAttribute"/>
         /// associated with this <see cref="AdapterConnectionStringParameter"/>.
         /// </summary>
         public PropertyInfo Info
@@ -92,7 +92,7 @@ namespace GSF.TimeSeriesFramework.UI.ViewModels
         /// <summary>
         /// Gets or sets the description of the <see cref="AdapterConnectionStringParameter"/>
         /// obtained through the <see cref="Info"/> using reflection. A property annotated with
-        /// <see cref="GSF.TimeSeriesFramework.Adapters.ConnectionStringParameterAttribute"/>
+        /// <see cref="GSF.TimeSeries.Adapters.ConnectionStringParameterAttribute"/>
         /// must also define a <see cref="System.ComponentModel.DescriptionAttribute"/> for this
         /// to become populated.
         /// </summary>
@@ -131,7 +131,7 @@ namespace GSF.TimeSeriesFramework.UI.ViewModels
         /// <summary>
         /// Gets or sets the default value of the <see cref="AdapterConnectionStringParameter"/>
         /// obtained through the <see cref="Info"/> using reflection. A property annotated with
-        /// <see cref="GSF.TimeSeriesFramework.Adapters.ConnectionStringParameterAttribute"/> must
+        /// <see cref="GSF.TimeSeries.Adapters.ConnectionStringParameterAttribute"/> must
         /// also define a <see cref="System.ComponentModel.DefaultValueAttribute"/> for this to
         /// be populated.
         /// </summary>

@@ -28,7 +28,7 @@ using System.Windows.Controls;
 using System.Xml;
 using System.Xml.Serialization;
 
-namespace GSF.TimeSeriesFramework.UI.UserControls
+namespace GSF.TimeSeries.UI.UserControls
 {
     /// <summary>
     /// Interaction logic for HomeUserControl.xaml

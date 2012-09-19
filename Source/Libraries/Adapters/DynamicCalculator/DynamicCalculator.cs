@@ -23,8 +23,8 @@
 
 using Ciloci.Flee;
 using GSF;
-using GSF.TimeSeriesFramework;
-using GSF.TimeSeriesFramework.Adapters;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -275,7 +275,7 @@ namespace DynamicCalculator
         /// </summary>
         /// <param name="frame"><see cref="IFrame"/> of measurements with the same timestamp that arrived within <see cref="ConcentratorBase.LagTime"/> that are ready for processing.</param>
         /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
-        protected override void PublishFrame(GSF.TimeSeriesFramework.IFrame frame, int index)
+        protected override void PublishFrame(GSF.TimeSeries.IFrame frame, int index)
         {
             ConcurrentDictionary<MeasurementKey, IMeasurement> measurements;
             IMeasurement measurement;

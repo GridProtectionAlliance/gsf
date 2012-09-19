@@ -21,14 +21,14 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeriesFramework.UI.ViewModels;
+using GSF.TimeSeries.UI.ViewModels;
 using System;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace GSF.TimeSeriesFramework.UI.UserControls
+namespace GSF.TimeSeries.UI.UserControls
 {
     /// <summary>
     /// Interaction logic for AlarmStatusUserControl.xaml
@@ -170,7 +170,7 @@ namespace GSF.TimeSeriesFramework.UI.UserControls
         {
             int refreshInterval;
 
-            int.TryParse(GSF.TimeSeriesFramework.UI.IsolatedStorageManager.ReadFromIsolatedStorage("AlarmStatusRefreshInterval").ToString(), out refreshInterval);
+            int.TryParse(GSF.TimeSeries.UI.IsolatedStorageManager.ReadFromIsolatedStorage("AlarmStatusRefreshInterval").ToString(), out refreshInterval);
             TextBlockAlarmRefreshInterval.Text = refreshInterval.ToString();
             TextBoxRefreshInterval.Text = refreshInterval.ToString();
             m_dataContext.Monitor.RefreshInterval = refreshInterval;

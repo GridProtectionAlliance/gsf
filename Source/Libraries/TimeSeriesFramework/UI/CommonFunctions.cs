@@ -23,7 +23,7 @@
 
 using GSF.Data;
 using GSF.Security;
-using GSF.TimeSeriesFramework.UI.DataModels;
+using GSF.TimeSeries.UI.DataModels;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -34,7 +34,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 
-namespace GSF.TimeSeriesFramework.UI
+namespace GSF.TimeSeries.UI
 {
     /// <summary>
     /// Represents a static class containing common methods.
@@ -722,8 +722,8 @@ namespace GSF.TimeSeriesFramework.UI
         {
             UIElement frame = null;
             UIElement groupBox = null;
-            GSF.TimeSeriesFramework.UI.CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(System.Windows.Controls.Frame), ref frame);
-            GSF.TimeSeriesFramework.UI.CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(GroupBox), ref groupBox);
+            GSF.TimeSeries.UI.CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(System.Windows.Controls.Frame), ref frame);
+            GSF.TimeSeries.UI.CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(GroupBox), ref groupBox);
 
             if (frame != null)
             {

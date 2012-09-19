@@ -21,10 +21,10 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeriesFramework.UI.DataModels;
+using GSF.TimeSeries.UI.DataModels;
 using System.Windows.Controls;
 
-namespace GSF.TimeSeriesFramework.UI.UserControls
+namespace GSF.TimeSeries.UI.UserControls
 {
     /// <summary>
     /// Interaction logic for CustomActionAdapterUserControl.xaml

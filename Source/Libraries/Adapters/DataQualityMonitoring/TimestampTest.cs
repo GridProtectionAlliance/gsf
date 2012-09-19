@@ -23,8 +23,8 @@
 
 using DataQualityMonitoring.Services;
 using GSF;
-using GSF.TimeSeriesFramework;
-using GSF.TimeSeriesFramework.Adapters;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;

@@ -28,7 +28,7 @@
 using System;
 using System.Collections.Concurrent;
 
-namespace GSF.TimeSeriesFramework
+namespace GSF.TimeSeries
 {
     /// <summary>
     /// Abstract frame interface representing a collection of measurements at an exact moment in time.

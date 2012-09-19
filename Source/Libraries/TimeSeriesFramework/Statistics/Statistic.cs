@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-namespace GSF.TimeSeriesFramework.Statistics
+namespace GSF.TimeSeries.Statistics
 {
     /// <summary>
     /// Method signature for function used to calculate a statistic for a given object.

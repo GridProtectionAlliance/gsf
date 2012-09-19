@@ -26,7 +26,7 @@ using System.IO;
 using System.IO.IsolatedStorage;
 using System.Text;
 
-namespace GSF.TimeSeriesFramework.UI
+namespace GSF.TimeSeries.UI
 {
     /// <summary>
     /// Static class to read/write data from/to IsolatedStorage.

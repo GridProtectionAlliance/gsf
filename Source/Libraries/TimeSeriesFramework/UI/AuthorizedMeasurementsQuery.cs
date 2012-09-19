@@ -31,7 +31,7 @@ using System.Data;
 using System.Linq;
 using System.Threading;
 
-namespace GSF.TimeSeriesFramework.UI
+namespace GSF.TimeSeries.UI
 {
     /// <summary>
     /// Represents an object that will query DataSubscriber instances to determine if measurements are authorized.

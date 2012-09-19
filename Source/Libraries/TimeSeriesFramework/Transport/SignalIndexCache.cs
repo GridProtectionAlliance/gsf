@@ -29,7 +29,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 
-namespace GSF.TimeSeriesFramework.Transport
+namespace GSF.TimeSeries.Transport
 {
     /// <summary>
     /// Represents a serializable <see cref="Guid"/> signal ID to <see cref="ushort"/> index cross reference.

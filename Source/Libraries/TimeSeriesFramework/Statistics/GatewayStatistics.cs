@@ -21,10 +21,10 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeriesFramework.Transport;
+using GSF.TimeSeries.Transport;
 using System.Linq;
 
-namespace GSF.TimeSeriesFramework.Statistics
+namespace GSF.TimeSeries.Statistics
 {
     internal static class GatewayStatistics
     {

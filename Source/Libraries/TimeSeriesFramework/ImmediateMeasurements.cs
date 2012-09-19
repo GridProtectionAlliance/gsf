@@ -29,7 +29,7 @@ using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
 
-namespace GSF.TimeSeriesFramework
+namespace GSF.TimeSeries
 {
     /// <summary>
     /// Represents the absolute latest measurement values received by a <see cref="ConcentratorBase"/> implementation.

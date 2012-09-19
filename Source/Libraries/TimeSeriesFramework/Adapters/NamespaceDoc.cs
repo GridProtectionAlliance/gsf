@@ -23,7 +23,7 @@
 
 using System.Runtime.CompilerServices;
 
-namespace GSF.TimeSeriesFramework.Adapters
+namespace GSF.TimeSeries.Adapters
 {
     /// <summary>
     /// Contains classes that define an adapter interface layer used to route measurements through a cycle of input, sorted actions and queued output.

@@ -26,9 +26,9 @@
 using namespace System;
 using namespace System::Collections::Generic;
 using namespace System::ComponentModel;
-using namespace TimeSeriesFramework;
-using namespace TimeSeriesFramework::Adapters;
-using namespace TVA;
+using namespace GSF::TimeSeries;
+using namespace GSF::TimeSeries::Adapters;
+using namespace GSF;
 
 namespace CSampleAdapters
 {

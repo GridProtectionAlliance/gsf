@@ -27,7 +27,7 @@
 //******************************************************************************************************
 
 using GSF.Data;
-using GSF.TimeSeriesFramework.UI.Commands;
+using GSF.TimeSeries.UI.Commands;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -40,7 +40,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 
-namespace GSF.TimeSeriesFramework.UI
+namespace GSF.TimeSeries.UI
 {
     /// <summary>
     /// Represents an abstract class with paging support which all ViewModel objects derive from.

@@ -34,7 +34,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 
-namespace GSF.TimeSeriesFramework.UI.DataModels
+namespace GSF.TimeSeries.UI.DataModels
 {
     /// <summary>
     ///  Represents a record of <see cref="ApplicationRole"/> information as defined in the database.

@@ -1,12 +1,12 @@
-﻿<UserControl x:Class="GSF.TimeSeriesFramework.UI.UserControls.ErrorLogUserControl"
+﻿<UserControl x:Class="GSF.TimeSeries.UI.UserControls.ErrorLogUserControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:tsfBinding="clr-namespace:GSF.TimeSeriesFramework.UI.Binding;assembly=TimeSeriesFramework.UI"
-             xmlns:uc="clr-namespace:GSF.TimeSeriesFramework.UI.UserControls"
-             xmlns:tsf="clr-namespace:GSF.TimeSeriesFramework.UI"
+             xmlns:tsfBinding="clr-namespace:GSF.TimeSeries.UI.Binding;assembly=GSF.TimeSeries.UI"
+             xmlns:uc="clr-namespace:GSF.TimeSeries.UI.UserControls"
+             xmlns:tsf="clr-namespace:GSF.TimeSeries.UI"
              mc:Ignorable="d" 
              d:DesignHeight="650" d:DesignWidth="750" Background="Transparent" >
     <StackPanel Orientation="Vertical">

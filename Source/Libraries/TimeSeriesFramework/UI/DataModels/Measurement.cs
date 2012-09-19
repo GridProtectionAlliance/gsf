@@ -40,7 +40,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
 
-namespace GSF.TimeSeriesFramework.UI.DataModels
+namespace GSF.TimeSeries.UI.DataModels
 {
     /// <summary>
     /// Represents a record of <see cref="Measurement"/> information as defined in the database.

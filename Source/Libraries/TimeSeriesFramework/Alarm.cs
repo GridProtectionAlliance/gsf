@@ -25,7 +25,7 @@
 
 using System;
 
-namespace GSF.TimeSeriesFramework
+namespace GSF.TimeSeries
 {
     #region [ Enumerations ]
 

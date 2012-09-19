@@ -28,7 +28,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 
-namespace GSF.TimeSeriesFramework.UI
+namespace GSF.TimeSeries.UI
 {
     /// <summary>
     /// <see cref="ContentControl"/> class which allows deep zoom composoer type functionalities in WPF apps.

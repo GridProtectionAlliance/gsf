@@ -35,7 +35,7 @@ using System.Linq;
 using System.Reflection;
 using System.Windows;
 
-namespace GSF.TimeSeriesFramework.UI
+namespace GSF.TimeSeries.UI
 {
     /// <summary>
     /// Represents an abstract base class for all entity model objects.

@@ -23,7 +23,7 @@
 
 using GSF.Diagnostics;
 
-namespace GSF.TimeSeriesFramework.Statistics
+namespace GSF.TimeSeries.Statistics
 {
     internal static class PerformanceStatistics
     {

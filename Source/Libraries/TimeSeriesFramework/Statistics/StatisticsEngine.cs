@@ -24,8 +24,8 @@
 using GSF.Configuration;
 using GSF.Diagnostics;
 using GSF.IO;
-using GSF.TimeSeriesFramework.Adapters;
-using GSF.TimeSeriesFramework.Transport;
+using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Transport;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -38,7 +38,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace GSF.TimeSeriesFramework.Statistics
+namespace GSF.TimeSeries.Statistics
 {
     /// <summary>
     /// Defines function signature for getting the acronym of a source.

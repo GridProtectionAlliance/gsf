@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 
-namespace GSF.TimeSeriesFramework
+namespace GSF.TimeSeries
 {
     public partial class DebugHostBase
     {

@@ -21,10 +21,10 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeriesFramework.UI.ViewModels;
+using GSF.TimeSeries.UI.ViewModels;
 using System.Windows.Controls;
 
-namespace GSF.TimeSeriesFramework.UI.UserControls
+namespace GSF.TimeSeries.UI.UserControls
 {
     /// <summary>
     /// Interaction logic for IaonTreeUserControl.xaml

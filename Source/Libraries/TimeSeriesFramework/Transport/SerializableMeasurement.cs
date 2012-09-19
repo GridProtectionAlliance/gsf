@@ -27,7 +27,7 @@ using GSF.Parsing;
 using System;
 using System.Text;
 
-namespace GSF.TimeSeriesFramework.Transport
+namespace GSF.TimeSeries.Transport
 {
     /// <summary>
     /// Represents a <see cref="IMeasurement"/> that can be serialized.

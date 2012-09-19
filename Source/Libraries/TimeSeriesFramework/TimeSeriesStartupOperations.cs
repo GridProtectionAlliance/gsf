@@ -27,7 +27,7 @@ using System;
 using System.Data;
 using System.Linq;
 
-namespace GSF.TimeSeriesFramework
+namespace GSF.TimeSeries
 {
     /// <summary>
     /// Defines a data operations to be performed at startup.

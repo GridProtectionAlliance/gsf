@@ -31,7 +31,7 @@ using System.Linq;
 using System.ServiceProcess;
 using System.Text;
 
-namespace GSF.TimeSeriesFramework
+namespace GSF.TimeSeries
 {
     /// <summary>
     /// Represents a client that can remotely access the time-series framework service host.

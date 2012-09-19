@@ -1,7 +1,7 @@
 ﻿using DNP3.Adapter;
 using DNP3.Interface;
-using GSF.TimeSeriesFramework;
-using GSF.TimeSeriesFramework.Adapters;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;

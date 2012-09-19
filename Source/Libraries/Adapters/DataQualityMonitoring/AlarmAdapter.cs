@@ -24,8 +24,8 @@
 using DataQualityMonitoring.Services;
 using GSF;
 using GSF.Data;
-using GSF.TimeSeriesFramework;
-using GSF.TimeSeriesFramework.Adapters;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

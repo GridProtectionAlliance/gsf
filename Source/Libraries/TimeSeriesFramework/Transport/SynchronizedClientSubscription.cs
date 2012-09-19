@@ -22,14 +22,14 @@
 //******************************************************************************************************
 
 using GSF.Parsing;
-using GSF.TimeSeriesFramework.Adapters;
+using GSF.TimeSeries.Adapters;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace GSF.TimeSeriesFramework.Transport
+namespace GSF.TimeSeries.Transport
 {
     /// <summary>
     /// Represents a synchronized client subscription to the <see cref="DataPublisher" />.

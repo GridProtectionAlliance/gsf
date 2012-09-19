@@ -145,17 +145,17 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Libraries\TimeSeriesFramework\TimeSeriesFramework.csproj">
+    <ProjectReference Include="..\..\Libraries\TimeSeriesFramework\GSF.TimeSeries.csproj">
       <Project>{412F9F59-D9B9-4C8E-96D2-20492644198C}</Project>
-      <Name>TimeSeriesFramework</Name>
+      <Name>GSF.TimeSeries</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Libraries\TimeSeriesFramework\UI\TimeSeriesFramework.UI.csproj">
+    <ProjectReference Include="..\..\Libraries\TimeSeriesFramework\UI\GSF.TimeSeries.UI.csproj">
       <Project>{7ED01B57-DD71-4A38-BB29-65D629224A12}</Project>
-      <Name>TimeSeriesFramework.UI</Name>
+      <Name>GSF.TimeSeries.UI</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Libraries\TimeSeriesFramework\UI\WPF\TimeSeriesFramework.UI.WPF.csproj">
+    <ProjectReference Include="..\..\Libraries\TimeSeriesFramework\UI\WPF\GSF.TimeSeries.UI.WPF.csproj">
       <Project>{5AF0D55A-30BF-46A5-8A47-FA885F56BFEF}</Project>
-      <Name>TimeSeriesFramework.UI.WPF</Name>
+      <Name>GSF.TimeSeries.UI.WPF</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Libraries\TVA.Communication\GSF.Communication.csproj">
       <Project>{2b2eb9be-e6a9-406f-bfe6-ff46dd6bd264}</Project>

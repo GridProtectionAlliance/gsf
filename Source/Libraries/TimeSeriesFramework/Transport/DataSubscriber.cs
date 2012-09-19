@@ -30,7 +30,7 @@ using GSF.Data;
 using GSF.IO;
 using GSF.Reflection;
 using GSF.Security.Cryptography;
-using GSF.TimeSeriesFramework.Adapters;
+using GSF.TimeSeries.Adapters;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -42,7 +42,7 @@ using System.Text;
 using System.Threading;
 using System.Xml;
 
-namespace GSF.TimeSeriesFramework.Transport
+namespace GSF.TimeSeries.Transport
 {
     /// <summary>
     /// Represents a data subscribing client that will connect to a data publisher for a data subscription.

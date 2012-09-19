@@ -24,7 +24,7 @@
 using Microsoft.Win32;
 using System.Security.Cryptography;
 
-namespace GSF.TimeSeriesFramework.Transport
+namespace GSF.TimeSeries.Transport
 {
     /// <summary>
     /// Common static methods and extensions for transport library.

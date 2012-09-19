@@ -28,7 +28,7 @@
 using System;
 using System.Windows.Input;
 
-namespace GSF.TimeSeriesFramework.UI.Commands
+namespace GSF.TimeSeries.UI.Commands
 {
     /// <summary>
     /// Defines a relay <see cref="ICommand"/>.

@@ -27,7 +27,7 @@ using System;
 using System.Diagnostics;
 using System.Windows.Forms;
 
-namespace GSF.TimeSeriesFramework
+namespace GSF.TimeSeries
 {
     /// <summary>
     /// Windows form application used to host the time-series framework service.

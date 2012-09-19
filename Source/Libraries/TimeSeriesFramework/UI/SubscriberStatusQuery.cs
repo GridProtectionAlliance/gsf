@@ -28,7 +28,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
-namespace GSF.TimeSeriesFramework.UI
+namespace GSF.TimeSeries.UI
 {
     /// <summary>
     /// Represents an object that will query the external DataPublisher for real-time subscriber status.

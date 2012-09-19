@@ -25,7 +25,7 @@ using GSF.Threading;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
-namespace GSF.TimeSeriesFramework
+namespace GSF.TimeSeries
 {
     /// <summary>
     /// <see cref="IFrame"/> container used to track <see cref="IMeasurement"/> values for downsampling.

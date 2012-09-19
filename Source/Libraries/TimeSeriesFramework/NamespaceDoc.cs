@@ -23,7 +23,7 @@
 
 using System.Runtime.CompilerServices;
 
-namespace GSF.TimeSeriesFramework
+namespace GSF.TimeSeries
 {
     /// <summary>
     /// Contains classes used to abstractly define time-series measured values and provide mechanisms for managing measurements.

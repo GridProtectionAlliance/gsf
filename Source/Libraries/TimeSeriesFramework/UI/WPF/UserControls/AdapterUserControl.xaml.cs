@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeriesFramework.UI.DataModels;
+using GSF.TimeSeries.UI.DataModels;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -29,7 +29,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace GSF.TimeSeriesFramework.UI.UserControls
+namespace GSF.TimeSeries.UI.UserControls
 {
     /// <summary>
     /// Interaction logic for AdapterUserControl.xaml
@@ -113,7 +113,7 @@ namespace GSF.TimeSeriesFramework.UI.UserControls
         /// <param name="e">Arguments for the event.</param>
         private void Default_Click(object sender, RoutedEventArgs e)
         {
-            GSF.TimeSeriesFramework.UI.ViewModels.Adapters dataContext = this.DataContext as GSF.TimeSeriesFramework.UI.ViewModels.Adapters;
+            GSF.TimeSeries.UI.ViewModels.Adapters dataContext = this.DataContext as GSF.TimeSeries.UI.ViewModels.Adapters;
 
             if (dataContext != null && dataContext.SelectedParameter != null)
             {

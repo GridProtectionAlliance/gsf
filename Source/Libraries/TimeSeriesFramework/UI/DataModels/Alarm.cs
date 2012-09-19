@@ -30,7 +30,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
 
-namespace GSF.TimeSeriesFramework.UI.DataModels
+namespace GSF.TimeSeries.UI.DataModels
 {
     /// <summary>
     /// Represents a record of <see cref="Alarm"/> information as defined in the database.
@@ -797,7 +797,7 @@ namespace GSF.TimeSeriesFramework.UI.DataModels
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, signalId);
                 }
 
-                GSF.TimeSeriesFramework.UI.CommonFunctions.SendCommandToService("ReloadConfig");
+                GSF.TimeSeries.UI.CommonFunctions.SendCommandToService("ReloadConfig");
 
                 return "Alarm deleted successfully";
             }

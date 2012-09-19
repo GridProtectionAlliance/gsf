@@ -24,7 +24,7 @@
 using System.ServiceModel;
 using System.Xml.Serialization;
 
-namespace GSF.TimeSeriesFramework.UI
+namespace GSF.TimeSeries.UI
 {
     /// <summary>
     /// Represents a subscriber authentication request.

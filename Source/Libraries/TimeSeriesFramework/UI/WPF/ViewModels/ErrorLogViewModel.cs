@@ -25,7 +25,7 @@
 //       Added paging technique and implemented sorting.
 //******************************************************************************************************
 
-using GSF.TimeSeriesFramework.UI.DataModels;
+using GSF.TimeSeries.UI.DataModels;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -34,7 +34,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 
-namespace GSF.TimeSeriesFramework.UI.ViewModels
+namespace GSF.TimeSeries.UI.ViewModels
 {
     internal class ErrorLogViewModel : PagedViewModelBase<ErrorLog, int>
     {

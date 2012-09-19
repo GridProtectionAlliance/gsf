@@ -34,7 +34,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace GSF.TimeSeriesFramework.Adapters
+namespace GSF.TimeSeries.Adapters
 {
     /// <summary>
     /// Represents the base class for any adapter.

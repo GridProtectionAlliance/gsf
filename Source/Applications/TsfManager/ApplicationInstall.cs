@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeriesFramework;
+using GSF.TimeSeries;
 using System.ComponentModel;
 
 namespace TsfManager

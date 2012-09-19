@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 using GSF.Parsing;
-using GSF.TimeSeriesFramework.Adapters;
+using GSF.TimeSeries.Adapters;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -31,7 +31,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace GSF.TimeSeriesFramework.Transport
+namespace GSF.TimeSeries.Transport
 {
     /// <summary>
     /// Represents an unsynchronized client subscription to the <see cref="DataPublisher" />.

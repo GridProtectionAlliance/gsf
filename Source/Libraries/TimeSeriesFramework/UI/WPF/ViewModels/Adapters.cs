@@ -23,9 +23,9 @@
 
 using GSF.IO;
 using GSF.Reflection;
-using GSF.TimeSeriesFramework.Adapters;
-using GSF.TimeSeriesFramework.UI.Commands;
-using GSF.TimeSeriesFramework.UI.DataModels;
+using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.UI.Commands;
+using GSF.TimeSeries.UI.DataModels;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -35,7 +35,7 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Input;
 
-namespace GSF.TimeSeriesFramework.UI.ViewModels
+namespace GSF.TimeSeries.UI.ViewModels
 {
     /// <summary>
     /// Class to hold bindable <see cref="Adapter"/> collection and current selection information for UI.

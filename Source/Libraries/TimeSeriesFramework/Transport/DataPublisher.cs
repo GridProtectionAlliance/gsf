@@ -34,7 +34,7 @@
 using GSF.Communication;
 using GSF.Data;
 using GSF.Security.Cryptography;
-using GSF.TimeSeriesFramework.Adapters;
+using GSF.TimeSeries.Adapters;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -50,7 +50,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml;
 
-namespace GSF.TimeSeriesFramework.Transport
+namespace GSF.TimeSeries.Transport
 {
     #region [ Enumerations ]
 

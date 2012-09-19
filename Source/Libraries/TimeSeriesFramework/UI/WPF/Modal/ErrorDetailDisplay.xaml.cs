@@ -24,7 +24,7 @@
 using System.Windows;
 using System.Windows.Input;
 
-namespace GSF.TimeSeriesFramework.UI.Modal
+namespace GSF.TimeSeries.UI.Modal
 {
     /// <summary>
     /// Interaction logic for ErrorDetailDisplay.xaml

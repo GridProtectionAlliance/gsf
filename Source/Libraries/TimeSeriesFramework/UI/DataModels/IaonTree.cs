@@ -27,7 +27,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
 
-namespace GSF.TimeSeriesFramework.UI.DataModels
+namespace GSF.TimeSeries.UI.DataModels
 {
     /// <summary>
     /// Represents a record of <see cref="IaonTree"/> information as defined in the database.

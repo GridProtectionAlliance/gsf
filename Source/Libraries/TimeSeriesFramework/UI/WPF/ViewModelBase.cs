@@ -25,7 +25,7 @@ using System;
 using System.ComponentModel;
 using System.Windows;
 
-namespace GSF.TimeSeriesFramework.UI
+namespace GSF.TimeSeries.UI
 {
     /// <summary>
     /// Represents an abstract class from which all ViewModel objects will derive.

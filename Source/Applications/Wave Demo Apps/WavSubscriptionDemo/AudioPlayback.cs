@@ -36,8 +36,8 @@
 #endregion
 
 using GSF;
-using GSF.TimeSeriesFramework;
-using GSF.TimeSeriesFramework.Transport;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Transport;
 using NAudio.Wave;
 using System;
 using System.Collections.Concurrent;
@@ -505,7 +505,7 @@ namespace NAudioWpfDemo
         }
 
         // Handles the subscriber's NewMeasurements event.
-        private void DataSubscriber_NewMeasurements(object sender, GSF.EventArgs<ICollection<GSF.TimeSeriesFramework.IMeasurement>> e)
+        private void DataSubscriber_NewMeasurements(object sender, GSF.EventArgs<ICollection<GSF.TimeSeries.IMeasurement>> e)
         {
             // Gather statistics.
             Interlocked.Add(ref m_measurementCount, e.Argument.Count);

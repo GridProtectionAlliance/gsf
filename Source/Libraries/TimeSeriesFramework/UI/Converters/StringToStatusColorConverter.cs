@@ -25,7 +25,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
 
-namespace GSF.TimeSeriesFramework.UI.Converters
+namespace GSF.TimeSeries.UI.Converters
 {
     /// <summary>
     /// Represents an <see cref="IValueConverter"/> class, which takes string value and returns <see cref="System.Windows.Media.Brush"/> object.

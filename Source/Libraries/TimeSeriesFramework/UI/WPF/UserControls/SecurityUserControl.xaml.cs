@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeriesFramework.UI.ViewModels;
+using GSF.TimeSeries.UI.ViewModels;
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -29,7 +29,7 @@ using System.Web.Security;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace GSF.TimeSeriesFramework.UI.UserControls
+namespace GSF.TimeSeries.UI.UserControls
 {
     /// <summary>
     /// Interaction logic for SecurityUserControl.xaml

@@ -21,11 +21,11 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeriesFramework.Adapters;
+using GSF.TimeSeries.Adapters;
 using System.Collections.Generic;
 using System.ComponentModel;
 
-namespace GSF.TimeSeriesFramework.Transport
+namespace GSF.TimeSeries.Transport
 {
     /// <summary>
     /// Represents an action adapter that exists within a temporal <see cref="IaonSession"/> to proxy data back to its parent <see cref="IClientSubscription"/> instance.

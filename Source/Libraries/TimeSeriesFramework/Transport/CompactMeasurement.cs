@@ -28,7 +28,7 @@
 using GSF.Parsing;
 using System;
 
-namespace GSF.TimeSeriesFramework.Transport
+namespace GSF.TimeSeries.Transport
 {
     #region [ Enumerations ]
 

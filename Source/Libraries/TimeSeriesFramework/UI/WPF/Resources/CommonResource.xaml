@@ -1,8 +1,8 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib"
-                    xmlns:conv="clr-namespace:GSF.TimeSeriesFramework.UI.Converters;assembly=TimeSeriesFramework.UI"
-                    xmlns:util="clr-namespace:GSF.TimeSeriesFramework.UI;assembly=TimeSeriesFramework.UI.WPF"
+                    xmlns:conv="clr-namespace:GSF.TimeSeries.UI.Converters;assembly=GSF.TimeSeries.UI"
+                    xmlns:util="clr-namespace:GSF.TimeSeries.UI;assembly=GSF.TimeSeries.UI.WPF"
                     xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
 
     <sys:Double x:Key="XXSmallTextSize">5</sys:Double>

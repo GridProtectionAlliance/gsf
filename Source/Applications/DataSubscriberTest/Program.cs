@@ -22,8 +22,8 @@
 //******************************************************************************************************
 
 using GSF;
-using GSF.TimeSeriesFramework;
-using GSF.TimeSeriesFramework.Transport;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Transport;
 using System;
 using System.Collections.Generic;
 

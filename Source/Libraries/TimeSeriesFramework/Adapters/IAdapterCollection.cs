@@ -24,7 +24,7 @@
 using System.Collections.Generic;
 using System.Data;
 
-namespace GSF.TimeSeriesFramework.Adapters
+namespace GSF.TimeSeries.Adapters
 {
     /// <summary>
     /// Represents the abstract interface for a collection of adapters.

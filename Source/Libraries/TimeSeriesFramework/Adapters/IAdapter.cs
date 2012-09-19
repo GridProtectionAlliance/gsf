@@ -28,7 +28,7 @@ using System.Data;
 using System.Linq;
 using System.Threading;
 
-namespace GSF.TimeSeriesFramework.Adapters
+namespace GSF.TimeSeries.Adapters
 {
     /// <summary>
     /// Represents the abstract interface for any adapter.

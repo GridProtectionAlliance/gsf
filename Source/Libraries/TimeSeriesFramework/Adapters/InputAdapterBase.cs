@@ -26,7 +26,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
-namespace GSF.TimeSeriesFramework.Adapters
+namespace GSF.TimeSeries.Adapters
 {
     /// <summary>
     /// Represents the base class for any incoming input adapter.

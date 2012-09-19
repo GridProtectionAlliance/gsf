@@ -8,8 +8,8 @@
     <ProjectGuid>{412F9F59-D9B9-4C8E-96D2-20492644198C}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TimeSeriesFramework</RootNamespace>
-    <AssemblyName>TimeSeriesFramework</AssemblyName>
+    <RootNamespace>GSF.TimeSeries</RootNamespace>
+    <AssemblyName>GSF.TimeSeries</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SccProjectName>SAK</SccProjectName>
@@ -26,7 +26,7 @@
     <DefineConstants>TRACE;DEBUG;UseHighResolutionTime</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\..\Build\Output\Debug\Libraries\TimeSeriesFramework.XML</DocumentationFile>
+    <DocumentationFile>..\..\..\Build\Output\Debug\Libraries\GSF.TimeSeries.xml</DocumentationFile>
     <RunCodeAnalysis>true</RunCodeAnalysis>
     <CodeAnalysisRuleSet>TimeSeriesFramework.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
@@ -38,7 +38,7 @@
     <DefineConstants>TRACE;UseHighResolutionTime</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\..\Build\Output\Release\Libraries\TimeSeriesFramework.XML</DocumentationFile>
+    <DocumentationFile>..\..\..\Build\Output\Release\Libraries\GSF.TimeSeries.xml</DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>

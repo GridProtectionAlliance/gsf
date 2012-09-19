@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 
-namespace GSF.TimeSeriesFramework.UI.DataModels
+namespace GSF.TimeSeries.UI.DataModels
 {
     /// <summary>
     /// Represents a record of <see cref="RaisedAlarm"/> information as defined in the database.

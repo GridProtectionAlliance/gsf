@@ -38,7 +38,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
 
-namespace GSF.TimeSeriesFramework.UI.DataModels
+namespace GSF.TimeSeries.UI.DataModels
 {
     #region [ Enumerations ]
 
@@ -575,7 +575,7 @@ namespace GSF.TimeSeriesFramework.UI.DataModels
                 string query = database.ParameterizedQueryString("DELETE FROM " + tableName + " WHERE ID = {0}", "adapterID");
                 database.Connection.ExecuteNonQuery(query, DefaultTimeout, adapterID);
 
-                GSF.TimeSeriesFramework.UI.CommonFunctions.SendCommandToService("ReloadConfig");
+                GSF.TimeSeries.UI.CommonFunctions.SendCommandToService("ReloadConfig");
 
                 return "Adapter deleted successfully";
             }

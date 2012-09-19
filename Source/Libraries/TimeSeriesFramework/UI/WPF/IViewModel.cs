@@ -27,7 +27,7 @@ using System;
 using System.ComponentModel;
 using System.Windows.Input;
 
-namespace GSF.TimeSeriesFramework.UI
+namespace GSF.TimeSeries.UI
 {
     /// <summary>
     /// Represents an interface and common methods and properties each data model definition should use.

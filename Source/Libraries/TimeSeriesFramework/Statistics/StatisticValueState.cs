@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 
-namespace GSF.TimeSeriesFramework.Statistics
+namespace GSF.TimeSeries.Statistics
 {
     /// <summary>
     /// Represents an object that can track the current and previous

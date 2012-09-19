@@ -23,7 +23,7 @@
 
 using System;
 
-namespace GSF.TimeSeriesFramework.UI
+namespace GSF.TimeSeries.UI
 {
     /// <summary>
     /// Represents an attribute that determines if a property in a class derived from

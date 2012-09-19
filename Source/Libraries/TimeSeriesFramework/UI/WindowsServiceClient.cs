@@ -26,7 +26,7 @@ using GSF.ServiceProcess;
 using System;
 using System.Collections.Generic;
 
-namespace GSF.TimeSeriesFramework.UI
+namespace GSF.TimeSeries.UI
 {
     /// <summary>
     /// Class to connect and communicate with windows service.

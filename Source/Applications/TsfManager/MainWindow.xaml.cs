@@ -24,8 +24,8 @@
 using GSF.IO;
 using GSF.Reflection;
 using GSF.Security;
-using GSF.TimeSeriesFramework.UI;
-using GSF.TimeSeriesFramework.UI.DataModels;
+using GSF.TimeSeries.UI;
+using GSF.TimeSeries.UI.DataModels;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

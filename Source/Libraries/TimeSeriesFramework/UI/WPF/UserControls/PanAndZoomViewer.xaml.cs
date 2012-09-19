@@ -24,7 +24,7 @@
 using System.Windows;
 using System.Windows.Media.Imaging;
 
-namespace GSF.TimeSeriesFramework.UI.UserControls
+namespace GSF.TimeSeries.UI.UserControls
 {
     /// <summary>
     /// Interaction logic for PanAndZoomViewer.xaml

@@ -21,12 +21,12 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeriesFramework.UI.ViewModels;
+using GSF.TimeSeries.UI.ViewModels;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace GSF.TimeSeriesFramework.UI.UserControls
+namespace GSF.TimeSeries.UI.UserControls
 {
     /// <summary>
     /// Interaction logic for ProtocolGroupUserControl.xaml

@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeriesFramework.UI.DataModels;
+using GSF.TimeSeries.UI.DataModels;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -31,7 +31,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 
-namespace GSF.TimeSeriesFramework.UI.ViewModels
+namespace GSF.TimeSeries.UI.ViewModels
 {
     internal class RaisedAlarms : PagedViewModelBase<RaisedAlarm, int>
     {

@@ -21,10 +21,10 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeriesFramework.UI.Converters;
+using GSF.TimeSeries.UI.Converters;
 using System.Windows.Data;
 
-namespace GSF.TimeSeriesFramework.UI.Binding
+namespace GSF.TimeSeries.UI.Binding
 {
     /// <summary>
     /// Represents a custom <see cref="Binding"/> class.

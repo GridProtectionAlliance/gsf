@@ -29,7 +29,7 @@ using System.Reflection;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace GSF.TimeSeriesFramework.UI.Commands
+namespace GSF.TimeSeries.UI.Commands
 {
     /// <summary>
     /// Exposes <see cref="ICommand"/> object to be used to handle menu item click event.

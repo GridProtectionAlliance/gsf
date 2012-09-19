@@ -25,7 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace GSF.TimeSeriesFramework
+namespace GSF.TimeSeries
 {
     /// <summary>
     /// Precision input timer.

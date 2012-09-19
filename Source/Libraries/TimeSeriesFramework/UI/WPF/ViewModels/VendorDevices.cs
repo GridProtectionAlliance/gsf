@@ -21,10 +21,10 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeriesFramework.UI.DataModels;
+using GSF.TimeSeries.UI.DataModels;
 using System.Collections.Generic;
 
-namespace GSF.TimeSeriesFramework.UI.ViewModels
+namespace GSF.TimeSeries.UI.ViewModels
 {
     /// <summary>
     /// Class to hold bindable <see cref="VendorDevice"/> collection and selected vendor device for UI.

@@ -29,7 +29,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
-namespace GSF.TimeSeriesFramework
+namespace GSF.TimeSeries
 {
     /// <summary>
     /// Implementation of a basic <see cref="IFrame"/>.

@@ -1,6 +1,6 @@
-﻿using GSF.TimeSeriesFramework.UI.DataModels;
+﻿using GSF.TimeSeries.UI.DataModels;
 
-namespace GSF.TimeSeriesFramework.UI.ViewModels
+namespace GSF.TimeSeries.UI.ViewModels
 {
     /// <summary>
     /// Class to hold bindable <see cref="SecurityGroup"/> collection.

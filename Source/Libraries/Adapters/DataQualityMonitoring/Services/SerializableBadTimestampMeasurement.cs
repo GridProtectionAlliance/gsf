@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 using GSF;
-using GSF.TimeSeriesFramework;
+using GSF.TimeSeries;
 using System;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;

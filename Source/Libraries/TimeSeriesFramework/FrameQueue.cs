@@ -33,7 +33,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
-namespace GSF.TimeSeriesFramework
+namespace GSF.TimeSeries
 {
     /// <summary>
     /// Represents a real-time queue of <see cref="TrackingFrame"/> instances used by the <see cref="ConcentratorBase"/> class.
@@ -126,7 +126,7 @@ namespace GSF.TimeSeriesFramework
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="GSF.TimeSeriesFramework.DownsamplingMethod"/> to be used by the <see cref="FrameQueue"/>.
+        /// Gets or sets the <see cref="GSF.TimeSeries.DownsamplingMethod"/> to be used by the <see cref="FrameQueue"/>.
         /// </summary>
         public DownsamplingMethod DownsamplingMethod
         {

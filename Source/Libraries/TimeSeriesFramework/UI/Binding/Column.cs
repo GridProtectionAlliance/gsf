@@ -23,7 +23,7 @@
 
 using System.Windows.Data;
 
-namespace GSF.TimeSeriesFramework.UI.Binding
+namespace GSF.TimeSeries.UI.Binding
 {
     /// <summary>
     /// Represents a custom <see cref="Binding"/> class.

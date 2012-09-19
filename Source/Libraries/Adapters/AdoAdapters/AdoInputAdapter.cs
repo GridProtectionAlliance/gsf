@@ -24,9 +24,9 @@
 using GSF;
 using GSF.IO;
 using GSF.Parsing;
-using GSF.TimeSeriesFramework;
-using GSF.TimeSeriesFramework.Adapters;
-using GSF.TimeSeriesFramework.Transport;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Transport;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;

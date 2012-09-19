@@ -1,5 +1,5 @@
 ﻿using DNP3.Interface;
-using GSF.TimeSeriesFramework;
+using GSF.TimeSeries;
 using System;
 using System.Collections.Generic;
 

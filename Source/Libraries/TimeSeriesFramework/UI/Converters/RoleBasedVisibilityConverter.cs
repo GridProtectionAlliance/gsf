@@ -25,7 +25,7 @@ using System;
 using System.Windows;
 using System.Windows.Data;
 
-namespace GSF.TimeSeriesFramework.UI.Converters
+namespace GSF.TimeSeries.UI.Converters
 {
     /// <summary>
     /// Represents an <see cref="IValueConverter"/> to convert role to Visibility.

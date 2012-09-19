@@ -23,7 +23,7 @@
 
 using System.ComponentModel;
 
-namespace GSF.TimeSeriesFramework.UI
+namespace GSF.TimeSeries.UI
 {
     /// <summary>
     /// Represents a data model entity.

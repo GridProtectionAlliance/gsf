@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 using GSF.Collections;
-using GSF.TimeSeriesFramework.Adapters;
+using GSF.TimeSeries.Adapters;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -30,7 +30,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 
-namespace GSF.TimeSeriesFramework.Transport
+namespace GSF.TimeSeries.Transport
 {
     /// <summary>
     /// Represents a common set of interfaces for a client adapter subscription to the <see cref="DataPublisher"/>.

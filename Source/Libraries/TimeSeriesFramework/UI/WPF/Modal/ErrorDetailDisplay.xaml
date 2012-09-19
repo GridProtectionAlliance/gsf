@@ -1,4 +1,4 @@
-﻿<Window x:Class="GSF.TimeSeriesFramework.UI.Modal.ErrorDetailDisplay"
+﻿<Window x:Class="GSF.TimeSeries.UI.Modal.ErrorDetailDisplay"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 

@@ -26,7 +26,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Data;
 
-namespace GSF.TimeSeriesFramework.UI.Converters
+namespace GSF.TimeSeries.UI.Converters
 {
     /// <summary>
     /// Represents an <see cref="IValueConverter"/> class, which takes <see cref="Dictionary{T1,T2}"/> collection and returns <see cref="KeyValuePair{T1,T2}"/>    

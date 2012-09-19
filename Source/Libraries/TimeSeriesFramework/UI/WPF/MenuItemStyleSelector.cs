@@ -24,7 +24,7 @@
 using System.Windows;
 using System.Windows.Controls;
 
-namespace GSF.TimeSeriesFramework.UI
+namespace GSF.TimeSeries.UI
 {
     /// <summary>
     /// Represents wrapper object around <see cref="StyleSelector"/> class.

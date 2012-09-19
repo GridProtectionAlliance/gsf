@@ -31,7 +31,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace GSF.TimeSeriesFramework.Transport
+namespace GSF.TimeSeries.Transport
 {
     /// <summary>
     /// Represents a <see cref="DataSubscriber"/> client connection to the <see cref="DataPublisher"/>.

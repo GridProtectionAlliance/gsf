@@ -23,8 +23,8 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeriesFramework.UI.Commands;
-using GSF.TimeSeriesFramework.UI.DataModels;
+using GSF.TimeSeries.UI.Commands;
+using GSF.TimeSeries.UI.DataModels;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -32,12 +32,12 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 
-namespace GSF.TimeSeriesFramework.UI.ViewModels
+namespace GSF.TimeSeries.UI.ViewModels
 {
     /// <summary>
-    /// Class to hold bindable <see cref="GSF.TimeSeriesFramework.UI.DataModels.Measurement"/> collection.
+    /// Class to hold bindable <see cref="GSF.TimeSeries.UI.DataModels.Measurement"/> collection.
     /// </summary>
-    public class Measurements : PagedViewModelBase<GSF.TimeSeriesFramework.UI.DataModels.Measurement, Guid>
+    public class Measurements : PagedViewModelBase<GSF.TimeSeries.UI.DataModels.Measurement, Guid>
     {
         #region [ Members ]
 
@@ -175,7 +175,7 @@ namespace GSF.TimeSeriesFramework.UI.ViewModels
         }
 
         /// <summary>
-        /// Creates a new instance of <see cref="GSF.TimeSeriesFramework.UI.DataModels.Measurement"/> and assigns it to CurrentItem.
+        /// Creates a new instance of <see cref="GSF.TimeSeries.UI.DataModels.Measurement"/> and assigns it to CurrentItem.
         /// </summary>
         public override void Clear()
         {
@@ -201,7 +201,7 @@ namespace GSF.TimeSeriesFramework.UI.ViewModels
         }
 
         /// <summary>
-        /// Loads collection of <see cref="GSF.TimeSeriesFramework.UI.DataModels.Measurement"/> defined in the database.
+        /// Loads collection of <see cref="GSF.TimeSeries.UI.DataModels.Measurement"/> defined in the database.
         /// </summary>
         public override void Load()
         {

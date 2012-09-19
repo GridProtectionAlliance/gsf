@@ -32,7 +32,7 @@ using GSF.Data;
 using GSF.IO;
 using GSF.Reflection;
 using GSF.ServiceProcess;
-using GSF.TimeSeriesFramework.Adapters;
+using GSF.TimeSeries.Adapters;
 using GSF.Units;
 using Microsoft.Win32;
 using System;
@@ -52,7 +52,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace GSF.TimeSeriesFramework
+namespace GSF.TimeSeries
 {
     #region [ Enumerations ]
 
@@ -267,7 +267,7 @@ namespace GSF.TimeSeriesFramework
         }
 
         /// <summary>
-        /// Gets the defined system <see cref="GSF.TimeSeriesFramework.ConfigurationType"/>.
+        /// Gets the defined system <see cref="GSF.TimeSeries.ConfigurationType"/>.
         /// </summary>
         protected ConfigurationType ConfigurationType
         {

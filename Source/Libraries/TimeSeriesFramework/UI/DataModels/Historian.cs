@@ -40,7 +40,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
 
-namespace GSF.TimeSeriesFramework.UI.DataModels
+namespace GSF.TimeSeries.UI.DataModels
 {
     /// <summary>
     /// Represents a record of <see cref="Historian"/> information as defined in the database.
@@ -571,7 +571,7 @@ namespace GSF.TimeSeriesFramework.UI.DataModels
 
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Historian WHERE ID = {0}", "historianID"), DefaultTimeout, historianID);
 
-                GSF.TimeSeriesFramework.UI.CommonFunctions.SendCommandToService("ReloadConfig");
+                GSF.TimeSeries.UI.CommonFunctions.SendCommandToService("ReloadConfig");
 
                 return "Historian deleted successfully";
             }

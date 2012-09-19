@@ -25,7 +25,7 @@
 
 using GSF;
 using GSF.ServiceModel;
-using GSF.TimeSeriesFramework;
+using GSF.TimeSeries;
 using System;
 using System.Collections.Generic;
 using System.ServiceModel;

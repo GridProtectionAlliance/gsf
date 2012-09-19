@@ -151,9 +151,9 @@
     <Resource Include="Resources\arrow_right_green.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Libraries\TimeSeriesFramework\TimeSeriesFramework.csproj">
+    <ProjectReference Include="..\..\..\Libraries\TimeSeriesFramework\GSF.TimeSeries.csproj">
       <Project>{412F9F59-D9B9-4C8E-96D2-20492644198C}</Project>
-      <Name>TimeSeriesFramework</Name>
+      <Name>GSF.TimeSeries</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Libraries\TVA.Communication\GSF.Communication.csproj">
       <Project>{2b2eb9be-e6a9-406f-bfe6-ff46dd6bd264}</Project>
