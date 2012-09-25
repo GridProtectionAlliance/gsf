@@ -1062,13 +1062,34 @@ namespace TVA.IO
 
                         Close(false);
 
+                        DateTime creationTime = File.GetCreationTime(m_fileName);
+                        DateTime lastWriteTime = File.GetLastWriteTime(m_fileName);
+
                         List<DateTime> savedTimes;
-                        string destinationfile = Path.Combine(directoryName, rootFileName) + "_" +
-                            File.GetCreationTime(m_fileName).ToString("yyyy-MM-dd hh!mm!ss") + "_to_" +
-                            File.GetLastWriteTime(m_fileName).ToString("yyyy-MM-dd hh!mm!ss") + FilePath.GetExtension(m_fileName);
+                        string destinationfile;
+                        bool fileExists = false;
+
+                        // In cases where logs are filling very fast you may encounter situations
+                        // where the log file names could overlap. In order to help with this
+                        // case dated file names include milliseconds and verify file uniqueness
+                        do
+                        {
+                            // Keep adding milliseconds to last write time until file name is unique
+                            if (fileExists)
+                                lastWriteTime = lastWriteTime.AddMilliseconds(1.0D);
+
+                            destinationfile = Path.Combine(directoryName, rootFileName) + "_" +
+                                creationTime.ToString("yyyy-MM-dd HH!mm!ss!fff") + "_to_" +
+                                lastWriteTime.ToString("yyyy-MM-dd HH!mm!ss!fff") + FilePath.GetExtension(m_fileName);
+
+                            fileExists = File.Exists(destinationfile);
+                        }
+                        while (fileExists);
 
                         File.Move(m_fileName, destinationfile);
-                        m_savedFilesWithTime.Add(File.GetLastWriteTime(destinationfile), destinationfile);
+
+                        m_savedFilesWithTime.Add(lastWriteTime, destinationfile);
+
                         savedTimes = m_savedFilesWithTime.Keys.ToList();
                         savedTimes.Sort();
 
