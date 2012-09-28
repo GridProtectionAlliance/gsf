@@ -629,6 +629,7 @@ namespace TimeSeriesFramework.Transport
 
         // Fields
         private bool m_throttled;
+        private double m_publishInterval;
         private bool m_includeTime;
 
         #endregion
@@ -642,6 +643,7 @@ namespace TimeSeriesFramework.Transport
         public UnsynchronizedSubscriptionInfo(bool throttled)
         {
             m_throttled = throttled;
+            m_publishInterval = -1;
             m_includeTime = true;
         }
 
@@ -662,6 +664,22 @@ namespace TimeSeriesFramework.Transport
             set
             {
                 m_throttled = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the interval at which data should be
+        /// published when using a throttled subscription.
+        /// </summary>
+        public double PublishInterval
+        {
+            get
+            {
+                return m_publishInterval;
+            }
+            set
+            {
+                m_publishInterval = value;
             }
         }
 

@@ -361,6 +361,41 @@ namespace TimeSeriesFramework.Transport
     {
         #region [ Members ]
 
+        // Nested Types
+
+        private class LatestMeasurementCache : FacileActionAdapterBase
+        {
+            public LatestMeasurementCache(string connectionString)
+            {
+                ConnectionString = connectionString;
+            }
+
+            public override string Name
+            {
+                get
+                {
+                    return "LatestMeasurementCache";
+                }
+                set
+                {
+                    base.Name = value;
+                }
+            }
+
+            public override bool SupportsTemporalProcessing
+            {
+                get
+                {
+                    return false;
+                }
+            }
+
+            public override string GetShortStatus(int maxLength)
+            {
+                return "LatestMeasurementCache happily exists. :)";
+            }
+        }
+
         // Events
 
         /// <summary>
@@ -878,6 +913,15 @@ namespace TimeSeriesFramework.Transport
             // Get user specified period for cipher key rotation
             if (settings.TryGetValue("cipherKeyRotationPeriod", out setting) && double.TryParse(setting, out period))
                 CipherKeyRotationPeriod = period;
+
+            if (settings.TryGetValue("cacheMeasurementKeys", out setting))
+            {
+                LatestMeasurementCache cache = new LatestMeasurementCache(string.Format("trackLatestMeasurements=true;lagTime=60;leadTime=60;inputMeasurementKeys={{{0}}}", setting));
+                cache.DataSource = DataSource;
+                Add(cache);
+                m_routingTables.CalculateRoutingTables(null);
+                cache.Start();
+            }
 
             // Create a new TCP server
             TcpServer commandChannel = new TcpServer();
@@ -1545,13 +1589,23 @@ namespace TimeSeriesFramework.Transport
             IActionAdapter adapter;
 
             // Lookup adapter by its client ID
-            if (TryGetAdapter<Guid>(clientID, (item, value) => ((IClientSubscription)item).ClientID == value, out adapter))
+            if (TryGetAdapter<Guid>(clientID, GetClientSubscription, out adapter))
             {
                 subscription = (IClientSubscription)adapter;
                 return true;
             }
 
             subscription = null;
+            return false;
+        }
+
+        private bool GetClientSubscription(IActionAdapter item, Guid value)
+        {
+            IClientSubscription subscription = item as IClientSubscription;
+
+            if ((object)subscription != null)
+                return subscription.ClientID == value;
+
             return false;
         }
 
@@ -1941,6 +1995,21 @@ namespace TimeSeriesFramework.Transport
                             // Send new or updated cipher keys
                             if (connection.Authenticated && m_encryptPayload)
                                 connection.RotateCipherKeys();
+
+                            // If client has subscribed to any cached measurements, queue them up for the client
+                            IActionAdapter adapter;
+                            LatestMeasurementCache cache;
+
+                            if (TryGetAdapterByName("LatestMeasurementCache", out adapter))
+                            {
+                                cache = adapter as LatestMeasurementCache;
+
+                                if ((object)cache != null)
+                                {
+                                    IEnumerable<IMeasurement> cachedMeasurements = cache.LatestMeasurements.Where(measurement => subscription.InputMeasurementKeys.Any(key => key.SignalID == measurement.ID));
+                                    subscription.QueueMeasurementsForProcessing(cachedMeasurements);
+                                }
+                            }
 
                             // Notify any direct publisher consumers about the new client connection
                             try

@@ -886,6 +886,7 @@ namespace TimeSeriesFramework.Transport
             AssemblyInfo assemblyInfo = AssemblyInfo.ExecutingAssembly;
 
             connectionString.AppendFormat("trackLatestMeasurements={0};", info.Throttled);
+            connectionString.AppendFormat("publishInterval={0};", info.PublishInterval);
             connectionString.AppendFormat("includeTime={0};", info.IncludeTime);
             connectionString.AppendFormat("lagTime={0};", info.LagTime);
             connectionString.AppendFormat("leadTime={0};", info.LeadTime);

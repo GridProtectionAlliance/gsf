@@ -63,6 +63,7 @@ namespace TimeSeriesFramework.Transport
         private string m_hostName;
         private bool m_useCompactMeasurementFormat;
         private long m_lastPublishTime;
+        private double m_publishInterval;
         private bool m_includeTime;
         private bool m_useMillisecondResolution;
         private volatile long[] m_baseTimeOffsets;
@@ -336,6 +337,11 @@ namespace TimeSeriesFramework.Transport
 
             string setting;
 
+            if (Settings.TryGetValue("publishInterval", out setting))
+                m_publishInterval = int.Parse(setting);
+            else
+                m_publishInterval = -1;
+
             if (Settings.TryGetValue("includeTime", out setting))
                 m_includeTime = setting.ParseBoolean();
             else
@@ -466,16 +472,13 @@ namespace TimeSeriesFramework.Transport
             {
                 if (TrackLatestMeasurements)
                 {
+                    double publishInterval;
+
                     // Keep track of latest measurements
                     base.QueueMeasurementsForProcessing(measurements);
+                    publishInterval = (m_publishInterval > 0) ? m_publishInterval : LagTime;
 
-                    // See if it is time to publish
-                    if (m_lastPublishTime == 0)
-                    {
-                        // Allow at least one set of measurements to be defined before initial publication
-                        m_lastPublishTime = 1;
-                    }
-                    else if (DateTime.UtcNow.Ticks > m_lastPublishTime + Ticks.FromSeconds(LatestMeasurements.LagTime))
+                    if (DateTime.UtcNow.Ticks > m_lastPublishTime + Ticks.FromSeconds(publishInterval))
                     {
                         List<IMeasurement> currentMeasurements = new List<IMeasurement>();
                         Measurement newMeasurement;

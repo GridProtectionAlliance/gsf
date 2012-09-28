@@ -730,6 +730,34 @@ namespace TimeSeriesFramework.Adapters
                 status.AppendFormat("    Data source table name: {0}", DataMember);
                 status.AppendLine();
 
+                Dictionary<string, string> keyValuePairs = Settings;
+                char[] keyChars;
+                string value;
+
+                status.AppendFormat("         Connection string: {0} key/value pairs", keyValuePairs.Count);
+                //                            1         2         3         4         5         6         7
+                //                   123456789012345678901234567890123456789012345678901234567890123456789012345678
+                //                                         Key = Value
+                //                                                        1         2         3         4         5
+                //                                               12345678901234567890123456789012345678901234567890
+                status.AppendLine();
+                status.AppendLine();
+
+                foreach (KeyValuePair<string, string> item in keyValuePairs)
+                {
+                    keyChars = item.Key.Trim().ToCharArray();
+                    keyChars[0] = char.ToUpper(keyChars[0]);
+
+                    value = item.Value.Trim();
+                    if (value.Length > 50)
+                        value = value.TruncateRight(47) + "...";
+
+                    status.AppendFormat("{0} = {1}", (new string(keyChars)).TruncateRight(25).PadLeft(25), value.PadRight(50));
+                    status.AppendLine();
+                }
+
+                status.AppendLine();
+
                 if (Count > 0)
                 {
                     int index = 0;
