@@ -561,7 +561,7 @@ namespace TimeSeriesFramework.Transport
                                 packet.Clear();
                                 packetSize = 5;
                             }
-
+                            ;
                             // Add the current measurement to the packet.
                             packet.Add(binaryMeasurement);
                             packetSize += binaryLength;
@@ -570,6 +570,7 @@ namespace TimeSeriesFramework.Transport
                         // Process the remaining measurements.
                         ProcessBinaryMeasurements(packet, useCompactMeasurementFormat);
                         packet.Clear();
+                        packetSize = 5;
                     }
                 }
                 catch (Exception ex)
