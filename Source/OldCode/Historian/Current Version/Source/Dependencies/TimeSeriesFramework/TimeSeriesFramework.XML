@@ -8586,6 +8586,12 @@
             to request that the subscription be throttled.
             </summary>
         </member>
+        <member name="P:TimeSeriesFramework.Transport.UnsynchronizedSubscriptionInfo.PublishInterval">
+            <summary>
+            Gets or sets the interval at which data should be
+            published when using a throttled subscription.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Transport.UnsynchronizedSubscriptionInfo.IncludeTime">
             <summary>
             Gets or sets the flag that determines whether timestamps are
