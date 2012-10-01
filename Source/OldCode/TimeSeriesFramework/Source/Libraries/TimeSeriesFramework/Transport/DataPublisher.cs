@@ -2114,21 +2114,42 @@ namespace TimeSeriesFramework.Transport
                             Match regexMatch = Regex.Match(tableExpression, @"FROM \w+");
                             table.TableName = regexMatch.Value.Split(' ')[1];
 
-                            // If table has a NodeID column, filter table data for just this node
-                            if (!m_sharedDatabase && table.Columns.Contains("NodeID"))
+                            // If table has a NodeID column, filter table data for just this node.
+                            // Also, determine whether we need to check subscriber for rights to the data
+                            bool applyNodeIDFilter = table.Columns.Contains("NodeID");
+                            bool checkSubscriberRights = m_requireAuthentication && table.Columns.Contains("SignalID");
+
+                            if (m_sharedDatabase || (!applyNodeIDFilter && !checkSubscriberRights))
                             {
+                                // Add a copy of the results to the dataset for meta-data exchange
+                                metadata.Tables.Add(table.Copy());
+                            }
+                            else
+                            {
+                                IEnumerable<DataRow> filteredRows;
+                                List<DataRow> filteredRowList;
+
                                 // Make a copy of the table structure
                                 metadata.Tables.Add(table.Clone());
 
                                 // Reduce data to only this node
-                                DataRow[] nodeData = table.Select(string.Format("NodeID = '{0}'", nodeID));
+                                if (applyNodeIDFilter)
+                                    filteredRows = table.Select(string.Format("NodeID = '{0}'", nodeID));
+                                else
+                                    filteredRows = table.Rows.Cast<DataRow>();
 
-                                if (nodeData.Length > 0)
+                                // Reduce data to only what the subscriber has rights to
+                                if (checkSubscriberRights)
+                                    filteredRows = filteredRows.Where(row => SubscriberHasRights(connection.SubscriberID, adoDatabase.Guid(row, "SignalID")));
+
+                                filteredRowList = filteredRows.ToList();
+
+                                if (filteredRowList.Count > 0)
                                 {
                                     DataTable metadataTable = metadata.Tables[table.TableName];
 
                                     // Manually copy-in each row into table
-                                    foreach (DataRow row in nodeData)
+                                    foreach (DataRow row in filteredRowList)
                                     {
                                         DataRow newRow = metadataTable.NewRow();
 
@@ -2141,11 +2162,6 @@ namespace TimeSeriesFramework.Transport
                                         metadataTable.Rows.Add(newRow);
                                     }
                                 }
-                            }
-                            else
-                            {
-                                // Add a copy of the results to the dataset for meta-data exchange
-                                metadata.Tables.Add(table.Copy());
                             }
                         }
                     }
