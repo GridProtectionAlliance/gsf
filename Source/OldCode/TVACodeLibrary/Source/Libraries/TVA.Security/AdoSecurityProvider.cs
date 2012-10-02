@@ -585,65 +585,73 @@ namespace TVA.Security
         /// <returns>true if the user is authenticated, otherwise false.</returns>
         public override bool Authenticate(string password)
         {
+            Exception authenticationException = null;
+
+            // Reset authenticated state and failure reason
+            UserData.IsAuthenticated = false;
             AuthenticationFailureReason = null;
 
-            // Note that blank password should be allowed so that LDAP can authenticate current credentials for
-            // pass through authentication, if desired
+            // Test for pre-authentication failure modes. Note that blank password should be allowed so that LDAP
+            // can authenticate current credentials for pass through authentication, if desired.
             if (!UserData.IsDefined)
             {
-                AuthenticationFailureReason = string.Format("User {0} is not defined.", UserData.LoginID);
-                return false;
+                AuthenticationFailureReason = string.Format("User \"{0}\" is not defined.", UserData.LoginID);
             }
-
-            if (UserData.IsDisabled)
+            else if (UserData.IsDisabled)
             {
-                AuthenticationFailureReason = string.Format("User {0} is disabled.", UserData.LoginID);
-                return false;
+                AuthenticationFailureReason = string.Format("User \"{0}\" is disabled.", UserData.LoginID);
             }
-
-            if (UserData.IsLockedOut)
+            else if (UserData.IsLockedOut)
             {
-                AuthenticationFailureReason = string.Format("User {0} is locked out.", UserData.LoginID);
-                return false;
+                AuthenticationFailureReason = string.Format("User \"{0}\" is locked out.", UserData.LoginID);
             }
-
-            if (UserData.PasswordChangeDateTime != DateTime.MinValue && UserData.PasswordChangeDateTime <= DateTime.UtcNow)
+            else if (UserData.PasswordChangeDateTime != DateTime.MinValue && UserData.PasswordChangeDateTime <= DateTime.UtcNow)
             {
-                AuthenticationFailureReason = string.Format("User {0}'s password has expired or has not been set.", UserData.LoginID);
-                return false;
+                AuthenticationFailureReason = string.Format("User \"{0}\" has an expired password or password has not been set.", UserData.LoginID);
             }
-
-            try
+            else
             {
-                // Authenticate user credentials.
-                UserData.IsAuthenticated = false;
-                if (!UserData.IsExternal)
-                    // Authenticate against active directory.
-                    base.Authenticate(password);
-                else
-                    // Authenticate against backend datastore.
-                    UserData.IsAuthenticated = UserData.Password == SecurityProviderUtility.EncryptPassword(password);
-
-                // Log user authentication result.
                 try
                 {
-                    // Writing data will fail for read-only databases
-                    LogLogin(UserData.IsAuthenticated);
+                    // Determine if user is LDAP or database authenticated
+                    if (!UserData.IsExternal)
+                    {
+                        // Authenticate against active directory (via LDAP base class)
+                        base.Authenticate(password);
+                    }
+                    else
+                    {
+                        // Authenticate against backend datastore
+                        UserData.IsAuthenticated = (UserData.Password == SecurityProviderUtility.EncryptPassword(password));
+                    }
                 }
                 catch (Exception ex)
                 {
-                    // All we can do is track last exception in this case
-                    m_lastException = ex;
+                    authenticationException = ex;
                 }
+            }
 
-                return UserData.IsAuthenticated;
+            // Log user authentication result.
+            try
+            {
+                // Writing data will fail for read-only databases
+                LogAuthenticationAttempt(UserData.IsAuthenticated);
             }
             catch (Exception ex)
             {
+                // All we can do is track last exception in this case
                 m_lastException = ex;
-                LogError(ex.Source, ex.ToString());
-                throw;
             }
+
+            // If an exception occured during authentication, rethrow it after loging authentication attempt
+            if ((object)authenticationException != null)
+            {
+                m_lastException = authenticationException;
+                LogError(authenticationException.Source, authenticationException.ToString());
+                throw authenticationException;
+            }
+
+            return UserData.IsAuthenticated;
         }
 
         /// <summary>
@@ -736,12 +744,16 @@ namespace TVA.Security
         /// </summary>
         /// <param name="loginSuccess">true if user authentication was successful, otherwise false.</param>
         /// <returns>true if logging was successful, otherwise false.</returns>
-        protected virtual bool LogLogin(bool loginSuccess)
+        protected virtual bool LogAuthenticationAttempt(bool loginSuccess)
         {
             if (UserData != null && UserData.IsDefined && !string.IsNullOrWhiteSpace(UserData.Username))
             {
                 string message = string.Format("User \"{0}\" login attempt {1}.", UserData.Username, loginSuccess ? "succeeded" : "failed");
                 EventLogEntryType entryType = loginSuccess ? EventLogEntryType.SuccessAudit : EventLogEntryType.FailureAudit;
+
+                // Suffix authentication failure reason on failed logins if available
+                if (!loginSuccess && !string.IsNullOrWhiteSpace(AuthenticationFailureReason))
+                    message = string.Concat(message, " ", AuthenticationFailureReason);
 
                 // Attempt to write success or failure to the event log
                 try
