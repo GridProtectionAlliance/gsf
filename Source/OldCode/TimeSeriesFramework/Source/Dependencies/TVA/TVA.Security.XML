@@ -651,7 +651,7 @@
             <returns>true if the password is changed, otherwise false.</returns>
             <exception cref="T:System.Security.SecurityException"><paramref name="newPassword"/> does not meet password requirements.</exception>
         </member>
-        <member name="M:TVA.Security.AdoSecurityProvider.LogLogin(System.Boolean)">
+        <member name="M:TVA.Security.AdoSecurityProvider.LogAuthenticationAttempt(System.Boolean)">
             <summary>
             Logs user authentication attempt.
             </summary>
