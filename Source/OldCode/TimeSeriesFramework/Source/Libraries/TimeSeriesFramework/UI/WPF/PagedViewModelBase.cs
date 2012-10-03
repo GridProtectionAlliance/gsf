@@ -532,7 +532,7 @@ namespace TimeSeriesFramework.UI
                 if (CurrentItem == null)
                     return false;
                 else
-                    return (CurrentItem.IsValid && CommonFunctions.CurrentPrincipal.IsInRole("Administrator, Editor"));
+                    return (CurrentItem.IsValid && (object)CommonFunctions.CurrentPrincipal != null && CommonFunctions.CurrentPrincipal.IsInRole("Administrator, Editor"));
             }
         }
 
@@ -547,7 +547,7 @@ namespace TimeSeriesFramework.UI
                 if (CurrentItem == null)
                     return false;
                 else
-                    return (!IsNewRecord && CommonFunctions.CurrentPrincipal.IsInRole("Administrator, Editor"));
+                    return (!IsNewRecord && (object)CommonFunctions.CurrentPrincipal != null && CommonFunctions.CurrentPrincipal.IsInRole("Administrator, Editor"));
             }
         }
 
