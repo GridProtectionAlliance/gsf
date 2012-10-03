@@ -974,9 +974,11 @@ namespace TimeSeriesFramework.UI
             // Change Save button appearance based on IsValid property value.
             // If value of IsValid is changed then raise OnPropertyChanged for CanSave to enable or disable Save button.
             if (string.Compare(e.PropertyName, "IsValid", true) == 0)
+            {
                 OnPropertyChanged("CanSave");
 
-            m_propertyChanged = true;
+                m_propertyChanged = true;
+            }
         }
 
         // We monitor the changes to the collection currently displayed on the screen.
