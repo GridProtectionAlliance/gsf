@@ -145,6 +145,17 @@ namespace TimeSeriesFramework.UI.UserControls
         }
 
         /// <summary>
+        /// Gets the currently highlighted item on the data grid.
+        /// </summary>
+        public DataModels.Measurement CurrentItem
+        {
+            get
+            {
+                return m_dataContext.CurrentItem;
+            }
+        }
+
+        /// <summary>
         /// Gets the set of selected measurements.
         /// </summary>
         public ISet<Guid> SelectedMeasurements

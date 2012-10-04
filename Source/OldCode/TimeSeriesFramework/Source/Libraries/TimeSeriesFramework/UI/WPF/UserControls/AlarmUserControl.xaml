@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" d:DesignHeight="650" d:DesignWidth="850"
              xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:tsf="clr-namespace:TimeSeriesFramework.UI"
              xmlns:uc="clr-namespace:TimeSeriesFramework.UI.UserControls"
              xmlns:tsfBinding="clr-namespace:TimeSeriesFramework.UI.Binding;assembly=TimeSeriesFramework.UI"
              Background="Transparent">
@@ -26,6 +27,25 @@
             <CollectionViewSource Source="{Binding Path=OperationList}" x:Key="OperationList"/>
         </StackPanel.Resources>
         
+        <tsf:TsfPopup x:Name="MeasurementPagerPopup" Placement="Center" Width="500" Height="500" Topmost="False" Visibility="Collapsed">
+            <Border CornerRadius="5" BorderThickness="2" Background="White" BorderBrush="Blue">
+                <StackPanel Orientation="Vertical" Margin="5">
+                    <uc:MeasurementPagerUserControl x:Name="MeasurementPager" ItemsPerPage="18" Searchable="True">
+                        <uc:MeasurementPagerUserControl.DataGridColumns>
+                            <sdk:DataGridTextColumn Header="ID" Width="2*" Binding="{Binding Path=ID}" IsReadOnly="True" ToolTipService.ToolTip="{Binding Path=SignalReference}"/>
+                            <sdk:DataGridTextColumn Header="Description" Width="9*" Binding="{Binding Path=Description}" IsReadOnly="True"
+                                                    ToolTipService.ToolTip="{Binding Path=Description}"/>
+                        </uc:MeasurementPagerUserControl.DataGridColumns>
+                    </uc:MeasurementPagerUserControl>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Close" Width="Auto" Click="ButtonCancel_Click" Margin="5"/>
+                        <Button Content="Select" Width="Auto" Click="ButtonSelectMeasurement_Click" Margin="5"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </tsf:TsfPopup>
+
         <Grid x:Name="GridDetailView" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="5,5,0,5" DataContext="{tsfBinding:Column Path=CurrentItem}" DataContextChanged="GridDetailView_DataContextChanged">
             <Grid.BindingGroup>
                 <BindingGroup Name="input"/>
@@ -56,8 +76,10 @@
             <TextBox Grid.Row="0" Grid.Column="1" Text="{tsfBinding:Column Path=TagName}" Width="{StaticResource ItemSize}" />
             
             <TextBlock Text="Signal" Grid.Row="1" Grid.Column="0" />
-            <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Source={StaticResource MeasurementLookupList}}" DisplayMemberPath="Value"
-                      SelectedItem="{tsfBinding:Column Path=SignalID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource MeasurementLookupList}}"/>
+            <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Orientation="Horizontal">
+                <TextBlock Name="SignalLabel" />
+                <Button Width="Auto" HorizontalAlignment="Left" Content=". . ." Click="MeasurementPagerButton_Click" />
+            </StackPanel>
 
             <TextBlock Text="Operation" Grid.Row="2" Grid.Column="0" />
             <ComboBox Name="OperationBox"  Grid.Row="2" Grid.Column="1" ItemsSource="{Binding Source={StaticResource OperationList}}" DisplayMemberPath="Value"

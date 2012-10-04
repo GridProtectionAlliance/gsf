@@ -65,6 +65,23 @@ namespace TimeSeriesFramework.UI.UserControls
         {
             m_dataContext.ProcessPropertyChange();
         }
+
+        private void MeasurementPagerButton_Click(object sender, RoutedEventArgs e)
+        {
+            MeasurementPagerPopup.IsOpen = true;
+        }
+
+        private void ButtonSelectMeasurement_Click(object sender, RoutedEventArgs e)
+        {
+            SignalLabel.Text = MeasurementPager.CurrentItem.PointTag;
+            m_dataContext.CurrentItem.SignalID = MeasurementPager.CurrentItem.SignalID;
+            MeasurementPagerPopup.IsOpen = false;
+        }
+
+        private void ButtonCancel_Click(object sender, RoutedEventArgs e)
+        {
+            MeasurementPagerPopup.IsOpen = false;
+        }
         
         private void DataGrid_PreviewKeyDown(object sender, KeyEventArgs e)
         {

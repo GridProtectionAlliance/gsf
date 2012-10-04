@@ -29,7 +29,7 @@
 
         <Button Name="SelectAllHyperlink" Width="Auto" Content="Click here to select all measurements on all pages." HorizontalAlignment="Left" Visibility="Collapsed" Template="{StaticResource HyperlinkStyleButtonTemplate}" Click="SelectAllHyperlink_Click" Margin="0" />
 
-        <DataGrid x:Name="DataGridList" ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" Sorting="DataGrid_Sorting" IsReadOnly="True" LoadingRow="DataGridList_LoadingRow">
+        <DataGrid x:Name="DataGridList" ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" Sorting="DataGrid_Sorting" IsReadOnly="True" LoadingRow="DataGridList_LoadingRow" SelectionMode="Single">
             <DataGrid.Columns>
                 <DataGridTemplateColumn Width="50" Visibility="Collapsed">
                     <DataGridTemplateColumn.CellTemplate>
