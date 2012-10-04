@@ -38,6 +38,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
+using TVA;
 using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
@@ -549,14 +550,16 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Loads <see cref="Measurement"/> signal IDs as an <see cref="IList{T}"/>.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="deviceID">ID of the Device to filter data.</param>
-        /// <param name="filterByInternalFlag">boolean flag to indicate if only non internal data requested.</param>
-        /// <param name="includeInternal">boolean flag to indicate if internal measurements are included.</param>
+        /// <param name="filterExpression">SQL expression by which to filter the data coming from the database.</param>
         /// <param name="searchText">The text to search by.</param>
         /// <param name="sortMember">The field to sort by.</param>
         /// <param name="sortDirection"><c>ASC</c> or <c>DESC</c> for ascending or descending respectively.</param>
         /// <returns>Collection of <see cref="Guid"/>.</returns>
-        public static List<Guid> LoadSignalIDs(AdoDataConnection database, int deviceID = 0, bool filterByInternalFlag = false, bool includeInternal = false, string searchText = "", string sortMember = "", string sortDirection = "")
+        /// <remarks>
+        /// This method does not validate <paramref name="filterExpression"/> for SQL injection.
+        /// Developers should validate their inputs before entering a filter expression.
+        /// </remarks>
+        public static List<Guid> LoadSignalIDs(AdoDataConnection database, string filterExpression = "", string searchText = "", string sortMember = "", string sortDirection = "")
         {
             bool createdConnection = false;
 
@@ -567,14 +570,11 @@ namespace TimeSeriesFramework.UI.DataModels
                 List<Guid> signalIDList = new List<Guid>();
                 DataTable measurementTable;
 
-                string queryFormat;
-                string[] paramNames;
-                object[] parameters;
                 string query;
+                object[] parameters;
 
                 string searchParam = null;
-                string searchQuery = null;
-
+                string searchQuery = string.Empty;
                 string sortClause = string.Empty;
 
                 if (!string.IsNullOrEmpty(searchText))
@@ -588,110 +588,16 @@ namespace TimeSeriesFramework.UI.DataModels
                 if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
                     sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
 
-                if (filterByInternalFlag)
-                {
-                    if (deviceID > 0)
-                    {
-                        if (includeInternal)
-                        {
-                            if (string.IsNullOrEmpty(searchText))
-                            {
-                                queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE DeviceID = {{0}} AND Subscribed = {{1}} {0}", sortClause);
-                                paramNames = new string[] { "deviceID", "subscribed" };
-                                parameters = new object[] { deviceID, database.Bool(false) };
-                            }
-                            else
-                            {
-                                queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE DeviceID = {{0}} AND Subscribed = {{1}} AND ({0}) {1}", searchQuery, sortClause);
-                                paramNames = new string[] { "deviceID", "subscribed" };
-                                parameters = new object[] { deviceID, database.Bool(false), searchParam };
-                            }
-                        }
-                        else
-                        {
-                            if (string.IsNullOrEmpty(searchText))
-                            {
-                                queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE DeviceID = {{0}} AND Internal = {{1}} AND Subscribed = {{2}} {0}", sortClause);
-                                paramNames = new string[] { "deviceID", "internal", "subscribed" };
-                                parameters = new object[] { deviceID, database.Bool(false), database.Bool(false) };
-                            }
-                            else
-                            {
-                                queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE DeviceID = {{0}} AND Internal = {{1}} AND Subscribed = {{2}} AND ({0}) {1}", searchQuery, sortClause);
-                                paramNames = new string[] { "deviceID", "internal", "subscribed" };
-                                parameters = new object[] { deviceID, database.Bool(false), database.Bool(false), searchParam };
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (includeInternal)
-                        {
-                            if (string.IsNullOrEmpty(searchText))
-                            {
-                                queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE Subscribed = {{0}} {0}", sortClause);
-                                paramNames = new string[] { "subscribed" };
-                                parameters = new object[] { database.Bool(false) };
-                            }
-                            else
-                            {
-                                queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE Subscribed = {{0}} AND ({0}) {1}", searchQuery, sortClause);
-                                paramNames = new string[] { "subscribed" };
-                                parameters = new object[] { database.Bool(false), searchParam };
-                            }
-                        }
-                        else
-                        {
-                            if (string.IsNullOrEmpty(searchText))
-                            {
-                                queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE Internal = {{0}} AND Subscribed = {{1}} {0}", sortClause);
-                                paramNames = new string[] { "internal", "subscribed" };
-                                parameters = new object[] { database.Bool(false), database.Bool(false) };
-                            }
-                            else
-                            {
-                                queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE Internal = {{0}} AND Subscribed = {{1}} AND ({0}) {1}", searchQuery, sortClause);
-                                paramNames = new string[] { "internal", "subscribed" };
-                                parameters = new object[] { database.Bool(false), database.Bool(false), searchParam };
-                            }
-                        }
-                    }
-                }
+                if (!string.IsNullOrEmpty(filterExpression) && !string.IsNullOrEmpty(searchText))
+                    query = string.Format("SELECT SignalID FROM MeasurementDetail WHERE ({0}) AND ({1}) {2}", filterExpression, searchQuery, sortClause);
+                else if (!string.IsNullOrEmpty(filterExpression))
+                    query = string.Format("SELECT SignalID FROM MeasurementDetail WHERE ({0}) {1}", filterExpression, sortClause);
+                else if (!string.IsNullOrEmpty(searchText))
+                    query = string.Format("SELECT SignalID FROM MeasurementDetail WHERE ({0}) {1}", searchQuery, sortClause);
                 else
-                {
-                    if (deviceID > 0)
-                    {
-                        if (string.IsNullOrEmpty(searchText))
-                        {
-                            queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE DeviceID = {{0}} {0}", sortClause);
-                            paramNames = new string[] { "deviceID" };
-                            parameters = new object[] { deviceID };
-                        }
-                        else
-                        {
-                            queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE DeviceID = {{0}} AND ({0}) {1}", searchQuery, sortClause);
-                            paramNames = new string[] { "deviceID" };
-                            parameters = new object[] { deviceID, searchParam };
-                        }
-                    }
-                    else
-                    {
-                        if (string.IsNullOrEmpty(searchText))
-                        {
-                            queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail {0}", sortClause);
-                            paramNames = new string[] { };
-                            parameters = new object[] { };
-                        }
-                        else
-                        {
-                            queryFormat = string.Format("SELECT SignalID FROM MeasurementDetail WHERE {0} {1}", searchQuery, sortClause);
-                            paramNames = new string[] { };
-                            parameters = new object[] { searchParam };
-                        }
-                    }
-                }
+                    query = string.Format("SELECT SignalID FROM MeasurementDetail {0}", sortClause);
 
-                query = database.ParameterizedQueryString(queryFormat, paramNames);
+                parameters = !string.IsNullOrEmpty(searchText) ? new object[] { searchParam } : new object[0];
                 measurementTable = database.Connection.RetrieveData(database.AdapterType, query, parameters);
 
                 foreach (DataRow row in measurementTable.Rows)

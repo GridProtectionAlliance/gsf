@@ -18,7 +18,7 @@
 
     <StackPanel Orientation="Vertical">
         <DockPanel>
-            <Label DockPanel.Dock="Left" Name="SelectedMeasurementsLabel" Content="Selected Measurements: 0" />
+            <Label DockPanel.Dock="Left" Name="SelectedMeasurementsLabel" Content="Selected Measurements: 0" Visibility="{Binding ElementName=MeasurementPager, Path=Selectable, Converter={StaticResource ObjectToVisibilityConverter}}" />
         
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right" Visibility="{Binding ElementName=MeasurementPager, Path=Searchable, Converter={StaticResource ObjectToVisibilityConverter}}">
                 <TextBox x:Name="TextBoxSearch" Width="150"/>

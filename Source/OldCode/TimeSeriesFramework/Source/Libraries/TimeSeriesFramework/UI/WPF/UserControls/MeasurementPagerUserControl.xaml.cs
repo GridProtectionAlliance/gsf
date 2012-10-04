@@ -86,6 +86,21 @@ namespace TimeSeriesFramework.UI.UserControls
         }
 
         /// <summary>
+        /// Gets or sets the filter expression used when reading measurements from the database.
+        /// </summary>
+        public string FilterExpression
+        {
+            get
+            {
+                return (string)this.GetValue(FilterExpressionProperty);
+            }
+            set
+            {
+                this.SetValue(FilterExpressionProperty, value);
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the boolean flag which determines whether this control
         /// provides checkboxes that allow the user to select measurements to
         /// be placed in the <see cref="SelectedMeasurements"/> set.
@@ -145,6 +160,44 @@ namespace TimeSeriesFramework.UI.UserControls
         #region [ Methods ]
 
         /// <summary>
+        /// Updates the collection of selected measurements based on which items are selected
+        /// or unselected on the current page. This method also updates the selected measurements
+        /// label to reflect the total number of selected measurements.
+        /// </summary>
+        public void UpdateSelections()
+        {
+            DataGridRow row;
+            CheckBox itemCheckBox;
+
+            DataModels.Measurement measurement;
+
+            // Iterate over all the rows on the current page
+            for (int i = 0; i < DataGridList.Items.Count; i++)
+            {
+                row = DataGridList.ItemContainerGenerator.ContainerFromIndex(i) as DataGridRow;
+
+                if ((object)row != null)
+                {
+                    // Get the measurement and its corresponding check box
+                    itemCheckBox = FindChildByName("ItemCheckBox", row) as CheckBox;
+                    measurement = row.Item as DataModels.Measurement;
+
+                    if ((object)itemCheckBox != null && (object)measurement != null)
+                    {
+                        // If it's checked, add it to the set of selections;
+                        // otherwise, remove it from the set of selection
+                        if (itemCheckBox.IsChecked ?? false)
+                            m_selectedMeasurements.Add(measurement.SignalID);
+                        else
+                            m_selectedMeasurements.Remove(measurement.SignalID);
+                    }
+                }
+            }
+
+            SelectedMeasurementsLabel.Content = string.Format("Selected Measurements: {0}", m_selectedMeasurements.Count);
+        }
+
+        /// <summary>
         /// Invoked whenever the effective value of any dependency property on this <see cref="System.Windows.FrameworkElement"/>
         /// has been updated. The specific dependency property that changed is reported in the arguments parameter.
         /// Overrides <see cref="System.Windows.DependencyObject.OnPropertyChanged(System.Windows.DependencyPropertyChangedEventArgs)"/>.
@@ -156,6 +209,8 @@ namespace TimeSeriesFramework.UI.UserControls
 
             if (e.Property == SelectableProperty)
                 DataGridList.Columns[0].Visibility = (bool)e.NewValue ? Visibility.Visible : Visibility.Collapsed;
+            else if (e.Property == FilterExpressionProperty && (object)m_dataContext != null)
+                m_dataContext.FilterExpression = FilterExpression;
         }
 
         // Creates and sets the data context once the user control has loaded.
@@ -163,7 +218,11 @@ namespace TimeSeriesFramework.UI.UserControls
         {
             if (!DesignerProperties.GetIsInDesignMode(this))
             {
-                m_dataContext = new Measurements(0, ItemsPerPage, false);
+                m_dataContext = new Measurements(false);
+                m_dataContext.PropertyChanged += ViewModel_PropertyChanged;
+                m_dataContext.FilterExpression = FilterExpression;
+                m_dataContext.ItemsPerPage = ItemsPerPage;
+                m_dataContext.Load();
                 this.DataContext = m_dataContext;
             }
         }
@@ -384,42 +443,6 @@ namespace TimeSeriesFramework.UI.UserControls
             }
         }
 
-        // Updates the collection of selected measurements based on which items are selected
-        // or unselected on the current page. This method also updates the selected measurements
-        // label to reflect the total number of selected measurements.
-        private void UpdateSelections()
-        {
-            DataGridRow row;
-            CheckBox itemCheckBox;
-
-            DataModels.Measurement measurement;
-
-            // Iterate over all the rows on the current page
-            for (int i = 0; i < DataGridList.Items.Count; i++)
-            {
-                row = DataGridList.ItemContainerGenerator.ContainerFromIndex(i) as DataGridRow;
-
-                if ((object)row != null)
-                {
-                    // Get the measurement and its corresponding check box
-                    itemCheckBox = FindChildByName("ItemCheckBox", row) as CheckBox;
-                    measurement = row.Item as DataModels.Measurement;
-
-                    if ((object)itemCheckBox != null && (object)measurement != null)
-                    {
-                        // If it's checked, add it to the set of selections;
-                        // otherwise, remove it from the set of selection
-                        if (itemCheckBox.IsChecked ?? false)
-                            m_selectedMeasurements.Add(measurement.SignalID);
-                        else
-                            m_selectedMeasurements.Remove(measurement.SignalID);
-                    }
-                }
-            }
-
-            SelectedMeasurementsLabel.Content = string.Format("Selected Measurements: {0}", m_selectedMeasurements.Count);
-        }
-
         // Traverses the visual tree, starting at the given parent object, toward
         // the leaf nodes in order to find a FrameworkElement with the given name.
         private FrameworkElement FindChildByName(string name, DependencyObject parent)
@@ -457,6 +480,11 @@ namespace TimeSeriesFramework.UI.UserControls
         /// <see cref="DependencyProperty"/> for the <see cref="ItemsPerPage"/> property.
         /// </summary>
         public static DependencyProperty ItemsPerPageProperty = DependencyProperty.Register("ItemsPerPage", typeof(int), typeof(MeasurementPagerUserControl), new PropertyMetadata(10));
+
+        /// <summary>
+        /// <see cref="DependencyProperty"/> for the <see cref="FilterExpression"/> property.
+        /// </summary>
+        public static DependencyProperty FilterExpressionProperty = DependencyProperty.Register("FilterExpression", typeof(string), typeof(MeasurementPagerUserControl));
 
         /// <summary>
         /// <see cref="DependencyProperty"/> for the <see cref="Selectable"/> property.
