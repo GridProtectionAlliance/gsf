@@ -63,7 +63,7 @@
             <TextBlock Text="Image" Grid.Row="3" Grid.Column="2" VerticalAlignment="Top" />            
             <TextBox Grid.Row="3" Grid.Column="3" Text="{tsfBinding:Column Path=Image}"/>
             <TextBlock Grid.Row="4" Grid.Column="0" Text="Settings"/>
-            <TextBox Grid.Row="4" Grid.Column="1" Text="{tsfBinding:Column Path=Settings}" Grid.ColumnSpan="3" Width="475" Height="50" TextWrapping="Wrap" ScrollViewer.VerticalScrollBarVisibility="Visible" />
+            <TextBox Grid.Row="4" Grid.Column="1" Text="{tsfBinding:Column Path=Settings}" Grid.ColumnSpan="3" Width="475" Height="55" TextWrapping="Wrap" ScrollViewer.VerticalScrollBarVisibility="Visible" />
             <TextBlock Grid.Row="5" Grid.Column="0" Text="Menu Type"/>
             <TextBox Grid.Row="5" Grid.Column="1" Text="{tsfBinding:Column Path=MenuType}" MaxLength="200"/>
             <TextBlock Grid.Row="5" Grid.Column="2" Text="Menu Data"/>
