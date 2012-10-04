@@ -134,6 +134,22 @@ namespace TimeSeriesFramework.UI.UserControls
         }
 
         /// <summary>
+        /// Gets or sets the boolean flag which determines whether
+        /// the page size should be shown on the control.
+        /// </summary>
+        public bool ShowPageSize
+        {
+            get
+            {
+                return (bool)this.GetValue(ShowPageSizeProperty);
+            }
+            set
+            {
+                this.SetValue(ShowPageSizeProperty, value);
+            }
+        }
+
+        /// <summary>
         /// Gets the collection of data grid columns to be displayed.
         /// </summary>
         public ObservableCollection<DataGridColumn> DataGridColumns
@@ -209,6 +225,25 @@ namespace TimeSeriesFramework.UI.UserControls
         }
 
         /// <summary>
+        /// Causes all selections to be cleared from the data grid.
+        /// </summary>
+        public void ClearSelections()
+        {
+            SelectedMeasurements.Clear();
+            m_dataContext.Load();
+            UpdateSelections();
+        }
+
+        /// <summary>
+        /// Causes the data grid to be reloaded with a new set of data.
+        /// </summary>
+        public void ReloadDataGrid()
+        {
+            m_dataContext.ItemsKeys = null;
+            m_dataContext.Load();
+        }
+
+        /// <summary>
         /// Invoked whenever the effective value of any dependency property on this <see cref="System.Windows.FrameworkElement"/>
         /// has been updated. The specific dependency property that changed is reported in the arguments parameter.
         /// Overrides <see cref="System.Windows.DependencyObject.OnPropertyChanged(System.Windows.DependencyPropertyChangedEventArgs)"/>.
@@ -222,6 +257,8 @@ namespace TimeSeriesFramework.UI.UserControls
                 DataGridList.Columns[0].Visibility = (bool)e.NewValue ? Visibility.Visible : Visibility.Collapsed;
             else if (e.Property == FilterExpressionProperty && (object)m_dataContext != null)
                 m_dataContext.FilterExpression = FilterExpression;
+            else if (e.Property == ShowPageSizeProperty)
+                DataPager.ShowPageSize = ShowPageSize;
         }
 
         // Creates and sets the data context once the user control has loaded.
@@ -234,7 +271,7 @@ namespace TimeSeriesFramework.UI.UserControls
                 m_dataContext.FilterExpression = FilterExpression;
                 m_dataContext.ItemsPerPage = ItemsPerPage;
                 m_dataContext.Load();
-                this.DataContext = m_dataContext;
+                RootPanel.DataContext = m_dataContext;
             }
         }
 
@@ -485,7 +522,7 @@ namespace TimeSeriesFramework.UI.UserControls
 
         #region [ Static ]
 
-        // Static Methods
+        // Static Fields
 
         /// <summary>
         /// <see cref="DependencyProperty"/> for the <see cref="ItemsPerPage"/> property.
@@ -506,6 +543,11 @@ namespace TimeSeriesFramework.UI.UserControls
         /// <see cref="DependencyProperty"/> for the <see cref="Searchable"/> property.
         /// </summary>
         public static DependencyProperty SearchableProperty = DependencyProperty.Register("Searchable", typeof(bool), typeof(MeasurementPagerUserControl), new PropertyMetadata(false));
+
+        /// <summary>
+        /// <see cref="DependencyProperty"/> for the <see cref="ShowPageSize"/> property.
+        /// </summary>
+        public static DependencyProperty ShowPageSizeProperty = DependencyProperty.Register("ShowPageSize", typeof(bool), typeof(MeasurementPagerUserControl), new PropertyMetadata(true));
 
         #endregion
     }

@@ -16,9 +16,9 @@
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <StackPanel Orientation="Vertical">
+    <StackPanel Name="RootPanel" Orientation="Vertical">
         <DockPanel>
-            <Label DockPanel.Dock="Left" Name="SelectedMeasurementsLabel" Content="Selected Measurements: 0" Visibility="{Binding ElementName=MeasurementPager, Path=Selectable, Converter={StaticResource ObjectToVisibilityConverter}}" />
+            <Label DockPanel.Dock="Left" Name="SelectedMeasurementsLabel" Content="Selected: 0" Visibility="{Binding ElementName=MeasurementPager, Path=Selectable, Converter={StaticResource ObjectToVisibilityConverter}}" />
         
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right" Visibility="{Binding ElementName=MeasurementPager, Path=Searchable, Converter={StaticResource ObjectToVisibilityConverter}}">
                 <TextBox x:Name="TextBoxSearch" Width="150"/>
@@ -48,7 +48,7 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <uc:DataPagerUserControl CurrentPageNumber="{Binding CurrentPageNumber}" PageCount="{Binding PageCount}"
+        <uc:DataPagerUserControl x:Name="DataPager" CurrentPageNumber="{Binding CurrentPageNumber}" PageCount="{Binding PageCount}"
                                  FirstCommand="{Binding FirstCommand}" PreviousCommand="{Binding PreviousCommand}"
                                  NextCommand="{Binding NextCommand}" LastCommand="{Binding LastCommand}"/>
     </StackPanel>
