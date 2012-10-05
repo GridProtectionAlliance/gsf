@@ -698,7 +698,7 @@ namespace TVA.Historian.Exporters
                             {
                                 m_exportAddedHandler(export);
                             }
-                            catch (Exception)
+                            catch
                             {
                             }
                         }
@@ -714,7 +714,7 @@ namespace TVA.Historian.Exporters
                             {
                                 m_exportRemovedHandler(export);
                             }
-                            catch (Exception)
+                            catch
                             {
                             }
                         }
@@ -730,7 +730,7 @@ namespace TVA.Historian.Exporters
                             {
                                 m_exportUpdatedHandler(export);
                             }
-                            catch (Exception)
+                            catch
                             {
                             }
                         }

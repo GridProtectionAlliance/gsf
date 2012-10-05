@@ -96,7 +96,7 @@ namespace TVA.Historian.Exporters
                     File.Copy(tempFile, prepFileName, true);
                 }
             }
-            catch (Exception)
+            catch
             {
                 // Propagate the encountered exception.
                 throw;

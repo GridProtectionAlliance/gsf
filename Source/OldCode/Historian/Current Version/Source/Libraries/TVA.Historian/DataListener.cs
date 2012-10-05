@@ -695,7 +695,7 @@ namespace TVA.Historian
                 {
                     // Nothing needs to be done before component is initialized.
                 }
-                catch (Exception)
+                catch
                 {
                     // Prevent the IDE from crashing when component is in design mode.
                 }
@@ -718,7 +718,7 @@ namespace TVA.Historian
                 {
                     Initialize();
                 }
-                catch (Exception)
+                catch
                 {
                     // Prevent the IDE from crashing when component is in design mode.
                 }

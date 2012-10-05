@@ -80,6 +80,8 @@
 //       bad data or corruption in an archive file does not stop the read process.
 //  11/30/2011 - J. Ritchie Carroll
 //       Modified to support buffer optimized ISupportBinaryImage.
+//  10/03/2012 - J. Ritchie Carroll
+//       Modified to support resumable read after roll-over completes.
 //
 //******************************************************************************************************
 
@@ -87,7 +89,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -487,10 +488,8 @@ namespace TVA.Historian.Files
         private List<ArchiveDataBlock> m_dataBlocks;
         private List<Info> m_historicArchiveFiles;
         private Dictionary<int, double> m_delayedAlarmProcessing;
-        // Searching
-        private TimeTag m_writeSearchTimeTag;
-        private TimeTag m_readSearchStartTimeTag;
-        private TimeTag m_readSearchEndTimeTag;
+        private volatile bool m_rolloverInProgress;
+        private long m_activeFileReaders;
         // Threading
         private Thread m_rolloverPreparationThread;
         private Thread m_buildHistoricFileListThread;
@@ -735,10 +734,11 @@ namespace TVA.Historian.Files
 
         /// <summary>
         /// Gets or sets the path to the directory where historic <see cref="ArchiveFile"/>s are to be offloaded to make space in the primary archive location.
+        /// Set to *DELETE* to remove historic files instead of moving them to an offload location.
         /// </summary>
         [Category("Archive"),
         DefaultValue(DefaultArchiveOffloadLocation),
-        Description("Path to the directory where historic ArchiveFiles are to be offloaded to make space in the primary archive location.")]
+        Description("Path to the directory where historic ArchiveFiles are to be offloaded to make space in the primary archive location. Set to *DELETE* to remove files instead of offloading.")]
         public string ArchiveOffloadLocation
         {
             get
@@ -1216,6 +1216,17 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
+        /// Gets wait handle used to synchronize roll-over access.
+        /// </summary>
+        protected internal ManualResetEvent RolloverWaitHandle
+        {
+            get
+            {
+                return m_rolloverWaitHandle;
+            }
+        }
+
+        /// <summary>
         /// Gets the name of the standby <see cref="ArchiveFile"/>.
         /// </summary>
         private string StandbyArchiveFileName
@@ -1301,7 +1312,7 @@ namespace TVA.Historian.Files
                     //if (m_offloadLocationFileWatcher != null)
                     //    m_offloadLocationFileWatcher.BeginInit();
                 }
-                catch (Exception)
+                catch
                 {
                     // Prevent the IDE from crashing when component is in design mode.
                 }
@@ -1327,7 +1338,7 @@ namespace TVA.Historian.Files
                     //m_currentLocationFileWatcher.EndInit();
                     //m_offloadLocationFileWatcher.EndInit();
                 }
-                catch (Exception)
+                catch
                 {
                     // Prevent the IDE from crashing when component is in design mode.
                 }
@@ -1388,7 +1399,7 @@ namespace TVA.Historian.Files
                 settings.Add("FileSize", m_fileSize, "Size (in MB) of the file.");
                 settings.Add("DataBlockSize", m_dataBlockSize, "Size (in KB) of the data blocks in the file.");
                 settings.Add("RolloverPreparationThreshold", m_rolloverPreparationThreshold, "Percentage file full when the rollover preparation should begin.");
-                settings.Add("ArchiveOffloadLocation", m_archiveOffloadLocation, "Path to the location where historic files are to be moved when disk start getting full.");
+                settings.Add("ArchiveOffloadLocation", m_archiveOffloadLocation, "Path to the location where historic files are to be moved when disk start getting full. Set to *DELETE* to remove files instead of offloading.");
                 settings.Add("ArchiveOffloadCount", m_archiveOffloadCount, "Number of files that are to be moved to the offload location when the disk starts getting full.");
                 settings.Add("ArchiveOffloadThreshold", m_archiveOffloadThreshold, "Percentage disk full when the historic files should be moved to the offload location.");
                 settings.Add("MaxHistoricArchiveFiles", m_maxHistoricArchiveFiles, "Maximum number of historic files to be kept at both the primary and offload locations combined.");
@@ -1589,10 +1600,11 @@ namespace TVA.Historian.Files
 
             try
             {
-                OnRolloverStart();
-
                 // Notify internal components about the rollover.
                 m_rolloverWaitHandle.Reset();
+
+                // Raise roll-over start event - this also sets m_rolloverInProgress flag
+                OnRolloverStart();
 
                 // Notify external components about the rollover.
                 IntercomRecord system = m_intercomFile.Read(1);
@@ -1619,6 +1631,9 @@ namespace TVA.Historian.Files
                 m_fat.FileEndTime = endTime;
                 m_stateFile.Save();
                 Save();
+
+                // Wait for any pending readers to release
+                WaitForReadersRelease();
 
                 // Clear all of the cached data blocks.
                 lock (m_dataBlocks)
@@ -1651,7 +1666,7 @@ namespace TVA.Historian.Files
                             MoveFile(standbyFileName, m_fileName); // Make the standby archive file active.
                         }
                     }
-                    catch (Exception)
+                    catch
                     {
                         OpenStream();
                         throw;
@@ -1671,12 +1686,13 @@ namespace TVA.Historian.Files
                     m_intercomFile.Write(1, system);
                     m_intercomFile.Save();
 
+                    // Raise roll-over complete event - this also resets m_rolloverInProgress flag
+                    OnRolloverComplete();
+
                     // Notify other threads that rollover is complete.
                     m_rolloverWaitHandle.Set();
-
-                    OnRolloverComplete();
                 }
-                catch (Exception)
+                catch
                 {
                     CloseStream(); // Close the file if we fail to open it.
                     DeleteFile(m_fileName);
@@ -1685,6 +1701,7 @@ namespace TVA.Historian.Files
             }
             catch (Exception ex)
             {
+                // Raise roll-over exception event if there is an error - this will also reset m_rolloverInProgress flag
                 OnRolloverException(ex);
             }
         }
@@ -1906,7 +1923,13 @@ namespace TVA.Historian.Files
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
         public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, TimeTag startTime, TimeTag endTime)
         {
-            // Yeild to archive rollover process.
+            return ReadData(historianIDs, startTime, endTime, -1);
+        }
+
+        // Read data implementation
+        private IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, TimeTag startTime, TimeTag endTime, int lastHistorianID)
+        {
+            // Yield to archive rollover process.
             m_rolloverWaitHandle.WaitOne();
 
             // Ensure that the current file is open.
@@ -1922,6 +1945,8 @@ namespace TVA.Historian.Files
                 throw new ArgumentException("End Time preceeds Start Time in the specified timespan");
 
             List<Info> dataFiles = new List<Info>();
+            bool pendingRollover = false;
+            bool usingActiveFile = false;
 
             if (startTime.CompareTo(m_fat.FileStartTime) < 0)
             {
@@ -1929,12 +1954,9 @@ namespace TVA.Historian.Files
                 if (m_buildHistoricFileListThread.IsAlive)
                     m_buildHistoricFileListThread.Join();
 
-                m_readSearchStartTimeTag = startTime;
-                m_readSearchEndTimeTag = endTime;
-
                 lock (m_historicArchiveFiles)
                 {
-                    dataFiles.AddRange(m_historicArchiveFiles.FindAll(FindHistoricArchiveFileForRead));
+                    dataFiles.AddRange(m_historicArchiveFiles.FindAll(info => FindHistoricArchiveFileForRead(info, startTime, endTime)));
                 }
             }
 
@@ -1955,14 +1977,19 @@ namespace TVA.Historian.Files
 
                 try
                 {
-                    if (dataFile.FileName == m_fileName)
+                    if (string.Compare(dataFile.FileName, m_fileName, true) == 0)
                     {
                         // Read data from current file.
+                        usingActiveFile = true;
                         file = this;
+
+                        // Atomically increment total number of readers for active file
+                        Interlocked.Increment(ref m_activeFileReaders);
                     }
                     else
                     {
                         // Read data from historic file.
+                        usingActiveFile = false;
                         file = new ArchiveFile();
                         file.FileName = dataFile.FileName;
                         file.StateFile = m_stateFile;
@@ -1973,18 +2000,50 @@ namespace TVA.Historian.Files
                     }
 
                     // Create new time sorted data point scanner for the desired points in this file and given time range
-                    TimeSortedDataPointScanner scanner = new TimeSortedDataPointScanner(file.Fat, historianIDs, startTime, endTime, (sender, e) => OnDataReadException(e.Argument));
+                    TimeSortedDataPointScanner scanner = new TimeSortedDataPointScanner(file.Fat, historianIDs, startTime, endTime, lastHistorianID, (sender, e) => OnDataReadException(e.Argument));
+
+                    // Reset last historian ID to scan from beginning after picking up where left off from roll over
+                    lastHistorianID = -1;
 
                     // Return data points
                     foreach (IDataPoint dataPoint in scanner.Read())
                     {
                         yield return dataPoint;
+
+                        // If a rollover needs to happen, we need to relinquish read lock and close file
+                        if (m_rolloverInProgress)
+                        {
+                            startTime = dataPoint.Time;
+                            lastHistorianID = dataPoint.HistorianID;
+                            pendingRollover = true;
+                            break;
+                        }
                     }
                 }
                 finally
                 {
-                    if (file != null && file != this && file.IsOpen)
+                    if (usingActiveFile)
+                    {
+                        // Atomically decrement active file reader count to signal in-process code that read is complete or yielded
+                        Interlocked.Decrement(ref m_activeFileReaders);
+                    }
+                    else if ((object)file != null && file.IsOpen)
+                    {
                         file.Close();
+                    }
+                }
+
+                if (pendingRollover)
+                    break;
+            }
+
+            if (pendingRollover)
+            {
+                // Recurse into this function with an updated start time and last read point ID so that read can
+                // resume right where it left off - recursed function call will wait until rollover is complete
+                foreach (IDataPoint dataPoint in ReadData(historianIDs, startTime, endTime, lastHistorianID))
+                {
+                    yield return dataPoint;
                 }
             }
         }
@@ -1997,10 +2056,11 @@ namespace TVA.Historian.Files
         public byte[] ReadMetaData(int historianID)
         {
             MetadataRecord record = MetadataFile.Read(historianID);
+
             if (record == null)
                 return null;
-            else
-                return record.BinaryImage();
+
+            return record.BinaryImage();
         }
 
         /// <summary>
@@ -2011,10 +2071,11 @@ namespace TVA.Historian.Files
         public byte[] ReadStateData(int historianID)
         {
             StateRecord record = StateFile.Read(historianID);
+
             if (record == null)
                 return null;
-            else
-                return record.BinaryImage();
+
+            return record.BinaryImage();
         }
 
         /// <summary>
@@ -2025,10 +2086,11 @@ namespace TVA.Historian.Files
         public byte[] ReadMetaDataSummary(int historianID)
         {
             MetadataRecord record = MetadataFile.Read(historianID);
+
             if (record == null)
                 return null;
-            else
-                return record.Summary.BinaryImage();
+
+            return record.Summary.BinaryImage();
         }
 
         /// <summary>
@@ -2039,10 +2101,31 @@ namespace TVA.Historian.Files
         public byte[] ReadStateDataSummary(int historianID)
         {
             StateRecord record = StateFile.Read(historianID);
+
             if (record == null)
                 return null;
-            else
-                return record.Summary.BinaryImage();
+
+            return record.Summary.BinaryImage();
+        }
+
+        /// <summary>
+        /// Waits for all readers to relinquish read locks on active file.
+        /// </summary>
+        /// <returns>True if readers released read locks in timely fashion.</returns>
+        protected internal bool WaitForReadersRelease()
+        {
+            int waitCount = 0;
+
+            // Wait up to five seconds for readers to release
+            while (Interlocked.Read(ref m_activeFileReaders) > 0 && waitCount < 5)
+            {
+                Thread.Sleep(1000);
+                waitCount++;
+            }
+
+            bool allReleased = (Interlocked.Read(ref m_activeFileReaders) <= 0);
+
+            return allReleased;
         }
 
         /// <summary>
@@ -2057,8 +2140,10 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Raises the <see cref="RolloverStart"/> event.
         /// </summary>
-        protected virtual void OnRolloverStart()
+        protected internal virtual void OnRolloverStart()
         {
+            m_rolloverInProgress = true;
+
             if (RolloverStart != null)
                 RolloverStart(this, EventArgs.Empty);
         }
@@ -2066,8 +2151,10 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Raises the <see cref="RolloverComplete"/> event.
         /// </summary>
-        protected virtual void OnRolloverComplete()
+        protected internal virtual void OnRolloverComplete()
         {
+            m_rolloverInProgress = false;
+
             if (RolloverComplete != null)
                 RolloverComplete(this, EventArgs.Empty);
         }
@@ -2076,8 +2163,10 @@ namespace TVA.Historian.Files
         /// Raises the <see cref="RolloverException"/> event.
         /// </summary>
         /// <param name="ex"><see cref="Exception"/> to send to <see cref="RolloverException"/> event.</param>
-        protected virtual void OnRolloverException(Exception ex)
+        protected internal virtual void OnRolloverException(Exception ex)
         {
+            m_rolloverInProgress = false;
+
             if (RolloverException != null)
                 RolloverException(this, new EventArgs<Exception>(ex));
         }
@@ -2340,13 +2429,29 @@ namespace TVA.Historian.Files
             }
         }
 
-        private void OpenStream()
+        internal void OpenStream()
         {
             if (File.Exists(m_fileName))
             {
-                // File has been created already, so we just need to read it.
-                m_fileStream = new FileStream(m_fileName, FileMode.Open, m_fileAccessMode, FileShare.ReadWrite);
-                m_fat = new ArchiveFileAllocationTable(this);
+                int attempts = 0;
+
+                while (true)
+                {
+                    try
+                    {
+                        attempts++;
+                        m_fileStream = new FileStream(m_fileName, FileMode.Open, m_fileAccessMode, FileShare.ReadWrite);
+                        m_fat = new ArchiveFileAllocationTable(this);
+                        break;
+                    }
+                    catch
+                    {
+                        if (attempts >= 4)
+                            throw;
+
+                        Thread.Sleep(500);
+                    }
+                }
             }
             else
             {
@@ -2361,7 +2466,7 @@ namespace TVA.Historian.Files
             }
         }
 
-        private void CloseStream()
+        internal void CloseStream()
         {
             m_fat = null;
             if (m_fileStream != null)
@@ -2412,9 +2517,10 @@ namespace TVA.Historian.Files
                     // We can safely assume that we'll always get information about the historic file because, the
                     // the search pattern ensures that we only can a list of historic archive files and not all files.
                     Info historicFileInfo = null;
+
+                    // Prevent the historic file list from being updated by the file watchers.
                     lock (m_historicArchiveFiles)
                     {
-                        // Prevent the historic file list from being updated by the file watchers.
                         foreach (string historicFileName in Directory.GetFiles(FilePath.GetDirectoryName(m_fileName), HistoricFilesSearchPattern))
                         {
                             historicFileInfo = GetHistoricFileInfo(historicFileName);
@@ -2480,7 +2586,7 @@ namespace TVA.Historian.Files
                 {
                     standbyArchiveFile.Open();
                 }
-                catch (Exception)
+                catch
                 {
                     string standbyFileName = standbyArchiveFile.FileName;
                     standbyArchiveFile.Close();
@@ -2513,11 +2619,9 @@ namespace TVA.Historian.Files
         {
             if (Directory.Exists(m_archiveOffloadLocation))
             {
+                // Wait until the historic file list has been built.
                 if (m_buildHistoricFileListThread.IsAlive)
-                {
-                    // Wait until the historic file list has been built.
                     m_buildHistoricFileListThread.Join();
-                }
 
                 try
                 {
@@ -2528,7 +2632,7 @@ namespace TVA.Historian.Files
                     List<Info> newHistoricFiles = null;
                     lock (m_historicArchiveFiles)
                     {
-                        newHistoricFiles = m_historicArchiveFiles.FindAll(IsNewHistoricArchiveFile);
+                        newHistoricFiles = m_historicArchiveFiles.FindAll(info => IsNewHistoricArchiveFile(info, m_fileName));
                     }
 
                     // Sorting the list will sort the historic files from oldest to newest.
@@ -2562,12 +2666,72 @@ namespace TVA.Historian.Files
                     OnOffloadException(ex);
                 }
             }
+            else if (string.Compare(m_archiveOffloadLocation.ToNonNullString().Trim(), "*DELETE*", true) == 0)
+            {
+                // Handle case where user has requested historic files be deleted instead of offloaded
+
+                // Wait until the historic file list has been built.
+                if (m_buildHistoricFileListThread.IsAlive)
+                    m_buildHistoricFileListThread.Join();
+
+                try
+                {
+                    OnOffloadStart();
+
+                    // Get a local copy of all the historic archive files.
+                    List<Info> allHistoricFiles = null;
+
+                    lock (m_historicArchiveFiles)
+                    {
+                        allHistoricFiles = new List<Info>(m_historicArchiveFiles);
+                    }
+
+                    // Determine total number of files to remove
+                    int filesToDelete = Common.Min(m_archiveOffloadCount, allHistoricFiles.Count);
+
+                    ProcessProgress<int> offloadProgress = new ProcessProgress<int>("FileOffload");
+                    offloadProgress.Total = filesToDelete;
+
+                    // Start deleting historic files from oldest to newest.
+                    allHistoricFiles.Sort();
+
+                    for (int i = 0; i < filesToDelete; i++)
+                    {
+                        try
+                        {
+                            DeleteFile(allHistoricFiles[i].FileName);
+
+                            offloadProgress.Complete++;
+                            offloadProgress.ProgressMessage = FilePath.GetFileName(allHistoricFiles[i].FileName);
+                            OnOffloadProgress(offloadProgress);
+                        }
+                        catch (Exception ex)
+                        {
+                            OnOffloadException(new InvalidOperationException(string.Format("Failed to remove historic file \"{0}\": {1}", FilePath.GetFileName(allHistoricFiles[i].FileName), ex.Message), ex));
+                        }
+                    }
+
+                    OnOffloadComplete();
+                }
+                catch (ThreadAbortException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    OnOffloadException(ex);
+                }
+            }
         }
 
         private void MaintainMaximumNumberOfHistoricFiles()
         {
             if (m_maxHistoricArchiveFiles >= 1)
             {
+                // Wait until the historic file list has been built.
+                if (m_buildHistoricFileListThread.IsAlive)
+                    m_buildHistoricFileListThread.Join();
+
                 // Get a local copy of all the historic archive files.
                 List<Info> allHistoricFiles = null;
 
@@ -2630,27 +2794,26 @@ namespace TVA.Historian.Files
                     finally
                     {
                         historicArchiveFile.Dispose();
-                        historicArchiveFile = null;
                     }
                 }
-                else
-                {
-                    // We'll resolve to getting the file information from its name only if the file no longer exists
-                    // at the location. This will be the case when file is moved to a different location. In this
-                    // case the file information we provide is only as good as the file name.
-                    string datesString = FilePath.GetFileNameWithoutExtension(fileName).Substring((FilePath.GetFileNameWithoutExtension(m_fileName) + "_").Length);
-                    string[] fileStartEndDates = datesString.Split(new string[] { "_to_" }, StringSplitOptions.None);
+                //else
+                //{
+                //    // We'll resolve to getting the file information from its name only if the file no longer exists
+                //    // at the location. This will be the case when file is moved to a different location. In this
+                //    // case the file information we provide is only as good as the file name.
+                //    string datesString = FilePath.GetFileNameWithoutExtension(fileName).Substring((FilePath.GetFileNameWithoutExtension(m_fileName) + "_").Length);
+                //    string[] fileStartEndDates = datesString.Split(new string[] { "_to_" }, StringSplitOptions.None);
 
-                    fileInfo = new Info();
-                    fileInfo.FileName = fileName;
-                    if (fileStartEndDates.Length == 2)
-                    {
-                        fileInfo.StartTimeTag = new TimeTag(Convert.ToDateTime(fileStartEndDates[0].Replace('!', ':')));
-                        fileInfo.EndTimeTag = new TimeTag(Convert.ToDateTime(fileStartEndDates[1].Replace('!', ':')));
-                    }
-                }
+                //    fileInfo = new Info();
+                //    fileInfo.FileName = fileName;
+                //    if (fileStartEndDates.Length == 2)
+                //    {
+                //        fileInfo.StartTimeTag = new TimeTag(Convert.ToDateTime(fileStartEndDates[0].Replace('!', ':')));
+                //        fileInfo.EndTimeTag = new TimeTag(Convert.ToDateTime(fileStartEndDates[1].Replace('!', ':')));
+                //    }
+                //}
             }
-            catch (Exception)
+            catch
             {
 
             }
@@ -2662,32 +2825,33 @@ namespace TVA.Historian.Files
 
         #region [ Find Predicates ]
 
-        private bool FindHistoricArchiveFileForRead(Info fileInfo)
+        private bool FindHistoricArchiveFileForRead(Info fileInfo, TimeTag startTime, TimeTag endTime)
         {
-            return (fileInfo != null && ((m_readSearchStartTimeTag.CompareTo(fileInfo.StartTimeTag) >= 0 && m_readSearchStartTimeTag.CompareTo(fileInfo.EndTimeTag) <= 0) ||
-                                         (m_readSearchEndTimeTag.CompareTo(fileInfo.StartTimeTag) >= 0 && m_readSearchEndTimeTag.CompareTo(fileInfo.EndTimeTag) <= 0) ||
-                                         (m_readSearchStartTimeTag.CompareTo(fileInfo.StartTimeTag) < 0 && m_readSearchEndTimeTag.CompareTo(fileInfo.EndTimeTag) > 0)));
+            return ((object)fileInfo != null &&
+                ((startTime.CompareTo(fileInfo.StartTimeTag) >= 0 && startTime.CompareTo(fileInfo.EndTimeTag) <= 0) ||
+                (endTime.CompareTo(fileInfo.StartTimeTag) >= 0 && endTime.CompareTo(fileInfo.EndTimeTag) <= 0) ||
+                (startTime.CompareTo(fileInfo.StartTimeTag) < 0 && endTime.CompareTo(fileInfo.EndTimeTag) > 0)));
         }
 
-        private bool FindHistoricArchiveFileForWrite(Info fileInfo)
+        private bool FindHistoricArchiveFileForWrite(Info fileInfo, TimeTag searchTime)
         {
-            return (fileInfo != null &&
-                    m_writeSearchTimeTag.CompareTo(fileInfo.StartTimeTag) >= 0 &&
-                    m_writeSearchTimeTag.CompareTo(fileInfo.EndTimeTag) <= 0);
+            return ((object)fileInfo != null &&
+                    searchTime.CompareTo(fileInfo.StartTimeTag) >= 0 &&
+                    searchTime.CompareTo(fileInfo.EndTimeTag) <= 0);
         }
 
-        private bool IsNewHistoricArchiveFile(Info fileInfo)
+        private bool IsNewHistoricArchiveFile(Info fileInfo, string fileName)
         {
-            return (fileInfo != null &&
-                    string.Compare(FilePath.GetDirectoryName(m_fileName), FilePath.GetDirectoryName(fileInfo.FileName), true) == 0);
+            return ((object)fileInfo != null &&
+                    string.Compare(FilePath.GetDirectoryName(fileName), FilePath.GetDirectoryName(fileInfo.FileName), true) == 0);
         }
 
-        private bool IsOldHistoricArchiveFile(Info fileInfo)
-        {
-            return (fileInfo != null &&
-                    !string.IsNullOrEmpty(m_archiveOffloadLocation) &&
-                    string.Compare(FilePath.GetDirectoryName(m_archiveOffloadLocation), FilePath.GetDirectoryName(fileInfo.FileName), true) == 0);
-        }
+        //private bool IsOldHistoricArchiveFile(Info fileInfo)
+        //{
+        //    return ((object)fileInfo != null &&
+        //            !string.IsNullOrEmpty(m_archiveOffloadLocation) &&
+        //            string.Compare(FilePath.GetDirectoryName(m_archiveOffloadLocation), FilePath.GetDirectoryName(fileInfo.FileName), true) == 0);
+        //}
 
         #endregion
 
@@ -2759,7 +2923,7 @@ namespace TVA.Historian.Files
                                     dataPoint.Quality = Quality.Good;
                                 break;
                             case DataType.Digital:
-                                if (dataPoint.Value == metadata.DigitalFields.AlarmState)
+                                if ((int)dataPoint.Value == metadata.DigitalFields.AlarmState)
                                     dataPoint.Quality = Quality.LogicalAlarm;
                                 else
                                     dataPoint.Quality = Quality.Good;
@@ -3036,8 +3200,8 @@ namespace TVA.Historian.Files
 
         private void WriteToHistoricArchiveFile(IDataPoint[] items)
         {
+            // Wait until the historic file list has been built.
             if (m_buildHistoricFileListThread.IsAlive)
-                // Wait until the historic file list has been built.
                 m_buildHistoricFileListThread.Join();
 
             Dictionary<int, List<IDataPoint>> sortedPointData = new Dictionary<int, List<IDataPoint>>();
@@ -3067,10 +3231,10 @@ namespace TVA.Historian.Files
                         {
                             // We'll try to find a historic file when the current point data belongs.
                             Info historicFileInfo;
-                            m_writeSearchTimeTag = sortedPointData[pointID][i].Time;
+
                             lock (m_historicArchiveFiles)
                             {
-                                historicFileInfo = m_historicArchiveFiles.Find(FindHistoricArchiveFileForWrite);
+                                historicFileInfo = m_historicArchiveFiles.Find(info => FindHistoricArchiveFileForWrite(info, sortedPointData[pointID][i].Time));
                             }
 
                             if (historicFileInfo != null)
@@ -3127,7 +3291,6 @@ namespace TVA.Historian.Files
                         try
                         {
                             historicFile.Dispose();
-                            historicFile = null;
                         }
                         catch
                         {
@@ -3165,7 +3328,7 @@ namespace TVA.Historian.Files
                     if ((m_dataBlocks[i] != null) && !(m_dataBlocks[i].IsActive))
                     {
                         m_dataBlocks[i] = null;
-                        Trace.WriteLine(string.Format("Inactive block for Point ID {0} disposed", i + 1));
+                        //Trace.WriteLine(string.Format("Inactive block for Point ID {0} disposed", i + 1));
                     }
                 }
             }
@@ -3277,7 +3440,7 @@ namespace TVA.Historian.Files
                         if (historicFileListUpdated)
                             OnHistoricFileListUpdated();
                     }
-                    catch (Exception)
+                    catch
                     {
                         // Ignore any exception we might encounter here if an archive file being renamed to a
                         // historic archive file. This might happen if someone is renaming files manually.
@@ -3301,7 +3464,7 @@ namespace TVA.Historian.Files
                         if (historicFileListUpdated)
                             OnHistoricFileListUpdated();
                     }
-                    catch (Exception)
+                    catch
                     {
                         // Ignore any exception we might encounter if a historic archive file is being renamed to
                         // something else. This might happen if someone is renaming files manually.

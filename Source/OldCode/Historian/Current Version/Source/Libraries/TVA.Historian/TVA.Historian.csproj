@@ -130,6 +130,7 @@
     </Compile>
     <Compile Include="Files\ArchiveFileAllocationTable.cs" />
     <Compile Include="Files\ArchiveFileStatistics.cs" />
+    <Compile Include="Files\ArchiveReader.cs" />
     <Compile Include="Files\IntercomFile.cs" />
     <Compile Include="Files\IntercomRecord.cs" />
     <Compile Include="Files\MetadataFile.cs" />

@@ -5388,7 +5388,7 @@
                         ArchiveMeasurement(measurement);
                     }
                 }
-                catch (Exception)
+                catch
                 {                
                     // So long as user hasn't requested to stop, restart connection cycle
                     if (Enabled)

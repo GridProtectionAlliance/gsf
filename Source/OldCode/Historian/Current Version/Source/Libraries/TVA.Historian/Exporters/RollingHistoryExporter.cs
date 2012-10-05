@@ -233,7 +233,7 @@ namespace TVA.Historian.Exporters
                         {
                             history.Rows.Add(newData.ItemArray);
                         }
-                        catch (Exception)
+                        catch
                         {
                             // Exception is encountered if duplicate data is inserted.
                             AddDummyData(history, newData);

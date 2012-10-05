@@ -31,6 +31,8 @@
 //  12/18/2011 - J. Ritchie Carroll
 //       Set likely default archive locations on initial startup and added check box to allow append to
 //       or overwrite modes on file based exports.
+//  09/29/2012 - J. Ritchie Carroll
+//       Updated to code to use roll-over yielding ArchiveReader.
 //
 //******************************************************************************************************
 
@@ -86,10 +88,6 @@ namespace HistorianPlaybackUtility
         }
 
         // Constants
-        private const string ArchiveFileName = "{0}{1}_archive.d";
-        private const string MetadataFileName = "{0}{1}_dbase.dat";
-        private const string StateFileName = "{0}{1}_startup.dat";
-        private const string IntercomFileName = "{0}scratch.dat";
         private const string WatermarkText = "Enter search phrase";
 
         // Fields
@@ -98,10 +96,8 @@ namespace HistorianPlaybackUtility
         private long m_transmitCompletes;
         private long m_transmitExceptions;
         private List<Thread> m_activeThreads;
-        private ArchiveFile m_archiveFile;
+        private ArchiveReader m_archiveReader;
         private IClient m_transmitClient;
-        private System.Timers.Timer m_rolloverWatcher;
-        private ManualResetEvent m_rolloverWaitHandle;
         private string m_lastSelectedArchiveLocation;
 
         #endregion
@@ -142,23 +138,13 @@ namespace HistorianPlaybackUtility
 
             // Initialize member variables.
             m_activeThreads = new List<Thread>();
-            m_archiveFile = new ArchiveFile();
-            m_archiveFile.StateFile = new StateFile();
-            m_archiveFile.StateFile.FileAccessMode = FileAccess.Read;
-            m_archiveFile.IntercomFile = new IntercomFile();
-            m_archiveFile.IntercomFile.FileAccessMode = FileAccess.Read;
-            m_archiveFile.MetadataFile = new MetadataFile();
-            m_archiveFile.MetadataFile.FileAccessMode = FileAccess.Read;
-            m_archiveFile.FileAccessMode = FileAccess.Read;
-            m_archiveFile.HistoricFileListBuildStart += ArchiveFile_HistoricFileListBuildStart;
-            m_archiveFile.HistoricFileListBuildComplete += ArchiveFile_HistoricFileListBuildComplete;
-            m_archiveFile.HistoricFileListBuildException += ArchiveFile_HistoricFileListBuildException;
-            m_archiveFile.DataReadException += ArchiveFile_DataReadException;
-            m_rolloverWatcher = new System.Timers.Timer();
-            m_rolloverWatcher.Interval = 1000;
-            m_rolloverWatcher.Elapsed += RollverWatcher_Elapsed;
-            m_rolloverWatcher.Start();
-            m_rolloverWaitHandle = new ManualResetEvent(true);
+            m_archiveReader = new ArchiveReader();
+            m_archiveReader.RolloverStart += m_archiveReader_RolloverStart;
+            m_archiveReader.RolloverComplete += m_archiveReader_RolloverComplete;
+            m_archiveReader.HistoricFileListBuildStart += m_archiveReader_HistoricFileListBuildStart;
+            m_archiveReader.HistoricFileListBuildComplete += m_archiveReader_HistoricFileListBuildComplete;
+            m_archiveReader.HistoricFileListBuildException += m_archiveReader_HistoricFileListBuildException;
+            m_archiveReader.DataReadException += m_archiveReader_DataReadException;
             m_lastSelectedArchiveLocation = ConfigurationFile.Current.Settings.General["ArchiveLocation", true].ValueAs("");
 
             // If last selected archive is not defined, try to a few default selections
@@ -292,7 +278,7 @@ namespace HistorianPlaybackUtility
                     }
 
                     ShowUpdateMessage("Reading measurements...");
-                    IEnumerable<IDataPoint> data = m_archiveFile.ReadData(historianIDs, startTime, endTime);
+                    IEnumerable<IDataPoint> data = m_archiveReader.ReadData(historianIDs, startTime, endTime);
 
                     int count = 0;
                     byte[] buffer = null;
@@ -304,10 +290,6 @@ namespace HistorianPlaybackUtility
                         {
                             m_transmitClient.SendAsync(new PacketType1(sample).BinaryImage(), 0, PacketType1.FixedLength);
                             count++;
-
-                            // Abort for rollover, when needed
-                            if (!m_rolloverWaitHandle.WaitOne(0))
-                                break;
 
                             // Sleep for throttling, if requested
                             if (sleepTime > 0)
@@ -336,10 +318,6 @@ namespace HistorianPlaybackUtility
 
                             m_transmitClient.SendAsync(buffer, 0, buffer.Length);
                             count++;
-
-                            // Abort for rollover, when needed
-                            if (!m_rolloverWaitHandle.WaitOne(0))
-                                break;
 
                             // Sleep for throttling, if requested
                             if (sleepTime > 0)
@@ -463,27 +441,23 @@ namespace HistorianPlaybackUtility
                 ConfigurationFile.Current.Save();
             }
 
-            if (m_rolloverWatcher != null)
-                m_rolloverWatcher.Dispose();
+            if (m_archiveReader.StateFile != null)
+                m_archiveReader.StateFile.Dispose();
 
-            if (m_rolloverWaitHandle != null)
-                m_rolloverWaitHandle.Close();
+            if (m_archiveReader.IntercomFile != null)
+                m_archiveReader.IntercomFile.Dispose();
 
-            if (m_archiveFile.StateFile != null)
-                m_archiveFile.StateFile.Dispose();
+            if (m_archiveReader.MetadataFile != null)
+                m_archiveReader.MetadataFile.Dispose();
 
-            if (m_archiveFile.IntercomFile != null)
-                m_archiveFile.IntercomFile.Dispose();
-
-            if (m_archiveFile.MetadataFile != null)
-                m_archiveFile.MetadataFile.Dispose();
-
-            if (m_archiveFile != null)
+            if (m_archiveReader != null)
             {
-                m_archiveFile.HistoricFileListBuildStart -= ArchiveFile_HistoricFileListBuildStart;
-                m_archiveFile.HistoricFileListBuildComplete -= ArchiveFile_HistoricFileListBuildComplete;
-                m_archiveFile.DataReadException -= ArchiveFile_DataReadException;
-                m_archiveFile.Dispose();
+                m_archiveReader.RolloverStart -= m_archiveReader_RolloverStart;
+                m_archiveReader.RolloverComplete -= m_archiveReader_RolloverComplete;
+                m_archiveReader.HistoricFileListBuildStart -= m_archiveReader_HistoricFileListBuildStart;
+                m_archiveReader.HistoricFileListBuildComplete -= m_archiveReader_HistoricFileListBuildComplete;
+                m_archiveReader.DataReadException -= m_archiveReader_DataReadException;
+                m_archiveReader.Dispose();
             }
 
             this.SaveLayout();
@@ -510,34 +484,30 @@ namespace HistorianPlaybackUtility
                 try
                 {
                     this.Cursor = Cursors.WaitCursor;
-                    // This issue has been raised in the Fortify report,And we dont see any security issue with it.
+
                     string[] matches = Directory.GetFiles(ArchiveLocationInput.Text, "*_archive.d");
+
                     if (matches.Length > 0)
                     {
-                        // Capture the instance name.
-                        string folder = FilePath.GetDirectoryName(matches[0]);
-                        string instance = FilePath.GetFileName(matches[0]).Split('_')[0];
-
-                        // Capture active archive.
-                        m_archiveFile.FileName = matches[0];
-                        m_archiveFile.StateFile.FileName = string.Format(StateFileName, folder, instance);
-                        m_archiveFile.IntercomFile.FileName = string.Format(IntercomFileName, folder);
-                        m_archiveFile.MetadataFile.FileName = string.Format(MetadataFileName, folder, instance);
-
-                        // Open the active archive.
-                        m_archiveFile.Open();
+                        // Open the active archive
+                        m_archiveReader.Open(matches[0]);
 
                         MetadataRecord definition;
                         List<string> previousSelection = new List<string>(ConfigurationFile.Current.Settings.General["Selection", true].ValueAs("").Split(','));
+
                         IDInput.Items.Clear();
-                        for (int i = 1; i <= m_archiveFile.MetadataFile.RecordsOnDisk; i++)
+
+                        for (int i = 1; i <= m_archiveReader.MetadataFile.RecordsOnDisk; i++)
                         {
-                            definition = m_archiveFile.MetadataFile.Read(i);
+                            definition = m_archiveReader.MetadataFile.Read(i);
+
                             if (definition.GeneralFlags.Enabled)
                             {
                                 IDInput.Items.Add(new Metadata(definition));
+
                                 if (previousSelection.Contains(definition.HistorianID.ToString()))
                                     IDInput.SetItemChecked(IDInput.Items.Count - 1, true);
+
                                 Application.DoEvents();
                             }
                         }
@@ -583,7 +553,9 @@ namespace HistorianPlaybackUtility
                 int.TryParse(searchPhrase, out pointID);
 
                 this.Cursor = Cursors.WaitCursor;
+
                 ShowUpdateMessage("Searching for points matching \"{0}\"...", searchPhrase);
+
                 for (int i = 0; i < IDInput.Items.Count; i++)
                 {
                     definition = (Metadata)IDInput.Items[i];
@@ -594,6 +566,7 @@ namespace HistorianPlaybackUtility
                         IDInput.SetItemChecked(i, true);
                     }
                 }
+
                 ShowUpdateMessage("Found {0} point(s) matching \"{1}\".", IDInput.CheckedIndices.Count, searchPhrase);
             }
             catch (Exception ex)
@@ -624,6 +597,7 @@ namespace HistorianPlaybackUtility
         {
             // Validate selection.
             MessagesOutput.Clear();
+
             if (IDInput.CheckedIndices.Count == 0)
             {
                 ShowUpdateMessage("No points selected for processing.");
@@ -648,8 +622,10 @@ namespace HistorianPlaybackUtility
 
                 // Create new client.
                 ShowUpdateMessage("Initializing client...");
+
                 List<object> state = new List<object>();
                 Dictionary<int, Metadata> metadata = new Dictionary<int, Metadata>();
+
                 state.Add(null);
                 state.Add(startTime);
                 state.Add(endTime);
@@ -657,9 +633,11 @@ namespace HistorianPlaybackUtility
                 state.Add(OutputPlainTextDataFormat.Text);
                 state.Add(int.Parse(ProcessDataAtIntervalSampleRate.Text));
                 state.Add(metadata);
+
                 m_transmitStarts = 0;
                 m_transmitCompletes = 0;
                 m_transmitExceptions = 0;
+
                 switch (OutputChannelTabs.SelectedIndex)
                 {
                     case 0: // TCP
@@ -677,14 +655,17 @@ namespace HistorianPlaybackUtility
                         m_transmitClient = ClientBase.Create(string.Format("Protocol=Serial;Port={0};BaudRate={1};Parity={2};StopBits={3};DataBits={4};DtrEnable={5};RtsEnable={6}", SerialPortInput.Text, SerialBaudRateInput.Text, SerialParityInput.Text, SerialStopBitsInput.Text, SerialDataBitsInput.Text, SerialDtrEnable.Checked, SerialRtsEnable.Checked));
                         break;
                 }
+
                 m_transmitClient.MaxConnectionAttempts = 10;
                 m_transmitClient.SendDataStart += m_transmitClient_SendDataStart;
                 m_transmitClient.SendDataComplete += m_transmitClient_SendDataComplete;
                 m_transmitClient.SendDataException += m_transmitClient_SendDataException;
+
                 ShowUpdateMessage("Client initialized.");
 
                 // Connect the newly created client.
                 ShowUpdateMessage("Connecting client...");
+
                 m_transmitClient.Connect();
 
                 if (m_transmitClient.CurrentState == ClientState.Connected)
@@ -775,50 +756,34 @@ namespace HistorianPlaybackUtility
             OutputPlainTextDataFormat.Enabled = true;
         }
 
-        private void ArchiveFile_HistoricFileListBuildStart(object sender, EventArgs e)
+        private void m_archiveReader_HistoricFileListBuildStart(object sender, EventArgs e)
         {
             ShowUpdateMessage("Building list of historic archive files...");
         }
 
-        private void ArchiveFile_HistoricFileListBuildComplete(object sender, EventArgs e)
+        private void m_archiveReader_HistoricFileListBuildComplete(object sender, EventArgs e)
         {
             ShowUpdateMessage("Completed building list of historic archive files.");
         }
 
-        private void ArchiveFile_HistoricFileListBuildException(object sender, EventArgs<Exception> e)
+        private void m_archiveReader_HistoricFileListBuildException(object sender, EventArgs<Exception> e)
         {
             ShowUpdateMessage(e.Argument.Message);
         }
 
-        private void ArchiveFile_DataReadException(object sender, TVA.EventArgs<Exception> e)
+        private void m_archiveReader_DataReadException(object sender, TVA.EventArgs<Exception> e)
         {
             ShowUpdateMessage("Exception encountered during data read: " + e.Argument.Message);
         }
 
-        private void RollverWatcher_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_archiveReader_RolloverStart(object sender, EventArgs e)
         {
-            if (m_archiveFile.IntercomFile.IsOpen)
-            {
-                IntercomRecord record = m_archiveFile.IntercomFile.Read(1);
+            ShowUpdateMessage("Archive rollover in progress...");
+        }
 
-                if (record != null)
-                {
-                    // Pause processing.
-                    if (record.RolloverInProgress && m_archiveFile.IsOpen)
-                    {
-                        m_rolloverWaitHandle.Reset();
-                        m_archiveFile.Close();
-                        ShowUpdateMessage("Archive rollover in progress...");
-                    }
-                    // Resume processing.
-                    if (!record.RolloverInProgress && !m_archiveFile.IsOpen)
-                    {
-                        m_archiveFile.Open();
-                        m_rolloverWaitHandle.Set();
-                        ShowUpdateMessage("Archive rollover complete!");
-                    }
-                }
-            }
+        private void m_archiveReader_RolloverComplete(object sender, EventArgs e)
+        {
+            ShowUpdateMessage("Archive rollover complete.");
         }
 
         private void m_transmitClient_SendDataStart(object sender, EventArgs e)
@@ -830,7 +795,6 @@ namespace HistorianPlaybackUtility
         {
             m_transmitCompletes++;
         }
-
 
         private void m_transmitClient_SendDataException(object sender, EventArgs<Exception> e)
         {
