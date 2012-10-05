@@ -41,6 +41,23 @@ namespace TimeSeriesFramework.UI.UserControls
     {
         #region [ Members ]
 
+        // Events
+
+        /// <summary>
+        /// Event triggered whenever the current page changes.
+        /// </summary>
+        public event EventHandler CurrentPageChanged;
+
+        /// <summary>
+        /// Event triggered whenever the currently highlighted item changes.
+        /// </summary>
+        public event EventHandler CurrentItemChanged;
+
+        /// <summary>
+        /// Event triggered whenever the set of selected measurements changes.
+        /// </summary>
+        public event EventHandler SelectedMeasurementsChanged;
+
         // Fields
         private Measurements m_dataContext;
         private ISet<Guid> m_selectedMeasurements;
@@ -161,6 +178,17 @@ namespace TimeSeriesFramework.UI.UserControls
         }
 
         /// <summary>
+        /// Gets the current page of measurements in the measurement pager.
+        /// </summary>
+        public ObservableCollection<DataModels.Measurement> CurrentPage
+        {
+            get
+            {
+                return m_dataContext.ItemsSource;
+            }
+        }
+
+        /// <summary>
         /// Gets the currently highlighted item on the data grid.
         /// </summary>
         public DataModels.Measurement CurrentItem
@@ -232,6 +260,7 @@ namespace TimeSeriesFramework.UI.UserControls
             SelectedMeasurements.Clear();
             m_dataContext.Load();
             UpdateSelections();
+            OnSelectedMeasurementsChanged();
         }
 
         /// <summary>
@@ -348,6 +377,7 @@ namespace TimeSeriesFramework.UI.UserControls
             // Hide the hyperlink and update selections
             SelectAllHyperlink.Visibility = Visibility.Collapsed;
             UpdateSelections();
+            OnSelectedMeasurementsChanged();
         }
 
         // Selects/unselects all the measurements on the current page.
@@ -384,6 +414,7 @@ namespace TimeSeriesFramework.UI.UserControls
             }
 
             UpdateSelections();
+            OnSelectedMeasurementsChanged();
         }
 
         // Selects the mesurement that the user clicked on.
@@ -411,6 +442,7 @@ namespace TimeSeriesFramework.UI.UserControls
 
             // Hide hyperlink because user has deliberately ignored it
             SelectAllHyperlink.Visibility = Visibility.Collapsed;
+            OnSelectedMeasurementsChanged();
         }
 
         // Receives notification any time the data grid is loading a row.
@@ -475,8 +507,15 @@ namespace TimeSeriesFramework.UI.UserControls
         // Sorts the current page of the data grid each time the view model's ItemsSource is modified.
         private void ViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == "ItemsSource")
+            if (e.PropertyName == "CurrentItem")
+            {
+                OnCurrentItemChanged();
+            }
+            else if (e.PropertyName == "ItemsSource")
+            {
                 Dispatcher.BeginInvoke(new Action(SortDataGrid));
+                OnCurrentPageChanged();
+            }
         }
 
         // Sorts the current page of the data grid.
@@ -516,6 +555,27 @@ namespace TimeSeriesFramework.UI.UserControls
             }
 
             return null;
+        }
+
+        // Triggers the CurrentPageChanged event.
+        private void OnCurrentPageChanged()
+        {
+            if ((object)CurrentPageChanged != null)
+                CurrentPageChanged(this, EventArgs.Empty);
+        }
+
+        // Triggers the CurrentItemChanged event.
+        private void OnCurrentItemChanged()
+        {
+            if ((object)CurrentItemChanged != null)
+                CurrentItemChanged(this, EventArgs.Empty);
+        }
+
+        // Triggers the SelectedMeasurementsChanged event.
+        private void OnSelectedMeasurementsChanged()
+        {
+            if ((object)SelectedMeasurementsChanged != null)
+                SelectedMeasurementsChanged(this, EventArgs.Empty);
         }
 
         #endregion
