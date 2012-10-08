@@ -282,7 +282,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 if ((object)Keys != null && Keys.Count > 0)
                 {
-                    commaSeparatedKeys = Keys.Select(key => "'" + key.ToString() + "'").Aggregate((str1, str2) => str1 + "," + str2);
+                    commaSeparatedKeys = Keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
                     query = string.Format("SELECT * FROM VendorDeviceDetail WHERE ID IN ({0})", commaSeparatedKeys);
                     vendorDeviceTable = database.Connection.RetrieveData(database.AdapterType, query);
 

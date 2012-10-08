@@ -295,7 +295,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 if ((object)Keys != null && Keys.Count > 0)
                 {
-                    commaSeparatedKeys = Keys.Select(key => "'" + key.ToString() + "'").Aggregate((str1, str2) => str1 + "," + str2);
+                    commaSeparatedKeys = Keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
                     query = string.Format("SELECT ID, Acronym, Name, PhoneNumber, ContactEmail, URL " +
                               "FROM VendorDetail WHERE ID IN ({0})", commaSeparatedKeys);
                     vendorTable = database.Connection.RetrieveData(database.AdapterType, query);
