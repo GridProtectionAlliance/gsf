@@ -65,7 +65,7 @@
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     
                     <Grid.RowDefinitions>
@@ -74,9 +74,9 @@
                     </Grid.RowDefinitions>
                     
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Search Directory" />
-                    <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
+                    <StackPanel Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Orientation="Horizontal">
                         <TextBox DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}, Path=DataContext}"
-                                 Name="SearchDirectoryTextBox" Text="{tsfBinding:Column Path=SearchDirectory}" Width="395"/>
+                                 Name="SearchDirectoryTextBox" Text="{tsfBinding:Column Path=SearchDirectory}" Width="525" />
                         <Button Click="Browse_Click" Width="Auto" ToolTip="Browse">
                             <Button.Template>
                                 <ControlTemplate>
@@ -86,7 +86,7 @@
                         </Button>
                     </StackPanel>
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Type" />
-                    <ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" ItemsSource="{Binding Source={StaticResource AdapterTypeList}}" DisplayMemberPath="Value" HorizontalContentAlignment="Left" Width="430"
+                    <ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" ItemsSource="{Binding Source={StaticResource AdapterTypeList}}" DisplayMemberPath="Value" HorizontalContentAlignment="Left" Width="560"
                               SelectedItem="{tsfBinding:Column Path=TypeName, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource AdapterTypeList}}" />
                 </Grid>
             </GroupBox>
@@ -106,7 +106,7 @@
                     
                     <TextBlock Text="Parameters" VerticalAlignment="Top" Grid.Row="0" Grid.Column="0" />
                     
-                    <ListBox Grid.Row="0" Grid.Column="1" Width="{StaticResource LargerItemSize}" Height="{StaticResource XSmallItemSize}" HorizontalContentAlignment="Stretch"
+                    <ListBox Grid.Row="0" Grid.Column="1" Width="{StaticResource XLargeItemSize}" Height="{StaticResource XSmallItemSize}" HorizontalContentAlignment="Stretch"
                              Name="ParameterListBox" ItemsSource="{Binding Source={StaticResource ParameterList}}" SelectedItem="{Binding Path=SelectedParameter}"
                              DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}, Path=DataContext}" ScrollViewer.VerticalScrollBarVisibility="Auto"
                              ScrollViewer.HorizontalScrollBarVisibility="Auto">
@@ -132,7 +132,7 @@
                             <CollectionViewSource Source="{Binding Path=EnumValues}" x:Key="EnumValues" />
                         </StackPanel.Resources>
                         
-                        <TextBox Name="ParameterValueTextBox" Height="{StaticResource XSmallItemSize}" Text="{tsfBinding:Column Path=Value}" TextWrapping="Wrap"
+                        <TextBox Name="ParameterValueTextBox" Width="{StaticResource XLargeItemSize}" Height="{StaticResource XSmallItemSize}" Text="{tsfBinding:Column Path=Value}" TextWrapping="Wrap"
                                  Visibility="{Binding Path=IsOther, Converter={StaticResource ObjectToVisibilityConverter}}" VerticalScrollBarVisibility="Auto"/>
                         
                         <StackPanel>
@@ -159,7 +159,7 @@
                         </StackPanel>
                     </StackPanel>
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Connection String" VerticalAlignment="Top" />
-                    <TextBox Grid.Row="1" Grid.Column="1"  Grid.ColumnSpan="3" Width="450" Height="{StaticResource XSmallItemSize}"
+                    <TextBox Grid.Row="1" Grid.Column="1"  Grid.ColumnSpan="3" Width="Auto" Height="{StaticResource XSmallItemSize}" HorizontalAlignment="Stretch"
                              Text="{tsfBinding:Column Path=ConnectionString}" TextWrapping="Wrap" ScrollViewer.VerticalScrollBarVisibility="Visible" />
                 </Grid>
             </GroupBox>
