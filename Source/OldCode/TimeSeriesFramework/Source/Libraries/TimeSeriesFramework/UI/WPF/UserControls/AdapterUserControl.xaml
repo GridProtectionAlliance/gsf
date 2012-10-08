@@ -54,7 +54,7 @@
                 <TextBlock Text="Name" Style="{StaticResource RequiredLabel}" />
                 <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
-            <TextBox Grid.Row="0" Grid.Column="1" Text="{tsfBinding:Column Path=AdapterName}" MaxLength="50"/>
+            <TextBox Grid.Row="0" Grid.Column="1" CharacterCasing="Upper" Text="{tsfBinding:Column Path=AdapterName}" MaxLength="50"/>
                 
             <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="2" HorizontalAlignment="Right">
                 <TextBlock Text="Load Order" Style="{StaticResource RequiredLabel}" />

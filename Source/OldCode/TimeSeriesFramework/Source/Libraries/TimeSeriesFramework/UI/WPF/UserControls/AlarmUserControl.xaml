@@ -73,7 +73,7 @@
                 <TextBlock Text="Tag Name" Style="{StaticResource RequiredLabel}" />
                 <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
-            <TextBox Grid.Row="0" Grid.Column="1" Text="{tsfBinding:Column Path=TagName}" Width="{StaticResource ItemSize}" />
+            <TextBox Grid.Row="0" Grid.Column="1" CharacterCasing="Upper" Text="{tsfBinding:Column Path=TagName}" Width="{StaticResource ItemSize}" />
             
             <TextBlock Text="Signal" Grid.Row="1" Grid.Column="0" />
             <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Orientation="Horizontal">

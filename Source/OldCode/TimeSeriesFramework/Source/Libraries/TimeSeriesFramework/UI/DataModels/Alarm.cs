@@ -120,6 +120,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets <see cref="Alarm"/> TagName
         /// </summary>
         [Required(ErrorMessage = " Alarm tag name is a required field, please select a value.")]
+        [RegularExpression("^[A-Z0-9-'!'_'@#\\$]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' and '$' are allowed.")]
         public string TagName
         {
             get
