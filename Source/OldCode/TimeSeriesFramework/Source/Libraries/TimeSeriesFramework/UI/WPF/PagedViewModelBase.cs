@@ -793,7 +793,9 @@ namespace TimeSeriesFramework.UI
 
                     TPrimaryKey currentItemKey = GetCurrentItemKey();
                     string result = (string)s_deleteRecord.Invoke(this, new object[] { (AdoDataConnection)null, currentItemKey });
-                    m_itemsKeys.Remove(currentItemKey);
+
+                    if ((object)m_itemsKeys != null)
+                        m_itemsKeys.Remove(currentItemKey);
 
                     OnDeleted();
 
