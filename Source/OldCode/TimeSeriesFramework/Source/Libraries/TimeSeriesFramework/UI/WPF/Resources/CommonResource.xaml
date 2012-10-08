@@ -380,13 +380,26 @@
     <Style TargetType="{x:Type ListBox}">
         <Setter Property="AlternationCount" Value="2"/>
     </Style>
-    
+
     <Style TargetType="{x:Type ListBoxItem}">
-        <Style.Triggers>
-            <Trigger Property="ItemsControl.AlternationIndex" Value="1">
-                <Setter Property="Background" Value="#FFDEE7EE"/>
-            </Trigger>
-        </Style.Triggers>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border Name="Border" Padding="2" SnapsToDevicePixels="true" Background="White" Margin="0">
+                        <ContentPresenter/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                            <Setter TargetName="Border" Property="Background" Value="#FFDEE7EE"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Border" Property="Background" Value="LightBlue"/>
+                            <Setter TargetName="Border" Property="BorderBrush" Value="#FF9EA7BF"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
     
     <util:MenuItemStyleSelector x:Key="MenuItemStyleSelector"/>
