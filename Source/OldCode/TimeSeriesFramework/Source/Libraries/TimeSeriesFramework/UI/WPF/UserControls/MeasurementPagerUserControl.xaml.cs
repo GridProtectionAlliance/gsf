@@ -249,7 +249,7 @@ namespace TimeSeriesFramework.UI.UserControls
                 }
             }
 
-            SelectedMeasurementsLabel.Content = string.Format("Selected Measurements: {0}", m_selectedMeasurements.Count);
+            SelectedMeasurementsLabel.Content = string.Format("Selected: {0}", m_selectedMeasurements.Count);
         }
 
         /// <summary>
