@@ -36,6 +36,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -1931,13 +1932,23 @@ namespace TimeSeriesFramework.Transport
                             {
                                 TransportProvider<Socket> client;
                                 Dictionary<string, string> settings = setting.ParseKeyValuePairs();
-                                string networkInterface;
+                                IPEndPoint localEndPoint = null;
+                                string networkInterface = "::0";
 
                                 // Make sure return interface matches incoming client connection
                                 if (m_commandChannel.TryGetClient(connection.ClientID, out client))
-                                    networkInterface = client.Provider.LocalEndPoint.ToString();
+                                    localEndPoint = client.Provider.LocalEndPoint as IPEndPoint;
                                 else
-                                    networkInterface = m_commandChannel.Server.LocalEndPoint.ToString();
+                                    localEndPoint = m_commandChannel.Server.LocalEndPoint as IPEndPoint;
+
+                                if ((object)localEndPoint != null)
+                                {
+                                    networkInterface = localEndPoint.Address.ToString();
+
+                                    // Remove dual-stack prefix
+                                    if (networkInterface.StartsWith("::ffff:", true, CultureInfo.InvariantCulture))
+                                        networkInterface = networkInterface.Substring(7);
+                                }
 
                                 if (settings.TryGetValue("port", out setting) || settings.TryGetValue("localport", out setting))
                                 {
