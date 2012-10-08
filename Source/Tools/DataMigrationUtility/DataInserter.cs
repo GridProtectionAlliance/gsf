@@ -15,7 +15,7 @@
 //  License for the specific language governing permissions and limitations.
 //
 //  Code Modification History:
-//  -----------------------------------------------------------------------------------------------------
+//  ----------------------------------------------------------------------------------------------------
 //  06/28/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
 //  08/21/2008 - Mihir Brahmbhatt

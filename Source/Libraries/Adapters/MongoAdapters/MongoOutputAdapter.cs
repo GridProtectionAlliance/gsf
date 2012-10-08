@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  Class1.cs - Gbtc
+//  MongoOutputAdapter.cs - Gbtc
 //
 //  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
 //
