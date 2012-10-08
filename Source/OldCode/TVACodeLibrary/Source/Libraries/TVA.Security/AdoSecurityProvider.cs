@@ -618,8 +618,9 @@ namespace TVA.Security
                     // Determine if user is LDAP or database authenticated
                     if (!UserData.IsExternal)
                     {
-                        // Authenticate against active directory (via LDAP base class)
-                        base.Authenticate(password);
+                        // Authenticate against active directory (via LDAP base class) - in context of ADO security
+                        // provisions, you are only authenticated if you are in a role!
+                        UserData.IsAuthenticated = (base.Authenticate(password) && UserData.Roles.Count > 0);
                     }
                     else
                     {
