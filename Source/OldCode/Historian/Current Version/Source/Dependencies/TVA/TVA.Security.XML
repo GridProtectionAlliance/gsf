@@ -436,6 +436,11 @@
             Gets or allows derived classes to set an authentication failure reason.
             </summary>
         </member>
+        <member name="P:TVA.Security.SecurityProviderBase.Initialized">
+            <summary>
+            Gets current intialization state.
+            </summary>
+        </member>
         <member name="F:TVA.Security.LdapSecurityProvider.ProviderID">
             <summary>
             Defines the provider ID for the <see cref="T:TVA.Security.LdapSecurityProvider"/>.
