@@ -671,6 +671,19 @@ namespace TVA.Data
         }
 
         /// <summary>
+        /// Returns proper LIKE expression for connected <see cref="AdoDataConnection"/> database type.
+        /// </summary>
+        /// <param name="expression">Expression to be converted to proper LIKE expression.</param>
+        /// <returns>Proper LIKE expression.</returns>
+        public string LikeExpression(string expression)
+        {
+            if (IsJetEngine)
+                return expression.Replace('%', '*');
+
+            return expression;
+        }
+
+        /// <summary>
         /// Returns proper <see cref="System.Guid"/> implementation for connected <see cref="AdoDataConnection"/> database type.
         /// </summary>
         /// <param name="guid"><see cref="System.Guid"/> to format per database type.</param>
