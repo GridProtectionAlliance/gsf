@@ -604,6 +604,18 @@ namespace TVA.Security
             }
         }
 
+        /// <summary>
+        /// Gets current intialization state.
+        /// </summary>
+        protected bool Initialized
+        {
+            get
+            {
+                return m_initialized;
+            }
+
+        }
+
         #endregion
 
         #region [ Methods ]

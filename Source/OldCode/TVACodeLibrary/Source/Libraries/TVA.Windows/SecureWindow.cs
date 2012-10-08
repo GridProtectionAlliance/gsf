@@ -348,14 +348,14 @@ namespace TVA.Windows
     /// <seealso cref="ISecurityProvider"/>
     public class SecureWindow : Window
     {
-    #region [ Members ]
+        #region [ Members ]
 
         // Fields
         private bool m_shutdownRequested;
 
-    #endregion
+        #endregion
 
-    #region [ Constructors ]
+        #region [ Constructors ]
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecureWindow"/> class.
@@ -365,9 +365,9 @@ namespace TVA.Windows
             this.Initialized += SecureWindow_Initialized;
         }
 
-    #endregion
+        #endregion
 
-    #region [ Properties ]
+        #region [ Properties ]
 
         /// <summary>
         /// Gets or sets flags to force login display.
@@ -414,9 +414,9 @@ namespace TVA.Windows
             }
         }
 
-    #endregion
+        #endregion
 
-    #region [ Methods ]
+        #region [ Methods ]
 
         /// <summary>
         /// Gets the name of resource being accessed.
@@ -463,11 +463,17 @@ namespace TVA.Windows
 
             ISecurityProvider provider = SecurityProviderCache.CurrentProvider;
 
+            if ((object)provider == null)
+            {
+                ShowSecurityDialog(DisplayType.AccessDenied, "Cannot authenticate users: Failed to load security provider, please check configuration.");
+                return;
+            }
+
             // Verify that the current thread principal has been authenticated
             if (!Thread.CurrentPrincipal.Identity.IsAuthenticated || ForceLoginDisplay)
             {
                 // See if user's password has expired
-                if (provider.UserData.PasswordChangeDateTime <= DateTime.UtcNow)
+                if (provider.UserData.IsDefined && provider.UserData.PasswordChangeDateTime <= DateTime.UtcNow)
                     ShowSecurityDialog(DisplayType.ChangePassword, string.Format("Your password has expired. {0} You must change your password to continue.", provider.AuthenticationFailureReason));
                 else
                     ShowSecurityDialog(DisplayType.Login);
@@ -524,9 +530,9 @@ namespace TVA.Windows
             }
         }
 
-    #endregion
+        #endregion
 
-    #region [ Static ]
+        #region [ Static ]
 
         // Static Fields
 
@@ -548,7 +554,7 @@ namespace TVA.Windows
         /// <returns>identifier for the <see cref="IncludedRoles"/> dependency property.</returns>
         public static readonly DependencyProperty IncludedRolesProperty = DependencyProperty.Register("IncludedRoles", typeof(string), typeof(SecureWindow), new PropertyMetadata("*"));
 
-    #endregion
+        #endregion
     }
 #endif
 }

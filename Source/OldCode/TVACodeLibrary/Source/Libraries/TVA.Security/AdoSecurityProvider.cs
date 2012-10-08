@@ -327,6 +327,7 @@ namespace TVA.Security
         public new const int ProviderID = 1;
 
         private Exception m_lastException;
+        private bool m_successfulPassThroughAuthentication;
 
         #endregion
 
@@ -590,6 +591,7 @@ namespace TVA.Security
             // Reset authenticated state and failure reason
             UserData.IsAuthenticated = false;
             AuthenticationFailureReason = null;
+            m_successfulPassThroughAuthentication = false;
 
             // Test for pre-authentication failure modes. Note that blank password should be allowed so that LDAP
             // can authenticate current credentials for pass through authentication, if desired.
@@ -631,16 +633,23 @@ namespace TVA.Security
                 }
             }
 
-            // Log user authentication result.
-            try
+            // Determine if user succeeded with pass-through authentication
+            m_successfulPassThroughAuthentication = (string.IsNullOrWhiteSpace(password) && UserData.IsAuthenticated);
+
+            // Log user authentication result if provider has completed initialization sequence or
+            // was successfully authenticated via pass-through authentication
+            if (Initialized || m_successfulPassThroughAuthentication)
             {
-                // Writing data will fail for read-only databases
-                LogAuthenticationAttempt(UserData.IsAuthenticated);
-            }
-            catch (Exception ex)
-            {
-                // All we can do is track last exception in this case
-                m_lastException = ex;
+                try
+                {
+                    // Writing data will fail for read-only databases
+                    LogAuthenticationAttempt(UserData.IsAuthenticated);
+                }
+                catch (Exception ex)
+                {
+                    // All we can do is track last exception in this case
+                    m_lastException = ex;
+                }
             }
 
             // If an exception occured during authentication, rethrow it after loging authentication attempt
@@ -746,9 +755,9 @@ namespace TVA.Security
         /// <returns>true if logging was successful, otherwise false.</returns>
         protected virtual bool LogAuthenticationAttempt(bool loginSuccess)
         {
-            if (UserData != null && UserData.IsDefined && !string.IsNullOrWhiteSpace(UserData.Username))
+            if (UserData != null && !string.IsNullOrWhiteSpace(UserData.Username))
             {
-                string message = string.Format("User \"{0}\" login attempt {1}.", UserData.Username, loginSuccess ? "succeeded" : "failed");
+                string message = string.Format("User \"{0}\" login attempt {1}.", UserData.Username, loginSuccess ? "succeeded using " + (m_successfulPassThroughAuthentication ? "pass-through authentication" : "user acquired password") : "failed");
                 EventLogEntryType entryType = loginSuccess ? EventLogEntryType.SuccessAudit : EventLogEntryType.FailureAudit;
 
                 // Suffix authentication failure reason on failed logins if available
