@@ -41,23 +41,12 @@ namespace TimeSeriesFramework.UI.UserControls
         public ProtocolGroupUserControl()
         {
             InitializeComponent();
-            this.Unloaded += new RoutedEventHandler(ProtocolGroupUserControl_Unloaded);
             this.DataContext = new Protocols(10);
         }
 
         #endregion
 
         #region [ Methods ]
-
-        /// <summary>
-        /// Handles unloaded event.
-        /// </summary>
-        /// <param name="sender">Source of the event.</param>
-        /// <param name="e">Arguments of the event.</param>
-        void ProtocolGroupUserControl_Unloaded(object sender, RoutedEventArgs e)
-        {
-            (this.DataContext as Protocols).ProcessPropertyChange();
-        }
 
         /// <summary>
         /// Handles key down event on the datagrid object.

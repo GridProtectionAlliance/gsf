@@ -51,7 +51,6 @@ namespace TimeSeriesFramework.UI.UserControls
         public AlarmUserControl()
         {
             InitializeComponent();
-            this.Unloaded += AlarmUserControl_Unloaded;
             m_dataContext = new ViewModels.Alarms(10);
             m_dataContext.PropertyChanged += new PropertyChangedEventHandler(ViewModel_PropertyChanged);
             this.DataContext = m_dataContext;
@@ -60,11 +59,6 @@ namespace TimeSeriesFramework.UI.UserControls
         #endregion
 
         #region [ Methods ]
-
-        private void AlarmUserControl_Unloaded(object sender, RoutedEventArgs e)
-        {
-            m_dataContext.ProcessPropertyChange();
-        }
 
         private void MeasurementPagerButton_Click(object sender, RoutedEventArgs e)
         {

@@ -54,7 +54,6 @@ namespace TimeSeriesFramework.UI.UserControls
         public AdapterUserControl(AdapterType adapterType)
         {
             InitializeComponent();
-            this.Unloaded += new RoutedEventHandler(AdapterUserControl_Unloaded);
             m_dataContext = new ViewModels.Adapters(7, adapterType);
             m_dataContext.PropertyChanged += new PropertyChangedEventHandler(ViewModel_PropertyChanged);
             this.DataContext = m_dataContext;
@@ -63,16 +62,6 @@ namespace TimeSeriesFramework.UI.UserControls
         #endregion
 
         #region [ Methods ]
-
-        /// <summary>
-        /// Handles unload event of the <see cref="AdapterUserControl"/>.
-        /// </summary>
-        /// <param name="sender">Source of the event.</param>
-        /// <param name="e">Argument of the event.</param>
-        private void AdapterUserControl_Unloaded(object sender, RoutedEventArgs e)
-        {
-            (this.DataContext as ViewModels.Adapters).ProcessPropertyChange();
-        }
 
         /// <summary>
         /// Handles PreviewKeyDown event on the datagrid.

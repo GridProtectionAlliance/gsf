@@ -53,7 +53,6 @@ namespace TimeSeriesFramework.UI.UserControls
         public VendorUserControl()
         {
             InitializeComponent();
-            this.Unloaded += new RoutedEventHandler(VendorUserControl_Unloaded);
             m_dataContext = new Vendors(25);
             m_dataContext.PropertyChanged += new PropertyChangedEventHandler(ViewModel_PropertyChanged);
             this.DataContext = m_dataContext;
@@ -62,16 +61,6 @@ namespace TimeSeriesFramework.UI.UserControls
         #endregion
 
         #region [ Methods ]
-
-        /// <summary>
-        /// Handles unload event of the <see cref="VendorUserControl"/>.
-        /// </summary>
-        /// <param name="sender">Source of the event.</param>
-        /// <param name="e">Arguments for the event.</param>
-        void VendorUserControl_Unloaded(object sender, RoutedEventArgs e)
-        {
-            m_dataContext.ProcessPropertyChange();
-        }
 
         /// <summary>
         /// Handles PreviewKeyDown event on the datagrid.
