@@ -580,9 +580,21 @@ namespace TimeSeriesFramework.UI.DataModels
                 if (!string.IsNullOrEmpty(searchText))
                 {
                     searchParam = string.Format("%{0}%", searchText);
-                    searchQuery = database.ParameterizedQueryString("UPPER(DESCRIPTION) LIKE UPPER({0}) OR DeviceID LIKE {0} OR UPPER(SignalReference) LIKE UPPER({0}) " +
-                        "OR UPPER(SignalAcronym) LIKE UPPER({0}) OR UPPER(SignalID) LIKE UPPER({0}) OR UPPER(PointTag) LIKE UPPER({0}) OR UPPER(CompanyName) LIKE UPPER({0}) " +
-                        "OR UPPER(CompanyAcronym) LIKE UPPER({0}) OR UPPER(DeviceAcronym) LIKE UPPER({0}) OR UPPER(SignalName) LIKE UPPER({0}) OR UPPER(ID) LIKE UPPER({0})", "searchParam");
+
+                    if (database.IsJetEngine)
+                    {
+                        // Access queries do not support UPPER but are case-insensitive anyway
+                        searchQuery = string.Format("DESCRIPTION LIKE '{0}' OR DeviceID LIKE '{0}' OR SignalReference LIKE '{0}' " +
+                            "OR SignalAcronym LIKE '{0}' OR SignalID LIKE '{0}' OR PointTag LIKE '{0}' OR CompanyName LIKE '{0}' " +
+                            "OR CompanyAcronym LIKE '{0}'OR DeviceAcronym LIKE '{0}' OR SignalName LIKE '{0}' OR ID LIKE '{0}'", searchParam.Replace("'", "''"));
+                    }
+                    else
+                    {
+                        searchQuery = database.ParameterizedQueryString("UPPER(DESCRIPTION) LIKE UPPER({0}) OR DeviceID LIKE {0} OR UPPER(SignalReference) LIKE UPPER({0}) " +
+                            "OR UPPER(SignalAcronym) LIKE UPPER({0}) OR UPPER(SignalID) LIKE UPPER({0}) OR UPPER(PointTag) LIKE UPPER({0}) OR UPPER(CompanyName) LIKE UPPER({0}) " +
+                            "OR UPPER(CompanyAcronym) LIKE UPPER({0}) OR UPPER(DeviceAcronym) LIKE UPPER({0}) OR UPPER(SignalName) LIKE UPPER({0}) OR UPPER(ID) LIKE UPPER({0})", "searchParam");
+                    }
+
                 }
 
                 if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
@@ -597,7 +609,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 else
                     query = string.Format("SELECT SignalID FROM MeasurementDetail {0}", sortClause);
 
-                parameters = !string.IsNullOrEmpty(searchText) ? new object[] { searchParam } : new object[0];
+                parameters = !string.IsNullOrEmpty(searchText) && !database.IsJetEngine ? new object[] { searchParam } : new object[0];
                 measurementTable = database.Connection.RetrieveData(database.AdapterType, query, parameters);
 
                 foreach (DataRow row in measurementTable.Rows)
