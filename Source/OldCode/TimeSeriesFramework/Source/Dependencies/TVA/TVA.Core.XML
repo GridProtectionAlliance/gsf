@@ -8533,13 +8533,6 @@
             <param name="value"><see cref="T:System.Boolean"/> to format per database type.</param>
             <returns>Proper <see cref="T:System.Boolean"/> implementation for connected <see cref="T:TVA.Data.AdoDataConnection"/> database type.</returns>
         </member>
-        <member name="M:TVA.Data.AdoDataConnection.LikeExpression(System.String)">
-            <summary>
-            Returns proper LIKE expression for connected <see cref="T:TVA.Data.AdoDataConnection"/> database type.
-            </summary>
-            <param name="expression">Expression to be converted to proper LIKE expression.</param>
-            <returns>Proper LIKE expression.</returns>
-        </member>
         <member name="M:TVA.Data.AdoDataConnection.Guid(System.Guid)">
             <summary>
             Returns proper <see cref="T:System.Guid"/> implementation for connected <see cref="T:TVA.Data.AdoDataConnection"/> database type.
