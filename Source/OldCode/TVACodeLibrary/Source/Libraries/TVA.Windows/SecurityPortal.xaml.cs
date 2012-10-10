@@ -481,15 +481,18 @@ namespace TVA.Windows
         /// <param name="message">Error message to display.</param>
         public void DisplayErrorMessage(string message)
         {
-            if (string.IsNullOrWhiteSpace(message))
+            if ((object)TextBlockGlobalMessage != null)
             {
-                TextBlockGlobalMessage.Text = "";
-                TextBlockGlobalMessage.Visibility = Visibility.Collapsed;
-            }
-            else
-            {
-                TextBlockGlobalMessage.Text = message;
-                TextBlockGlobalMessage.Visibility = Visibility.Visible;
+                if (string.IsNullOrWhiteSpace(message))
+                {
+                    TextBlockGlobalMessage.Text = "";
+                    TextBlockGlobalMessage.Visibility = Visibility.Collapsed;
+                }
+                else
+                {
+                    TextBlockGlobalMessage.Text = message;
+                    TextBlockGlobalMessage.Visibility = Visibility.Visible;
+                }
             }
         }
 
