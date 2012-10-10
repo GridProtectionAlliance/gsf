@@ -504,7 +504,7 @@ namespace TVA.Windows
             SecurityPortal securityDialog = new SecurityPortal(displayType);
 
             // Show authentication failure reason if one was defined and user didn't force another message
-            if (errorMessage == null)
+            if ((object)errorMessage == null && (object)SecurityProviderCache.CurrentProvider != null)
                 errorMessage = SecurityProviderCache.CurrentProvider.AuthenticationFailureReason;
 
             if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -518,7 +518,7 @@ namespace TVA.Windows
             {
                 // User chose to cancel security action. If the secure window has no parent,
                 // this is root window so exit application, otherwise just close the window
-                if (this.Owner == null)
+                if ((object)this.Owner == null)
                 {
                     m_shutdownRequested = true;
                     Application.Current.Shutdown();
