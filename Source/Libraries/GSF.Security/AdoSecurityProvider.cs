@@ -57,6 +57,7 @@ using GSF.Data;
 using System;
 using System.Configuration;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Security;
 using System.Text.RegularExpressions;
@@ -122,6 +123,7 @@ namespace GSF.Security
         public new const int ProviderID = 1;
 
         private Exception m_lastException;
+        private bool m_successfulPassThroughAuthentication;
 
         #endregion
 
@@ -380,65 +382,82 @@ namespace GSF.Security
         /// <returns>true if the user is authenticated, otherwise false.</returns>
         public override bool Authenticate(string password)
         {
-            AuthenticationFailureReason = null;
+            Exception authenticationException = null;
 
-            // Note that blank password should be allowed so that LDAP can authenticate current credentials for
-            // pass through authentication, if desired
+            // Reset authenticated state and failure reason
+            UserData.IsAuthenticated = false;
+            AuthenticationFailureReason = null;
+            m_successfulPassThroughAuthentication = false;
+
+            // Test for pre-authentication failure modes. Note that blank password should be allowed so that LDAP
+            // can authenticate current credentials for pass through authentication, if desired.
             if (!UserData.IsDefined)
             {
-                AuthenticationFailureReason = string.Format("User {0} is not defined.", UserData.LoginID);
-                return false;
+                AuthenticationFailureReason = string.Format("User \"{0}\" is not defined.", UserData.LoginID);
+            }
+            else if (UserData.IsDisabled)
+            {
+                AuthenticationFailureReason = string.Format("User \"{0}\" is disabled.", UserData.LoginID);
+            }
+            else if (UserData.IsLockedOut)
+            {
+                AuthenticationFailureReason = string.Format("User \"{0}\" is locked out.", UserData.LoginID);
+            }
+            else if (UserData.PasswordChangeDateTime != DateTime.MinValue && UserData.PasswordChangeDateTime <= DateTime.UtcNow)
+            {
+                AuthenticationFailureReason = string.Format("User \"{0}\" has an expired password or password has not been set.", UserData.LoginID);
+            }
+            else
+            {
+                try
+                {
+                    // Determine if user is LDAP or database authenticated
+                    if (!UserData.IsExternal)
+                    {
+                        // Authenticate against active directory (via LDAP base class) - in context of ADO security
+                        // provisions, you are only authenticated if you are in a role!
+                        UserData.IsAuthenticated = (base.Authenticate(password) && UserData.Roles.Count > 0);
+                    }
+                    else
+                    {
+                        // Authenticate against backend datastore
+                        UserData.IsAuthenticated = (UserData.Password == SecurityProviderUtility.EncryptPassword(password));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    authenticationException = ex;
+                }
             }
 
-            if (UserData.IsDisabled)
-            {
-                AuthenticationFailureReason = string.Format("User {0} is disabled.", UserData.LoginID);
-                return false;
-            }
+            // Determine if user succeeded with pass-through authentication
+            m_successfulPassThroughAuthentication = (string.IsNullOrWhiteSpace(password) && UserData.IsAuthenticated);
 
-            if (UserData.IsLockedOut)
+            // Log user authentication result if provider has completed initialization sequence or
+            // was successfully authenticated via pass-through authentication
+            if (Initialized || m_successfulPassThroughAuthentication)
             {
-                AuthenticationFailureReason = string.Format("User {0} is locked out.", UserData.LoginID);
-                return false;
-            }
-
-            if (UserData.PasswordChangeDateTime != DateTime.MinValue && UserData.PasswordChangeDateTime <= DateTime.UtcNow)
-            {
-                AuthenticationFailureReason = string.Format("User {0}'s password has expired or has not been set.", UserData.LoginID);
-                return false;
-            }
-
-            try
-            {
-                // Authenticate user credentials.
-                UserData.IsAuthenticated = false;
-                if (!UserData.IsExternal)
-                    // Authenticate against active directory.
-                    base.Authenticate(password);
-                else
-                    // Authenticate against backend datastore.
-                    UserData.IsAuthenticated = UserData.Password == SecurityProviderUtility.EncryptPassword(password);
-
-                // Log user authentication result.
                 try
                 {
                     // Writing data will fail for read-only databases
-                    LogLogin(UserData.IsAuthenticated);
+                    LogAuthenticationAttempt(UserData.IsAuthenticated);
                 }
                 catch (Exception ex)
                 {
                     // All we can do is track last exception in this case
                     m_lastException = ex;
                 }
+            }
 
-                return UserData.IsAuthenticated;
-            }
-            catch (Exception ex)
+            // If an exception occured during authentication, rethrow it after loging authentication attempt
+            if ((object)authenticationException != null)
             {
-                m_lastException = ex;
-                LogError(ex.Source, ex.ToString());
-                throw;
+                m_lastException = authenticationException;
+                LogError(authenticationException.Source, authenticationException.ToString());
+                throw authenticationException;
             }
+
+            return UserData.IsAuthenticated;
         }
 
         /// <summary>
@@ -531,15 +550,38 @@ namespace GSF.Security
         /// </summary>
         /// <param name="loginSuccess">true if user authentication was successful, otherwise false.</param>
         /// <returns>true if logging was successful, otherwise false.</returns>
-        protected virtual bool LogLogin(bool loginSuccess)
+        protected virtual bool LogAuthenticationAttempt(bool loginSuccess)
         {
-            if (!string.IsNullOrWhiteSpace(SettingsCategory) && UserData != null && UserData.IsDefined && !string.IsNullOrWhiteSpace(UserData.Username))
+            if (UserData != null && !string.IsNullOrWhiteSpace(UserData.Username))
             {
-                AdoDataConnection database = new AdoDataConnection(SettingsCategory);
+                string message = string.Format("User \"{0}\" login attempt {1}.", UserData.Username, loginSuccess ? "succeeded using " + (m_successfulPassThroughAuthentication ? "pass-through authentication" : "user acquired password") : "failed");
+                EventLogEntryType entryType = loginSuccess ? EventLogEntryType.SuccessAudit : EventLogEntryType.FailureAudit;
 
-                using (IDbConnection connection = database.Connection)
+                // Suffix authentication failure reason on failed logins if available
+                if (!loginSuccess && !string.IsNullOrWhiteSpace(AuthenticationFailureReason))
+                    message = string.Concat(message, " ", AuthenticationFailureReason);
+
+                // Attempt to write success or failure to the event log
+                try
                 {
-                    connection.ExecuteNonQuery(database.ParameterizedQueryString("INSERT INTO AccessLog (UserName, AccessGranted) VALUES ({0}, {1})", "userName", "accessGranted"), UserData.Username, loginSuccess ? 1 : 0);
+                    EventLog.WriteEntry(ApplicationName, message, entryType, 1);
+                }
+                catch (Exception ex)
+                {
+                    LogError(ex.Source, ex.ToString());
+                }
+
+                // Attempt to write success or failure to the database - we allow caller to catch any possible exceptions here so that
+                // database exceptions can be tracked separately (via LastException property) from other login exceptions, e.g., when
+                // a read-only database is being used or current user only has read-only access to database.
+                if (!string.IsNullOrWhiteSpace(SettingsCategory))
+                {
+                    AdoDataConnection database = new AdoDataConnection(SettingsCategory);
+
+                    using (IDbConnection connection = database.Connection)
+                    {
+                        connection.ExecuteNonQuery(database.ParameterizedQueryString("INSERT INTO AccessLog (UserName, AccessGranted) VALUES ({0}, {1})", "userName", "accessGranted"), UserData.Username, loginSuccess ? 1 : 0);
+                    }
                 }
 
                 return true;

@@ -292,7 +292,7 @@ namespace GSF.Windows
     /// </summary>
     public partial class SecurityPortal : Window
     {
-    #region [ Members ]
+        #region [ Members ]
 
         // Fields
         private DisplayType m_displayType;
@@ -300,7 +300,7 @@ namespace GSF.Windows
 
         #endregion
 
-    #region [ Constructors ]
+        #region [ Constructors ]
 
         /// <summary>
         /// Initializes a new WPF window.
@@ -365,7 +365,7 @@ namespace GSF.Windows
 
         #endregion
 
-    #region [ Properties ]
+        #region [ Properties ]
 
         /// <summary>
         /// Gets or sets flag that indicates if there was a failure during provider initialization.
@@ -401,7 +401,7 @@ namespace GSF.Windows
 
         #endregion
 
-    #region [ Methods ]
+        #region [ Methods ]
 
         /// <summary>
         /// Displays requested screen section based on received request.
@@ -481,15 +481,18 @@ namespace GSF.Windows
         /// <param name="message">Error message to display.</param>
         public void DisplayErrorMessage(string message)
         {
-            if (string.IsNullOrWhiteSpace(message))
+            if ((object)TextBlockGlobalMessage != null)
             {
-                TextBlockGlobalMessage.Text = "";
-                TextBlockGlobalMessage.Visibility = Visibility.Collapsed;
-            }
-            else
-            {
-                TextBlockGlobalMessage.Text = message;
-                TextBlockGlobalMessage.Visibility = Visibility.Visible;
+                if (string.IsNullOrWhiteSpace(message))
+                {
+                    TextBlockGlobalMessage.Text = "";
+                    TextBlockGlobalMessage.Visibility = Visibility.Collapsed;
+                }
+                else
+                {
+                    TextBlockGlobalMessage.Text = message;
+                    TextBlockGlobalMessage.Visibility = Visibility.Visible;
+                }
             }
         }
 
@@ -501,7 +504,7 @@ namespace GSF.Windows
             DisplayErrorMessage(null);
         }
 
-    #region [ Event Handlers ]
+        #region [ Event Handlers ]
 
         /// <summary>
         /// Handles window closed.
@@ -547,7 +550,7 @@ namespace GSF.Windows
                 else
                 {
                     // Verify their password hasn't expired
-                    if (provider.UserData.PasswordChangeDateTime <= DateTime.UtcNow)
+                    if (provider.UserData.IsDefined && provider.UserData.PasswordChangeDateTime <= DateTime.UtcNow)
                     {
                         // Display password expired message
                         DisplayErrorMessage(string.Format("Your password has expired. {0} You must change your password to continue.", provider.AuthenticationFailureReason));

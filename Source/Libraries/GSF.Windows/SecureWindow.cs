@@ -141,14 +141,14 @@ namespace GSF.Windows
     /// <seealso cref="ISecurityProvider"/>
     public class SecureWindow : Window
     {
-    #region [ Members ]
+        #region [ Members ]
 
         // Fields
         private bool m_shutdownRequested;
 
-    #endregion
+        #endregion
 
-    #region [ Constructors ]
+        #region [ Constructors ]
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecureWindow"/> class.
@@ -158,9 +158,9 @@ namespace GSF.Windows
             this.Initialized += SecureWindow_Initialized;
         }
 
-    #endregion
+        #endregion
 
-    #region [ Properties ]
+        #region [ Properties ]
 
         /// <summary>
         /// Gets or sets flags to force login display.
@@ -207,9 +207,9 @@ namespace GSF.Windows
             }
         }
 
-    #endregion
+        #endregion
 
-    #region [ Methods ]
+        #region [ Methods ]
 
         /// <summary>
         /// Gets the name of resource being accessed.
@@ -256,11 +256,17 @@ namespace GSF.Windows
 
             ISecurityProvider provider = SecurityProviderCache.CurrentProvider;
 
+            if ((object)provider == null)
+            {
+                ShowSecurityDialog(DisplayType.AccessDenied, "Cannot authenticate users: Failed to load security provider, please check configuration.");
+                return;
+            }
+
             // Verify that the current thread principal has been authenticated
             if (!Thread.CurrentPrincipal.Identity.IsAuthenticated || ForceLoginDisplay)
             {
                 // See if user's password has expired
-                if (provider.UserData.PasswordChangeDateTime <= DateTime.UtcNow)
+                if (provider.UserData.IsDefined && provider.UserData.PasswordChangeDateTime <= DateTime.UtcNow)
                     ShowSecurityDialog(DisplayType.ChangePassword, string.Format("Your password has expired. {0} You must change your password to continue.", provider.AuthenticationFailureReason));
                 else
                     ShowSecurityDialog(DisplayType.Login);
@@ -291,7 +297,7 @@ namespace GSF.Windows
             SecurityPortal securityDialog = new SecurityPortal(displayType);
 
             // Show authentication failure reason if one was defined and user didn't force another message
-            if (errorMessage == null)
+            if ((object)errorMessage == null && (object)SecurityProviderCache.CurrentProvider != null)
                 errorMessage = SecurityProviderCache.CurrentProvider.AuthenticationFailureReason;
 
             if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -305,7 +311,7 @@ namespace GSF.Windows
             {
                 // User chose to cancel security action. If the secure window has no parent,
                 // this is root window so exit application, otherwise just close the window
-                if (this.Owner == null)
+                if ((object)this.Owner == null)
                 {
                     m_shutdownRequested = true;
                     Application.Current.Shutdown();
@@ -317,9 +323,9 @@ namespace GSF.Windows
             }
         }
 
-    #endregion
+        #endregion
 
-    #region [ Static ]
+        #region [ Static ]
 
         // Static Fields
 
@@ -341,7 +347,7 @@ namespace GSF.Windows
         /// <returns>identifier for the <see cref="IncludedRoles"/> dependency property.</returns>
         public static readonly DependencyProperty IncludedRolesProperty = DependencyProperty.Register("IncludedRoles", typeof(string), typeof(SecureWindow), new PropertyMetadata("*"));
 
-    #endregion
+        #endregion
     }
 #endif
 }

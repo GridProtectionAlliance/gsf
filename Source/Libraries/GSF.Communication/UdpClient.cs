@@ -381,6 +381,7 @@ namespace GSF.Communication
 
         private class UdpClientPayload
         {
+            public EndPoint Destination;
             public byte[] Data;
             public int Offset;
             public int Length;
@@ -967,6 +968,19 @@ namespace GSF.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         protected override WaitHandle SendDataAsync(byte[] data, int offset, int length)
         {
+            return SendDataToAsync(data, offset, length, m_udpServer);
+        }
+
+        /// <summary>
+        /// Sends data to the server asynchronously.
+        /// </summary>
+        /// <param name="data">The buffer that contains the binary data to be sent.</param>
+        /// <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
+        /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
+        /// <param name="destination">The end point which identifies the destination for the data.</param>
+        /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
+        public WaitHandle SendDataToAsync(byte[] data, int offset, int length, EndPoint destination)
+        {
             UdpClientPayload payload;
             ManualResetEventSlim handle;
 
@@ -990,6 +1004,7 @@ namespace GSF.Communication
             payload = ReusableObjectPool<UdpClientPayload>.Default.TakeObject();
             handle = ReusableObjectPool<ManualResetEventSlim>.Default.TakeObject();
 
+            payload.Destination = destination;
             payload.Data = data;
             payload.Offset = offset;
             payload.Length = length;
@@ -1064,7 +1079,7 @@ namespace GSF.Communication
                         {
                             // Get the handle for the send operation.
                             handle = payload.WaitHandle;
-                            m_sendArgs.RemoteEndPoint = m_udpServer;
+                            m_sendArgs.RemoteEndPoint = payload.Destination;
                             m_sendArgs.UserToken = payload.WaitHandle;
 
                             while (payload.Length > 0)

@@ -40,6 +40,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -359,6 +360,41 @@ namespace GSF.TimeSeries.Transport
     public class DataPublisher : ActionAdapterCollection
     {
         #region [ Members ]
+
+        // Nested Types
+
+        private class LatestMeasurementCache : FacileActionAdapterBase
+        {
+            public LatestMeasurementCache(string connectionString)
+            {
+                ConnectionString = connectionString;
+            }
+
+            public override string Name
+            {
+                get
+                {
+                    return "LatestMeasurementCache";
+                }
+                set
+                {
+                    base.Name = value;
+                }
+            }
+
+            public override bool SupportsTemporalProcessing
+            {
+                get
+                {
+                    return false;
+                }
+            }
+
+            public override string GetShortStatus(int maxLength)
+            {
+                return "LatestMeasurementCache happily exists. :)";
+            }
+        }
 
         // Events
 
@@ -877,6 +913,15 @@ namespace GSF.TimeSeries.Transport
             // Get user specified period for cipher key rotation
             if (settings.TryGetValue("cipherKeyRotationPeriod", out setting) && double.TryParse(setting, out period))
                 CipherKeyRotationPeriod = period;
+
+            if (settings.TryGetValue("cacheMeasurementKeys", out setting))
+            {
+                LatestMeasurementCache cache = new LatestMeasurementCache(string.Format("trackLatestMeasurements=true;lagTime=60;leadTime=60;inputMeasurementKeys={{{0}}}", setting));
+                cache.DataSource = DataSource;
+                Add(cache);
+                m_routingTables.CalculateRoutingTables(null);
+                cache.Start();
+            }
 
             // Create a new TCP server
             TcpServer commandChannel = new TcpServer();
@@ -1544,13 +1589,23 @@ namespace GSF.TimeSeries.Transport
             IActionAdapter adapter;
 
             // Lookup adapter by its client ID
-            if (TryGetAdapter<Guid>(clientID, (item, value) => ((IClientSubscription)item).ClientID == value, out adapter))
+            if (TryGetAdapter<Guid>(clientID, GetClientSubscription, out adapter))
             {
                 subscription = (IClientSubscription)adapter;
                 return true;
             }
 
             subscription = null;
+            return false;
+        }
+
+        private bool GetClientSubscription(IActionAdapter item, Guid value)
+        {
+            IClientSubscription subscription = item as IClientSubscription;
+
+            if ((object)subscription != null)
+                return subscription.ClientID == value;
+
             return false;
         }
 
@@ -1876,13 +1931,23 @@ namespace GSF.TimeSeries.Transport
                             {
                                 TransportProvider<Socket> client;
                                 Dictionary<string, string> settings = setting.ParseKeyValuePairs();
-                                string networkInterface;
+                                IPEndPoint localEndPoint = null;
+                                string networkInterface = "::0";
 
                                 // Make sure return interface matches incoming client connection
                                 if (m_commandChannel.TryGetClient(connection.ClientID, out client))
-                                    networkInterface = client.Provider.LocalEndPoint.ToString();
+                                    localEndPoint = client.Provider.LocalEndPoint as IPEndPoint;
                                 else
-                                    networkInterface = m_commandChannel.Server.LocalEndPoint.ToString();
+                                    localEndPoint = m_commandChannel.Server.LocalEndPoint as IPEndPoint;
+
+                                if ((object)localEndPoint != null)
+                                {
+                                    networkInterface = localEndPoint.Address.ToString();
+
+                                    // Remove dual-stack prefix
+                                    if (networkInterface.StartsWith("::ffff:", true, CultureInfo.InvariantCulture))
+                                        networkInterface = networkInterface.Substring(7);
+                                }
 
                                 if (settings.TryGetValue("port", out setting) || settings.TryGetValue("localport", out setting))
                                 {
@@ -1940,6 +2005,21 @@ namespace GSF.TimeSeries.Transport
                             // Send new or updated cipher keys
                             if (connection.Authenticated && m_encryptPayload)
                                 connection.RotateCipherKeys();
+
+                            // If client has subscribed to any cached measurements, queue them up for the client
+                            IActionAdapter adapter;
+                            LatestMeasurementCache cache;
+
+                            if (TryGetAdapterByName("LatestMeasurementCache", out adapter))
+                            {
+                                cache = adapter as LatestMeasurementCache;
+
+                                if ((object)cache != null)
+                                {
+                                    IEnumerable<IMeasurement> cachedMeasurements = cache.LatestMeasurements.Where(measurement => subscription.InputMeasurementKeys.Any(key => key.SignalID == measurement.ID));
+                                    subscription.QueueMeasurementsForProcessing(cachedMeasurements);
+                                }
+                            }
 
                             // Notify any direct publisher consumers about the new client connection
                             try
@@ -2044,21 +2124,42 @@ namespace GSF.TimeSeries.Transport
                             Match regexMatch = Regex.Match(tableExpression, @"FROM \w+");
                             table.TableName = regexMatch.Value.Split(' ')[1];
 
-                            // If table has a NodeID column, filter table data for just this node
-                            if (!m_sharedDatabase && table.Columns.Contains("NodeID"))
+                            // If table has a NodeID column, filter table data for just this node.
+                            // Also, determine whether we need to check subscriber for rights to the data
+                            bool applyNodeIDFilter = table.Columns.Contains("NodeID");
+                            bool checkSubscriberRights = m_requireAuthentication && table.Columns.Contains("SignalID");
+
+                            if (m_sharedDatabase || (!applyNodeIDFilter && !checkSubscriberRights))
                             {
+                                // Add a copy of the results to the dataset for meta-data exchange
+                                metadata.Tables.Add(table.Copy());
+                            }
+                            else
+                            {
+                                IEnumerable<DataRow> filteredRows;
+                                List<DataRow> filteredRowList;
+
                                 // Make a copy of the table structure
                                 metadata.Tables.Add(table.Clone());
 
                                 // Reduce data to only this node
-                                DataRow[] nodeData = table.Select(string.Format("NodeID = '{0}'", nodeID));
+                                if (applyNodeIDFilter)
+                                    filteredRows = table.Select(string.Format("NodeID = '{0}'", nodeID));
+                                else
+                                    filteredRows = table.Rows.Cast<DataRow>();
 
-                                if (nodeData.Length > 0)
+                                // Reduce data to only what the subscriber has rights to
+                                if (checkSubscriberRights)
+                                    filteredRows = filteredRows.Where(row => SubscriberHasRights(connection.SubscriberID, adoDatabase.Guid(row, "SignalID")));
+
+                                filteredRowList = filteredRows.ToList();
+
+                                if (filteredRowList.Count > 0)
                                 {
                                     DataTable metadataTable = metadata.Tables[table.TableName];
 
                                     // Manually copy-in each row into table
-                                    foreach (DataRow row in nodeData)
+                                    foreach (DataRow row in filteredRowList)
                                     {
                                         DataRow newRow = metadataTable.NewRow();
 
@@ -2071,11 +2172,6 @@ namespace GSF.TimeSeries.Transport
                                         metadataTable.Rows.Add(newRow);
                                     }
                                 }
-                            }
-                            else
-                            {
-                                // Add a copy of the results to the dataset for meta-data exchange
-                                metadata.Tables.Add(table.Copy());
                             }
                         }
                     }

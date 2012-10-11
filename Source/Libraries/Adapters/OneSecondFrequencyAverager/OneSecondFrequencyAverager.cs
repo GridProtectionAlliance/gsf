@@ -72,6 +72,7 @@ namespace OneSecondFrequencyAverager
             string setting;
 
             settings["framesPerSecond"] = 1.ToString();
+            settings["processingInterval"] = 500.ToString();
             settings["lagTime"] = 1.0D.ToString();
             settings["leadTime"] = 1.0D.ToString();
             settings["downsamplingMethod"] = "Filtered";
