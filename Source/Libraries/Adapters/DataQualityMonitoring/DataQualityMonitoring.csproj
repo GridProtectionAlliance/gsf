@@ -80,15 +80,15 @@
     <Compile Include="TimestampTest.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\TimeSeriesFramework\GSF.TimeSeries.csproj">
+    <ProjectReference Include="..\..\GSF.TimeSeries\GSF.TimeSeries.csproj">
       <Project>{412F9F59-D9B9-4C8E-96D2-20492644198C}</Project>
       <Name>GSF.TimeSeries</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\TVA.Core\GSF.Core.csproj">
+    <ProjectReference Include="..\..\GSF.Core\GSF.Core.csproj">
       <Project>{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}</Project>
       <Name>GSF.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\TVA.ServiceModel\GSF.ServiceModel.csproj">
+    <ProjectReference Include="..\..\GSF.ServiceModel\GSF.ServiceModel.csproj">
       <Project>{0622c318-5032-4d56-bb71-5ce64b502fb0}</Project>
       <Name>GSF.ServiceModel</Name>
     </ProjectReference>

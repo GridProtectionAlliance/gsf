@@ -1,47 +1,44 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{69846364-E3F5-4086-B9FE-D447BB7E56C3}</ProjectGuid>
+    <ProjectGuid>{72713097-3BE3-4FA7-97B5-7EC3A2BA8316}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TestingAdapters</RootNamespace>
-    <AssemblyName>TestingAdapters</AssemblyName>
+    <RootNamespace>GSF.Net</RootNamespace>
+    <AssemblyName>GSF.Net</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
     <SccAuxPath>SAK</SccAuxPath>
     <SccProvider>SAK</SccProvider>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\..\Build\Output\Debug\Libraries\</OutputPath>
+    <OutputPath>..\..\..\Build\Output\Debug\Libraries\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\..\..\Build\Output\Debug\Libraries\TestingAdapters.XML</DocumentationFile>
-    <Prefer32Bit>false</Prefer32Bit>
+    <DocumentationFile>..\..\..\Build\Output\Debug\Libraries\GSF.Net.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\..\Build\Output\Release\Libraries\</OutputPath>
+    <OutputPath>..\..\..\Build\Output\Release\Libraries\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\..\..\Build\Output\Release\Libraries\TestingAdapters.XML</DocumentationFile>
-    <Prefer32Bit>false</Prefer32Bit>
+    <DocumentationFile>..\..\..\Build\Output\Release\Libraries\GSF.Net.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -49,21 +46,38 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Ftp\FtpAsyncResult.cs" />
+    <Compile Include="Ftp\FtpClient.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Ftp\FtpControlChannel.cs" />
+    <Compile Include="Ftp\FtpDataStream.cs" />
+    <Compile Include="Ftp\FtpDirectory.cs" />
+    <Compile Include="Ftp\FtpExceptions.cs" />
+    <Compile Include="Ftp\FtpFile.cs" />
+    <Compile Include="Ftp\FtpFileTransferer.cs" />
+    <Compile Include="Ftp\FtpFileWatcher.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Ftp\FtpInputDataStream.cs" />
+    <Compile Include="Ftp\FtpOutputDataStream.cs" />
+    <Compile Include="Ftp\FtpResponse.cs" />
+    <Compile Include="Ftp\FtpSessionConnected.cs" />
+    <Compile Include="Ftp\FtpSessionDisconnected.cs" />
+    <Compile Include="Ftp\FtpTimeStampParser.cs" />
+    <Compile Include="Ftp\IFtpFile.cs" />
+    <Compile Include="Ftp\IFtpSessionState.cs" />
+    <Compile Include="Ftp\NamespaceDoc.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RandomValueInputAdapter.cs" />
-    <Compile Include="VirtualInputAdapter.cs" />
-    <Compile Include="VirtualOutputAdapter.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\GSF.TimeSeries\GSF.TimeSeries.csproj">
-      <Project>{412F9F59-D9B9-4C8E-96D2-20492644198C}</Project>
-      <Name>GSF.TimeSeries</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\GSF.Communication\GSF.Communication.csproj">
-      <Project>{2b2eb9be-e6a9-406f-bfe6-ff46dd6bd264}</Project>
-      <Name>GSF.Communication</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\GSF.Core\GSF.Core.csproj">
+    <EmbeddedResource Include="Ftp\FtpClient.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Ftp\FtpFileWatcher.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GSF.Core\GSF.Core.csproj">
       <Project>{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}</Project>
       <Name>GSF.Core</Name>
     </ProjectReference>

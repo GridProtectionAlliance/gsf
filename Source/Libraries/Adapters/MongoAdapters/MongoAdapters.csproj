@@ -61,11 +61,11 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\TimeSeriesFramework\GSF.TimeSeries.csproj">
+    <ProjectReference Include="..\..\GSF.TimeSeries\GSF.TimeSeries.csproj">
       <Project>{412F9F59-D9B9-4C8E-96D2-20492644198C}</Project>
       <Name>GSF.TimeSeries</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\TVA.Core\GSF.Core.csproj">
+    <ProjectReference Include="..\..\GSF.Core\GSF.Core.csproj">
       <Project>{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}</Project>
       <Name>GSF.Core</Name>
     </ProjectReference>

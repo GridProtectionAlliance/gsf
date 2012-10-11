@@ -143,7 +143,7 @@
     <Content Include="DataMigrationUtility.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Libraries\TVA.Core\GSF.Core.csproj">
+    <ProjectReference Include="..\..\Libraries\GSF.Core\GSF.Core.csproj">
       <Project>{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88}</Project>
       <Name>GSF.Core</Name>
     </ProjectReference>

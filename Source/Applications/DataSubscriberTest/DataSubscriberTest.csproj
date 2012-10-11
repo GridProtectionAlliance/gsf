@@ -88,15 +88,15 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Libraries\TimeSeriesFramework\GSF.TimeSeries.csproj">
+    <ProjectReference Include="..\..\Libraries\GSF.TimeSeries\GSF.TimeSeries.csproj">
       <Project>{412F9F59-D9B9-4C8E-96D2-20492644198C}</Project>
       <Name>GSF.TimeSeries</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Libraries\TVA.Communication\GSF.Communication.csproj">
+    <ProjectReference Include="..\..\Libraries\GSF.Communication\GSF.Communication.csproj">
       <Project>{2b2eb9be-e6a9-406f-bfe6-ff46dd6bd264}</Project>
       <Name>GSF.Communication</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Libraries\TVA.Core\GSF.Core.csproj">
+    <ProjectReference Include="..\..\Libraries\GSF.Core\GSF.Core.csproj">
       <Project>{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}</Project>
       <Name>GSF.Core</Name>
     </ProjectReference>
