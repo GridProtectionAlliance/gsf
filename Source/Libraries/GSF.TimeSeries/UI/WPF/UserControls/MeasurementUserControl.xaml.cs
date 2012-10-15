@@ -39,6 +39,7 @@ namespace GSF.TimeSeries.UI.UserControls
     {
         #region [ Members ]
 
+        private bool m_committing;
         private Measurements m_dataContext;
         private DataGridColumn m_sortColumn;
         private string m_sortMemberPath;
@@ -63,7 +64,6 @@ namespace GSF.TimeSeries.UI.UserControls
         public MeasurementUserControl(int deviceID)
         {
             InitializeComponent();
-            this.Unloaded += new RoutedEventHandler(MeasurementUserControl_Unloaded);
             m_dataContext = new Measurements(deviceID, 17);
             m_dataContext.PropertyChanged += new PropertyChangedEventHandler(ViewModel_PropertyChanged);
             this.DataContext = m_dataContext;
@@ -72,16 +72,6 @@ namespace GSF.TimeSeries.UI.UserControls
         #endregion
 
         #region [ Methods ]
-
-        /// <summary>
-        /// Handles unloaded event.
-        /// </summary>
-        /// <param name="sender">Source of the event.</param>
-        /// <param name="e">Arguments of the event.</param>
-        void MeasurementUserControl_Unloaded(object sender, RoutedEventArgs e)
-        {
-            m_dataContext.ProcessPropertyChange();
-        }
 
         /// <summary>
         /// Handles key down event on the datagrid object.
@@ -98,6 +88,17 @@ namespace GSF.TimeSeries.UI.UserControls
                     if (MessageBox.Show("Are you sure you want to delete " + dataGrid.SelectedItems.Count + " selected item(s)?", "Delete Selected Items", MessageBoxButton.YesNo) == MessageBoxResult.No)
                         e.Handled = true;
                 }
+            }
+        }
+
+        private void DataGrid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
+        {
+            if (!m_committing && e.EditAction == DataGridEditAction.Commit)
+            {
+                m_committing = true;
+                DataGridList.CommitEdit(DataGridEditingUnit.Row, true);
+                m_dataContext.ProcessPropertyChange();
+                m_committing = false;
             }
         }
 

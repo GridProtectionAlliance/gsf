@@ -381,7 +381,7 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
                     sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
-                
+
                 query = database.ParameterizedQueryString(string.Format("SELECT ID FROM HistorianDetail WHERE NodeID = {{0}} {0}", sortClause), "nodeID");
                 historianTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
 
@@ -419,7 +419,7 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 if ((object)keys != null && keys.Count > 0)
                 {
-                    commaSeparatedKeys = keys.Select(key => "'" + key.ToString() + "'").Aggregate((str1, str2) => str1 + "," + str2);
+                    commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
                     query = database.ParameterizedQueryString(string.Format("SELECT NodeID, ID, Acronym, Name, AssemblyName, TypeName, " +
                         "ConnectionString, IsLocal, Description, LoadOrder, Enabled, MeasurementReportingInterval, NodeName" +
                         " FROM HistorianDetail WHERE NodeID = {{0}} AND ID IN ({0})", commaSeparatedKeys), "nodeID");

@@ -13,7 +13,7 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/TimeSeriesFramework.UI.WPF;Component/Resources/CommonResource.xaml" />
+                <ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
@@ -35,7 +35,7 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="2*" />
             </Grid.ColumnDefinitions>
-            
+
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -53,16 +53,16 @@
             <TextBox Grid.Row="0" Grid.Column="1" Text="{tsfBinding:Column Path=PointTag}" CharacterCasing="Upper"/>
             <TextBlock Grid.Row="0" Grid.Column="2" Text="Device ID"/>
             <TextBox Grid.Row="0" Grid.Column="3" Text="{tsfBinding:Column Path=DeviceID}" Width="{StaticResource XXSmallItemSize}" />
-            
+
             <!--Second Row-->
             <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right">
                 <TextBlock Text="Signal Reference" Style="{StaticResource RequiredLabel}"/>
                 <TextBlock Style="{StaticResource RequiredMarker}"/>
             </StackPanel>
-            <TextBox Grid.Row="1" Grid.Column="1" Text="{tsfBinding:Column Path=SignalReference}" CharacterCasing="Upper"/>            
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{tsfBinding:Column Path=SignalReference}" CharacterCasing="Upper"/>
             <TextBlock Grid.Row="1" Grid.Column="2" Text="Measurement Type"/>
             <ComboBox Grid.Row="1" Grid.Column="3" ItemsSource="{Binding Source={StaticResource SignalTypeLookupList}}" DisplayMemberPath="Value" SelectedItem="{tsfBinding:Column Path=SignalTypeID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource SignalTypeLookupList}}"/>
-            
+
             <!--Third Row-->
             <TextBlock Grid.Row="2" Grid.Column="0" Text="Alternate Tag"/>
             <TextBox Grid.Row="2" Grid.Column="1" Text="{tsfBinding:Column Path=AlternateTag}"/>
@@ -76,7 +76,7 @@
                 <CheckBox Content="Internal" IsChecked="{tsfBinding:Column Path=Internal}"/>
                 <CheckBox Content="Subscribed" IsChecked="{tsfBinding:Column Path=Subscribed}"/>
             </StackPanel>
-            
+
             <!--Fifth Row-->
             <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="0" HorizontalAlignment="Right">
                 <TextBlock Text="Adder" Style="{StaticResource RequiredLabel}"/>
@@ -84,7 +84,7 @@
             </StackPanel>
             <TextBox Grid.Row="4" Grid.Column="1" Text="{tsfBinding:Column Path=Adder}" Width="{StaticResource XSmallItemSize}"/>
             <CheckBox Content="Enabled" Grid.Row="4" Grid.Column="3" IsChecked="{tsfBinding:Column Path=Enabled}"/>
-            
+
             <!--Sixth Row-->
             <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="0" HorizontalAlignment="Right">
                 <TextBlock Text="Multiplier" Style="{StaticResource RequiredLabel}"/>
@@ -97,19 +97,19 @@
 
         <uc:DetailViewFooterUserControl x:Name="UserControlDetailViewFooter" DeleteCommand="{Binding DeleteCommand}" ClearCommand="{Binding ClearCommand}" SaveCommand="{Binding SaveCommand}"
                     SaveEnabled="{tsfBinding:DataOperation Path=(Validation.HasError)}" HorizontalAlignment="Right"/>
-                          
+
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
             <TextBox x:Name="TextBoxSearch" Width="150"/>
             <Button Content="Search" Command="{Binding Path=SearchCommand}" CommandParameter="{Binding ElementName=TextBoxSearch, Path=Text}" ToolTip="Search measurements" Margin="2" IsDefault="True"/>
             <Button Content="Show All" Command="{Binding Path=ShowAllCommand}" ToolTip="Show all measurements" Margin="2"/>
         </StackPanel>
-        
+
         <sdk:DataGrid x:Name="DataGridList" ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" PreviewKeyDown="DataGrid_PreviewKeyDown"
-                      Sorting="DataGrid_Sorting">
+                      Sorting="DataGrid_Sorting" CellEditEnding="DataGrid_CellEditEnding">
             <sdk:DataGrid.Columns>
                 <sdk:DataGridTextColumn Header="ID" Width="*" Binding="{Binding Path=ID}" ToolTipService.ToolTip="{Binding Path=PointTag}" CellStyle="{StaticResource CenterAlignCellStyle}" IsReadOnly="True"/>
-                <!--<sdk:DataGridTextColumn Header="Point Tag" Width="2*" Binding="{tsfBinding:Column Path=PointTag}" CellStyle="{StaticResource CenterAlignCellStyle}" />-->                
-                <sdk:DataGridTextColumn Header="Description" Width="4*" Binding="{tsfBinding:Column Path=Description}"/>                                
+                <!--<sdk:DataGridTextColumn Header="Point Tag" Width="2*" Binding="{tsfBinding:Column Path=PointTag}" CellStyle="{StaticResource CenterAlignCellStyle}" />-->
+                <sdk:DataGridTextColumn Header="Description" Width="4*" Binding="{tsfBinding:Column Path=Description}"/>
                 <sdk:DataGridCheckBoxColumn Header="Internal" Width="*" Binding="{tsfBinding:Column Path=Internal}" CellStyle="{StaticResource CenterAlignCellStyle}"/>
                 <sdk:DataGridCheckBoxColumn Header="Subscribed" Width="*" Binding="{tsfBinding:Column Path=Subscribed}" CellStyle="{StaticResource CenterAlignCellStyle}"/>
                 <sdk:DataGridCheckBoxColumn Header="Enabled" Width="*" Binding="{tsfBinding:Column Path=Enabled}" CellStyle="{StaticResource CenterAlignCellStyle}"/>

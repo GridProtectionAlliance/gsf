@@ -44,10 +44,11 @@ namespace GSF.TimeSeries.UI.ViewModels
         private Dictionary<int, string> m_historianLookupList;
         private Dictionary<int, string> m_signalTypeLookupList;
         private int m_deviceID;
-        private IList<Guid> m_allKeys; 
+        private IList<Guid> m_allKeys;
         private RelayCommand m_searchCommand;
         private RelayCommand m_showAllCommand;
         private string m_searchText;
+        private string m_filterExpression;
 
         #endregion
 
@@ -69,9 +70,44 @@ namespace GSF.TimeSeries.UI.ViewModels
             Load();
         }
 
+        /// <summary>
+        /// Creates a new instance of the <see cref="Measurements"/> class.
+        /// </summary>
+        /// <param name="autosave">Determines whether the current item is saved automatically when a new item is selected.</param>
+        public Measurements(bool autosave = true)
+            : base(0, autosave)
+        {
+            m_historianLookupList = Historian.GetLookupList(null, isOptional: true);
+            m_signalTypeLookupList = SignalType.GetLookupList(null);
+        }
+
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the filter expression used when querying records from the database.
+        /// </summary>
+        public string FilterExpression
+        {
+            get
+            {
+                string filterExpression = null;
+
+                if (m_deviceID > 0 && !string.IsNullOrEmpty(m_filterExpression))
+                    filterExpression = string.Format("DeviceID = {0} AND ({1})", m_deviceID, m_filterExpression);
+                else if (m_deviceID > 0)
+                    filterExpression = string.Format("DeviceID = {0}", m_deviceID);
+                else if (!string.IsNullOrEmpty(m_filterExpression))
+                    filterExpression = m_filterExpression;
+
+                return filterExpression;
+            }
+            set
+            {
+                m_filterExpression = value;
+            }
+        }
 
         /// <summary>
         /// Gets flag that determines if <see cref="PagedViewModelBase{T1, T2}.CurrentItem"/> is a new record.
@@ -142,7 +178,7 @@ namespace GSF.TimeSeries.UI.ViewModels
             get
             {
                 if ((object)m_allKeys == null)
-                    m_allKeys = DataModels.Measurement.LoadSignalIDs(null, m_deviceID, false, false, "", SortMember, SortDirection);
+                    m_allKeys = DataModels.Measurement.LoadSignalIDs(null, FilterExpression, string.Empty, SortMember, SortDirection);
 
                 return m_allKeys;
             }
@@ -175,7 +211,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         }
 
         /// <summary>
-        /// Creates a new instance of <see cref="GSF.TimeSeries.UI.DataModels.Measurement"/> and assigns it to CurrentItem.
+        /// Creates a new instance of <see cref="TimeSeriesFramework.UI.DataModels.Measurement"/> and assigns it to CurrentItem.
         /// </summary>
         public override void Clear()
         {
@@ -201,7 +237,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         }
 
         /// <summary>
-        /// Loads collection of <see cref="GSF.TimeSeries.UI.DataModels.Measurement"/> defined in the database.
+        /// Loads collection of <see cref="TimeSeriesFramework.UI.DataModels.Measurement"/> defined in the database.
         /// </summary>
         public override void Load()
         {
@@ -212,7 +248,7 @@ namespace GSF.TimeSeries.UI.ViewModels
             {
                 if ((object)ItemsKeys == null)
                 {
-                    ItemsKeys = DataModels.Measurement.LoadSignalIDs(null, m_deviceID, false, false, m_searchText, SortMember, SortDirection);
+                    ItemsKeys = DataModels.Measurement.LoadSignalIDs(null, FilterExpression, m_searchText, SortMember, SortDirection);
 
                     if (string.IsNullOrEmpty(m_searchText))
                         AllKeys = ItemsKeys;
@@ -284,6 +320,5 @@ namespace GSF.TimeSeries.UI.ViewModels
         }
 
         #endregion
-
     }
 }

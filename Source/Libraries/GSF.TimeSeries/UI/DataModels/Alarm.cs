@@ -120,6 +120,7 @@ namespace GSF.TimeSeries.UI.DataModels
         /// Gets or sets <see cref="Alarm"/> TagName
         /// </summary>
         [Required(ErrorMessage = " Alarm tag name is a required field, please select a value.")]
+        [RegularExpression("^[A-Z0-9-'!'_'@#\\$]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' and '$' are allowed.")]
         public string TagName
         {
             get
@@ -561,7 +562,7 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 if ((object)keys != null && keys.Count > 0)
                 {
-                    commaSeparatedKeys = keys.Select(key => "'" + key.ToString() + "'").Aggregate((str1, str2) => str1 + "," + str2);
+                    commaSeparatedKeys = keys.Select(key => "" + key.ToString() + "").Aggregate((str1, str2) => str1 + "," + str2);
                     query = database.ParameterizedQueryString(string.Format("SELECT NodeID, TagName, ID, SignalID, AssociatedMeasurementID, Description, Severity, Operation, " +
                         "SetPoint, Tolerance, Delay, Hysteresis, LoadOrder, Enabled FROM Alarm WHERE NodeID = {{0}} AND ID IN ({0})", commaSeparatedKeys), "nodeID");
 
@@ -843,7 +844,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 return null;
             }
         }
-        
+
         // Deletes a measurement whose signal ID matches the given measurement ID.
         private static void DeleteAlarmMeasurement(AdoDataConnection database, Guid measurementId)
         {

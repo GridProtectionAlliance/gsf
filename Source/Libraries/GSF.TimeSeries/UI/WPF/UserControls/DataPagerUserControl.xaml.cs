@@ -68,6 +68,11 @@ namespace GSF.TimeSeries.UI.UserControls
         public static readonly DependencyProperty LastCommandProperty = DependencyProperty.Register("LastCommand", typeof(ICommand), typeof(DataPagerUserControl), new PropertyMetadata(null));
 
         /// <summary>
+        /// <see cref="DependencyProperty"/> to bind to <see cref="ShowPageSize"/>.
+        /// </summary>
+        public static DependencyProperty ShowPageSizeProperty = DependencyProperty.Register("ShowPageSize", typeof(bool), typeof(DataPagerUserControl), new PropertyMetadata(true));
+
+        /// <summary>
         /// Gets or sets an index of the current page displayed in UI.
         /// </summary>
         public int CurrentPageNumber
@@ -157,6 +162,22 @@ namespace GSF.TimeSeries.UI.UserControls
             }
         }
 
+        /// <summary>
+        /// Gets or sets the boolean flag which determines whether
+        /// the page size should be shown on the control.
+        /// </summary>
+        public bool ShowPageSize
+        {
+            get
+            {
+                return (bool)this.GetValue(ShowPageSizeProperty);
+            }
+            set
+            {
+                this.SetValue(ShowPageSizeProperty, value);
+            }
+        }
+
         #endregion
 
         #region [ Constructor ]
@@ -172,6 +193,23 @@ namespace GSF.TimeSeries.UI.UserControls
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Invoked whenever the effective value of any dependency property on this <see cref="System.Windows.FrameworkElement"/>
+        /// has been updated. The specific dependency property that changed is reported in the arguments parameter.
+        /// Overrides <see cref="System.Windows.DependencyObject.OnPropertyChanged(System.Windows.DependencyPropertyChangedEventArgs)"/>.
+        /// </summary>
+        /// <param name="e">The event data that describes the property that changed, as well as old and new values.</param>
+        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(e);
+
+            if (e.Property == ShowPageSizeProperty)
+            {
+                PageSizeTextLabel.Visibility = ShowPageSize ? Visibility.Visible : Visibility.Collapsed;
+                PageSizeLabel.Visibility = ShowPageSize ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
 
         private void CurrentPageTextBox_KeyDown(object sender, KeyEventArgs e)
         {

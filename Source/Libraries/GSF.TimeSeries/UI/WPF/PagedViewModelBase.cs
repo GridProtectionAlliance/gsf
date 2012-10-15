@@ -88,7 +88,7 @@ namespace GSF.TimeSeries.UI
 
         // Fields
         private int m_pageCount, m_currentPageNumber, m_itemsPerPage, m_currentSelectedIndex;
-        private IList<TPrimaryKey> m_itemsKeys; 
+        private IList<TPrimaryKey> m_itemsKeys;
         private ObservableCollection<TDataModel> m_currentPage, m_itemsSource;
         private ObservableCollection<ObservableCollection<TDataModel>> m_pages;
         private ICommand m_firstCommand, m_previousCommand, m_nextCommand, m_lastCommand;
@@ -264,10 +264,7 @@ namespace GSF.TimeSeries.UI
                 {
 
                     if ((object)m_currentItem != null)
-                    {
-                        ProcessPropertyChange();
                         m_currentItem.PropertyChanged -= m_currentItem_PropertyChanged;
-                    }
 
                     m_currentItem = value;
 
@@ -532,7 +529,7 @@ namespace GSF.TimeSeries.UI
                 if (CurrentItem == null)
                     return false;
                 else
-                    return (CurrentItem.IsValid && CommonFunctions.CurrentPrincipal.IsInRole("Administrator, Editor"));
+                    return (CurrentItem.IsValid && (object)CommonFunctions.CurrentPrincipal != null && CommonFunctions.CurrentPrincipal.IsInRole("Administrator, Editor"));
             }
         }
 
@@ -547,7 +544,7 @@ namespace GSF.TimeSeries.UI
                 if (CurrentItem == null)
                     return false;
                 else
-                    return (!IsNewRecord && CommonFunctions.CurrentPrincipal.IsInRole("Administrator, Editor"));
+                    return (!IsNewRecord && (object)CommonFunctions.CurrentPrincipal != null && CommonFunctions.CurrentPrincipal.IsInRole("Administrator, Editor"));
             }
         }
 
@@ -793,7 +790,9 @@ namespace GSF.TimeSeries.UI
 
                     TPrimaryKey currentItemKey = GetCurrentItemKey();
                     string result = (string)s_deleteRecord.Invoke(this, new object[] { (AdoDataConnection)null, currentItemKey });
-                    m_itemsKeys.Remove(currentItemKey);
+
+                    if ((object)m_itemsKeys != null)
+                        m_itemsKeys.Remove(currentItemKey);
 
                     OnDeleted();
 

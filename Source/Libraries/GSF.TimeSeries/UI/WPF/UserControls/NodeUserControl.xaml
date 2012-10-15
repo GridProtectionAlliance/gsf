@@ -11,7 +11,7 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/TimeSeriesFramework.UI.WPF;Component/Resources/CommonResource.xaml" />
+                <ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
@@ -60,14 +60,14 @@
             <TextBox Grid.Row="2" Grid.Column="3" Text="{tsfBinding:Column Path=Latitude}" />
             <TextBlock Text="Description" Grid.Row="3" Grid.Column="0" VerticalAlignment="Top" />
             <TextBox Grid.Row="3" Grid.Column="1" Text="{tsfBinding:Column Path=Description}" TextWrapping="Wrap" />
-            <TextBlock Text="Image" Grid.Row="3" Grid.Column="2" VerticalAlignment="Top" />            
+            <TextBlock Text="Image" Grid.Row="3" Grid.Column="2" VerticalAlignment="Top" />
             <TextBox Grid.Row="3" Grid.Column="3" Text="{tsfBinding:Column Path=Image}"/>
             <TextBlock Grid.Row="4" Grid.Column="0" Text="Settings"/>
-            <TextBox Grid.Row="4" Grid.Column="1" Text="{tsfBinding:Column Path=Settings}" Grid.ColumnSpan="3" Width="475" Height="50" TextWrapping="Wrap" ScrollViewer.VerticalScrollBarVisibility="Visible" />
+            <TextBox Grid.Row="4" Grid.Column="1" Text="{tsfBinding:Column Path=Settings}" Grid.ColumnSpan="3" Width="475" Height="55" TextWrapping="Wrap" ScrollViewer.VerticalScrollBarVisibility="Visible" />
             <TextBlock Grid.Row="5" Grid.Column="0" Text="Menu Type"/>
             <TextBox Grid.Row="5" Grid.Column="1" Text="{tsfBinding:Column Path=MenuType}" MaxLength="200"/>
             <TextBlock Grid.Row="5" Grid.Column="2" Text="Menu Data"/>
-            <TextBox Grid.Row="5" Grid.Column="3" Text="{tsfBinding:Column Path=MenuData}"/>            
+            <TextBox Grid.Row="5" Grid.Column="3" Text="{tsfBinding:Column Path=MenuData}"/>
             <StackPanel Orientation="Horizontal" Grid.Row="7" Grid.Column="0" HorizontalAlignment="Right">
                 <TextBlock Text="Load Order" Style="{StaticResource RequiredLabel}" />
                 <TextBlock Style="{StaticResource RequiredMarker}" />

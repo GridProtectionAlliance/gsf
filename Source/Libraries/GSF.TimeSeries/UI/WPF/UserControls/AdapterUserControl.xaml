@@ -9,11 +9,11 @@
              xmlns:tsfBinding="clr-namespace:GSF.TimeSeries.UI.Binding;assembly=GSF.TimeSeries.UI"
              xmlns:vm="clr-namespace:GSF.TimeSeries.UI.ViewModels"
              Background="Transparent">
-    
+
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/TimeSeriesFramework.UI.WPF;Component/Resources/CommonResource.xaml" />
+                <ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
@@ -54,29 +54,29 @@
                 <TextBlock Text="Name" Style="{StaticResource RequiredLabel}" />
                 <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
-            <TextBox Grid.Row="0" Grid.Column="1" Text="{tsfBinding:Column Path=AdapterName}" MaxLength="50"/>
-                
+            <TextBox Grid.Row="0" Grid.Column="1" CharacterCasing="Upper" Text="{tsfBinding:Column Path=AdapterName}" MaxLength="50"/>
+
             <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="2" HorizontalAlignment="Right">
                 <TextBlock Text="Load Order" Style="{StaticResource RequiredLabel}" />
                 <TextBlock Style="{StaticResource RequiredMarker}" />
-            </StackPanel>            
+            </StackPanel>
             <TextBox Grid.Row="0" Grid.Column="3" Text="{tsfBinding:Column Path=LoadOrder}" Width="35" />
             <GroupBox Grid.Row="2" Grid.ColumnSpan="4" Header="Adapter Type">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    
+
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    
+
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Search Directory" />
-                    <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
+                    <StackPanel Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Orientation="Horizontal">
                         <TextBox DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}, Path=DataContext}"
-                                 Name="SearchDirectoryTextBox" Text="{tsfBinding:Column Path=SearchDirectory}" Width="395"/>
+                                 Name="SearchDirectoryTextBox" Text="{tsfBinding:Column Path=SearchDirectory}" Width="525" />
                         <Button Click="Browse_Click" Width="Auto" ToolTip="Browse">
                             <Button.Template>
                                 <ControlTemplate>
@@ -86,7 +86,7 @@
                         </Button>
                     </StackPanel>
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Type" />
-                    <ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" ItemsSource="{Binding Source={StaticResource AdapterTypeList}}" DisplayMemberPath="Value" HorizontalContentAlignment="Left" Width="430"
+                    <ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" ItemsSource="{Binding Source={StaticResource AdapterTypeList}}" DisplayMemberPath="Value" HorizontalContentAlignment="Left" Width="560"
                               SelectedItem="{tsfBinding:Column Path=TypeName, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource AdapterTypeList}}" />
                 </Grid>
             </GroupBox>
@@ -103,10 +103,10 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    
+
                     <TextBlock Text="Parameters" VerticalAlignment="Top" Grid.Row="0" Grid.Column="0" />
-                    
-                    <ListBox Grid.Row="0" Grid.Column="1" Width="{StaticResource LargerItemSize}" Height="{StaticResource XSmallItemSize}" HorizontalContentAlignment="Stretch"
+
+                    <ListBox Grid.Row="0" Grid.Column="1" Width="{StaticResource XLargeItemSize}" Height="{StaticResource XSmallItemSize}" HorizontalContentAlignment="Stretch"
                              Name="ParameterListBox" ItemsSource="{Binding Source={StaticResource ParameterList}}" SelectedItem="{Binding Path=SelectedParameter}"
                              DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}, Path=DataContext}" ScrollViewer.VerticalScrollBarVisibility="Auto"
                              ScrollViewer.HorizontalScrollBarVisibility="Auto">
@@ -131,10 +131,10 @@
                         <StackPanel.Resources>
                             <CollectionViewSource Source="{Binding Path=EnumValues}" x:Key="EnumValues" />
                         </StackPanel.Resources>
-                        
-                        <TextBox Name="ParameterValueTextBox" Height="{StaticResource XSmallItemSize}" Text="{tsfBinding:Column Path=Value}" TextWrapping="Wrap"
+
+                        <TextBox Name="ParameterValueTextBox" Width="{StaticResource XLargeItemSize}" Height="{StaticResource XSmallItemSize}" Text="{tsfBinding:Column Path=Value}" TextWrapping="Wrap"
                                  Visibility="{Binding Path=IsOther, Converter={StaticResource ObjectToVisibilityConverter}}" VerticalScrollBarVisibility="Auto"/>
-                        
+
                         <StackPanel>
                             <StackPanel.Style>
                                 <Style TargetType="{x:Type StackPanel}">
@@ -151,7 +151,7 @@
                                 <RadioButton Content="True" GroupName="BooleanParameter" IsChecked="{Binding Path=Value}" />
                                 <RadioButton Content="False" GroupName="BooleanParameter" IsChecked="{Binding Mode=OneWay, Path=IsFalseChecked}" />
                             </StackPanel>
-                            
+
                             <StackPanel Margin="5" Height="{Binding ElementName=ParameterValueTextBox, Path=Height}"
                                         Visibility="{Binding Path=IsEnum, Converter={StaticResource ObjectToVisibilityConverter}}">
                                 <ComboBox ItemsSource="{Binding Source={StaticResource EnumValues}}" SelectedItem="{Binding Path=Value}" />
@@ -159,7 +159,7 @@
                         </StackPanel>
                     </StackPanel>
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Connection String" VerticalAlignment="Top" />
-                    <TextBox Grid.Row="1" Grid.Column="1"  Grid.ColumnSpan="3" Width="450" Height="{StaticResource XSmallItemSize}"
+                    <TextBox Grid.Row="1" Grid.Column="1"  Grid.ColumnSpan="3" Width="Auto" Height="{StaticResource XSmallItemSize}" HorizontalAlignment="Stretch"
                              Text="{tsfBinding:Column Path=ConnectionString}" TextWrapping="Wrap" ScrollViewer.VerticalScrollBarVisibility="Visible" />
                 </Grid>
             </GroupBox>
@@ -169,7 +169,7 @@
                 <Button Content="Initialize" Command="{Binding Path=DataContext.InitializeCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}}" 
                         IsEnabled="{Binding Path=DataContext.IsNewRecord, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}, Converter={StaticResource NotConverter}}"/>
             </StackPanel>
-            <CheckBox Content="Enabled" Grid.Row="4" Grid.Column="3" IsChecked="{tsfBinding:Column Path=Enabled}"/>                 
+            <CheckBox Content="Enabled" Grid.Row="4" Grid.Column="3" IsChecked="{tsfBinding:Column Path=Enabled}"/>
         </Grid>
 
         <uc:DetailViewFooterUserControl x:Name="UserControlDetailViewFooter" DeleteCommand="{Binding DeleteCommand}" ClearCommand="{Binding ClearCommand}" SaveCommand="{Binding SaveCommand}"

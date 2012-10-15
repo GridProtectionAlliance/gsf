@@ -128,6 +128,9 @@
     <Compile Include="UserControls\IaonTreeUserControl.xaml.cs">
       <DependentUpon>IaonTreeUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\MeasurementPagerUserControl.xaml.cs">
+      <DependentUpon>MeasurementPagerUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\MeasurementUserControl.xaml.cs">
       <DependentUpon>MeasurementUserControl.xaml</DependentUpon>
     </Compile>
@@ -262,6 +265,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UserControls\IaonTreeUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\MeasurementPagerUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

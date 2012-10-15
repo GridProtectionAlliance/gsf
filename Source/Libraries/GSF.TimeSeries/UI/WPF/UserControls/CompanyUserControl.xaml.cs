@@ -52,7 +52,6 @@ namespace GSF.TimeSeries.UI.UserControls
         public CompanyUserControl()
         {
             InitializeComponent();
-            this.Unloaded += new RoutedEventHandler(CompanyUserControl_Unloaded);
             m_dataContext = new Companies(25, false);
             m_dataContext.PropertyChanged += new PropertyChangedEventHandler(ViewModel_PropertyChanged);
             this.DataContext = m_dataContext;
@@ -62,16 +61,6 @@ namespace GSF.TimeSeries.UI.UserControls
         #endregion
 
         #region [ Methods ]
-
-        /// <summary>
-        /// Handles unload event of the <see cref="CompanyUserControl"/>.
-        /// </summary>
-        /// <param name="sender">Source of the event.</param>
-        /// <param name="e">Arguments for the event.</param>
-        void CompanyUserControl_Unloaded(object sender, RoutedEventArgs e)
-        {
-            m_dataContext.ProcessPropertyChange();
-        }
 
         /// <summary>
         /// Handles PreviewKeyDown event on the datagrid.

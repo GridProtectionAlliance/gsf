@@ -51,7 +51,6 @@ namespace GSF.TimeSeries.UI.UserControls
         public AlarmUserControl()
         {
             InitializeComponent();
-            this.Unloaded += AlarmUserControl_Unloaded;
             m_dataContext = new ViewModels.Alarms(10);
             m_dataContext.PropertyChanged += new PropertyChangedEventHandler(ViewModel_PropertyChanged);
             this.DataContext = m_dataContext;
@@ -61,11 +60,23 @@ namespace GSF.TimeSeries.UI.UserControls
 
         #region [ Methods ]
 
-        private void AlarmUserControl_Unloaded(object sender, RoutedEventArgs e)
+        private void MeasurementPagerButton_Click(object sender, RoutedEventArgs e)
         {
-            m_dataContext.ProcessPropertyChange();
+            MeasurementPagerPopup.IsOpen = true;
         }
-        
+
+        private void ButtonSelectMeasurement_Click(object sender, RoutedEventArgs e)
+        {
+            SignalLabel.Text = MeasurementPager.CurrentItem.PointTag;
+            m_dataContext.CurrentItem.SignalID = MeasurementPager.CurrentItem.SignalID;
+            MeasurementPagerPopup.IsOpen = false;
+        }
+
+        private void ButtonCancel_Click(object sender, RoutedEventArgs e)
+        {
+            MeasurementPagerPopup.IsOpen = false;
+        }
+
         private void DataGrid_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Delete)

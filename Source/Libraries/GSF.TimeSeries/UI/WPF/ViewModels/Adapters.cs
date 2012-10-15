@@ -502,7 +502,28 @@ namespace GSF.TimeSeries.UI.ViewModels
         {
             return adapterType.LoadImplementations(searchDirectory, true)
                 .Distinct()
+                .Where(type => GetEditorBrowsableState(type) == EditorBrowsableState.Always)
                 .ToDictionary(type => type, GetDescription);
+        }
+
+        /// <summary>
+        /// Gets the editor browsable state of the given type. This method will
+        /// search for a <see cref="EditorBrowsableAttribute"/> using reflection.
+        /// If none is found, it will default to <see cref="EditorBrowsableState.Always"/>.
+        /// </summary>
+        /// <param name="type">The type for which an editor browsable state is found.</param>
+        /// <returns>
+        /// Either the editor browsable state as defined by an <see cref="EditorBrowsableAttribute"/>
+        /// or else <see cref="EditorBrowsableState.Always"/>.
+        /// </returns>
+        private EditorBrowsableState GetEditorBrowsableState(Type type)
+        {
+            EditorBrowsableAttribute editorBrowsableAttribute;
+
+            if (type.TryGetAttribute(out editorBrowsableAttribute))
+                return editorBrowsableAttribute.State;
+            else
+                return EditorBrowsableState.Always;
         }
 
         /// <summary>

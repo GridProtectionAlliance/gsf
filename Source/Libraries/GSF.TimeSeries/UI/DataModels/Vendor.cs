@@ -295,7 +295,7 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 if ((object)Keys != null && Keys.Count > 0)
                 {
-                    commaSeparatedKeys = Keys.Select(key => "'" + key.ToString() + "'").Aggregate((str1, str2) => str1 + "," + str2);
+                    commaSeparatedKeys = Keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
                     query = string.Format("SELECT ID, Acronym, Name, PhoneNumber, ContactEmail, URL " +
                               "FROM VendorDetail WHERE ID IN ({0})", commaSeparatedKeys);
                     vendorTable = database.Connection.RetrieveData(database.AdapterType, query);
@@ -306,14 +306,14 @@ namespace GSF.TimeSeries.UI.DataModels
                     foreach (DataRow row in vendorTable.Rows)
                     {
                         vendorList.Add(new Vendor()
-                            {
-                                ID = row.ConvertField<int>("ID"),
-                                Acronym = row.Field<string>("Acronym"),
-                                Name = row.Field<string>("Name"),
-                                PhoneNumber = row.Field<string>("PhoneNumber"),
-                                ContactEmail = row.Field<string>("ContactEmail"),
-                                URL = row.Field<string>("URL")
-                            });
+                        {
+                            ID = row.ConvertField<int>("ID"),
+                            Acronym = row.Field<string>("Acronym"),
+                            Name = row.Field<string>("Name"),
+                            PhoneNumber = row.Field<string>("PhoneNumber"),
+                            ContactEmail = row.Field<string>("ContactEmail"),
+                            URL = row.Field<string>("URL")
+                        });
                     }
                 }
                 return vendorList;

@@ -137,6 +137,7 @@ namespace GSF.TimeSeries.UI.DataModels
         /// </summary>
         [Required(ErrorMessage = " Adapter name is a required field, please provide value.")]
         [StringLength(200, ErrorMessage = " Adapter name cannot exceed 200 characters.")]
+        [RegularExpression("^[A-Z0-9-'!'_'@#\\$]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' and '$' are allowed.")]
         public string AdapterName
         {
             get
@@ -420,7 +421,7 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 if ((object)keys != null && keys.Count > 0)
                 {
-                    commaSeparatedKeys = keys.Select(key => "'" + key.ToString() + "'").Aggregate((str1, str2) => str1 + "," + str2);
+                    commaSeparatedKeys = keys.Select(key => "" + key.ToString() + "").Aggregate((str1, str2) => str1 + "," + str2);
                     query = database.ParameterizedQueryString(string.Format("SELECT NodeID, ID, AdapterName, AssemblyName, TypeName, ConnectionString, " +
                         "LoadOrder, Enabled, NodeName FROM {0} WHERE NodeID = {{0}} AND ID IN ({1})", viewName, commaSeparatedKeys), "nodeID");
 
@@ -587,6 +588,5 @@ namespace GSF.TimeSeries.UI.DataModels
         }
 
         #endregion
-
     }
 }

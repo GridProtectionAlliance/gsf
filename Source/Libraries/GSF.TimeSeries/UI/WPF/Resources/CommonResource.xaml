@@ -84,10 +84,10 @@
         <GradientStop Offset="0.5" Color="#FF2588D8"/>
         <GradientStop Offset="0.2" Color="#FF65AAE2"/>
     </RadialGradientBrush>
-   
+
     <DropShadowEffect x:Key="TextDarkShadowEffect" BlurRadius="2" Color="#FF064885" Direction="310" ShadowDepth="1"/>
     <DropShadowEffect x:Key="TextLightShadowEffect" BlurRadius="2" Color="#FFFFFFFF" Direction="310" ShadowDepth="1"/>
-    
+
     <Style TargetType="TextBlock" x:Key="RequiredLabel">
         <Setter Property="Margin" Value="5,5,0,5" />
     </Style>
@@ -101,7 +101,7 @@
     <Style x:Key="MainTitleStyle" TargetType="TextBlock">
         <Setter Property="Foreground" Value="{StaticResource MainTitleForegroundBrush}"/>
         <Setter Property="Effect" Value="{StaticResource TextDarkShadowEffect}"/>
-        <Setter Property="FontSize" Value="30"/>        
+        <Setter Property="FontSize" Value="30"/>
     </Style>
 
     <Style x:Key="CenterAlignCellStyle" TargetType="sdk:DataGridCell">
@@ -109,7 +109,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type DataGridCell}">
                     <Grid Background="{TemplateBinding Background}">
-                        <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center" />                        
+                        <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center" />
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>
@@ -131,12 +131,12 @@
             </Setter.Value>
         </Setter>
     </Style>
-    
+
     <Style TargetType="TextBox">
         <Setter Property="HorizontalAlignment" Value="Left" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="Width" Value="{StaticResource LargerItemSize}" />
-        <Setter Property="Margin" Value="5" />  
+        <Setter Property="Margin" Value="5" />
         <Setter Property="MinHeight" Value="22"/>
         <Setter Property="Validation.ErrorTemplate">
             <Setter.Value>
@@ -156,7 +156,7 @@
             </Trigger>
         </Style.Triggers>
     </Style>
-    
+
     <Style TargetType="{x:Type ComboBox}">
         <Setter Property="Width" Value="{StaticResource LargerItemSize}"/>
         <Setter Property="Height" Value="Auto"/>
@@ -166,11 +166,11 @@
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="HorizontalAlignment" Value="Left"/>
     </Style>
-    
+
     <Style TargetType="CheckBox">
         <Setter Property="Margin" Value="5"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
-        <Setter Property="HorizontalAlignment" Value="Left"/>        
+        <Setter Property="HorizontalAlignment" Value="Left"/>
     </Style>
 
     <!--<Style x:Key="DataGridColumnHeaderStyle" TargetType="sdk:DataGridColumnHeader">
@@ -222,7 +222,7 @@
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Height" Value="25"/>
         <Setter Property="Background" Value="{StaticResource HeaderRowBackgroundBrush}"/>
-        <Setter Property="Foreground" Value="#FF000000"/>        
+        <Setter Property="Foreground" Value="#FF000000"/>
         <Setter Property="FontWeight" Value="Bold"/>
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="Padding" Value="0"/>
@@ -297,16 +297,16 @@
         <Setter Property="CanUserReorderColumns" Value="True" />
         <Setter Property="CanUserSortColumns" Value="True" />
         <Setter Property="AlternatingRowBackground" Value="#FFDEE7EE" />
-        <Setter Property="AutoGenerateColumns" Value="False" /> 
+        <Setter Property="AutoGenerateColumns" Value="False" />
         <Setter Property="ColumnHeaderStyle" Value="{StaticResource DataGridColumnHeaderStyle}" />
         <Setter Property="GridLinesVisibility" Value="Vertical"/>
         <Setter Property="VerticalGridLinesBrush" Value="#FFE1E9EE" />
         <Setter Property="CanUserAddRows" Value="False" />
         <Setter Property="CanUserDeleteRows" Value="True"/>
         <Setter Property="HorizontalScrollBarVisibility" Value="Hidden" />
-        <Setter Property="VerticalScrollBarVisibility" Value="Auto" />               
+        <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
     </Style>
-    
+
     <Style TargetType="sdk:DataGridCell">
         <Style.Triggers>
             <Trigger Property="sdk:DataGridCell.IsSelected" Value="True">
@@ -315,15 +315,15 @@
             </Trigger>
         </Style.Triggers>
     </Style>
-        
+
     <Style TargetType="Button">
-        <Setter Property="Cursor" Value="Hand" />   
+        <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Width" Value="{StaticResource XSmallItemSize}" />
-        <Setter Property="Height" Value="Auto"/>        
+        <Setter Property="Height" Value="Auto"/>
         <Setter Property="Padding" Value="0,-2,0,-2"/>
         <Setter Property="Margin" Value="2"/>
     </Style>
-    
+
     <Style TargetType="Button" x:Key="HomeButtonStyle">
         <Setter Property="HorizontalAlignment" Value="Center"/>
         <Setter Property="Padding" Value="1"/>
@@ -349,12 +349,12 @@
     </Style>
 
     <Style TargetType="{x:Type MenuItem}" x:Key="MenuItemStyle">
-        <Setter Property="Command" Value="{Binding Command}" />        
+        <Setter Property="Command" Value="{Binding Command}" />
         <!--<Setter Property="FontSize" Value="12"/>-->
         <Setter Property="FontWeight" Value="Bold"/>
         <Setter Property="HorizontalAlignment" Value="Left"/>
         <Setter Property="Margin" Value="1"/>
-        <Setter Property="Background" Value="Transparent"/>        
+        <Setter Property="Background" Value="Transparent"/>
         <!--<Style.Triggers>
             <Trigger Property="MenuItem.IsMouseOver" Value="true">
                 <Setter Property="Foreground" Value="#FFFFFFFF"/>
@@ -372,44 +372,57 @@
     <Style TargetType="TextBlock">
         <Setter Property="Margin" Value="5" />
         <Setter Property="TextAlignment" Value="Right" />
-        <Setter Property="HorizontalAlignment" Value="Right" />        
+        <Setter Property="HorizontalAlignment" Value="Right" />
         <!--<Setter Property="FontSize" Value="{StaticResource TextSize}" />-->
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
-    
+
     <Style TargetType="{x:Type ListBox}">
         <Setter Property="AlternationCount" Value="2"/>
     </Style>
-    
+
     <Style TargetType="{x:Type ListBoxItem}">
-        <Style.Triggers>
-            <Trigger Property="ItemsControl.AlternationIndex" Value="1">
-                <Setter Property="Background" Value="#FFDEE7EE"/>
-            </Trigger>
-        </Style.Triggers>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border Name="Border" Padding="2" SnapsToDevicePixels="true" Background="White" Margin="0">
+                        <ContentPresenter/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                            <Setter TargetName="Border" Property="Background" Value="#FFDEE7EE"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Border" Property="Background" Value="LightBlue"/>
+                            <Setter TargetName="Border" Property="BorderBrush" Value="#FF9EA7BF"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
-    
+
     <util:MenuItemStyleSelector x:Key="MenuItemStyleSelector"/>
 
     <conv:NotConverter x:Key="NotConverter"/>
-    <conv:DictionaryToKeyValuePairConverter x:Key="DictionaryToKeyValuePairConverter"/>    
+    <conv:DictionaryToKeyValuePairConverter x:Key="DictionaryToKeyValuePairConverter"/>
     <conv:ObjectToVisibilityConverter x:Key="ObjectToVisibilityConverter" />
     <conv:RoleBasedVisibilityConverter x:Key="RoleBasedVisibilityConverter" />
     <conv:StringToStatusColorConverter x:Key="StringToStatusColorConverter" />
     <conv:StringToBooleanConverter x:Key="StringToBooleanConverter"/>
-    
+
     <ControlTemplate x:Key="HyperlinkStyleButtonTemplate" TargetType="Button">
         <TextBlock Text="{TemplateBinding Content}" TextDecorations="Underline" Cursor="Hand" 
                    HorizontalAlignment="Center" Width="Auto" Height="Auto" Foreground="{TemplateBinding Foreground}"/>
     </ControlTemplate>
-    
+
     <ControlTemplate x:Key="ImageButtonTemplate" TargetType="Button">
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
             <Image Source="{TemplateBinding Content}" Width="16" Height="16" />
             <TextBlock Text="{TemplateBinding Tag}" />
         </StackPanel>
     </ControlTemplate>
-    
+
     <ControlTemplate x:Key="RoundButtonTemplate" TargetType="Button">
         <Grid>
             <Ellipse HorizontalAlignment="Center" VerticalAlignment="Center" Width="{TemplateBinding Width}" Height="{TemplateBinding Height}" Fill="{TemplateBinding Background}"/>
