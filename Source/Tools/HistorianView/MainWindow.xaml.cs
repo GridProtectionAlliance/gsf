@@ -21,6 +21,8 @@
 //  12/18/2011 - J. Ritchie Carroll
 //       Set likely default archive locations on initial startup and removed disabled points from the
 //       display list.
+//  09/29/2012 - J. Ritchie Carroll
+//       Updated to code to use roll-over yielding ArchiveReader.
 //
 //******************************************************************************************************
 
@@ -271,7 +273,7 @@ namespace HistorianView
         // Fields
 
         private string m_currentSessionPath;
-        private ICollection<ArchiveFile> m_archiveFiles;
+        private ICollection<ArchiveReader> m_archiveReaders;
         private List<MetadataWrapper> m_metadata;
         private DateTime m_startTime;
         private DateTime m_endTime;
@@ -290,7 +292,7 @@ namespace HistorianView
         /// </summary>
         public MainWindow()
         {
-            m_archiveFiles = new List<ArchiveFile>();
+            m_archiveReaders = new List<ArchiveReader>();
             m_metadata = new List<MetadataWrapper>();
             m_contextMenuItems = new List<MenuItem>();
             m_visibleColumns = new HashSet<string>();
@@ -304,7 +306,7 @@ namespace HistorianView
 
             string[] lastArchiveLocations = ConfigurationFile.Current.Settings.General["ArchiveLocations", true].ValueAs("").Split('|').Where(archiveLocation => !string.IsNullOrWhiteSpace(archiveLocation) && File.Exists(archiveLocation)).ToArray();
 
-            if (lastArchiveLocations == null || lastArchiveLocations.Length == 0)
+            if (lastArchiveLocations.Length == 0)
             {
                 // See if a local archive folder exists with a valid archive
                 string defaultArchiveLocation = FilePath.GetAbsolutePath("Archive");
@@ -312,7 +314,7 @@ namespace HistorianView
                 if (Directory.Exists(defaultArchiveLocation))
                     lastArchiveLocations = Directory.GetFiles(defaultArchiveLocation, "*_archive.d");
 
-                if (lastArchiveLocations == null || lastArchiveLocations.Length == 0)
+                if (lastArchiveLocations.Length == 0)
                 {
                     // See if a local statistics folder exists with a valid archive
                     defaultArchiveLocation = FilePath.GetAbsolutePath("Statistics");
@@ -322,7 +324,7 @@ namespace HistorianView
                 }
             }
 
-            if (lastArchiveLocations != null && lastArchiveLocations.Length > 0)
+            if (lastArchiveLocations.Length > 0)
                 OpenArchives(lastArchiveLocations);
         }
 
@@ -443,16 +445,13 @@ namespace HistorianView
             foreach (string fileName in fileNames)
             {
                 if (File.Exists(fileName))
-                    m_archiveFiles.Add(OpenArchiveFile(fileName));
+                    m_archiveReaders.Add(OpenArchiveReader(fileName));
             }
-            
-            foreach (ArchiveFile file in m_archiveFiles)
+
+            foreach (ArchiveReader reader in m_archiveReaders)
             {
-               
-                foreach (MetadataRecord record in file.MetadataFile.Read())
+                foreach (MetadataRecord record in reader.MetadataFile.Read())
                 {
-                   
-                   
                     if (record.GeneralFlags.Enabled)
                         m_metadata.Add(new MetadataWrapper(record));
                 }
@@ -460,7 +459,7 @@ namespace HistorianView
 
             ArchiveIsOpen = true;
             FilterBySearchResults();
-            m_chartWindow.ArchiveFiles = m_archiveFiles;
+            m_chartWindow.ArchiveReaders = m_archiveReaders;
             TrySetChartInterval(null);
             m_chartWindow.UpdateChart();
         }
@@ -512,30 +511,12 @@ namespace HistorianView
             }
         }
 
-        // Opens an archive file and returns the ArchiveFile object.
-        private ArchiveFile OpenArchiveFile(string fileName)
+        // Opens an archive reader and returns the ArchiveReader object.
+        private ArchiveReader OpenArchiveReader(string fileName)
         {
-            string m_archiveLocation = FilePath.GetDirectoryName(fileName);
-            string instance = fileName.Substring(0, fileName.LastIndexOf('_'));
+            ArchiveReader file = new ArchiveReader();
 
-            ArchiveFile file = new ArchiveFile();
-            file.FileName = fileName;
-            file.FileAccessMode = FileAccess.Read;
-
-            file.StateFile = new StateFile();
-            file.StateFile.FileAccessMode = FileAccess.Read;
-            file.StateFile.FileName = string.Format("{0}_startup.dat", instance);
-
-            file.IntercomFile = new IntercomFile();
-            file.IntercomFile.FileAccessMode = FileAccess.Read;
-            file.IntercomFile.FileName = string.Format("{0}scratch.dat", m_archiveLocation);
-
-            file.MetadataFile = new MetadataFile();
-            file.MetadataFile.FileAccessMode = FileAccess.Read;
-            file.MetadataFile.FileName = string.Format("{0}_dbase.dat", instance);
-            file.MetadataFile.LoadOnOpen = true;
-
-            file.Open();
+            file.Open(fileName);
 
             return file;
         }
@@ -553,24 +534,24 @@ namespace HistorianView
             StartTime = DateTime.Parse(root.Attributes["startTime"].Value);
             EndTime = DateTime.Parse(root.Attributes["endTime"].Value);
             metadataElements = root.ChildNodes.Cast<XmlElement>();
-            m_archiveFiles = metadataElements.Select(element => element.Attributes["archivePath"].Value).Distinct().Select(archivePath => OpenArchiveFile(archivePath)).ToList();
+            m_archiveReaders = metadataElements.Select(element => element.Attributes["archivePath"].Value).Distinct().Select(archivePath => OpenArchiveReader(archivePath)).ToList();
 
-            foreach (ArchiveFile archive in m_archiveFiles)
+            foreach (ArchiveReader reader in m_archiveReaders)
             {
-                IEnumerable<MetadataWrapper> wrappers = archive.MetadataFile.Read().Select(record => new MetadataWrapper(record));
+                IEnumerable<MetadataWrapper> records = reader.MetadataFile.Read().Select(record => new MetadataWrapper(record));
 
-                foreach (MetadataWrapper wrap in wrappers)
+                foreach (MetadataWrapper record in records)
                 {
-                    XmlElement metadataElement = metadataElements.SingleOrDefault(element => element.Attributes["historianId"].Value == wrap.GetMetadata().HistorianID.ToString() && element.Attributes["archivePath"].Value == archive.FileName);
+                    XmlElement metadataElement = metadataElements.SingleOrDefault(element => element.Attributes["historianId"].Value == record.GetMetadata().HistorianID.ToString() && element.Attributes["archivePath"].Value == reader.FileName);
 
                     if (metadataElement != null)
                     {
-                        wrap.Export = bool.Parse(metadataElement.Attributes["export"].Value);
-                        wrap.Display = bool.Parse(metadataElement.Attributes["display"].Value);
-                        
+                        record.Export = bool.Parse(metadataElement.Attributes["export"].Value);
+                        record.Display = bool.Parse(metadataElement.Attributes["display"].Value);
+
                     }
 
-                    m_metadata.Add(wrap);
+                    m_metadata.Add(record);
                 }
             }
 
@@ -578,7 +559,7 @@ namespace HistorianView
             this.Title = Path.GetFileName(filePath) + " - Historian Data Viewer";
             ArchiveIsOpen = true;
             FilterBySearchResults();
-            m_chartWindow.ArchiveFiles = m_archiveFiles;
+            m_chartWindow.ArchiveReaders = m_archiveReaders;
             TrySetChartInterval(null);
             m_chartWindow.UpdateChart();
         }
@@ -614,33 +595,33 @@ namespace HistorianView
             endTime.Value = EndTime.ToString("MM/dd/yyyy HH:mm:ss.fff");
             root.Attributes.Append(startTime);
             root.Attributes.Append(endTime);
-            
-            foreach (ArchiveFile archive in m_archiveFiles)
+
+            foreach (ArchiveReader reader in m_archiveReaders)
             {
-                foreach (MetadataRecord record in archive.MetadataFile.Read())
+                foreach (MetadataRecord record in reader.MetadataFile.Read())
                 {
                     //The earlier version used m_metadata.Single which would throw an exception(when GetMetadata returns a null) causing the application to crash
                     //When m_metadata.SingleOrDefault is used it returns a null(default) value when the comparison is false
                     MetadataWrapper wrapper = m_metadata.SingleOrDefault(wrap => wrap.GetMetadata() == record);//svk_modified from Single
 
-                  
-                   if(wrapper!=null)//svk_5/25/12//condition to ensure that an null referenced object is not accessed
-                   {
-                    if (wrapper.Export || wrapper.Display)
+
+                    if (wrapper != null)//svk_5/25/12//condition to ensure that an null referenced object is not accessed
                     {
-                        string[] attributeValues = { archive.FileName, record.HistorianID.ToString(), wrapper.Export.ToString(), wrapper.Display.ToString() };
-                        XmlElement metadataElement = doc.CreateElement("metadata");
-
-                        for (int i = 0; i < attributeNames.Length; i++)
+                        if (wrapper.Export || wrapper.Display)
                         {
-                            XmlAttribute attribute = doc.CreateAttribute(attributeNames[i]);
-                            attribute.Value = attributeValues[i];
-                            metadataElement.Attributes.Append(attribute);
-                        }
+                            string[] attributeValues = { reader.FileName, record.HistorianID.ToString(), wrapper.Export.ToString(), wrapper.Display.ToString() };
+                            XmlElement metadataElement = doc.CreateElement("metadata");
 
-                        root.AppendChild(metadataElement);
+                            for (int i = 0; i < attributeNames.Length; i++)
+                            {
+                                XmlAttribute attribute = doc.CreateAttribute(attributeNames[i]);
+                                attribute.Value = attributeValues[i];
+                                metadataElement.Attributes.Append(attribute);
+                            }
+
+                            root.AppendChild(metadataElement);
+                        }
                     }
-                   }
 
                 }
             }
@@ -755,11 +736,11 @@ namespace HistorianView
                 {
                     int index = 0;
 
-                    Dictionary<MetadataWrapper, ArchiveFile> metadata = m_metadata
+                    Dictionary<MetadataWrapper, ArchiveReader> metadata = m_metadata
                         .Where(wrapper => wrapper.Export)
                         .ToDictionary(
                             wrapper => wrapper,
-                            wrapper => m_archiveFiles.Single(archive => archive.MetadataFile.Read().Any(record => wrapper.GetMetadata() == record))
+                            wrapper => m_archiveReaders.Single(archive => archive.MetadataFile.Read().Any(record => wrapper.GetMetadata() == record))
                         );
 
                     Dictionary<string, List<string>> data = new Dictionary<string, List<string>>();
@@ -965,10 +946,10 @@ namespace HistorianView
         // Closes the archive files and clears the archive file collection.
         private void ClearArchives()
         {
-            foreach (ArchiveFile file in m_archiveFiles)
-                file.Close();
+            foreach (ArchiveReader reader in m_archiveReaders)
+                reader.Dispose();
 
-            m_archiveFiles.Clear();
+            m_archiveReaders.Clear();
             m_metadata.Clear();
         }
 
@@ -1285,8 +1266,8 @@ namespace HistorianView
         {
             string lastArchiveLocations = "";
 
-            if (m_archiveFiles != null && m_archiveFiles.Count > 0)
-                lastArchiveLocations = m_archiveFiles.Select(file => file.FileName).ToDelimitedString();
+            if (m_archiveReaders != null && m_archiveReaders.Count > 0)
+                lastArchiveLocations = m_archiveReaders.Select(file => file.FileName).ToDelimitedString();
 
             ConfigurationFile.Current.Settings.General["ArchiveLocations", true].Value = lastArchiveLocations;
             ConfigurationFile.Current.Save();

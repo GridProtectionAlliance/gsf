@@ -146,7 +146,7 @@ namespace GSF.Historian.Exporters
             // Initialize local variables.
             DataSet output = null;
             string[] outputFiles = outputFileSetting.Value.Split(';', ',');
-            DataSet current = GetExportDataAsDataset(export, null); 
+            DataSet current = GetExportDataAsDataset(export, null);
             DateTime dataStartDate = DateTime.UtcNow.AddMinutes(-Convert.ToInt32(outputTimespanSetting.Value));
 
             // Make the output filenames absolute.
@@ -233,7 +233,7 @@ namespace GSF.Historian.Exporters
                         {
                             history.Rows.Add(newData.ItemArray);
                         }
-                        catch (Exception)
+                        catch
                         {
                             // Exception is encountered if duplicate data is inserted.
                             AddDummyData(history, newData);

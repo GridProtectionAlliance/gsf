@@ -279,7 +279,7 @@ namespace GSF.Historian.Exporters
         /// <summary>
         /// Gets the internal <see cref="ProcessQueue{T}"/> used for processing <see cref="Exports"/> defined as <see cref="ExportType.RealTime"/>.
         /// </summary>
-        protected ProcessQueue<RealTimeData> RealTimeExportQueue 
+        protected ProcessQueue<RealTimeData> RealTimeExportQueue
         {
             get
             {
@@ -698,7 +698,7 @@ namespace GSF.Historian.Exporters
                             {
                                 m_exportAddedHandler(export);
                             }
-                            catch (Exception)
+                            catch
                             {
                             }
                         }
@@ -714,7 +714,7 @@ namespace GSF.Historian.Exporters
                             {
                                 m_exportRemovedHandler(export);
                             }
-                            catch (Exception)
+                            catch
                             {
                             }
                         }
@@ -730,7 +730,7 @@ namespace GSF.Historian.Exporters
                             {
                                 m_exportUpdatedHandler(export);
                             }
-                            catch (Exception)
+                            catch
                             {
                             }
                         }

@@ -45,10 +45,26 @@ namespace HistorianView
         // Nested Types
         private struct ChartBoundary
         {
-            public DateTime? Left { get; set; }
-            public DateTime? Right { get; set; }
-            public double? Top { get; set; }
-            public double? Bottom { get; set; }
+            public DateTime? Left
+            {
+                get;
+                set;
+            }
+            public DateTime? Right
+            {
+                get;
+                set;
+            }
+            public double? Top
+            {
+                get;
+                set;
+            }
+            public double? Bottom
+            {
+                get;
+                set;
+            }
         }
 
         private class DataPointWrapper
@@ -89,7 +105,7 @@ namespace HistorianView
         public event EventHandler ChartUpdated;
 
         // Fields
-        private ICollection<ArchiveFile> m_archiveFiles;
+        private ICollection<ArchiveReader> m_archiveReaders;
         private ICollection<MetadataRecord> m_visiblePoints;
         private int m_chartResolution;
         private LinkedList<ChartBoundary> m_backwardHistory;
@@ -108,7 +124,7 @@ namespace HistorianView
 
         public ChartWindow()
         {
-            m_archiveFiles = new List<ArchiveFile>();
+            m_archiveReaders = new List<ArchiveReader>();
             m_visiblePoints = new List<MetadataRecord>();
             m_chartResolution = 100;
 
@@ -124,15 +140,15 @@ namespace HistorianView
 
         #region [ Properties ]
 
-        public ICollection<ArchiveFile> ArchiveFiles
+        public ICollection<ArchiveReader> ArchiveReaders
         {
             get
             {
-                return m_archiveFiles;
+                return m_archiveReaders;
             }
             set
             {
-                m_archiveFiles = value;
+                m_archiveReaders = value;
                 m_visiblePoints.Clear();
             }
         }
@@ -226,14 +242,15 @@ namespace HistorianView
             Cursor = Cursors.Wait;
 
             m_chart.Series.Clear();
-            foreach (ArchiveFile file in m_archiveFiles)
+
+            foreach (ArchiveReader reader in m_archiveReaders)
             {
-                foreach (MetadataRecord record in file.MetadataFile.Read())
+                foreach (MetadataRecord record in reader.MetadataFile.Read())
                 {
                     if (m_chartResolution > 0 && colorIndex < m_lineColors.Count && m_visiblePoints.Any(point => record == point))
                     {
                         LineSeries series = new LineSeries();
-                        IEnumerable<IDataPoint> data = file.ReadData(record.HistorianID, startTime, endTime);
+                        IEnumerable<IDataPoint> data = reader.ReadData(record.HistorianID, startTime, endTime);
                         int interval = (data.Count() / m_chartResolution) + 1;
                         int pointCount = 0;
 

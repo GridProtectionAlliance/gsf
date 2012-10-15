@@ -164,7 +164,7 @@ namespace GSF.Historian.Exporters
                     }
                 }
             }
-            catch (Exception)
+            catch
             {
                 throw;
             }
@@ -244,7 +244,7 @@ namespace GSF.Historian.Exporters
             foreach (RealTimeData item in items)
             {
                 try
-                {                  
+                {
                     lock (m_rawData)
                     {
                         m_rawData.TryGetValue(item.Export.Name, out rawData);
@@ -266,7 +266,7 @@ namespace GSF.Historian.Exporters
                                         rawData.Tables[0].Rows.Add(item.Listener.ID, dataPoint.HistorianID, dataPoint.Time.ToString(), dataPoint.Value, (int)dataPoint.Quality);
                                     }
                                 }
-                                catch (Exception)
+                                catch
                                 {
                                     throw;
                                 }
@@ -290,7 +290,7 @@ namespace GSF.Historian.Exporters
                                             rawData.Tables[0].Rows.Add(item.Listener.ID, dataPoint.HistorianID, dataPoint.Time.ToString(), dataPoint.Value, (int)dataPoint.Quality);
                                     }
                                 }
-                                catch (Exception)
+                                catch
                                 {
                                     throw;
                                 }
@@ -344,7 +344,7 @@ namespace GSF.Historian.Exporters
                 }
             }
         }
-      
+
         #endregion
     }
 }

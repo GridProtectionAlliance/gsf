@@ -48,6 +48,7 @@ namespace GSF.Historian.Files
             private List<ArchiveDataBlock> m_dataBlocks;
             private TimeTag m_startTime;
             private TimeTag m_endTime;
+            private int m_historianID;
             private EventHandler<EventArgs<Exception>> m_dataReadExceptionHandler;
 
             #endregion
@@ -68,7 +69,23 @@ namespace GSF.Historian.Files
                 m_dataBlocks = dataBlockAllocationTable.FindDataBlocks(historianID, startTime, endTime, false);
                 m_startTime = startTime;
                 m_endTime = endTime;
+                m_historianID = historianID;
                 m_dataReadExceptionHandler = dataReadExceptionHandler;
+            }
+
+            #endregion
+
+            #region [ Properties]
+
+            /// <summary>
+            /// Gets the historian ID associated with this <see cref="DataPointScanner"/>.
+            /// </summary>
+            public int HistorianID
+            {
+                get
+                {
+                    return m_historianID;
+                }
             }
 
             #endregion
@@ -127,7 +144,7 @@ namespace GSF.Historian.Files
         }
 
         // Fields
-        private List<DataPointScanner> m_dataPointScanners;
+        private readonly List<DataPointScanner> m_dataPointScanners;
 
         #endregion
 
@@ -140,15 +157,20 @@ namespace GSF.Historian.Files
         /// <param name="historianIDs">Historian ID's to scan.</param>
         /// <param name="startTime">Desired start time.</param>
         /// <param name="endTime">Desired end time.</param>
+        /// <param name="lastHistorianID">Last read historian ID, or -1 to begin scan at first ID.</param>
         /// <param name="dataReadExceptionHandler">Read exception handler.</param>
-        public TimeSortedDataPointScanner(ArchiveFileAllocationTable dataBlockAllocationTable, IEnumerable<int> historianIDs, TimeTag startTime, TimeTag endTime, EventHandler<EventArgs<Exception>> dataReadExceptionHandler)
+        public TimeSortedDataPointScanner(ArchiveFileAllocationTable dataBlockAllocationTable, IEnumerable<int> historianIDs, TimeTag startTime, TimeTag endTime, int lastHistorianID, EventHandler<EventArgs<Exception>> dataReadExceptionHandler)
         {
             m_dataPointScanners = new List<DataPointScanner>();
 
             // Create data point scanners for each historian ID
             foreach (int historianID in historianIDs)
             {
-                m_dataPointScanners.Add(new DataPointScanner(dataBlockAllocationTable, historianID, startTime, endTime, dataReadExceptionHandler));
+                // Start scan when last Historian ID is -1, otherwise if last historian ID is encountered, start reading at next point
+                if (lastHistorianID == -1)
+                    m_dataPointScanners.Add(new DataPointScanner(dataBlockAllocationTable, historianID, startTime, endTime, dataReadExceptionHandler));
+                else if (lastHistorianID == historianID)
+                    lastHistorianID = -1;
             }
         }
 
