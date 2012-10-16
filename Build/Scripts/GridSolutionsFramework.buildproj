@@ -32,6 +32,8 @@
       <!-- Versioning scheme settings. -->
       <VersionBuildChange>Increment</VersionBuildChange>
       <VersionRevisionChange>Reset</VersionRevisionChange>
+      <!-- Server folder does not match project name -->
+      <ServerFolder>$/gsf/Main</ServerFolder>
     </PropertyGroup>
   </Target>
 
