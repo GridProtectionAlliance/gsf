@@ -521,11 +521,11 @@ namespace TimeSeriesFramework.UI.DataModels
                         "measurementReportingInterval", "description", "loadOrder", "enabled", "updatedBy", "updatedOn", "createdBy", "createdOn");
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout,
-                        (historian.NodeID == null || historian.NodeID == Guid.Empty) ? database.CurrentNodeID() : database.Guid(historian.NodeID),
-                        historian.Acronym.Replace(" ", "").ToUpper(), historian.Name.ToNotNull(), historian.AssemblyName.ToNotNull(), historian.TypeName.ToNotNull(),
-                        historian.ConnectionString.ToNotNull(), database.Bool(historian.IsLocal), historian.MeasurementReportingInterval, historian.Description.ToNotNull(),
-                        historian.LoadOrder, database.Bool(historian.Enabled), CommonFunctions.CurrentUser, database.UtcNow(),
-                        CommonFunctions.CurrentUser, database.UtcNow());
+                    database.CurrentNodeID(),
+                       historian.Acronym.Replace(" ", "").ToUpper(), historian.Name.ToNotNull(), historian.AssemblyName.ToNotNull(), historian.TypeName.ToNotNull(),
+                       historian.ConnectionString.ToNotNull(), database.Bool(historian.IsLocal), historian.MeasurementReportingInterval, historian.Description.ToNotNull(),
+                       historian.LoadOrder, database.Bool(historian.Enabled), CommonFunctions.CurrentUser, database.UtcNow(),
+                       CommonFunctions.CurrentUser, database.UtcNow());
                 }
                 else
                 {
@@ -534,7 +534,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         "UpdatedBy = {11}, UpdatedOn = {12} WHERE ID = {13}", "nodeID", "acronym", "name", "assemblyName", "typeName", "connectionString",
                         "isLocal", "measurementReportingInterval", "description", "loadOrder", "enabled", "updatedBy", "updatedOn", "id");
 
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.Guid(historian.NodeID),
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.CurrentNodeID(),
                         historian.Acronym.Replace(" ", "").ToUpper(), historian.Name.ToNotNull(), historian.AssemblyName.ToNotNull(), historian.TypeName.ToNotNull(),
                         historian.ConnectionString.ToNotNull(), database.Bool(historian.IsLocal), historian.MeasurementReportingInterval, historian.Description.ToNotNull(),
                         historian.LoadOrder, database.Bool(historian.Enabled), CommonFunctions.CurrentUser, database.UtcNow(), historian.ID);
