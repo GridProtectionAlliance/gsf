@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion("2.0.1.0")]
 
 // Informational attributes.
-[assembly: AssemblyCompany("TVA")]
-[assembly: AssemblyCopyright("No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.")]
-[assembly: AssemblyProduct("TVA Code Library")]
+[assembly: AssemblyCompany("Grid Protection Alliance")]
+[assembly: AssemblyCopyright("Copyright ©  2012. All Rights Reserved.")]
+[assembly: AssemblyProduct("Grid Solutions Framework")]
 
 // Assembly manifest attributes.
 #if DEBUG
@@ -16,9 +16,9 @@ using System.Runtime.InteropServices;
 #else
 [assembly: AssemblyConfiguration("Release Build")]
 #endif
-[assembly: AssemblyDefaultAlias("TVA.Security")]
+[assembly: AssemblyDefaultAlias("GSF.Security")]
 [assembly: AssemblyDescription("Library of core security framework for implementing role-based security across various .NET application types.")]
-[assembly: AssemblyTitle("TVA.Security")]
+[assembly: AssemblyTitle("GSF.Security")]
 
 // Other configuration attributes.
 [assembly: CLSCompliant(true)]

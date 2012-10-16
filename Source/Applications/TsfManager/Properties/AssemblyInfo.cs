@@ -6,7 +6,7 @@ using System.Windows;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("TSF Manager")]
-[assembly: AssemblyDescription("Time-series Framework UI Management Application")]
+[assembly: AssemblyDescription("Grid Solutions Framework UI Management Application")]
 [assembly: AssemblyCompany("Grid Protection Alliance")]
 [assembly: AssemblyProduct("Grid Solutions Framework")]
 [assembly: AssemblyCopyright("Copyright © 2012.  All Rights Reserved.")]

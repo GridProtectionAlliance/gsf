@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion("2.0.1.0")]
 
 // Informational attributes.
-[assembly: AssemblyCompany("TVA")]
-[assembly: AssemblyCopyright("No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.")]
-[assembly: AssemblyProduct("TVA Code Library")]
+[assembly: AssemblyCompany("Grid Protection Alliance")]
+[assembly: AssemblyCopyright("Copyright ©  2012. All Rights Reserved.")]
+[assembly: AssemblyProduct("Grid Solutions Framework")]
 
 // Assembly manifest attributes.
 #if DEBUG
@@ -16,9 +16,9 @@ using System.Runtime.InteropServices;
 #else
 [assembly: AssemblyConfiguration("Release Build")]
 #endif
-[assembly: AssemblyDefaultAlias("TVA.ServiceBus")]
+[assembly: AssemblyDefaultAlias("GSF.ServiceBus")]
 [assembly: AssemblyDescription("Library of lightweight WCF-based Service Bus with queue and topic support for secure event-driven messaging between disjoint systems.")]
-[assembly: AssemblyTitle("TVA.ServiceBus")]
+[assembly: AssemblyTitle("GSF.ServiceBus")]
 
 // Other configuration attributes.
 [assembly: CLSCompliant(true)]

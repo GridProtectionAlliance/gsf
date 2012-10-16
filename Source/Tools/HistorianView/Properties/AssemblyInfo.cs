@@ -9,7 +9,7 @@ using System.Windows;
 [assembly: AssemblyDescription("Utility for trending and exporting data from historian data files.")]
 [assembly: AssemblyCompany("Grid Protection Alliance")]
 [assembly: AssemblyProduct("openHistorian")]
-[assembly: AssemblyCopyright("Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.")]
+[assembly: AssemblyCopyright("Copyright © 2012.  All Rights Reserved.")]
 
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug Build")]

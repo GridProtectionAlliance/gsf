@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion("2.0.1.0")]
 
 // Informational attributes.
-[assembly: AssemblyCompany("TVA")]
-[assembly: AssemblyCopyright("No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.")]
-[assembly: AssemblyProduct("TVA Code Library")]
+[assembly: AssemblyCompany("Grid Protection Alliance")]
+[assembly: AssemblyCopyright("Copyright ©  2012. All Rights Reserved.")]
+[assembly: AssemblyProduct("Grid Solutions Framework")]
 
 // Assembly manifest attributes.
 #if DEBUG
@@ -16,9 +16,9 @@ using System.Runtime.InteropServices;
 #else
 [assembly: AssemblyConfiguration("Release Build")]
 #endif
-[assembly: AssemblyDefaultAlias("TVA.Windows")]
+[assembly: AssemblyDefaultAlias("GSF.Windows")]
 [assembly: AssemblyDescription("Library of property grid extensions, about dialog and base Windows Form and WPF Window for implementing role-based security.")]
-[assembly: AssemblyTitle("TVA.Windows")]
+[assembly: AssemblyTitle("GSF.Windows")]
 
 // Other configuration attributes.
 [assembly: CLSCompliant(true)]

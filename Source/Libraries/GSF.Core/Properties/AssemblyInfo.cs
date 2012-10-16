@@ -7,9 +7,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion("2.0.1.0")]
 
 // Informational attributes.
-[assembly: AssemblyCompany("TVA")]
-[assembly: AssemblyCopyright("No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.")]
-[assembly: AssemblyProduct("TVA Code Library")]
+[assembly: AssemblyCompany("Grid Protection Alliance")]
+[assembly: AssemblyCopyright("Copyright © 2012.  All Rights Reserved.")]
+[assembly: AssemblyProduct("Grid Solutions Framework")]
 
 // Assembly manifest attributes.
 #if DEBUG
@@ -17,9 +17,9 @@ using System.Runtime.InteropServices;
 #else
 [assembly: AssemblyConfiguration("Release Build")]
 #endif
-[assembly: AssemblyDefaultAlias("TVA.Core")]
+[assembly: AssemblyDefaultAlias("GSF.Core")]
 [assembly: AssemblyDescription("Library of .NET extensions and components - adapter framework, process queue, configuration api, diagnostics, error handling, active directory, interop, checksums, ftp, mail, unit conversion, binary parsing, scheduler, ntp time, precision timer, int24, unit24, console extensions, database extensions, drawing extension, reflection extensions, xml extensions, bit extensions, buffer extensions, char extensions, data-time extensions, enum extensions, string extensions.")]
-[assembly: AssemblyTitle("TVA.Core")]
+[assembly: AssemblyTitle("GSF.Core")]
 
 // Other configuration attributes.
 [assembly: CLSCompliant(true)]

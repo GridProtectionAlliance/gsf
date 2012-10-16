@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("HistorianPlaybackUtility")]
 [assembly: AssemblyDescription("Utility for playing back and/or exporting data from historian data files.")]
 [assembly: AssemblyCompany("Grid Protection Alliance")]
-[assembly: AssemblyCopyright("Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.")]
+[assembly: AssemblyCopyright("Copyright © 2012.  All Rights Reserved.")]
 [assembly: AssemblyProduct("openHistorian")]
 
 // Assembly manifest attributes.

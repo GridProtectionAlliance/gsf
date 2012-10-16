@@ -4,11 +4,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("TimeSeriesFramework.UI")]
-[assembly: AssemblyDescription("Time-series Data Processing User Interface Framework")]
+[assembly: AssemblyTitle("Grid Solutions Framework")]
+[assembly: AssemblyDescription("Grid Solutions Data Processing User Interface Framework")]
 [assembly: AssemblyCompany("Grid Protection Alliance")]
 [assembly: AssemblyProduct("Time-series Data Processing Framework")]
-[assembly: AssemblyCopyright("Copyright © GPA, 2011.  All Rights Reserved.")]
+[assembly: AssemblyCopyright("Copyright © 2012.  All Rights Reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
