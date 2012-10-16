@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.Web.UI;
 
 // Assembly identity attributes.
-[assembly: AssemblyVersion("4.0.4.15")]
+[assembly: AssemblyVersion("2.0.1.0")]
 
 // Informational attributes.
 [assembly: AssemblyCompany("TVA")]
