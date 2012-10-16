@@ -7,8 +7,8 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Data Subscriber Test")]
 [assembly: AssemblyDescription("Data Subscriber Test Application")]
 [assembly: AssemblyCompany("Grid Protection Alliance")]
-[assembly: AssemblyProduct("Time-series Data Processing Framework")]
-[assembly: AssemblyCopyright("Copyright © GPA, 2011.  All Rights Reserved.")]
+[assembly: AssemblyProduct("Grid Solutions Framework")]
+[assembly: AssemblyCopyright("Copyright © 2012.  All Rights Reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

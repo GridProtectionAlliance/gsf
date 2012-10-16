@@ -8,8 +8,8 @@ using System.Windows;
 [assembly: AssemblyTitle("TSF Manager")]
 [assembly: AssemblyDescription("Time-series Framework UI Management Application")]
 [assembly: AssemblyCompany("Grid Protection Alliance")]
-[assembly: AssemblyProduct("Time-series Data Processing Framework")]
-[assembly: AssemblyCopyright("Copyright © GPA, 2011.  All Rights Reserved.")]
+[assembly: AssemblyProduct("Grid Solutions Framework")]
+[assembly: AssemblyCopyright("Copyright © 2012.  All Rights Reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

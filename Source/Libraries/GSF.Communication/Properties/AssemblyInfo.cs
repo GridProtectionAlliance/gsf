@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion("2.0.1.0")]
 
 // Informational attributes.
-[assembly: AssemblyCompany("TVA")]
-[assembly: AssemblyCopyright("No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.")]
-[assembly: AssemblyProduct("TVA Code Library")]
+[assembly: AssemblyCompany("Grid Protection Alliance")]
+[assembly: AssemblyCopyright("Copyright © 2012.  All Rights Reserved.")]
+[assembly: AssemblyProduct("Grid Solutions Frameowrk")]
 
 // Assembly manifest attributes.
 #if DEBUG
@@ -16,9 +16,10 @@ using System.Runtime.InteropServices;
 #else
 [assembly: AssemblyConfiguration("Release Build")]
 #endif
-[assembly: AssemblyDefaultAlias("TVA.Communication")]
+
+[assembly: AssemblyDefaultAlias("GSF.Communication")]
 [assembly: AssemblyDescription("Library of components for TCP, UDP, serial and file-based communication in an abstract fashion.")]
-[assembly: AssemblyTitle("TVA.Communication")]
+[assembly: AssemblyTitle("GSF.Communication")]
 
 // Other configuration attributes.
 [assembly: CLSCompliant(true)]
