@@ -437,7 +437,7 @@
     <PropertyGroup>
       <BuildLabel Condition="'$(BuildLabel)' == ''">$(ProjectName)_v$(Major).$(Minor).$(Build).$(Revision)</BuildLabel>
     </PropertyGroup>
-    <Exec Command="%22$(TfsClient)%22 checkin /comment:%22$(ProjectName): Version change for build $(BuildLabel).%22 /recursive /noprompt %22$(LocalFolder)%22"/>
+    <Exec Command="%22$(TfsClient)%22 checkin /comment:%22$(ProjectName): Version change for build $(BuildLabel).%22 /recursive /noprompt /notes:%22Code Reviewer%22=%22me%22 %22$(LocalFolder)%22"/>
   </Target>
 
   <Target Name="AfterVersionSource"/>
