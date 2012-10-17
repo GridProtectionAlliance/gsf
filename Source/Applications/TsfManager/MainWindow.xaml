@@ -48,7 +48,7 @@
                 </Grid.RowDefinitions>
 
                 <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="0">
-                    <Image Source="/TimeSeriesFramework.UI;component/images/GPALock.png" ToolTip="Grid Protection Alliance"/>
+                    <Image Source="/GSF.TimeSeries.UI;component/images/GPALock.png" ToolTip="Grid Protection Alliance"/>
                     <TextBlock x:Name="TextBoxTitle" Style="{StaticResource MainTitleStyle}" Margin="5,-10,0,0"/>
                 </StackPanel>
 
@@ -59,16 +59,16 @@
                     <Button x:Name="backEnabled" Width="Auto" Height="Auto" ToolTip="Go Back" Margin="0,0,5,0" Click="ButtonBack_Click" IsEnabled="{Binding ElementName=FrameContent, Path=CanGoBack}">
                         <Button.Template>
                             <ControlTemplate>
-                                <Image Source="/TimeSeriesFramework.UI;component/images/Back.png" Height="24" Width="24"/>
+                                <Image Source="/GSF.TimeSeries.UI;component/images/Back.png" Height="24" Width="24"/>
                             </ControlTemplate>
                         </Button.Template>
                     </Button>
-                    <Image x:Name="backDisabled" Source="/TimeSeriesFramework.UI;component/images/BackGray.png" Margin="0,0,5,0" Height="24" Width="24" Visibility="Collapsed"/>
-                    <Image x:Name="forwardDisabled" Source="/TimeSeriesFramework.UI;component/images/ForwardGray.png" Margin="0,0,5,0" Height="24" Width="24" Visibility="Collapsed"/>
+                    <Image x:Name="backDisabled" Source="/GSF.TimeSeries.UI;component/images/BackGray.png" Margin="0,0,5,0" Height="24" Width="24" Visibility="Collapsed"/>
+                    <Image x:Name="forwardDisabled" Source="/GSF.TimeSeries.UI;component/images/ForwardGray.png" Margin="0,0,5,0" Height="24" Width="24" Visibility="Collapsed"/>
                     <Button x:Name="forwardEnabled" Width="Auto" Height="Auto" ToolTip="Go Forward" Margin="0,0,5,0" Click="ButtonForward_Click" IsEnabled="{Binding ElementName=FrameContent, Path=CanGoForward}">
                         <Button.Template>
                             <ControlTemplate>
-                                <Image Source="/TimeSeriesFramework.UI;component/images/Forward.png" Height="24" Width="24"/>
+                                <Image Source="/GSF.TimeSeries.UI;component/images/Forward.png" Height="24" Width="24"/>
                             </ControlTemplate>
                         </Button.Template>
                     </Button>

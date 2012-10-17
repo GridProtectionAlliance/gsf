@@ -11,7 +11,7 @@
             <Button.Template>
                 <ControlTemplate>
                     <StackPanel Orientation="Horizontal">
-                        <Image Source="/TimeSeriesFramework.UI;component/images/Delete.png" Height="16" Width="16" Margin="2"/>
+                        <Image Source="/GSF.TimeSeries.UI;component/images/Delete.png" Height="16" Width="16" Margin="2"/>
                         <TextBlock x:Name="TextBlockText" Text="Delete" FontWeight="Bold" VerticalAlignment="Center"/>
                     </StackPanel>
                     <ControlTemplate.Triggers>
@@ -26,7 +26,7 @@
             <Button.Template>
                 <ControlTemplate>
                     <StackPanel Orientation="Horizontal">
-                        <Image Source="/TimeSeriesFramework.UI;component/images/Clear.png" Height="16" Width="16" Margin="2"/>
+                        <Image Source="/GSF.TimeSeries.UI;component/images/Clear.png" Height="16" Width="16" Margin="2"/>
                         <TextBlock x:Name="TextBlockText" Text="Clear" FontWeight="Bold" VerticalAlignment="Center"/>
                     </StackPanel>
                     <ControlTemplate.Triggers>
@@ -41,7 +41,7 @@
             <Button.Template>
                 <ControlTemplate>
                     <StackPanel Orientation="Horizontal">
-                        <Image Source="/TimeSeriesFramework.UI;component/images/Save.png" Height="16" Width="16" Margin="2"/>
+                        <Image Source="/GSF.TimeSeries.UI;component/images/Save.png" Height="16" Width="16" Margin="2"/>
                         <TextBlock x:Name="TextBlockText" Text="Save" FontWeight="Bold" VerticalAlignment="Center"/>
                     </StackPanel>
                     <ControlTemplate.Triggers>           

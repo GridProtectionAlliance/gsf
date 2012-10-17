@@ -107,7 +107,7 @@ namespace GSF.TimeSeries
         private static void ValidateExternalDataPublisher(IDbConnection connection, string nodeIDQueryString)
         {
             const string ExternalDataPublisherCountFormat = "SELECT COUNT(*) FROM CustomActionAdapter WHERE AdapterName='EXTERNAL!DATAPUBLISHER' AND NodeID = {0}";
-            const string ExternalDataPublisherInsertFormat = "INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, Enabled) VALUES({0}, 'EXTERNAL!DATAPUBLISHER', 'TimeSeriesFramework.dll', 'TimeSeriesFramework.Transport.DataPublisher', 'requireAuthentication=true; allowSynchronizedSubscription=false; useBaseTimeOffsets=true', 1)";
+            const string ExternalDataPublisherInsertFormat = "INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, Enabled) VALUES({0}, 'EXTERNAL!DATAPUBLISHER', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Transport.DataPublisher', 'requireAuthentication=true; allowSynchronizedSubscription=false; useBaseTimeOffsets=true', 1)";
 
             int externalDataPublisherCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(ExternalDataPublisherCountFormat, nodeIDQueryString)));
 
@@ -135,8 +135,8 @@ namespace GSF.TimeSeries
             const string StatSignalTypeIDFormat = "SELECT ID FROM SignalType WHERE Acronym = 'STAT'";
             const string StatMeasurementCountFormat = "SELECT COUNT(*) FROM Measurement WHERE SignalReference = '{0}' AND HistorianID = {1}";
 
-            const string SubscriberRowsFormat = "SELECT * FROM IaonInputAdapter WHERE TypeName = 'TimeSeriesFramework.Transport.DataSubscriber' AND NodeID = {0}";
-            const string PublisherRowsFormat = "SELECT * FROM IaonActionadapter WHERE TypeName = 'TimeSeriesFramework.Transport.DataPublisher' AND NodeID = {0}";
+            const string SubscriberRowsFormat = "SELECT * FROM IaonInputAdapter WHERE TypeName = 'GSF.TimeSeries.Transport.DataSubscriber' AND NodeID = {0}";
+            const string PublisherRowsFormat = "SELECT * FROM IaonActionadapter WHERE TypeName = 'GSF.TimeSeries.Transport.DataPublisher' AND NodeID = {0}";
             const string RuntimeSourceIDFormat = "SELECT SourceID FROM Runtime WHERE ID = {0}";
 
             // INSERT queries
@@ -144,10 +144,10 @@ namespace GSF.TimeSeries
             const string StatSignalTypeInsertFormat = "INSERT INTO SignalType(Name, Acronym, Suffix, Abbreviation, Source, EngineeringUnits) VALUES('Statistic', 'STAT', 'ST', 'P', 'Any', '')";
 
             const string StatHistorianInsertFormat = "INSERT INTO Historian(NodeID, Acronym, Name, AssemblyName, TypeName, ConnectionString, IsLocal, Description, LoadOrder, Enabled) VALUES({0}, 'STAT', 'Statistics Archive', 'TestingAdapters.dll', 'TestingAdapters.VirtualOutputAdapter', '', 1, 'Local historian used to archive system statistics', 9999, 1)";
-            const string StatEngineInsertFormat = "INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, LoadOrder, Enabled) VALUES({0}, 'STATISTIC!SERVICES', 'TimeSeriesFramework.dll', 'TimeSeriesFramework.Statistics.StatisticsEngine', 0, 1)";
-            const string SystemStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('System', {0}, '{1}', '{2}', 'TimeSeriesFramework.dll', 'TimeSeriesFramework.Statistics.PerformanceStatistics', 'GetSystemStatistic_{3}', '', 1, 'System.Double', '{{0:N3}}', 0, {0})";
-            const string SubscriberStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('Subscriber', {0}, '{1}', '{2}', 'TimeSeriesFramework.dll', 'TimeSeriesFramework.Statistics.GatewayStatistics', 'GetSubscriberStatistic_{3}', '', 1, '{4}', '{5}', 0, {0})";
-            const string PublisherStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('Publisher', {0}, '{1}', '{2}', 'TimeSeriesFramework.dll', 'TimeSeriesFramework.Statistics.GatewayStatistics', 'GetPublisherStatistic_{3}', '', 1, '{4}', '{5}', 0, {0})";
+            const string StatEngineInsertFormat = "INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, LoadOrder, Enabled) VALUES({0}, 'STATISTIC!SERVICES', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.StatisticsEngine', 0, 1)";
+            const string SystemStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('System', {0}, '{1}', '{2}', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.PerformanceStatistics', 'GetSystemStatistic_{3}', '', 1, 'System.Double', '{{0:N3}}', 0, {0})";
+            const string SubscriberStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('Subscriber', {0}, '{1}', '{2}', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.GatewayStatistics', 'GetSubscriberStatistic_{3}', '', 1, '{4}', '{5}', 0, {0})";
+            const string PublisherStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('Publisher', {0}, '{1}', '{2}', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.GatewayStatistics', 'GetPublisherStatistic_{3}', '', 1, '{4}', '{5}', 0, {0})";
 
             const string StatMeasurementInsertFormat = "INSERT INTO Measurement(HistorianID, PointTag, SignalTypeID, SignalReference, Description, Enabled) VALUES({0}, {1}, {2}, {3}, {4}, 1)";
 

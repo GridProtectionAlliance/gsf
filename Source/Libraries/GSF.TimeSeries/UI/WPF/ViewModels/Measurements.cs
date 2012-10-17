@@ -211,7 +211,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         }
 
         /// <summary>
-        /// Creates a new instance of <see cref="TimeSeriesFramework.UI.DataModels.Measurement"/> and assigns it to CurrentItem.
+        /// Creates a new instance of <see cref="GSF.TimeSeries.UI.DataModels.Measurement"/> and assigns it to CurrentItem.
         /// </summary>
         public override void Clear()
         {
@@ -237,7 +237,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         }
 
         /// <summary>
-        /// Loads collection of <see cref="TimeSeriesFramework.UI.DataModels.Measurement"/> defined in the database.
+        /// Loads collection of <see cref="GSF.TimeSeries.UI.DataModels.Measurement"/> defined in the database.
         /// </summary>
         public override void Load()
         {

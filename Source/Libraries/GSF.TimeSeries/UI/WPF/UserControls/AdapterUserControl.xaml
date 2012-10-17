@@ -80,7 +80,7 @@
                         <Button Click="Browse_Click" Width="Auto" ToolTip="Browse">
                             <Button.Template>
                                 <ControlTemplate>
-                                    <Image Source="/TimeSeriesFramework.UI;component/images/Folder.png" Height="24" Width="24" />
+                                    <Image Source="/GSF.TimeSeries.UI;component/images/Folder.png" Height="24" Width="24" />
                                 </ControlTemplate>
                             </Button.Template>
                         </Button>

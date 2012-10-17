@@ -208,8 +208,8 @@ namespace GSF.TimeSeries.Transport
             // Assign critical adapter properties
             proxyAdapterRow["ID"] = 0;
             proxyAdapterRow["AdapterName"] = "PROXY!SERVICES";
-            proxyAdapterRow["AssemblyName"] = "TimeSeriesFramework.dll";
-            proxyAdapterRow["TypeName"] = "TimeSeriesFramework.Transport.TemporalClientSubscriptionProxy";
+            proxyAdapterRow["AssemblyName"] = "GSF.TimeSeries.dll";
+            proxyAdapterRow["TypeName"] = "GSF.TimeSeries.Transport.TemporalClientSubscriptionProxy";
             proxyAdapterRow["ConnectionString"] = connectionString.ToString();
 
             // Add proxy row to Iaon action adapter definitions
