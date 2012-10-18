@@ -360,6 +360,15 @@ namespace GSF.TimeSeries.UI.UserControls
             }
         }
 
+        // Executes search on the pager when the user presses Enter.
+        private void TextBoxSearch_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                m_dataContext.Search(TextBoxSearch.Text);
+            }
+        }
+
         // Selects/unselects all the measurements on all pages.
         private void SelectAllHyperlink_Click(object sender, RoutedEventArgs e)
         {
