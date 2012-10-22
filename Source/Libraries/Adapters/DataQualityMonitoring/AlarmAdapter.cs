@@ -52,7 +52,7 @@ namespace DataQualityMonitoring
         private List<Alarm> m_alarms;
         private AlarmService m_alarmService;
 
-        private BlockingCollection<IMeasurement> m_measurementQueue;
+        private BlockingCollection<IEnumerable<IMeasurement>> m_measurementQueue;
         private Thread m_processThread;
         private long m_eventCount;
 
@@ -147,7 +147,7 @@ namespace DataQualityMonitoring
         {
             base.Start();
 
-            m_measurementQueue = new BlockingCollection<IMeasurement>(new ConcurrentQueue<IMeasurement>());
+            m_measurementQueue = new BlockingCollection<IEnumerable<IMeasurement>>(new ConcurrentQueue<IEnumerable<IMeasurement>>());
             m_processThread = new Thread(ProcessMeasurements);
             m_eventCount = 0L;
 
@@ -208,9 +208,7 @@ namespace DataQualityMonitoring
         public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
             base.QueueMeasurementsForProcessing(measurements);
-
-            foreach (IMeasurement measurement in measurements)
-                m_measurementQueue.Add(measurement);
+            m_measurementQueue.Add(measurements);
         }
 
         /// <summary>
@@ -260,40 +258,55 @@ namespace DataQualityMonitoring
         // Processes measurements in the queue.
         private void ProcessMeasurements()
         {
-            IMeasurement measurement, alarmEvent;
+            IEnumerable<IMeasurement> measurements;
+            List<IMeasurement> alarmEvents;
+            IMeasurement alarmEvent;
             List<Alarm> events;
+
+            // Create the collection that will store
+            // alarm events to be sent into the system
+            alarmEvents = new List<IMeasurement>();
 
             while (Enabled)
             {
                 try
                 {
-                    if ((object)m_measurementQueue != null && m_measurementQueue.TryTake(out measurement, WaitTimeout))
+                    if ((object)m_measurementQueue != null && m_measurementQueue.TryTake(out measurements, WaitTimeout))
                     {
-                        lock (m_alarms)
+                        foreach (IMeasurement measurement in measurements)
                         {
-                            // Get alarms that triggered events
-                            events = m_alarms.Where(a => a.SignalID == measurement.ID)
-                                .Where(a => a.Test(measurement))
-                                .ToList();
-                        }
-
-                        // Create event measurements and send them into the system
-                        foreach (Alarm alarm in events)
-                        {
-                            alarmEvent = new Measurement()
+                            lock (m_alarms)
                             {
-                                Timestamp = measurement.Timestamp,
-                                Value = (int)alarm.State
-                            };
-
-                            if ((object)alarm.AssociatedMeasurementID != null)
-                            {
-                                alarmEvent.ID = alarm.AssociatedMeasurementID.Value;
-                                alarmEvent.Key = MeasurementKey.LookupBySignalID(alarmEvent.ID);
+                                // Get alarms that triggered events
+                                events = m_alarms.Where(a => a.SignalID == measurement.ID)
+                                    .Where(a => a.Test(measurement))
+                                    .ToList();
                             }
 
-                            OnNewMeasurement(alarmEvent);
-                            m_eventCount++;
+                            // Create event measurements and send them into the system
+                            foreach (Alarm alarm in events)
+                            {
+                                alarmEvent = new Measurement()
+                                {
+                                    Timestamp = measurement.Timestamp,
+                                    Value = (int)alarm.State
+                                };
+
+                                if ((object)alarm.AssociatedMeasurementID != null)
+                                {
+                                    alarmEvent.ID = alarm.AssociatedMeasurementID.Value;
+                                    alarmEvent.Key = MeasurementKey.LookupBySignalID(alarmEvent.ID);
+                                }
+
+                                alarmEvents.Add(alarmEvent);
+                                m_eventCount++;
+                            }
+
+                            // Send new alarm events into the system,
+                            // then reset the collection for the next
+                            // group of measurements
+                            OnNewMeasurements(alarmEvents);
+                            alarmEvents.Clear();
                         }
                     }
                 }
@@ -302,13 +315,6 @@ namespace DataQualityMonitoring
                     OnProcessException(ex);
                 }
             }
-        }
-
-        // Helper method to raise the NewMeasurements event
-        // when only a single measurement is to be provided.
-        private void OnNewMeasurement(IMeasurement measurement)
-        {
-            OnNewMeasurements(new IMeasurement[] { measurement });
         }
 
         // Processes excpetions thrown by the alarm service.
