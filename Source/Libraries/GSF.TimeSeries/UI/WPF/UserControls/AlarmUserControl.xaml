@@ -22,7 +22,6 @@
 
         <StackPanel.Resources>
             <CollectionViewSource Source="{Binding Path=NodeLookupList}" x:Key="NodeLookupList"/>
-            <CollectionViewSource Source="{Binding Path=MeasurementLookupList}" x:Key="MeasurementLookupList"/>
             <CollectionViewSource Source="{Binding Path=SeverityList}" x:Key="SeverityList"/>
             <CollectionViewSource Source="{Binding Path=OperationList}" x:Key="OperationList"/>
         </StackPanel.Resources>
@@ -75,9 +74,12 @@
             </StackPanel>
             <TextBox Grid.Row="0" Grid.Column="1" CharacterCasing="Upper" Text="{tsfBinding:Column Path=TagName}" Width="{StaticResource ItemSize}" />
 
-            <TextBlock Text="Signal" Grid.Row="1" Grid.Column="0" />
+            <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right">
+              <TextBlock Text="Signal" Style="{StaticResource RequiredLabel}" />
+              <TextBlock Style="{StaticResource RequiredMarker}" />
+            </StackPanel>
             <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Orientation="Horizontal">
-                <TextBlock Name="SignalLabel" />
+                <TextBlock Name="SignalLabel" Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorLevel=1, AncestorType=UserControl}, Path=DataContext.SelectedMeasurementLabel}" />
                 <Button Width="Auto" HorizontalAlignment="Left" Content=". . ." Click="MeasurementPagerButton_Click" />
             </StackPanel>
 
@@ -86,19 +88,19 @@
                       SelectedItem="{tsfBinding:Column Path=Operation, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource OperationList}}" />
 
             <TextBlock Text="Alarm Point" Grid.Row="2" Grid.Column="2" />
-            <TextBox Name="SetPointBox" Grid.Row="2" Grid.Column="3" Text="{tsfBinding:Column Path=SetPoint}" Width="{StaticResource XSmallItemSize}" TextAlignment="Right" IsEnabled="{Binding Path=SetPointEnabled}" />
+            <TextBox Name="SetPointBox" Grid.Row="2" Grid.Column="3" Text="{tsfBinding:Column UpdateSourceTrigger=LostFocus, Path=SetPoint}" Width="{StaticResource XSmallItemSize}" TextAlignment="Right" IsEnabled="{Binding Path=SetPointEnabled}" />
 
             <TextBlock Text="Tolerance" Grid.Row="3" Grid.Column="2" />
-            <TextBox Name="ToleranceBox" Grid.Row="3" Grid.Column="3" Text="{tsfBinding:Column Path=Tolerance}" Width="{StaticResource XSmallItemSize}" TextAlignment="Right" IsEnabled="{Binding Path=ToleranceEnabled}" />
+            <TextBox Name="ToleranceBox" Grid.Row="3" Grid.Column="3" Text="{tsfBinding:Column UpdateSourceTrigger=LostFocus, Path=Tolerance}" Width="{StaticResource XSmallItemSize}" TextAlignment="Right" IsEnabled="{Binding Path=ToleranceEnabled}" />
 
             <TextBlock Text="Delay" Grid.Row="4" Grid.Column="0" />
             <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal">
-                <TextBox Name="DelayBox" Text="{tsfBinding:Column Path=Delay}" Width="{StaticResource XSmallItemSize}" Margin="5,5,0,5" TextAlignment="Right" IsEnabled="{Binding Path=DelayEnabled}" />
+                <TextBox Name="DelayBox" Text="{tsfBinding:Column UpdateSourceTrigger=LostFocus, Path=Delay}" Width="{StaticResource XSmallItemSize}" Margin="5,5,0,5" TextAlignment="Right" IsEnabled="{Binding Path=DelayEnabled}" />
                 <TextBlock Text="seconds" Margin="2,5,5,5" />
             </StackPanel>
 
             <TextBlock Name="HysteresisBox" Text="Hysteresis" Grid.Row="4" Grid.Column="2" />
-            <TextBox Grid.Row="4" Grid.Column="3" Text="{tsfBinding:Column Path=Hysteresis}" Width="{StaticResource XSmallItemSize}" TextAlignment="Right" IsEnabled="{Binding Path=HysteresisEnabled}" />
+            <TextBox Grid.Row="4" Grid.Column="3" Text="{tsfBinding:Column UpdateSourceTrigger=LostFocus, Path=Hysteresis}" Width="{StaticResource XSmallItemSize}" TextAlignment="Right" IsEnabled="{Binding Path=HysteresisEnabled}" />
 
             <TextBlock Text="Description" Grid.Row="5" Grid.Column="0" VerticalAlignment="Top" />
             <TextBox Grid.Row="5" Grid.Column="1" Text="{tsfBinding:Column Path=Description}" TextWrapping="Wrap" />
@@ -126,7 +128,7 @@
             <sdk:DataGrid.Columns>
                 <sdk:DataGridTextColumn Header="TagName" Width="*" Binding="{tsfBinding:Column Path=TagName}" />
                 <sdk:DataGridTextColumn Header="Operation" Width="*" Binding="{tsfBinding:Column Path=OperationDescription}" IsReadOnly="True" />
-                <sdk:DataGridTextColumn Header="Severity" Width="*" Binding="{tsfBinding:Column Path=SeverityName}" />
+                <sdk:DataGridTextColumn Header="Severity" Width="*" Binding="{tsfBinding:Column Path=SeverityName}" IsReadOnly="True" />
                 <sdk:DataGridTextColumn Header="Description" Width="2*" Binding="{tsfBinding:Column Path=Description}" />
                 <sdk:DataGridCheckBoxColumn Header="Enabled" Width="*" Binding="{tsfBinding:Column Path=Enabled}" />
             </sdk:DataGrid.Columns>

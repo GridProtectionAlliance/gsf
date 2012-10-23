@@ -38,9 +38,10 @@ namespace GSF.TimeSeries.UI.ViewModels
 
         // Fields
         private Dictionary<Guid, string> m_nodeLookupList;
-        private Dictionary<Guid, string> m_measurementLookupList;
         private Dictionary<int, string> m_operationList;
         private Dictionary<int, string> m_severityList;
+        private Dictionary<Guid, string> m_measurementLabels;
+        private string m_selectedMeasurementLabel;
 
         #endregion
 
@@ -83,17 +84,6 @@ namespace GSF.TimeSeries.UI.ViewModels
         }
 
         /// <summary>
-        /// Gets the list of measurements in the system.
-        /// </summary>
-        public Dictionary<Guid, string> MeasurementLookupList
-        {
-            get
-            {
-                return m_measurementLookupList;
-            }
-        }
-
-        /// <summary>
         /// Gets a list of operations that can be performed to trigger an alarm.
         /// </summary>
         public Dictionary<int, string> OperationList
@@ -115,6 +105,33 @@ namespace GSF.TimeSeries.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets a list of the measurement labels for the alarms on the current page.
+        /// </summary>
+        public Dictionary<Guid, string> MeasurementLabels
+        {
+            get
+            {
+                return m_measurementLabels;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the label of the measurement selected by the user.
+        /// </summary>
+        public string SelectedMeasurementLabel
+        {
+            get
+            {
+                return m_selectedMeasurementLabel;
+            }
+            set
+            {
+                m_selectedMeasurementLabel = value;
+                OnPropertyChanged("SelectedMeasurementLabel");
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -124,10 +141,11 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// </summary>
         public override void Initialize()
         {
+            m_measurementLabels = new Dictionary<Guid, string>();
+
             base.Initialize();
 
             m_nodeLookupList = DataModels.Node.GetLookupList(null);
-            m_measurementLookupList = DataModels.Measurement.GetLookupList(null);
             m_operationList = CreateOperationList();
             m_severityList = CreateSeverityList();
         }
@@ -187,11 +205,10 @@ namespace GSF.TimeSeries.UI.ViewModels
         {
             base.Clear();
 
+            SelectedMeasurementLabel = string.Empty;
+
             if (m_nodeLookupList.Count > 0)
                 CurrentItem.NodeID = m_nodeLookupList.First().Key;
-
-            if (m_measurementLookupList.Count > 0)
-                CurrentItem.SignalID = m_measurementLookupList.First().Key;
 
             if (m_operationList.Count > 0)
                 CurrentItem.Operation = m_operationList.First().Key;
@@ -222,7 +239,10 @@ namespace GSF.TimeSeries.UI.ViewModels
                     break;
             }
 
-            if (e.PropertyName == "Operation" || e.PropertyName == "SetPoint" || e.PropertyName == "Delay")
+            if (e.PropertyName == "SignalID")
+                m_measurementLabels = GetMeasurementLabels();
+
+            if (e.PropertyName == "SignalID" || e.PropertyName == "Operation" || e.PropertyName == "SetPoint" || e.PropertyName == "Delay")
                 CurrentItem.OperationDescription = GetOperationDescription(CurrentItem);
 
             if (e.PropertyName == "Severity")
@@ -238,10 +258,19 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// <param name="propertyName">Property name that has changed.</param>
         protected override void OnPropertyChanged(string propertyName)
         {
+            string selectedMeasurementLabel;
+
+            if (propertyName == "ItemsSource")
+                m_measurementLabels = GetMeasurementLabels();
+            
             base.OnPropertyChanged(propertyName);
 
             if (propertyName == "CurrentItem")
+            {
+                m_measurementLabels.TryGetValue(CurrentItem.SignalID, out selectedMeasurementLabel);
+                SelectedMeasurementLabel = selectedMeasurementLabel;
                 UpdateEnableFlags();
+            }
         }
 
         // Creates a list of operations that can be performed to trigger an alarm.
@@ -278,12 +307,26 @@ namespace GSF.TimeSeries.UI.ViewModels
             return severityList;
         }
 
+        // Creates a list of measurement labels for the current page of alarms.
+        private Dictionary<Guid, string> GetMeasurementLabels()
+        {
+            List<Guid> signals = ItemsSource.Select(alarm => alarm.SignalID).Distinct().ToList();
+            IList<DataModels.Measurement> measurements = DataModels.Measurement.LoadFromKeys(null, signals);
+            return measurements.ToDictionary(measurement => measurement.SignalID, measurement => measurement.PointTag);
+        }
+
         // Generates a description of the operation that triggers the alarm.
         private string GetOperationDescription(DataModels.Alarm item)
         {
             if (item.ID > 0)
             {
-                StringBuilder description = new StringBuilder(m_measurementLookupList[item.SignalID]);
+                string measurementLabel;
+                StringBuilder description;
+
+                if (!m_measurementLabels.TryGetValue(item.SignalID, out measurementLabel))
+                    measurementLabel = m_selectedMeasurementLabel;
+
+                description = new StringBuilder(measurementLabel);
 
                 switch ((AlarmOperation)item.Operation)
                 {
