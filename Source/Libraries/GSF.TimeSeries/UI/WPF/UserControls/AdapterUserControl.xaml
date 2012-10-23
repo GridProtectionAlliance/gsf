@@ -159,7 +159,7 @@
                         </StackPanel>
                     </StackPanel>
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Connection String" VerticalAlignment="Top" />
-                    <TextBox Grid.Row="1" Grid.Column="1"  Grid.ColumnSpan="3" Width="Auto" Height="{StaticResource XSmallItemSize}" HorizontalAlignment="Stretch"
+                    <TextBox Grid.Row="1" Grid.Column="1"  Grid.ColumnSpan="3" Width="560" Height="{StaticResource XSmallItemSize}" HorizontalAlignment="Stretch"
                              Text="{tsfBinding:Column Path=ConnectionString}" TextWrapping="Wrap" ScrollViewer.VerticalScrollBarVisibility="Visible" />
                 </Grid>
             </GroupBox>
