@@ -711,10 +711,10 @@ namespace TimeSeriesFramework.UI.DataModels
                         "nodeID", "tagName", "signalId", "associatedMeasurementId", "description", "severity", "operation", "setPoint", "tolerance", "delay",
                         "hysteresis", "loadOrder", "enabled", "updatedBy", "updatedOn", "createdBy", "createdOn");
 
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, (alarm.NodeID == null || alarm.NodeID == Guid.Empty) ? database.CurrentNodeID() : database.Guid(alarm.NodeID),
-                        alarm.TagName.ToNotNull(), database.Guid(alarm.SignalID), associatedMeasurementId, alarm.Description.ToNotNull(), alarm.Severity, alarm.Operation, alarm.SetPoint.ToNotNull(),
-                        alarm.Tolerance.ToNotNull(), alarm.Delay.ToNotNull(), alarm.Hysteresis.ToNotNull(), alarm.LoadOrder, database.Bool(alarm.Enabled), CommonFunctions.CurrentUser, database.UtcNow(),
-                        CommonFunctions.CurrentUser, database.UtcNow());
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, (database.CurrentNodeID() == null && alarm.NodeID != null) ? database.Guid(alarm.NodeID) : database.CurrentNodeID(),
+                    alarm.TagName.ToNotNull(), database.Guid(alarm.SignalID), associatedMeasurementId, alarm.Description.ToNotNull(), alarm.Severity, alarm.Operation, alarm.SetPoint.ToNotNull(),
+                    alarm.Tolerance.ToNotNull(), alarm.Delay.ToNotNull(), alarm.Hysteresis.ToNotNull(), alarm.LoadOrder, database.Bool(alarm.Enabled), CommonFunctions.CurrentUser, database.UtcNow(),
+                    CommonFunctions.CurrentUser, database.UtcNow());
 
                     createdAlarm = Alarm.GetAlarm(database, string.Format("WHERE TagName = '{0}'", alarm.TagName));
                 }

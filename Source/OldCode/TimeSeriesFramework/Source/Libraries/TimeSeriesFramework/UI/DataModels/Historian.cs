@@ -520,12 +520,11 @@ namespace TimeSeriesFramework.UI.DataModels
                         "{5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14})", "nodeID", "acronym", "name", "assemblyName", "typeName", "connectionString", "isLocal",
                         "measurementReportingInterval", "description", "loadOrder", "enabled", "updatedBy", "updatedOn", "createdBy", "createdOn");
 
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout,
-                    database.CurrentNodeID(),
-                       historian.Acronym.Replace(" ", "").ToUpper(), historian.Name.ToNotNull(), historian.AssemblyName.ToNotNull(), historian.TypeName.ToNotNull(),
-                       historian.ConnectionString.ToNotNull(), database.Bool(historian.IsLocal), historian.MeasurementReportingInterval, historian.Description.ToNotNull(),
-                       historian.LoadOrder, database.Bool(historian.Enabled), CommonFunctions.CurrentUser, database.UtcNow(),
-                       CommonFunctions.CurrentUser, database.UtcNow());
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, (database.CurrentNodeID() == null && historian.NodeID != null) ? database.Guid(historian.NodeID) : database.CurrentNodeID(),
+                      historian.Acronym.Replace(" ", "").ToUpper(), historian.Name.ToNotNull(), historian.AssemblyName.ToNotNull(), historian.TypeName.ToNotNull(),
+                      historian.ConnectionString.ToNotNull(), database.Bool(historian.IsLocal), historian.MeasurementReportingInterval, historian.Description.ToNotNull(),
+                      historian.LoadOrder, database.Bool(historian.Enabled), CommonFunctions.CurrentUser, database.UtcNow(),
+                      CommonFunctions.CurrentUser, database.UtcNow());
                 }
                 else
                 {

@@ -522,13 +522,13 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 if (adapter.ID == 0)
                     database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("INSERT INTO " + tableName + " (NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, LoadOrder, " +
-                        "Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10})",
-                        "nodeID", "adapterName", "assemblyName", "typeName", "connectionString", "loadOrder",
-                        "enabled", "updatedBy", "updatedOn", "createdBy", "createdOn"), DefaultTimeout,
-                        database.CurrentNodeID(), adapter.AdapterName, adapter.AssemblyName,
-                        adapter.TypeName, adapter.ConnectionString.ToNotNull(), adapter.LoadOrder, database.Bool(adapter.Enabled), CommonFunctions.CurrentUser,
-                        database.UtcNow(), CommonFunctions.CurrentUser,
-                        database.UtcNow());
+                       "Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10})",
+                       "nodeID", "adapterName", "assemblyName", "typeName", "connectionString", "loadOrder",
+                       "enabled", "updatedBy", "updatedOn", "createdBy", "createdOn"), DefaultTimeout,
+                       (database.CurrentNodeID() == null && adapter.NodeID != null) ? database.Guid(adapter.NodeID) : database.CurrentNodeID(), adapter.AdapterName, adapter.AssemblyName,
+                       adapter.TypeName, adapter.ConnectionString.ToNotNull(), adapter.LoadOrder, database.Bool(adapter.Enabled), CommonFunctions.CurrentUser,
+                       database.UtcNow(), CommonFunctions.CurrentUser,
+                       database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("UPDATE " + tableName + " SET NodeID = {0}, AdapterName = {1}, AssemblyName = {2}, " +
                        "TypeName = {3}, ConnectionString = {4}, LoadOrder = {5}, Enabled = {6}, UpdatedBy = {7}, " +
