@@ -50,11 +50,12 @@ namespace DataQualityMonitoring
 
         // Fields
         private List<Alarm> m_alarms;
+        private Dictionary<Guid, List<Alarm>> m_alarmLookup;
         private AlarmService m_alarmService;
 
-        private BlockingCollection<IEnumerable<IMeasurement>> m_measurementQueue;
-        private Thread m_processThread;
+        private ConcurrentQueue<IEnumerable<IMeasurement>> m_measurementQueue;
         private long m_eventCount;
+        private int m_processing;
 
         private bool m_supportsTemporalProcessing;
         private bool m_disposed;
@@ -120,6 +121,12 @@ namespace DataQualityMonitoring
                 .Select(row => CreateAlarm(row))
                 .ToList();
 
+            // Create lookup table for alarms to speed up measurement processing
+            m_alarmLookup = new Dictionary<Guid, List<Alarm>>();
+
+            foreach (Guid signalID in m_alarms.Select(alarm => alarm.SignalID).Distinct())
+                m_alarmLookup.Add(signalID, m_alarms.Where(alarm => alarm.SignalID == signalID).ToList());
+
             if (m_alarms.Count > 0)
             {
                 // Generate filter expression for input measurements
@@ -147,31 +154,8 @@ namespace DataQualityMonitoring
         {
             base.Start();
 
-            m_measurementQueue = new BlockingCollection<IEnumerable<IMeasurement>>(new ConcurrentQueue<IEnumerable<IMeasurement>>());
-            m_processThread = new Thread(ProcessMeasurements);
+            m_measurementQueue = new ConcurrentQueue<IEnumerable<IMeasurement>>();
             m_eventCount = 0L;
-
-            m_processThread.Start();
-        }
-
-        /// <summary>
-        /// Stops the <see cref="AlarmAdapter"/>.
-        /// </summary>
-        public override void Stop()
-        {
-            base.Stop();
-
-            if ((object)m_processThread != null)
-            {
-                m_processThread.Join();
-                m_processThread = null;
-            }
-
-            if ((object)m_measurementQueue != null)
-            {
-                m_measurementQueue.Dispose();
-                m_measurementQueue = null;
-            }
         }
 
         /// <summary>
@@ -207,8 +191,16 @@ namespace DataQualityMonitoring
         /// <param name="measurements">Measurements to queue for processing.</param>
         public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
+            IEnumerable<IMeasurement> dequeuedMeasurements;
+
             base.QueueMeasurementsForProcessing(measurements);
-            m_measurementQueue.Add(measurements);
+            m_measurementQueue.Enqueue(measurements);
+
+            if (Interlocked.CompareExchange(ref m_processing, 1, 0) == 0)
+            {
+                if (m_measurementQueue.TryDequeue(out dequeuedMeasurements))
+                    ThreadPool.QueueUserWorkItem(state => ProcessMeasurements((IEnumerable<IMeasurement>)state), dequeuedMeasurements);
+            }
         }
 
         /// <summary>
@@ -256,64 +248,75 @@ namespace DataQualityMonitoring
         }
 
         // Processes measurements in the queue.
-        private void ProcessMeasurements()
+        private void ProcessMeasurements(IEnumerable<IMeasurement> measurements)
         {
-            IEnumerable<IMeasurement> measurements;
+            List<Alarm> alarms;
+            List<Alarm> raisedAlarms;
+
             List<IMeasurement> alarmEvents;
             IMeasurement alarmEvent;
-            List<Alarm> events;
+            IEnumerable<IMeasurement> dequeuedMeasurements;
+            long processedMeasurements;
 
             // Create the collection that will store
             // alarm events to be sent into the system
             alarmEvents = new List<IMeasurement>();
+            processedMeasurements = 0L;
 
-            while (Enabled)
+            try
             {
-                try
+                foreach (IMeasurement measurement in measurements)
                 {
-                    if ((object)m_measurementQueue != null && m_measurementQueue.TryTake(out measurements, WaitTimeout))
+                    lock (m_alarms)
                     {
-                        foreach (IMeasurement measurement in measurements)
-                        {
-                            lock (m_alarms)
-                            {
-                                // Get alarms that triggered events
-                                events = m_alarms.Where(a => a.SignalID == measurement.ID)
-                                    .Where(a => a.Test(measurement))
-                                    .ToList();
-                            }
+                        // Get alarms that apply to the measurement being processed
+                        if (!m_alarmLookup.TryGetValue(measurement.ID, out alarms))
+                            alarms = new List<Alarm>();
 
-                            // Create event measurements and send them into the system
-                            foreach (Alarm alarm in events)
-                            {
-                                alarmEvent = new Measurement()
-                                {
-                                    Timestamp = measurement.Timestamp,
-                                    Value = (int)alarm.State
-                                };
-
-                                if ((object)alarm.AssociatedMeasurementID != null)
-                                {
-                                    alarmEvent.ID = alarm.AssociatedMeasurementID.Value;
-                                    alarmEvent.Key = MeasurementKey.LookupBySignalID(alarmEvent.ID);
-                                }
-
-                                alarmEvents.Add(alarmEvent);
-                                m_eventCount++;
-                            }
-
-                            // Send new alarm events into the system,
-                            // then reset the collection for the next
-                            // group of measurements
-                            OnNewMeasurements(alarmEvents);
-                            alarmEvents.Clear();
-                        }
+                        // Get alarms that triggered events
+                        raisedAlarms = alarms.Where(a => a.Test(measurement)).ToList();
                     }
+
+                    // Create event measurements and send them into the system
+                    foreach (Alarm alarm in alarms)
+                    {
+                        alarmEvent = new Measurement()
+                        {
+                            Timestamp = measurement.Timestamp,
+                            Value = (int)alarm.State
+                        };
+
+                        if ((object)alarm.AssociatedMeasurementID != null)
+                        {
+                            alarmEvent.ID = alarm.AssociatedMeasurementID.Value;
+                            alarmEvent.Key = MeasurementKey.LookupBySignalID(alarmEvent.ID);
+                        }
+
+                        alarmEvents.Add(alarmEvent);
+                        m_eventCount++;
+                    }
+
+                    // Increment processed measurement count
+                    processedMeasurements++;
                 }
-                catch (Exception ex)
-                {
-                    OnProcessException(ex);
-                }
+
+                // Send new alarm events into the system,
+                // then reset the collection for the next
+                // group of measurements
+                OnNewMeasurements(alarmEvents);
+                alarmEvents.Clear();
+
+                // Increment total count of processed measurements
+                IncrementProcessedMeasurements(processedMeasurements);
+
+                if (Enabled && m_measurementQueue.TryDequeue(out dequeuedMeasurements))
+                    ThreadPool.QueueUserWorkItem(state => ProcessMeasurements((IEnumerable<IMeasurement>)state), dequeuedMeasurements);
+                else
+                    Interlocked.Exchange(ref m_processing, 0);
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(ex);
             }
         }
 
