@@ -66,12 +66,29 @@ namespace GSF.TimeSeries.UI.UserControls
             InitializeComponent();
             m_dataContext = new Measurements(deviceID, 17);
             m_dataContext.PropertyChanged += new PropertyChangedEventHandler(ViewModel_PropertyChanged);
+            m_dataContext.SearchCategories = AdvancedSearch.Categories;
             this.DataContext = m_dataContext;
         }
 
         #endregion
 
         #region [ Methods ]
+
+        private void MeasurementUserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            m_dataContext.LoadSettings();
+        }
+
+        private void MeasurementUserControl_Unloaded(object sender, RoutedEventArgs e)
+        {
+            m_dataContext.SaveSettings();
+        }
+
+        private void MeasurementUserControl_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control)
+                m_dataContext.AdvancedFindIsOpen = true;
+        }
 
         /// <summary>
         /// Handles key down event on the datagrid object.

@@ -92,6 +92,9 @@
     <Compile Include="UserControls\AdapterUserControl.xaml.cs">
       <DependentUpon>AdapterUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\AdvancedSearchUserControl.xaml.cs">
+      <DependentUpon>AdvancedSearchUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\AlarmStatusUserControl.xaml.cs">
       <DependentUpon>AlarmStatusUserControl.xaml</DependentUpon>
     </Compile>
@@ -221,6 +224,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UserControls\AdapterUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\AdvancedSearchUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

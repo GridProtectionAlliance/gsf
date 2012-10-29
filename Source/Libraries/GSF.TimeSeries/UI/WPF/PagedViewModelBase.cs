@@ -996,7 +996,7 @@ namespace GSF.TimeSeries.UI
         /// <summary>
         /// Method to create a list of pages based on the <see cref="ItemsSource"/>.
         /// </summary>
-        private void GeneratePages()
+        protected void GeneratePages()
         {
             if (ItemsSource != null && ItemsSource.Count > 0)
             {

@@ -250,6 +250,7 @@
     <Compile Include="Reflection\NamespaceDoc.cs" />
     <Compile Include="ReusableObjectPool.cs" />
     <Compile Include="Scheduling\NamespaceDoc.cs" />
+    <Compile Include="Searching\AsyncSearcher.cs" />
     <Compile Include="Security\Cryptography\NamespaceDoc.cs" />
     <Compile Include="Security\Cryptography\Random.cs" />
     <Compile Include="Reflection\AssemblyExtensions.cs" />

@@ -6,7 +6,8 @@
              mc:Ignorable="d" 
              xmlns:uc="clr-namespace:GSF.TimeSeries.UI.UserControls"
              xmlns:tsfBinding="clr-namespace:GSF.TimeSeries.UI.Binding;assembly=GSF.TimeSeries.UI"
-             d:DesignHeight="300" d:DesignWidth="500" Name="MeasurementPager" Loaded="MeasurementPager_Loaded">
+             xmlns:tsf="clr-namespace:GSF.TimeSeries.UI"
+             d:DesignHeight="300" d:DesignWidth="500" Name="MeasurementPager" Loaded="MeasurementPager_Loaded" Unloaded="MeasurementPager_Unloaded">
 
     <UserControl.Resources>
         <ResourceDictionary>
@@ -21,9 +22,9 @@
             <Label DockPanel.Dock="Left" Name="SelectedMeasurementsLabel" Content="Selected: 0" Visibility="{Binding ElementName=MeasurementPager, Path=Selectable, Converter={StaticResource ObjectToVisibilityConverter}}" />
 
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right" Visibility="{Binding ElementName=MeasurementPager, Path=Searchable, Converter={StaticResource ObjectToVisibilityConverter}}">
-                <TextBox x:Name="TextBoxSearch" Width="150" KeyDown="TextBoxSearch_KeyDown" />
-                <Button Content="Search" Command="{Binding Path=SearchCommand}" CommandParameter="{Binding ElementName=TextBoxSearch, Path=Text}" ToolTip="Search measurements" Margin="2" />
-                <Button Content="Show All" Command="{Binding Path=ShowAllCommand}" ToolTip="Show all measurements" Margin="2"/>
+                <TextBox Text="{Binding Mode=TwoWay, Path=SearchText}" Width="150" KeyDown="TextBoxSearch_KeyDown" />
+                <Button Content="Search" Command="{Binding Path=SearchCommand}" ToolTip="Search measurements" Margin="2" />
+                <Button Content="Advanced..." Command="{Binding Path=AdvancedFindCommand}" ToolTip="Opens advanced find dialog" Margin="2"/>
             </StackPanel>
         </DockPanel>
 
@@ -51,5 +52,39 @@
         <uc:DataPagerUserControl x:Name="DataPager" CurrentPageNumber="{Binding CurrentPageNumber}" PageCount="{Binding PageCount}"
                                  FirstCommand="{Binding FirstCommand}" PreviousCommand="{Binding PreviousCommand}"
                                  NextCommand="{Binding NextCommand}" LastCommand="{Binding LastCommand}"/>
+
+        <tsf:TsfPopup x:Name="AdvancedFindPopup" Placement="Center" Width="500" Height="350" Topmost="False" Visibility="Collapsed" IsOpen="{Binding AdvancedFindIsOpen}">
+            <Border CornerRadius="5" BorderThickness="2" Background="White" BorderBrush="Blue">
+                <Grid Margin="5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <uc:AdvancedSearchUserControl Grid.Row="0" x:Name="AdvancedSearch" SearchText="{Binding Mode=TwoWay, Path=SearchText}" IgnoreCase="{Binding Mode=TwoWay, Path=IgnoreCase}" UseWildcards="{Binding Mode=TwoWay, Path=UseWildcards}" UseRegex="{Binding Mode=TwoWay, Path=UseRegex}">
+                        <uc:AdvancedSearchUserControl.Categories>
+                            <uc:AdvancedSearchCategory Name="CompanyAcronym" />
+                            <uc:AdvancedSearchCategory Name="CompanyName" />
+                            <uc:AdvancedSearchCategory Name="Description" />
+                            <uc:AdvancedSearchCategory Name="DeviceAcronym" />
+                            <uc:AdvancedSearchCategory Name="HistorianAcronym" />
+                            <uc:AdvancedSearchCategory Name="ID" />
+                            <uc:AdvancedSearchCategory Name="PhasorLabel" />
+                            <uc:AdvancedSearchCategory Name="PointTag" />
+                            <uc:AdvancedSearchCategory Name="SignalAcronym" />
+                            <uc:AdvancedSearchCategory Name="SignalID" />
+                            <uc:AdvancedSearchCategory Name="SignalName" />
+                            <uc:AdvancedSearchCategory Name="SignalReference" />
+                            <uc:AdvancedSearchCategory Name="SignalSuffix" />
+                        </uc:AdvancedSearchUserControl.Categories>
+                    </uc:AdvancedSearchUserControl>
+
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Search" Command="{Binding SearchCommand}" Width="Auto" Margin="5" IsDefault="True" />
+                        <Button Content="Cancel" Command="{Binding CloseAdvancedFindCommand}" Width="Auto" Margin="5" IsCancel="True" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </tsf:TsfPopup>
     </StackPanel>
 </UserControl>

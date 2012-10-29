@@ -307,9 +307,17 @@ namespace GSF.TimeSeries.UI.UserControls
                 m_dataContext.PropertyChanged += ViewModel_PropertyChanged;
                 m_dataContext.FilterExpression = FilterExpression;
                 m_dataContext.ItemsPerPage = ItemsPerPage;
+                m_dataContext.SearchCategories = AdvancedSearch.Categories;
+                m_dataContext.LoadSettings();
                 m_dataContext.Load();
                 RootPanel.DataContext = m_dataContext;
             }
+        }
+
+        // Saves advanced find settings when the pager is unloaded
+        private void MeasurementPager_Unloaded(object sender, RoutedEventArgs e)
+        {
+            m_dataContext.SaveSettings();
         }
 
         // Edits the columns of the data grid so that they reflect any changes made to the DataGridColumns collection.
@@ -364,9 +372,7 @@ namespace GSF.TimeSeries.UI.UserControls
         private void TextBoxSearch_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
-            {
-                m_dataContext.Search(TextBoxSearch.Text);
-            }
+                m_dataContext.Search();
         }
 
         // Selects/unselects all the measurements on all pages.
