@@ -311,11 +311,24 @@ namespace GSF.TimeSeries.UI.UserControls
                 m_dataContext.LoadSettings();
                 m_dataContext.Load();
                 RootPanel.DataContext = m_dataContext;
+
+                Application.Current.Exit += Application_Exit;
             }
         }
 
         // Saves advanced find settings when the pager is unloaded
         private void MeasurementPager_Unloaded(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Exit -= Application_Exit;
+            m_dataContext.SaveSettings();
+        }
+
+        /// <summary>
+        /// Handles the application exit event.
+        /// </summary>
+        /// <param name="sender">Source of the event.</param>
+        /// <param name="e">Arguments of the event.</param>
+        private void Application_Exit(object sender, ExitEventArgs e)
         {
             m_dataContext.SaveSettings();
         }

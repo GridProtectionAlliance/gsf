@@ -77,10 +77,18 @@ namespace GSF.TimeSeries.UI.UserControls
         private void MeasurementUserControl_Loaded(object sender, RoutedEventArgs e)
         {
             m_dataContext.LoadSettings();
+            Application.Current.Exit += Application_Exit;
         }
 
         private void MeasurementUserControl_Unloaded(object sender, RoutedEventArgs e)
         {
+            Application.Current.Exit -= Application_Exit;
+            m_dataContext.SaveSettings();
+        }
+
+        private void Application_Exit(object sender, ExitEventArgs e)
+        {
+            m_dataContext.ProcessPropertyChange();
             m_dataContext.SaveSettings();
         }
 

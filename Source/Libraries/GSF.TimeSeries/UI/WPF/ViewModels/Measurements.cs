@@ -31,6 +31,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
@@ -555,17 +556,29 @@ namespace GSF.TimeSeries.UI.ViewModels
         {
             const int searchGroupSize = 1000;
 
+            IList<Guid> allKeys = AllKeys;
             IList<DataModels.Measurement> measurements;
             List<Guid> searchGroup;
             int searchIndex = 0;
 
+            string sortMember = SortMember;
+            string sortDirection = SortDirection;
+            PropertyInfo sortProperty = typeof(DataModels.Measurement).GetProperty(sortMember);
+
             try
             {
-                while (searchIndex < AllKeys.Count && !m_cancelSearch)
+                while (searchIndex < allKeys.Count && !m_cancelSearch)
                 {
-                    searchGroup = AllKeys.Skip(searchIndex).Take(searchGroupSize).ToList();
+                    searchGroup = allKeys.Skip(searchIndex).Take(searchGroupSize).ToList();
                     measurements = DataModels.Measurement.LoadFromKeys(null, searchGroup);
-                    m_searcher.Add(measurements);
+
+                    if ((object)sortProperty == null)
+                        m_searcher.Add(measurements);
+                    else if (SortDirection == "ASC")
+                        m_searcher.Add(measurements.OrderBy(measurement => sortProperty.GetValue(measurement)));
+                    else
+                        m_searcher.Add(measurements.OrderByDescending(measurement => sortProperty.GetValue(measurement)));
+
                     searchIndex += searchGroupSize;
                 }
             }
@@ -589,13 +602,20 @@ namespace GSF.TimeSeries.UI.ViewModels
 
                 Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                 {
-                    if (ItemsSource.Count < ItemsPerPage)
+                    if (ItemsSource.Count == 0)
                     {
-                        e.Argument.Take(ItemsPerPage - ItemsSource.Count).ToList()
-                            .ForEach(measurement => ItemsSource.Add(measurement));
+                        Load();
                     }
+                    else
+                    {
+                        if (ItemsSource.Count < ItemsPerPage)
+                        {
+                            e.Argument.Take(ItemsPerPage - ItemsSource.Count).ToList()
+                                .ForEach(measurement => ItemsSource.Add(measurement));
+                        }
 
-                    GeneratePages();
+                        GeneratePages();
+                    }
                 }));
             }
             catch (Exception ex)

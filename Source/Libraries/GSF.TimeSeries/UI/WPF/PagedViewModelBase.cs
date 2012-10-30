@@ -311,8 +311,6 @@ namespace GSF.TimeSeries.UI
                     {
                         if (CurrentSelectedIndex < 0 || CurrentSelectedIndex >= m_currentPage.Count)
                             CurrentSelectedIndex = 0;
-
-                        CurrentItem = m_currentPage[CurrentSelectedIndex];
                     }
                 }
             }
