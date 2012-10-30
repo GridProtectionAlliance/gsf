@@ -229,7 +229,20 @@ namespace GSF.Searching
         }
 
         /// <summary>
-        /// Cancels currently running searches
+        /// Clears the queue of items to search.
+        /// </summary>
+        /// <remarks>
+        /// After a search is cancelled, there may still
+        /// be items lingering in the queue. This method
+        /// allows the user to clear them out.
+        /// </remarks>
+        public void Clear()
+        {
+            m_itemsToSearch = new ConcurrentQueue<IEnumerable<TSearch>>();
+        }
+
+        /// <summary>
+        /// Cancels currently running searches.
         /// </summary>
         public void Cancel()
         {

@@ -428,7 +428,7 @@ namespace GSF.TimeSeries.UI.ViewModels
                 m_cancelSearch = true;
                 m_searcher.Cancel();
             }
-            else if (!string.IsNullOrEmpty(m_searchText))
+            else if (!string.IsNullOrEmpty(m_pendingSearch) || !string.IsNullOrEmpty(m_searchText))
             {
                 // Begin the search
                 SetCurrentPageNumber(1);
@@ -439,6 +439,7 @@ namespace GSF.TimeSeries.UI.ViewModels
             else
             {
                 // Search text is empty so show all
+                m_pendingSearch = null;
                 SetCurrentPageNumber(1);
                 ItemsKeys = AllKeys;
                 Load();
@@ -581,6 +582,9 @@ namespace GSF.TimeSeries.UI.ViewModels
 
                     searchIndex += searchGroupSize;
                 }
+
+                if (m_cancelSearch)
+                    m_searcher.Clear();
             }
             catch (Exception ex)
             {
