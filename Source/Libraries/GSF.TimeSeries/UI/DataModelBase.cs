@@ -84,22 +84,40 @@ namespace GSF.TimeSeries.UI
         /// to exist before a property is included as a field in the data model.
         /// </param>
         protected DataModelBase(bool requireEntityPropertyAttribute)
+            : this(true, requireEntityPropertyAttribute)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="DataModelBase"/> class.
+        /// </summary>
+        /// <param name="loadDefaults">
+        /// Determines whether to load default values into the properties using reflection.
+        /// </param>
+        /// <param name="requireEntityPropertyAttribute">
+        /// Assigns flag that determines if <see cref="EntityPropertyAttribute"/> is required
+        /// to exist before a property is included as a field in the data model.
+        /// </param>
+        protected DataModelBase(bool loadDefaults, bool requireEntityPropertyAttribute)
         {
             m_propertyErrors = new ConcurrentDictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
             m_memberAccessBindingFlags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly;
             m_requireEntityPropertyAttribute = requireEntityPropertyAttribute;
 
-            // Load all default values for properties
-            ExecuteActionForProperties(property =>
+            if (loadDefaults)
             {
-                object defaultValue = DeriveDefaultValue(property.Name, property.GetValue(this, null));
+                // Load all default values for properties
+                ExecuteActionForProperties(property =>
+                {
+                    object defaultValue = DeriveDefaultValue(property.Name, property.GetValue(this, null));
 
-                if (!Common.IsDefaultValue(defaultValue))
-                    property.SetValue(this, defaultValue, null);
+                    if (!Common.IsDefaultValue(defaultValue))
+                        property.SetValue(this, defaultValue, null);
 
-                OnPropertyChanged(property.Name);
+                    OnPropertyChanged(property.Name);
 
-            }, BindingFlags.SetProperty);
+                }, BindingFlags.SetProperty);
+            }
         }
 
         #endregion

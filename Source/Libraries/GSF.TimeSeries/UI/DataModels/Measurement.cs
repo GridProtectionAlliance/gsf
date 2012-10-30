@@ -83,6 +83,29 @@ namespace GSF.TimeSeries.UI.DataModels
 
         #endregion
 
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="Measurement"/> class.
+        /// </summary>
+        public Measurement()
+            : base()
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="Measurement"/> class.
+        /// </summary>
+        /// <param name="loadDefaults">
+        /// Determines whether to load default values into the properties using reflection.
+        /// </param>
+        public Measurement(bool loadDefaults)
+            : base(loadDefaults, false)
+        {
+        }
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>
@@ -622,7 +645,7 @@ namespace GSF.TimeSeries.UI.DataModels
 
                     foreach (DataRow row in measurementTable.Rows)
                     {
-                        measurementList.Add(new Measurement()
+                        measurementList.Add(new Measurement(false)
                         {
                             SignalID = database.Guid(row, "SignalID"),
                             HistorianID = row.ConvertNullableField<int>("HistorianID"),
@@ -740,7 +763,7 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 foreach (DataRow row in measurementTable.Rows)
                 {
-                    measurementList.Add(new Measurement()
+                    measurementList.Add(new Measurement(false)
                     {
                         SignalID = database.Guid(row, "SignalID"),
                         HistorianID = row.ConvertNullableField<int>("HistorianID"),
