@@ -29,13 +29,13 @@
 #include "../Common/Measurement.h"
 #include "../Transport/DataSubscriber.h"
 
-namespace tsf = TimeSeriesFramework;
-namespace tsft = tsf::Transport;
+namespace gsfts = GSF::TimeSeries;
+namespace tst = gsfts::Transport;
 
-tsft::DataSubscriber Subscriber;
+tst::DataSubscriber Subscriber;
 
-void RunSubscriber(std::string hostname, tsf::uint16_t port);
-void ProcessMeasurements(std::vector<tsf::Measurement> newMeasurements);
+void RunSubscriber(std::string hostname, gsfts::uint16_t port);
+void ProcessMeasurements(std::vector<gsfts::Measurement> newMeasurements);
 
 // Sample application to demonstrate the most simple use of the subscriber API.
 //
@@ -49,7 +49,7 @@ void ProcessMeasurements(std::vector<tsf::Measurement> newMeasurements);
 int main(int argc, char* argv[])
 {
 	std::string hostname;
-	tsf::uint16_t port;
+	gsfts::uint16_t port;
 
 	// Ensure that the necessary
 	// command line arguments are given.
@@ -82,11 +82,11 @@ int main(int argc, char* argv[])
 //   - Register callbacks
 //   - Connect to publisher
 //   - Subscribe
-void RunSubscriber(std::string hostname, tsf::uint16_t port)
+void RunSubscriber(std::string hostname, gsfts::uint16_t port)
 {
 	// SubscriptionInfo is a helper object which allows the user
 	// to set up their subscription and reuse subscription settings.
-	tsft::SubscriptionInfo info;
+	tst::SubscriptionInfo info;
 	info.FilterExpression = "PPA:1;PPA:2;PPA:3;PPA:4;PPA:5;PPA:6;PPA:7;PPA:8;PPA:9;PPA:10;PPA:11;PPA:12;PPA:13;PPA:14";
 	
 	Subscriber.RegisterNewMeasurementsCallback(&ProcessMeasurements);
@@ -96,7 +96,7 @@ void RunSubscriber(std::string hostname, tsf::uint16_t port)
 
 // Callback which is called when the subscriber has
 // received a new packet of measurements from the publisher.
-void ProcessMeasurements(std::vector<tsf::Measurement> newMeasurements)
+void ProcessMeasurements(std::vector<gsfts::Measurement> newMeasurements)
 {
 	const std::string TimestampFormat = "%Y-%m-%d %H:%M:%S.%f";
 	const std::size_t MaxTimestampSize = 80;
@@ -114,7 +114,7 @@ void ProcessMeasurements(std::vector<tsf::Measurement> newMeasurements)
 
 		if (newMeasurements.size() > 0)
 		{
-			if (tsf::TicksToString(timestamp, MaxTimestampSize, TimestampFormat, newMeasurements[0].Timestamp))
+			if (gsfts::TicksToString(timestamp, MaxTimestampSize, TimestampFormat, newMeasurements[0].Timestamp))
 				std::cout << "Timestamp: " << std::string(timestamp) << std::endl;
 
 			std::cout << "Point\tValue" << std::endl;

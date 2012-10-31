@@ -1,5 +1,5 @@
 //******************************************************************************************************
-//  Version.h - Gbtc
+//  Guid.h - Gbtc
 //
 //  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,14 +16,40 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  04/12/2012 - Stephen C. Wills
+//  03/09/2012 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-#ifndef __VERSION_H
-#define __VERSION_H
+#ifndef __TYPES_H
+#define __TYPES_H
 
-#define TSF_VERSION "@TSF_VERSION@"
+#include <boost/uuid/uuid.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/ip/udp.hpp>
+
+namespace GSF {
+namespace TimeSeries
+{
+	typedef boost::uuids::uuid Guid;
+	typedef boost::asio::ip::tcp::socket TcpSocket;
+	typedef boost::asio::ip::udp::socket UdpSocket;
+
+	// Signed integer types
+	typedef signed char		int8_t;
+	typedef short			int16_t;
+	typedef int				int32_t;
+	typedef long			int64_t;
+
+	// Unsigned integer types
+	typedef unsigned char	uint8_t;
+	typedef unsigned short	uint16_t;
+	typedef unsigned int	uint32_t;
+	typedef unsigned long	uint64_t;
+
+	// Floating-point types
+	typedef float			float32_t;
+	typedef double			float64_t;
+}}
 
 #endif

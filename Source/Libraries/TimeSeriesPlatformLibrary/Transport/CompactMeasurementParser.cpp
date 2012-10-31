@@ -23,11 +23,11 @@
 
 #include "CompactMeasurementParser.h"
 
-namespace tsf = TimeSeriesFramework;
+namespace gsfts = GSF::TimeSeries;
 
 // Takes the 8-bit compact measurement flags and maps
 // them to the full 32-bit measurement flags format.
-uint32_t tsf::Transport::CompactMeasurementParser::MapToFullFlags(uint8_t compactFlags) const
+uint32_t gsfts::Transport::CompactMeasurementParser::MapToFullFlags(uint8_t compactFlags) const
 {
 	unsigned int fullFlags = 0;
 
@@ -53,7 +53,7 @@ uint32_t tsf::Transport::CompactMeasurementParser::MapToFullFlags(uint8_t compac
 }
 
 // Gets the byte length of measurements parsed by this parser.
-std::size_t tsf::Transport::CompactMeasurementParser::GetMeasurementByteLength(bool usingBaseTimeOffset) const
+std::size_t gsfts::Transport::CompactMeasurementParser::GetMeasurementByteLength(bool usingBaseTimeOffset) const
 {
 	std::size_t byteLength = 7;
 
@@ -73,7 +73,7 @@ std::size_t tsf::Transport::CompactMeasurementParser::GetMeasurementByteLength(b
 // Attempts to parse a measurement from the buffer. Return value of false indicates
 // that there is not enough data to parse the measurement. Offset and length will be
 // updated by this method to indicate how many bytes were used when parsing.
-bool tsf::Transport::CompactMeasurementParser::TryParseMeasurement(uint8_t* buffer, std::size_t& offset, std::size_t& length)
+bool gsfts::Transport::CompactMeasurementParser::TryParseMeasurement(uint8_t* buffer, std::size_t& offset, std::size_t& length)
 {
 	uint8_t compactFlags;
 	uint16_t signalIndex;

@@ -29,7 +29,8 @@
 #include <string>
 #include "../Common/Types.h"
 
-namespace TimeSeriesFramework {
+namespace GSF {
+namespace TimeSeries {
 namespace Transport
 {
 	// Maps 16-bit runtime IDs to 128-bit globally unique IDs.
@@ -81,6 +82,6 @@ namespace Transport
 		// Gets the 16-bit runtime ID associated with the given globally unique signal ID.
 		unsigned short GetSignalIndex(Guid signalID) const;
 	};
-}}
+}}}
 
 #endif

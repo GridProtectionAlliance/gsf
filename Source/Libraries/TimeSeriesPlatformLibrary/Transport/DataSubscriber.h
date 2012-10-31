@@ -36,7 +36,8 @@
 
 #include "SignalIndexCache.h"
 
-namespace TimeSeriesFramework {
+namespace GSF {
+namespace TimeSeries {
 namespace Transport
 {
 	// Simple exception type thrown by the data subscriber.
@@ -389,6 +390,6 @@ namespace Transport
 		int GetRetryInterval() const;
 		bool GetAutoReconnect() const;
 	};
-}}
+}}}
 
 #endif

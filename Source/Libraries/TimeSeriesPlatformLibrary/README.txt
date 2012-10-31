@@ -1,10 +1,10 @@
-This file is intended to help developers build the TSF Platform Library
+This file is intended to help developers build the Time Series Platform Library
 on Linux platforms. Similar instructions may apply to other platforms.
 
 
 1. Dependencies
 ---------------
-The TSF Platform Library depends on the following libraries in order
+The Time Series Platform Library depends on the following libraries in order
 to build. Earlier versions of the libraries listed may not work properly.
 
 CMake v2.8 (http://www.cmake.org/)
@@ -43,8 +43,8 @@ At the top level of the build directory, type the following command.
 
 	make
 
-In addition to the library itself, there are sample applications
-which demonstrate the proper use of the TSF Platform Library API.
+In addition to the library itself, there are sample applications which
+demonstrate the proper use of the Time Series Platform Library API.
 To build these samples, type the following command.
 
 	make samples

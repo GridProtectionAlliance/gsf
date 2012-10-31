@@ -26,7 +26,8 @@
 
 #include "../Common/Types.h"
 
-namespace TimeSeriesFramework {
+namespace GSF {
+namespace TimeSeries {
 namespace Transport
 {
 	struct DataPacketFlags
@@ -79,6 +80,6 @@ namespace Transport
 		static const uint32_t UTF8             = 0x00000200;
 		static const uint32_t ANSI             = 0x00000300;
 	};
-}}
+}}}
 
 #endif

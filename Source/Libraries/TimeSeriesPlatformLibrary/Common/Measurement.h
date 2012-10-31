@@ -27,7 +27,8 @@
 #include <string>
 #include "Types.h"
 
-namespace TimeSeriesFramework
+namespace GSF {
+namespace TimeSeries
 {
 	// Fundamental data type used by
 	// the Time Series Framework.
@@ -79,6 +80,6 @@ namespace TimeSeriesFramework
 			return Value * Multiplier + Adder;
 		}
 	};
-}
+}}
 
 #endif

@@ -30,7 +30,8 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/locks.hpp>
 
-namespace TimeSeriesFramework
+namespace GSF {
+namespace TimeSeries
 {
 	// Simple queue with locking mechanisms to make its operations thread-safe.
 	//
@@ -167,6 +168,6 @@ namespace TimeSeriesFramework
 		boost::lock_guard<boost::mutex> lock(m_mutex);
 		m_release = false;
 	}
-}
+}}
 
 #endif

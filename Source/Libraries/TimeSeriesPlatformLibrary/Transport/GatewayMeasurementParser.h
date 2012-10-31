@@ -28,7 +28,8 @@
 #include "../Common/Measurement.h"
 #include "../Common/Types.h"
 
-namespace TimeSeriesFramework {
+namespace GSF {
+namespace TimeSeries {
 namespace Transport
 {
 	// Base class for measurement parsers.
@@ -45,6 +46,6 @@ namespace Transport
 		// Returns the measurement that was parsed by the last successful call to TryParseMeasurement.
 		virtual Measurement GetParsedMeasurement() const = 0;
 	};
-}}
+}}}
 
 #endif

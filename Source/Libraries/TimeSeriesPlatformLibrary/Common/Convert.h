@@ -28,10 +28,11 @@
 #include <string>
 #include "Types.h"
 
-namespace TimeSeriesFramework
+namespace GSF {
+namespace TimeSeries
 {
 	// Thin wrapper around strftime to provide formats for milliseconds (%f) and full-resolution ticks (%t).
 	std::size_t TicksToString(char* ptr, std::size_t maxsize, std::string format, int64_t ticks);
-}
+}}
 
 #endif

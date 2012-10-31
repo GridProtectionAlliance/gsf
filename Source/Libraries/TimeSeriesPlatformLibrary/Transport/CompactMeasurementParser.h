@@ -33,7 +33,8 @@
 #include "GatewayMeasurementParser.h"
 #include "SignalIndexCache.h"
 
-namespace TimeSeriesFramework {
+namespace GSF {
+namespace TimeSeries {
 namespace Transport
 {
 	// Parser for the compact measurement format of the Gateway Exchange Protocol.
@@ -91,6 +92,6 @@ namespace Transport
 		static const uint32_t CalculatedValueMask = 0x00001000;
 		static const uint32_t DiscardedValueMask  = 0x00400000;
 	};
-}}
+}}}
 
 #endif

@@ -1,5 +1,5 @@
 //******************************************************************************************************
-//  Version.h - Gbtc
+//  EndianConverter.cpp - Gbtc
 //
 //  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,18 +16,41 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  04/12/2012 - Stephen C. Wills
+//  03/19/2012 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-#ifndef __VERSION_H
-#define __VERSION_H
+#include "EndianConverter.h"
 
-// This header is a placeholder.
-//
-// The Version.h used by the build is
-// configured by cmake from Version.h.in.
-#define TSF_VERSION "0.0.0"
+namespace gsfts = GSF::TimeSeries;
 
-#endif
+// Creates a new instance of the EndianConverter.
+gsfts::EndianConverter::EndianConverter()
+{
+	union
+	{
+		uint32_t num;
+		uint8_t bytes[4];
+	} endianTest = { 0x00000001 };
+
+	if (endianTest.bytes[0] == 1)
+		m_nativeOrder = EndianConverter::LittleEndian;
+	else
+		m_nativeOrder = EndianConverter::BigEndian;
+}
+
+// Swaps the bytes in a character array.
+// Used for conversion between different byte orders.
+void gsfts::EndianConverter::ByteSwap(uint8_t* value, std::size_t length) const
+{
+	uint8_t *start, *end;
+	uint8_t temp;
+
+	for(start = value, end = value + length - 1; start < end; ++start, --end)
+	{
+		temp = *start;
+		*start = *end;
+		*end = temp;
+	}
+}

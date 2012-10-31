@@ -27,9 +27,9 @@
 #include <string>
 #include "Convert.h"
 
-namespace tsf = TimeSeriesFramework;
+namespace gsfts = GSF::TimeSeries;
 
-std::size_t tsf::TicksToString(char* ptr, std::size_t maxsize, std::string format, int64_t ticks)
+std::size_t gsfts::TicksToString(char* ptr, std::size_t maxsize, std::string format, int64_t ticks)
 {
 	// Unix dates are measured as the number of seconds since 1/1/1970
 	const int64_t BaseTimeOffset = 621355968000000000L;
