@@ -41,6 +41,10 @@
 //       Corrected the implementation of ConnectAsync() method.
 //  02/13/2011 - Pinal C. Patel
 //       Modified ConnectAsync() to handle loopback address resolution failure on IPv6 enabled OSes.
+//  07/23/2012 - Stephen C. Wills
+//       Performed a full refactor to use the SocketAsyncEventArgs API calls.
+//  10/31/2012 - Stephen C. Wills
+//       Replaced single-threaded BlockingCollection pattern with asynchronous loop pattern.
 //
 //*******************************************************************************************************
 
@@ -1083,6 +1087,10 @@ namespace GSF.Communication
             catch (Exception ex)
             {
                 OnSendDataException(ex);
+
+                // Assume process send was not able
+                // to continue the asynchronous loop.
+                Interlocked.Exchange(ref m_sending, 0);
             }
         }
 

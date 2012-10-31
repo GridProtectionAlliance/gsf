@@ -35,6 +35,10 @@
 //       prevented the ServerStopped event from being raised under certain configuration.
 //  12/04/2011 - J. Ritchie Carroll
 //       Modified to use concurrent dictionary.
+//  07/23/2012 - Stephen C. Wills
+//       Performed a full refactor to use the SocketAsyncEventArgs API calls.
+//  10/31/2012 - Stephen C. Wills
+//       Replaced single-threaded BlockingCollection pattern with asynchronous loop pattern.
 //
 //*******************************************************************************************************
 
@@ -983,7 +987,7 @@ namespace GSF.Communication
         /// </summary>
         private void SendPayload(UdpServerPayload payload)
         {
-            UdpClientInfo clientInfo;
+            UdpClientInfo clientInfo = null;
             TransportProvider<EndPoint> client = null;
             SocketAsyncEventArgs args;
             ManualResetEventSlim handle;
@@ -1016,6 +1020,13 @@ namespace GSF.Communication
             {
                 if ((object)client != null)
                     OnSendClientDataException(client.ID, ex);
+
+                if ((object)clientInfo != null)
+                {
+                    // Assume process send was not able
+                    // to continue the asynchronous loop.
+                    Interlocked.Exchange(ref clientInfo.Sending, 0);
+                }
             }
         }
 
