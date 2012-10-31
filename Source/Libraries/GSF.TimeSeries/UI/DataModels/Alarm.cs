@@ -711,7 +711,7 @@ namespace GSF.TimeSeries.UI.DataModels
                         "nodeID", "tagName", "signalId", "associatedMeasurementId", "description", "severity", "operation", "setPoint", "tolerance", "delay",
                         "hysteresis", "loadOrder", "enabled", "updatedBy", "updatedOn", "createdBy", "createdOn");
 
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, (alarm.NodeID == null || alarm.NodeID == Guid.Empty) ? database.CurrentNodeID() : database.Guid(alarm.NodeID),
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, (alarm.NodeID != Guid.Empty) ? database.Guid(alarm.NodeID) : database.CurrentNodeID(),
                         alarm.TagName.ToNotNull(), database.Guid(alarm.SignalID), associatedMeasurementId, alarm.Description.ToNotNull(), alarm.Severity, alarm.Operation, alarm.SetPoint.ToNotNull(),
                         alarm.Tolerance.ToNotNull(), alarm.Delay.ToNotNull(), alarm.Hysteresis.ToNotNull(), alarm.LoadOrder, database.Bool(alarm.Enabled), CommonFunctions.CurrentUser, database.UtcNow(),
                         CommonFunctions.CurrentUser, database.UtcNow());
@@ -725,9 +725,10 @@ namespace GSF.TimeSeries.UI.DataModels
                         "nodeID", "tagName", "signalId", "associatedMeasurementId", "description", "severity", "operation", "setPoint", "tolerance", "delay", "hysteresis",
                         "loadOrder", "enabled", "updatedBy", "updatedOn", "id");
 
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.Guid(alarm.NodeID), alarm.TagName, database.Guid(alarm.SignalID), associatedMeasurementId,
-                        alarm.Description.ToNotNull(), alarm.Severity, alarm.Operation, alarm.SetPoint.ToNotNull(), alarm.Tolerance.ToNotNull(), alarm.Delay.ToNotNull(),
-                        alarm.Hysteresis.ToNotNull(), alarm.LoadOrder, database.Bool(alarm.Enabled), CommonFunctions.CurrentUser, database.UtcNow(), alarm.ID);
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, (alarm.NodeID != Guid.Empty) ? database.Guid(alarm.NodeID) : database.CurrentNodeID(),
+                        alarm.TagName, database.Guid(alarm.SignalID), associatedMeasurementId, alarm.Description.ToNotNull(), alarm.Severity, alarm.Operation,
+                        alarm.SetPoint.ToNotNull(), alarm.Tolerance.ToNotNull(), alarm.Delay.ToNotNull(), alarm.Hysteresis.ToNotNull(), alarm.LoadOrder, database.Bool(alarm.Enabled),
+                        CommonFunctions.CurrentUser, database.UtcNow(), alarm.ID);
                 }
 
                 updateQuery = database.ParameterizedQueryString("UPDATE Alarm SET AssociatedMeasurementID = {0} WHERE ID = {1}", "associatedMeasurementId", "id");
@@ -812,13 +813,15 @@ namespace GSF.TimeSeries.UI.DataModels
         // Creates a measurement associated with the given alarm and returns the new measurements signal ID.
         private static Guid? CreateAlarmMeasurement(AdoDataConnection database, Alarm alarm)
         {
+            object nodeID;
             Historian historian;
             Measurement alarmMeasurement;
             int signalTypeId;
 
             try
             {
-                historian = Historian.GetHistorian(database, string.Format("WHERE Acronym = 'STAT' AND NodeID = '{0}'", database.Guid(alarm.NodeID)));
+                nodeID = (alarm.NodeID != Guid.Empty) ? database.Guid(alarm.NodeID) : database.CurrentNodeID();
+                historian = Historian.GetHistorian(database, string.Format("WHERE Acronym = 'STAT' AND NodeID = '{0}'", nodeID));
                 signalTypeId = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym = 'ALRM'", DefaultTimeout));
 
                 alarmMeasurement = new Measurement()

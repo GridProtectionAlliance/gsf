@@ -130,16 +130,6 @@ namespace GSF.TimeSeries.UI.ViewModels
         }
 
         /// <summary>
-        /// Creates a new instance of <see cref="Historian"/> and assigns it to CurrentItem.
-        /// </summary>
-        public override void Clear()
-        {
-            base.Clear();
-            if (m_nodeLookupList.Count > 0)
-                CurrentItem.NodeID = m_nodeLookupList.First().Key;
-        }
-
-        /// <summary>
         /// Initialization to be done before the initial call to <see cref="PagedViewModelBase{T1,T2}.Load"/>.
         /// </summary>
         public override void Initialize()

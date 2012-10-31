@@ -207,9 +207,6 @@ namespace GSF.TimeSeries.UI.ViewModels
 
             SelectedMeasurementLabel = string.Empty;
 
-            if (m_nodeLookupList.Count > 0)
-                CurrentItem.NodeID = m_nodeLookupList.First().Key;
-
             if (m_operationList.Count > 0)
                 CurrentItem.Operation = m_operationList.First().Key;
 

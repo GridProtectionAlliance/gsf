@@ -256,9 +256,6 @@ namespace GSF.TimeSeries.UI.ViewModels
         {
             base.Clear();
             CurrentItem.Type = m_adapterType;
-            if (m_nodeLookupList.Count > 0)
-                CurrentItem.NodeID = m_nodeLookupList.First().Key;
-
             ParameterList = null;
         }
 
