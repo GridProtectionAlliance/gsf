@@ -38,6 +38,10 @@
 //       Modified ConnectAsync() to handle loopback address resolution failure on IPv6 enabled OSes.
 //  09/21/2011 - J. Ritchie Carroll
 //       Added Mono implementation exception regions.
+//  07/23/2012 - Stephen C. Wills
+//       Performed a full refactor to use the SocketAsyncEventArgs API calls.
+//  10/31/2012 - Stephen C. Wills
+//       Replaced single-threaded BlockingCollection pattern with asynchronous loop pattern.
 //
 //*******************************************************************************************************
 
@@ -1091,6 +1095,10 @@ namespace TVA.Communication
             catch (Exception ex)
             {
                 OnSendDataException(ex);
+
+                // Assume process send was not able
+                // to continue the asynchronous loop.
+                Interlocked.Exchange(ref m_sending, 0);
             }
         }
 
