@@ -125,8 +125,7 @@ namespace ArchivistAdapters
                 return false;
             }
         }
-
-        /*
+        
         /// <summary>
         /// Returns the detailed status of this <see cref="ArchivistOutputAdapter"/>.
         /// </summary>
@@ -137,13 +136,13 @@ namespace ArchivistAdapters
                 StringBuilder status = new StringBuilder();
 
                 status.Append(base.Status);
-                status.AppendFormat("                 File name: {0}", m_fileName);
+                status.AppendFormat("                 Host: {0}", m_host);
+                status.AppendFormat("                 Port: {0}", m_port);
                 status.AppendLine();
 
                 return status.ToString();
             }
         }
-         * */
 
         #endregion
 
@@ -195,8 +194,15 @@ namespace ArchivistAdapters
         {
             if (measurements != null)
             {
-                var meas = Convert(measurements);
-                var result = m_client.Insert(meas).Await().Get(); // TODO - error handling here
+                try
+                {
+                    var meas = Convert(measurements);
+                    var result = m_client.Insert(meas).Await().Get(); // TODO - error handling here
+                }
+                catch (System.Exception ex)
+                {
+                    OnProcessException(ex);
+                }
             }
         }
 
