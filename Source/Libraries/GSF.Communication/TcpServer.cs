@@ -274,6 +274,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -366,20 +367,24 @@ namespace GSF.Communication
         #region [ Members ]
 
         // Nested Types
+        private class TcpClientInfo
+        {
+            public TransportProvider<Socket> Client;
+            public ConcurrentQueue<TcpServerPayload> SendQueue;
+            public SocketAsyncEventArgs SendArgs;
+            public int Sending;
+        }
 
         private class TcpServerPayload
         {
+            // Per payload state
             public byte[] Data;
             public int Offset;
             public int Length;
-
             public ManualResetEventSlim WaitHandle;
-        }
 
-        private class TcpServerUserToken
-        {
-            public TransportProvider<Socket> Client;
-            public ManualResetEventSlim WaitHandle;
+            // Per client state
+            public TcpClientInfo ClientInfo;
         }
 
         // Constants
@@ -418,8 +423,7 @@ namespace GSF.Communication
         private int m_maxSendQueueSize;
         private Socket m_tcpServer;
         private SocketAsyncEventArgs m_acceptArgs;
-        private ConcurrentDictionary<Guid, TransportProvider<Socket>> m_tcpClients;
-        private ConcurrentDictionary<Guid, BlockingCollection<TcpServerPayload>> m_sendQueues;
+        private ConcurrentDictionary<Guid, TcpClientInfo> m_clientInfoLookup;
         private Dictionary<string, string> m_configData;
 
         private EventHandler<SocketAsyncEventArgs> m_acceptHandler;
@@ -451,8 +455,7 @@ namespace GSF.Communication
             m_integratedSecurity = DefaultIntegratedSecurity;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_maxSendQueueSize = DefaultMaxSendQueueSize;
-            m_tcpClients = new ConcurrentDictionary<Guid, TransportProvider<Socket>>();
-            m_sendQueues = new ConcurrentDictionary<Guid, BlockingCollection<TcpServerPayload>>();
+            m_clientInfoLookup = new ConcurrentDictionary<Guid, TcpClientInfo>();
 
             m_acceptHandler = (sender, args) => ProcessAccept();
             m_sendHandler = (sender, args) => ProcessSend(args);
@@ -604,7 +607,7 @@ namespace GSF.Communication
                 StringBuilder statusBuilder = new StringBuilder(base.Status);
                 int count = 0;
 
-                foreach (BlockingCollection<TcpServerPayload> sendQueue in m_sendQueues.Values)
+                foreach (ConcurrentQueue<TcpServerPayload> sendQueue in m_clientInfoLookup.Values.Select(clientInfo => clientInfo.SendQueue))
                 {
                     statusBuilder.AppendFormat("           Queued payloads: {0} for client {1}", sendQueue.Count, ++count);
                     statusBuilder.AppendLine();
@@ -613,8 +616,6 @@ namespace GSF.Communication
                 statusBuilder.AppendFormat("     Wait handle pool size: {0}", ReusableObjectPool<ManualResetEventSlim>.Default.GetPoolSize());
                 statusBuilder.AppendLine();
                 statusBuilder.AppendFormat("         Payload pool size: {0}", ReusableObjectPool<TcpServerPayload>.Default.GetPoolSize());
-                statusBuilder.AppendLine();
-                statusBuilder.AppendFormat("      User token pool size: {0}", ReusableObjectPool<TcpServerUserToken>.Default.GetPoolSize());
                 statusBuilder.AppendLine();
 
                 return statusBuilder.ToString();
@@ -650,10 +651,13 @@ namespace GSF.Communication
         {
             buffer.ValidateParameters(startIndex, length);
 
+            TcpClientInfo clientInfo;
             TransportProvider<Socket> tcpClient;
 
-            if (m_tcpClients.TryGetValue(clientID, out tcpClient))
+            if (m_clientInfoLookup.TryGetValue(clientID, out clientInfo))
             {
+                tcpClient = clientInfo.Client;
+
                 if ((object)tcpClient.ReceiveBuffer != null)
                 {
                     int readIndex = ReadIndicies[clientID];
@@ -816,7 +820,15 @@ namespace GSF.Communication
         /// <exception cref="InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
         public bool TryGetClient(Guid clientID, out TransportProvider<Socket> tcpClient)
         {
-            return m_tcpClients.TryGetValue(clientID, out tcpClient);
+            TcpClientInfo clientInfo;
+            bool clientExists = m_clientInfoLookup.TryGetValue(clientID, out clientInfo);
+
+            if (clientExists)
+                tcpClient = clientInfo.Client;
+            else
+                tcpClient = null;
+
+            return clientExists;
         }
 
         /// <summary>
@@ -849,19 +861,24 @@ namespace GSF.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         protected override WaitHandle SendDataToAsync(Guid clientID, byte[] data, int offset, int length)
         {
-            BlockingCollection<TcpServerPayload> sendQueue;
+            TcpClientInfo clientInfo;
+            ConcurrentQueue<TcpServerPayload> sendQueue;
+            TcpServerPayload dequeuedPayload;
+
             TcpServerPayload payload;
             ManualResetEventSlim handle;
 
-            if (!m_sendQueues.TryGetValue(clientID, out sendQueue))
+            if (!m_clientInfoLookup.TryGetValue(clientID, out clientInfo))
                 throw new InvalidOperationException(string.Format("No client found for ID {0}.", clientID));
+
+            sendQueue = clientInfo.SendQueue;
 
             // Check to see if the client has reached the maximum send queue size.
             if (m_maxSendQueueSize > 0 && sendQueue.Count >= m_maxSendQueueSize)
             {
                 for (int i = 0; i < m_maxSendQueueSize; i++)
                 {
-                    if (sendQueue.TryTake(out payload))
+                    if (sendQueue.TryDequeue(out payload))
                     {
                         payload.WaitHandle.Set();
                         payload.WaitHandle.Dispose();
@@ -884,10 +901,18 @@ namespace GSF.Communication
             payload.Offset = offset;
             payload.Length = length;
             payload.WaitHandle = handle;
+            payload.ClientInfo = clientInfo;
             handle.Reset();
 
             // Queue payload for sending.
-            sendQueue.Add(payload);
+            sendQueue.Enqueue(payload);
+
+            // Send next queued payload.
+            if (Interlocked.CompareExchange(ref clientInfo.Sending, 1, 0) == 0)
+            {
+                if (sendQueue.TryDequeue(out dequeuedPayload))
+                    ThreadPool.QueueUserWorkItem(state => SendPayload((TcpServerPayload)state), dequeuedPayload);
+            }
 
             // Notify that the send operation has started.
             OnSendClientDataStart(clientID);
@@ -903,7 +928,7 @@ namespace GSF.Communication
         /// <param name="ex">Exception to send to <see cref="ServerBase.SendClientDataException"/> event.</param>
         protected override void OnSendClientDataException(Guid clientID, Exception ex)
         {
-            if (m_tcpClients.ContainsKey(clientID) && CurrentState == ServerState.Running)
+            if (m_clientInfoLookup.ContainsKey(clientID) && CurrentState == ServerState.Running)
                 base.OnSendClientDataException(clientID, ex);
         }
 
@@ -914,7 +939,7 @@ namespace GSF.Communication
         /// <param name="ex">Exception to send to <see cref="ServerBase.ReceiveClientDataException"/> event.</param>
         protected virtual void OnReceiveClientDataException(Guid clientID, SocketException ex)
         {
-            if (m_tcpClients.ContainsKey(clientID) && ex.SocketErrorCode != SocketError.Disconnecting)
+            if (m_clientInfoLookup.ContainsKey(clientID) && ex.SocketErrorCode != SocketError.Disconnecting)
                 OnReceiveClientDataException(clientID, (Exception)ex);
         }
 
@@ -925,7 +950,7 @@ namespace GSF.Communication
         /// <param name="ex">Exception to send to <see cref="ServerBase.ReceiveClientDataException"/> event.</param>
         protected override void OnReceiveClientDataException(Guid clientID, Exception ex)
         {
-            if (m_tcpClients.ContainsKey(clientID) && CurrentState == ServerState.Running)
+            if (m_clientInfoLookup.ContainsKey(clientID) && CurrentState == ServerState.Running)
                 base.OnReceiveClientDataException(clientID, ex);
         }
 
@@ -936,6 +961,7 @@ namespace GSF.Communication
         {
             TransportProvider<Socket> client = new TransportProvider<Socket>();
             SocketAsyncEventArgs receiveArgs = null;
+            TcpClientInfo clientInfo;
 
             try
             {
@@ -1001,13 +1027,17 @@ namespace GSF.Communication
                 else
                 {
                     // We can proceed further with receiving data from the client.
-                    m_tcpClients.TryAdd(client.ID, client);
-                    m_sendQueues.TryAdd(client.ID, new BlockingCollection<TcpServerPayload>());
-                    client.SetSendBuffer(SendBufferSize);
+                    clientInfo = new TcpClientInfo();
+                    clientInfo.Client = client;
+                    clientInfo.SendQueue = new ConcurrentQueue<TcpServerPayload>();
+                    clientInfo.SendArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
 
-                    // Initiate SendPayload thread so the
-                    // user can send data on the socket.
-                    SendPayloadAsync(client.ID);
+                    // Set up socket args.
+                    client.SetSendBuffer(SendBufferSize);
+                    clientInfo.SendArgs.Completed += m_sendHandler;
+                    clientInfo.SendArgs.SetBuffer(client.SendBuffer, 0, client.SendBufferSize);
+
+                    m_clientInfoLookup.TryAdd(client.ID, clientInfo);
 
                     OnClientConnected(client.ID);
 
@@ -1043,106 +1073,44 @@ namespace GSF.Communication
         }
 
         /// <summary>
-        /// Kicks off the send payload thread.
+        /// Asynchronous loop sends payloads on the socket.
         /// </summary>
-        private void SendPayloadAsync(Guid clientID)
+        private void SendPayload(TcpServerPayload payload)
         {
-            Thread sendThread = new Thread(() => SendPayload(clientID));
-            sendThread.IsBackground = true;
-            sendThread.Start();
-        }
-
-        /// <summary>
-        /// Loops waiting for payloads and sends them on the socket.
-        /// </summary>
-        private void SendPayload(Guid clientID)
-        {
-            TcpServerUserToken userToken = FastObjectFactory<TcpServerUserToken>.CreateObjectFunction();
-
-            TransportProvider<Socket> client;
-            BlockingCollection<TcpServerPayload> sendQueue;
+            TcpClientInfo clientInfo;
+            TransportProvider<Socket> client = null;
             SocketAsyncEventArgs args;
-            TcpServerPayload payload;
-            ManualResetEventSlim handle = null;
+            ManualResetEventSlim handle;
             int copyLength;
 
-            // Inability to find the client indicates the client
-            // was disconnected before we had a chance to send.
-            if (!TryGetClient(clientID, out client))
-                return;
-
-            using (sendQueue = m_sendQueues[clientID])
+            try
             {
-                using (args = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction())
-                {
-                    // Set up socket args.
-                    args.Completed += m_sendHandler;
-                    args.UserToken = userToken;
-                    args.SetBuffer(client.SendBuffer, 0, client.SendBufferSize);
-                    userToken.Client = client;
+                clientInfo = payload.ClientInfo;
+                client = clientInfo.Client;
+                args = clientInfo.SendArgs;
+                args.UserToken = payload;
+                handle = payload.WaitHandle;
 
-                    while (m_tcpClients.ContainsKey(clientID))
-                    {
-                        try
-                        {
-                            if (sendQueue.TryTake(out payload, 1000))
-                            {
-                                try
-                                {
-                                    // Get the handle for the send operation.
-                                    handle = payload.WaitHandle;
-                                    userToken.WaitHandle = handle;
+                // Copy payload into send buffer.
+                copyLength = Math.Min(payload.Length, client.SendBufferSize);
+                Buffer.BlockCopy(payload.Data, payload.Offset, client.SendBuffer, 0, copyLength);
 
-                                    while (payload.Length > 0)
-                                    {
-                                        // Copy payload into send buffer.
-                                        copyLength = Math.Min(payload.Length, client.SendBufferSize);
-                                        Buffer.BlockCopy(payload.Data, payload.Offset, client.SendBuffer, 0, copyLength);
+                // Set buffer and user token of send args.
+                args.SetBuffer(0, copyLength);
 
-                                        // Set buffer and user token of send args.
-                                        args.SetBuffer(0, copyLength);
+                // Update offset and length.
+                payload.Offset += copyLength;
+                payload.Length -= copyLength;
 
-                                        // Send data over socket.
-                                        if (!client.Provider.SendAsync(args))
-                                            ProcessSend(args);
-
-                                        // Wait for send operation to complete
-                                        // before the next send attempt.
-                                        handle.Wait();
-                                        handle.Reset();
-
-                                        // Update offset and length.
-                                        payload.Offset += copyLength;
-                                        payload.Length -= copyLength;
-                                    }
-                                }
-                                finally
-                                {
-                                    // Return used payload to the pool.
-                                    payload.Data = null;
-                                    payload.WaitHandle = null;
-                                    ReusableObjectPool<TcpServerPayload>.Default.ReturnObject(payload);
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            OnSendClientDataException(client.ID, ex);
-                        }
-                        finally
-                        {
-                            // Return the handle to the pool.
-                            if ((object)handle != null)
-                            {
-                                ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
-                                handle = null;
-                            }
-                        }
-                    }
-                }
+                // Send data over socket.
+                if (!client.Provider.SendAsync(args))
+                    ProcessSend(args);
             }
-
-            m_sendQueues.TryRemove(clientID, out sendQueue);
+            catch (Exception ex)
+            {
+                if ((object)client != null)
+                    OnSendClientDataException(client.ID, ex);
+            }
         }
 
         /// <summary>
@@ -1150,32 +1118,64 @@ namespace GSF.Communication
         /// </summary>
         private void ProcessSend(SocketAsyncEventArgs args)
         {
-            TcpServerUserToken userToken = (TcpServerUserToken)args.UserToken;
-
-            TransportProvider<Socket> client = userToken.Client;
-            ManualResetEventSlim handle = userToken.WaitHandle;
+            TcpServerPayload payload = null;
+            TcpClientInfo clientInfo = null;
+            TransportProvider<Socket> client = null;
+            ConcurrentQueue<TcpServerPayload> sendQueue = null;
+            ManualResetEventSlim handle = null;
 
             try
             {
-                // Send operation is complete.
+                payload = (TcpServerPayload)args.UserToken;
+                clientInfo = payload.ClientInfo;
+                client = clientInfo.Client;
+                sendQueue = clientInfo.SendQueue;
+                handle = payload.WaitHandle;
+
+                // Determine whether we are finished with this
+                // payload and, if so, set the wait handle.
+                if (payload.Length <= 0)
+                    handle.Set();
+
+                // Check for errors during send operation.
                 if (args.SocketError != SocketError.Success)
                     throw new SocketException((int)args.SocketError);
 
+                // Update statistics on the client.
                 client.Statistics.UpdateBytesSent(args.BytesTransferred);
-                handle.Set();
-                handle = null;
 
-                OnSendClientDataComplete(client.ID);
+                // Send operation is complete.
+                if (payload.Length <= 0)
+                    OnSendClientDataComplete(client.ID);
             }
             catch (Exception ex)
             {
                 // Send operation failed to complete.
-                OnSendClientDataException(client.ID, ex);
+                if ((object)client != null)
+                    OnSendClientDataException(client.ID, ex);
             }
             finally
             {
-                if ((object)handle != null)
-                    handle.Set();
+                if (payload.Length > 0)
+                {
+                    // Still more to send for this payload.
+                    ThreadPool.QueueUserWorkItem(state => SendPayload((TcpServerPayload)state), payload);
+                }
+                else
+                {
+                    payload.WaitHandle = null;
+                    payload.ClientInfo = null;
+
+                    // Return payload and wait handle to their respective object pools.
+                    ReusableObjectPool<TcpServerPayload>.Default.ReturnObject(payload);
+                    ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
+
+                    // Begin sending next client payload.
+                    if (sendQueue.TryDequeue(out payload))
+                        ThreadPool.QueueUserWorkItem(state => SendPayload((TcpServerPayload)state), payload);
+                    else
+                        Interlocked.Exchange(ref clientInfo.Sending, 0);
+                }
             }
         }
 
@@ -1374,10 +1374,15 @@ namespace GSF.Communication
         /// </summary>
         private void TerminateConnection(TransportProvider<Socket> client, SocketAsyncEventArgs args, bool raiseEvent)
         {
+            TcpClientInfo clientInfo;
+
             try
             {
-                if (m_tcpClients.TryRemove(client.ID, out client))
+                if (m_clientInfoLookup.TryRemove(client.ID, out clientInfo))
+                {
                     client.Reset();
+                    clientInfo.SendArgs.Dispose();
+                }
 
                 if (raiseEvent)
                     OnClientDisconnected(client.ID);

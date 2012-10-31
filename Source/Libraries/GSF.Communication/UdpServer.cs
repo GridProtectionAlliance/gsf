@@ -279,6 +279,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -378,20 +379,24 @@ namespace GSF.Communication
         #region [ Members ]
 
         // Nested Types
+        private class UdpClientInfo
+        {
+            public TransportProvider<EndPoint> Client;
+            public ConcurrentQueue<UdpServerPayload> SendQueue;
+            public SocketAsyncEventArgs SendArgs;
+            public int Sending;
+        }
 
         private class UdpServerPayload
         {
+            // Per payload state
             public byte[] Data;
             public int Offset;
             public int Length;
-
             public ManualResetEventSlim WaitHandle;
-        }
 
-        private class UdpServerUserToken
-        {
-            public TransportProvider<EndPoint> Client;
-            public ManualResetEventSlim WaitHandle;
+            // Per client state
+            public UdpClientInfo ClientInfo;
         }
 
         // Constants
@@ -419,8 +424,7 @@ namespace GSF.Communication
         // Fields
         private TransportProvider<Socket> m_udpServer;
         private SocketAsyncEventArgs m_receiveArgs;
-        private ConcurrentDictionary<Guid, TransportProvider<EndPoint>> m_udpClients;
-        private ConcurrentDictionary<Guid, BlockingCollection<UdpServerPayload>> m_sendQueues;
+        private ConcurrentDictionary<Guid, UdpClientInfo> m_clientInfoLookup;
         private IPStack m_ipStack;
         private bool m_allowDualStackSocket;
         private int m_maxSendQueueSize;
@@ -450,8 +454,7 @@ namespace GSF.Communication
         {
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_maxSendQueueSize = DefaultMaxSendQueueSize;
-            m_udpClients = new ConcurrentDictionary<Guid, TransportProvider<EndPoint>>();
-            m_sendQueues = new ConcurrentDictionary<Guid, BlockingCollection<UdpServerPayload>>();
+            m_clientInfoLookup = new ConcurrentDictionary<Guid, UdpClientInfo>();
 
             m_sendHandler = (sender, args) => ProcessSend(args);
             m_receiveHandler = (sender, args) => ProcessReceive(args);
@@ -530,7 +533,7 @@ namespace GSF.Communication
                 StringBuilder statusBuilder = new StringBuilder(base.Status);
                 int count = 0;
 
-                foreach (BlockingCollection<UdpServerPayload> sendQueue in m_sendQueues.Values)
+                foreach (ConcurrentQueue<UdpServerPayload> sendQueue in m_clientInfoLookup.Values.Select(clientInfo => clientInfo.SendQueue))
                 {
                     statusBuilder.AppendFormat("           Queued payloads: {0} for client {1}", sendQueue.Count, ++count);
                     statusBuilder.AppendLine();
@@ -539,8 +542,6 @@ namespace GSF.Communication
                 statusBuilder.AppendFormat("     Wait handle pool size: {0}", ReusableObjectPool<ManualResetEventSlim>.Default.GetPoolSize());
                 statusBuilder.AppendLine();
                 statusBuilder.AppendFormat("         Payload pool size: {0}", ReusableObjectPool<UdpServerPayload>.Default.GetPoolSize());
-                statusBuilder.AppendLine();
-                statusBuilder.AppendFormat("      User token pool size: {0}", ReusableObjectPool<UdpServerUserToken>.Default.GetPoolSize());
                 statusBuilder.AppendLine();
 
                 return statusBuilder.ToString();
@@ -576,10 +577,13 @@ namespace GSF.Communication
         {
             buffer.ValidateParameters(startIndex, length);
 
+            UdpClientInfo clientInfo;
             TransportProvider<EndPoint> udpClient;
 
-            if (m_udpClients.TryGetValue(clientID, out udpClient))
+            if (m_clientInfoLookup.TryGetValue(clientID, out clientInfo))
             {
+                udpClient = clientInfo.Client;
+
                 if ((object)udpClient.ReceiveBuffer != null)
                 {
                     int readIndex = ReadIndicies[clientID];
@@ -710,14 +714,15 @@ namespace GSF.Communication
 
                         if (endpoint != Match.Empty)
                         {
+                            UdpClientInfo clientInfo = new UdpClientInfo();
                             TransportProvider<EndPoint> udpClient = new TransportProvider<EndPoint>();
+                            IPEndPoint clientEndpoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
+
                             udpClient.SetReceiveBuffer(ReceiveBufferSize);
                             udpClient.SetSendBuffer(SendBufferSize);
-                            udpClient.Provider = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
+                            udpClient.Provider = clientEndpoint;
 
                             // If the IP specified for the client is a multicast IP, subscribe to the specified multicast group.
-                            IPEndPoint clientEndpoint = (IPEndPoint)udpClient.Provider;
-
                             if (Transport.IsMulticastIP(clientEndpoint.Address))
                             {
                                 string multicastSource;
@@ -759,9 +764,15 @@ namespace GSF.Communication
                                 }
                             }
 
-                            m_udpClients.TryAdd(udpClient.ID, udpClient);
-                            m_sendQueues.TryAdd(udpClient.ID, new BlockingCollection<UdpServerPayload>());
-                            SendPayloadAsync(udpClient.ID);
+                            clientInfo.Client = udpClient;
+                            clientInfo.SendQueue = new ConcurrentQueue<UdpServerPayload>();
+                            clientInfo.SendArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
+
+                            clientInfo.SendArgs.RemoteEndPoint = udpClient.Provider;
+                            clientInfo.SendArgs.SetBuffer(udpClient.SendBuffer, 0, udpClient.SendBufferSize);
+                            clientInfo.SendArgs.Completed += m_sendHandler;
+
+                            m_clientInfoLookup.TryAdd(udpClient.ID, clientInfo);
                             OnClientConnected(udpClient.ID);
                         }
                     }
@@ -785,13 +796,16 @@ namespace GSF.Communication
         /// <exception cref="InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
         public override void DisconnectOne(Guid clientID)
         {
-            TransportProvider<EndPoint> client;
-
-            if (!m_udpClients.TryRemove(clientID, out client))
-                return;
+            UdpClientInfo clientInfo;
+            TransportProvider<EndPoint> client = null;
 
             try
             {
+                if (!m_clientInfoLookup.TryRemove(clientID, out clientInfo))
+                    return;
+
+                client = clientInfo.Client;
+
                 if ((object)client.Provider != null)
                 {
                     // If the IP specified for the client is a multicast IP, unsubscribe from the specified multicast group.
@@ -814,10 +828,13 @@ namespace GSF.Communication
             }
             catch (Exception ex)
             {
-                OnSendClientDataException(client.ID, new InvalidOperationException(string.Format("Failed to drop multicast membership: {0}", ex.Message), ex));
+                if ((object)client != null)
+                    OnSendClientDataException(client.ID, new InvalidOperationException(string.Format("Failed to drop multicast membership: {0}", ex.Message), ex));
             }
 
-            client.Reset();
+            if ((object)client != null)
+                client.Reset();
+
             OnClientDisconnected(clientID);
         }
 
@@ -830,7 +847,17 @@ namespace GSF.Communication
         /// <exception cref="InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
         public bool TryGetClient(Guid clientID, out TransportProvider<EndPoint> udpClient)
         {
-            return m_udpClients.TryGetValue(clientID, out udpClient);
+            UdpClientInfo clientInfo;
+            bool clientExists;
+
+            clientExists = m_clientInfoLookup.TryGetValue(clientID, out clientInfo);
+
+            if (clientExists)
+                udpClient = clientInfo.Client;
+            else
+                udpClient = null;
+
+            return clientExists;
         }
 
         /// <summary>
@@ -873,19 +900,24 @@ namespace GSF.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         protected override WaitHandle SendDataToAsync(Guid clientID, byte[] data, int offset, int length)
         {
-            BlockingCollection<UdpServerPayload> sendQueue;
+            UdpClientInfo clientInfo;
+            ConcurrentQueue<UdpServerPayload> sendQueue;
             UdpServerPayload payload;
             ManualResetEventSlim handle;
 
-            if (!m_sendQueues.TryGetValue(clientID, out sendQueue))
+            UdpServerPayload dequeuedPayload;
+
+            if (!m_clientInfoLookup.TryGetValue(clientID, out clientInfo))
                 throw new InvalidOperationException(string.Format("No client found for ID {0}.", clientID));
+
+            sendQueue = clientInfo.SendQueue;
 
             // Check to see if the client has reached the maximum send queue size.
             if (m_maxSendQueueSize > 0 && sendQueue.Count >= m_maxSendQueueSize)
             {
                 for (int i = 0; i < m_maxSendQueueSize; i++)
                 {
-                    if (sendQueue.TryTake(out payload))
+                    if (sendQueue.TryDequeue(out payload))
                     {
                         payload.WaitHandle.Set();
                         payload.WaitHandle.Dispose();
@@ -904,10 +936,18 @@ namespace GSF.Communication
             payload.Offset = offset;
             payload.Length = length;
             payload.WaitHandle = handle;
+            payload.ClientInfo = clientInfo;
             handle.Reset();
 
             // Queue payload for sending.
-            sendQueue.Add(payload);
+            sendQueue.Enqueue(payload);
+
+            // Send next queued payload.
+            if (Interlocked.CompareExchange(ref clientInfo.Sending, 1, 0) == 0)
+            {
+                if (sendQueue.TryDequeue(out dequeuedPayload))
+                    ThreadPool.QueueUserWorkItem(state => SendPayload((UdpServerPayload)state), dequeuedPayload);
+            }
 
             // Notify that the send operation has started.
             OnSendClientDataStart(clientID);
@@ -923,7 +963,7 @@ namespace GSF.Communication
         /// <param name="ex">Exception to send to <see cref="ServerBase.SendClientDataException"/> event.</param>
         protected override void OnSendClientDataException(Guid clientID, Exception ex)
         {
-            if (m_udpClients.ContainsKey(clientID) && CurrentState == ServerState.Running)
+            if (m_clientInfoLookup.ContainsKey(clientID) && CurrentState == ServerState.Running)
                 base.OnSendClientDataException(clientID, ex);
         }
 
@@ -934,112 +974,49 @@ namespace GSF.Communication
         /// <param name="ex">Exception to send to <see cref="ServerBase.ReceiveClientDataException"/> event.</param>
         protected override void OnReceiveClientDataException(Guid clientID, Exception ex)
         {
-            if (m_udpClients.ContainsKey(clientID) && CurrentState == ServerState.Running)
+            if (m_clientInfoLookup.ContainsKey(clientID) && CurrentState == ServerState.Running)
                 base.OnReceiveClientDataException(clientID, ex);
-        }
-
-        /// <summary>
-        /// Kicks off the send payload thread.
-        /// </summary>
-        private void SendPayloadAsync(Guid clientID)
-        {
-            Thread sendThread = new Thread(() => SendPayload(clientID));
-            sendThread.IsBackground = true;
-            sendThread.Start();
         }
 
         /// <summary>
         /// Loops waiting for payloads and sends them on the socket.
         /// </summary>
-        private void SendPayload(Guid clientID)
+        private void SendPayload(UdpServerPayload payload)
         {
-            UdpServerUserToken userToken = FastObjectFactory<UdpServerUserToken>.CreateObjectFunction();
-
-            TransportProvider<EndPoint> client;
-            BlockingCollection<UdpServerPayload> sendQueue;
+            UdpClientInfo clientInfo;
+            TransportProvider<EndPoint> client = null;
             SocketAsyncEventArgs args;
-            UdpServerPayload payload;
-            ManualResetEventSlim handle = null;
+            ManualResetEventSlim handle;
             int copyLength;
 
-            // Inability to find the client indicates the client
-            // was disconnected before we had a chance to send.
-            if (!TryGetClient(clientID, out client))
-                return;
-
-            using (sendQueue = m_sendQueues[clientID])
+            try
             {
-                using (args = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction())
-                {
-                    // Set up socket args.
-                    args.RemoteEndPoint = client.Provider;
-                    args.SetBuffer(client.SendBuffer, 0, client.SendBufferSize);
-                    args.UserToken = userToken;
-                    args.Completed += m_sendHandler;
-                    userToken.Client = client;
+                clientInfo = payload.ClientInfo;
+                client = clientInfo.Client;
+                args = clientInfo.SendArgs;
+                handle = payload.WaitHandle;
+                args.UserToken = payload;
 
-                    while (m_udpClients.ContainsKey(clientID))
-                    {
-                        try
-                        {
-                            if (sendQueue.TryTake(out payload, 1000))
-                            {
-                                try
-                                {
-                                    // Get the handle for the send operation.
-                                    handle = payload.WaitHandle;
-                                    userToken.WaitHandle = handle;
+                // Copy payload into send buffer.
+                copyLength = Math.Min(payload.Length, client.SendBufferSize);
+                Buffer.BlockCopy(payload.Data, payload.Offset, client.SendBuffer, 0, copyLength);
 
-                                    while (payload.Length > 0)
-                                    {
-                                        // Copy payload into send buffer.
-                                        copyLength = Math.Min(payload.Length, client.SendBufferSize);
-                                        Buffer.BlockCopy(payload.Data, payload.Offset, client.SendBuffer, 0, copyLength);
+                // Set buffer and user token of send args.
+                args.SetBuffer(0, copyLength);
 
-                                        // Set buffer and user token of send args.
-                                        args.SetBuffer(0, copyLength);
+                // Update offset and length.
+                payload.Offset += copyLength;
+                payload.Length -= copyLength;
 
-                                        // Send data over socket.
-                                        if (!m_udpServer.Provider.SendToAsync(args))
-                                            ProcessSend(args);
-
-                                        // Wait for send operation to complete
-                                        // before the next send attempt.
-                                        handle.Wait();
-                                        handle.Reset();
-
-                                        // Update offset and length.
-                                        payload.Offset += copyLength;
-                                        payload.Length -= copyLength;
-                                    }
-                                }
-                                finally
-                                {
-                                    // Return used payload to the pool.
-                                    payload.Data = null;
-                                    payload.WaitHandle = null;
-                                    ReusableObjectPool<UdpServerPayload>.Default.ReturnObject(payload);
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            OnSendClientDataException(client.ID, ex);
-                        }
-                        finally
-                        {
-                            // Return the handle to the pool.
-                            if ((object)handle != null)
-                            {
-                                ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
-                                handle = null;
-                            }
-                        }
-                    }
-                }
+                // Send data over socket.
+                if (!m_udpServer.Provider.SendToAsync(args))
+                    ProcessSend(args);
             }
-
-            m_sendQueues.TryRemove(clientID, out sendQueue);
+            catch (Exception ex)
+            {
+                if ((object)client != null)
+                    OnSendClientDataException(client.ID, ex);
+            }
         }
 
         /// <summary>
@@ -1047,32 +1024,64 @@ namespace GSF.Communication
         /// </summary>
         private void ProcessSend(SocketAsyncEventArgs args)
         {
-            UdpServerUserToken userToken = (UdpServerUserToken)args.UserToken;
-
-            TransportProvider<EndPoint> client = userToken.Client;
-            ManualResetEventSlim handle = userToken.WaitHandle;
+            UdpServerPayload payload = null;
+            UdpClientInfo clientInfo = null;
+            TransportProvider<EndPoint> client = null;
+            ConcurrentQueue<UdpServerPayload> sendQueue = null;
+            ManualResetEventSlim handle = null;
 
             try
             {
-                // Send operation is complete.
+                payload = (UdpServerPayload)args.UserToken;
+                clientInfo = payload.ClientInfo;
+                client = clientInfo.Client;
+                sendQueue = clientInfo.SendQueue;
+                handle = payload.WaitHandle;
+
+                // Determine whether we are finished with this
+                // payload and, if so, set the wait handle.
+                if (payload.Length <= 0)
+                    handle.Set();
+
+                // Check for errors during send operation.
                 if (args.SocketError != SocketError.Success)
                     throw new SocketException((int)args.SocketError);
 
+                // Update statistics on the client.
                 client.Statistics.UpdateBytesSent(args.BytesTransferred);
-                handle.Set();
-                handle = null;
 
-                OnSendClientDataComplete(client.ID);
+                // Send operation is complete.
+                if (payload.Length <= 0)
+                    OnSendClientDataComplete(client.ID);
             }
             catch (Exception ex)
             {
                 // Send operation failed to complete.
-                OnSendClientDataException(client.ID, ex);
+                if ((object)client != null)
+                    OnSendClientDataException(client.ID, ex);
             }
             finally
             {
-                if ((object)handle != null)
-                    handle.Set();
+                if (payload.Length > 0)
+                {
+                    // Still more to send for this payload.
+                    ThreadPool.QueueUserWorkItem(state => SendPayload((UdpServerPayload)state), payload);
+                }
+                else
+                {
+                    payload.WaitHandle = null;
+                    payload.ClientInfo = null;
+
+                    // Return payload and wait handle to their respective object pools.
+                    ReusableObjectPool<UdpServerPayload>.Default.ReturnObject(payload);
+                    ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
+
+                    // Begin sending next client payload.
+                    if (sendQueue.TryDequeue(out payload))
+                        ThreadPool.QueueUserWorkItem(state => SendPayload((UdpServerPayload)state), payload);
+                    else
+                        Interlocked.Exchange(ref clientInfo.Sending, 0);
+                }
             }
         }
 
@@ -1109,7 +1118,7 @@ namespace GSF.Communication
                 m_udpServer.BytesReceived = args.BytesTransferred;
 
                 // Search connected clients for a client connected to the end-point from where this data is received.
-                foreach (TransportProvider<EndPoint> client in m_udpClients.Values)
+                foreach (TransportProvider<EndPoint> client in m_clientInfoLookup.Values.Select(clientInfo => clientInfo.Client))
                 {
                     if (client.Provider.Equals(args.RemoteEndPoint))
                     {
