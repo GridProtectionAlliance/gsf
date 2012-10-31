@@ -367,7 +367,6 @@ namespace TVA.Communication
         #region [ Members ]
 
         // Nested Types
-
         private class TcpClientPayload
         {
             public byte[] Data;
@@ -405,7 +404,8 @@ namespace TVA.Communication
         public const string DefaultConnectionString = "Server=localhost:8888";
 
         // Fields
-        private BlockingCollection<TcpClientPayload> m_sendQueue;
+        private ConcurrentQueue<TcpClientPayload> m_sendQueue;
+        private int m_sending;
         private bool m_payloadAware;
         private byte[] m_payloadMarker;
         private bool m_integratedSecurity;
@@ -446,7 +446,7 @@ namespace TVA.Communication
         public TcpClient(string connectString)
             : base(TransportProtocol.Tcp, connectString)
         {
-            m_sendQueue = new BlockingCollection<TcpClientPayload>();
+            m_sendQueue = new ConcurrentQueue<TcpClientPayload>();
             m_payloadAware = DefaultPayloadAware;
             m_payloadMarker = Payload.DefaultMarker;
             m_integratedSecurity = DefaultIntegratedSecurity;
@@ -816,12 +816,6 @@ namespace TVA.Communication
                             m_connectWaitHandle = null;
                         }
 
-                        if ((object)m_sendQueue != null)
-                        {
-                            m_sendQueue.Dispose();
-                            m_sendQueue = null;
-                        }
-
                         if ((object)m_connectArgs != null)
                         {
                             m_connectArgs.Dispose();
@@ -893,6 +887,7 @@ namespace TVA.Communication
         protected override WaitHandle SendDataAsync(byte[] data, int offset, int length)
         {
             TcpClientPayload payload;
+            TcpClientPayload dequeuedPayload;
             ManualResetEventSlim handle;
 
             try
@@ -902,7 +897,7 @@ namespace TVA.Communication
                 {
                     for (int i = 0; i < m_maxSendQueueSize; i++)
                     {
-                        if (m_sendQueue.TryTake(out payload))
+                        if (m_sendQueue.TryDequeue(out payload))
                         {
                             payload.WaitHandle.Set();
                             payload.WaitHandle.Dispose();
@@ -928,7 +923,14 @@ namespace TVA.Communication
                 handle.Reset();
 
                 // Queue payload for sending.
-                m_sendQueue.Add(payload);
+                m_sendQueue.Enqueue(payload);
+
+                // Send the next queued payload.
+                if (Interlocked.CompareExchange(ref m_sending, 1, 0) == 0)
+                {
+                    if (m_sendQueue.TryDequeue(out dequeuedPayload))
+                        ThreadPool.QueueUserWorkItem(state => SendPayload((TcpClientPayload)state), dequeuedPayload);
+                }
 
                 // Notify that the send operation has started.
                 OnSendDataStart();
@@ -1022,9 +1024,6 @@ namespace TVA.Communication
                 m_sendArgs.Completed += m_sendHandler;
                 m_receiveArgs.Completed += ReceiveHandler;
 
-                // Initiate SendPayload thread.
-                SendPayloadAsync();
-
                 // Notify user of established connection.
                 m_connectWaitHandle.Set();
                 OnConnectionEstablished();
@@ -1063,81 +1062,35 @@ namespace TVA.Communication
         }
 
         /// <summary>
-        /// Kicks off the send payload thread.
+        /// Sends a payload on the socket.
         /// </summary>
-        private void SendPayloadAsync()
+        private void SendPayload(TcpClientPayload payload)
         {
-            Thread sendPayloadThread = new Thread(SendPayload);
-            sendPayloadThread.IsBackground = true;
-            sendPayloadThread.Start();
-        }
-
-        /// <summary>
-        /// Loops waiting for payloads and sends them on the socket.
-        /// </summary>
-        private void SendPayload()
-        {
-            TcpClientPayload payload;
-            ManualResetEventSlim handle = null;
             int copyLength;
 
-            while (CurrentState != ClientState.Disconnected)
+            try
             {
-                try
-                {
-                    if (m_sendQueue.TryTake(out payload, 1000))
-                    {
-                        try
-                        {
-                            // Get the handle for the send operation.
-                            handle = payload.WaitHandle;
-                            m_sendArgs.UserToken = handle;
+                // Set the user token of the socket args.
+                m_sendArgs.UserToken = payload;
 
-                            while (payload.Length > 0)
-                            {
-                                // Copy payload into send buffer.
-                                copyLength = Math.Min(payload.Length, m_tcpClient.SendBufferSize);
-                                Buffer.BlockCopy(payload.Data, payload.Offset, m_tcpClient.SendBuffer, 0, copyLength);
+                // Copy payload into send buffer.
+                copyLength = Math.Min(payload.Length, m_tcpClient.SendBufferSize);
+                Buffer.BlockCopy(payload.Data, payload.Offset, m_tcpClient.SendBuffer, 0, copyLength);
 
-                                // Set buffer and user token of send args.
-                                m_sendArgs.SetBuffer(0, copyLength);
+                // Set buffer of send args.
+                m_sendArgs.SetBuffer(0, copyLength);
 
-                                // Send data over socket.
-                                if (!m_tcpClient.Provider.SendAsync(m_sendArgs))
-                                    ProcessSend();
+                // Update payload offset and length.
+                payload.Offset += copyLength;
+                payload.Length -= copyLength;
 
-                                // Wait for send operation to complete
-                                // before the next send attempt.
-                                handle.Wait();
-                                handle.Reset();
-
-                                // Update offset and length.
-                                payload.Offset += copyLength;
-                                payload.Length -= copyLength;
-                            }
-                        }
-                        finally
-                        {
-                            // Return used payload to the pool.
-                            payload.Data = null;
-                            payload.WaitHandle = null;
-                            ReusableObjectPool<TcpClientPayload>.Default.ReturnObject(payload);
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    OnSendDataException(ex);
-                }
-                finally
-                {
-                    // Return the handle to the pool.
-                    if ((object)handle != null)
-                    {
-                        ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
-                        handle = null;
-                    }
-                }
+                // Send data over socket.
+                if (!m_tcpClient.Provider.SendAsync(m_sendArgs))
+                    ProcessSend();
+            }
+            catch (Exception ex)
+            {
+                OnSendDataException(ex);
             }
         }
 
@@ -1146,24 +1099,30 @@ namespace TVA.Communication
         /// </summary>
         private void ProcessSend()
         {
+            TcpClientPayload payload = null;
             ManualResetEventSlim handle = null;
 
             try
             {
-                // Send operation is complete.
-                handle = (ManualResetEventSlim)m_sendArgs.UserToken;
+                // Get the payload and its wait handle.
+                payload = (TcpClientPayload)m_sendArgs.UserToken;
+                handle = payload.WaitHandle;
+
+                // Determine whether we are finished with this
+                // payload and, if so, set the wait handle.
+                if (payload.Length <= 0)
+                    handle.Set();
 
                 // Check for errors during send operation.
                 if (m_sendArgs.SocketError != SocketError.Success)
                     throw new SocketException((int)m_sendArgs.SocketError);
 
-                // Update statistics and trigger callback.
+                // Update statistics.
                 m_tcpClient.Statistics.UpdateBytesSent(m_sendArgs.BytesTransferred);
-                handle.Set();
-                handle = null;
 
-                // Trigger callback.
-                OnSendDataComplete();
+                // Send operation is complete.
+                if (payload.Length <= 0)
+                    OnSendDataComplete();
             }
             catch (Exception ex)
             {
@@ -1172,8 +1131,25 @@ namespace TVA.Communication
             }
             finally
             {
-                if ((object)handle != null)
-                    handle.Set();
+                if (payload.Length > 0)
+                {
+                    // Still more to send for this payload.
+                    ThreadPool.QueueUserWorkItem(state => SendPayload((TcpClientPayload)state), payload);
+                }
+                else
+                {
+                    payload.WaitHandle = null;
+
+                    // Return payload and wait handle to their respective object pools.
+                    ReusableObjectPool<TcpClientPayload>.Default.ReturnObject(payload);
+                    ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
+
+                    // Begin sending next client payload.
+                    if (m_sendQueue.TryDequeue(out payload))
+                        ThreadPool.QueueUserWorkItem(state => SendPayload((TcpClientPayload)state), payload);
+                    else
+                        Interlocked.Exchange(ref m_sending, 0);
+                }
             }
         }
 

@@ -463,7 +463,8 @@ namespace TVA.Communication
         private Thread m_connectionThread;
 #endif
 
-        private BlockingCollection<UdpClientPayload> m_sendQueue;
+        private int m_sending;
+        private ConcurrentQueue<UdpClientPayload> m_sendQueue;
         private SocketAsyncEventArgs m_sendArgs;
         private SocketAsyncEventArgs m_receiveArgs;
         private EventHandler<SocketAsyncEventArgs> m_sendHandler;
@@ -494,7 +495,7 @@ namespace TVA.Communication
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_maxSendQueueSize = DefaultMaxSendQueueSize;
 
-            m_sendQueue = new BlockingCollection<UdpClientPayload>();
+            m_sendQueue = new ConcurrentQueue<UdpClientPayload>();
             m_sendHandler += (sender, args) => ProcessSend();
             m_receiveHandler += (sender, args) => ProcessReceive();
         }
@@ -805,12 +806,6 @@ namespace TVA.Communication
                             m_connectionHandle = null;
                         }
 
-                        if ((object)m_sendQueue != null)
-                        {
-                            m_sendQueue.Dispose();
-                            m_sendQueue = null;
-                        }
-
                         if ((object)m_sendArgs != null)
                         {
                             m_sendArgs.Dispose();
@@ -929,7 +924,6 @@ namespace TVA.Communication
                     m_udpClient.SetSendBuffer(SendBufferSize);
                     m_sendArgs.SetBuffer(m_udpClient.SendBuffer, 0, m_udpClient.SendBufferSize);
                     m_sendArgs.Completed += m_sendHandler;
-                    SendPayloadAsync();
 
                     m_connectionHandle.Set();
                     OnConnectionEstablished();
@@ -982,6 +976,7 @@ namespace TVA.Communication
         public WaitHandle SendDataToAsync(byte[] data, int offset, int length, EndPoint destination)
         {
             UdpClientPayload payload;
+            UdpClientPayload dequeuedPayload;
             ManualResetEventSlim handle;
 
             // Check to see if the client has reached the maximum send queue size.
@@ -989,7 +984,7 @@ namespace TVA.Communication
             {
                 for (int i = 0; i < m_maxSendQueueSize; i++)
                 {
-                    if (m_sendQueue.TryTake(out payload))
+                    if (m_sendQueue.TryDequeue(out payload))
                     {
                         payload.WaitHandle.Set();
                         payload.WaitHandle.Dispose();
@@ -1012,7 +1007,14 @@ namespace TVA.Communication
             handle.Reset();
 
             // Queue payload for sending.
-            m_sendQueue.Add(payload);
+            m_sendQueue.Enqueue(payload);
+
+            // Send the next queued payload.
+            if (Interlocked.CompareExchange(ref m_sending, 1, 0) == 0)
+            {
+                if (m_sendQueue.TryDequeue(out dequeuedPayload))
+                    ThreadPool.QueueUserWorkItem(state => SendPayload((UdpClientPayload)state), dequeuedPayload);
+            }
 
             // Notify that the send operation has started.
             OnSendDataStart();
@@ -1051,82 +1053,36 @@ namespace TVA.Communication
         }
 
         /// <summary>
-        /// Kicks off the send payload thread.
+        /// Sends a payload on the socket.
         /// </summary>
-        private void SendPayloadAsync()
+        private void SendPayload(UdpClientPayload payload)
         {
-            Thread sendThread = new Thread(SendPayload);
-            sendThread.IsBackground = true;
-            sendThread.Start();
-        }
-
-        /// <summary>
-        /// Loops waiting for payloads and sends them on the socket.
-        /// </summary>
-        private void SendPayload()
-        {
-            UdpClientPayload payload;
-            ManualResetEventSlim handle = null;
             int copyLength;
 
-            while (CurrentState != ClientState.Disconnected)
+            try
             {
-                try
-                {
-                    if (m_sendQueue.TryTake(out payload, 1000))
-                    {
-                        try
-                        {
-                            // Get the handle for the send operation.
-                            handle = payload.WaitHandle;
-                            m_sendArgs.RemoteEndPoint = payload.Destination;
-                            m_sendArgs.UserToken = payload.WaitHandle;
+                // Set the user token of the socket args.
+                m_sendArgs.UserToken = payload;
 
-                            while (payload.Length > 0)
-                            {
-                                // Copy payload into send buffer.
-                                copyLength = Math.Min(payload.Length, m_udpClient.SendBufferSize);
-                                Buffer.BlockCopy(payload.Data, payload.Offset, m_udpClient.SendBuffer, 0, payload.Length);
+                // Copy payload into send buffer.
+                copyLength = Math.Min(payload.Length, m_udpClient.SendBufferSize);
+                Buffer.BlockCopy(payload.Data, payload.Offset, m_udpClient.SendBuffer, 0, copyLength);
 
-                                // Set buffer and user token of send args.
-                                m_sendArgs.SetBuffer(0, copyLength);
+                // Set buffer and end point of send args.
+                m_sendArgs.SetBuffer(0, copyLength);
+                m_sendArgs.RemoteEndPoint = payload.Destination;
 
-                                // Send data over socket.
-                                if (!m_udpClient.Provider.SendToAsync(m_sendArgs))
-                                    ProcessSend();
+                // Update payload offset and length.
+                payload.Offset += copyLength;
+                payload.Length -= copyLength;
 
-                                // Wait for send operation to complete
-                                // before the next send attempt.
-                                handle.Wait();
-                                handle.Reset();
-
-                                // Update offset and length.
-                                payload.Offset += copyLength;
-                                payload.Length -= copyLength;
-                            }
-                        }
-                        finally
-                        {
-                            // Return used payload to the pool.
-                            payload.Data = null;
-                            payload.WaitHandle = null;
-                            ReusableObjectPool<UdpClientPayload>.Default.ReturnObject(payload);
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    OnSendDataException(ex);
-                }
-                finally
-                {
-                    // Return the handle to the pool.
-                    if ((object)handle != null)
-                    {
-                        ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
-                        handle = null;
-                    }
-                }
+                // Send data over socket.
+                if (!m_udpClient.Provider.SendToAsync(m_sendArgs))
+                    ProcessSend();
+            }
+            catch (Exception ex)
+            {
+                OnSendDataException(ex);
             }
         }
 
@@ -1135,21 +1091,30 @@ namespace TVA.Communication
         /// </summary>
         private void ProcessSend()
         {
+            UdpClientPayload payload = null;
             ManualResetEventSlim handle = null;
 
             try
             {
-                // Send operation is complete.
-                handle = (ManualResetEventSlim)m_sendArgs.UserToken;
+                // Get the payload and its wait handle.
+                payload = (UdpClientPayload)m_sendArgs.UserToken;
+                handle = payload.WaitHandle;
 
+                // Determine whether we are finished with this
+                // payload and, if so, set the wait handle.
+                if (payload.Length <= 0)
+                    handle.Set();
+
+                // Check for errors during send operation.
                 if (m_sendArgs.SocketError != SocketError.Success)
                     throw new SocketException((int)m_sendArgs.SocketError);
 
+                // Update statistics.
                 m_udpClient.Statistics.UpdateBytesSent(m_sendArgs.BytesTransferred);
-                handle.Set();
-                handle = null;
 
-                OnSendDataComplete();
+                // Send operation is complete.
+                if (payload.Length <= 0)
+                    OnSendDataComplete();
             }
             catch (Exception ex)
             {
@@ -1158,8 +1123,25 @@ namespace TVA.Communication
             }
             finally
             {
-                if ((object)handle != null)
-                    handle.Set();
+                if (payload.Length > 0)
+                {
+                    // Still more to send for this payload.
+                    ThreadPool.QueueUserWorkItem(state => SendPayload((UdpClientPayload)state), payload);
+                }
+                else
+                {
+                    payload.WaitHandle = null;
+
+                    // Return payload and wait handle to their respective object pools.
+                    ReusableObjectPool<UdpClientPayload>.Default.ReturnObject(payload);
+                    ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
+
+                    // Begin sending next client payload.
+                    if (m_sendQueue.TryDequeue(out payload))
+                        ThreadPool.QueueUserWorkItem(state => SendPayload((UdpClientPayload)state), payload);
+                    else
+                        Interlocked.Exchange(ref m_sending, 0);
+                }
             }
         }
 
