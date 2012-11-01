@@ -4166,6 +4166,12 @@
             </summary>
             <param name="item">The item to add to the <see cref="T:TVA.Collections.ProcessQueue`1"/>.</param>
         </member>
+        <member name="M:TVA.Collections.ProcessQueue`1.AddRange(System.Collections.Generic.IEnumerable{`0})">
+            <summary>
+            Adds the specified <paramref name="items"/> to the <see name="ProcessQueue{T}"/>.
+            </summary>
+            <param name="items">The elements to be added to the <see name="ProcessQueue{T}"/>.</param>
+        </member>
         <member name="M:TVA.Collections.ProcessQueue`1.Contains(`0)">
             <summary>
             Determines whether an element is in the <see cref="T:TVA.Collections.ProcessQueue`1"/>.
