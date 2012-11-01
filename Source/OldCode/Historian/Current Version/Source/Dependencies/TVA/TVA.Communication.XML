@@ -1234,14 +1234,9 @@
             Raises the <see cref="E:TVA.Communication.ClientBase.ConnectionTerminated"/> event.
             </summary>
         </member>
-        <member name="M:TVA.Communication.UdpClient.SendPayloadAsync">
+        <member name="M:TVA.Communication.UdpClient.SendPayload(TVA.Communication.UdpClient.UdpClientPayload)">
             <summary>
-            Kicks off the send payload thread.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.UdpClient.SendPayload">
-            <summary>
-            Loops waiting for payloads and sends them on the socket.
+            Sends a payload on the socket.
             </summary>
         </member>
         <member name="M:TVA.Communication.UdpClient.ProcessSend">
@@ -1731,14 +1726,9 @@
             Callback method for asynchronous connect operation.
             </summary>
         </member>
-        <member name="M:TVA.Communication.TcpClient.SendPayloadAsync">
+        <member name="M:TVA.Communication.TcpClient.SendPayload(TVA.Communication.TcpClient.TcpClientPayload)">
             <summary>
-            Kicks off the send payload thread.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.TcpClient.SendPayload">
-            <summary>
-            Loops waiting for payloads and sends them on the socket.
+            Sends a payload on the socket.
             </summary>
         </member>
         <member name="M:TVA.Communication.TcpClient.ProcessSend">
@@ -3052,12 +3042,7 @@
             <param name="clientID">ID of client to send to <see cref="E:TVA.Communication.ServerBase.ReceiveClientDataException"/> event.</param>
             <param name="ex">Exception to send to <see cref="E:TVA.Communication.ServerBase.ReceiveClientDataException"/> event.</param>
         </member>
-        <member name="M:TVA.Communication.UdpServer.SendPayloadAsync(System.Guid)">
-            <summary>
-            Kicks off the send payload thread.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.UdpServer.SendPayload(System.Guid)">
+        <member name="M:TVA.Communication.UdpServer.SendPayload(TVA.Communication.UdpServer.UdpServerPayload)">
             <summary>
             Loops waiting for payloads and sends them on the socket.
             </summary>
@@ -3375,14 +3360,9 @@
             Callback method for asynchronous accept operation.
             </summary>
         </member>
-        <member name="M:TVA.Communication.TcpServer.SendPayloadAsync(System.Guid)">
+        <member name="M:TVA.Communication.TcpServer.SendPayload(TVA.Communication.TcpServer.TcpServerPayload)">
             <summary>
-            Kicks off the send payload thread.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.TcpServer.SendPayload(System.Guid)">
-            <summary>
-            Loops waiting for payloads and sends them on the socket.
+            Asynchronous loop sends payloads on the socket.
             </summary>
         </member>
         <member name="M:TVA.Communication.TcpServer.ProcessSend(System.Net.Sockets.SocketAsyncEventArgs)">
