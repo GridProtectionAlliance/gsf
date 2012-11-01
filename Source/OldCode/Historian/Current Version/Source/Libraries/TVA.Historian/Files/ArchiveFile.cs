@@ -1162,7 +1162,7 @@ namespace TVA.Historian.Files
                     if (m_fat.DataPointsReceived >= 1)
                         statistics.CompressionRate = ((float)(m_fat.DataPointsReceived - m_fat.DataPointsArchived) / (float)m_fat.DataPointsReceived) * 100;
 
-                    if (m_currentDataQueue.RunTime >= 1)
+                    if (m_currentDataQueue.RunTime >= 1.0D)
                     {
                         statistics.AveragingWindow = m_currentDataQueue.RunTime;
                         statistics.AverageWriteSpeed = (int)((m_currentDataQueue.CurrentStatistics.TotalProcessedItems -
