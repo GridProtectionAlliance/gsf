@@ -104,6 +104,9 @@ namespace TimeSeriesFramework.Adapters
         /// Gets or sets whether or not to automatically place measurements back into the processing
         /// queue if an exception occurs while processing.  Defaults to false.
         /// </summary>
+        /// <remarks>
+        /// Note that items being requeued will be added to the bottom of queue by default.
+        /// </remarks>
         public virtual bool RequeueOnException
         {
             get
@@ -223,13 +226,10 @@ namespace TimeSeriesFramework.Adapters
                         enabled = m_measurementQueue.Enabled;
                         requeueOnException = m_measurementQueue.RequeueOnException;
 
-                        lock (m_measurementQueue.SyncRoot)
+                        if (m_measurementQueue.Count > 0)
                         {
-                            if (m_measurementQueue.Count > 0)
-                            {
-                                m_measurementQueue.Stop();
-                                unprocessedMeasurements = m_measurementQueue.ToArray();
-                            }
+                            m_measurementQueue.Stop();
+                            unprocessedMeasurements = m_measurementQueue.ToArray();
                         }
 
                         m_measurementQueue.ProcessException -= m_measurementQueue_ProcessException;
@@ -623,12 +623,14 @@ namespace TimeSeriesFramework.Adapters
             if (m_disposed)
                 return;
 
-            lock (m_measurementQueue.SyncRoot)
-            {
-                if (total > m_measurementQueue.Count)
-                    total = m_measurementQueue.Count;
+            if (total > m_measurementQueue.Count)
+                total = m_measurementQueue.Count;
 
-                m_measurementQueue.RemoveRange(0, total);
+            IMeasurement measurement;
+
+            for (int i = 0; i < total; i++)
+            {
+                m_measurementQueue.TryTake(out measurement);
             }
         }
 
