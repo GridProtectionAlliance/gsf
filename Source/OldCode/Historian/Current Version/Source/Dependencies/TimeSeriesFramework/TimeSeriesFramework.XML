@@ -5457,6 +5457,9 @@
             Gets or sets whether or not to automatically place measurements back into the processing
             queue if an exception occurs while processing.  Defaults to false.
             </summary>
+            <remarks>
+            Note that items being requeued will be added to the bottom of queue by default.
+            </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.InputSourceIDs">
             <summary>
