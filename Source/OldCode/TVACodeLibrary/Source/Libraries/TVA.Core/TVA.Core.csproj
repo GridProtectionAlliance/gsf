@@ -128,8 +128,9 @@
     <Compile Include="CharExtensions.cs" />
     <Compile Include="Collections\CollectionExtensions.cs" />
     <Compile Include="Collections\DictionaryList.cs" />
-    <Compile Include="Collections\KeyedProcessQueue.cs" />
+    <Compile Include="Collections\ProcessDictionary.cs" />
     <Compile Include="Collections\NamespaceDoc.cs" />
+    <Compile Include="Collections\ProcessList.cs" />
     <Compile Include="Collections\ProcessQueue.cs" />
     <Compile Include="Collections\ProcessQueueStatistics.cs" />
     <Compile Include="Common.cs" />

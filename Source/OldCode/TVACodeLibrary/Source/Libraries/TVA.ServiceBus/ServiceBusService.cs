@@ -674,7 +674,7 @@ namespace TVA.ServiceBus
         private ReaderWriterLockSlim m_clientsLock;
         private ReaderWriterLockSlim m_queuesLock;
         private ReaderWriterLockSlim m_topicsLock;
-        private ProcessQueue<PublishContext> m_publishQueue;
+        private ProcessList<PublishContext> m_publishQueue;
         private long m_discardedMessages;
         private bool m_disposed;
 
@@ -742,21 +742,33 @@ namespace TVA.ServiceBus
                 status.AppendLine();
                 m_clientsLock.EnterReadLock();
                 try
-                { status.AppendFormat("         Number of clients: {0}", m_clients.Count); }
+                {
+                    status.AppendFormat("         Number of clients: {0}", m_clients.Count);
+                }
                 finally
-                { m_clientsLock.ExitReadLock(); }
+                {
+                    m_clientsLock.ExitReadLock();
+                }
                 status.AppendLine();
                 m_queuesLock.EnterReadLock();
                 try
-                { status.AppendFormat("          Number of queues: {0}", m_queues.Count); }
+                {
+                    status.AppendFormat("          Number of queues: {0}", m_queues.Count);
+                }
                 finally
-                { m_queuesLock.ExitReadLock(); }
+                {
+                    m_queuesLock.ExitReadLock();
+                }
                 status.AppendLine();
                 m_topicsLock.EnterReadLock();
                 try
-                { status.AppendFormat("          Number of topics: {0}", m_topics.Count); }
+                {
+                    status.AppendFormat("          Number of topics: {0}", m_topics.Count);
+                }
                 finally
-                { m_topicsLock.ExitReadLock(); }
+                {
+                    m_topicsLock.ExitReadLock();
+                }
                 status.AppendLine();
 
                 if (m_publishQueue != null)
@@ -830,9 +842,9 @@ namespace TVA.ServiceBus
             {
                 // Instantiate the process queue.
                 if (m_processingMode == MessageProcessingMode.Parallel)
-                    m_publishQueue = ProcessQueue<PublishContext>.CreateAsynchronousQueue(PublishMessages);
+                    m_publishQueue = ProcessList<PublishContext>.CreateAsynchronousQueue(PublishMessages);
                 else if (m_processingMode == MessageProcessingMode.Sequential)
-                    m_publishQueue = ProcessQueue<PublishContext>.CreateRealTimeQueue(PublishMessages);
+                    m_publishQueue = ProcessList<PublishContext>.CreateRealTimeQueue(PublishMessages);
                 else
                     throw new NotSupportedException(string.Format("Processing mode '{0}' is not supported", m_processingMode));
 
@@ -1281,7 +1293,9 @@ namespace TVA.ServiceBus
                                     if (client.OperationContext.Channel.State == CommunicationState.Opened)
                                         client.OperationContext.Channel.Close();
                                 }
-                                catch { }
+                                catch
+                                {
+                                }
                             }
                         }
                         PublishComplete(context);
@@ -1347,7 +1361,9 @@ namespace TVA.ServiceBus
                         if (client.OperationContext.Channel.State == CommunicationState.Opened)
                             client.OperationContext.Channel.Close();
                     }
-                    catch { }
+                    catch
+                    {
+                    }
                 }
             }
             finally

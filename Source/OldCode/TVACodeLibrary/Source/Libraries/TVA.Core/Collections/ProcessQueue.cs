@@ -292,7 +292,9 @@
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -302,51 +304,74 @@ namespace TVA.Collections
 {
     #region [ Enumerations ]
 
-    /// <summary>Enumeration of possible <see cref="ProcessQueue{T}"/> threading modes.</summary>
+    /// <summary>
+    /// Enumeration of possible <see cref="ProcessQueue{T}"/> threading modes.
+    /// </summary>
     public enum QueueThreadingMode
     {
-        /// <summary>Processes several items in the <see cref="ProcessQueue{T}"/> at once on different threads, where processing order is not
-        /// important.</summary>
+        /// <summary>
+        /// Processes several items in the <see cref="ProcessQueue{T}"/> at once on different threads, where processing order is not important.
+        /// </summary>
         Asynchronous,
-        /// <summary>Processes items in the <see cref="ProcessQueue{T}"/> one at a time on a single thread, where processing order is important.</summary>
+        /// <summary>
+        /// Processes items in the <see cref="ProcessQueue{T}"/> one at a time on a single thread, where processing order is important.
+        /// </summary>
         Synchronous
     }
 
-    /// <summary>Enumeration of possible <see cref="ProcessQueue{T}"/> processing styles.</summary>
+    /// <summary>
+    /// Enumeration of possible <see cref="ProcessQueue{T}"/> processing styles.
+    /// </summary>
     public enum QueueProcessingStyle
     {
-        /// <summary>Defines <see cref="ProcessQueue{T}"/> processing delegate to process only one item at a time.</summary>
-        /// <remarks>This is the typical <see cref="QueueProcessingStyle"/> when the <see cref="QueueThreadingMode"/> is asynchronous.</remarks>
+        /// <summary>
+        /// Defines <see cref="ProcessQueue{T}"/> processing delegate to process only one item at a time.
+        /// </summary>
+        /// <remarks>
+        /// This is the typical <see cref="QueueProcessingStyle"/> when the <see cref="QueueThreadingMode"/> is asynchronous.
+        /// </remarks>
         OneAtATime,
-        /// <summary>Defines <see cref="ProcessQueue{T}"/> processing delegate to process all currently available items in the <see cref="ProcessQueue{T}"/>. Items are
-        /// passed into delegate as an array.</summary>
-        /// <remarks>This is the optimal <see cref="QueueProcessingStyle"/> when the <see cref="QueueThreadingMode"/> is synchronous.</remarks>
+        /// <summary>
+        /// Defines <see cref="ProcessQueue{T}"/> processing delegate to process all currently available items in the <see cref="ProcessQueue{T}"/>.
+        /// Items are passed into delegate as an array.
+        /// </summary>
+        /// <remarks>
+        /// This is the optimal <see cref="QueueProcessingStyle"/> when the <see cref="QueueThreadingMode"/> is synchronous.
+        /// </remarks>
         ManyAtOnce
     }
 
-    /// <summary>Enumeration of possible requeue modes.</summary>
-    public enum RequeueMode
+    /// <summary>
+    /// Enumeration of possible requeue reasons.
+    /// </summary>
+    public enum RequeueReason
     {
-        /// <summary>Requeues item at the beginning of the <see cref="ProcessQueue{T}"/>.</summary>
-        Prefix,
-        /// <summary>Requeues item at the end of the <see cref="ProcessQueue{T}"/>.</summary>
-        Suffix
+        /// <summary>
+        /// Requeuing item since it cannot be processed at this time.
+        /// </summary>
+        CannotProcess,
+        /// <summary>
+        /// Requeuing item due to an exception.
+        /// </summary>
+        Exception,
+        /// <summary>
+        /// Requeing item due to timeout.
+        /// </summary>
+        Timeout
     }
 
     #endregion
 
     /// <summary>
-    /// Represents a collection of items that get processed on independent threads with
-    /// a consumer provided function.
+    /// Represents a lock-free thread-safe collection of items, based on <see cref="ConcurrentQueue{T}"/>, that get processed on independent threads with a consumer provided function.
     /// </summary>
     /// <typeparam name="T">Type of object to process</typeparam>
     /// <remarks>
     /// <para>This class acts as a strongly-typed collection of objects to be processed.</para>
-    /// <para>Consumers are expected to create new instances of this class through the static construction functions
-    /// (e.g., CreateAsynchronousQueue, CreateSynchronousQueue, etc.)</para>
-    /// <para>Note that the <see cref="ProcessQueue{T}"/> will not start processing until the Start method is called.</para>
+    /// <para>Consumers are expected to create new instances of this class through the static construction functions (e.g., CreateAsynchronousQueue, CreateSynchronousQueue, etc.)</para>
+    /// <para>Note that the <see cref="ProcessQueue{T}"/> will not start processing until the <see cref="ProcessQueue{T}.Start"/> method is called.</para>
     /// </remarks>
-    public class ProcessQueue<T> : IList<T>, ICollection, IDisposable, IProvideStatus, ISupportLifecycle
+    public class ProcessQueue<T> : IProducerConsumerCollection<T>, IProvideStatus, ISupportLifecycle
     {
         #region [ Members ]
 
@@ -455,14 +480,8 @@ namespace TVA.Collections
         /// <summary>Default setting for requeuing items on processing timeout.</summary>
         public const bool DefaultRequeueOnTimeout = false;
 
-        /// <summary>Default setting for requeuing mode on processing timeout.</summary>
-        public const RequeueMode DefaultRequeueModeOnTimeout = RequeueMode.Prefix;
-
         /// <summary>Default setting for requeuing items on processing exceptions.</summary>
         public const bool DefaultRequeueOnException = false;
-
-        /// <summary>Default setting for requeuing mode on processing exceptions.</summary>
-        public const RequeueMode DefaultRequeueModeOnException = RequeueMode.Prefix;
 
         /// <summary>Default real-time processing interval (in milliseconds).</summary>
         public const double RealTimeProcessInterval = 0.0;
@@ -568,16 +587,15 @@ namespace TVA.Collections
         private ProcessItemsFunctionSignature m_processItemsFunction;
         private CanProcessItemFunctionSignature m_canProcessItemFunction;
 
-        private IList<T> m_processQueue;
+        private IEnumerable<T> m_processQueue;
         private int m_maximumThreads;
         private int m_processTimeout;
+        private readonly bool m_processingIsRealTime;
 
         private bool m_requeueOnTimeout;
         private bool m_requeueOnException;
-        private RequeueMode m_requeueModeOnTimeout;
-        private RequeueMode m_requeueModeOnException;
 
-        private bool m_processingIsRealTime;
+        private int m_processing;
         private int m_threadCount;
         private bool m_enabled;
         private long m_itemsProcessing;
@@ -593,7 +611,6 @@ namespace TVA.Collections
         private Thread m_realTimeProcessThread;
 #endif
 
-        private ThreadPriority m_realTimeProcessThreadPriority;
         private System.Timers.Timer m_processTimer;
 
         #endregion
@@ -611,7 +628,7 @@ namespace TVA.Collections
         /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
         /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
         protected ProcessQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-            : this(processItemFunction, null, canProcessItemFunction, new List<T>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+            : this(processItemFunction, null, canProcessItemFunction, new ConcurrentQueue<T>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
         {
         }
 
@@ -626,12 +643,12 @@ namespace TVA.Collections
         /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
         /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
         protected ProcessQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-            : this(null, processItemsFunction, canProcessItemFunction, new List<T>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+            : this(null, processItemsFunction, canProcessItemFunction, new ConcurrentQueue<T>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
         {
         }
 
         /// <summary>
-        /// Allows derived classes to define their own IList instance, if desired.
+        /// Allows derived classes to define their own instance, if desired.
         /// </summary>
         /// <param name="processItemFunction">Delegate that defines a method to process one item at a time.</param>
         /// <param name="processItemsFunction">Delegate that defines a method to process multiple items at once.</param>
@@ -642,7 +659,7 @@ namespace TVA.Collections
         /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
         /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
         /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        protected ProcessQueue(ProcessItemFunctionSignature processItemFunction, ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, IList<T> processQueue, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        protected ProcessQueue(ProcessItemFunctionSignature processItemFunction, ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, IEnumerable<T> processQueue, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
             m_processItemFunction = processItemFunction;    // Defining this function creates a ProcessingStyle = OneAtATime process queue
             m_processItemsFunction = processItemsFunction;  // Defining this function creates a ProcessingStyle = ManyAtOnce process queue
@@ -651,10 +668,7 @@ namespace TVA.Collections
             m_maximumThreads = maximumThreads;
             m_processTimeout = processTimeout;
             m_requeueOnTimeout = requeueOnTimeout;
-            m_requeueModeOnTimeout = DefaultRequeueModeOnTimeout;
             m_requeueOnException = requeueOnException;
-            m_requeueModeOnException = DefaultRequeueModeOnException;
-            m_realTimeProcessThreadPriority = ThreadPriority.Normal;
 
             if (processInterval == RealTimeProcessInterval)
             {
@@ -780,13 +794,9 @@ namespace TVA.Collections
             get
             {
                 if (m_maximumThreads > 1)
-                {
                     return QueueThreadingMode.Asynchronous;
-                }
-                else
-                {
-                    return QueueThreadingMode.Synchronous;
-                }
+
+                return QueueThreadingMode.Synchronous;
             }
         }
 
@@ -810,13 +820,9 @@ namespace TVA.Collections
             get
             {
                 if ((object)m_processItemFunction == null)
-                {
                     return QueueProcessingStyle.ManyAtOnce;
-                }
-                else
-                {
-                    return QueueProcessingStyle.OneAtATime;
-                }
+
+                return QueueProcessingStyle.OneAtATime;
             }
         }
 
@@ -828,24 +834,16 @@ namespace TVA.Collections
             get
             {
                 if (m_processingIsRealTime)
-                {
                     return RealTimeProcessInterval;
-                }
-                else
-                {
-                    return m_processTimer.Interval;
-                }
+
+                return m_processTimer.Interval;
             }
             set
             {
                 if (m_processingIsRealTime)
-                {
                     throw new InvalidOperationException("Cannot change process interval when " + Name + " is configured for real-time processing");
-                }
-                else
-                {
-                    m_processTimer.Interval = value;
-                }
+
+                m_processTimer.Interval = value;
             }
         }
 
@@ -864,13 +862,9 @@ namespace TVA.Collections
             set
             {
                 if (m_processingIsRealTime)
-                {
                     throw new InvalidOperationException("Cannot change the maximum number of threads when " + Name + " is configured for real-time processing");
-                }
-                else
-                {
-                    m_maximumThreads = value;
-                }
+
+                m_maximumThreads = value;
             }
         }
 
@@ -909,23 +903,6 @@ namespace TVA.Collections
         }
 
         /// <summary>
-        /// Gets or sets the mode of insertion used (prefix or suffix) when at item is placed back into the <see cref="ProcessQueue{T}"/>
-        /// after processing times out.
-        /// </summary>
-        /// <remarks>Only relevant when RequeueOnTimeout = True.</remarks>
-        public virtual RequeueMode RequeueModeOnTimeout
-        {
-            get
-            {
-                return m_requeueModeOnTimeout;
-            }
-            set
-            {
-                m_requeueModeOnTimeout = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets whether or not to automatically place an item back into the <see cref="ProcessQueue{T}"/> if an exception occurs
         /// while processing.
         /// </summary>
@@ -938,23 +915,6 @@ namespace TVA.Collections
             set
             {
                 m_requeueOnException = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the mode of insertion used (prefix or suffix) when at item is placed back into the
-        /// <see cref="ProcessQueue{T}"/> after an exception occurs while processing.
-        /// </summary>
-        /// <remarks>Only relevant when RequeueOnException = True.</remarks>
-        public virtual RequeueMode RequeueModeOnException
-        {
-            get
-            {
-                return m_requeueModeOnException;
-            }
-            set
-            {
-                m_requeueModeOnException = value;
             }
         }
 
@@ -984,16 +944,12 @@ namespace TVA.Collections
             get
             {
                 if (m_processingIsRealTime)
-                {
                     return ((object)m_realTimeProcessThread != null);
-                }
-                else
+
+                lock (m_processTimer)
                 {
-                    lock (m_processTimer)
-                    {
-                        // Enabled flag changes are always in a critical section to ensure all items will be processed
-                        return m_processTimer.Enabled;
-                    }
+                    // Enabled flag changes are always in a critical section to ensure all items will be processed
+                    return m_processTimer.Enabled;
                 }
             }
         }
@@ -1059,25 +1015,6 @@ namespace TVA.Collections
         }
 
         /// <summary>
-        /// Gets or sets adjustment of real-time process thread priority.
-        /// </summary>
-        /// <remarks>
-        /// <para>Only affects real-time <see cref="ProcessQueue{T}"/>.</para>
-        /// <para>Only takes effect when set before calling the "Start" method.</para>
-        /// </remarks>
-        public ThreadPriority RealTimeProcessThreadPriority
-        {
-            get
-            {
-                return m_realTimeProcessThreadPriority;
-            }
-            set
-            {
-                m_realTimeProcessThreadPriority = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets name for this <see cref="ProcessQueue{T}"/>.
         /// </summary>
         /// <remarks>
@@ -1098,80 +1035,13 @@ namespace TVA.Collections
             }
         }
 
-        /// <summary>Gets or sets the element at the specified index.</summary>
-        /// <returns>The element at the specified index.</returns>
-        /// <param name="index">The zero-based index of the element to get or set.</param>
-        /// <exception cref="ArgumentOutOfRangeException">index is less than 0 -or- index is equal to or greater than
-        /// <see cref="ProcessQueue{T}"/> length. </exception>
-        public virtual T this[int index]
-        {
-            get
-            {
-                lock (m_processQueue)
-                {
-                    return m_processQueue[index];
-                }
-            }
-            set
-            {
-                lock (m_processQueue)
-                {
-                    m_processQueue[index] = value;
-                    DataAdded();
-                }
-            }
-        }
-
         /// <summary>Gets the number of elements actually contained in the <see cref="ProcessQueue{T}"/>.</summary>
         /// <returns>The number of elements actually contained in the <see cref="ProcessQueue{T}"/>.</returns>
         public virtual int Count
         {
             get
             {
-                lock (m_processQueue)
-                {
-                    return m_processQueue.Count;
-                }
-            }
-        }
-
-        /// <summary>Gets a value indicating whether the <see cref="ProcessQueue{T}"/> is read-only.</summary>
-        /// <returns>True, if the <see cref="ProcessQueue{T}"/> is read-only; otherwise, false. In the default implementation, this property
-        /// always returns false.</returns>
-        public virtual bool IsReadOnly
-        {
-            get
-            {
-                return m_processQueue.IsReadOnly;
-            }
-        }
-
-        /// <summary>Returns reference to internal IList that should be used to synchronize access to the <see cref="ProcessQueue{T}"/>.</summary>
-        /// <returns>Reference to internal IList that should be used to synchronize access to the <see cref="ProcessQueue{T}"/>.</returns>
-        /// <remarks>
-        /// <para>
-        /// Note that all the methods of this class are already individually synchronized; however, to safely enumerate through each
-        /// <see cref="ProcessQueue{T}"/> element (i.e., to make sure <see cref="ProcessQueue{T}"/> elements do not change during enumeration),
-        /// derived classes and end users should perform their own synchronization by implementing a SyncLock using this SyncRoot property.
-        /// </para>
-        /// <para>
-        /// We return a typed object for synchronization as an optimization. Returning a generic object requires that
-        /// SyncLock implementations validate that the referenced object is not a value type at run time.
-        /// </para>
-        /// </remarks>
-        public IList<T> SyncRoot
-        {
-            get
-            {
-                return m_processQueue;
-            }
-        }
-
-        object ICollection.SyncRoot
-        {
-            get
-            {
-                return m_processQueue;
+                return m_processQueue.Count();
             }
         }
 
@@ -1195,7 +1065,7 @@ namespace TVA.Collections
             {
                 ProcessQueueStatistics statistics;
 
-                statistics.IsEnabled = m_enabled;
+                statistics.IsEnabled = Enabled;
                 statistics.IsProcessing = IsProcessing;
                 statistics.ProcessingInterval = ProcessInterval;
                 statistics.ProcessingStyle = ProcessingStyle;
@@ -1221,7 +1091,7 @@ namespace TVA.Collections
                 StringBuilder status = new StringBuilder();
 
                 status.Append("       Queue processing is: ");
-                status.Append(m_enabled ? "Enabled" : "Disabled");
+                status.Append(Enabled ? "Enabled" : "Disabled");
                 status.AppendLine();
                 status.Append("  Current processing state: ");
                 status.Append(IsProcessing ? "Executing" : "Idle");
@@ -1286,7 +1156,18 @@ namespace TVA.Collections
         /// <summary>
         /// Allows derived classes to access the interfaced internal <see cref="ProcessQueue{T}"/> directly.
         /// </summary>
-        protected IList<T> InternalList
+        protected IEnumerable<T> InternalQueue
+        {
+            get
+            {
+                return m_processQueue;
+            }
+        }
+
+        /// <summary>
+        /// Gets an object that can be used to synchronize access to the <see cref="ProcessQueue{T}"/>. 
+        /// </summary>
+        public object SyncRoot
         {
             get
             {
@@ -1328,10 +1209,6 @@ namespace TVA.Collections
                             m_processTimer.Dispose();
                         }
                         m_processTimer = null;
-                        if ((object)m_processQueue != null)
-                        {
-                            Clear();
-                        }
                         m_processQueue = null;
                         m_processItemFunction = null;
                         m_processItemsFunction = null;
@@ -1345,6 +1222,145 @@ namespace TVA.Collections
                     if (Disposed != null)
                         Disposed(this, EventArgs.Empty);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Adds an item to the <see cref="ProcessQueue{T}"/>.
+        /// </summary>
+        /// <param name="item">The item to add to the <see cref="ProcessQueue{T}"/>.</param>
+        public virtual void Add(T item)
+        {
+            ConcurrentQueue<T> queue = m_processQueue as ConcurrentQueue<T>;
+
+            if ((object)queue != null)
+            {
+                queue.Enqueue(item);
+                DataAdded();
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+        }
+
+        /// <summary>
+        /// Determines whether an element is in the <see cref="ProcessQueue{T}"/>.
+        /// </summary>
+        /// <returns>True, if item is found in the <see cref="ProcessQueue{T}"/>; otherwise, false.</returns>
+        /// <param name="item">The object to locate in the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
+        public virtual bool Contains(T item)
+        {
+            return m_processQueue.Contains(item);
+        }
+
+        /// <summary>
+        /// Copies the elements of the <see cref="ProcessQueue{T}"/> to an <see cref="System.Array"/>, starting at a particular index.
+        /// </summary>
+        /// <param name="array">
+        /// The one-dimensional <see cref="System.Array"/> that is the destination of the elements copied from the <see cref="ProcessQueue{T}"/>.
+        /// The array must have zero-based indexing.
+        /// </param>
+        /// <param name="index">The zero-based index in array at which copying begins.</param>
+        public virtual void CopyTo(T[] array, int index)
+        {
+            m_processQueue.ToList().CopyTo(array, index);
+        }
+
+        /// <summary>
+        /// Copies the elements contained in the <see cref="ProcessQueue{T}"/> to a new array. 
+        /// </summary>
+        /// <returns>A new array containing the elements copied from the <see cref="ProcessQueue{T}"/>.</returns>
+        public virtual T[] ToArray()
+        {
+            return m_processQueue.ToArray();
+        }
+
+        /// <summary>
+        /// Attempts to add an object to the <see cref="ProcessQueue{T}"/>.
+        /// </summary>
+        /// <param name="item">The object to add to the <see cref="ProcessQueue{T}"/>.</param>
+        /// <returns><c>true</c> if the object was successfully added; otherwise, <c>false</c>.</returns>
+        public virtual bool TryAdd(T item)
+        {
+            Add(item);
+            return true;
+        }
+
+        /// <summary>
+        /// Attempts to remove and return an object from the <see cref="ProcessQueue{T}"/>.
+        /// </summary>
+        /// <param name="item">When this method returns, if the object was removed and returned successfully, item contains the removed object. If no object was available to be removed, the value is unspecified.</param>
+        /// <returns><c>true</c> if an object was removed and returned successfully; otherwise, <c>false</c>.</returns>
+        public virtual bool TryTake(out T item)
+        {
+            ConcurrentQueue<T> queue = m_processQueue as ConcurrentQueue<T>;
+
+            if ((object)queue != null)
+                return queue.TryDequeue(out item);
+
+            throw new InvalidOperationException();
+        }
+
+        /// <summary>
+        /// Attempts to remove and return all objects from the <see cref="ProcessQueue{T}"/>.
+        /// </summary>
+        /// <param name="items">When this method returns, if any objects were removed and returned successfully, item array contains the removed objects. If no object was available to be removed, the value is null.</param>
+        /// <returns><c>true</c> if any objects were removed and returned successfully; otherwise, <c>false</c>.</returns>
+        public virtual bool TryTake(out T[] items)
+        {
+            ConcurrentQueue<T> queue = m_processQueue as ConcurrentQueue<T>;
+
+            if ((object)queue != null)
+            {
+                T item;
+                List<T> taken = new List<T>();
+
+                while (queue.TryDequeue(out item))
+                {
+                    taken.Add(item);
+                }
+
+                if (taken.Count > 0)
+                {
+                    items = taken.ToArray();
+                    return true;
+                }
+
+                items = null;
+                return false;
+            }
+
+            throw new InvalidOperationException();
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through the <see cref="ProcessQueue{T}"/>.
+        /// </summary>
+        /// <returns>An enumerator for the <see cref="ProcessList{T}"/>.</returns>
+        public virtual IEnumerator<T> GetEnumerator()
+        {
+            return m_processQueue.GetEnumerator();
+        }
+
+        /// <summary>
+        /// Removes all elements from the <see cref="ProcessQueue{T}"/>.
+        /// </summary>
+        public virtual void Clear()
+        {
+            ConcurrentQueue<T> queue = m_processQueue as ConcurrentQueue<T>;
+
+            if ((object)queue != null)
+            {
+                T result;
+
+                while (queue.TryDequeue(out result))
+                {
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException();
             }
         }
 
@@ -1368,10 +1384,10 @@ namespace TVA.Collections
                 m_realTimeProcessThread = new ManagedThread(RealTimeThreadProc);
                 m_realTimeProcessThread.Name = "TVA.Collections.ProcessQueue.RealTimeThreadProc() [" + Name + "]";
 #else
-                m_realTimeProcessThread = new Thread(new ThreadStart(RealTimeThreadProc));
+                m_realTimeProcessThread = new Thread(RealTimeThreadProc);
 #endif
 
-                m_realTimeProcessThread.Priority = m_realTimeProcessThreadPriority;
+                m_realTimeProcessThread.IsBackground = true;
                 m_realTimeProcessThread.Start();
             }
             else
@@ -1396,7 +1412,7 @@ namespace TVA.Collections
         /// </summary>
         public virtual void Stop()
         {
-            m_enabled = false;
+            Enabled = false;
 
             if (m_processingIsRealTime)
             {
@@ -1444,7 +1460,7 @@ namespace TVA.Collections
         /// </remarks>
         public virtual void Flush()
         {
-            bool enabled = m_enabled;
+            bool enabled = Enabled;
 
             // Stop all queue processing...
             Stop();
@@ -1462,20 +1478,17 @@ namespace TVA.Collections
                 while (Count > 0)
                 {
                     // Create a real-time processing loop that will process remaining items as quickly as possible.
-                    lock (m_processQueue)
+                    while (m_processQueue.Any())
                     {
-                        while (m_processQueue.Count > 0)
+                        if ((object)m_processItemsFunction == null)
                         {
-                            if ((object)m_processItemsFunction == null)
-                            {
-                                // Processes one item at a time.
-                                ProcessNextItem();
-                            }
-                            else
-                            {
-                                // Processes multiple items at once.
-                                ProcessNextItems();
-                            }
+                            // Processes one item at a time.
+                            ProcessNextItem();
+                        }
+                        else
+                        {
+                            // Processes multiple items at once.
+                            ProcessNextItems();
                         }
                     }
                 }
@@ -1484,6 +1497,16 @@ namespace TVA.Collections
                 m_requeueOnTimeout = originalRequeueOnTimeout;
                 m_requeueOnException = originalRequeueOnException;
             }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable)m_processQueue).GetEnumerator();
+        }
+
+        void ICollection.CopyTo(Array array, int index)
+        {
+            m_processQueue.ToArray().CopyTo(array, index);
         }
 
         #region [ Item Processing Functions ]
@@ -1568,7 +1591,7 @@ namespace TVA.Collections
         /// </para>
         /// <para>
         /// To make sure items in the <see cref="ProcessQueue{T}"/> always get processed, this function is expected to be
-        /// invoked from within a SyncLock of the exposed SyncRoot (i.e., m_processQueue).
+        /// invoked from within a SyncLock of the exposed SyncRoot (i.e., InternalList).
         /// </para>
         /// </remarks>
         protected virtual void DataAdded()
@@ -1580,7 +1603,7 @@ namespace TVA.Collections
                 lock (m_processTimer)
                 {
                     // Enabled flag changes are always in a critical section to ensure all items will be processed
-                    if (m_enabled && !m_processTimer.Enabled)
+                    if (Enabled && !m_processTimer.Enabled)
                         m_processTimer.Enabled = true;
                 }
             }
@@ -1600,32 +1623,28 @@ namespace TVA.Collections
         /// <returns>A <see cref="Boolean"/> value indicating whether it can process the item or not.</returns>
         protected virtual bool CanProcessItem(T item)
         {
+            // If user provided no implementation for this function or function failed, we assume item can be processed.
             if ((object)m_canProcessItemFunction == null)
-            {
-                // If user provided no implementation for this function or function failed, we assume item can be processed.
                 return true;
-            }
-            else
-            {
-                try
-                {
-                    // When user function is provided, we call it to determine if item should be processed at this time.
-                    return m_canProcessItemFunction(item);
-                }
-                catch (ThreadAbortException)
-                {
-                    // Rethrow thread abort so calling method can respond appropriately
-                    throw;
-                }
-                catch (Exception ex)
-                {
-                    // Processing will not stop for any errors thrown by the user function, but errors will be reported.
-                    OnProcessException(ex);
-                }
 
-                // Assuming processing must go on if the user function fails
-                return true;
+            try
+            {
+                // When user function is provided, we call it to determine if item state allows processing at this time.
+                return m_canProcessItemFunction(item);
             }
+            catch (ThreadAbortException)
+            {
+                // Rethrow thread abort so calling method can respond appropriately
+                throw;
+            }
+            catch (Exception ex)
+            {
+                // Processing will not stop for any errors thrown by the user function, but errors will be reported.
+                OnProcessException(ex);
+            }
+
+            // Assuming processing must go on if the user function fails
+            return true;
         }
 
         /// <summary>
@@ -1642,60 +1661,45 @@ namespace TVA.Collections
         /// <returns>A <see cref="Boolean"/> value indicating whether the process queue can process the items.</returns>
         protected virtual bool CanProcessItems(T[] items)
         {
+            // If user provided no implementation for this function or function failed, we assume item can be processed.
             if ((object)m_canProcessItemFunction == null)
-            {
-                // If user provided no implementation for this function or function failed, we assume item can be processed.
                 return true;
-            }
-            else
+
+            // Otherwise we call user function for each item to determine if all items are ready for processing.
+            bool allItemsCanBeProcessed = true;
+
+            foreach (T item in items)
             {
-                // Otherwise we call user function for each item to determine if all items are ready for processing.
-                bool allItemsCanBeProcessed = true;
-
-                foreach (T item in items)
+                if (!CanProcessItem(item))
                 {
-                    if (!CanProcessItem(item))
-                    {
-                        allItemsCanBeProcessed = false;
-                        break;
-                    }
+                    allItemsCanBeProcessed = false;
+                    break;
                 }
-
-                return allItemsCanBeProcessed;
             }
+
+            return allItemsCanBeProcessed;
         }
 
         /// <summary>
-        /// Requeues item into <see cref="ProcessQueue{T}"/> according to specified requeue mode.
+        /// Requeues item into <see cref="ProcessQueue{T}"/> according to specified requeue reason.
         /// </summary>
         /// <param name="item">A generic item of type T to be requeued.</param>
-        /// <param name="mode">The method in which to requeue the object.</param>
-        protected virtual void RequeueItem(T item, RequeueMode mode)
+        /// <param name="reason">The reason the object is being requeued.</param>
+        protected virtual void RequeueItem(T item, RequeueReason reason)
         {
-            if (mode == RequeueMode.Prefix)
-            {
-                Insert(0, item);
-            }
-            else
-            {
-                Add(item);
-            }
+            Add(item);
         }
 
         /// <summary>
-        /// Requeues items into <see cref="ProcessQueue{T}"/> according to specified requeue mode.
+        /// Requeues items into <see cref="ProcessQueue{T}"/> according to specified requeue reason.
         /// </summary>
-        /// <param name="items">Array of type T.</param>
-        /// <param name="mode">The method in which to requeue the object.</param>
-        protected virtual void RequeueItems(T[] items, RequeueMode mode)
+        /// <param name="items">Array of type T to be requeued.</param>
+        /// <param name="reason">The reason the object is being requeued.</param>
+        protected virtual void RequeueItems(T[] items, RequeueReason reason)
         {
-            if (mode == RequeueMode.Prefix)
+            foreach (T item in items)
             {
-                InsertRange(0, items);
-            }
-            else
-            {
-                AddRange(items);
+                Add(item);
             }
         }
 
@@ -1723,7 +1727,7 @@ namespace TVA.Collections
             {
                 // Requeues item on processing exception, if requested.
                 if (m_requeueOnException)
-                    RequeueItem(item, m_requeueModeOnException);
+                    RequeueItem(item, RequeueReason.Exception);
 
                 // Processing will not stop for any errors thrown by the user function, but errors will be reported.
                 OnProcessException(ex);
@@ -1754,7 +1758,7 @@ namespace TVA.Collections
             {
                 // Requeues items on processing exception, if requested.
                 if (m_requeueOnException)
-                    RequeueItems(items, m_requeueModeOnException);
+                    RequeueItems(items, RequeueReason.Exception);
 
                 // Processing will not stop for any errors thrown by the user function, but errors will be reported.
                 OnProcessException(ex);
@@ -1768,43 +1772,26 @@ namespace TVA.Collections
         {
             long noWorkSleeps = 0;
 
-            // Creates a real-time processing loop that will process items as quickly as possible.
-            while (m_enabled)
+            // Creates a real-time processing loop that will start item processing as quickly as possible.
+            while (Enabled)
             {
-                if (m_processQueue.Count > 0)
+                // Kick start processing when items exist that are not currently being processed
+                if (Interlocked.CompareExchange(ref m_processing, 1, 0) == 0 && m_processQueue.Any())
                 {
                     noWorkSleeps = 0;
-
-                    if ((object)m_processItemsFunction == null)
-                    {
-                        // Process one item at a time.
-                        using (Task processTask = Task.Factory.StartNew(ProcessNextItem))
-                        {
-                            // Wait for task to complete
-                            processTask.Wait();
-                        }
-                    }
-                    else
-                    {
-                        // Process multiple items at once.
-                        using (Task processTask = Task.Factory.StartNew(ProcessNextItems))
-                        {
-                            // Wait for task to complete
-                            processTask.Wait();
-                        }
-                    }
+                    ThreadPool.QueueUserWorkItem(RealTimeDataProcessingLoop);
                 }
                 else
                 {
                     int sleepTime = 1;
 
-                    // Vary sleep time based on how often items are being processed, up to one second for very idle queues
+                    // Vary sleep time based on how often kick start is being processed, up to one second for very idle queues
                     if (noWorkSleeps > 1000L)
-                        sleepTime = 1000;   // It will take well over 1.5 minutes of no data before sleeping for 1 second
+                        sleepTime = 1000;   // It will take well over 1.5 minutes of no work before sleeping for 1 second
                     else if (noWorkSleeps > 100L)
-                        sleepTime = 100;    // It will take at least one second of no data before sleeping for 100ms
-                    else if (noWorkSleeps > 10L)
-                        sleepTime = 10;     // It will take at least 10ms of no data before sleeping for 10ms
+                        sleepTime = 100;    // It will take at least one second of no work before sleeping for 100ms
+                    else if (noWorkSleeps > 5L)
+                        sleepTime = 10;     // It will take at least 5ms of no work before sleeping for 10ms
 
                     noWorkSleeps++;
 
@@ -1812,6 +1799,20 @@ namespace TVA.Collections
                     Thread.Sleep(sleepTime);
                 }
             }
+        }
+
+        // Creates a real-time loop for processing data that runs as long as there is data to process
+        private void RealTimeDataProcessingLoop(object state)
+        {
+            if ((object)m_processItemsFunction == null)
+                ProcessNextItem();
+            else
+                ProcessNextItems();
+
+            if (Enabled && m_processQueue.Any())
+                ThreadPool.QueueUserWorkItem(RealTimeDataProcessingLoop);
+            else
+                Interlocked.Exchange(ref m_processing, 0);
         }
 
         /// <summary>
@@ -1823,8 +1824,7 @@ namespace TVA.Collections
         {
             // The system timer creates an intervaled processing loop such that if an existing item processing
             // call hasn't completed before next interval, multiple processing calls will be spawned thereby
-            // distributing item processing across multiple threads as needed. Since each timer call is on the
-            // thread pool anyway, there is no need to use tasks here (tasks just go on the thread pool as well)
+            // distributing item processing across multiple threads as needed.
             if ((object)m_processItemsFunction == null)
             {
                 // Process one item at a time.
@@ -1842,7 +1842,7 @@ namespace TVA.Collections
                 lock (m_processTimer)
                 {
                     // Enabled flag changes are always in a critical section to ensure all items will be processed
-                    if (m_processQueue.Count == 0)
+                    if (!m_processQueue.Any())
                         m_processTimer.Enabled = false;
                 }
             }
@@ -1858,28 +1858,21 @@ namespace TVA.Collections
 
             try
             {
-                // Handles all queue operations for getting next item in a single synchronous operation.
-                // We keep work to be done here down to a mimimum amount of time
-                lock (m_processQueue)
+                // Get the next item to be processed if the number of current process threads is less
+                // than the maximum allowable number of process threads.
+                if (m_threadCount < m_maximumThreads && TryTake(out nextItem))
                 {
-                    // Retrieves the next item to be processed if the number of current process threads is less
-                    // than the maximum allowable number of process threads.
-                    if (m_processQueue.Count > 0 && m_threadCount < m_maximumThreads)
+                    // Call optional user function to see if we can process this item.
+                    if (CanProcessItem(nextItem))
                     {
-                        // Retrieves first item to be processed.
-                        nextItem = m_processQueue[0];
-
-                        // Calls optional user function to see if we should process this item.
-                        if (CanProcessItem(nextItem))
-                        {
-                            Interlocked.Increment(ref m_threadCount);
-
-                            // Removes the item about to be processed from the queue.
-                            m_processQueue.RemoveAt(0);
-
-                            processingItem = true;
-                            Interlocked.Increment(ref m_itemsProcessing);
-                        }
+                        Interlocked.Increment(ref m_threadCount);
+                        Interlocked.Increment(ref m_itemsProcessing);
+                        processingItem = true;
+                    }
+                    else
+                    {
+                        // If item state is not ready for processing, all we can do is requeue.
+                        RequeueItem(nextItem, RequeueReason.CannotProcess);
                     }
                 }
 
@@ -1911,7 +1904,7 @@ namespace TVA.Collections
 
                             // Requeues item on processing timeout, if requested.
                             if (m_requeueOnTimeout)
-                                RequeueItem(nextItem, m_requeueModeOnTimeout);
+                                RequeueItem(nextItem, RequeueReason.Timeout);
                         }
                     }
                 }
@@ -1947,31 +1940,21 @@ namespace TVA.Collections
 
             try
             {
-                // Handles all queue operations for getting next items in a single synchronous operation.
-                // We keep work to be done here down to a mimimum amount of time.
-                lock (m_processQueue)
+                // Get next items to be processed if the number of current process threads is less
+                // than the maximum allowable number of process threads.
+                if (m_threadCount < m_maximumThreads && TryTake(out nextItems))
                 {
-                    // Gets next items to be processed, if the number of current process threads is less
-                    // than the maximum allowable number of process threads.
-                    if (m_processQueue.Count > 0 && m_threadCount < m_maximumThreads)
+                    // Call optional user function to see if these items can be processed.
+                    if (CanProcessItems(nextItems))
                     {
-                        // Retrieves items to be processed.
-                        nextItems = ToArray();
-
-                        if ((object)nextItems == null || (object)m_itemsProcessing == null)
-                            return;
-
-                        // Calls optional user function to see if these items should be processed.
-                        if (CanProcessItems(nextItems))
-                        {
-                            Interlocked.Increment(ref m_threadCount);
-
-                            // Clears all items from the queue
-                            m_processQueue.Clear();
-
-                            processingItems = true;
-                            Interlocked.Add(ref m_itemsProcessing, nextItems.Length);
-                        }
+                        Interlocked.Increment(ref m_threadCount);
+                        Interlocked.Add(ref m_itemsProcessing, nextItems.Length);
+                        processingItems = true;
+                    }
+                    else
+                    {
+                        // If item state is not ready for processing, all we can do is requeue.
+                        RequeueItems(nextItems, RequeueReason.CannotProcess);
                     }
                 }
 
@@ -2003,7 +1986,7 @@ namespace TVA.Collections
 
                             // Requeues items on processing timeout, if requested.
                             if (m_requeueOnTimeout)
-                                RequeueItems(nextItems, m_requeueModeOnTimeout);
+                                RequeueItems(nextItems, RequeueReason.Timeout);
                         }
                     }
                 }
@@ -2027,1217 +2010,6 @@ namespace TVA.Collections
                     Interlocked.Add(ref m_itemsProcessing, -nextItems.Length);
                 }
             }
-        }
-
-        #endregion
-
-        #region [ Handy List(Of T) Functions Implementation ]
-
-        // The internal list is declared as an IList(Of T). Derived classes (e.g., KeyedProcessQueue) can use their own
-        // list implementation for process functionality. However, the regular List(Of T) provides many handy functions
-        // that are not required to be exposed by the IList(Of T) interface. So, if the implemented list is a List(Of T),
-        // we'll expose this native functionality; otherwise, we implement it for you. Yeah, you'll thank me one day.
-
-        // Note: All List(Of T) implementations should be synchronized, as necessary.
-
-        /// <summary>
-        /// Adds the elements of the specified collection to the end of the <see cref="ProcessQueue{T}"/>.
-        /// </summary>
-        /// <param name="collection">
-        /// The collection whose elements should be added to the end of the <see cref="ProcessQueue{T}"/>.
-        /// The collection itself cannot be null, but it can contain elements that are null, if type T is a reference type.
-        /// </param>
-        /// <exception cref="ArgumentNullException">collection is null.</exception>
-        public virtual void AddRange(IEnumerable<T> collection)
-        {
-            lock (m_processQueue)
-            {
-                List<T> processQueue = m_processQueue as List<T>;
-
-                if ((object)processQueue == null)
-                {
-                    // We manually implement this feature if process queue is not a List(Of T).
-                    if ((object)collection == null)
-                        throw new ArgumentNullException("collection", "collection is null");
-
-                    foreach (T item in collection)
-                    {
-                        m_processQueue.Add(item);
-                    }
-                }
-                else
-                {
-                    // Otherwise, we'll call native implementation.
-                    processQueue.AddRange(collection);
-                }
-
-                DataAdded();
-            }
-        }
-
-        ///	<summary>
-        /// Searches the entire sorted <see cref="ProcessQueue{T}"/>, using a binary search algorithm, for an element using the
-        /// default comparer and returns the zero-based index of the element.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="ProcessQueue{T}"/> must be sorted in order for this function to return an accurate result.
-        /// </remarks>
-        ///	<param name="item">The object to locate. The value can be null for reference types.</param>
-        /// <returns>
-        /// The zero-based index of item in the sorted <see cref="ProcessQueue{T}"/>, if item is found; otherwise, a negative number that is the
-        /// bitwise complement of the index of the next element that is larger than item or, if there is no larger element,
-        /// the bitwise complement of count.
-        /// </returns>
-        ///	<exception cref="InvalidOperationException">The default comparer, Generic.Comparer.Default, cannot find an
-        /// implementation of the IComparable generic interface or the IComparable interface for type T.</exception>
-        public virtual int BinarySearch(T item)
-        {
-            return BinarySearch(0, m_processQueue.Count, item, null);
-        }
-
-        ///	<summary>
-        /// Searches the entire sorted <see cref="ProcessQueue{T}"/>, using a binary search algorithm, for an element using the
-        /// specified comparer and returns the zero-based index of the element.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="ProcessQueue{T}"/> must be sorted in order for this function to return an accurate result.
-        /// </remarks>
-        ///	<param name="item">The object to locate. The value can be null for reference types.</param>
-        /// <param name="comparer">The Generic.IComparer implementation to use when comparing elements -or-
-        /// null to use the default comparer: Generic.Comparer(Of T).Default</param>
-        /// <returns>
-        /// The zero-based index of item in the sorted <see cref="ProcessQueue{T}"/>, if item is found; otherwise, a negative number that is the
-        /// bitwise complement of the index of the next element that is larger than item or, if there is no larger element,
-        /// the bitwise complement of count.
-        /// </returns>
-        ///	<exception cref="InvalidOperationException">The default comparer, Generic.Comparer.Default, cannot find an
-        /// implementation of the IComparable generic interface or the IComparable interface for type T.</exception>
-        public virtual int BinarySearch(T item, IComparer<T> comparer)
-        {
-            return BinarySearch(0, m_processQueue.Count, item, comparer);
-        }
-
-        ///	<summary>
-        /// Searches a range of elements in the sorted <see cref="ProcessQueue{T}"/>, using a binary search algorithm, for an
-        /// element using the specified comparer and returns the zero-based index of the element.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="ProcessQueue{T}"/> must be sorted in order for this function to return an accurate result.
-        /// </remarks>
-        /// <param name="index">The zero-based starting index of the range to search.</param>
-        /// <param name="count">The length of the range to search.</param>
-        ///	<param name="item">The object to locate. The value can be null for reference types.</param>
-        /// <param name="comparer">The Generic.IComparer implementation to use when comparing elements -or- null to use
-        /// the default comparer: Generic.Comparer(Of T).Default</param>
-        /// <returns>
-        /// The zero-based index of item in the sorted <see cref="ProcessQueue{T}"/>, if item is found; otherwise, a negative number that is the
-        /// bitwise complement of the index of the next element that is larger than item or, if there is no larger element,
-        /// the bitwise complement of count.
-        /// </returns>
-        /// <exception cref="ArgumentOutOfRangeException">startIndex is outside the range of valid indexes for the <see cref="ProcessQueue{T}"/>
-        /// -or- count is less than 0 -or- startIndex and count do not specify a valid section in the <see cref="ProcessQueue{T}"/></exception>
-        ///	<exception cref="InvalidOperationException">The default comparer, Generic.Comparer.Default, cannot find an
-        /// implementation of the IComparable generic interface or the IComparable interface for type T.</exception>
-        public virtual int BinarySearch(int index, int count, T item, IComparer<T> comparer)
-        {
-            lock (m_processQueue)
-            {
-                List<T> processQueue = m_processQueue as List<T>;
-
-                if ((object)processQueue == null)
-                {
-                    // We manually implement this feature, if process queue is not a List(Of T).
-                    int foundIndex = -1;
-                    int startIndex = index;
-                    int stopIndex = index + count - 1;
-                    int currentIndex;
-                    int result;
-
-                    // Validates start and stop index.
-                    if (startIndex < 0 || count < 0 || stopIndex > m_processQueue.Count - 1)
-                        throw new ArgumentOutOfRangeException("index", "index and/or count is outside the range of valid indexes for the queue");
-
-                    if ((object)comparer == null)
-                        comparer = Comparer<T>.Default;
-
-                    if (count > 0)
-                    {
-                        while (true)
-                        {
-                            // Finds next mid point.
-                            currentIndex = startIndex + (stopIndex - startIndex) / 2;
-
-                            // Compares item at mid-point
-                            result = comparer.Compare(item, m_processQueue[currentIndex]);
-
-                            if (result == 0)
-                            {
-                                // For a found item, returns located index.
-                                foundIndex = currentIndex;
-                                break;
-                            }
-                            else if (startIndex == stopIndex)
-                            {
-                                // Met in the middle and didn't find match, so we are finished,
-                                foundIndex = startIndex ^ -1;
-                                break;
-                            }
-                            else if (result > 0)
-                            {
-                                if (currentIndex < count - 1)
-                                {
-                                    // Item is beyond current item, so we start search at next item.
-                                    startIndex = currentIndex + 1;
-                                }
-                                else
-                                {
-                                    // Looked to the end and did not find match, so we are finished.
-                                    foundIndex = (count - 1) ^ -1;
-                                    break;
-                                }
-                            }
-                            else
-                            {
-                                if (currentIndex > 0)
-                                {
-                                    // Item is before current item, so we will stop search at current item.
-                                    // Note that because of the way the math works, you do not stop at the
-                                    // prior item, as you might guess. It can cause you to skip an item.
-                                    stopIndex = currentIndex;
-                                }
-                                else
-                                {
-                                    // Looked to the top and did not find match, so we are finished.
-                                    foundIndex = 0 ^ -1;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    return foundIndex;
-                }
-                else
-                {
-                    // Otherwise, we will call native implementation.
-                    return processQueue.BinarySearch(index, count, item, comparer);
-                }
-            }
-        }
-
-        /// <summary>Converts the elements in the current <see cref="ProcessQueue{T}"/> to another type, and returns a <see cref="ProcessQueue{T}"/> containing the
-        /// converted elements.</summary>
-        /// <returns>A generic list of the target type containing the converted elements from the current <see cref="ProcessQueue{T}"/>.</returns>
-        /// <param name="converter">A Converter delegate that converts each element from one type to another type.</param>
-        /// <exception cref="ArgumentNullException">converter is null.</exception>
-        /// <typeparam name="TOutput">The generic type used.</typeparam>
-        public virtual List<TOutput> ConvertAll<TOutput>(Converter<T, TOutput> converter)
-        {
-            lock (m_processQueue)
-            {
-                List<T> processQueue = m_processQueue as List<T>;
-
-                if ((object)processQueue == null)
-                {
-                    // We manually implement this feature, if process queue is not a List(Of T).
-                    if ((object)converter == null)
-                        throw new ArgumentNullException("converter", "converter is null");
-
-                    List<TOutput> result = new List<TOutput>();
-
-                    foreach (T item in m_processQueue)
-                    {
-                        result.Add(converter(item));
-                    }
-
-                    return result;
-                }
-                else
-                {
-                    // Otherwise, we will call native implementation
-                    return processQueue.ConvertAll(converter);
-                }
-            }
-        }
-
-        /// <summary>Determines whether the <see cref="ProcessQueue{T}"/> contains elements that match the conditions defined by the specified
-        /// predicate.</summary>
-        /// <returns>True, if the <see cref="ProcessQueue{T}"/> contains one or more elements that match the conditions defined by the specified
-        /// predicate; otherwise, false.</returns>
-        /// <param name="match">The Predicate delegate that defines the conditions of the elements to search for.</param>
-        /// <exception cref="ArgumentNullException">match is null.</exception>
-        public virtual bool Exists(Predicate<T> match)
-        {
-            lock (m_processQueue)
-            {
-                List<T> processQueue = m_processQueue as List<T>;
-
-                if ((object)processQueue == null)
-                {
-                    // We manually implement this feature, if process queue is not a List(Of T).
-                    if ((object)match == null)
-                        throw new ArgumentNullException("match", "match is null");
-
-                    bool found = false;
-
-                    for (int x = 0; x < m_processQueue.Count; x++)
-                    {
-                        if (match(m_processQueue[x]))
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    return found;
-                }
-                else
-                {
-                    // Otherwise, we will call native implementation.
-                    return processQueue.Exists(match);
-                }
-            }
-        }
-
-        /// <summary>Searches for an element that matches the conditions defined by the specified predicate, and returns
-        /// the first occurrence within the entire <see cref="ProcessQueue{T}"/>.</summary>
-        /// <returns>The first element that matches the conditions defined by the specified predicate, if found;
-        /// otherwise, the default value for type T.</returns>
-        /// <param name="match">The Predicate delegate that defines the conditions of the element to search for.</param>
-        /// <exception cref="ArgumentNullException">match is null.</exception>
-        public virtual T Find(Predicate<T> match)
-        {
-            lock (m_processQueue)
-            {
-                List<T> processQueue = m_processQueue as List<T>;
-
-                if ((object)processQueue == null)
-                {
-                    // We manually implement this feature, if process queue is not a List(Of T).
-                    if ((object)match == null)
-                        throw new ArgumentNullException("match", "match is null");
-
-                    T foundItem = default(T);
-                    int foundIndex = FindIndex(match);
-
-                    if (foundIndex >= 0)
-                        foundItem = m_processQueue[foundIndex];
-
-                    return foundItem;
-                }
-                else
-                {
-                    // Otherwise, we will call native implementation.
-                    return processQueue.Find(match);
-                }
-            }
-        }
-
-        /// <summary>Retrieves all elements that match the conditions defined by the specified predicate.</summary>
-        /// <returns>A generic list containing all elements that match the conditions defined by the specified predicate,
-        /// if found; otherwise, an empty list.</returns>
-        /// <param name="match">The Predicate delegate that defines the conditions of the elements to search for.</param>
-        /// <exception cref="ArgumentNullException">match is null.</exception>
-        public virtual List<T> FindAll(Predicate<T> match)
-        {
-            lock (m_processQueue)
-            {
-                List<T> processQueue = m_processQueue as List<T>;
-
-                if ((object)processQueue == null)
-                {
-                    // We manually implement this feature, if process queue is not a List(Of T).
-                    if ((object)match == null)
-                        throw new ArgumentNullException("match", "match is null");
-
-                    List<T> foundItems = new List<T>();
-
-                    foreach (T item in m_processQueue)
-                    {
-                        if (match(item))
-                            foundItems.Add(item);
-                    }
-
-                    return foundItems;
-                }
-                else
-                {
-                    // Otherwise, we will call native implementation.
-                    return processQueue.FindAll(match);
-                }
-            }
-        }
-
-        /// <summary>Searches for an element that matches the conditions defined by the specified predicate, and returns
-        /// the zero-based index of the first occurrence within the range of elements in the <see cref="ProcessQueue{T}"/> that extends from the
-        /// specified index to the last element.</summary>
-        /// <returns>The zero-based index of the first occurrence of an element that matches the conditions defined by
-        /// match, if found; otherwise, –1.</returns>
-        /// <param name="match">The Predicate delegate that defines the conditions of the element to search for.</param>
-        /// <exception cref="ArgumentNullException">match is null.</exception>
-        public virtual int FindIndex(Predicate<T> match)
-        {
-            return FindIndex(0, m_processQueue.Count, match);
-        }
-
-        /// <summary>Searches for an element that matches the conditions defined by the specified predicate, and returns
-        /// the zero-based index of the first occurrence within the range of elements in the <see cref="ProcessQueue{T}"/> that extends from the
-        /// specified index to the last element.</summary>
-        /// <returns>The zero-based index of the first occurrence of an element that matches the conditions defined by
-        /// match, if found; otherwise, –1.</returns>
-        /// <param name="startIndex">The zero-based starting index of the search.</param>
-        /// <param name="match">The Predicate delegate that defines the conditions of the element to search for.</param>
-        /// <exception cref="ArgumentOutOfRangeException">startIndex is outside the range of valid indexes for the <see cref="ProcessQueue{T}"/>.</exception>
-        /// <exception cref="ArgumentNullException">match is null.</exception>
-        public virtual int FindIndex(int startIndex, Predicate<T> match)
-        {
-            return FindIndex(startIndex, m_processQueue.Count, match);
-        }
-
-        /// <summary>Searches for an element that matches the conditions defined by the specified predicate, and returns
-        /// the zero-based index of the first occurrence within the range of elements in the <see cref="ProcessQueue{T}"/> that extends from the
-        /// specified index to the last element.</summary>
-        /// <returns>The zero-based index of the first occurrence of an element that matches the conditions defined by
-        /// match, if found; otherwise, –1.</returns>
-        /// <param name="startIndex">The zero-based starting index of the search.</param>
-        /// <param name="count">The number of elements in the section to search.</param>
-        /// <param name="match">The Predicate delegate that defines the conditions of the element to search for.</param>
-        /// <exception cref="ArgumentOutOfRangeException">startIndex is outside the range of valid indexes for the <see cref="ProcessQueue{T}"/>
-        /// -or- count is less than 0 -or- startIndex and count do not specify a valid section in the <see cref="ProcessQueue{T}"/>.</exception>
-        /// <exception cref="ArgumentNullException">match is null.</exception>
-        public virtual int FindIndex(int startIndex, int count, Predicate<T> match)
-        {
-            lock (m_processQueue)
-            {
-                List<T> processQueue = m_processQueue as List<T>;
-
-                if ((object)processQueue == null)
-                {
-                    // We manually implement this feature, if process queue is not a List(Of T).
-                    if (startIndex < 0 || count < 0 || startIndex + count > m_processQueue.Count)
-                        throw new ArgumentOutOfRangeException("startIndex", "startIndex and/or count is outside the range of valid indexes for the queue");
-
-                    if ((object)match == null)
-                        throw new ArgumentNullException("match", "match is null");
-
-                    int foundindex = -1;
-
-                    for (int x = startIndex; x < startIndex + count; x++)
-                    {
-                        if (match(m_processQueue[x]))
-                        {
-                            foundindex = x;
-                            break;
-                        }
-                    }
-
-                    return foundindex;
-                }
-                else
-                {
-                    // Otherwise, we will call native implementation.
-                    return processQueue.FindIndex(startIndex, count, match);
-                }
-            }
-        }
-
-        /// <summary>Searches for an element that matches the conditions defined by the specified predicate, and returns the last occurrence within the entire <see cref="ProcessQueue{T}"/>.</summary>
-        /// <returns>The last element that matches the conditions defined by the specified predicate, if found; otherwise, the default value for type T.</returns>
-        /// <param name="match">The Predicate delegate that defines the conditions of the element to search for.</param>
-        /// <exception cref="ArgumentNullException">match is null.</exception>
-        public virtual T FindLast(Predicate<T> match)
-        {
-            lock (m_processQueue)
-            {
-                List<T> processQueue = m_processQueue as List<T>;
-
-                if ((object)processQueue == null)
-                {
-                    // We manually implement this feature if process queue is not a List(Of T)
-                    if ((object)match == null)
-                        throw (new ArgumentNullException("match", "match is null"));
-
-                    T foundItem = default(T);
-                    int foundIndex = FindLastIndex(match);
-
-                    if (foundIndex >= 0)
-                        foundItem = m_processQueue[foundIndex];
-
-                    return foundItem;
-                }
-                else
-                {
-                    // Otherwise, we will call native implementation.
-                    return processQueue.FindLast(match);
-                }
-            }
-        }
-
-        /// <summary>Searches for an element that matches the conditions defined by the specified predicate, and returns
-        /// the zero-based index of the last occurrence within the entire <see cref="ProcessQueue{T}"/>.</summary>
-        /// <returns>The zero-based index of the last occurrence of an element that matches the conditions defined by
-        /// match, if found; otherwise, –1.</returns>
-        /// <param name="match">The Predicate delegate that defines the conditions of the element to search for.</param>
-        /// <exception cref="ArgumentNullException">match is null.</exception>
-        public virtual int FindLastIndex(Predicate<T> match)
-        {
-            return FindLastIndex(0, m_processQueue.Count, match);
-        }
-
-        /// <summary>Searches for an element that matches the conditions defined by the specified predicate, and returns
-        /// the zero-based index of the last occurrence within the range of elements in the <see cref="ProcessQueue{T}"/> that extends from the
-        /// first element to the specified index.</summary>
-        /// <returns>The zero-based index of the last occurrence of an element that matches the conditions defined by
-        /// match, if found; otherwise, –1.</returns>
-        /// <param name="startIndex">The zero-based starting index of the backward search.</param>
-        /// <param name="match">The Predicate delegate that defines the conditions of the element to search for.</param>
-        /// <exception cref="ArgumentOutOfRangeException">startIndex is outside the range of valid indexes for the <see cref="ProcessQueue{T}"/>.</exception>
-        /// <exception cref="ArgumentNullException">match is null.</exception>
-        public virtual int FindLastIndex(int startIndex, Predicate<T> match)
-        {
-            return FindLastIndex(startIndex, m_processQueue.Count, match);
-        }
-
-        /// <summary>Searches for an element that matches the conditions defined by the specified predicate, and returns
-        /// the zero-based index of the last occurrence within the range of elements in the <see cref="ProcessQueue{T}"/> that contains the
-        /// specified number of elements and ends at the specified index.</summary>
-        /// <returns>The zero-based index of the last occurrence of an element that matches the conditions defined by
-        /// match, if found; otherwise, –1.</returns>
-        /// <param name="count">The number of elements in the section to search.</param>
-        /// <param name="startIndex">The zero-based starting index of the backward search.</param>
-        /// <param name="match">The Predicate delegate that defines the conditions of the element to search for.</param>
-        /// <exception cref="ArgumentOutOfRangeException">startIndex is outside the range of valid indexes for the <see cref="ProcessQueue{T}"/>
-        /// -or- count is less than 0 -or- startIndex and count do not specify a valid section in the <see cref="ProcessQueue{T}"/>.</exception>
-        /// <exception cref="ArgumentNullException">match is null.</exception>
-        public virtual int FindLastIndex(int startIndex, int count, Predicate<T> match)
-        {
-            lock (m_processQueue)
-            {
-                List<T> processQueue = m_processQueue as List<T>;
-
-                if ((object)processQueue == null)
-                {
-                    // We manually implement this feature, if process queue is not a List(Of T).
-                    if (startIndex < 0 || count < 0 || startIndex + count > m_processQueue.Count)
-                        throw new ArgumentOutOfRangeException("startIndex", "startIndex and/or count is outside the range of valid indexes for the queue");
-
-                    if ((object)match == null)
-                        throw new ArgumentNullException("match", "match is null");
-
-                    int foundindex = -1;
-
-                    for (int x = startIndex + count - 1; x >= startIndex; x--)
-                    {
-                        if (match(m_processQueue[x]))
-                        {
-                            foundindex = x;
-                            break;
-                        }
-                    }
-
-                    return foundindex;
-                }
-                else
-                {
-                    // Otherwise, we will call native implementation.
-                    return processQueue.FindLastIndex(startIndex, count, match);
-                }
-            }
-        }
-
-        /// <summary>Performs the specified action on each element of the <see cref="ProcessQueue{T}"/>.</summary>
-        /// <param name="action">The Action delegate to perform on each element of the <see cref="ProcessQueue{T}"/>.</param>
-        /// <exception cref="ArgumentNullException">action is null.</exception>
-        public virtual void ForEach(Action<T> action)
-        {
-            lock (m_processQueue)
-            {
-                List<T> processQueue = m_processQueue as List<T>;
-
-                if ((object)processQueue == null)
-                {
-                    // We manually implement this feature, if process queue is not a List(Of T).
-                    if ((object)action == null)
-                        throw new ArgumentNullException("action", "action is null");
-
-                    foreach (T item in m_processQueue)
-                    {
-                        action(item);
-                    }
-                }
-                else
-                {
-                    // Otherwise, we will call native implementation.
-                    processQueue.ForEach(action);
-                }
-            }
-        }
-
-        /// <summary>Creates a shallow copy of a range of elements in the source <see cref="ProcessQueue{T}"/>.</summary>
-        /// <returns>A shallow copy of a range of elements in the source <see cref="ProcessQueue{T}"/>.</returns>
-        /// <param name="count">The number of elements in the range.</param>
-        /// <param name="index">The zero-based <see cref="ProcessQueue{T}"/> index at which the range starts.</param>
-        /// <exception cref="ArgumentOutOfRangeException">index is less than 0 -or- count is less than 0.</exception>
-        /// <exception cref="ArgumentException">index and count do not denote a valid range of elements in the <see cref="ProcessQueue{T}"/>.</exception>
-        public virtual List<T> GetRange(int index, int count)
-        {
-            lock (m_processQueue)
-            {
-                List<T> processQueue = m_processQueue as List<T>;
-
-                if ((object)processQueue == null)
-                {
-                    // We manually implement this feature, if process queue is not a List(Of T).
-                    if (index + count > m_processQueue.Count)
-                        throw new ArgumentException("Index and count do not denote a valid range of elements in the queue");
-
-                    if (index < 0 || count < 0)
-                        throw new ArgumentOutOfRangeException("index", "Index and/or count is outside the range of valid indexes for the queue");
-
-                    List<T> items = new List<T>();
-
-                    for (int x = index; x < index + count; x++)
-                    {
-                        items.Add(m_processQueue[x]);
-                    }
-
-                    return items;
-                }
-                else
-                {
-                    // Otherwise, we will call native implementation.
-                    return processQueue.GetRange(index, count);
-                }
-            }
-        }
-
-        /// <summary>Searches for the specified object and returns the zero-based index of the first occurrence within
-        /// the range of elements in the <see cref="ProcessQueue{T}"/> that extends from the specified index to the last element.</summary>
-        /// <returns>The zero-based index of the first occurrence of item within the range of elements in the <see cref="ProcessQueue{T}"/> that
-        /// extends from index to the last element, if found; otherwise, –1.</returns>
-        /// <param name="item">The object to locate in the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
-        /// <param name="index">The zero-based starting index of the search.</param>
-        /// <exception cref="ArgumentOutOfRangeException">index is outside the range of valid indexes for the <see cref="ProcessQueue{T}"/>.</exception>
-        public virtual int IndexOf(T item, int index)
-        {
-            return IndexOf(item, index, m_processQueue.Count);
-        }
-
-        /// <summary>Searches for the specified object and returns the zero-based index of the first occurrence within
-        /// the range of elements in the <see cref="ProcessQueue{T}"/> that starts at the specified index and contains the specified number of
-        /// elements.</summary>
-        /// <returns>The zero-based index of the first occurrence of item within the range of elements in the <see cref="ProcessQueue{T}"/> that
-        /// starts at index and contains count number of elements, if found; otherwise, –1.</returns>
-        /// <param name="count">The number of elements in the section to search.</param>
-        /// <param name="item">The object to locate in the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
-        /// <param name="index">The zero-based starting index of the search.</param>
-        /// <exception cref="ArgumentOutOfRangeException">index is outside the range of valid indexes for the <see cref="ProcessQueue{T}"/>
-        /// -or- count is less than 0 -or- index and count do not specify a valid section in the <see cref="ProcessQueue{T}"/>.</exception>
-        public virtual int IndexOf(T item, int index, int count)
-        {
-            lock (m_processQueue)
-            {
-                List<T> processQueue = m_processQueue as List<T>;
-
-                if ((object)processQueue == null)
-                {
-                    // We manually implement this feature, if process queue is not a List(Of T).
-                    if (index < 0 || count < 0 || index + count > m_processQueue.Count)
-                        throw new ArgumentOutOfRangeException("index", "Index and/or count is outside the range of valid indexes for the queue");
-
-                    int foundindex = -1;
-                    Comparer<T> comparer = Comparer<T>.Default;
-
-                    for (int x = index; x < index + count; x++)
-                    {
-                        if (comparer.Compare(item, m_processQueue[x]) == 0)
-                        {
-                            foundindex = x;
-                            break;
-                        }
-                    }
-
-                    return foundindex;
-                }
-                else
-                {
-                    // Otherwise, we will call native implementation.
-                    return processQueue.IndexOf(item, index, count);
-                }
-            }
-        }
-
-        /// <summary>Inserts the elements of a collection into the <see cref="ProcessQueue{T}"/> at the specified index.</summary>
-        /// <param name="collection">The collection whose elements should be inserted into the <see cref="ProcessQueue{T}"/>. The collection
-        /// itself cannot be null, but it can contain elements that are null, if type T is a reference type.</param>
-        /// <param name="index">The zero-based index at which the new elements should be inserted.</param>
-        /// <exception cref="ArgumentOutOfRangeException">index is less than 0 -or- index is greater than <see cref="ProcessQueue{T}"/> length.</exception>
-        /// <exception cref="ArgumentNullException">collection is null.</exception>
-        public virtual void InsertRange(int index, IEnumerable<T> collection)
-        {
-            lock (m_processQueue)
-            {
-                List<T> processQueue = m_processQueue as List<T>;
-
-                if ((object)processQueue == null)
-                {
-                    // We manually implement this feature, if process queue is not a List(Of T).
-                    if (index < 0 || index > m_processQueue.Count - 1)
-                        throw new ArgumentOutOfRangeException("index", "index is outside the range of valid indexes for the queue");
-
-                    if ((object)collection == null)
-                        throw new ArgumentNullException("collection", "collection is null");
-
-                    foreach (T item in collection)
-                    {
-                        m_processQueue.Insert(index, item);
-                        index++;
-                    }
-                }
-                else
-                {
-                    // Otherwise, we will call native implementation.
-                    processQueue.InsertRange(index, collection);
-                }
-
-                DataAdded();
-            }
-        }
-
-        /// <summary>Searches for the specified object and returns the zero-based index of the last occurrence within the
-        /// entire <see cref="ProcessQueue{T}"/>.</summary>
-        /// <returns>The zero-based index of the last occurrence of item within the entire the <see cref="ProcessQueue{T}"/>, if found;
-        /// otherwise, –1.</returns>
-        /// <param name="item">The object to locate in the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
-        public virtual int LastIndexOf(T item)
-        {
-            return LastIndexOf(item, 0, m_processQueue.Count);
-        }
-
-        /// <summary>Searches for the specified object and returns the zero-based index of the last occurrence within the
-        /// range of elements in the <see cref="ProcessQueue{T}"/> that extends from the first element to the specified index.</summary>
-        /// <returns>The zero-based index of the last occurrence of item within the range of elements in the <see cref="ProcessQueue{T}"/> that
-        /// extends from the first element to index, if found; otherwise, –1.</returns>
-        /// <param name="item">The object to locate in the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
-        /// <param name="index">The zero-based starting index of the backward search.</param>
-        /// <exception cref="ArgumentOutOfRangeException">index is outside the range of valid indexes for the <see cref="ProcessQueue{T}"/>. </exception>
-        public virtual int LastIndexOf(T item, int index)
-        {
-            return LastIndexOf(item, index, m_processQueue.Count);
-        }
-
-        /// <summary>Searches for the specified object and returns the zero-based index of the last occurrence within the
-        /// range of elements in the <see cref="ProcessQueue{T}"/> that contains the specified number of elements and ends at the specified index.</summary>
-        /// <returns>The zero-based index of the last occurrence of item within the range of elements in the <see cref="ProcessQueue{T}"/> that
-        /// contains count number of elements and ends at index, if found; otherwise, –1.</returns>
-        /// <param name="item">The object to locate in the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
-        /// <param name="index">The zero-based starting index of the backward search.</param>
-        /// <param name="count">The number of elements in the section to search.</param>
-        /// <exception cref="ArgumentOutOfRangeException">index is outside the range of valid indexes for the <see cref="ProcessQueue{T}"/> -or-
-        /// count is less than 0 -or- index and count do not specify a valid section in the <see cref="ProcessQueue{T}"/>.</exception>
-        public virtual int LastIndexOf(T item, int index, int count)
-        {
-            lock (m_processQueue)
-            {
-                List<T> processQueue = m_processQueue as List<T>;
-
-                if ((object)processQueue == null)
-                {
-                    // We manually implement this feature, if process queue is not a List(Of T).
-                    if (index < 0 || count < 0 || index + count > m_processQueue.Count)
-                        throw new ArgumentOutOfRangeException("index", "Index and/or count is outside the range of valid indexes for the queue");
-
-                    int foundindex = -1;
-                    Comparer<T> comparer = Comparer<T>.Default;
-
-                    for (int x = index + count - 1; x >= index; x--)
-                    {
-                        if (comparer.Compare(item, m_processQueue[x]) == 0)
-                        {
-                            foundindex = x;
-                            break;
-                        }
-                    }
-
-                    return foundindex;
-                }
-                else
-                {
-                    // Otherwise, we'll call native implementation.
-                    return processQueue.LastIndexOf(item, index, count);
-                }
-            }
-        }
-
-        /// <summary>Removes the all the elements that match the conditions defined by the specified predicate.</summary>
-        /// <returns>The number of elements removed from the <see cref="ProcessQueue{T}"/>.</returns>
-        /// <param name="match">The Predicate delegate that defines the conditions of the elements to remove.</param>
-        /// <exception cref="ArgumentNullException">match is null.</exception>
-        public virtual int RemoveAll(Predicate<T> match)
-        {
-            lock (m_processQueue)
-            {
-                List<T> processQueue = m_processQueue as List<T>;
-
-                if ((object)processQueue == null)
-                {
-                    // We manually implement this feature, if process queue is not a List(Of T).
-                    if ((object)match == null)
-                        throw new ArgumentNullException("match", "match is null");
-
-                    int removedItems = 0;
-
-                    // Process removal from the bottom up to maintain proper index access
-                    for (int x = m_processQueue.Count - 1; x >= 0; x--)
-                    {
-                        if (match(m_processQueue[x]))
-                        {
-                            m_processQueue.RemoveAt(x);
-                            removedItems++;
-                        }
-                    }
-
-                    return removedItems;
-                }
-                else
-                {
-                    // Otherwise, we will call native implementation.
-                    return processQueue.RemoveAll(match);
-                }
-            }
-        }
-
-        /// <summary>Removes a range of elements from the <see cref="ProcessQueue{T}"/>.</summary>
-        /// <param name="count">The number of elements to remove.</param>
-        /// <param name="index">The zero-based starting index of the range of elements to remove.</param>
-        /// <exception cref="ArgumentOutOfRangeException">index is less than 0 -or- count is less than 0.</exception>
-        /// <exception cref="ArgumentException">index and count do not denote a valid range of elements in the <see cref="ProcessQueue{T}"/>.</exception>
-        public virtual void RemoveRange(int index, int count)
-        {
-            lock (m_processQueue)
-            {
-                List<T> processQueue = m_processQueue as List<T>;
-
-                if ((object)processQueue == null)
-                {
-                    // We manually implement this feature, if process queue is not a List(Of T).
-                    if (index < 0 || count < 0 || index + count > m_processQueue.Count)
-                        throw new ArgumentOutOfRangeException("index", "Index and/or count is outside the range of valid indexes for the queue");
-
-                    for (int x = index + count - 1; x >= index; x--)
-                    {
-                        m_processQueue.RemoveAt(x);
-                    }
-                }
-                else
-                {
-                    // Otherwise, we will call native implementation.
-                    processQueue.RemoveRange(index, count);
-                }
-            }
-        }
-
-        /// <summary>Reverses the order of the elements in the entire <see cref="ProcessQueue{T}"/>.</summary>
-        public virtual void Reverse()
-        {
-            Reverse(0, m_processQueue.Count);
-        }
-
-        /// <summary>Reverses the order of the elements in the specified range.</summary>
-        /// <param name="count">The number of elements in the range to reverse.</param>
-        /// <param name="index">The zero-based starting index of the range to reverse.</param>
-        /// <exception cref="ArgumentException">index and count do not denote a valid range of elements in the <see cref="ProcessQueue{T}"/>. </exception>
-        /// <exception cref="ArgumentOutOfRangeException">index is less than 0 -or- count is less than 0.</exception>
-        public virtual void Reverse(int index, int count)
-        {
-            lock (m_processQueue)
-            {
-                List<T> processQueue = m_processQueue as List<T>;
-
-                if ((object)processQueue == null)
-                {
-                    // We manually implement this feature, if process queue is not a List(Of T).
-                    if (index + count > m_processQueue.Count)
-                        throw new ArgumentException("Index and count do not denote a valid range of elements in the queue");
-
-                    if (index < 0 || count < 0)
-                        throw new ArgumentOutOfRangeException("index", "Index and/or count is outside the range of valid indexes for the queue");
-
-                    T item;
-                    int stopIndex = index + count - 1;
-
-                    for (int x = index; x < (index + count) / 2; x++)
-                    {
-                        if (x < stopIndex)
-                        {
-                            // Swaps items top to bottom to reverse order.
-                            item = m_processQueue[x];
-                            m_processQueue[x] = m_processQueue[stopIndex];
-                            m_processQueue[stopIndex] = item;
-                            stopIndex--;
-                        }
-                    }
-                }
-                else
-                {
-                    // Otherwise, we will call native implementation.
-                    processQueue.Reverse(index, count);
-                }
-            }
-        }
-
-        /// <summary>Sorts the elements in the entire <see cref="ProcessQueue{T}"/>, using the default comparer.</summary>
-        ///	<exception cref="InvalidOperationException">The default comparer, Generic.Comparer.Default, cannot find an
-        /// implementation of the IComparable generic interface or the IComparable interface for type T.</exception>
-        public virtual void Sort()
-        {
-            Sort(0, m_processQueue.Count, null);
-        }
-
-        /// <summary>Sorts the elements in the entire <see cref="ProcessQueue{T}"/>, using the specified comparer.</summary>
-        /// <param name="comparer">The Generic.IComparer implementation to use when comparing elements, or null to use
-        /// the default comparer: Generic.Comparer.Default.</param>
-        /// <exception cref="ArgumentException">The implementation of comparer caused an error during the sort. For
-        /// example, comparer might not return 0 when comparing an item with itself.</exception>
-        ///	<exception cref="InvalidOperationException">the comparer is null and the default comparer,
-        /// Generic.Comparer.Default, cannot find an implementation of the IComparable generic interface or the
-        /// IComparable interface for type T.</exception>
-        public virtual void Sort(IComparer<T> comparer)
-        {
-            Sort(0, m_processQueue.Count, comparer);
-        }
-
-        /// <summary>Sorts the elements in a range of elements in the <see cref="ProcessQueue{T}"/>, using the specified comparer.</summary>
-        /// <param name="count">The length of the range to sort.</param>
-        /// <param name="index">The zero-based starting index of the range to sort.</param>
-        /// <param name="comparer">The Generic.IComparer implementation to use when comparing elements, or null to use
-        /// the default comparer: Generic.Comparer.Default.</param>
-        /// <exception cref="ArgumentException">The implementation of comparer caused an error during the sort. For
-        /// example, comparer might not return 0 when comparing an item with itself.</exception>
-        ///	<exception cref="InvalidOperationException">the comparer is null and the default comparer,
-        /// Generic.Comparer.Default, cannot find an implementation of the IComparable generic interface or the
-        /// IComparable interface for type T.</exception>
-        /// <exception cref="ArgumentOutOfRangeException">index is less than 0 -or- count is less than 0.</exception>
-        public virtual void Sort(int index, int count, IComparer<T> comparer)
-        {
-            lock (m_processQueue)
-            {
-                List<T> processQueue = m_processQueue as List<T>;
-
-                if ((object)processQueue == null)
-                {
-                    // We manually implement this feature, if process queue is not a List(Of T).
-                    if ((object)comparer == null)
-                        comparer = Comparer<T>.Default;
-
-                    // This sort implementation is a little harsh, but the normal process queue uses List(Of T) and the
-                    // keyed process queue is based on a sorted list anyway (i.e., no sorting needed); so, this alternate
-                    // sort implementation exists for any future derived process queue possibly based on a non List(Of T)
-                    // queue and will at least ensure that the function will perform as expected.
-                    T[] items = ToArray();
-                    Array.Sort<T>(items, index, count, comparer);
-                    m_processQueue.Clear();
-                    AddRange(items);
-                }
-                else
-                {
-                    // Otherwise, we will call native implementation.
-                    processQueue.Sort(index, count, comparer);
-                }
-            }
-        }
-
-        /// <summary>Sorts the elements in the entire <see cref="ProcessQueue{T}"/>, using the specified comparison.</summary>
-        /// <param name="comparison">The comparison to use when comparing elements.</param>
-        /// <exception cref="ArgumentException">The implementation of comparison caused an error during the sort. For
-        /// example, comparison might not return 0 when comparing an item with itself.</exception>
-        /// <exception cref="ArgumentNullException">comparison is null.</exception>
-        public virtual void Sort(Comparison<T> comparison)
-        {
-            lock (m_processQueue)
-            {
-                List<T> processQueue = m_processQueue as List<T>;
-
-                if ((object)processQueue == null)
-                {
-                    // We manually implement this feature, if process queue is not a List(Of T).
-                    if ((object)comparison == null)
-                        throw new ArgumentNullException("comparison", "comparison is null");
-
-                    // This sort implementation is a little harsh, but the normal process queue uses List(Of T) and the
-                    // keyed process queue is based on a sorted list anyway (i.e., no sorting needed); so, this alternate
-                    // sort implementation exists for any future derived process queue possibly based on a non-List(Of T)
-                    // queue and will at least ensure that the function will perform as expected. Maybe some clever
-                    // programmer will come behind me and add some "Linq-y" expression that will magically do this...
-                    T[] items = ToArray();
-                    Array.Sort<T>(items, comparison);
-                    m_processQueue.Clear();
-                    AddRange(items);
-                }
-                else
-                {
-                    // Otherwise we'll call native implementation
-                    processQueue.Sort(comparison);
-                }
-            }
-        }
-
-        /// <summary>Copies the elements of the <see cref="ProcessQueue{T}"/> to a new array.</summary>
-        /// <returns>An array containing copies of the elements of the <see cref="ProcessQueue{T}"/>.</returns>
-        public virtual T[] ToArray()
-        {
-            lock (m_processQueue)
-            {
-                List<T> processQueue = m_processQueue as List<T>;
-
-                if ((object)processQueue == null)
-                {
-                    // We manually implement this feature, if process queue is not a List(Of T).
-                    T[] items = new T[m_processQueue.Count];
-
-                    for (int x = 0; x < m_processQueue.Count; x++)
-                    {
-                        items[x] = m_processQueue[x];
-                    }
-
-                    return items;
-                }
-                else
-                {
-                    // Otherwise, we will call native implementation.
-                    return processQueue.ToArray();
-                }
-            }
-        }
-
-        /// <summary>Determines whether every element in the <see cref="ProcessQueue{T}"/> matches the conditions defined by the specified
-        /// predicate.</summary>
-        /// <returns>True, if every element in the <see cref="ProcessQueue{T}"/> matches the conditions defined by the specified predicate;
-        /// otherwise, false. If the <see cref="ProcessQueue{T}"/> has no elements, the return value is true.</returns>
-        /// <param name="match">The Predicate delegate that defines the conditions to check against the elements.</param>
-        /// <exception cref="ArgumentNullException">match is null.</exception>
-        public virtual bool TrueForAll(Predicate<T> match)
-        {
-            lock (m_processQueue)
-            {
-                List<T> processQueue = m_processQueue as List<T>;
-
-                if ((object)processQueue == null)
-                {
-                    // We manually implement this feature, if process queue is not a List(Of T).
-                    if ((object)match == null)
-                        throw (new ArgumentNullException("match", "match is null"));
-
-                    bool allTrue = true;
-
-                    foreach (T item in m_processQueue)
-                    {
-                        if (!match(item))
-                        {
-                            allTrue = false;
-                            break;
-                        }
-                    }
-
-                    return allTrue;
-                }
-                else
-                {
-                    // Otherwise, we will call native implementation.
-                    return processQueue.TrueForAll(match);
-                }
-            }
-        }
-
-        #endregion
-
-        #region [ Handy Queue Functions Implementation ]
-
-        // Note: All queue function implementations should be synchronized, as necessary.
-
-        /// <summary>Inserts an item onto the top of the <see cref="ProcessQueue{T}"/>.</summary>
-        /// <param name="item">The item to push onto the <see cref="ProcessQueue{T}"/>.</param>
-        public virtual void Push(T item)
-        {
-            lock (m_processQueue)
-            {
-                m_processQueue.Insert(0, item);
-                DataAdded();
-            }
-        }
-
-        /// <summary>Removes the first item from the <see cref="ProcessQueue{T}"/>, and returns its value.</summary>
-        /// <exception cref="IndexOutOfRangeException">There are no items in the <see cref="ProcessQueue{T}"/>.</exception>
-        /// <returns>An object of generic type T.</returns>
-        public virtual T Pop()
-        {
-            lock (m_processQueue)
-            {
-                if (m_processQueue.Count > 0)
-                {
-                    T poppedItem = m_processQueue[0];
-                    m_processQueue.RemoveAt(0);
-                    return poppedItem;
-                }
-                else
-                {
-                    throw new IndexOutOfRangeException("The " + Name + " is empty");
-                }
-            }
-        }
-
-        /// <summary>Removes the last item from the <see cref="ProcessQueue{T}"/>, and returns its value. (It's a dirty job, but someone has to do it.)</summary>
-        /// <returns>An object of generic type T.</returns>
-        /// <exception cref="IndexOutOfRangeException">There are no items in the <see cref="ProcessQueue{T}"/>.</exception>
-        public virtual T Poop()
-        {
-            lock (m_processQueue)
-            {
-                if (m_processQueue.Count > 0)
-                {
-                    int lastIndex = m_processQueue.Count - 1;
-                    T poopedItem = m_processQueue[lastIndex];
-                    m_processQueue.RemoveAt(lastIndex);
-                    return poopedItem;
-                }
-                else
-                {
-                    throw new IndexOutOfRangeException("The " + Name + " is empty");
-                }
-            }
-        }
-
-        #endregion
-
-        #region [ Generic IList(Of T) Implementation ]
-
-        // Note: All IList(Of T) implementations should be synchronized, as necessary.
-
-        /// <summary>Adds an item to the <see cref="ProcessQueue{T}"/>.</summary>
-        /// <param name="item">The item to add to the <see cref="ProcessQueue{T}"/>.</param>
-        public virtual void Add(T item)
-        {
-            lock (m_processQueue)
-            {
-                m_processQueue.Add(item);
-                DataAdded();
-            }
-        }
-
-        /// <summary>Inserts an element into the <see cref="ProcessQueue{T}"/> at the specified index.</summary>
-        /// <param name="item">The object to insert. The value can be null for reference types.</param>
-        /// <param name="index">The zero-based index at which item should be inserted.</param>
-        /// <exception cref="ArgumentOutOfRangeException">index is less than 0 -or- index is greater than <see cref="ProcessQueue{T}"/> length.</exception>
-        public virtual void Insert(int index, T item)
-        {
-            lock (m_processQueue)
-            {
-                m_processQueue.Insert(index, item);
-                DataAdded();
-            }
-        }
-
-        /// <summary>Copies the entire <see cref="ProcessQueue{T}"/> to a compatible one-dimensional array, starting at the beginning of the
-        /// target array.</summary>
-        /// <param name="array">The one-dimensional array that is the destination of the elements copied from <see cref="ProcessQueue{T}"/>. The
-        /// array must have zero-based indexing.</param>
-        /// <param name="arrayIndex">The zero-based index in array at which copying begins.</param>
-        /// <exception cref="ArgumentException">arrayIndex is equal to or greater than the length of array -or- the
-        /// number of elements in the source <see cref="ProcessQueue{T}"/> is greater than the available space from arrayIndex to the end of the
-        /// destination array.</exception>
-        /// <exception cref="ArgumentOutOfRangeException">arrayIndex is less than 0.</exception>
-        /// <exception cref="ArgumentNullException">array is null.</exception>
-        public virtual void CopyTo(T[] array, int arrayIndex)
-        {
-            lock (m_processQueue)
-            {
-                m_processQueue.CopyTo(array, arrayIndex);
-            }
-        }
-
-        /// <summary>Returns an enumerator that iterates through the <see cref="ProcessQueue{T}"/>.</summary>
-        /// <returns>An enumerator for the <see cref="ProcessQueue{T}"/>.</returns>
-        public virtual IEnumerator<T> GetEnumerator()
-        {
-            return m_processQueue.GetEnumerator();
-        }
-
-        /// <summary>Searches for the specified object and returns the zero-based index of the first occurrence within
-        /// the entire <see cref="ProcessQueue{T}"/>.</summary>
-        /// <returns>The zero-based index of the first occurrence of item within the entire <see cref="ProcessQueue{T}"/>, if found; otherwise, –1.</returns>
-        /// <param name="item">The object to locate in the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
-        public virtual int IndexOf(T item)
-        {
-            lock (m_processQueue)
-            {
-                return m_processQueue.IndexOf(item);
-            }
-        }
-
-
-        /// <summary>Removes all elements from the <see cref="ProcessQueue{T}"/>.</summary>
-        public virtual void Clear()
-        {
-            lock (m_processQueue)
-            {
-                m_processQueue.Clear();
-            }
-        }
-
-        /// <summary>Determines whether an element is in the <see cref="ProcessQueue{T}"/>.</summary>
-        /// <returns>True, if item is found in the <see cref="ProcessQueue{T}"/>; otherwise, false.</returns>
-        /// <param name="item">The object to locate in the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
-        public virtual bool Contains(T item)
-        {
-            lock (m_processQueue)
-            {
-                return m_processQueue.Contains(item);
-            }
-        }
-
-        /// <summary>Removes the first occurrence of a specific object from the <see cref="ProcessQueue{T}"/>.</summary>
-        /// <returns>True, if item is successfully removed; otherwise, false. This method also returns false if item was
-        /// not found in the <see cref="ProcessQueue{T}"/>.</returns>
-        /// <param name="item">The object to remove from the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
-        public virtual bool Remove(T item)
-        {
-            lock (m_processQueue)
-            {
-                return m_processQueue.Remove(item);
-            }
-        }
-
-        /// <summary>Removes the element at the specified index of the <see cref="ProcessQueue{T}"/>.</summary>
-        /// <param name="index">The zero-based index of the element to remove.</param>
-        /// <exception cref="ArgumentOutOfRangeException">index is less than 0 -or- index is equal to or greater than
-        /// <see cref="ProcessQueue{T}"/> length.</exception>
-        public virtual void RemoveAt(int index)
-        {
-            lock (m_processQueue)
-            {
-                m_processQueue.RemoveAt(index);
-            }
-        }
-
-        /// <summary>
-        /// Gets an enumerator of all items within the <see cref="ProcessQueue{T}"/>.
-        /// </summary>
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return ((IEnumerable)m_processQueue).GetEnumerator();
-        }
-
-        /// <summary>
-        /// Copies the elements of the <see cref="ProcessQueue{T}"/> to an <see cref="System.Array"/>, starting at a particular index.
-        /// </summary>
-        /// <param name="array">
-        /// The one-dimensional <see cref="System.Array"/> that is the destination of the elements 
-        /// copied from the <see cref="ProcessQueue{T}"/>. The array must have zero-based indexing.
-        /// </param>
-        /// <param name="index">The zero-based index in array at which copying begins.</param>
-        public void CopyTo(Array array, int index)
-        {
-            CopyTo(array, index);
         }
 
         #endregion
