@@ -1245,6 +1245,18 @@ namespace TVA.Collections
         }
 
         /// <summary>
+        /// Adds the specified <paramref name="items"/> to the <see name="ProcessQueue{T}"/>.
+        /// </summary>
+        /// <param name="items">The elements to be added to the <see name="ProcessQueue{T}"/>.</param>
+        public virtual void AddRange(IEnumerable<T> items)
+        {
+            foreach (T item in items)
+            {
+                Add(item);
+            }
+        }
+
+        /// <summary>
         /// Determines whether an element is in the <see cref="ProcessQueue{T}"/>.
         /// </summary>
         /// <returns>True, if item is found in the <see cref="ProcessQueue{T}"/>; otherwise, false.</returns>

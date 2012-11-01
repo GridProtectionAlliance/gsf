@@ -620,7 +620,7 @@ namespace TVA.Collections
         /// The collection itself cannot be null, but it can contain elements that are null, if type T is a reference type.
         /// </param>
         /// <exception cref="ArgumentNullException">collection is null.</exception>
-        public virtual void AddRange(IEnumerable<T> collection)
+        public override void AddRange(IEnumerable<T> collection)
         {
             lock (SyncRoot)
             {
