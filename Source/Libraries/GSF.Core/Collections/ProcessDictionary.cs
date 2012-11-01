@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  KeyedProcessQueue.cs - Gbtc
+//  ProcessDictionary.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2009
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -246,8 +246,7 @@ using System.ComponentModel;
 namespace GSF.Collections
 {
     /// <summary>
-    /// Represents a keyed collection of items that get processed on independent threads with
-    /// a consumer provided function.
+    /// Represents a thread-safe (via locking) keyed collection of items, based on <see cref="DictionaryList{TKey,TValue}"/>, that get processed on independent threads with a consumer provided function.
     /// </summary>
     /// <typeparam name="TKey">Type of keys used to reference process items.</typeparam>
     /// <typeparam name="TValue">Type of values to process.</typeparam>
@@ -255,27 +254,27 @@ namespace GSF.Collections
     /// <para>This class acts as a strongly-typed sorted dictionary of objects to be processed.</para>
     /// <para>
     /// Consumers are expected to create new instances of this class through the static construction functions (e.g., 
-    /// <see cref="KeyedProcessQueue{TKey,TValue}.CreateAsynchronousQueue(ProcessItemFunctionSignature)"/>, 
-    /// <see cref="KeyedProcessQueue{TKey,TValue}.CreateSynchronousQueue(ProcessItemFunctionSignature)"/>, etc.)
+    /// <see cref="ProcessDictionary{TKey,TValue}.CreateAsynchronousQueue(ProcessItemFunctionSignature)"/>, 
+    /// <see cref="ProcessDictionary{TKey,TValue}.CreateSynchronousQueue(ProcessItemFunctionSignature)"/>, etc.)
     /// </para>
-    /// <para>Note that the <see cref="KeyedProcessQueue{TKey,TValue}"/> will not start processing until the Start method is called.</para>
-    /// <para>Because this <see cref="KeyedProcessQueue{TKey,TValue}"/> represents a dictionary style collection, all keys must be unique.</para>
+    /// <para>Note that the <see cref="ProcessDictionary{TKey,TValue}"/> will not start processing until the Start method is called.</para>
+    /// <para>Because this <see cref="ProcessDictionary{TKey,TValue}"/> represents a dictionary style collection, all keys must be unique.</para>
     /// <para>
     /// Be aware that this class is based on a <see cref="DictionaryList{TKey,TValue}"/> (i.e., a <see cref="SortedList{TKey,TValue}"/>
     /// that implements <see cref="IList{T}"/>), and since items in this kind of list are automatically sorted, items will be processed
     /// in "sorted" order regardless of the order in which they are added to the list.
     /// </para>
     /// <para>
-    /// Important note about using an "Integer" as the key for this class: because the <see cref="KeyedProcessQueue{TKey,TValue}"/> base class must
+    /// Important note about using an "Integer" as the key for this class: because the <see cref="ProcessDictionary{TKey,TValue}"/> base class must
     /// implement IList, a normal dictionary cannot be used for the base class. IDictionary implementations
     /// do not normally implement the IList interface because of ambiguity that is caused when implementing
     /// an integer key. For example, if you implement this class with a key of type "Integer," you will not
-    /// be able to access items in the <see cref="KeyedProcessQueue{TKey,TValue}"/> by index without "casting" the 
-    /// <see cref="KeyedProcessQueue{TKey,TValue}"/> as IList. This is because the Item property in both the IDictionary and IList would
+    /// be able to access items in the <see cref="ProcessDictionary{TKey,TValue}"/> by index without "casting" the 
+    /// <see cref="ProcessDictionary{TKey,TValue}"/> as IList. This is because the Item property in both the IDictionary and IList would
     /// have the same parameters (see the <see cref="DictionaryList{TKey,TValue}"/> class for more details.).
     /// </para>
     /// </remarks>
-    public class KeyedProcessQueue<TKey, TValue> : ProcessQueue<KeyValuePair<TKey, TValue>>, IDictionary<TKey, TValue>
+    public class ProcessDictionary<TKey, TValue> : ProcessList<KeyValuePair<TKey, TValue>>, IDictionary<TKey, TValue>
     {
         #region [ Members ]
 
@@ -287,9 +286,9 @@ namespace GSF.Collections
         /// <param name="key">key to be processed.</param>
         /// <param name="value">value to be processed.</param>
         /// <remarks>
-        /// <para>Required unless <see cref="KeyedProcessQueue{TKey,TValue}.ProcessItemsFunction"/> is implemented.</para>
-        /// <para>Used when creating a <see cref="KeyedProcessQueue{TKey,TValue}"/> to process one item at a time.</para>
-        /// <para>Asynchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> will process individual items on multiple threads</para>
+        /// <para>Required unless <see cref="ProcessDictionary{TKey,TValue}.ProcessItemsFunction"/> is implemented.</para>
+        /// <para>Used when creating a <see cref="ProcessDictionary{TKey,TValue}"/> to process one item at a time.</para>
+        /// <para>Asynchronous <see cref="ProcessDictionary{TKey,TValue}"/> will process individual items on multiple threads</para>
         /// </remarks>
         public new delegate void ProcessItemFunctionSignature(TKey key, TValue value);
 
@@ -302,11 +301,11 @@ namespace GSF.Collections
         /// <remarks>
         /// <para>Implementation of this function is optional. It will be assumed that an item can be processed if this
         /// function is not defined</para>
-        /// <para>Items must eventually get to a state where they can be processed or they will remain in the <see cref="KeyedProcessQueue{TKey,TValue}"/>
+        /// <para>Items must eventually get to a state where they can be processed or they will remain in the <see cref="ProcessDictionary{TKey,TValue}"/>
         /// indefinitely.</para>
         /// <para>
         /// Note that when this function is implemented and <see cref="QueueProcessingStyle"/> = ManyAtOnce (i.e., 
-        /// <see cref="KeyedProcessQueue{TKey,TValue}.ProcessItemsFunction"/> is defined), then each item presented
+        /// <see cref="ProcessDictionary{TKey,TValue}.ProcessItemsFunction"/> is defined), then each item presented
         /// for processing must evaluate as "CanProcessItem = True" before any items are processed.
         /// </para>
         /// </remarks>
@@ -322,7 +321,7 @@ namespace GSF.Collections
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a ProcessList based on the generic DictionaryList class.
+        /// Creates a <see cref="ProcessDictionary{TKey, TValue}"/> based on the generic <see cref="DictionaryList{TKey, TValue}"/> class.
         /// </summary>
         /// <param name="processItemFunction">A delegate <see cref="ProcessItemFunctionSignature"/> that defines a function signature to process a key and value one at a time.</param>
         /// <param name="canProcessItemFunction">A delegate <see cref="CanProcessItemFunctionSignature"/> that determines of a key and value can currently be processed.</param>
@@ -331,7 +330,7 @@ namespace GSF.Collections
         /// <param name="processTimeout">An <see cref="Int32"/> that represents the amount of time before a process times out.</param>
         /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether the process should requeue the item after a timeout.</param>
         /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether the process should requeue the item after an exception.</param>
-        protected KeyedProcessQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        protected ProcessDictionary(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
             : base(null, null, null, new DictionaryList<TKey, TValue>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
         {
             m_processItemFunction = processItemFunction; // Defining this function creates a ProcessingStyle = OneAtATime keyed process queue
@@ -345,7 +344,7 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Creates a bulk-item ProcessList based on the generic DictionaryList class.
+        /// Creates a bulk-item <see cref="ProcessDictionary{TKey, TValue}"/> based on the generic <see cref="DictionaryList{TKey, TValue}"/> class.
         /// </summary>
         /// <param name="processItemsFunction">A delegate ProcessItemsFunctionSignature that defines a function signature to process multiple items at once.</param>
         /// <param name="canProcessItemFunction">A delegate <see cref="CanProcessItemFunctionSignature"/> that determines of a key and value can currently be processed.</param>
@@ -354,7 +353,7 @@ namespace GSF.Collections
         /// <param name="processTimeout">An <see cref="Int32"/> that represents the amount of time before a process times out.</param>
         /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether the process should requeue the item after a timeout.</param>
         /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether the process should requeue the item after an exception.</param>
-        protected KeyedProcessQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        protected ProcessDictionary(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
             : base(null, processItemsFunction, null, new DictionaryList<TKey, TValue>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
         {
             m_canProcessItemFunction = canProcessItemFunction;
@@ -372,8 +371,8 @@ namespace GSF.Collections
         /// Gets or sets the user function used to process items in the list one at a time.
         /// </summary>
         /// <remarks>
-        /// <para>This function and <see cref="KeyedProcessQueue{TKey,TValue}.ProcessItemFunction"/> cannot be defined at the same time.</para>
-        /// <para>A <see cref="KeyedProcessQueue{TKey,TValue}"/> must be defined to process either a single item at a time or many items at once.</para>
+        /// <para>This function and <see cref="ProcessDictionary{TKey,TValue}.ProcessItemFunction"/> cannot be defined at the same time.</para>
+        /// <para>A <see cref="ProcessDictionary{TKey,TValue}"/> must be defined to process either a single item at a time or many items at once.</para>
         /// <para>Implementation of this function makes <see cref="QueueProcessingStyle"/> = OneAtATime.</para>
         /// </remarks>
         public virtual new ProcessItemFunctionSignature ProcessItemFunction
@@ -398,8 +397,8 @@ namespace GSF.Collections
         /// Gets or sets the user function used to process multiple items in the list at once.
         /// </summary>
         /// <remarks>
-        /// <para>This function and <see cref="KeyedProcessQueue{TKey,TValue}.ProcessItemFunction"/> cannot be defined at the same time.</para>
-        /// <para>A <see cref="KeyedProcessQueue{TKey,TValue}"/> must be defined to process either a single item at a time or many items at once.</para>
+        /// <para>This function and <see cref="ProcessDictionary{TKey,TValue}.ProcessItemFunction"/> cannot be defined at the same time.</para>
+        /// <para>A <see cref="ProcessDictionary{TKey,TValue}"/> must be defined to process either a single item at a time or many items at once.</para>
         /// <para>Implementation of this function makes <see cref="QueueProcessingStyle"/> = ManyAtOnce.</para>
         /// </remarks>
         public override ProcessItemsFunctionSignature ProcessItemsFunction
@@ -480,8 +479,8 @@ namespace GSF.Collections
             }
         }
 
-        /// <summary>Gets an ICollection containing the keys of the <see cref="KeyedProcessQueue{TKey,TValue}"/>.</summary>
-        /// <returns>An ICollection containing the keys of the <see cref="KeyedProcessQueue{TKey,TValue}"/>.</returns>
+        /// <summary>Gets an ICollection containing the keys of the <see cref="ProcessDictionary{TKey,TValue}"/>.</summary>
+        /// <returns>An ICollection containing the keys of the <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
         public ICollection<TKey> Keys
         {
             get
@@ -490,8 +489,8 @@ namespace GSF.Collections
             }
         }
 
-        /// <summary>Gets an ICollection containing the values of the <see cref="KeyedProcessQueue{TKey,TValue}"/>.</summary>
-        /// <returns>An ICollection containing the values of the <see cref="KeyedProcessQueue{TKey,TValue}"/>.</returns>
+        /// <summary>Gets an ICollection containing the values of the <see cref="ProcessDictionary{TKey,TValue}"/>.</summary>
+        /// <returns>An ICollection containing the values of the <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
         public ICollection<TValue> Values
         {
             get
@@ -507,7 +506,7 @@ namespace GSF.Collections
         {
             get
             {
-                return (DictionaryList<TKey, TValue>)InternalList;
+                return (DictionaryList<TKey, TValue>)InternalQueue;
             }
         }
 
@@ -516,7 +515,7 @@ namespace GSF.Collections
         #region [ Methods ]
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="KeyedProcessQueue{TKey, TValue}"/> object and optionally releases the managed resources.
+        /// Releases the unmanaged resources used by the <see cref="ProcessDictionary{TKey, TValue}"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
@@ -542,7 +541,7 @@ namespace GSF.Collections
         #region [ Item Processing Translation Functions ]
 
         // These functions act as intermediate "translators" between the delegate implementations of
-        // ProcessQueue and KeyedProcessQueue. Users implementing a KeyedProcessQueue will likely be
+        // ProcessQueue and ProcessDictionary. Users implementing a ProcessDictionary will likely be
         // thinking in terms of "keys" and "values", and not a KeyValuePair structure. Note that the
         // bulk item ProcessItems delegate is not translated since an array of KeyValuePair structures
         // would make more sense and be more efficient than two separate arrays of keys and values.
@@ -577,11 +576,11 @@ namespace GSF.Collections
 
         #region [ Generic IDictionary(Of TKey, TValue) Implementation ]
 
-        /// <summary>Adds an element with the provided key and value to the <see cref="KeyedProcessQueue{TKey,TValue}"/>.</summary>
+        /// <summary>Adds an element with the provided key and value to the <see cref="ProcessDictionary{TKey,TValue}"/>.</summary>
         /// <param name="value">The object to use as the value of the element to add.</param>
         /// <param name="key">The object to use as the key of the element to add.</param>
-        /// <exception cref="NotSupportedException">The <see cref="KeyedProcessQueue{TKey,TValue}"/> is read-only.</exception>
-        /// <exception cref="ArgumentException">An element with the same key already exists in the <see cref="KeyedProcessQueue{TKey,TValue}"/>.</exception>
+        /// <exception cref="NotSupportedException">The <see cref="ProcessDictionary{TKey,TValue}"/> is read-only.</exception>
+        /// <exception cref="ArgumentException">An element with the same key already exists in the <see cref="ProcessDictionary{TKey,TValue}"/>.</exception>
         /// <exception cref="ArgumentNullException">key is null.</exception>
         public void Add(TKey key, TValue value)
         {
@@ -592,9 +591,9 @@ namespace GSF.Collections
             }
         }
 
-        /// <summary>Determines whether the <see cref="KeyedProcessQueue{TKey,TValue}"/> contains an element with the specified key.</summary>
-        /// <returns>True, if the <see cref="KeyedProcessQueue{TKey,TValue}"/> contains an element with the key; otherwise, false.</returns>
-        /// <param name="key">The key to locate in the <see cref="KeyedProcessQueue{TKey,TValue}"/>.</param>
+        /// <summary>Determines whether the <see cref="ProcessDictionary{TKey,TValue}"/> contains an element with the specified key.</summary>
+        /// <returns>True, if the <see cref="ProcessDictionary{TKey,TValue}"/> contains an element with the key; otherwise, false.</returns>
+        /// <param name="key">The key to locate in the <see cref="ProcessDictionary{TKey,TValue}"/>.</param>
         /// <exception cref="ArgumentNullException">key is null.</exception>
         public bool ContainsKey(TKey key)
         {
@@ -604,9 +603,9 @@ namespace GSF.Collections
             }
         }
 
-        /// <summary>Determines whether the <see cref="KeyedProcessQueue{TKey,TValue}"/> contains an element with the specified value.</summary>
-        /// <returns>True, if the <see cref="KeyedProcessQueue{TKey,TValue}"/> contains an element with the value; otherwise, false.</returns>
-        /// <param name="value">The value to locate in the <see cref="KeyedProcessQueue{TKey,TValue}"/>.</param>
+        /// <summary>Determines whether the <see cref="ProcessDictionary{TKey,TValue}"/> contains an element with the specified value.</summary>
+        /// <returns>True, if the <see cref="ProcessDictionary{TKey,TValue}"/> contains an element with the value; otherwise, false.</returns>
+        /// <param name="value">The value to locate in the <see cref="ProcessDictionary{TKey,TValue}"/>.</param>
         public bool ContainsValue(TValue value)
         {
             lock (SyncRoot)
@@ -616,10 +615,10 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Searches for the specified key and returns the zero-based index within the entire <see cref="KeyedProcessQueue{TKey,TValue}"/>.
+        /// Searches for the specified key and returns the zero-based index within the entire <see cref="ProcessDictionary{TKey,TValue}"/>.
         /// </summary>
-        /// <param name="key">The key to locate in the <see cref="KeyedProcessQueue{TKey,TValue}"/>.</param>
-        /// <returns>The zero-based index of key within the entire <see cref="KeyedProcessQueue{TKey,TValue}"/>, if found; otherwise, -1.</returns>
+        /// <param name="key">The key to locate in the <see cref="ProcessDictionary{TKey,TValue}"/>.</param>
+        /// <returns>The zero-based index of key within the entire <see cref="ProcessDictionary{TKey,TValue}"/>, if found; otherwise, -1.</returns>
         public int IndexOfKey(TKey key)
         {
             lock (SyncRoot)
@@ -629,10 +628,10 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Searches for the specified value and returns the zero-based index of the first occurrence within the entire <see cref="KeyedProcessQueue{TKey,TValue}"/>.
+        /// Searches for the specified value and returns the zero-based index of the first occurrence within the entire <see cref="ProcessDictionary{TKey,TValue}"/>.
         /// </summary>
-        /// <param name="value">The value to locate in the <see cref="KeyedProcessQueue{TKey,TValue}"/>. The value can be null for reference types.</param>
-        /// <returns>The zero-based index of the first occurrence of value within the entire <see cref="KeyedProcessQueue{TKey,TValue}"/>, if found; otherwise, -1.</returns>
+        /// <param name="value">The value to locate in the <see cref="ProcessDictionary{TKey,TValue}"/>. The value can be null for reference types.</param>
+        /// <returns>The zero-based index of the first occurrence of value within the entire <see cref="ProcessDictionary{TKey,TValue}"/>, if found; otherwise, -1.</returns>
         public int IndexOfValue(TValue value)
         {
             lock (SyncRoot)
@@ -641,7 +640,7 @@ namespace GSF.Collections
             }
         }
 
-        /// <summary>Removes the element with the specified key from the <see cref="KeyedProcessQueue{TKey,TValue}"/>.</summary>
+        /// <summary>Removes the element with the specified key from the <see cref="ProcessDictionary{TKey,TValue}"/>.</summary>
         /// <param name="key">The key of the element to remove.</param>
         /// <exception cref="ArgumentNullException">key is null.</exception>
         /// <returns>This method returns a <see cref="Boolean"/> value indicating whether the item was removed.</returns>
@@ -654,7 +653,7 @@ namespace GSF.Collections
         }
 
         /// <summary>Gets the value associated with the specified key.</summary>
-        /// <returns>True, if the <see cref="KeyedProcessQueue{TKey,TValue}"/> contains an element with the specified key; otherwise, false.</returns>
+        /// <returns>True, if the <see cref="ProcessDictionary{TKey,TValue}"/> contains an element with the specified key; otherwise, false.</returns>
         /// <param name="value">When this method returns, contains the value associated with the specified key, if the
         /// key is found; otherwise, the default value for the type of the value parameter. This parameter is passed
         /// uninitialized.</param>
@@ -677,9 +676,9 @@ namespace GSF.Collections
         // the editor to help avoid confusion.
 
         ///	<summary>
-        /// This function doesn't have the same meaning in the <see cref="KeyedProcessQueue{TKey,TValue}"/> as it does in
+        /// This function doesn't have the same meaning in the <see cref="ProcessDictionary{TKey,TValue}"/> as it does in
         /// <see cref="ProcessQueue{T}"/>, so it is marked as hidden from the editor.  However it returns
-        /// <see cref="KeyedProcessQueue{TKey,TValue}.IndexOfKey"/> so that it returns a value that at least makes sense
+        /// <see cref="ProcessDictionary{TKey,TValue}.IndexOfKey"/> so that it returns a value that at least makes sense
         /// in case it gets called.
         /// </summary>
         ///	<param name="item">The object to locate. The value can be null for reference types.</param>
@@ -691,9 +690,9 @@ namespace GSF.Collections
         }
 
         ///	<summary>
-        /// This function doesn't have the same meaning in the <see cref="KeyedProcessQueue{TKey,TValue}"/> as it does in
+        /// This function doesn't have the same meaning in the <see cref="ProcessDictionary{TKey,TValue}"/> as it does in
         /// <see cref="ProcessQueue{T}"/>, so it is marked as hidden from the editor.  However it returns
-        /// <see cref="KeyedProcessQueue{TKey,TValue}.IndexOfKey"/> so that it returns a value that at least makes sense
+        /// <see cref="ProcessDictionary{TKey,TValue}.IndexOfKey"/> so that it returns a value that at least makes sense
         /// in case it gets called.
         /// </summary>
         ///	<param name="item">The object to locate. The value can be null for reference types.</param>
@@ -707,9 +706,9 @@ namespace GSF.Collections
         }
 
         ///	<summary>
-        /// This function doesn't have the same meaning in the <see cref="KeyedProcessQueue{TKey,TValue}"/> as it does in
+        /// This function doesn't have the same meaning in the <see cref="ProcessDictionary{TKey,TValue}"/> as it does in
         /// <see cref="ProcessQueue{T}"/>, so it is marked as hidden from the editor.  However it returns
-        /// <see cref="KeyedProcessQueue{TKey,TValue}.IndexOfKey"/> so that it returns a value that at least makes sense
+        /// <see cref="ProcessDictionary{TKey,TValue}.IndexOfKey"/> so that it returns a value that at least makes sense
         /// in case it gets called.
         /// </summary>
         /// <param name="index">The zero-based starting index of the range to search.</param>
@@ -725,9 +724,9 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// This function doesn't have the same meaning in the <see cref="KeyedProcessQueue{TKey,TValue}"/> as it does in
+        /// This function doesn't have the same meaning in the <see cref="ProcessDictionary{TKey,TValue}"/> as it does in
         /// <see cref="ProcessQueue{T}"/>, so it is marked as hidden from the editor.  However it returns
-        /// <see cref="KeyedProcessQueue{TKey,TValue}.IndexOfKey"/> so that it returns a value that at least makes sense
+        /// <see cref="ProcessDictionary{TKey,TValue}.IndexOfKey"/> so that it returns a value that at least makes sense
         /// in case it gets called.
         /// </summary>
         /// <param name="item">The object to locate in the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
@@ -739,9 +738,9 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// This function doesn't have the same meaning in the <see cref="KeyedProcessQueue{TKey,TValue}"/> as it does in
+        /// This function doesn't have the same meaning in the <see cref="ProcessDictionary{TKey,TValue}"/> as it does in
         /// <see cref="ProcessQueue{T}"/>, so it is marked as hidden from the editor.  However it returns
-        /// <see cref="KeyedProcessQueue{TKey,TValue}.IndexOfKey"/> so that it returns a value that at least makes sense
+        /// <see cref="ProcessDictionary{TKey,TValue}.IndexOfKey"/> so that it returns a value that at least makes sense
         /// in case it gets called.
         /// </summary>
         /// <param name="count">The number of elements in the section to search.</param>
@@ -755,9 +754,9 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// This function doesn't have the same meaning in the <see cref="KeyedProcessQueue{TKey,TValue}"/> as it does in
+        /// This function doesn't have the same meaning in the <see cref="ProcessDictionary{TKey,TValue}"/> as it does in
         /// <see cref="ProcessQueue{T}"/>, so it is marked as hidden from the editor.  However it returns
-        /// <see cref="KeyedProcessQueue{TKey,TValue}.IndexOfKey"/> so that it returns a value that at least makes sense
+        /// <see cref="ProcessDictionary{TKey,TValue}.IndexOfKey"/> so that it returns a value that at least makes sense
         /// in case it gets called.
         /// </summary>
         /// <param name="item">The object to locate in the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
@@ -769,9 +768,9 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// This function doesn't have the same meaning in the <see cref="KeyedProcessQueue{TKey,TValue}"/> as it does in
+        /// This function doesn't have the same meaning in the <see cref="ProcessDictionary{TKey,TValue}"/> as it does in
         /// <see cref="ProcessQueue{T}"/>, so it is marked as hidden from the editor.  However it returns
-        /// <see cref="KeyedProcessQueue{TKey,TValue}.IndexOfKey"/> so that it returns a value that at least makes sense
+        /// <see cref="ProcessDictionary{TKey,TValue}.IndexOfKey"/> so that it returns a value that at least makes sense
         /// in case it gets called.
         /// </summary>
         /// <param name="item">The object to locate in the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
@@ -784,9 +783,9 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// This function doesn't have the same meaning in the <see cref="KeyedProcessQueue{TKey,TValue}"/> as it does in
+        /// This function doesn't have the same meaning in the <see cref="ProcessDictionary{TKey,TValue}"/> as it does in
         /// <see cref="ProcessQueue{T}"/>, so it is marked as hidden from the editor.  However it returns
-        /// <see cref="KeyedProcessQueue{TKey,TValue}.IndexOfKey"/> so that it returns a value that at least makes sense
+        /// <see cref="ProcessDictionary{TKey,TValue}.IndexOfKey"/> so that it returns a value that at least makes sense
         /// in case it gets called.
         /// </summary>
         /// <param name="item">The object to locate in the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
@@ -800,7 +799,7 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// <see cref="KeyedProcessQueue{TKey,TValue}"/> is based on a <see cref="DictionaryList{TKey,TValue}"/> which is already
+        /// <see cref="ProcessDictionary{TKey,TValue}"/> is based on a <see cref="DictionaryList{TKey,TValue}"/> which is already
         /// sorted, so calling this function has no effect.  As a result this function is marked as hidden from the editor.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -810,7 +809,7 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// <see cref="KeyedProcessQueue{TKey,TValue}"/> is based on a <see cref="DictionaryList{TKey,TValue}"/> which is already
+        /// <see cref="ProcessDictionary{TKey,TValue}"/> is based on a <see cref="DictionaryList{TKey,TValue}"/> which is already
         /// sorted, so calling this function has no effect.  As a result this function is marked as hidden from the editor.
         /// </summary>
         /// <param name="comparer">The Generic.IComparer implementation to use when comparing elements -or-
@@ -822,7 +821,7 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// <see cref="KeyedProcessQueue{TKey,TValue}"/> is based on a <see cref="DictionaryList{TKey,TValue}"/> which is already
+        /// <see cref="ProcessDictionary{TKey,TValue}"/> is based on a <see cref="DictionaryList{TKey,TValue}"/> which is already
         /// sorted, so calling this function has no effect.  As a result this function is marked as hidden from the editor.
         /// </summary>
         /// <param name="comparison">The comparison to use when comparing elements.</param>
@@ -833,7 +832,7 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// <see cref="KeyedProcessQueue{TKey,TValue}"/> is based on a <see cref="DictionaryList{TKey,TValue}"/> which is already
+        /// <see cref="ProcessDictionary{TKey,TValue}"/> is based on a <see cref="DictionaryList{TKey,TValue}"/> which is already
         /// sorted, so calling this function has no effect.  As a result this function is marked as hidden from the editor.
         /// </summary>
         /// <param name="index">The zero-based starting index of the range to search.</param>
@@ -855,55 +854,55 @@ namespace GSF.Collections
         #region [ Single-Item Processing Constructors ]
 
         /// <summary>
-        /// Creates a new, keyed, asynchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
+        /// Creates a new, keyed, asynchronous <see cref="ProcessDictionary{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
         /// MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
-        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
-        public static KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction)
+        /// <returns>Returns the process queue ProcessDictionary.</returns>
+        public static ProcessDictionary<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction)
         {
             return CreateAsynchronousQueue(processItemFunction, null, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
         }
 
         /// <summary>
-        /// Creates a new, keyed, asynchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
+        /// Creates a new, keyed, asynchronous <see cref="ProcessDictionary{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
         /// MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
         /// <param name="canProcessItemFunction">A delegate which defines a method to indicate whether a key and value can be processed at this time.</param>
-        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
-        public static KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction)
+        /// <returns>Returns the process queue ProcessDictionary.</returns>
+        public static ProcessDictionary<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction)
         {
             return CreateAsynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
         }
 
         /// <summary>
-        /// Creates a new, keyed, asynchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
+        /// Creates a new, keyed, asynchronous <see cref="ProcessDictionary{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
         /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
         /// <param name="maximumThreads">The maximum number of threads for the queue to use.</param>
-        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
-        public static KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, int maximumThreads)
+        /// <returns>Returns the process queue ProcessDictionary.</returns>
+        public static ProcessDictionary<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, int maximumThreads)
         {
             return CreateAsynchronousQueue(processItemFunction, null, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
         }
 
         /// <summary>
-        /// Creates a new, keyed, asynchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
+        /// Creates a new, keyed, asynchronous <see cref="ProcessDictionary{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
         /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
         /// <param name="canProcessItemFunction">A delegate which defines a method to indicate whether a key and value can be processed at this time.</param>
         /// <param name="maximumThreads">The maximum number of threads for the queue to use.</param>
-        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
-        public static KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, int maximumThreads)
+        /// <returns>Returns the process queue ProcessDictionary.</returns>
+        public static ProcessDictionary<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, int maximumThreads)
         {
             return CreateAsynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
         }
 
         /// <summary>
-        /// Creates a new, keyed, asynchronous <see cref="KeyedProcessQueue{TKey,TValue}"/>, using specified settings.
+        /// Creates a new, keyed, asynchronous <see cref="ProcessDictionary{TKey,TValue}"/>, using specified settings.
         /// </summary>
         /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
         /// <param name="processInterval">a <see cref="double"/> value which represents the process interval in milliseconds.</param>
@@ -911,14 +910,14 @@ namespace GSF.Collections
         /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
         /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
         /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
-        public static KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        /// <returns>Returns the process queue ProcessDictionary.</returns>
+        public static ProcessDictionary<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
             return CreateAsynchronousQueue(processItemFunction, null, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
         }
 
         /// <summary>
-        /// Creates a new, keyed, asynchronous <see cref="KeyedProcessQueue{TKey,TValue}"/>, using specified settings.
+        /// Creates a new, keyed, asynchronous <see cref="ProcessDictionary{TKey,TValue}"/>, using specified settings.
         /// </summary>
         /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
         /// <param name="canProcessItemFunction">A delegate which defines a method to indicate whether a key and value can be processed at this time.</param>
@@ -927,54 +926,51 @@ namespace GSF.Collections
         /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
         /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
         /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
-        public static KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        /// <returns>Returns the process queue ProcessDictionary.</returns>
+        public static ProcessDictionary<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
-            return new KeyedProcessQueue<TKey, TValue>(processItemFunction, canProcessItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
+            return new ProcessDictionary<TKey, TValue>(processItemFunction, canProcessItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
         }
 
-
-
-
         /// <summary>
-        /// Creates a new, keyed, synchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> (i.e., single process thread) with the default settings:
+        /// Creates a new, keyed, synchronous <see cref="ProcessDictionary{TKey,TValue}"/> (i.e., single process thread) with the default settings:
         /// ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
-        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
-        public static KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction)
+        /// <returns>Returns the process queue ProcessDictionary.</returns>
+        public static ProcessDictionary<TKey, TValue> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction)
         {
             return CreateSynchronousQueue(processItemFunction, null, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
         }
 
         /// <summary>
-        /// Creates a new, keyed, synchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> (i.e., single process thread) with the default settings:
+        /// Creates a new, keyed, synchronous <see cref="ProcessDictionary{TKey,TValue}"/> (i.e., single process thread) with the default settings:
         /// ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
         /// <param name="canProcessItemFunction">A delegate which defines a method to indicate whether a key and value can be processed at this time.</param>
-        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
-        public static KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction)
+        /// <returns>Returns the process queue ProcessDictionary.</returns>
+        public static ProcessDictionary<TKey, TValue> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction)
         {
             return CreateSynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
         }
 
         /// <summary>
-        /// Creates a new, keyed, synchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> (i.e., single process thread), using specified settings.
+        /// Creates a new, keyed, synchronous <see cref="ProcessDictionary{TKey,TValue}"/> (i.e., single process thread), using specified settings.
         /// </summary>
         /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
         /// <param name="processInterval">a <see cref="double"/> value which represents the process interval in milliseconds.</param>
         /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
         /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
         /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
-        public static KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        /// <returns>Returns the process queue ProcessDictionary.</returns>
+        public static ProcessDictionary<TKey, TValue> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
             return CreateSynchronousQueue(processItemFunction, null, processInterval, processTimeout, requeueOnTimeout, requeueOnException);
         }
 
         /// <summary>
-        /// Creates a new, keyed, synchronous <see cref="KeyedProcessQueue{TKey,TValue}"/> (i.e., single process thread), using specified settings.
+        /// Creates a new, keyed, synchronous <see cref="ProcessDictionary{TKey,TValue}"/> (i.e., single process thread), using specified settings.
         /// </summary>
         /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
         /// <param name="canProcessItemFunction">A delegate which defines a method to indicate whether a key and value can be processed at this time.</param>
@@ -982,65 +978,60 @@ namespace GSF.Collections
         /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
         /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
         /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
-        public static KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        /// <returns>Returns the process queue ProcessDictionary.</returns>
+        public static ProcessDictionary<TKey, TValue> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
-            return new KeyedProcessQueue<TKey, TValue>(processItemFunction, canProcessItemFunction, processInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
+            return new ProcessDictionary<TKey, TValue>(processItemFunction, canProcessItemFunction, processInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
         }
 
-
-
-
-
-
         /// <summary>
-        /// Creates a new, keyed, real-time <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessTimeout = Infinite,
+        /// Creates a new, keyed, real-time <see cref="ProcessDictionary{TKey,TValue}"/> with the default settings: ProcessTimeout = Infinite,
         /// RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
-        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
-        public static KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction)
+        /// <returns>Returns the process queue ProcessDictionary.</returns>
+        public static ProcessDictionary<TKey, TValue> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction)
         {
             return CreateRealTimeQueue(processItemFunction, null, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
         }
 
         /// <summary>
-        /// Creates a new, keyed, real-time <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessTimeout = Infinite,
+        /// Creates a new, keyed, real-time <see cref="ProcessDictionary{TKey,TValue}"/> with the default settings: ProcessTimeout = Infinite,
         /// RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
         /// <param name="canProcessItemFunction">A delegate which defines a method to indicate whether a key and value can be processed at this time.</param>
-        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
-        public static KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction)
+        /// <returns>Returns the process queue ProcessDictionary.</returns>
+        public static ProcessDictionary<TKey, TValue> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction)
         {
             return CreateRealTimeQueue(processItemFunction, canProcessItemFunction, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
         }
 
         /// <summary>
-        /// Creates a new, keyed, real-time <see cref="KeyedProcessQueue{TKey,TValue}"/>, using specified settings.
+        /// Creates a new, keyed, real-time <see cref="ProcessDictionary{TKey,TValue}"/>, using specified settings.
         /// </summary>
         /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
         /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
         /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
         /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
-        public static KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        /// <returns>Returns the process queue ProcessDictionary.</returns>
+        public static ProcessDictionary<TKey, TValue> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
             return CreateRealTimeQueue(processItemFunction, null, processTimeout, requeueOnTimeout, requeueOnException);
         }
 
         /// <summary>
-        /// Creates a new, keyed, real-time <see cref="KeyedProcessQueue{TKey,TValue}"/>, using the specified settings.
+        /// Creates a new, keyed, real-time <see cref="ProcessDictionary{TKey,TValue}"/>, using the specified settings.
         /// </summary>
         /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
         /// <param name="canProcessItemFunction">A delegate which defines a method to indicate whether a key and value can be processed at this time.</param>
         /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
         /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
         /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        /// <returns>Returns the process queue KeyedProcessQueue.</returns>
-        public static KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        /// <returns>Returns the process queue ProcessDictionary.</returns>
+        public static ProcessDictionary<TKey, TValue> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
-            return new KeyedProcessQueue<TKey, TValue>(processItemFunction, canProcessItemFunction, RealTimeProcessInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
+            return new ProcessDictionary<TKey, TValue>(processItemFunction, canProcessItemFunction, RealTimeProcessInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
         }
 
         #endregion
@@ -1048,55 +1039,55 @@ namespace GSF.Collections
         #region [ Multi-Item Processing Constructors ]
 
         /// <summary>
-        /// Creates a new asynchronous bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
+        /// Creates a new asynchronous bulk-item <see cref="ProcessDictionary{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
         /// MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
-        /// <returns>Returns the process queue <see cref="KeyedProcessQueue{TKey,TValue}"/>.</returns>
-        public static new KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction)
+        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
+        public static new ProcessDictionary<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction)
         {
             return CreateAsynchronousQueue(processItemsFunction, null, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
         }
 
         /// <summary>
-        /// Creates a new asynchronous bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
+        /// Creates a new asynchronous bulk-item <see cref="ProcessDictionary{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
         /// MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
         /// <param name="canProcessItemFunction">Delegate which defines a method to know if a key and value can currently be processed.</param>
-        /// <returns>Returns the process queue <see cref="KeyedProcessQueue{TKey,TValue}"/>.</returns>
-        public static KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction)
+        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
+        public static ProcessDictionary<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction)
         {
             return CreateAsynchronousQueue(processItemsFunction, canProcessItemFunction, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
         }
 
         /// <summary>
-        /// Creates a new asynchronous bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
+        /// Creates a new asynchronous bulk-item <see cref="ProcessDictionary{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
         /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
         /// </summary>
         /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
         /// <param name="maximumThreads">An <see cref="Int32"/> value indicating the maximum number of threads to use for processing items.</param>
-        /// <returns>Returns the process queue <see cref="KeyedProcessQueue{TKey,TValue}"/>.</returns>
-        public static new KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, int maximumThreads)
+        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
+        public static new ProcessDictionary<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, int maximumThreads)
         {
             return CreateAsynchronousQueue(processItemsFunction, null, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
         }
 
         /// <summary>
-        /// Creates a new asynchronous bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
+        /// Creates a new asynchronous bulk-item <see cref="ProcessDictionary{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
         /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
         /// <param name="canProcessItemFunction">Delegate which defines a method to know if a key and value can currently be processed.</param>
         /// <param name="maximumThreads">An <see cref="Int32"/> value indicating the maximum number of threads to use for processing items.</param>
-        /// <returns>Returns the process queue <see cref="KeyedProcessQueue{TKey,TValue}"/>.</returns>
-        public static KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, int maximumThreads)
+        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
+        public static ProcessDictionary<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, int maximumThreads)
         {
             return CreateAsynchronousQueue(processItemsFunction, canProcessItemFunction, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
         }
 
         /// <summary>
-        /// Creates a new asynchronous bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/>, using specified settings.
+        /// Creates a new asynchronous bulk-item <see cref="ProcessDictionary{TKey,TValue}"/>, using specified settings.
         /// </summary>
         /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
         /// <param name="processInterval">Number of milliseconds between each process.</param>
@@ -1104,14 +1095,14 @@ namespace GSF.Collections
         /// <param name="processTimeout">An <see cref="Int32"/> value indicating the number of seconds to wait for a process timeout.</param>
         /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
         /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        /// <returns>Returns the process queue <see cref="KeyedProcessQueue{TKey,TValue}"/>.</returns>
-        public static new KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
+        public static new ProcessDictionary<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
             return CreateAsynchronousQueue(processItemsFunction, null, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
         }
 
         /// <summary>
-        /// Creates a new asynchronous bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/>, using specified settings.
+        /// Creates a new asynchronous bulk-item <see cref="ProcessDictionary{TKey,TValue}"/>, using specified settings.
         /// </summary>
         /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
         /// <param name="canProcessItemFunction">Delegate which defines a method to know if a key and value can currently be processed.</param>
@@ -1120,51 +1111,51 @@ namespace GSF.Collections
         /// <param name="processTimeout">An <see cref="Int32"/> value indicating the number of seconds to wait for a process timeout.</param>
         /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
         /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        /// <returns>Returns the process queue <see cref="KeyedProcessQueue{TKey,TValue}"/>.</returns>
-        public static KeyedProcessQueue<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
+        public static ProcessDictionary<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
-            return new KeyedProcessQueue<TKey, TValue>(processItemsFunction, canProcessItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
+            return new ProcessDictionary<TKey, TValue>(processItemsFunction, canProcessItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
         }
 
         /// <summary>
-        /// Creates a new synchronous bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/> (i.e., single process thread) with the default settings:
+        /// Creates a new synchronous bulk-item <see cref="ProcessDictionary{TKey,TValue}"/> (i.e., single process thread) with the default settings:
         /// ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
-        /// <returns>Returns the process queue <see cref="KeyedProcessQueue{TKey,TValue}"/>.</returns>
-        public static new KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction)
+        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
+        public static new ProcessDictionary<TKey, TValue> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction)
         {
             return CreateSynchronousQueue(processItemsFunction, null, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
         }
 
         /// <summary>
-        /// Creates a new synchronous bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/> (i.e., single process thread) with the default settings:
+        /// Creates a new synchronous bulk-item <see cref="ProcessDictionary{TKey,TValue}"/> (i.e., single process thread) with the default settings:
         /// ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
         /// <param name="canProcessItemFunction">Delegate which defines a method to know if a key and value can currently be processed.</param>
-        /// <returns>Returns the process queue <see cref="KeyedProcessQueue{TKey,TValue}"/>.</returns>
-        public static KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction)
+        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
+        public static ProcessDictionary<TKey, TValue> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction)
         {
             return CreateSynchronousQueue(processItemsFunction, canProcessItemFunction, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
         }
 
         /// <summary>
-        /// Creates a new synchronous bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/> (i.e., single process thread), using specified settings.
+        /// Creates a new synchronous bulk-item <see cref="ProcessDictionary{TKey,TValue}"/> (i.e., single process thread), using specified settings.
         /// </summary>
         /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
         /// <param name="processInterval">Number of milliseconds between each process.</param>
         /// <param name="processTimeout">An <see cref="Int32"/> value indicating the number of seconds to wait for a process timeout.</param>
         /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
         /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        /// <returns>Returns the process queue <see cref="KeyedProcessQueue{TKey,TValue}"/>.</returns>
-        public static new KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
+        public static new ProcessDictionary<TKey, TValue> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
             return CreateSynchronousQueue(processItemsFunction, null, processInterval, processTimeout, requeueOnTimeout, requeueOnException);
         }
 
         /// <summary>
-        /// Creates a new synchronous bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/> (i.e., single process thread), using specified settings.
+        /// Creates a new synchronous bulk-item <see cref="ProcessDictionary{TKey,TValue}"/> (i.e., single process thread), using specified settings.
         /// </summary>
         /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
         /// <param name="canProcessItemFunction">Delegate which defines a method to know if a key and value can currently be processed.</param>
@@ -1172,60 +1163,60 @@ namespace GSF.Collections
         /// <param name="processTimeout">An <see cref="Int32"/> value indicating the number of seconds to wait for a process timeout.</param>
         /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
         /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        /// <returns>Returns the process queue <see cref="KeyedProcessQueue{TKey,TValue}"/>.</returns>
-        public static KeyedProcessQueue<TKey, TValue> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
+        public static ProcessDictionary<TKey, TValue> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
-            return new KeyedProcessQueue<TKey, TValue>(processItemsFunction, canProcessItemFunction, processInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
+            return new ProcessDictionary<TKey, TValue>(processItemsFunction, canProcessItemFunction, processInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
         }
 
         /// <summary>
-        /// Creates a new real-time bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessTimeout = Infinite,
+        /// Creates a new real-time bulk-item <see cref="ProcessDictionary{TKey,TValue}"/> with the default settings: ProcessTimeout = Infinite,
         /// RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
-        /// <returns>Returns the process queue <see cref="KeyedProcessQueue{TKey,TValue}"/>.</returns>
-        public static new KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction)
+        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
+        public static new ProcessDictionary<TKey, TValue> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction)
         {
             return CreateRealTimeQueue(processItemsFunction, null, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
         }
 
         /// <summary>
-        /// Creates a new real-time bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/> with the default settings: ProcessTimeout = Infinite,
+        /// Creates a new real-time bulk-item <see cref="ProcessDictionary{TKey,TValue}"/> with the default settings: ProcessTimeout = Infinite,
         /// RequeueOnTimeout = False, RequeueOnException = False.
         /// </summary>
         /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
         /// <param name="canProcessItemFunction">Delegate which defines a method to know if a key and value can currently be processed.</param>
-        /// <returns>Returns the process queue <see cref="KeyedProcessQueue{TKey,TValue}"/>.</returns>
-        public static KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction)
+        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
+        public static ProcessDictionary<TKey, TValue> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction)
         {
             return CreateRealTimeQueue(processItemsFunction, canProcessItemFunction, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
         }
 
         /// <summary>
-        /// Creates a new real-time bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/>, using specified settings.
+        /// Creates a new real-time bulk-item <see cref="ProcessDictionary{TKey,TValue}"/>, using specified settings.
         /// </summary>
         /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
         /// <param name="processTimeout">An <see cref="Int32"/> value indicating the number of seconds to wait for a process timeout.</param>
         /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
         /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        /// <returns>Returns the process queue <see cref="KeyedProcessQueue{TKey,TValue}"/>.</returns>
-        public static new KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
+        public static new ProcessDictionary<TKey, TValue> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
             return CreateRealTimeQueue(processItemsFunction, null, processTimeout, requeueOnTimeout, requeueOnException);
         }
 
         /// <summary>
-        /// Creates a new real-time bulk-item <see cref="KeyedProcessQueue{TKey,TValue}"/>, using specified settings.
+        /// Creates a new real-time bulk-item <see cref="ProcessDictionary{TKey,TValue}"/>, using specified settings.
         /// </summary>
         /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
         /// <param name="canProcessItemFunction">Delegate which defines a method to know if a key and value can currently be processed.</param>
         /// <param name="processTimeout">An <see cref="Int32"/> value indicating the number of seconds to wait for a process timeout.</param>
         /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
         /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        /// <returns>Returns the process queue <see cref="KeyedProcessQueue{TKey,TValue}"/>.</returns>
-        public static KeyedProcessQueue<TKey, TValue> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
+        public static ProcessDictionary<TKey, TValue> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
-            return new KeyedProcessQueue<TKey, TValue>(processItemsFunction, canProcessItemFunction, RealTimeProcessInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
+            return new ProcessDictionary<TKey, TValue>(processItemsFunction, canProcessItemFunction, RealTimeProcessInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
         }
 
         #endregion

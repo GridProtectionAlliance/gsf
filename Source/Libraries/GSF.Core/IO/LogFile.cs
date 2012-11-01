@@ -374,7 +374,7 @@ namespace GSF.IO
         private string m_settingsCategory;
         private FileStream m_fileStream;
         private ManualResetEvent m_operationWaitHandle;
-        private ProcessQueue<string> m_logEntryQueue;
+        private ProcessList<string> m_logEntryQueue;
         private Encoding m_textEncoding;
         private bool m_disposed;
         private bool m_initialized;
@@ -399,8 +399,8 @@ namespace GSF.IO
             m_settingsCategory = DefaultSettingsCategory;
             m_textEncoding = Encoding.Default;
             m_operationWaitHandle = new ManualResetEvent(true);
-            m_logEntryQueue = ProcessQueue<string>.CreateSynchronousQueue(WriteLogEntries);
             m_savedFilesWithTime = new Dictionary<DateTime, string>();
+            m_logEntryQueue = ProcessList<string>.CreateRealTimeQueue(WriteLogEntries);
 
             this.FileFull += LogFile_FileFull;
             m_logEntryQueue.ProcessException += ProcessExceptionHandler;

@@ -17,6 +17,8 @@
 //       Edited Comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  11/01/2012 - J. Ritchie Carroll
+//       Updated to use concurrent dictionaries and new recreate parsed output list.
 //
 //*******************************************************************************************************
 
@@ -259,6 +261,7 @@
 
 using GSF.Collections;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
@@ -303,9 +306,9 @@ namespace GSF.Parsing
 
         // Fields
         private ProcessQueue<IdentifiableItem<TSourceIdentifier, byte[]>> m_bufferQueue;
-        private Dictionary<TSourceIdentifier, bool> m_sourceInitialized;
-        private Dictionary<TSourceIdentifier, byte[]> m_unparsedBuffers;
-        private List<TOutputType> m_parsedOutputs;
+        private ConcurrentDictionary<TSourceIdentifier, bool> m_sourceInitialized;
+        private ConcurrentDictionary<TSourceIdentifier, byte[]> m_unparsedBuffers;
+        private readonly List<TOutputType> m_parsedOutputs;
         private TSourceIdentifier m_sourceID;
         private bool m_disposed;
 
@@ -322,13 +325,14 @@ namespace GSF.Parsing
             m_bufferQueue.ProcessException += ProcessExceptionHandler;
 
             if (ProtocolUsesSyncBytes)
-                m_sourceInitialized = new Dictionary<TSourceIdentifier, bool>();
+                m_sourceInitialized = new ConcurrentDictionary<TSourceIdentifier, bool>();
 
-            m_unparsedBuffers = new Dictionary<TSourceIdentifier, byte[]>();
+            m_unparsedBuffers = new ConcurrentDictionary<TSourceIdentifier, byte[]>();
+            m_parsedOutputs = new List<TOutputType>();
 
             // We attach to base class events so we can cumulate outputs per data source and handle data errors
-            base.DataParsed += CumulateParsedOutput;
-            base.DataDiscarded += ResetDataSourceInitialization;
+            base.DataParsed += DataParsed_CumulateParsedOutput;
+            base.DataDiscarded += DataDiscarded_ResetDataSourceInitialization;
         }
 
         #endregion
@@ -399,21 +403,12 @@ namespace GSF.Parsing
                         }
                         m_bufferQueue = null;
 
-                        if ((object)m_sourceInitialized != null)
-                        {
-                            m_sourceInitialized.Clear();
-                        }
                         m_sourceInitialized = null;
-
-                        if ((object)m_unparsedBuffers != null)
-                        {
-                            m_unparsedBuffers.Clear();
-                        }
                         m_unparsedBuffers = null;
 
                         // Detach from base class events
-                        base.DataParsed -= CumulateParsedOutput;
-                        base.DataDiscarded -= ResetDataSourceInitialization;
+                        base.DataParsed -= DataParsed_CumulateParsedOutput;
+                        base.DataDiscarded -= DataDiscarded_ResetDataSourceInitialization;
                     }
                 }
                 finally
@@ -491,11 +486,8 @@ namespace GSF.Parsing
         /// </remarks>
         public virtual void PurgeBuffer(TSourceIdentifier source)
         {
-            lock (m_unparsedBuffers)
-            {
-                if (m_unparsedBuffers.ContainsKey(source))
-                    m_unparsedBuffers.Remove(source);
-            }
+            byte[] buffer;
+            m_unparsedBuffers.TryRemove(source, out buffer);
         }
 
         /// <summary>
@@ -586,27 +578,20 @@ namespace GSF.Parsing
                 buffer = item.Item;
 
                 // Check to see if this data source has been initialized
-                if ((object)m_sourceInitialized != null && !m_sourceInitialized.TryGetValue(m_sourceID, out StreamInitialized))
-                    m_sourceInitialized.Add(m_sourceID, true);
+                if ((object)m_sourceInitialized != null)
+                    StreamInitialized = m_sourceInitialized.GetOrAdd(m_sourceID, true);
 
                 // Restore any unparsed buffers for this data source, if any
-                lock (m_unparsedBuffers)
-                {
-                    if (!m_unparsedBuffers.TryGetValue(m_sourceID, out UnparsedBuffer))
-                        m_unparsedBuffers.Add(m_sourceID, null);
-                }
+                UnparsedBuffer = m_unparsedBuffers.GetOrAdd(m_sourceID, (byte[])null);
 
-                // Create new collection for parsed output
-                m_parsedOutputs = new List<TOutputType>();
+                // Clear collection to hold new parsed output
+                m_parsedOutputs.Clear();
 
                 // Start parsing sequence for this buffer - this will cumulate new parsed outputs
                 base.Write(buffer, 0, buffer.Length);
 
                 // Track last unparsed buffer for this data source
-                lock (m_unparsedBuffers)
-                {
-                    m_unparsedBuffers[m_sourceID] = UnparsedBuffer;
-                }
+                m_unparsedBuffers[m_sourceID] = UnparsedBuffer;
 
                 // Expose any parsed data
                 if (m_parsedOutputs.Count > 0)
@@ -626,13 +611,13 @@ namespace GSF.Parsing
         }
 
         // Cumulate output data for current data source
-        private void CumulateParsedOutput(object sender, EventArgs<TOutputType> data)
+        private void DataParsed_CumulateParsedOutput(object sender, EventArgs<TOutputType> data)
         {
             m_parsedOutputs.Add(data.Argument);
         }
 
         // If an error occurs during parsing from a data source, we reset its initialization state
-        private void ResetDataSourceInitialization(object sender, EventArgs<byte[]> data)
+        private void DataDiscarded_ResetDataSourceInitialization(object sender, EventArgs<byte[]> data)
         {
             if ((object)m_sourceInitialized != null)
                 m_sourceInitialized[m_sourceID] = false;

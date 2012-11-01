@@ -326,8 +326,9 @@ namespace GSF.Historian.Exporters
         public void ProcessExport(string exportName)
         {
             Export export = FindExport(exportName);
+
+            // Queue the export for processing regardless of its type.
             if (export != null)
-                // Queue the export for processing regardless of its type.
                 m_nonRealTimeExportQueue.Add(export);
             else
                 throw new InvalidOperationException(string.Format("Export \"{0}\" does not exist", exportName));
@@ -508,11 +509,14 @@ namespace GSF.Historian.Exporters
             // normal to process its exports. Longer than normal processing time will back-log processing to a
             // point that it might become impossible to catch-up because of the rate at which data may be parsed.
             int drops = 0;
+            RealTimeData data;
+
             while (m_realTimeExportQueue.Count > MaximumQueuedRequest)
             {
-                m_realTimeExportQueue.RemoveAt(0);
+                m_realTimeExportQueue.TryTake(out data);
                 drops++;
             }
+
             if (drops > 0)
                 OnStatusUpdate(string.Format("Dropped {0} time-series data points to prevent flooding.", drops));
         }
@@ -669,6 +673,7 @@ namespace GSF.Historian.Exporters
         private void ExportTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             List<Export> exports = new List<Export>();
+
             lock (m_exports)
             {
                 exports.AddRange(m_exports);
