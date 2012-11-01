@@ -60,7 +60,7 @@ public class InputStreamExtensions
 		
 		while (readAmount >= 0 && totalReadAmount < length)
 		{
-			readAmount = stream.read(buffer, index, length - readAmount);
+			readAmount = stream.read(buffer, index, length - totalReadAmount);
 			index += readAmount;
 			totalReadAmount += readAmount;
 		}
