@@ -296,6 +296,11 @@ namespace GSF.Parsing
         /// </remarks>
         public event EventHandler<EventArgs<Exception>> ParsingException;
 
+        /// <summary>
+        /// Occurs when buffer parsing has completed.
+        /// </summary>
+        public event EventHandler BufferParsed;
+
         // Fields
 
         /// <summary>
@@ -649,7 +654,9 @@ namespace GSF.Parsing
         /// <summary>
         /// The parser is designed as a write only stream, so this method is not implemented.
         /// </summary>
-        /// <exception cref="NotImplementedException">WriteOnly stream has no length.</exception>
+        /// <remarks>
+        /// WriteOnly stream has no length. Returned value will always be -1.
+        /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override long Length
         {
@@ -662,7 +669,9 @@ namespace GSF.Parsing
         /// <summary>
         /// The parser is designed as a write only stream, so this method is not implemented.
         /// </summary>
-        /// <exception cref="NotImplementedException">WriteOnly stream has no position.</exception>
+        /// <remarks>
+        /// WriteOnly stream has no position. Returned value will always be -1 and any assigned value will be ignored.
+        /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override long Position
         {
@@ -724,10 +733,10 @@ namespace GSF.Parsing
                                 OnParsingException(ex);
                             }
                             else
-                                throw ex;
+                                throw;
                         }
                         else
-                            throw ex;
+                            throw;
                     }
 
                     // Returned value represents total bytes of data in the buffer image that were
@@ -759,6 +768,9 @@ namespace GSF.Parsing
                 OnDataDiscarded(buffer.BlockCopy(offset, count));
                 OnParsingException(ex);
             }
+
+            // Notify consumer that buffer parsing is complete
+            OnBufferParsed();
         }
 
         /// <summary>
@@ -778,14 +790,14 @@ namespace GSF.Parsing
         /// Derived implementations should return an integer value that represents the length of the data that was parsed, and zero if not
         /// enough data was able to be parsed. Note that exceptions are expensive when parsing fast moving streaming data and a good coding
         /// practice for implementations of this method will be to not throw an exception when there is not enough data to parse the data,
-        /// instead check the <paramref name="length"/> property to insure there is enough data in buffer to represent the desired image. If
-        /// there is not enough data to represent the image return zero and the base class will prepend buffer onto next incoming set of data.
+        /// instead check the <paramref name="length"/> property to verify there is enough buffer data to represent the desired image. If
+        /// there is not enough data to represent the image return zero and base class will prepend buffer onto next incoming set of data.
         /// </para>
         /// <para>
         /// Because of the expense incurred when an exception is thrown, any exceptions encounted in the derived implementations of this method
         /// will cause the current data buffer to be discarded and a <see cref="ParsingException"/> event to be raised.  Doing this prevents
-        /// exceptions from being thrown repeatedly for the same data. If your code implementation recognizes a malformed image, raise a custom
-        /// event to indicate this instead of throwing as exception and keep moving through the buffer.
+        /// exceptions from being thrown repeatedly for the same data. If your code implementation recognizes a malformed image, you can raise
+        /// a custom event to indicate this instead of throwing as exception and keep moving through the buffer as an optimization.
         /// </para>
         /// </remarks>
         protected abstract int ParseFrame(byte[] buffer, int offset, int length);
@@ -808,6 +820,15 @@ namespace GSF.Parsing
         {
             if ((object)ParsingException != null)
                 ParsingException(this, new EventArgs<Exception>(ex));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="BufferParsed"/> event.
+        /// </summary>
+        protected virtual void OnBufferParsed()
+        {
+            if ((object)BufferParsed != null)
+                BufferParsed(this, EventArgs.Empty);
         }
 
         #endregion

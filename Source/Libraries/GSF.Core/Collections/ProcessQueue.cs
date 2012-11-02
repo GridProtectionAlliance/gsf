@@ -1065,7 +1065,7 @@ namespace GSF.Collections
             {
                 ProcessQueueStatistics statistics;
 
-                statistics.IsEnabled = Enabled;
+                statistics.IsEnabled = m_enabled;
                 statistics.IsProcessing = IsProcessing;
                 statistics.ProcessingInterval = ProcessInterval;
                 statistics.ProcessingStyle = ProcessingStyle;
@@ -1091,7 +1091,7 @@ namespace GSF.Collections
                 StringBuilder status = new StringBuilder();
 
                 status.Append("       Queue processing is: ");
-                status.Append(Enabled ? "Enabled" : "Disabled");
+                status.Append(m_enabled ? "Enabled" : "Disabled");
                 status.AppendLine();
                 status.Append("  Current processing state: ");
                 status.Append(IsProcessing ? "Executing" : "Idle");
@@ -1237,7 +1237,7 @@ namespace GSF.Collections
             {
                 queue.Enqueue(item);
 
-                if (Enabled && m_processingIsRealTime && Interlocked.CompareExchange(ref m_processing, 1, 0) == 0)
+                if (m_enabled && m_processingIsRealTime && Interlocked.CompareExchange(ref m_processing, 1, 0) == 0)
                 {
                     if (m_processQueue.Any())
                         ThreadPool.QueueUserWorkItem(RealTimeDataProcessingLoop);
@@ -1425,7 +1425,7 @@ namespace GSF.Collections
         void ISupportLifecycle.Initialize()
         {
             // Enabled property handles check for redundant calls...
-            this.Enabled = true;
+            Enabled = true;
         }
 
         /// <summary>
@@ -1481,7 +1481,7 @@ namespace GSF.Collections
         /// </remarks>
         public virtual void Flush()
         {
-            bool enabled = Enabled;
+            bool enabled = m_enabled;
 
             // Stop all queue processing...
             Stop();
@@ -1624,7 +1624,7 @@ namespace GSF.Collections
                 lock (m_processTimer)
                 {
                     // Enabled flag changes are always in a critical section to ensure all items will be processed
-                    if (Enabled && !m_processTimer.Enabled)
+                    if (m_enabled && !m_processTimer.Enabled)
                         m_processTimer.Enabled = true;
                 }
             }
@@ -1796,7 +1796,7 @@ namespace GSF.Collections
             long noWorkSleeps = 0L;
 
             // Creates a real-time processing loop that will start item processing as quickly as possible.
-            while (Enabled)
+            while (m_enabled)
             {
                 processing = Interlocked.CompareExchange(ref m_processing, 1, 0);
 
@@ -1838,7 +1838,7 @@ namespace GSF.Collections
             else
                 ProcessNextItems();
 
-            if (Enabled && m_processQueue.Any())
+            if (m_enabled && m_processQueue.Any())
                 ThreadPool.QueueUserWorkItem(RealTimeDataProcessingLoop);
             else
                 Interlocked.Exchange(ref m_processing, 0);
