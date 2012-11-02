@@ -34,6 +34,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
+using System.Threading;
 
 namespace GSF.TimeSeries.UI
 {
@@ -63,6 +64,7 @@ namespace GSF.TimeSeries.UI
         private BindingFlags m_memberAccessBindingFlags;
         private bool m_requireEntityPropertyAttribute;
         private bool m_lastIsValidState;
+        private static bool m_messageFlag;
 
         #endregion
 
@@ -206,6 +208,21 @@ namespace GSF.TimeSeries.UI
             set
             {
                 m_memberAccessBindingFlags = value;
+            }
+        }
+
+        /// <summary>
+        /// gets or sets when the current <see cref="MessageFlag"/> 's Message Flag
+        /// </summary>
+        public static bool MessageFlag
+        {
+            get
+            {
+                return m_messageFlag;
+            }
+            set
+            {
+                m_messageFlag = value;
             }
         }
 
@@ -390,7 +407,12 @@ namespace GSF.TimeSeries.UI
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("ERROR: " + ex.Message, "Create Database Connection", MessageBoxButton.OK);
+                    if (!MessageFlag)
+                    {
+                        m_messageFlag = true;
+                        MessageBox.Show("ERROR: " + ex.Message, "Create Database Connection", MessageBoxButton.OK);
+                        m_messageFlag = false;
+                    }
                     return false;
                 }
             }
