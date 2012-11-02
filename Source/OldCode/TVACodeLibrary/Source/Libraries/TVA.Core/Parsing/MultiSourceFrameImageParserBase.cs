@@ -4,7 +4,7 @@
 //  Tennessee Valley Authority, 2011
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
-//  This software is made freely available under the TVA Open Source Agreement (see below).
+//  This software is made freely available under the TVA Open SourceID Agreement (see below).
 //  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
@@ -22,7 +22,7 @@
 //
 //*******************************************************************************************************
 
-#region [ TVA Open Source Agreement ]
+#region [ TVA Open SourceID Agreement ]
 /*
 
  THIS OPEN SOURCE AGREEMENT ("AGREEMENT") DEFINES THE RIGHTS OF USE,REPRODUCTION, DISTRIBUTION,
@@ -34,7 +34,7 @@
  ACTION, ACCEPTING IN FULL THE RESPONSIBILITIES AND OBLIGATIONS CONTAINED IN THIS AGREEMENT.
 
  Original Software Designation: openPDC
- Original Software Title: The TVA Open Source Phasor Data Concentrator
+ Original Software Title: The TVA Open SourceID Phasor Data Concentrator
  User Registration Requested. Please Visit https://naspi.tva.com/Registration/
  Point of Contact for Original Software: J. Ritchie Carroll <mailto:jrcarrol@tva.gov>
 
@@ -264,6 +264,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
+using System.Threading;
 using TVA.Collections;
 
 namespace TVA.Parsing
@@ -291,6 +292,133 @@ namespace TVA.Parsing
     {
         #region [ Members ]
 
+        // Nested Types
+
+        /// <summary>
+        /// Represents a source identifiable buffer.
+        /// </summary>
+        public class IdentifiableBuffer : ISupportLifecycle
+        {
+            #region [ Members ]
+
+            // Events
+
+            /// <summary>
+            /// Occurs when <see cref="IdentifiableBuffer"/> is disposed.
+            /// </summary>
+            public event EventHandler Disposed;
+
+            // Fields
+
+            /// <summary>
+            /// Defines the source identifier of the <see cref="Buffer"/>.
+            /// </summary>
+            public TSourceIdentifier Source;
+
+            /// <summary>
+            /// Defines the buffer which is identifiable by its associated <see cref="Source"/>.
+            /// </summary>
+            public byte[] Buffer;
+
+            private int m_count;
+            private bool m_disposed;
+
+            #endregion
+
+            #region [ Constructors ]
+
+            /// <summary>
+            /// Releases the unmanaged resources before the <see cref="IdentifiableBuffer"/> object is reclaimed by <see cref="GC"/>.
+            /// </summary>
+            ~IdentifiableBuffer()
+            {
+                Dispose(false);
+            }
+
+            #endregion
+
+            #region [ Properties ]
+
+            /// <summary>
+            /// Gets or sets enabled state of <see cref="IdentifiableBuffer"/>.
+            /// </summary>
+            public bool Enabled
+            {
+                get;
+                set;
+            }
+
+            /// <summary>
+            /// Gets or sets valid number of bytes within the <see cref="Buffer"/>.
+            /// </summary>
+            /// <remarks>   
+            /// This property will automatically initialize buffer. Set to zero to release buffer. 
+            /// </remarks>
+            public int Count
+            {
+                get
+                {
+                    return m_count;
+                }
+                set
+                {
+                    m_count = value;
+
+                    if ((object)Buffer != null)
+                        BufferPool.ReturnBuffer(Buffer);
+
+                    if (m_count > 0)
+                        Buffer = BufferPool.TakeBuffer(m_count);
+                    else
+                        Buffer = null;
+                }
+            }
+
+            #endregion
+
+            #region [ Methods ]
+
+            /// <summary>
+            /// Releases all the resources used by the <see cref="IdentifiableBuffer"/> object.
+            /// </summary>
+            public void Dispose()
+            {
+                Dispose(true);
+                GC.SuppressFinalize(this);
+            }
+
+            /// <summary>
+            /// Releases the unmanaged resources used by the <see cref="IdentifiableBuffer"/> object and optionally releases the managed resources.
+            /// </summary>
+            /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+            protected virtual void Dispose(bool disposing)
+            {
+                if (!m_disposed)
+                {
+                    try
+                    {
+                        Count = 0;
+                    }
+                    finally
+                    {
+                        m_disposed = true;  // Prevent duplicate dispose.
+
+                        if (Disposed != null)
+                            Disposed(this, EventArgs.Empty);
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Initializes (or reinitializes) <see cref="IdentifiableBuffer"/> state.
+            /// </summary>
+            public void Initialize()
+            {
+            }
+
+            #endregion
+        }
+
         // Events
 
         /// <summary>
@@ -298,14 +426,14 @@ namespace TVA.Parsing
         /// that the data image was for.
         /// </summary>
         /// <remarks>
-        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the ID of the source for the data image.<br/>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the SourceID of the source for the data image.<br/>
         /// <see cref="EventArgs{T1,T2}.Argument2"/> is a list of objects deserialized from the data image.
         /// </remarks>
         [Description("Occurs when a data image is deserialized successfully to one or more object of the Type that the data image was for.")]
         public new event EventHandler<EventArgs<TSourceIdentifier, IList<TOutputType>>> DataParsed;
 
         // Fields
-        private ProcessQueue<IdentifiableItem<TSourceIdentifier, byte[]>> m_bufferQueue;
+        private ProcessQueue<IdentifiableBuffer> m_bufferQueue;
         private ConcurrentDictionary<TSourceIdentifier, bool> m_sourceInitialized;
         private ConcurrentDictionary<TSourceIdentifier, byte[]> m_unparsedBuffers;
         private readonly List<TOutputType> m_parsedOutputs;
@@ -445,29 +573,54 @@ namespace TVA.Parsing
         /// <summary>
         /// Queues a sequence of bytes, from the specified data source, onto the stream for parsing.
         /// </summary>
-        /// <param name="source">ID of the data source.</param>
+        /// <param name="source">SourceID of the data source.</param>
         /// <param name="buffer">An array of bytes to queue for parsing</param>
         public virtual void Parse(TSourceIdentifier source, byte[] buffer)
         {
-            m_bufferQueue.Add(new IdentifiableItem<TSourceIdentifier, byte[]>(source, buffer));
+            if ((object)buffer == null)
+                throw new ArgumentNullException("buffer");
+
+            Parse(source, buffer, 0, buffer.Length);
         }
 
         /// <summary>
         /// Queues a sequence of bytes, from the specified data source, onto the stream for parsing.
         /// </summary>
-        /// <param name="source">ID of the data source.</param>
+        /// <param name="source">SourceID of the data source.</param>
         /// <param name="buffer">An array of bytes. This method copies count bytes from buffer to the queue.</param>
         /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
         /// <param name="count">The number of bytes to be written to the current stream.</param>
         public virtual void Parse(TSourceIdentifier source, byte[] buffer, int offset, int count)
         {
-            m_bufferQueue.Add(new IdentifiableItem<TSourceIdentifier, byte[]>(source, buffer.BlockCopy(offset, count)));
+            IdentifiableBuffer identifiableBuffer = null;
+
+            buffer.ValidateParameters(offset, count);
+
+            try
+            {
+                identifiableBuffer = ReusableObjectPool<IdentifiableBuffer>.Default.TakeObject();
+                identifiableBuffer.Source = source;
+                identifiableBuffer.Count = count;
+
+                // Copy buffer data
+                Buffer.BlockCopy(buffer, offset, identifiableBuffer.Buffer, 0, count);
+
+                // Add buffer to the queue for parsing
+                m_bufferQueue.Add(identifiableBuffer);
+            }
+            catch
+            {
+                if ((object)identifiableBuffer != null)
+                    identifiableBuffer.Dispose();
+
+                throw;
+            }
         }
 
         /// <summary>
         /// Queues the object implementing the <see cref="ISupportBinaryImage"/> interface, from the specified data source, onto the stream for parsing.
         /// </summary>
-        /// <param name="source">ID of the data source.</param>
+        /// <param name="source">SourceID of the data source.</param>
         /// <param name="image">Object to be parsed that implements the <see cref="ISupportBinaryImage"/> interface.</param>
         /// <remarks>
         /// This method takes the binary image from <see cref="ISupportBinaryImage"/> and writes the buffer to the <see cref="BinaryImageParserBase"/> stream for parsing.
@@ -480,7 +633,7 @@ namespace TVA.Parsing
         /// <summary>
         /// Clears the internal buffer of unparsed data received from the specified <paramref name="source"/>.
         /// </summary>
-        /// <param name="source">ID of the data source.</param>
+        /// <param name="source">SourceID of the data source.</param>
         /// <remarks>
         /// This method can be used to ensure that partial data received from the <paramref name="source"/> is not kept in memory indefinitely.
         /// </remarks>
@@ -491,7 +644,7 @@ namespace TVA.Parsing
         }
 
         /// <summary>
-        /// Not implemented. Consumers should call the <see cref="Parse(TSourceIdentifier,ISupportBinaryImage)"/> method instead to make sure data source ID gets tracked with data buffer.
+        /// Not implemented. Consumers should call the <see cref="Parse(TSourceIdentifier,ISupportBinaryImage)"/> method instead to make sure data source SourceID gets tracked with data buffer.
         /// </summary>
         /// <exception cref="NotImplementedException">This method should not be called directly.</exception>
         /// <param name="image">A <see cref="ISupportBinaryImage"/>.</param>
@@ -502,7 +655,7 @@ namespace TVA.Parsing
         }
 
         /// <summary>
-        /// Not implemented. Consumers should call the <see cref="Parse(TSourceIdentifier,byte[],int,int)"/> method instead to make sure data source ID gets tracked with data buffer.
+        /// Not implemented. Consumers should call the <see cref="Parse(TSourceIdentifier,byte[],int,int)"/> method instead to make sure data source SourceID gets tracked with data buffer.
         /// </summary>
         /// <exception cref="NotImplementedException">This method should not be called directly.</exception>
         /// <param name="buffer">A <see cref="Byte"/> array.</param>
@@ -555,27 +708,24 @@ namespace TVA.Parsing
         /// </para>
         /// </remarks>
         /// <returns>New internal buffer processing queue (i.e., a new <see cref="ProcessQueue{T}"/>).</returns>
-        protected virtual ProcessQueue<IdentifiableItem<TSourceIdentifier, byte[]>> CreateBufferQueue()
+        protected virtual ProcessQueue<IdentifiableBuffer> CreateBufferQueue()
         {
-            return ProcessQueue<IdentifiableItem<TSourceIdentifier, byte[]>>.CreateRealTimeQueue(ParseQueuedBuffers);
+            return ProcessQueue<IdentifiableBuffer>.CreateRealTimeQueue(ParseQueuedBuffers);
         }
 
         /// <summary>
         /// This method is used by the internal <see cref="ProcessQueue{T}"/> to process all queued data buffers.
         /// </summary>
-        /// <param name="buffers">Source identifiable buffers to process.</param>
+        /// <param name="buffers">SourceID identifiable buffers to process.</param>
         /// <remarks>
-        /// This is the item processing delegate to use when overriding the <see cref="CreateBufferQueue"/> method.
+        /// This is the <see cref="IdentifiableBuffer"/> processing delegate to use when overriding the <see cref="CreateBufferQueue"/> method.
         /// </remarks>
-        protected virtual void ParseQueuedBuffers(IdentifiableItem<TSourceIdentifier, byte[]>[] buffers)
+        protected virtual void ParseQueuedBuffers(IdentifiableBuffer[] buffers)
         {
-            byte[] buffer;
-
             // Process all queued data buffers...
-            foreach (IdentifiableItem<TSourceIdentifier, byte[]> item in buffers)
+            foreach (IdentifiableBuffer buffer in buffers)
             {
-                m_sourceID = item.ID;
-                buffer = item.Item;
+                m_sourceID = buffer.Source;
 
                 // Check to see if this data source has been initialized
                 if ((object)m_sourceInitialized != null)
@@ -588,7 +738,7 @@ namespace TVA.Parsing
                 m_parsedOutputs.Clear();
 
                 // Start parsing sequence for this buffer - this will cumulate new parsed outputs
-                base.Write(buffer, 0, buffer.Length);
+                base.Write(buffer.Buffer, 0, buffer.Count);
 
                 // Track last unparsed buffer for this data source
                 m_unparsedBuffers[m_sourceID] = UnparsedBuffer;
@@ -597,12 +747,30 @@ namespace TVA.Parsing
                 if (m_parsedOutputs.Count > 0)
                     OnDataParsed(m_sourceID, m_parsedOutputs);
             }
+
+            // Dispose of source buffers - no rush
+            ThreadPool.QueueUserWorkItem(DisposeSourceBuffers, buffers);
+        }
+
+        // Handle disposing of source buffers (this will return items to the resuable object pool)
+        private void DisposeSourceBuffers(object state)
+        {
+            IdentifiableBuffer[] buffers = state as IdentifiableBuffer[];
+
+            if ((object)buffers != null)
+            {
+                foreach (IdentifiableBuffer buffer in buffers)
+                {
+                    if ((object)buffer != null)
+                        buffer.Dispose();
+                }
+            }
         }
 
         /// <summary>
         /// Raises the <see cref="DataParsed"/> event.
         /// </summary>
-        /// <param name="sourceID">Data source ID.</param>
+        /// <param name="sourceID">Data source SourceID.</param>
         /// <param name="parsedData">List of parsed events.</param>
         protected virtual void OnDataParsed(TSourceIdentifier sourceID, List<TOutputType> parsedData)
         {

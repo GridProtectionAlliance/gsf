@@ -4,7 +4,8 @@
 //  Tennessee Valley Authority, 2009
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
-//  This software is made freely available under the TVA Open Source Agreement (see below).
+//  This software is made freely available under the TVA Open SourceID Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -19,7 +20,7 @@
 //
 //*******************************************************************************************************
 
-#region [ TVA Open Source Agreement ]
+#region [ TVA Open SourceID Agreement ]
 /*
 
  THIS OPEN SOURCE AGREEMENT ("AGREEMENT") DEFINES THE RIGHTS OF USE,REPRODUCTION, DISTRIBUTION,
@@ -31,7 +32,7 @@
  ACTION, ACCEPTING IN FULL THE RESPONSIBILITIES AND OBLIGATIONS CONTAINED IN THIS AGREEMENT.
 
  Original Software Designation: openPDC
- Original Software Title: The TVA Open Source Phasor Data Concentrator
+ Original Software Title: The TVA Open SourceID Phasor Data Concentrator
  User Registration Requested. Please Visit https://naspi.tva.com/Registration/
  Point of Contact for Original Software: J. Ritchie Carroll <mailto:jrcarrol@tva.gov>
 
@@ -235,20 +236,47 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 namespace TVA
 {
     /// <summary>
-    /// Represents an identifiable item.
+    /// Represents an identifiable buffer.
     /// </summary>
     /// <typeparam name="TId">Type of the identifier to be used for identification.</typeparam>
-    /// <typeparam name="TItem">Type of the item that is to be made identifiable.</typeparam>
+    /// <typeparam name="TItem">Type of the buffer that is to be made identifiable.</typeparam>
     public class IdentifiableItem<TId, TItem>
     {
         #region [ Members ]
 
         // Fields
-        private TId m_id;
-        private TItem m_item;
+
+        /// <summary>
+        /// Defines the identifier of the <see cref="Item"/>.
+        /// </summary>
+        public TId ID;
+
+        /// <summary>
+        /// Defines the buffer being made identifiable by its associated <see cref="ID"/>.
+        /// </summary>
+        public TItem Item;
 
         #endregion
 
@@ -257,46 +285,19 @@ namespace TVA
         /// <summary>
         /// Initializes a new instance of the <see cref="IdentifiableItem{TId, TItem}"/> class.
         /// </summary>
+        public IdentifiableItem()
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="IdentifiableItem{TId, TItem}"/> class.
+        /// </summary>
         /// <param name="id">The identifier of the <paramref name="item"/>.</param>
-        /// <param name="item">The item being assigned the <paramref name="id"/> to make it identifiable.</param>
+        /// <param name="item">The item being associated with the <paramref name="id"/> to make it identifiable.</param>
         public IdentifiableItem(TId id, TItem item)
         {
-            this.ID = id;
-            this.Item = item;
-        }
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets the identifier of the <see cref="Item"/>.
-        /// </summary>
-        public TId ID
-        {
-            get
-            {
-                return m_id;
-            }
-            set
-            {
-                m_id = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the item being made identifiable by assigning it an <see cref="ID"/>.
-        /// </summary>
-        public TItem Item
-        {
-            get
-            {
-                return m_item;
-            }
-            set
-            {
-                m_item = value;
-            }
+            ID = id;
+            Item = item;
         }
 
         #endregion
