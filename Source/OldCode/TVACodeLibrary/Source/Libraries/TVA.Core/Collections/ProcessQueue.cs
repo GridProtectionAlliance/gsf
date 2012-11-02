@@ -1237,7 +1237,7 @@ namespace TVA.Collections
             {
                 queue.Enqueue(item);
 
-                if (m_enabled && Interlocked.CompareExchange(ref m_processing, 1, 0) == 0)
+                if (m_enabled && m_processingIsRealTime && Interlocked.CompareExchange(ref m_processing, 1, 0) == 0)
                 {
                     if (m_processQueue.Any())
                         ThreadPool.QueueUserWorkItem(RealTimeDataProcessingLoop);
