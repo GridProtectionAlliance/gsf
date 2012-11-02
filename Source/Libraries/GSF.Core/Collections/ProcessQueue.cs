@@ -1237,7 +1237,7 @@ namespace GSF.Collections
             {
                 queue.Enqueue(item);
 
-                if (Enabled && Interlocked.CompareExchange(ref m_processing, 1, 0) == 0)
+                if (Enabled && m_processingIsRealTime && Interlocked.CompareExchange(ref m_processing, 1, 0) == 0)
                 {
                     if (m_processQueue.Any())
                         ThreadPool.QueueUserWorkItem(RealTimeDataProcessingLoop);

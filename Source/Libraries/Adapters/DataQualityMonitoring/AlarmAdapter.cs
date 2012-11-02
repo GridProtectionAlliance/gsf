@@ -200,6 +200,8 @@ namespace DataQualityMonitoring
             {
                 if (m_measurementQueue.TryDequeue(out dequeuedMeasurements))
                     ThreadPool.QueueUserWorkItem(state => ProcessMeasurements((IEnumerable<IMeasurement>)state), dequeuedMeasurements);
+                else
+                    Interlocked.Exchange(ref m_processing, 0);
             }
         }
 
