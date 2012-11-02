@@ -62,6 +62,8 @@ using GSF.Threading;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 
 namespace GSF.Security
@@ -72,6 +74,16 @@ namespace GSF.Security
     public class UserDataCache : InterprocessCache
     {
         #region [ Members ]
+
+        // Nested Types
+        private class UserDataSerializationBinder : SerializationBinder
+        {
+            public override Type BindToType(string assemblyName, string typeName)
+            {
+                string newTypeName = typeName.Replace("TVA.", "GSF.");
+                return Type.GetType(newTypeName);
+            }
+        }
 
         // Constants
 
@@ -244,9 +256,17 @@ namespace GSF.Security
         /// </remarks>
         protected override byte[] LoadFileData(FileStream fileStream)
         {
+            byte[] serializedUserDataTable;
+            BinaryFormatter binaryFormatter;
+            Dictionary<string, UserData> userDataTable;
+
             // Decrypt data that was encrypted local to this machine
-            byte[] serializedUserDataTable = ProtectedData.Unprotect(fileStream.ReadStream(), null, DataProtectionScope.LocalMachine);
-            Dictionary<string, UserData> userDataTable = Serialization.Deserialize<Dictionary<string, UserData>>(serializedUserDataTable, SerializationFormat.Binary);
+            serializedUserDataTable = ProtectedData.Unprotect(fileStream.ReadStream(), null, DataProtectionScope.LocalMachine);
+
+            // Deserialize the decrypted data
+            binaryFormatter = new BinaryFormatter();
+            binaryFormatter.Binder = new UserDataSerializationBinder();
+            userDataTable = (Dictionary<string, UserData>)binaryFormatter.Deserialize(new MemoryStream(serializedUserDataTable));
 
             // Wait for thread level lock on user data table
             lock (m_userDataTableLock)

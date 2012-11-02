@@ -296,6 +296,9 @@ using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -352,6 +355,18 @@ namespace GSF.Security.Cryptography
         private class KeyIVCache : InterprocessCache
         {
             #region [ Members ]
+
+            // Nested Types
+            private class KeyIVSerializationBinder : SerializationBinder
+            {
+                public override Type BindToType(string assemblyName, string typeName)
+                {
+                    string newTypeName = typeName.Replace("TVA.", "GSF.");
+                    return Type.GetType(newTypeName);
+                }
+            }
+
+            // Fields
 
             // Internal key and initialization vector table
             private Dictionary<string, byte[][]> m_keyIVTable = new Dictionary<string, byte[][]>();
@@ -611,9 +626,17 @@ namespace GSF.Security.Cryptography
             /// </remarks>
             protected override byte[] LoadFileData(FileStream fileStream)
             {
+                byte[] serializedKeyIVTable;
+                BinaryFormatter binaryFormatter;
+                Dictionary<string, byte[][]> keyIVTable;
+
                 // Decrypt data that was encrypted local to this machine
-                byte[] serializedKeyIVTable = ProtectedData.Unprotect(fileStream.ReadStream(), null, DataProtectionScope.LocalMachine);
-                Dictionary<string, byte[][]> keyIVTable = Serialization.Deserialize<Dictionary<string, byte[][]>>(serializedKeyIVTable, SerializationFormat.Binary);
+                serializedKeyIVTable = ProtectedData.Unprotect(fileStream.ReadStream(), null, DataProtectionScope.LocalMachine);
+
+                // Deserialize the decrypted data
+                binaryFormatter = new BinaryFormatter();
+                binaryFormatter.Binder = new KeyIVSerializationBinder();
+                keyIVTable = (Dictionary<string, byte[][]>)binaryFormatter.Deserialize(new MemoryStream(serializedKeyIVTable));
 
                 // Wait for thread level lock on key table
                 lock (m_keyIVTableLock)
