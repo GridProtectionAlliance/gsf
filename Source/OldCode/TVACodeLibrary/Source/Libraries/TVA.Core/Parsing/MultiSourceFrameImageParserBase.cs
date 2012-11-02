@@ -4,7 +4,7 @@
 //  Tennessee Valley Authority, 2011
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
-//  This software is made freely available under the TVA Open SourceID Agreement (see below).
+//  This software is made freely available under the TVA Open Source Agreement (see below).
 //  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
@@ -22,7 +22,7 @@
 //
 //*******************************************************************************************************
 
-#region [ TVA Open SourceID Agreement ]
+#region [ TVA Open Source Agreement ]
 /*
 
  THIS OPEN SOURCE AGREEMENT ("AGREEMENT") DEFINES THE RIGHTS OF USE,REPRODUCTION, DISTRIBUTION,
@@ -34,7 +34,7 @@
  ACTION, ACCEPTING IN FULL THE RESPONSIBILITIES AND OBLIGATIONS CONTAINED IN THIS AGREEMENT.
 
  Original Software Designation: openPDC
- Original Software Title: The TVA Open SourceID Phasor Data Concentrator
+ Original Software Title: The TVA Open Source Phasor Data Concentrator
  User Registration Requested. Please Visit https://naspi.tva.com/Registration/
  Point of Contact for Original Software: J. Ritchie Carroll <mailto:jrcarrol@tva.gov>
 
@@ -426,7 +426,7 @@ namespace TVA.Parsing
         /// that the data image was for.
         /// </summary>
         /// <remarks>
-        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the SourceID of the source for the data image.<br/>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the identifier of the source for the data image.<br/>
         /// <see cref="EventArgs{T1,T2}.Argument2"/> is a list of objects deserialized from the data image.
         /// </remarks>
         [Description("Occurs when a data image is deserialized successfully to one or more object of the Type that the data image was for.")]
@@ -573,7 +573,7 @@ namespace TVA.Parsing
         /// <summary>
         /// Queues a sequence of bytes, from the specified data source, onto the stream for parsing.
         /// </summary>
-        /// <param name="source">SourceID of the data source.</param>
+        /// <param name="source">Source identifier of the data source.</param>
         /// <param name="buffer">An array of bytes to queue for parsing</param>
         public virtual void Parse(TSourceIdentifier source, byte[] buffer)
         {
@@ -586,7 +586,7 @@ namespace TVA.Parsing
         /// <summary>
         /// Queues a sequence of bytes, from the specified data source, onto the stream for parsing.
         /// </summary>
-        /// <param name="source">SourceID of the data source.</param>
+        /// <param name="source">Source identifier of the data source.</param>
         /// <param name="buffer">An array of bytes. This method copies count bytes from buffer to the queue.</param>
         /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
         /// <param name="count">The number of bytes to be written to the current stream.</param>
@@ -598,6 +598,7 @@ namespace TVA.Parsing
 
             try
             {
+                // Get an identifiable buffer object
                 identifiableBuffer = ReusableObjectPool<IdentifiableBuffer>.Default.TakeObject();
                 identifiableBuffer.Source = source;
                 identifiableBuffer.Count = count;
@@ -620,7 +621,7 @@ namespace TVA.Parsing
         /// <summary>
         /// Queues the object implementing the <see cref="ISupportBinaryImage"/> interface, from the specified data source, onto the stream for parsing.
         /// </summary>
-        /// <param name="source">SourceID of the data source.</param>
+        /// <param name="source">Source identifier of the data source.</param>
         /// <param name="image">Object to be parsed that implements the <see cref="ISupportBinaryImage"/> interface.</param>
         /// <remarks>
         /// This method takes the binary image from <see cref="ISupportBinaryImage"/> and writes the buffer to the <see cref="BinaryImageParserBase"/> stream for parsing.
@@ -633,7 +634,7 @@ namespace TVA.Parsing
         /// <summary>
         /// Clears the internal buffer of unparsed data received from the specified <paramref name="source"/>.
         /// </summary>
-        /// <param name="source">SourceID of the data source.</param>
+        /// <param name="source">Source identifier of the data source.</param>
         /// <remarks>
         /// This method can be used to ensure that partial data received from the <paramref name="source"/> is not kept in memory indefinitely.
         /// </remarks>
@@ -644,7 +645,7 @@ namespace TVA.Parsing
         }
 
         /// <summary>
-        /// Not implemented. Consumers should call the <see cref="Parse(TSourceIdentifier,ISupportBinaryImage)"/> method instead to make sure data source SourceID gets tracked with data buffer.
+        /// Not implemented. Consumers should call the <see cref="Parse(TSourceIdentifier,ISupportBinaryImage)"/> method instead to make sure data source source ID gets tracked with data buffer.
         /// </summary>
         /// <exception cref="NotImplementedException">This method should not be called directly.</exception>
         /// <param name="image">A <see cref="ISupportBinaryImage"/>.</param>
@@ -655,7 +656,7 @@ namespace TVA.Parsing
         }
 
         /// <summary>
-        /// Not implemented. Consumers should call the <see cref="Parse(TSourceIdentifier,byte[],int,int)"/> method instead to make sure data source SourceID gets tracked with data buffer.
+        /// Not implemented. Consumers should call the <see cref="Parse(TSourceIdentifier,byte[],int,int)"/> method instead to make sure data source source ID gets tracked with data buffer.
         /// </summary>
         /// <exception cref="NotImplementedException">This method should not be called directly.</exception>
         /// <param name="buffer">A <see cref="Byte"/> array.</param>
@@ -716,7 +717,7 @@ namespace TVA.Parsing
         /// <summary>
         /// This method is used by the internal <see cref="ProcessQueue{T}"/> to process all queued data buffers.
         /// </summary>
-        /// <param name="buffers">SourceID identifiable buffers to process.</param>
+        /// <param name="buffers">Identifiable buffers to process.</param>
         /// <remarks>
         /// This is the <see cref="IdentifiableBuffer"/> processing delegate to use when overriding the <see cref="CreateBufferQueue"/> method.
         /// </remarks>
@@ -770,7 +771,7 @@ namespace TVA.Parsing
         /// <summary>
         /// Raises the <see cref="DataParsed"/> event.
         /// </summary>
-        /// <param name="sourceID">Data source SourceID.</param>
+        /// <param name="sourceID">Data source ID.</param>
         /// <param name="parsedData">List of parsed events.</param>
         protected virtual void OnDataParsed(TSourceIdentifier sourceID, List<TOutputType> parsedData)
         {
