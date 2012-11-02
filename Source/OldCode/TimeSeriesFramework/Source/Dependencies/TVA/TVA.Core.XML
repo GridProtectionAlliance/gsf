@@ -23433,14 +23433,14 @@
             Derived implementations should return an integer value that represents the length of the data that was parsed, and zero if not
             enough data was able to be parsed. Note that exceptions are expensive when parsing fast moving streaming data and a good coding
             practice for implementations of this method will be to not throw an exception when there is not enough data to parse the data,
-            instead check the <paramref name="length"/> property to insure there is enough data in buffer to represent the desired image. If
-            there is not enough data to represent the image return zero and the base class will prepend buffer onto next incoming set of data.
+            instead check the <paramref name="length"/> property to verify there is enough buffer data to represent the desired image. If
+            there is not enough data to represent the image return zero and base class will prepend buffer onto next incoming set of data.
             </para>
             <para>
             Because of the expense incurred when an exception is thrown, any exceptions encounted in the derived implementations of this method
             will cause the current data buffer to be discarded and a <see cref="E:TVA.Parsing.BinaryImageParserBase.ParsingException"/> event to be raised.  Doing this prevents
-            exceptions from being thrown repeatedly for the same data. If your code implementation recognizes a malformed image, raise a custom
-            event to indicate this instead of throwing as exception and keep moving through the buffer.
+            exceptions from being thrown repeatedly for the same data. If your code implementation recognizes a malformed image, you can raise
+            a custom event to indicate this instead of throwing as exception and keep moving through the buffer as an optimization.
             </para>
             </remarks>
         </member>
@@ -23455,6 +23455,11 @@
             Raises the <see cref="E:TVA.Parsing.BinaryImageParserBase.ParsingException"/> event.
             </summary>
             <param name="ex">The <see cref="T:System.Exception"/> that was encountered during parsing.</param>
+        </member>
+        <member name="M:TVA.Parsing.BinaryImageParserBase.OnBufferParsed">
+            <summary>
+            Raises the <see cref="E:TVA.Parsing.BinaryImageParserBase.BufferParsed"/> event.
+            </summary>
         </member>
         <member name="E:TVA.Parsing.BinaryImageParserBase.DataDiscarded">
             <summary>
@@ -23471,6 +23476,11 @@
             <remarks>
             <see cref="F:TVA.EventArgs`1.Argument"/> is the <see cref="T:System.Exception"/> encountered while parsing data.
             </remarks>
+        </member>
+        <member name="E:TVA.Parsing.BinaryImageParserBase.BufferParsed">
+            <summary>
+            Occurs when buffer parsing has completed.
+            </summary>
         </member>
         <member name="P:TVA.Parsing.BinaryImageParserBase.Enabled">
             <summary>
@@ -23540,13 +23550,17 @@
             <summary>
             The parser is designed as a write only stream, so this method is not implemented.
             </summary>
-            <exception cref="T:System.NotImplementedException">WriteOnly stream has no length.</exception>
+            <remarks>
+            WriteOnly stream has no length. Returned value will always be -1.
+            </remarks>
         </member>
         <member name="P:TVA.Parsing.BinaryImageParserBase.Position">
             <summary>
             The parser is designed as a write only stream, so this method is not implemented.
             </summary>
-            <exception cref="T:System.NotImplementedException">WriteOnly stream has no position.</exception>
+            <remarks>
+            WriteOnly stream has no position. Returned value will always be -1 and any assigned value will be ignored.
+            </remarks>
         </member>
         <member name="T:TVA.Parsing.CommonHeaderBase`1">
             <summary>
