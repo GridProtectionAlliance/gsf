@@ -35,6 +35,7 @@ using TVA;
 using TVA.Collections;
 using TVA.Data;
 using TVA.Reflection;
+using System.Threading;
 
 namespace TimeSeriesFramework.UI
 {
@@ -64,7 +65,7 @@ namespace TimeSeriesFramework.UI
         private BindingFlags m_memberAccessBindingFlags;
         private bool m_requireEntityPropertyAttribute;
         private bool m_lastIsValidState;
-
+        private static bool m_messageFlag = false;
         #endregion
 
         #region [ Constructors ]
@@ -106,6 +107,19 @@ namespace TimeSeriesFramework.UI
         #endregion
 
         #region [ Properties ]
+
+        public static bool MessageFlag
+        {
+            get
+            {
+                // If any of the properties have errors, values are not valid
+                return m_messageFlag;
+            }
+            set
+            {
+                m_messageFlag = value;
+            }
+        }
 
         /// <summary>
         /// Indicates if the values associated with this object are valid.
@@ -366,6 +380,7 @@ namespace TimeSeriesFramework.UI
         {
             if (database == null)
             {
+                
                 try
                 {
                     database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
@@ -373,8 +388,13 @@ namespace TimeSeriesFramework.UI
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("ERROR: " + ex.Message, "Create Database Connection", MessageBoxButton.OK);
-                    return false;
+                        if (!MessageFlag)
+                        {
+                            MessageFlag = true;
+                            MessageBox.Show("ERROR: " + ex.Message, "Create Database Connection", MessageBoxButton.OK);
+                            MessageFlag = false;
+                        }
+                        return false;
                 }
             }
             else
