@@ -55,6 +55,7 @@ namespace GSF.TimeSeries.Transport
         private Guid m_clientID;
         private Guid m_subscriberID;
         private string m_hostName;
+        private string m_requestedInputFilter;
         private volatile bool m_useCompactMeasurementFormat;
         private volatile bool m_startTimeSent;
         private IaonSession m_iaonSession;
@@ -118,6 +119,14 @@ namespace GSF.TimeSeries.Transport
             get
             {
                 return m_signalIndexCache;
+            }
+        }
+
+        public string RequestedInputFilter
+        {
+            get
+            {
+                return m_requestedInputFilter;
             }
         }
 
@@ -296,6 +305,9 @@ namespace GSF.TimeSeries.Transport
         {
             base.Initialize();
             base.UsePrecisionTimer = false;
+
+            if (!Settings.TryGetValue("inputMeasurementKeys", out m_requestedInputFilter))
+                m_requestedInputFilter = null;
 
             // Handle temporal session intialization
             if (this.TemporalConstraintIsDefined())

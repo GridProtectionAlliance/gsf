@@ -667,6 +667,19 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
+        public override DataSet DataSource
+        {
+            get
+            {
+                return base.DataSource;
+            }
+            set
+            {
+                base.DataSource = value;
+                UpdateRights();
+            }
+        }
+
         /// <summary>
         /// Gets the status of this <see cref="DataPublisher"/>.
         /// </summary>
@@ -1195,6 +1208,33 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Updates each subscription's inputs based on
+        /// possible updates to that subscriber's rights.
+        /// </summary>
+        protected void UpdateRights()
+        {
+            IClientSubscription subscription;
+
+            // If authentication is not required,
+            // rights are not applicable
+            if (!m_requireAuthentication)
+                return;
+
+            lock (this)
+            {
+                foreach (IAdapter adapter in this)
+                {
+                    subscription = adapter as IClientSubscription;
+
+                    if ((object)subscription != null)
+                        UpdateRights(subscription);
+                }
+            }
+
+            m_routingTables.CalculateRoutingTables(null);
+        }
+
+        /// <summary>
         /// Determines if subscriber has rights to specified <paramref name="signalID"/>.
         /// </summary>
         /// <param name="subscriberID"><see cref="Guid"/> based subscriber ID.</param>
@@ -1377,6 +1417,28 @@ namespace GSF.TimeSeries.Transport
         internal protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, byte[] data)
         {
             return SendClientResponse(clientID, (byte)response, (byte)command, data);
+        }
+
+        // Update rights for the given subscription.
+        private void UpdateRights(IClientSubscription subscription)
+        {
+            MeasurementKey[] requestedInputs = AdapterBase.ParseInputMeasurementKeys(DataSource, subscription.RequestedInputFilter);
+            HashSet<MeasurementKey> authorizedSignals = new HashSet<MeasurementKey>();
+            Guid subscriberID = subscription.SubscriberID;
+            string message;
+
+            foreach (MeasurementKey input in requestedInputs)
+            {
+                if (SubscriberHasRights(subscriberID, input.SignalID))
+                    authorizedSignals.Add(input);
+            }
+
+            if (!authorizedSignals.SetEquals(subscription.InputMeasurementKeys))
+            {
+                message = string.Format("Update to authorized signals caused subscription to change. Now subscribed to {0} signals.", authorizedSignals.Count);
+                subscription.InputMeasurementKeys = authorizedSignals.ToArray();
+                SendClientResponse(subscription.ClientID, ServerResponse.Succeeded, ServerCommand.Subscribe, message);
+            }
         }
 
         // Send binary response packet to client
