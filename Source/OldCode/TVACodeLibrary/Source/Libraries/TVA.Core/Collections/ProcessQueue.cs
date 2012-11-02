@@ -1236,6 +1236,15 @@ namespace TVA.Collections
             if ((object)queue != null)
             {
                 queue.Enqueue(item);
+
+                if (Enabled && Interlocked.CompareExchange(ref m_processing, 1, 0) == 0)
+                {
+                    if (m_processQueue.Any())
+                        ThreadPool.QueueUserWorkItem(RealTimeDataProcessingLoop);
+                    else
+                        Interlocked.Exchange(ref m_processing, 0);
+                }
+
                 DataAdded();
             }
             else
@@ -1424,7 +1433,7 @@ namespace TVA.Collections
         /// </summary>
         public virtual void Stop()
         {
-            Enabled = false;
+            m_enabled = false;
 
             if (m_processingIsRealTime)
             {
@@ -1782,20 +1791,28 @@ namespace TVA.Collections
         /// </summary>
         private void RealTimeThreadProc()
         {
-            long noWorkSleeps = 0;
+            int processing;
+            int sleepTime = 1;
+            long noWorkSleeps = 0L;
 
             // Creates a real-time processing loop that will start item processing as quickly as possible.
             while (Enabled)
             {
+                processing = Interlocked.CompareExchange(ref m_processing, 1, 0);
+
                 // Kick start processing when items exist that are not currently being processed
-                if (Interlocked.CompareExchange(ref m_processing, 1, 0) == 0 && m_processQueue.Any())
+                if (processing == 0 && m_processQueue.Any())
                 {
-                    noWorkSleeps = 0;
+                    sleepTime = 1;
+                    noWorkSleeps = 0L;
                     ThreadPool.QueueUserWorkItem(RealTimeDataProcessingLoop);
                 }
                 else
                 {
-                    int sleepTime = 1;
+                    // If the processing flag was set but no items were found in the process queue,
+                    // the asynchronous loop was never spawned so we need to clear the processing flag
+                    if (processing == 0)
+                        Interlocked.Exchange(ref m_processing, 0);
 
                     // Vary sleep time based on how often kick start is being processed, up to one second for very idle queues
                     if (noWorkSleeps > 1000L)
