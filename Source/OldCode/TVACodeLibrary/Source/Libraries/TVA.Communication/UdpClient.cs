@@ -1018,6 +1018,8 @@ namespace TVA.Communication
             {
                 if (m_sendQueue.TryDequeue(out dequeuedPayload))
                     ThreadPool.QueueUserWorkItem(state => SendPayload((UdpClientPayload)state), dequeuedPayload);
+                else
+                    Interlocked.Exchange(ref m_sending, 0);
             }
 
             // Notify that the send operation has started.
