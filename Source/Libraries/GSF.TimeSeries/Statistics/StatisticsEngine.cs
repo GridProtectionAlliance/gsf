@@ -22,13 +22,12 @@
 //******************************************************************************************************
 
 using GSF.Configuration;
+using GSF.Data;
 using GSF.Diagnostics;
 using GSF.IO;
 using GSF.TimeSeries.Adapters;
-using GSF.TimeSeries.Transport;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
@@ -36,17 +35,9 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 
 namespace GSF.TimeSeries.Statistics
 {
-    /// <summary>
-    /// Defines function signature for getting the acronym of a source.
-    /// </summary>
-    /// <param name="source">The source.</param>
-    /// <returns>The acronym of the given source.</returns>
-    public delegate string GetAcronymFunction(object source);
-
     /// <summary>
     /// Represents the engine that computes statistics within applications of the TimeSeriesFramework.
     /// </summary>
@@ -56,73 +47,35 @@ namespace GSF.TimeSeries.Statistics
         #region [ Members ]
 
         // Nested Types
-
-        /// <summary>
-        /// Represents arguments to an event that needs to pass a read-only
-        /// collection of unmapped measurements to its subscribers.
-        /// </summary>
-        public class UnmappedMeasurementsEventArgs : EventArgs
+        private class StatisticSource
         {
-            private ReadOnlyCollection<IMeasurement> m_unmappedMeasurements;
-
-            /// <summary>
-            /// Creates a new instance of the <see cref="UnmappedMeasurementsEventArgs"/> class.
-            /// </summary>
-            /// <param name="undefinedMeasurements">The undefined measurements.</param>
-            public UnmappedMeasurementsEventArgs(ReadOnlyCollection<IMeasurement> undefinedMeasurements)
-            {
-                m_unmappedMeasurements = undefinedMeasurements;
-            }
-
-            /// <summary>
-            /// Gets the collection of undefined measurements.
-            /// </summary>
-            public ReadOnlyCollection<IMeasurement> UnmappedMeasurements
-            {
-                get
-                {
-                    return m_unmappedMeasurements;
-                }
-            }
+            public object Source;
+            public string SourceName;
+            public string SourceCategory;
+            public string SourceAcronym;
+            public DataRow[] StatisticMeasurements;
         }
 
 
         // Events
 
         /// <summary>
-        /// Event is raised when statistics are loaded from the database.
-        /// </summary>
-        public event EventHandler<UnmappedMeasurementsEventArgs> Loaded;
-
-        /// <summary>
         /// Event is raised before statistics calculation.
         /// </summary>
-        public event EventHandler BeforeCalculate;
+        public static event EventHandler BeforeCalculate;
 
         /// <summary>
         /// Event is raised after statistics calculation.
         /// </summary>
-        public event EventHandler Calculated;
+        public static event EventHandler Calculated;
 
 
         // Fields
-        private object m_timerLock;
+        private object m_statisticsLock;
         private System.Timers.Timer m_statisticCalculationTimer;
         private PerformanceMonitor m_performanceMonitor;
-        private ManualResetEvent m_loadWaitHandle;
-
         private List<Statistic> m_statistics;
-        private List<IMeasurement> m_definedMeasurements;
-        private Dictionary<MeasurementKey, string> m_measurementSignalReferenceMap;
-        private Dictionary<MeasurementKey, string> m_measurementSourceMap;
-        private Dictionary<string, ICollection<object>> m_statisticSources;
-        private Dictionary<string, GetAcronymFunction> m_sourceAcronymFunctions;
-
-        private InputAdapterCollection m_inputAdapters;
-        private ActionAdapterCollection m_actionAdapters;
-
         private int m_lastStatisticCalculationCount;
-
         private bool m_disposed;
 
         #endregion
@@ -134,32 +87,13 @@ namespace GSF.TimeSeries.Statistics
         /// </summary>
         public StatisticsEngine()
         {
-            if ((object)Default != null)
-                throw new Exception("More than one statistics engine detected. Only one statistics engine is allowed to exist.");
-
-            m_timerLock = new object();
+            m_statisticsLock = new object();
             m_performanceMonitor = new PerformanceMonitor();
-            m_loadWaitHandle = new ManualResetEvent(false);
-
-            m_sourceAcronymFunctions = new Dictionary<string, GetAcronymFunction>();
-
-            Default = this;
         }
 
         #endregion
 
         #region [ Properties ]
-
-        /// <summary>
-        /// Returns the collection of statistics measurements defined in the system.
-        /// </summary>
-        public ReadOnlyCollection<IMeasurement> DefinedMeasurements
-        {
-            get
-            {
-                return new ReadOnlyCollection<IMeasurement>(m_definedMeasurements);
-            }
-        }
 
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
@@ -182,12 +116,6 @@ namespace GSF.TimeSeries.Statistics
                 StringBuilder status = new StringBuilder(base.Status);
 
                 status.AppendFormat("          Statistics count: {0}", m_statistics.Count);
-                status.AppendLine();
-                status.AppendFormat("    Stat measurement count: {0}", m_definedMeasurements.Count);
-                status.AppendLine();
-                status.AppendFormat("    Statistic source count: {0}", m_statisticSources.SelectMany(pair => pair.Value).Count());
-                status.AppendLine();
-                status.AppendFormat("    Acronym function count: {0}", m_sourceAcronymFunctions.Count);
                 status.AppendLine();
                 status.AppendFormat(" Recently calculated stats: {0}", m_lastStatisticCalculationCount);
                 status.AppendLine();
@@ -218,10 +146,6 @@ namespace GSF.TimeSeries.Statistics
             else
                 reportingInterval = 10000.0;
 
-            // Reset the wait handle so that the adapter cannot
-            // start until loading of statistics is complete
-            m_loadWaitHandle.Reset();
-
             // Set up the statistic calculation timer
             m_statisticCalculationTimer = new System.Timers.Timer();
             m_statisticCalculationTimer.Elapsed += StatisticCalculationTimer_Elapsed;
@@ -231,27 +155,12 @@ namespace GSF.TimeSeries.Statistics
 
             // Initialize collections
             m_statistics = new List<Statistic>();
-            m_definedMeasurements = new List<IMeasurement>();
-            m_measurementSignalReferenceMap = new Dictionary<MeasurementKey, string>();
-            m_measurementSourceMap = new Dictionary<MeasurementKey, string>();
-            m_statisticSources = new Dictionary<string, ICollection<object>>(StringComparer.InvariantCultureIgnoreCase);
 
-            // Map source names to their acronym functions
-            MapAcronymFunction("System", GetSystemAcronym);
-            MapAcronymFunction("Publisher", GetAdapterAcronym);
-            MapAcronymFunction("Subscriber", GetAdapterAcronym);
+            // Load statistics
+            ReloadStatistics();
 
-            try
-            {
-                // Kick off initial load of statistics from
-                // thread pool since this may take a while
-                ThreadPool.QueueUserWorkItem(LoadStatistics);
-            }
-            catch (Exception ex)
-            {
-                // Process exception for logging
-                OnProcessException(new InvalidOperationException("Failed to queue loading of statistics due to exception: " + ex.Message, ex));
-            }
+            // Register system as a statistics source
+            Register(m_performanceMonitor, GetSystemName(), "System", "SYSTEM");
         }
 
         /// <summary>
@@ -262,15 +171,8 @@ namespace GSF.TimeSeries.Statistics
         {
             base.Start();
 
-            if (m_loadWaitHandle.WaitOne(DefaultInitializationTimeout))
-            {
-                m_statisticCalculationTimer.Start();
-                OnStatusMessage("Started statistics calculation timer.");
-            }
-            else
-            {
-                OnProcessException(new Exception("Timeout waiting for loaded statistics."));
-            }
+            m_statisticCalculationTimer.Start();
+            OnStatusMessage("Started statistics calculation timer.");
         }
 
         /// <summary>
@@ -301,16 +203,23 @@ namespace GSF.TimeSeries.Statistics
                 Assembly assembly;
                 Type type;
                 MethodInfo method;
-                Measurement definedMeasurement;
-                Guid signalID;
-                string assemblyName, typeName, methodName, signalReference;
+                string assemblyName, typeName, methodName;
                 bool reenable;
 
-                lock (m_timerLock)
+                lock (s_statisticSources)
                 {
-                    // Empty the statistics and measurements lists
+                    // Clear the statistic measurements for each source
+                    // so that they will reload on next calculation
+                    foreach (StatisticSource source in s_statisticSources)
+                    {
+                        source.StatisticMeasurements = null;
+                    }
+                }
+
+                lock (m_statisticsLock)
+                {
+                    // Empty the statistics list
                     m_statistics.Clear();
-                    m_definedMeasurements.Clear();
 
                     // Turn off statistic calculation timer while statistics are being reloaded
                     reenable = m_statisticCalculationTimer.Enabled;
@@ -368,58 +277,13 @@ namespace GSF.TimeSeries.Statistics
                         // Add statistic to list
                         m_statistics.Add(statistic);
                     }
+                }
 
-                    OnStatusMessage("Loaded {0} statistic calculation definitions...", m_statistics.Count);
+                OnStatusMessage("Loaded {0} statistic calculation definitions...", m_statistics.Count);
 
-                    // Load statistical measurements
-                    foreach (DataRow row in DataSource.Tables["ActiveMeasurements"].Select("SignalType='STAT'"))
-                    {
-                        signalReference = row["SignalReference"].ToString();
-
-                        if (!string.IsNullOrEmpty(signalReference))
-                        {
-                            try
-                            {
-                                // Get measurement's point ID formatted as a measurement key
-                                signalID = new Guid(row["SignalID"].ToNonNullString(Guid.NewGuid().ToString()));
-
-                                // Create a measurement with a reference associated with this adapter
-                                definedMeasurement = new Measurement()
-                                {
-                                    ID = signalID,
-                                    Key = MeasurementKey.Parse(row["ID"].ToString(), signalID),
-                                    TagName = signalReference,
-                                    Adder = double.Parse(row["Adder"].ToNonNullString("0.0")),
-                                    Multiplier = double.Parse(row["Multiplier"].ToNonNullString("1.0"))
-                                };
-
-                                // Add measurement to definition list keyed by signal reference
-                                m_definedMeasurements.Add(definedMeasurement);
-                                m_measurementSignalReferenceMap[definedMeasurement.Key] = signalReference;
-
-                                // Map known measurement types to their sources
-                                // TODO: Add a StatisticsCategory table to do mapping automatically
-                                if (RegexMatch(signalReference, "SYSTEM"))
-                                    MapMeasurement(definedMeasurement, "System");
-                                else if (RegexMatch(signalReference, "PUB"))
-                                    MapMeasurement(definedMeasurement, "Publisher");
-                                else if (RegexMatch(signalReference, "SUB"))
-                                    MapMeasurement(definedMeasurement, "Subscriber");
-                            }
-                            catch (Exception ex)
-                            {
-                                OnProcessException(new InvalidOperationException(string.Format("Failed to load signal reference \"{0}\" due to exception: {1}", signalReference, ex.Message), ex));
-                            }
-                        }
-                    }
-
-                    OnLoaded();
-                    OnStatusMessage("Loaded {0} statistic measurements...", m_definedMeasurements.Count);
-
-                    if (reenable)
-                    {
-                        m_statisticCalculationTimer.Enabled = true;
-                    }
+                if (reenable)
+                {
+                    m_statisticCalculationTimer.Enabled = true;
                 }
             }
             else
@@ -430,80 +294,13 @@ namespace GSF.TimeSeries.Statistics
         }
 
         /// <summary>
-        /// Maps the given measurement to the given source name.
-        /// </summary>
-        /// <param name="measurement">The measurement to be mapped.</param>
-        /// <param name="source">The name of the source of the measurement.</param>
-        public void MapMeasurement(IMeasurement measurement, string source)
-        {
-            m_measurementSourceMap[measurement.Key] = source;
-        }
-
-        /// <summary>
-        /// Adds the given source under the source collection with the given source name.
-        /// </summary>
-        /// <param name="sourceName">The name of the source.</param>
-        /// <param name="source">The source to be added.</param>
-        public void AddSource(string sourceName, object source)
-        {
-            ICollection<object> sourceCollection;
-
-            if (!m_statisticSources.TryGetValue(sourceName, out sourceCollection))
-            {
-                sourceCollection = new List<object>();
-                m_statisticSources.Add(sourceName, sourceCollection);
-            }
-
-            sourceCollection.Add(source);
-        }
-
-        /// <summary>
-        /// Maps the given source name to the given acronym function.
-        /// </summary>
-        /// <param name="sourceName">The source name.</param>
-        /// <param name="acronymFunction">The function used to get the acronym of the source.</param>
-        public void MapAcronymFunction(string sourceName, GetAcronymFunction acronymFunction)
-        {
-            m_sourceAcronymFunctions[sourceName] = acronymFunction;
-        }
-
-        /// <summary>
         /// Gets a short one-line status of this <see cref="StatisticsEngine"/>.
         /// </summary>
         /// <param name="maxLength">Maximum number of available characters for display.</param>
         /// <returns>A short one-line summary of the current status of this <see cref="StatisticsEngine"/>.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            IEnumerable<IMeasurement> publishedMeasurements;
-            int publishedMeasurementCount = 0;
-
-            if (Enabled)
-            {
-                publishedMeasurements = m_definedMeasurements.Where(measurement => m_measurementSourceMap.ContainsKey(measurement.Key));
-                publishedMeasurementCount = publishedMeasurements.Count();
-            }
-
-            return string.Format("Currently publishing {0} statistics", publishedMeasurementCount).CenterText(maxLength);
-        }
-
-        /// <summary>
-        /// Assigns the reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="AdapterBase"/>.
-        /// </summary>
-        /// <param name="parent">Parent adapter collection.</param>
-        protected override void AssignParentCollection(IAdapterCollection parent)
-        {
-            base.AssignParentCollection(parent);
-
-            if ((object)parent != null)
-            {
-                m_inputAdapters = parent.Parent.First(collection => collection is InputAdapterCollection) as InputAdapterCollection;
-                m_actionAdapters = parent.Parent.First(collection => collection is ActionAdapterCollection) as ActionAdapterCollection;
-            }
-            else
-            {
-                m_inputAdapters = null;
-                m_actionAdapters = null;
-            }
+            return string.Format("Last published {0} statistics", m_lastStatisticCalculationCount).CenterText(maxLength);
         }
 
         /// <summary>
@@ -518,53 +315,22 @@ namespace GSF.TimeSeries.Statistics
                 {
                     if (disposing)
                     {
-                        if ((object)m_loadWaitHandle != null)
-                        {
-                            m_loadWaitHandle.Set();
-                            m_loadWaitHandle.Dispose();
-                            m_loadWaitHandle = null;
-                        }
-
                         if ((object)m_statisticCalculationTimer != null)
                         {
                             m_statisticCalculationTimer.Elapsed -= StatisticCalculationTimer_Elapsed;
                             m_statisticCalculationTimer.Dispose();
                             m_statisticCalculationTimer = null;
                         }
+
+                        Unregister(m_performanceMonitor);
                     }
                 }
                 finally
                 {
                     m_disposed = true;          // Prevent duplicate dispose.
-                    Default = null;             // Unset singleton instance.
                     base.Dispose(disposing);    // Call base class Dispose().
                 }
             }
-        }
-
-        private void LoadStatistics(object state)
-        {
-            try
-            {
-                if (WaitForExternalEvents(DefaultInitializationTimeout))
-                {
-                    ReloadStatistics();
-                    m_loadWaitHandle.Set();
-                }
-                else
-                {
-                    throw new Exception("Timeout waiting for external events.");
-                }
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(ex);
-            }
-        }
-
-        private void ClearSources()
-        {
-            m_statisticSources.Clear();
         }
 
         private void StatisticCalculationTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -583,114 +349,137 @@ namespace GSF.TimeSeries.Statistics
         private void CalculateStatistics()
         {
             List<IMeasurement> calculatedStatistics = new List<IMeasurement>();
+            StatisticSource[] sources;
+            Statistic[] statistics;
             DateTime serverTime;
 
-            IEnumerable<IMeasurement> measurements;
-            IEnumerable<object> sources;
-            GetAcronymFunction acronymFunction;
-
-            string sourceAcronym;
-            string signalReferencePattern;
-            IMeasurement measurement;
-            IMeasurement clone;
-
-            lock (m_timerLock)
+            try
             {
+                lock (s_statisticSources)
+                {
+                    // Get a snapshot of the current list of sources
+                    // that can be iterated safely without locking
+                    sources = s_statisticSources.ToArray();
+                }
+
+                lock (m_statisticsLock)
+                {
+                    // Get a snapshot of the current list of statistics
+                    // that can be iterated safely without locking
+                    statistics = m_statistics.ToArray();
+                }
+
                 OnBeforeCalculate();
                 serverTime = DateTime.UtcNow;
 
-                foreach (Statistic stat in m_statistics)
+                foreach (StatisticSource source in sources)
                 {
-                    measurements = GetStatisticMeasurements(stat);
-                    sources = GetSourceCollection(stat);
-                    acronymFunction = m_sourceAcronymFunctions[stat.Source];
-
-                    if (measurements.Any() && !sources.Any())
-                        OnStatusMessage("WARNING: Source collection not found for {0}-ST{1} measurements.", stat.Source, stat.Index);
-
-                    // Run calculations
-                    foreach (object source in sources)
-                    {
-                        sourceAcronym = acronymFunction(source);
-                        signalReferencePattern = string.Format(@"^{0}![^!]+-ST{1}", sourceAcronym, stat.Index);
-                        measurement = measurements.SingleOrDefault(m => Regex.IsMatch(m_measurementSignalReferenceMap[m.Key], signalReferencePattern, RegexOptions.CultureInvariant | RegexOptions.IgnoreCase));
-
-                        try
-                        {
-                            if ((object)measurement == null)
-                                throw new Exception(string.Format("Statistic measurement not found for {0}.", sourceAcronym));
-
-                            clone = Measurement.Clone(measurement);
-                            clone.Timestamp = serverTime;
-                            clone.Value = stat.Method(source, stat.Arguments);
-                            calculatedStatistics.Add(clone);
-                        }
-                        catch (Exception ex)
-                        {
-                            OnProcessException(new Exception(string.Format("Exception encountered while calculating {0} statistic ST{1}: {2}", stat.Source, stat.Index, ex.Message), ex));
-                        }
-                    }
+                    // Send calculated statistics into the system
+                    OnNewMeasurements(CalculateStatistics(serverTime, source));
                 }
 
-                OnNewMeasurements(calculatedStatistics);
                 OnCalculated();
 
                 m_lastStatisticCalculationCount = calculatedStatistics.Count;
             }
-        }
-
-        private IEnumerable<IMeasurement> GetStatisticMeasurements(Statistic stat)
-        {
-            string signalReferenceSuffix = string.Format("-ST{0}", stat.Index);
-
-            return m_definedMeasurements
-                .Where(definedMeasurement => m_measurementSourceMap.ContainsKey(definedMeasurement.Key))
-                .Where(definedMeasurement => m_measurementSourceMap[definedMeasurement.Key] == stat.Source)
-                .Where(definedMeasurement => m_measurementSignalReferenceMap[definedMeasurement.Key].EndsWith(signalReferenceSuffix))
-                .Where(definedMeasurement => definedMeasurement.Key.Source.ToUpper() == "STAT")
-                .ToList();
-        }
-
-        private IEnumerable<object> GetSourceCollection(Statistic stat)
-        {
-            ICollection<object> sourceCollection;
-
-            if (!m_statisticSources.TryGetValue(stat.Source, out sourceCollection))
-                sourceCollection = new List<object>();
-
-            return sourceCollection;
-        }
-
-        private void OnLoaded()
-        {
-            if ((object)Loaded != null)
+            catch (Exception ex)
             {
-                List<IMeasurement> unmappedMeasurementList = m_definedMeasurements.Where(m => !m_measurementSourceMap.ContainsKey(m.Key)).ToList();
-                ReadOnlyCollection<IMeasurement> unmappedMeasurements = new ReadOnlyCollection<IMeasurement>(unmappedMeasurementList);
-                UnmappedMeasurementsEventArgs args = new UnmappedMeasurementsEventArgs(unmappedMeasurements);
+                string errorMessage = string.Format("Error encountered while calculating statistics: {0}", ex.Message);
+                OnProcessException(new Exception(errorMessage, ex));
+            }
+        }
 
-                Loaded(this, args);
+        private ICollection<IMeasurement> CalculateStatistics(DateTime serverTime, StatisticSource source)
+        {
+            List<IMeasurement> calculatedStatistics = new List<IMeasurement>();
+            IMeasurement calculatedStatistic;
+
+            try
+            {
+                // Load statistic measurements for this source if none are currently loaded
+                if ((object)source.StatisticMeasurements == null)
+                    source.StatisticMeasurements = DataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalReference LIKE '{0}!{1}-ST%'", source.SourceName, source.SourceAcronym));
+
+                // Calculate statistics
+                foreach (DataRow measurement in source.StatisticMeasurements)
+                {
+                    calculatedStatistic = CalculateStatistic(serverTime, source, measurement);
+
+                    if ((object)calculatedStatistic != null)
+                        calculatedStatistics.Add(calculatedStatistic);
+                }
+            }
+            catch (Exception ex)
+            {
+                string errorMessage = string.Format("Error calculating statistics for {0}: {1}", source.SourceName, ex.Message);
+                OnProcessException(new Exception(errorMessage, ex));
+            }
+
+            return calculatedStatistics;
+        }
+
+        private IMeasurement CalculateStatistic(DateTime serverTime, StatisticSource source, DataRow measurement)
+        {
+            Guid signalID;
+            string signalReference;
+            Statistic statistic;
+
+            try
+            {
+                // Get the signal ID and signal reference of the current measurement
+                signalID = Guid.Parse(measurement["SignalID"].ToString());
+                signalReference = measurement["SignalReference"].ToString();
+
+                // Find the statistic corresponding to the current measurement
+                statistic = m_statistics.FirstOrDefault(stat => (source.SourceCategory == stat.Source) && (signalReference == string.Format("{0}!{1}-ST{2}", source.SourceName, source.SourceAcronym, stat.Index)));
+
+                if ((object)statistic != null)
+                {
+                    // Calculate the current value of the statistic measurement
+                    return new Measurement()
+                    {
+                        ID = signalID,
+                        Key = MeasurementKey.Parse(measurement["ID"].ToString(), signalID),
+                        TagName = measurement["PointTag"].ToNonNullString(),
+                        Adder = double.Parse(measurement["Adder"].ToNonNullString("0.0")),
+                        Multiplier = double.Parse(measurement["Multiplier"].ToNonNullString("1.0")),
+                        Value = statistic.Method(source.Source, statistic.Arguments),
+                        Timestamp = serverTime
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                string errorMessage = string.Format("Error calculating statistic for {0}: {1}", measurement["SignalReference"], ex.Message);
+                OnProcessException(new Exception(errorMessage, ex));
+            }
+
+            return null;
+        }
+
+        private string GetSystemName()
+        {
+            Guid nodeID;
+
+            if (DataSource.Tables.Contains("NodeInfo"))
+            {
+                return DataSource.Tables["NodeInfo"].Rows[0]["Name"]
+                    .ToNonNullString()
+                    .RemoveCharacters(c => !char.IsLetterOrDigit(c))
+                    .Replace(' ', '_')
+                    .ToUpper();
+            }
+
+            nodeID = ConfigurationFile.Current.Settings["systemSettings"]["NodeID"].ValueAs<Guid>();
+
+            using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
+            {
+                return database.Connection.ExecuteScalar(string.Format("SELECT Name FROM Node WHERE ID = '{0}'", database.Guid(nodeID))).ToNonNullString().ToUpper();
             }
         }
 
         private void OnBeforeCalculate()
         {
-            // Sources are likely to change throughout the lifetime of
-            // the statistics engine. In order to keep them up to date,
-            // they must be refreshed each time we calculated statistics.
-            ClearSources();
-
-            // Add the performance monitor as the source for system statistics
-            AddSource("System", m_performanceMonitor);
-
-            // Add all data subscribers as sources for subscriber statistics
-            foreach (IInputAdapter subscriber in m_inputAdapters.Where<IInputAdapter>(adapter => adapter is DataSubscriber))
-                AddSource("Subscriber", subscriber);
-
-            // Add all data publishers as sources for publisher statistics
-            foreach (IActionAdapter publisher in m_actionAdapters.Where<IActionAdapter>(adapter => adapter is DataPublisher))
-                AddSource("Publisher", publisher);
-
             if ((object)BeforeCalculate != null)
                 BeforeCalculate(this, new EventArgs());
         }
@@ -701,28 +490,14 @@ namespace GSF.TimeSeries.Statistics
                 Calculated(this, new EventArgs());
         }
 
-        private string GetSystemAcronym(object source)
-        {
-            if (DataSource.Tables.Contains("NodeInfo"))
-                return DataSource.Tables["NodeInfo"].Rows[0]["Name"].ToNonNullString().ToUpper();
-
-            string signalReference = m_definedMeasurements
-                .Select(measurement => m_measurementSignalReferenceMap[measurement.Key])
-                .FirstOrDefault(sigRef => RegexMatch(sigRef, "SYSTEM"));
-
-            if ((object)signalReference == null)
-                return null;
-
-            return signalReference.Remove(signalReference.LastIndexOf("!"));
-        }
-
         #endregion
 
         #region [ Static ]
 
         // Static Fields
-        private static StatisticsEngine s_default;
-        private static readonly ManualResetEventSlim s_defaultWaitHandle;
+        private static List<StatisticSource> s_statisticSources;
+        private static int? s_statSignalTypeID;
+        private static int? s_statHistorianID;
 
         // Static Constructor
 
@@ -731,33 +506,138 @@ namespace GSF.TimeSeries.Statistics
         /// </summary>
         static StatisticsEngine()
         {
-            s_defaultWaitHandle = new ManualResetEventSlim();
-        }
-
-        // Static Properties
-
-        /// <summary>
-        /// Gets the <see cref="StatisticsEngine"/> singleton instance.
-        /// </summary>
-        public static StatisticsEngine Default
-        {
-            get
-            {
-                return s_default;
-            }
-            private set
-            {
-                if ((object)value == null)
-                    s_defaultWaitHandle.Reset();
-
-                s_default = value;
-
-                if ((object)value != null)
-                    s_defaultWaitHandle.Set();
-            }
+            s_statisticSources = new List<StatisticSource>();
         }
 
         // Static Methods
+
+        /// <summary>
+        /// Registers the given adapter with the statistics engine as a source of statistics.
+        /// </summary>
+        /// <param name="adapter">The source of the statistics.</param>
+        /// <param name="sourceCategory">The category of the statistics.</param>
+        /// <param name="sourceAcronym">The acronym used in signal references.</param>
+        public static void Register(IAdapter adapter, string sourceCategory, string sourceAcronym)
+        {
+            Register(adapter, adapter.Name, sourceCategory, sourceAcronym);
+        }
+
+        /// <summary>
+        /// Registers the given object with the statistics engine as a source of statistics.
+        /// </summary>
+        /// <param name="source">The source of the statistics.</param>
+        /// <param name="sourceName">The name of the source.</param>
+        /// <param name="sourceCategory">The category of the statistics.</param>
+        /// <param name="sourceAcronym">The acronym used in signal references.</param>
+        public static void Register(object source, string sourceName, string sourceCategory, string sourceAcronym)
+        {
+            StatisticSource sourceInfo;
+            IAdapter adapter;
+
+            if (s_statisticSources.Any(registeredSource => registeredSource.Source == source))
+                throw new InvalidOperationException(string.Format("Unable to register {0} as statistic source because it is already registered.", sourceName));
+
+            sourceInfo = new StatisticSource()
+            {
+                Source = source,
+                SourceName = sourceName,
+                SourceCategory = sourceCategory,
+                SourceAcronym = sourceAcronym
+            };
+
+            lock (s_statisticSources)
+            {
+                s_statisticSources.Add(sourceInfo);
+            }
+
+            adapter = source as IAdapter;
+
+            if ((object)adapter != null)
+                adapter.Disposed += (sender, args) => Unregister(sender);
+        }
+
+        /// <summary>
+        /// Unregisters the given source, removing it from the list of
+        /// statistic sources so that it no longer generates statistics.
+        /// </summary>
+        /// <param name="source">The adapter to be unregistered with the statistics engine.</param>
+        /// <remarks>
+        /// Sources that implement <see cref="IAdapter"/> do not need to
+        /// explicitly unregister themselves from the statistics engine.
+        /// The engine automatically unregisters them by attaching to the
+        /// <see cref="ISupportLifecycle.Disposed"/> event.
+        /// </remarks>
+        public static void Unregister(object source)
+        {
+            if (source != null)
+            {
+                lock (s_statisticSources)
+                {
+                    for (int i = 0; i < s_statisticSources.Count; i++)
+                    {
+                        if (s_statisticSources[i] == source)
+                        {
+                            s_statisticSources.RemoveAt(i);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the signal type ID used for statistic measurements.
+        /// </summary>
+        /// <param name="database">The database to be queried.</param>
+        /// <returns>The signal type ID used for statistic measurements.</returns>
+        private static int GetStatSignalTypeID(AdoDataConnection database)
+        {
+            const string statSignalTypeQuery = "SELECT ID FROM SignalType WHERE Acronym = 'STAT'";
+
+            if ((object)s_statSignalTypeID == null)
+                s_statSignalTypeID = Convert.ToInt32(database.Connection.ExecuteScalar(statSignalTypeQuery));
+
+            return (int)s_statSignalTypeID;
+        }
+
+        /// <summary>
+        /// Gets the ID of the statistics historian.
+        /// </summary>
+        /// <param name="database">The database to be queried.</param>
+        /// <returns>The ID of the statistics historian.</returns>
+        private static int GetStatHistorianID(AdoDataConnection database)
+        {
+            const string statHistorianQuery = "SELECT ID FROM Historian WHERE Acronym = 'STAT'";
+
+            if ((object)s_statHistorianID == null)
+                s_statHistorianID = Convert.ToInt32(database.Connection.ExecuteScalar(statHistorianQuery));
+
+            return (int)s_statHistorianID;
+        }
+
+        /// <summary>
+        /// Gets the device ID of the given adapter, or <see cref="DBNull.Value"/> if the adapter is not a device.
+        /// </summary>
+        /// <param name="database">The database to be queried.</param>
+        /// <param name="adapter">The adapter whose device ID is queried.</param>
+        /// <returns>The device ID of the given adapter, or <see cref="DBNull.Value"/> if the adapter is not a device.</returns>
+        private static object GetDeviceID(AdoDataConnection database, IAdapter adapter)
+        {
+            const string runtimeCountQueryFormat = "SELECT COUNT(*) FROM Runtime WHERE ID = {0} AND SourceTable = 'Device'";
+            const string deviceIDQueryFormat = "SELECT SourceID FROM Runtime WHERE ID = {0} AND SourceTable = 'Device'";
+            object deviceID = DBNull.Value;
+            int runtimeCount;
+
+            if ((object)adapter != null)
+            {
+                runtimeCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(runtimeCountQueryFormat, adapter.ID)));
+
+                if (runtimeCount > 0)
+                    deviceID = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(deviceIDQueryFormat, adapter.ID)));
+            }
+
+            return deviceID;
+        }
 
         /// <summary>
         /// Determines whether the given signal reference matches the
@@ -776,31 +656,6 @@ namespace GSF.TimeSeries.Statistics
         {
             string regex = string.Format(@"!{0}-ST\d+$", suffix);
             return Regex.IsMatch(signalReference, regex);
-        }
-
-        /// <summary>
-        /// Waits for the default instance to be created.
-        /// </summary>
-        /// <param name="timeout">The amount of time to wait before giving up.</param>
-        /// <returns>Boolean to indicate whether the default instance was created or not.</returns>
-        public static bool WaitForDefaultInstance(int timeout)
-        {
-            return s_defaultWaitHandle.Wait(timeout);
-        }
-
-        /// <summary>
-        /// Gets the adapter acronym of the given source object.
-        /// </summary>
-        /// <param name="source">The source object.</param>
-        /// <returns>The given source object's adapter acronym.</returns>
-        public static string GetAdapterAcronym(object source)
-        {
-            IAdapter adapter = source as IAdapter;
-
-            if ((object)adapter == null)
-                return null;
-
-            return adapter.Name;
         }
 
         #endregion

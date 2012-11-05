@@ -31,6 +31,7 @@ using GSF.IO;
 using GSF.Reflection;
 using GSF.Security.Cryptography;
 using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Statistics;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -704,6 +705,9 @@ namespace GSF.TimeSeries.Transport
                 commandChannel.ConnectionString = setting;
             else
                 commandChannel.ConnectionString = ConnectionString;
+
+            // Register subscriber with the statistics engine
+            StatisticsEngine.Register(this, "Subscriber", "SUB");
 
             Initialized = true;
         }

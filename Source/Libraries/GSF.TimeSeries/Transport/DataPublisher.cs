@@ -35,6 +35,7 @@ using GSF.Communication;
 using GSF.Data;
 using GSF.Security.Cryptography;
 using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Statistics;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -667,6 +668,10 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="DataSet"/> based data source used to load each <see cref="IAdapter"/>.
+        /// Updates to this property will cascade to all items in this <see cref="AdapterCollectionBase{T}"/>.
+        /// </summary>
         public override DataSet DataSource
         {
             get
@@ -954,6 +959,9 @@ namespace GSF.TimeSeries.Transport
             // Start cipher key rotation timer when encrypting payload
             if (m_encryptPayload && m_cipherKeyRotationTimer != null)
                 m_cipherKeyRotationTimer.Start();
+
+            // Register publisher with the statistics engine
+            StatisticsEngine.Register(this, "Publisher", "PUB");
 
             Initialized = true;
         }
