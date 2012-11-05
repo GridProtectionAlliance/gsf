@@ -428,21 +428,20 @@ namespace TVA.Parsing
         // Events
 
         /// <summary>
-        /// Occurs when a data image is deserialized successfully to one or more objects of the <see cref="Type"/> 
-        /// that the data image was for.
+        /// Occurs when a data image is successfully deserialized to a <typeparamref name="TOutputType"/> object.
         /// </summary>
         /// <remarks>
         /// <see cref="EventArgs{T1,T2}.Argument1"/> is the identifier of the source for the data image.<br/>
-        /// <see cref="EventArgs{T1,T2}.Argument2"/> is a list of objects deserialized from the data image.
+        /// <see cref="EventArgs{T1,T2}.Argument2"/> is an object deserialized from the data image.
         /// </remarks>
-        [Description("Occurs when a data image is deserialized successfully to one or more object of the Type that the data image was for.")]
-        public new event EventHandler<EventArgs<TSourceIdentifier, IList<TOutputType>>> DataParsed;
+        public new event EventHandler<EventArgs<TSourceIdentifier, TOutputType>> DataParsed;
 
         // Fields
         private ProcessQueue<IdentifiableBuffer> m_bufferQueue;
-        private ConcurrentDictionary<TSourceIdentifier, bool> m_sourceInitialized;
-        private ConcurrentDictionary<TSourceIdentifier, byte[]> m_unparsedBuffers;
-        private readonly List<TOutputType> m_parsedOutputs;
+        private readonly ConcurrentDictionary<TSourceIdentifier, bool> m_sourceInitialized;
+        private readonly ConcurrentDictionary<TSourceIdentifier, byte[]> m_unparsedBuffers;
+        private readonly ConcurrentQueue<EventArgs<TSourceIdentifier, TOutputType>> m_parsedOutputQueue;
+        private int m_processing;
         private TSourceIdentifier m_sourceID;
         private bool m_disposed;
 
@@ -462,7 +461,7 @@ namespace TVA.Parsing
                 m_sourceInitialized = new ConcurrentDictionary<TSourceIdentifier, bool>();
 
             m_unparsedBuffers = new ConcurrentDictionary<TSourceIdentifier, byte[]>();
-            m_parsedOutputs = new List<TOutputType>();
+            m_parsedOutputQueue = new ConcurrentQueue<EventArgs<TSourceIdentifier, TOutputType>>();
 
             // We attach to base class events so we can cumulate outputs per data source and handle data errors
             base.DataParsed += DataParsed_CumulateParsedOutput;
@@ -536,9 +535,6 @@ namespace TVA.Parsing
                             m_bufferQueue.Dispose();
                         }
                         m_bufferQueue = null;
-
-                        m_sourceInitialized = null;
-                        m_unparsedBuffers = null;
 
                         // Detach from base class events
                         base.DataParsed -= DataParsed_CumulateParsedOutput;
@@ -694,7 +690,7 @@ namespace TVA.Parsing
         /// </summary>
         /// <remarks>
         /// <para>
-        /// If the user has called <see cref="Start"/> method, this method will process all remaining buffers on the calling thread until all
+        /// If the user has called <see cref="Start()"/> method, this method will process all remaining buffers on the calling thread until all
         /// queued buffers have been parsed - the <see cref="MultiSourceFrameImageParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/>
         /// will then be automatically stopped. This method is typically called on shutdown to make sure any remaining queued buffers get
         /// parsed before the class instance is destructed.
@@ -747,6 +743,7 @@ namespace TVA.Parsing
             // Process all queued data buffers...
             foreach (IdentifiableBuffer buffer in buffers)
             {
+                // Track current buffer source
                 m_sourceID = buffer.Source;
 
                 // Check to see if this data source has been initialized
@@ -756,18 +753,11 @@ namespace TVA.Parsing
                 // Restore any unparsed buffers for this data source, if any
                 UnparsedBuffer = m_unparsedBuffers.GetOrAdd(m_sourceID, (byte[])null);
 
-                // Clear collection to hold new parsed output
-                m_parsedOutputs.Clear();
-
                 // Start parsing sequence for this buffer - this will cumulate new parsed outputs
                 base.Write(buffer.Buffer, 0, buffer.Count);
 
                 // Track last unparsed buffer for this data source
                 m_unparsedBuffers[m_sourceID] = UnparsedBuffer;
-
-                // Expose any parsed data
-                if (m_parsedOutputs.Count > 0)
-                    OnDataParsed(m_sourceID, m_parsedOutputs);
             }
 
             // Dispose of source buffers - no rush
@@ -793,17 +783,49 @@ namespace TVA.Parsing
         /// Raises the <see cref="DataParsed"/> event.
         /// </summary>
         /// <param name="sourceID">Data source ID.</param>
-        /// <param name="parsedData">List of parsed events.</param>
-        protected virtual void OnDataParsed(TSourceIdentifier sourceID, List<TOutputType> parsedData)
+        /// <param name="parsedOutput">Parsed output type.</param>
+        protected virtual void OnDataParsed(TSourceIdentifier sourceID, TOutputType parsedOutput)
         {
             if ((object)DataParsed != null)
-                DataParsed(this, new EventArgs<TSourceIdentifier, IList<TOutputType>>(sourceID, parsedData));
+                DataParsed(this, new EventArgs<TSourceIdentifier, TOutputType>(sourceID, parsedOutput));
         }
 
         // Cumulate output data for current data source
         private void DataParsed_CumulateParsedOutput(object sender, EventArgs<TOutputType> data)
         {
-            m_parsedOutputs.Add(data.Argument);
+            EventArgs<TSourceIdentifier, TOutputType> parsedArgs = ReusableObjectPool<EventArgs<TSourceIdentifier, TOutputType>>.Default.TakeObject();
+
+            parsedArgs.Argument1 = m_sourceID;
+            parsedArgs.Argument2 = data.Argument;
+
+            m_parsedOutputQueue.Enqueue(parsedArgs);
+
+            if (Interlocked.CompareExchange(ref m_processing, 1, 0) == 0)
+            {
+                if (m_parsedOutputQueue.TryDequeue(out parsedArgs))
+                    ThreadPool.QueueUserWorkItem(PublishParsedOutput, parsedArgs);
+                else
+                    Interlocked.Exchange(ref m_processing, 0);
+            }
+        }
+
+        // Publish parsed output
+        private void PublishParsedOutput(object state)
+        {
+            EventArgs<TSourceIdentifier, TOutputType> parsedArgs = state as EventArgs<TSourceIdentifier, TOutputType>;
+
+            if ((object)parsedArgs != null)
+            {
+                if ((object)DataParsed != null)
+                    DataParsed(this, parsedArgs);
+
+                ReusableObjectPool<EventArgs<TSourceIdentifier, TOutputType>>.Default.ReturnObject(parsedArgs);
+
+                if (Enabled && m_parsedOutputQueue.TryDequeue(out parsedArgs))
+                    ThreadPool.QueueUserWorkItem(PublishParsedOutput, parsedArgs);
+                else
+                    Interlocked.Exchange(ref m_processing, 0);
+            }
         }
 
         // If an error occurs during parsing from a data source, we reset its initialization state
