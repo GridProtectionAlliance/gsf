@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Threading;
 using TVA.IO;
 
 namespace TVA.Historian.Files
@@ -94,6 +95,7 @@ namespace TVA.Historian.Files
         // Fields
         private ArchiveFile m_archiveFile;
         private System.Timers.Timer m_rolloverWatcher;
+        private readonly object m_watcherLock;
         private bool m_disposed;
 
         #endregion
@@ -105,6 +107,7 @@ namespace TVA.Historian.Files
         /// </summary>
         public ArchiveReader()
         {
+            m_watcherLock = new object();
             m_rolloverWatcher = new System.Timers.Timer();
             m_rolloverWatcher.Interval = 1000;
             m_rolloverWatcher.Elapsed += m_rolloverWatcher_Elapsed;
@@ -121,7 +124,7 @@ namespace TVA.Historian.Files
         #endregion
 
         #region [ Properties ]
-        
+
         /// <summary>
         /// Gets the name of the <see cref="ArchiveFile"/>.
         /// </summary>
@@ -465,41 +468,60 @@ namespace TVA.Historian.Files
         // Monitors for roll-over notifications
         private void m_rolloverWatcher_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            // Read the inter-process communications file for changes in roll-over state
-            if ((object)m_archiveFile != null && (object)m_archiveFile.IntercomFile != null && m_archiveFile.IntercomFile.IsOpen)
+            // Don't start another rollover activity if one is already in progress...
+            if (Monitor.TryEnter(m_watcherLock))
             {
-                IntercomRecord record = m_archiveFile.IntercomFile.Read(1);
-
-                if (record != null)
+                try
                 {
-                    // Pause processing
-                    if (record.RolloverInProgress && m_archiveFile.IsOpen)
+                    // Read the inter-process communications file for changes in roll-over state
+                    if ((object)m_archiveFile != null && (object)m_archiveFile.IntercomFile != null && m_archiveFile.IntercomFile.IsOpen)
                     {
-                        // Notify internal archive file components about the pending rollover
-                        m_archiveFile.RolloverWaitHandle.Reset();
+                        IntercomRecord record = m_archiveFile.IntercomFile.Read(1);
 
-                        // Raise roll-over start event (sets m_rolloverInProgress flag)
-                        m_archiveFile.OnRolloverStart();
+                        if (record != null)
+                        {
+                            // Pause processing
+                            if (record.RolloverInProgress && m_archiveFile.IsOpen)
+                            {
+                                // Notify internal archive file components about the pending rollover
+                                m_archiveFile.RolloverWaitHandle.Reset();
 
-                        // Wait for pending to reads to yield
-                        m_archiveFile.WaitForReadersRelease();
+                                // Raise roll-over start event (sets m_rolloverInProgress flag)
+                                m_archiveFile.OnRolloverStart();
 
-                        // Close the active archive file stream so it can be rolled-over
-                        m_archiveFile.CloseStream();
+                                // Wait for pending to reads to yield
+                                m_archiveFile.WaitForReadersRelease();
+
+                                // Close the active archive file stream so it can be rolled-over
+                                m_archiveFile.CloseStream();
+                            }
+
+                            // Resume processing
+                            if (!record.RolloverInProgress && !m_archiveFile.IsOpen)
+                            {
+                                // Open new active archive file stream
+                                m_archiveFile.OpenStream();
+
+                                // Raise roll-over complete event (resets m_rolloverInProgress flag)
+                                m_archiveFile.OnRolloverComplete();
+
+                                // Notify waiting internal archive components that rollover is complete
+                                m_archiveFile.RolloverWaitHandle.Set();
+                            }
+                        }
                     }
-
-                    // Resume processing
-                    if (!record.RolloverInProgress && !m_archiveFile.IsOpen)
-                    {
-                        // Open new active archive file stream
-                        m_archiveFile.OpenStream();
-
-                        // Raise roll-over complete event (resets m_rolloverInProgress flag)
-                        m_archiveFile.OnRolloverComplete();
-
-                        // Notify waiting internal archive components that rollover is complete
-                        m_archiveFile.RolloverWaitHandle.Set();
-                    }
+                }
+                catch (ThreadAbortException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    OnDataReadException(new InvalidOperationException("Exception encountered during roll-over processing: " + ex.Message, ex));
+                }
+                finally
+                {
+                    Monitor.Exit(m_watcherLock);
                 }
             }
         }

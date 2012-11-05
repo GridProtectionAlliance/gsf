@@ -95,7 +95,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using TVA.Collections;
 using TVA.Configuration;
 using TVA.IO;
@@ -1711,7 +1710,7 @@ namespace TVA.Historian.Files
         /// </summary>
         public void SynchronizeStateFile()
         {
-            Task.Factory.StartNew(SyncStateFile);
+            ThreadPool.QueueUserWorkItem(SyncStateFile);
         }
 
         /// <summary>
@@ -2479,7 +2478,7 @@ namespace TVA.Historian.Files
             }
         }
 
-        private void SyncStateFile()
+        private void SyncStateFile(object state)
         {
             lock (this)
             {
