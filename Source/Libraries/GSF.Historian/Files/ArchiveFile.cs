@@ -96,7 +96,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.IO;
@@ -1482,7 +1481,7 @@ namespace GSF.Historian.Files
                     m_dataBlocks = new List<ArchiveDataBlock>(new ArchiveDataBlock[m_stateFile.RecordsOnDisk]);
 
                 // Validate the dependency files.
-                SyncStateFile();
+                SyncStateFile(null);
                 if (m_intercomFile.FileAccessMode != FileAccess.Read)
                 {
                     // Ensure that "rollover in progress" is not set.
@@ -1712,7 +1711,7 @@ namespace GSF.Historian.Files
         /// </summary>
         public void SynchronizeStateFile()
         {
-            Task.Factory.StartNew(SyncStateFile);
+            ThreadPool.QueueUserWorkItem(SyncStateFile);
         }
 
         /// <summary>
@@ -2480,7 +2479,7 @@ namespace GSF.Historian.Files
             }
         }
 
-        private void SyncStateFile()
+        private void SyncStateFile(object state)
         {
             lock (this)
             {
@@ -3316,7 +3315,7 @@ namespace GSF.Historian.Files
 
         private void MetadataFile_FileModified(object sender, System.EventArgs e)
         {
-            SyncStateFile();
+            SyncStateFile(null);
         }
 
         private void ConserveMemoryTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
