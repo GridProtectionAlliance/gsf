@@ -29,8 +29,6 @@
 //
 //******************************************************************************************************
 
-
-
 namespace GSF
 {
     /// <summary>
@@ -43,8 +41,16 @@ namespace GSF
         #region [ Members ]
 
         // Fields
-        private TId m_id;
-        private TItem m_item;
+
+        /// <summary>
+        /// Defines the identifier of the <see cref="Item"/>.
+        /// </summary>
+        public TId ID;
+
+        /// <summary>
+        /// Defines the buffer being made identifiable by its associated <see cref="ID"/>.
+        /// </summary>
+        public TItem Item;
 
         #endregion
 
@@ -53,46 +59,19 @@ namespace GSF
         /// <summary>
         /// Initializes a new instance of the <see cref="IdentifiableItem{TId, TItem}"/> class.
         /// </summary>
+        public IdentifiableItem()
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="IdentifiableItem{TId, TItem}"/> class.
+        /// </summary>
         /// <param name="id">The identifier of the <paramref name="item"/>.</param>
-        /// <param name="item">The item being assigned the <paramref name="id"/> to make it identifiable.</param>
+        /// <param name="item">The item being associated with the <paramref name="id"/> to make it identifiable.</param>
         public IdentifiableItem(TId id, TItem item)
         {
-            this.ID = id;
-            this.Item = item;
-        }
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets the identifier of the <see cref="Item"/>.
-        /// </summary>
-        public TId ID
-        {
-            get
-            {
-                return m_id;
-            }
-            set
-            {
-                m_id = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the item being made identifiable by assigning it an <see cref="ID"/>.
-        /// </summary>
-        public TItem Item
-        {
-            get
-            {
-                return m_item;
-            }
-            set
-            {
-                m_item = value;
-            }
+            ID = id;
+            Item = item;
         }
 
         #endregion
