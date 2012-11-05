@@ -414,6 +414,12 @@ namespace GSF.Parsing
             /// </summary>
             public void Initialize()
             {
+                // Undispose class instance if it is being reused                
+                if (m_disposed)
+                {
+                    m_disposed = false;
+                    GC.ReRegisterForFinalize(this);
+                }
             }
 
             #endregion
