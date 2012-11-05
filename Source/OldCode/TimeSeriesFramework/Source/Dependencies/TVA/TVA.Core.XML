@@ -23995,21 +23995,20 @@
             This is the <see cref="T:TVA.Parsing.MultiSourceFrameImageParserBase`3.IdentifiableBuffer"/> processing delegate to use when overriding the <see cref="M:TVA.Parsing.MultiSourceFrameImageParserBase`3.CreateBufferQueue"/> method.
             </remarks>
         </member>
-        <member name="M:TVA.Parsing.MultiSourceFrameImageParserBase`3.OnDataParsed(`0,System.Collections.Generic.List{`2})">
+        <member name="M:TVA.Parsing.MultiSourceFrameImageParserBase`3.OnDataParsed(`0,`2)">
             <summary>
             Raises the <see cref="E:TVA.Parsing.MultiSourceFrameImageParserBase`3.DataParsed"/> event.
             </summary>
             <param name="sourceID">Data source ID.</param>
-            <param name="parsedData">List of parsed events.</param>
+            <param name="parsedOutput">Parsed output type.</param>
         </member>
         <member name="E:TVA.Parsing.MultiSourceFrameImageParserBase`3.DataParsed">
             <summary>
-            Occurs when a data image is deserialized successfully to one or more objects of the <see cref="T:System.Type"/> 
-            that the data image was for.
+            Occurs when a data image is successfully deserialized to a <typeparamref name="TOutputType"/> object.
             </summary>
             <remarks>
             <see cref="F:TVA.EventArgs`2.Argument1"/> is the identifier of the source for the data image.<br/>
-            <see cref="F:TVA.EventArgs`2.Argument2"/> is a list of objects deserialized from the data image.
+            <see cref="F:TVA.EventArgs`2.Argument2"/> is an object deserialized from the data image.
             </remarks>
         </member>
         <member name="P:TVA.Parsing.MultiSourceFrameImageParserBase`3.QueuedBuffers">
