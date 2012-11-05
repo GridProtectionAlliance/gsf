@@ -1480,7 +1480,8 @@ namespace TVA.Historian.Files
                     m_dataBlocks = new List<ArchiveDataBlock>(new ArchiveDataBlock[m_stateFile.RecordsOnDisk]);
 
                 // Validate the dependency files.
-                SyncStateFile();
+                SyncStateFile(null);
+
                 if (m_intercomFile.FileAccessMode != FileAccess.Read)
                 {
                     // Ensure that "rollover in progress" is not set.
@@ -3314,7 +3315,7 @@ namespace TVA.Historian.Files
 
         private void MetadataFile_FileModified(object sender, System.EventArgs e)
         {
-            SyncStateFile();
+            SyncStateFile(null);
         }
 
         private void ConserveMemoryTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
