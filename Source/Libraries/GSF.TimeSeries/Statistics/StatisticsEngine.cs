@@ -72,9 +72,9 @@ namespace GSF.TimeSeries.Statistics
 
         // Fields
         private object m_statisticsLock;
+        private List<Statistic> m_statistics;
         private System.Timers.Timer m_statisticCalculationTimer;
         private PerformanceMonitor m_performanceMonitor;
-        private List<Statistic> m_statistics;
         private int m_lastStatisticCalculationCount;
         private bool m_disposed;
 
@@ -88,12 +88,30 @@ namespace GSF.TimeSeries.Statistics
         public StatisticsEngine()
         {
             m_statisticsLock = new object();
+            m_statistics = new List<Statistic>();
+            m_statisticCalculationTimer = new System.Timers.Timer();
             m_performanceMonitor = new PerformanceMonitor();
         }
 
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets <see cref="DataSet"/> based data source available to the <see cref="StatisticsEngine"/>.
+        /// </summary>
+        public override DataSet DataSource
+        {
+            get
+            {
+                return base.DataSource;
+            }
+            set
+            {
+                base.DataSource = value;
+                ReloadStatistics();
+            }
+        }
 
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
@@ -147,17 +165,10 @@ namespace GSF.TimeSeries.Statistics
                 reportingInterval = 10000.0;
 
             // Set up the statistic calculation timer
-            m_statisticCalculationTimer = new System.Timers.Timer();
             m_statisticCalculationTimer.Elapsed += StatisticCalculationTimer_Elapsed;
             m_statisticCalculationTimer.Interval = reportingInterval;
             m_statisticCalculationTimer.AutoReset = true;
             m_statisticCalculationTimer.Enabled = false;
-
-            // Initialize collections
-            m_statistics = new List<Statistic>();
-
-            // Load statistics
-            ReloadStatistics();
 
             // Register system as a statistics source
             Register(m_performanceMonitor, GetSystemName(), "System", "SYSTEM");
