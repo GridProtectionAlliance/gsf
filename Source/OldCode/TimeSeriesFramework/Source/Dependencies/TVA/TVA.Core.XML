@@ -23884,6 +23884,12 @@
             Start the streaming data parser.
             </summary>
         </member>
+        <member name="M:TVA.Parsing.MultiSourceFrameImageParserBase`3.Start(System.Collections.Generic.IEnumerable{System.Type})">
+            <summary>
+            Starts the data parser given the specified type implementations.
+            </summary>
+            <param name="implementations">Output type implementations to establish for the parser.</param>
+        </member>
         <member name="M:TVA.Parsing.MultiSourceFrameImageParserBase`3.Stop">
             <summary>
             Stops the streaming data parser.
