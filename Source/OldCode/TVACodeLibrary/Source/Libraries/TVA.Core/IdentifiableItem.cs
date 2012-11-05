@@ -4,7 +4,7 @@
 //  Tennessee Valley Authority, 2009
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
-//  This software is made freely available under the TVA Open SourceID Agreement (see below).
+//  This software is made freely available under the TVA Open Source Agreement (see below).
 //  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
@@ -20,7 +20,7 @@
 //
 //*******************************************************************************************************
 
-#region [ TVA Open SourceID Agreement ]
+#region [ TVA Open Source Agreement ]
 /*
 
  THIS OPEN SOURCE AGREEMENT ("AGREEMENT") DEFINES THE RIGHTS OF USE,REPRODUCTION, DISTRIBUTION,
@@ -32,7 +32,7 @@
  ACTION, ACCEPTING IN FULL THE RESPONSIBILITIES AND OBLIGATIONS CONTAINED IN THIS AGREEMENT.
 
  Original Software Designation: openPDC
- Original Software Title: The TVA Open SourceID Phasor Data Concentrator
+ Original Software Title: The TVA Open Source Phasor Data Concentrator
  User Registration Requested. Please Visit https://naspi.tva.com/Registration/
  Point of Contact for Original Software: J. Ritchie Carroll <mailto:jrcarrol@tva.gov>
 
