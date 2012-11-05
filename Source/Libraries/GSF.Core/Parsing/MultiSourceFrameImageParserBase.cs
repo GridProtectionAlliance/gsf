@@ -568,6 +568,21 @@ namespace GSF.Parsing
         }
 
         /// <summary>
+        /// Starts the data parser given the specified type implementations.
+        /// </summary>
+        /// <param name="implementations">Output type implementations to establish for the parser.</param>
+        public override void Start(IEnumerable<Type> implementations)
+        {
+            base.Start(implementations);
+
+            if ((object)m_sourceInitialized != null)
+                m_sourceInitialized.Clear();
+
+            m_unparsedBuffers.Clear();
+            m_bufferQueue.Start();
+        }
+
+        /// <summary>
         /// Stops the streaming data parser.
         /// </summary>
         public override void Stop()
