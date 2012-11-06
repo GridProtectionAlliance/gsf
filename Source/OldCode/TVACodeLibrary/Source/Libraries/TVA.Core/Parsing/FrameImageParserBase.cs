@@ -18,6 +18,8 @@
 //       Added new header and license agreement.
 //  11/23/2011 - J. Ritchie Carroll
 //       Modified to support buffer optimized ISupportBinaryImage.
+//  11/06/2012 - J. Ritchie Carroll
+//       Modified to support queued publication processing.
 //
 //*******************************************************************************************************
 
@@ -257,10 +259,12 @@
 #endregion
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 
 namespace TVA.Parsing
 {
@@ -285,8 +289,6 @@ namespace TVA.Parsing
     /// </remarks>
     /// <typeparam name="TTypeIdentifier">Type of identifier used to distinguish output types.</typeparam>
     /// <typeparam name="TOutputType">Type of the interface or class used to represent outputs.</typeparam>
-    [Description("Defines the basic functionality for parsing a binary data stream represented as frames with common headers and returning the parsed data via an event."),
-    DefaultEvent("DataParsed")]
     public abstract class FrameImageParserBase<TTypeIdentifier, TOutputType> : BinaryImageParserBase, IFrameImageParser<TTypeIdentifier, TOutputType> where TOutputType : ISupportFrameImage<TTypeIdentifier>
     {
         #region [ Members ]
@@ -332,6 +334,8 @@ namespace TVA.Parsing
 
         // Fields
         private Dictionary<TTypeIdentifier, TypeInfo> m_outputTypes;
+        private readonly ConcurrentQueue<EventArgs<TOutputType>> m_parsedOutputQueue;
+        private int m_processing;
         private bool m_disposed;
 
         #endregion
@@ -344,6 +348,7 @@ namespace TVA.Parsing
         protected FrameImageParserBase()
         {
             m_outputTypes = new Dictionary<TTypeIdentifier, TypeInfo>();
+            m_parsedOutputQueue = new ConcurrentQueue<EventArgs<TOutputType>>();
         }
 
         #endregion
@@ -366,6 +371,20 @@ namespace TVA.Parsing
         }
 
         /// <summary>
+        /// Gets the total number of parsed outputs that are currently queued for publication, if any.
+        /// </summary>
+        public virtual int QueuedOutputs
+        {
+            get
+            {
+                if ((object)m_parsedOutputQueue != null)
+                    return m_parsedOutputQueue.Count;
+
+                return 0;
+            }
+        }
+
+        /// <summary>
         /// Gets current status of <see cref="FrameImageParserBase{TTypeIdentifier,TOutputType}"/>.
         /// </summary>
         [Browsable(false)]
@@ -376,8 +395,9 @@ namespace TVA.Parsing
                 StringBuilder status = new StringBuilder();
 
                 status.Append(base.Status);
-                status.Append("Total defined output types: ");
-                status.Append(m_outputTypes.Count);
+                status.AppendFormat("Total defined output types: {0}", m_outputTypes.Count);
+                status.AppendLine();
+                status.AppendFormat(" Parsed outputs to publish: {0}", QueuedOutputs);
                 status.AppendLine();
 
                 return status.ToString();
@@ -461,8 +481,10 @@ namespace TVA.Parsing
                     //      - has a default public constructor
                     //      - is not abstract and can be instantiated.
                     //      - type is related to class or interface specified for the output
-                    TypeInfo outputType = new TypeInfo();
-                    outputType.RuntimeType = type;
+                    TypeInfo outputType = new TypeInfo
+                    {
+                        RuntimeType = type
+                    };
 
                     // If object pooling is allowed and class implementation supports life cycle, use object pool instead of creating an object each time one is parsed
                     if (AllowObjectPooling && (object)type.GetInterface("TVA.ISupportLifecycle") != null)
@@ -586,11 +608,58 @@ namespace TVA.Parsing
         /// <summary>
         /// Raises the <see cref="DataParsed"/> event.
         /// </summary>
-        /// <param name="obj">The object that was deserialized from binary image.</param>
-        protected virtual void OnDataParsed(TOutputType obj)
+        /// <param name="output">The object that was deserialized from binary image.</param>
+        protected virtual void OnDataParsed(TOutputType output)
         {
             if ((object)DataParsed != null)
-                DataParsed(this, new EventArgs<TOutputType>(obj));
+            {
+                // Get a reusable event args object to publish output
+                EventArgs<TOutputType> outputArgs = ReusableObjectPool<EventArgs<TOutputType>>.Default.TakeObject();
+                outputArgs.Argument = output;
+
+                if (output.AllowQueuedPublication)
+                {
+                    // Queue-up parsed output for publication
+                    m_parsedOutputQueue.Enqueue(outputArgs);
+
+                    // Make sure queue processing has started
+                    if (Interlocked.CompareExchange(ref m_processing, 1, 0) == 0)
+                    {
+                        if (m_parsedOutputQueue.TryDequeue(out outputArgs))
+                            ThreadPool.QueueUserWorkItem(PublishParsedOutput, outputArgs);
+                        else
+                            Interlocked.Exchange(ref m_processing, 0);
+                    }
+                }
+                else
+                {
+                    // Publish parsed output immediately
+                    DataParsed(this, outputArgs);
+                    ReusableObjectPool<EventArgs<TOutputType>>.Default.ReturnObject(outputArgs);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Thread pool handler used to publish parsed output.
+        /// </summary>
+        /// <param name="state">Event args to publish.</param>
+        protected virtual void PublishParsedOutput(object state)
+        {
+            EventArgs<TOutputType> parsedArgs = state as EventArgs<TOutputType>;
+
+            if ((object)parsedArgs != null)
+            {
+                if ((object)DataParsed != null)
+                    DataParsed(this, parsedArgs);
+
+                ReusableObjectPool<EventArgs<TOutputType>>.Default.ReturnObject(parsedArgs);
+
+                if (Enabled && m_parsedOutputQueue.TryDequeue(out parsedArgs))
+                    ThreadPool.QueueUserWorkItem(PublishParsedOutput, parsedArgs);
+                else
+                    Interlocked.Exchange(ref m_processing, 0);
+            }
         }
 
         /// <summary>

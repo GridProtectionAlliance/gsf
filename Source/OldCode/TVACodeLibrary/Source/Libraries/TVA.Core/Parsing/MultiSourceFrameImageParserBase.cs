@@ -275,12 +275,15 @@ namespace TVA.Parsing
     /// </summary>
     /// <remarks>
     /// <para>
+    /// This parser is designed as a write-only stream such that data can come from any source.
+    /// </para>
+    /// <para>
     /// This class is more specific than the <see cref="BinaryImageParserBase"/> in that it can automate the parsing of a
     /// particular protocol that is formatted as a series of frames that have a common method of identification.
     /// Automation of type creation occurs by loading implementations of common types that implement the
-    /// <see cref="ISupportFrameImage{TTypeIdentifier}"/> interface. The common method of identification is handled by
-    /// creating a class derived from the <see cref="ICommonHeader{TTypeIdentifier}"/> which primarily includes a
-    /// TypeID property, but also should include any state information needed to parse a particular frame if necessary.
+    /// <see cref="ISupportSourceIdentifiableFrameImage{TSourceIdentifier,TTypeIdentifier}"/> interface. The common method of
+    /// identification is handled by creating a class derived from the <see cref="ICommonHeader{TTypeIdentifier}"/> which primarily
+    /// includes a TypeID property, but also should include any state information needed to parse a particular frame if necessary.
     /// Derived classes override the <see cref="FrameImageParserBase{TTypeIdentifier, TOutputType}.ParseCommonHeader"/>
     /// method in order to parse the <see cref="ICommonHeader{TTypeIdentifier}"/> from a provided binary image.
     /// </para>
@@ -288,7 +291,7 @@ namespace TVA.Parsing
     /// <typeparam name="TSourceIdentifier">Type of identifier for the data source.</typeparam>
     /// <typeparam name="TTypeIdentifier">Type of identifier used to distinguish output types.</typeparam>
     /// <typeparam name="TOutputType">Type of the interface or class used to represent outputs.</typeparam>
-    public abstract class MultiSourceFrameImageParserBase<TSourceIdentifier, TTypeIdentifier, TOutputType> : FrameImageParserBase<TTypeIdentifier, TOutputType> where TOutputType : ISupportFrameImage<TTypeIdentifier>
+    public abstract class MultiSourceFrameImageParserBase<TSourceIdentifier, TTypeIdentifier, TOutputType> : FrameImageParserBase<TTypeIdentifier, TOutputType> where TOutputType : ISupportSourceIdentifiableFrameImage<TSourceIdentifier, TTypeIdentifier>
     {
         #region [ Members ]
 
@@ -297,14 +300,18 @@ namespace TVA.Parsing
         /// <summary>
         /// Represents a source identifiable buffer.
         /// </summary>
-        public class IdentifiableBuffer : ISupportLifecycle
+        /// <remarks>
+        /// This class implements <see cref="ISupportLifecycle"/> such that it will support
+        /// automatic object pool handling, e.g., returning object to pool when disposed.
+        /// </remarks>
+        public class SourceIdentifiableBuffer : ISupportLifecycle
         {
             #region [ Members ]
 
             // Events
 
             /// <summary>
-            /// Occurs when <see cref="IdentifiableBuffer"/> is disposed.
+            /// Occurs when <see cref="SourceIdentifiableBuffer"/> is disposed.
             /// </summary>
             public event EventHandler Disposed;
 
@@ -328,9 +335,9 @@ namespace TVA.Parsing
             #region [ Constructors ]
 
             /// <summary>
-            /// Releases the unmanaged resources before the <see cref="IdentifiableBuffer"/> object is reclaimed by <see cref="GC"/>.
+            /// Releases the unmanaged resources before the <see cref="SourceIdentifiableBuffer"/> object is reclaimed by <see cref="GC"/>.
             /// </summary>
-            ~IdentifiableBuffer()
+            ~SourceIdentifiableBuffer()
             {
                 Dispose(false);
             }
@@ -340,7 +347,7 @@ namespace TVA.Parsing
             #region [ Properties ]
 
             /// <summary>
-            /// Gets or sets enabled state of <see cref="IdentifiableBuffer"/>.
+            /// Gets or sets enabled state of <see cref="SourceIdentifiableBuffer"/>.
             /// </summary>
             public bool Enabled
             {
@@ -379,7 +386,7 @@ namespace TVA.Parsing
             #region [ Methods ]
 
             /// <summary>
-            /// Releases all the resources used by the <see cref="IdentifiableBuffer"/> object.
+            /// Releases all the resources used by the <see cref="SourceIdentifiableBuffer"/> object.
             /// </summary>
             public void Dispose()
             {
@@ -388,7 +395,7 @@ namespace TVA.Parsing
             }
 
             /// <summary>
-            /// Releases the unmanaged resources used by the <see cref="IdentifiableBuffer"/> object and optionally releases the managed resources.
+            /// Releases the unmanaged resources used by the <see cref="SourceIdentifiableBuffer"/> object and optionally releases the managed resources.
             /// </summary>
             /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
             protected virtual void Dispose(bool disposing)
@@ -397,6 +404,7 @@ namespace TVA.Parsing
                 {
                     try
                     {
+                        // Return any existing buffer to the pool
                         Count = 0;
                     }
                     finally
@@ -410,7 +418,7 @@ namespace TVA.Parsing
             }
 
             /// <summary>
-            /// Initializes (or reinitializes) <see cref="IdentifiableBuffer"/> state.
+            /// Initializes (or reinitializes) <see cref="SourceIdentifiableBuffer"/> state.
             /// </summary>
             public void Initialize()
             {
@@ -425,24 +433,11 @@ namespace TVA.Parsing
             #endregion
         }
 
-        // Events
-
-        /// <summary>
-        /// Occurs when a data image is successfully deserialized to a <typeparamref name="TOutputType"/> object.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the identifier of the source for the data image.<br/>
-        /// <see cref="EventArgs{T1,T2}.Argument2"/> is an object deserialized from the data image.
-        /// </remarks>
-        public new event EventHandler<EventArgs<TSourceIdentifier, TOutputType>> DataParsed;
-
         // Fields
-        private ProcessQueue<IdentifiableBuffer> m_bufferQueue;
+        private ProcessQueue<SourceIdentifiableBuffer> m_bufferQueue;
         private readonly ConcurrentDictionary<TSourceIdentifier, bool> m_sourceInitialized;
         private readonly ConcurrentDictionary<TSourceIdentifier, byte[]> m_unparsedBuffers;
-        private readonly ConcurrentQueue<EventArgs<TSourceIdentifier, TOutputType>> m_parsedOutputQueue;
-        private int m_processing;
-        private TSourceIdentifier m_sourceID;
+        private TSourceIdentifier m_source;
         private bool m_disposed;
 
         #endregion
@@ -461,11 +456,6 @@ namespace TVA.Parsing
                 m_sourceInitialized = new ConcurrentDictionary<TSourceIdentifier, bool>();
 
             m_unparsedBuffers = new ConcurrentDictionary<TSourceIdentifier, byte[]>();
-            m_parsedOutputQueue = new ConcurrentQueue<EventArgs<TSourceIdentifier, TOutputType>>();
-
-            // We attach to base class events so we can cumulate outputs per data source and handle data errors
-            base.DataParsed += DataParsed_CumulateParsedOutput;
-            base.DataDiscarded += DataDiscarded_ResetDataSourceInitialization;
         }
 
         #endregion
@@ -481,20 +471,6 @@ namespace TVA.Parsing
             {
                 if ((object)m_bufferQueue != null)
                     return m_bufferQueue.Count;
-
-                return 0;
-            }
-        }
-
-        /// <summary>
-        /// Gets the total number of parsed outputs that are currently queued for publication, if any.
-        /// </summary>
-        public virtual int QueuedOutputs
-        {
-            get
-            {
-                if ((object)m_parsedOutputQueue != null)
-                    return m_parsedOutputQueue.Count;
 
                 return 0;
             }
@@ -522,8 +498,6 @@ namespace TVA.Parsing
 
                 status.Append(base.Status);
                 status.Append(m_bufferQueue.Status);
-                status.AppendFormat(" Parsed outputs to publish: {0}", QueuedOutputs);
-                status.AppendLine();
 
                 return status.ToString();
             }
@@ -551,10 +525,6 @@ namespace TVA.Parsing
                             m_bufferQueue.Dispose();
                         }
                         m_bufferQueue = null;
-
-                        // Detach from base class events
-                        base.DataParsed -= DataParsed_CumulateParsedOutput;
-                        base.DataDiscarded -= DataDiscarded_ResetDataSourceInitialization;
                     }
                 }
                 finally
@@ -606,7 +576,7 @@ namespace TVA.Parsing
         /// <summary>
         /// Queues a sequence of bytes, from the specified data source, onto the stream for parsing.
         /// </summary>
-        /// <param name="source">Source identifier of the data source.</param>
+        /// <param name="source">Identifier of the data source.</param>
         /// <param name="buffer">An array of bytes to queue for parsing</param>
         public virtual void Parse(TSourceIdentifier source, byte[] buffer)
         {
@@ -619,24 +589,27 @@ namespace TVA.Parsing
         /// <summary>
         /// Queues a sequence of bytes, from the specified data source, onto the stream for parsing.
         /// </summary>
-        /// <param name="source">Source identifier of the data source.</param>
+        /// <param name="source">Identifier of the data source.</param>
         /// <param name="buffer">An array of bytes. This method copies count bytes from buffer to the queue.</param>
         /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
         /// <param name="count">The number of bytes to be written to the current stream.</param>
+        /// <remarks>
+        /// This method associates a buffer with its data source identifier.
+        /// </remarks>
         public virtual void Parse(TSourceIdentifier source, byte[] buffer, int offset, int count)
         {
-            IdentifiableBuffer identifiableBuffer = null;
+            SourceIdentifiableBuffer identifiableBuffer = null;
 
             buffer.ValidateParameters(offset, count);
 
             try
             {
                 // Get an identifiable buffer object
-                identifiableBuffer = ReusableObjectPool<IdentifiableBuffer>.Default.TakeObject();
+                identifiableBuffer = ReusableObjectPool<SourceIdentifiableBuffer>.Default.TakeObject();
                 identifiableBuffer.Source = source;
                 identifiableBuffer.Count = count;
 
-                // Copy buffer data
+                // Copy buffer data for processing (destination buffer preallocated from buffer pool)
                 Buffer.BlockCopy(buffer, offset, identifiableBuffer.Buffer, 0, count);
 
                 // Add buffer to the queue for parsing
@@ -644,6 +617,7 @@ namespace TVA.Parsing
             }
             catch
             {
+                // Return source buffer to object pool if we failed to queue it for processing
                 if ((object)identifiableBuffer != null)
                     identifiableBuffer.Dispose();
 
@@ -654,7 +628,7 @@ namespace TVA.Parsing
         /// <summary>
         /// Queues the object implementing the <see cref="ISupportBinaryImage"/> interface, from the specified data source, onto the stream for parsing.
         /// </summary>
-        /// <param name="source">Source identifier of the data source.</param>
+        /// <param name="source">Identifier of the data source.</param>
         /// <param name="image">Object to be parsed that implements the <see cref="ISupportBinaryImage"/> interface.</param>
         /// <remarks>
         /// This method takes the binary image from <see cref="ISupportBinaryImage"/> and writes the buffer to the <see cref="BinaryImageParserBase"/> stream for parsing.
@@ -667,7 +641,7 @@ namespace TVA.Parsing
         /// <summary>
         /// Clears the internal buffer of unparsed data received from the specified <paramref name="source"/>.
         /// </summary>
-        /// <param name="source">Source identifier of the data source.</param>
+        /// <param name="source">Identifier of the data source.</param>
         /// <remarks>
         /// This method can be used to ensure that partial data received from the <paramref name="source"/> is not kept in memory indefinitely.
         /// </remarks>
@@ -682,10 +656,10 @@ namespace TVA.Parsing
         /// </summary>
         /// <exception cref="NotImplementedException">This method should not be called directly.</exception>
         /// <param name="image">A <see cref="ISupportBinaryImage"/>.</param>
-        [EditorBrowsable(EditorBrowsableState.Never), Obsolete("MultiSourceFrameParser requires consumers call Parse overload that takes source identifier as an argument", true)]
+        [EditorBrowsable(EditorBrowsableState.Never), Obsolete("MultiSourceFrameImageParserBase requires consumers call Parse overload that takes data source identifier as an argument", true)]
         public override void Parse(ISupportBinaryImage image)
         {
-            throw new NotImplementedException("This method should not be called directly, call the Parse(TSourceIdentifier,ISupportBinaryImage) method to queue data for parsing instead");
+            throw new NotImplementedException("This method should not be called directly, call the Parse(TSourceIdentifier,ISupportBinaryImage) method to queue data for parsing instead.");
         }
 
         /// <summary>
@@ -695,10 +669,10 @@ namespace TVA.Parsing
         /// <param name="buffer">A <see cref="Byte"/> array.</param>
         /// <param name="count">An <see cref="Int32"/> for the offset.</param>
         /// <param name="offset">An <see cref="Int32"/> for the count.</param>
-        [EditorBrowsable(EditorBrowsableState.Never), Obsolete("MultiSourceFrameParser requires consumers call Parse overload that takes source identifier as an argument", true)]
+        [EditorBrowsable(EditorBrowsableState.Never), Obsolete("MultiSourceFrameImageParserBase requires consumers call Parse overload that takes data source identifier as an argument", true)]
         public override void Write(byte[] buffer, int offset, int count)
         {
-            throw new NotImplementedException("This method should not be called directly, call the Parse(TSourceIdentifier,byte[],int,int) method to queue data for parsing instead");
+            throw new NotImplementedException("This method should not be called directly, call the Parse(TSourceIdentifier,byte[],int,int) method to queue data for parsing instead.");
         }
 
         /// <summary>
@@ -737,14 +711,14 @@ namespace TVA.Parsing
         /// processing delegate.
         /// </para>
         /// <para>
-        /// Note that current design only supports synchronous parsing - consumer overriding this method to return
-        /// an asynchronous (i.e., multi-threaded) process queue will need to redesign the processing delegate.
+        /// Note that current design only supports serial processing - consumer overriding this method to return an asynchronous
+        /// process queue to process multiple items at once on separate threads will need to redesign the processing delegate.
         /// </para>
         /// </remarks>
         /// <returns>New internal buffer processing queue (i.e., a new <see cref="ProcessQueue{T}"/>).</returns>
-        protected virtual ProcessQueue<IdentifiableBuffer> CreateBufferQueue()
+        protected virtual ProcessQueue<SourceIdentifiableBuffer> CreateBufferQueue()
         {
-            return ProcessQueue<IdentifiableBuffer>.CreateRealTimeQueue(ParseQueuedBuffers);
+            return ProcessQueue<SourceIdentifiableBuffer>.CreateRealTimeQueue(ParseQueuedBuffers);
         }
 
         /// <summary>
@@ -752,28 +726,28 @@ namespace TVA.Parsing
         /// </summary>
         /// <param name="buffers">Identifiable buffers to process.</param>
         /// <remarks>
-        /// This is the <see cref="IdentifiableBuffer"/> processing delegate to use when overriding the <see cref="CreateBufferQueue"/> method.
+        /// This is the <see cref="SourceIdentifiableBuffer"/> processing delegate to use when overriding the <see cref="CreateBufferQueue"/> method.
         /// </remarks>
-        protected virtual void ParseQueuedBuffers(IdentifiableBuffer[] buffers)
+        protected virtual void ParseQueuedBuffers(SourceIdentifiableBuffer[] buffers)
         {
             // Process all queued data buffers...
-            foreach (IdentifiableBuffer buffer in buffers)
+            foreach (SourceIdentifiableBuffer buffer in buffers)
             {
                 // Track current buffer source
-                m_sourceID = buffer.Source;
+                m_source = buffer.Source;
 
                 // Check to see if this data source has been initialized
                 if ((object)m_sourceInitialized != null)
-                    StreamInitialized = m_sourceInitialized.GetOrAdd(m_sourceID, true);
+                    StreamInitialized = m_sourceInitialized.GetOrAdd(m_source, true);
 
                 // Restore any unparsed buffers for this data source, if any
-                UnparsedBuffer = m_unparsedBuffers.GetOrAdd(m_sourceID, (byte[])null);
+                UnparsedBuffer = m_unparsedBuffers.GetOrAdd(m_source, (byte[])null);
 
-                // Start parsing sequence for this buffer - this will cumulate new parsed outputs
+                // Start parsing sequence for this buffer - this will begin publication of new parsed outputs
                 base.Write(buffer.Buffer, 0, buffer.Count);
 
                 // Track last unparsed buffer for this data source
-                m_unparsedBuffers[m_sourceID] = UnparsedBuffer;
+                m_unparsedBuffers[m_source] = UnparsedBuffer;
             }
 
             // Dispose of source buffers - no rush
@@ -783,11 +757,11 @@ namespace TVA.Parsing
         // Handle disposing of source buffers (this will return items to the resuable object pool)
         private void DisposeSourceBuffers(object state)
         {
-            IdentifiableBuffer[] buffers = state as IdentifiableBuffer[];
+            SourceIdentifiableBuffer[] buffers = state as SourceIdentifiableBuffer[];
 
             if ((object)buffers != null)
             {
-                foreach (IdentifiableBuffer buffer in buffers)
+                foreach (SourceIdentifiableBuffer buffer in buffers)
                 {
                     if ((object)buffer != null)
                         buffer.Dispose();
@@ -796,59 +770,28 @@ namespace TVA.Parsing
         }
 
         /// <summary>
-        /// Raises the <see cref="DataParsed"/> event.
+        /// Raises the <see cref="FrameImageParserBase{TTypeIdentifier, TOutputType}.DataParsed"/> event.
         /// </summary>
-        /// <param name="sourceID">Data source ID.</param>
-        /// <param name="parsedOutput">Parsed output type.</param>
-        protected virtual void OnDataParsed(TSourceIdentifier sourceID, TOutputType parsedOutput)
+        /// <param name="output">The object that was deserialized from binary image.</param>
+        protected override void OnDataParsed(TOutputType output)
         {
-            if ((object)DataParsed != null)
-                DataParsed(this, new EventArgs<TSourceIdentifier, TOutputType>(sourceID, parsedOutput));
+            // Make sure output gets associated with its data source prior to publication
+            output.Source = m_source;
+
+            base.OnDataParsed(output);
         }
 
-        // Cumulate output data for current data source
-        private void DataParsed_CumulateParsedOutput(object sender, EventArgs<TOutputType> data)
+        /// <summary>
+        /// Raises the <see cref="BinaryImageParserBase.DataDiscarded"/> event.
+        /// </summary>
+        /// <param name="buffer">Source buffer that contains output that failed to parse.</param>
+        protected override void OnDataDiscarded(byte[] buffer)
         {
-            EventArgs<TSourceIdentifier, TOutputType> parsedArgs = ReusableObjectPool<EventArgs<TSourceIdentifier, TOutputType>>.Default.TakeObject();
-
-            parsedArgs.Argument1 = m_sourceID;
-            parsedArgs.Argument2 = data.Argument;
-
-            m_parsedOutputQueue.Enqueue(parsedArgs);
-
-            if (Interlocked.CompareExchange(ref m_processing, 1, 0) == 0)
-            {
-                if (m_parsedOutputQueue.TryDequeue(out parsedArgs))
-                    ThreadPool.QueueUserWorkItem(PublishParsedOutput, parsedArgs);
-                else
-                    Interlocked.Exchange(ref m_processing, 0);
-            }
-        }
-
-        // Publish parsed output
-        private void PublishParsedOutput(object state)
-        {
-            EventArgs<TSourceIdentifier, TOutputType> parsedArgs = state as EventArgs<TSourceIdentifier, TOutputType>;
-
-            if ((object)parsedArgs != null)
-            {
-                if ((object)DataParsed != null)
-                    DataParsed(this, parsedArgs);
-
-                ReusableObjectPool<EventArgs<TSourceIdentifier, TOutputType>>.Default.ReturnObject(parsedArgs);
-
-                if (Enabled && m_parsedOutputQueue.TryDequeue(out parsedArgs))
-                    ThreadPool.QueueUserWorkItem(PublishParsedOutput, parsedArgs);
-                else
-                    Interlocked.Exchange(ref m_processing, 0);
-            }
-        }
-
-        // If an error occurs during parsing from a data source, we reset its initialization state
-        private void DataDiscarded_ResetDataSourceInitialization(object sender, EventArgs<byte[]> data)
-        {
+            // If an error occurs during parsing from a data source, we reset its initialization state
             if ((object)m_sourceInitialized != null)
-                m_sourceInitialized[m_sourceID] = false;
+                m_sourceInitialized[m_source] = false;
+
+            base.OnDataDiscarded(buffer);
         }
 
         // We just bubble any exceptions captured in process queue out to parsing exception event...
