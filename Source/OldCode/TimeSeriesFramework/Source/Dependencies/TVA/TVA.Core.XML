@@ -24016,6 +24016,11 @@
             Gets the total number of buffers that are currently queued for processing, if any.
             </summary>
         </member>
+        <member name="P:TVA.Parsing.MultiSourceFrameImageParserBase`3.QueuedOutputs">
+            <summary>
+            Gets the total number of parsed outputs that are currently queued for publication, if any.
+            </summary>
+        </member>
         <member name="P:TVA.Parsing.MultiSourceFrameImageParserBase`3.CurrentStatistics">
             <summary>
             Gets the current run-time statistics of the <see cref="T:TVA.Parsing.MultiSourceFrameImageParserBase`3"/>.
