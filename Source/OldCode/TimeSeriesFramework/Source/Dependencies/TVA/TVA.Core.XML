@@ -23618,6 +23618,63 @@
             Gets or sets any additional state information that might be needed for parsing.
             </summary>
         </member>
+        <member name="T:TVA.Parsing.ISupportSourceIdentifiableFrameImage`2">
+            <summary>
+            Specifies that this <see cref="T:System.Type"/> can produce or consume a frame of data represented as a source identifiable binary image.
+            </summary>
+            <remarks>
+            Related types of protocol data that occur as frames in a stream can implement this interface for automated parsing
+            via the <see cref="T:TVA.Parsing.MultiSourceFrameImageParserBase`3"/> class.
+            </remarks>
+            <typeparam name="TSourceIdentifier">Type of identifier for the data source.</typeparam>
+            <typeparam name="TTypeIdentifier">Type of the frame identifier.</typeparam>
+        </member>
+        <member name="T:TVA.Parsing.ISupportFrameImage`1">
+            <summary>
+            Specifies that this <see cref="T:System.Type"/> can produce or consume a frame of data represented as a binary image.
+            </summary>
+            <remarks>
+            Related types of protocol data that occur as frames in a stream can implement this interface for automated parsing
+            via the <see cref="T:TVA.Parsing.FrameImageParserBase`2"/> class.
+            </remarks>
+            <typeparam name="TTypeIdentifier">Type of the frame identifier.</typeparam>
+        </member>
+        <member name="P:TVA.Parsing.ISupportFrameImage`1.CommonHeader">
+            <summary>
+            Gets or sets current <see cref="T:TVA.Parsing.ICommonHeader`1"/>.
+            </summary>
+            <remarks>
+            If used, this will need to be set before call to <see cref="M:TVA.Parsing.ISupportBinaryImage.ParseBinaryImage(System.Byte[],System.Int32,System.Int32)"/>.
+            </remarks>
+        </member>
+        <member name="P:TVA.Parsing.ISupportFrameImage`1.TypeID">
+            <summary>
+            Gets the identifier that can be used for identifying the <see cref="T:System.Type"/>.
+            </summary>
+            <remarks>
+            <para>
+            <see cref="P:TVA.Parsing.ISupportFrameImage`1.TypeID"/> must be unique across all siblings implementing a common <see cref="T:System.Type"/> or interface.
+            </para>
+            <para>
+            Output types implement this class so they have a consistently addressable identification property.
+            </para>
+            </remarks>
+        </member>
+        <member name="P:TVA.Parsing.ISupportFrameImage`1.AllowQueuedPublication">
+            <summary>
+            Gets flag that determines if frame image can queued for publication or should be processed immediately.
+            </summary>
+            <remarks>
+            Some frames, e.g., a configuration or key frame, may be critical to processing of other frames. In this
+            case, these types of frames should be published immediately so that subsequent frame parsing can have
+            access to needed critical information.
+            </remarks>
+        </member>
+        <member name="P:TVA.Parsing.ISupportSourceIdentifiableFrameImage`2.Source">
+            <summary>
+            Gets or sets the data source identifier of the frame image.
+            </summary>
+        </member>
         <member name="T:TVA.Parsing.FrameImageParserBase`2">
             <summary>
             This class defines a basic implementation of parsing functionality suitable for automating the parsing of
@@ -23727,7 +23784,13 @@
             <summary>
             Raises the <see cref="E:TVA.Parsing.FrameImageParserBase`2.DataParsed"/> event.
             </summary>
-            <param name="obj">The object that was deserialized from binary image.</param>
+            <param name="output">The object that was deserialized from binary image.</param>
+        </member>
+        <member name="M:TVA.Parsing.FrameImageParserBase`2.PublishParsedOutput(System.Object)">
+            <summary>
+            Thread pool handler used to publish parsed output.
+            </summary>
+            <param name="state">Event args to publish.</param>
         </member>
         <member name="M:TVA.Parsing.FrameImageParserBase`2.OnOutputTypeNotFound(`0)">
             <summary>
@@ -23777,6 +23840,11 @@
             override and return <c>false</c> if you do not want your frame image parser to use object pooling.
             </remarks>
         </member>
+        <member name="P:TVA.Parsing.FrameImageParserBase`2.QueuedOutputs">
+            <summary>
+            Gets the total number of parsed outputs that are currently queued for publication, if any.
+            </summary>
+        </member>
         <member name="P:TVA.Parsing.FrameImageParserBase`2.Status">
             <summary>
             Gets current status of <see cref="T:TVA.Parsing.FrameImageParserBase`2"/>.
@@ -23816,37 +23884,6 @@
             <returns>The number of bytes parsed from the <paramref name="stream"/>.</returns>
             <exception cref="T:System.ArgumentNullException"><paramref name="imageSource"/> cannot be null.</exception>
         </member>
-        <member name="T:TVA.Parsing.ISupportFrameImage`1">
-            <summary>
-            Specifies that this <see cref="T:System.Type"/> can produce or consume a frame of data represented as a binary image.
-            </summary>
-            <remarks>
-            Related types of protocol data that occur as frames in a stream can implement this interface for automated parsing
-            via the <see cref="T:TVA.Parsing.FrameImageParserBase`2"/> class.
-            </remarks>
-            <typeparam name="TTypeIdentifier">Type of the frame identifier.</typeparam>
-        </member>
-        <member name="P:TVA.Parsing.ISupportFrameImage`1.CommonHeader">
-            <summary>
-            Gets or sets current <see cref="T:TVA.Parsing.ICommonHeader`1"/>.
-            </summary>
-            <remarks>
-            If used, this will need to be set before call to <see cref="M:TVA.Parsing.ISupportBinaryImage.ParseBinaryImage(System.Byte[],System.Int32,System.Int32)"/>.
-            </remarks>
-        </member>
-        <member name="P:TVA.Parsing.ISupportFrameImage`1.TypeID">
-            <summary>
-            Gets the identifier that can be used for identifying the <see cref="T:System.Type"/>.
-            </summary>
-            <remarks>
-            <para>
-            <see cref="P:TVA.Parsing.ISupportFrameImage`1.TypeID"/> must be unique across all siblings implementing a common <see cref="T:System.Type"/> or interface.
-            </para>
-            <para>
-            Output types implement this class so they have a consistently addressable identification property.
-            </para>
-            </remarks>
-        </member>
         <member name="T:TVA.Parsing.MultiSourceFrameImageParserBase`3">
             <summary>
             This class defines a basic implementation of parsing functionality suitable for automating the parsing of multiple
@@ -23854,12 +23891,15 @@
             </summary>
             <remarks>
             <para>
+            This parser is designed as a write-only stream such that data can come from any source.
+            </para>
+            <para>
             This class is more specific than the <see cref="T:TVA.Parsing.BinaryImageParserBase"/> in that it can automate the parsing of a
             particular protocol that is formatted as a series of frames that have a common method of identification.
             Automation of type creation occurs by loading implementations of common types that implement the
-            <see cref="T:TVA.Parsing.ISupportFrameImage`1"/> interface. The common method of identification is handled by
-            creating a class derived from the <see cref="T:TVA.Parsing.ICommonHeader`1"/> which primarily includes a
-            TypeID property, but also should include any state information needed to parse a particular frame if necessary.
+            <see cref="T:TVA.Parsing.ISupportSourceIdentifiableFrameImage`2"/> interface. The common method of
+            identification is handled by creating a class derived from the <see cref="T:TVA.Parsing.ICommonHeader`1"/> which primarily
+            includes a TypeID property, but also should include any state information needed to parse a particular frame if necessary.
             Derived classes override the <see cref="M:TVA.Parsing.FrameImageParserBase`2.ParseCommonHeader(System.Byte[],System.Int32,System.Int32)"/>
             method in order to parse the <see cref="T:TVA.Parsing.ICommonHeader`1"/> from a provided binary image.
             </para>
@@ -23899,23 +23939,26 @@
             <summary>
             Queues a sequence of bytes, from the specified data source, onto the stream for parsing.
             </summary>
-            <param name="source">Source identifier of the data source.</param>
+            <param name="source">Identifier of the data source.</param>
             <param name="buffer">An array of bytes to queue for parsing</param>
         </member>
         <member name="M:TVA.Parsing.MultiSourceFrameImageParserBase`3.Parse(`0,System.Byte[],System.Int32,System.Int32)">
             <summary>
             Queues a sequence of bytes, from the specified data source, onto the stream for parsing.
             </summary>
-            <param name="source">Source identifier of the data source.</param>
+            <param name="source">Identifier of the data source.</param>
             <param name="buffer">An array of bytes. This method copies count bytes from buffer to the queue.</param>
             <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
             <param name="count">The number of bytes to be written to the current stream.</param>
+            <remarks>
+            This method associates a buffer with its data source identifier.
+            </remarks>
         </member>
         <member name="M:TVA.Parsing.MultiSourceFrameImageParserBase`3.Parse(`0,TVA.Parsing.ISupportBinaryImage)">
             <summary>
             Queues the object implementing the <see cref="T:TVA.Parsing.ISupportBinaryImage"/> interface, from the specified data source, onto the stream for parsing.
             </summary>
-            <param name="source">Source identifier of the data source.</param>
+            <param name="source">Identifier of the data source.</param>
             <param name="image">Object to be parsed that implements the <see cref="T:TVA.Parsing.ISupportBinaryImage"/> interface.</param>
             <remarks>
             This method takes the binary image from <see cref="T:TVA.Parsing.ISupportBinaryImage"/> and writes the buffer to the <see cref="T:TVA.Parsing.BinaryImageParserBase"/> stream for parsing.
@@ -23925,7 +23968,7 @@
             <summary>
             Clears the internal buffer of unparsed data received from the specified <paramref name="source"/>.
             </summary>
-            <param name="source">Source identifier of the data source.</param>
+            <param name="source">Identifier of the data source.</param>
             <remarks>
             This method can be used to ensure that partial data received from the <paramref name="source"/> is not kept in memory indefinitely.
             </remarks>
@@ -23976,49 +24019,40 @@
             <para>
             This method is virtual to allow derived classes to customize the style of processing queue used when consumers
             choose to implement an internal buffer queue.  Default type is a real-time queue with the default settings.
-            When overriding, use the <see cref="M:TVA.Parsing.MultiSourceFrameImageParserBase`3.ParseQueuedBuffers(TVA.Parsing.MultiSourceFrameImageParserBase{`0,`1,`2}.IdentifiableBuffer[])"/> method for the <see cref="T:TVA.Collections.ProcessQueue`1"/>) item
+            When overriding, use the <see cref="M:TVA.Parsing.MultiSourceFrameImageParserBase`3.ParseQueuedBuffers(TVA.Parsing.MultiSourceFrameImageParserBase{`0,`1,`2}.SourceIdentifiableBuffer[])"/> method for the <see cref="T:TVA.Collections.ProcessQueue`1"/>) item
             processing delegate.
             </para>
             <para>
-            Note that current design only supports synchronous parsing - consumer overriding this method to return
-            an asynchronous (i.e., multi-threaded) process queue will need to redesign the processing delegate.
+            Note that current design only supports serial processing - consumer overriding this method to return an asynchronous
+            process queue to process multiple items at once on separate threads will need to redesign the processing delegate.
             </para>
             </remarks>
             <returns>New internal buffer processing queue (i.e., a new <see cref="T:TVA.Collections.ProcessQueue`1"/>).</returns>
         </member>
-        <member name="M:TVA.Parsing.MultiSourceFrameImageParserBase`3.ParseQueuedBuffers(TVA.Parsing.MultiSourceFrameImageParserBase{`0,`1,`2}.IdentifiableBuffer[])">
+        <member name="M:TVA.Parsing.MultiSourceFrameImageParserBase`3.ParseQueuedBuffers(TVA.Parsing.MultiSourceFrameImageParserBase{`0,`1,`2}.SourceIdentifiableBuffer[])">
             <summary>
             This method is used by the internal <see cref="T:TVA.Collections.ProcessQueue`1"/> to process all queued data buffers.
             </summary>
             <param name="buffers">Identifiable buffers to process.</param>
             <remarks>
-            This is the <see cref="T:TVA.Parsing.MultiSourceFrameImageParserBase`3.IdentifiableBuffer"/> processing delegate to use when overriding the <see cref="M:TVA.Parsing.MultiSourceFrameImageParserBase`3.CreateBufferQueue"/> method.
+            This is the <see cref="T:TVA.Parsing.MultiSourceFrameImageParserBase`3.SourceIdentifiableBuffer"/> processing delegate to use when overriding the <see cref="M:TVA.Parsing.MultiSourceFrameImageParserBase`3.CreateBufferQueue"/> method.
             </remarks>
         </member>
-        <member name="M:TVA.Parsing.MultiSourceFrameImageParserBase`3.OnDataParsed(`0,`2)">
+        <member name="M:TVA.Parsing.MultiSourceFrameImageParserBase`3.OnDataParsed(`2)">
             <summary>
-            Raises the <see cref="E:TVA.Parsing.MultiSourceFrameImageParserBase`3.DataParsed"/> event.
+            Raises the <see cref="E:TVA.Parsing.FrameImageParserBase`2.DataParsed"/> event.
             </summary>
-            <param name="sourceID">Data source ID.</param>
-            <param name="parsedOutput">Parsed output type.</param>
+            <param name="output">The object that was deserialized from binary image.</param>
         </member>
-        <member name="E:TVA.Parsing.MultiSourceFrameImageParserBase`3.DataParsed">
+        <member name="M:TVA.Parsing.MultiSourceFrameImageParserBase`3.OnDataDiscarded(System.Byte[])">
             <summary>
-            Occurs when a data image is successfully deserialized to a <typeparamref name="TOutputType"/> object.
+            Raises the <see cref="E:TVA.Parsing.BinaryImageParserBase.DataDiscarded"/> event.
             </summary>
-            <remarks>
-            <see cref="F:TVA.EventArgs`2.Argument1"/> is the identifier of the source for the data image.<br/>
-            <see cref="F:TVA.EventArgs`2.Argument2"/> is an object deserialized from the data image.
-            </remarks>
+            <param name="buffer">Source buffer that contains output that failed to parse.</param>
         </member>
         <member name="P:TVA.Parsing.MultiSourceFrameImageParserBase`3.QueuedBuffers">
             <summary>
             Gets the total number of buffers that are currently queued for processing, if any.
-            </summary>
-        </member>
-        <member name="P:TVA.Parsing.MultiSourceFrameImageParserBase`3.QueuedOutputs">
-            <summary>
-            Gets the total number of parsed outputs that are currently queued for publication, if any.
             </summary>
         </member>
         <member name="P:TVA.Parsing.MultiSourceFrameImageParserBase`3.CurrentStatistics">
@@ -24031,55 +24065,59 @@
             Gets current status of <see cref="T:TVA.Parsing.MultiSourceFrameImageParserBase`3"/>.
             </summary>
         </member>
-        <member name="T:TVA.Parsing.MultiSourceFrameImageParserBase`3.IdentifiableBuffer">
+        <member name="T:TVA.Parsing.MultiSourceFrameImageParserBase`3.SourceIdentifiableBuffer">
             <summary>
             Represents a source identifiable buffer.
             </summary>
+            <remarks>
+            This class implements <see cref="T:TVA.ISupportLifecycle"/> such that it will support
+            automatic object pool handling, e.g., returning object to pool when disposed.
+            </remarks>
         </member>
-        <member name="F:TVA.Parsing.MultiSourceFrameImageParserBase`3.IdentifiableBuffer.Source">
+        <member name="F:TVA.Parsing.MultiSourceFrameImageParserBase`3.SourceIdentifiableBuffer.Source">
             <summary>
-            Defines the source identifier of the <see cref="F:TVA.Parsing.MultiSourceFrameImageParserBase`3.IdentifiableBuffer.Buffer"/>.
+            Defines the source identifier of the <see cref="F:TVA.Parsing.MultiSourceFrameImageParserBase`3.SourceIdentifiableBuffer.Buffer"/>.
             </summary>
         </member>
-        <member name="F:TVA.Parsing.MultiSourceFrameImageParserBase`3.IdentifiableBuffer.Buffer">
+        <member name="F:TVA.Parsing.MultiSourceFrameImageParserBase`3.SourceIdentifiableBuffer.Buffer">
             <summary>
-            Defines the buffer which is identifiable by its associated <see cref="F:TVA.Parsing.MultiSourceFrameImageParserBase`3.IdentifiableBuffer.Source"/>.
+            Defines the buffer which is identifiable by its associated <see cref="F:TVA.Parsing.MultiSourceFrameImageParserBase`3.SourceIdentifiableBuffer.Source"/>.
             </summary>
         </member>
-        <member name="M:TVA.Parsing.MultiSourceFrameImageParserBase`3.IdentifiableBuffer.Finalize">
+        <member name="M:TVA.Parsing.MultiSourceFrameImageParserBase`3.SourceIdentifiableBuffer.Finalize">
             <summary>
-            Releases the unmanaged resources before the <see cref="T:TVA.Parsing.MultiSourceFrameImageParserBase`3.IdentifiableBuffer"/> object is reclaimed by <see cref="T:System.GC"/>.
+            Releases the unmanaged resources before the <see cref="T:TVA.Parsing.MultiSourceFrameImageParserBase`3.SourceIdentifiableBuffer"/> object is reclaimed by <see cref="T:System.GC"/>.
             </summary>
         </member>
-        <member name="M:TVA.Parsing.MultiSourceFrameImageParserBase`3.IdentifiableBuffer.Dispose">
+        <member name="M:TVA.Parsing.MultiSourceFrameImageParserBase`3.SourceIdentifiableBuffer.Dispose">
             <summary>
-            Releases all the resources used by the <see cref="T:TVA.Parsing.MultiSourceFrameImageParserBase`3.IdentifiableBuffer"/> object.
+            Releases all the resources used by the <see cref="T:TVA.Parsing.MultiSourceFrameImageParserBase`3.SourceIdentifiableBuffer"/> object.
             </summary>
         </member>
-        <member name="M:TVA.Parsing.MultiSourceFrameImageParserBase`3.IdentifiableBuffer.Dispose(System.Boolean)">
+        <member name="M:TVA.Parsing.MultiSourceFrameImageParserBase`3.SourceIdentifiableBuffer.Dispose(System.Boolean)">
             <summary>
-            Releases the unmanaged resources used by the <see cref="T:TVA.Parsing.MultiSourceFrameImageParserBase`3.IdentifiableBuffer"/> object and optionally releases the managed resources.
+            Releases the unmanaged resources used by the <see cref="T:TVA.Parsing.MultiSourceFrameImageParserBase`3.SourceIdentifiableBuffer"/> object and optionally releases the managed resources.
             </summary>
             <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         </member>
-        <member name="M:TVA.Parsing.MultiSourceFrameImageParserBase`3.IdentifiableBuffer.Initialize">
+        <member name="M:TVA.Parsing.MultiSourceFrameImageParserBase`3.SourceIdentifiableBuffer.Initialize">
             <summary>
-            Initializes (or reinitializes) <see cref="T:TVA.Parsing.MultiSourceFrameImageParserBase`3.IdentifiableBuffer"/> state.
+            Initializes (or reinitializes) <see cref="T:TVA.Parsing.MultiSourceFrameImageParserBase`3.SourceIdentifiableBuffer"/> state.
             </summary>
         </member>
-        <member name="E:TVA.Parsing.MultiSourceFrameImageParserBase`3.IdentifiableBuffer.Disposed">
+        <member name="E:TVA.Parsing.MultiSourceFrameImageParserBase`3.SourceIdentifiableBuffer.Disposed">
             <summary>
-            Occurs when <see cref="T:TVA.Parsing.MultiSourceFrameImageParserBase`3.IdentifiableBuffer"/> is disposed.
+            Occurs when <see cref="T:TVA.Parsing.MultiSourceFrameImageParserBase`3.SourceIdentifiableBuffer"/> is disposed.
             </summary>
         </member>
-        <member name="P:TVA.Parsing.MultiSourceFrameImageParserBase`3.IdentifiableBuffer.Enabled">
+        <member name="P:TVA.Parsing.MultiSourceFrameImageParserBase`3.SourceIdentifiableBuffer.Enabled">
             <summary>
-            Gets or sets enabled state of <see cref="T:TVA.Parsing.MultiSourceFrameImageParserBase`3.IdentifiableBuffer"/>.
+            Gets or sets enabled state of <see cref="T:TVA.Parsing.MultiSourceFrameImageParserBase`3.SourceIdentifiableBuffer"/>.
             </summary>
         </member>
-        <member name="P:TVA.Parsing.MultiSourceFrameImageParserBase`3.IdentifiableBuffer.Count">
+        <member name="P:TVA.Parsing.MultiSourceFrameImageParserBase`3.SourceIdentifiableBuffer.Count">
             <summary>
-            Gets or sets valid number of bytes within the <see cref="F:TVA.Parsing.MultiSourceFrameImageParserBase`3.IdentifiableBuffer.Buffer"/>.
+            Gets or sets valid number of bytes within the <see cref="F:TVA.Parsing.MultiSourceFrameImageParserBase`3.SourceIdentifiableBuffer.Buffer"/>.
             </summary>
             <remarks>   
             This property will automatically initialize buffer. Set to zero to release buffer. 
