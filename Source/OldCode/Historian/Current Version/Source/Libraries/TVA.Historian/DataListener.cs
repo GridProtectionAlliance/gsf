@@ -1185,13 +1185,13 @@ namespace TVA.Historian
             m_parser.Parse(m_clientIDs[(IClient)sender], e.Argument1, 0, e.Argument2);
         }
 
-        private void PacketParser_DataParsed(object sender, EventArgs<Guid, IPacket> e)
+        private void PacketParser_DataParsed(object sender, EventArgs<IPacket> e)
         {
             // Extract data from the packets.
             IEnumerable<IDataPoint> extractedData;
             List<IDataPoint> dataPoints = new List<IDataPoint>();
 
-            extractedData = e.Argument2.ExtractTimeSeriesData();
+            extractedData = e.Argument.ExtractTimeSeriesData();
 
             if (extractedData != null)
                 dataPoints.AddRange(extractedData);

@@ -38,7 +38,7 @@ namespace TVA.Historian.Packets
     /// <summary>
     /// Defines a binary packet received by a historian.
     /// </summary>
-    public interface IPacket : ISupportFrameImage<short>
+    public interface IPacket : ISupportSourceIdentifiableFrameImage<Guid, short>
     {
         #region [ Properties ]
 
