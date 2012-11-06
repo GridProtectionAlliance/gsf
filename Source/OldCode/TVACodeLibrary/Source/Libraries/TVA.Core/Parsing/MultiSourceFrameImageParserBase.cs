@@ -481,8 +481,22 @@ namespace TVA.Parsing
             {
                 if ((object)m_bufferQueue != null)
                     return m_bufferQueue.Count;
-                else
-                    return 0;
+
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// Gets the total number of parsed outputs that are currently queued for publication, if any.
+        /// </summary>
+        public virtual int QueuedOutputs
+        {
+            get
+            {
+                if ((object)m_parsedOutputQueue != null)
+                    return m_parsedOutputQueue.Count;
+
+                return 0;
             }
         }
 
@@ -508,6 +522,8 @@ namespace TVA.Parsing
 
                 status.Append(base.Status);
                 status.Append(m_bufferQueue.Status);
+                status.AppendFormat(" Parsed outputs to publish: {0}", QueuedOutputs);
+                status.AppendLine();
 
                 return status.ToString();
             }
