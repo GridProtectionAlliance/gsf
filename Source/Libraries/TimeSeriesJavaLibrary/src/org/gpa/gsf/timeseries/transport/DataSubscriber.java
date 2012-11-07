@@ -1,7 +1,7 @@
 //******************************************************************************************************
 //  DataSubscriber.java - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright ï¿½ 2010, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -566,7 +566,7 @@ public class DataSubscriber
 			{
 				runCommandThread();
 			}
-		});
+		}, "CommandThread");
 		
 		m_commandThread.start();
 	}
@@ -581,7 +581,7 @@ public class DataSubscriber
 			{
 				runCallbackThread();
 			}
-		});
+		},"CallbackThread");
 
 		m_callbackThread.start();
 	}
@@ -596,7 +596,7 @@ public class DataSubscriber
 			{
 				runCommandChannelResponseThread();
 			}
-		});
+		},"CommandChannelResponseThread");
 
 		m_commandChannelResponseThread.start();
 	}
