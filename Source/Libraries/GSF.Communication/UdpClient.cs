@@ -1133,24 +1133,33 @@ namespace GSF.Communication
             }
             finally
             {
-                if (payload.Length > 0)
+                try
                 {
-                    // Still more to send for this payload.
-                    ThreadPool.QueueUserWorkItem(state => SendPayload((UdpClientPayload)state), payload);
-                }
-                else
-                {
-                    payload.WaitHandle = null;
-
-                    // Return payload and wait handle to their respective object pools.
-                    ReusableObjectPool<UdpClientPayload>.Default.ReturnObject(payload);
-                    ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
-
-                    // Begin sending next client payload.
-                    if (m_sendQueue.TryDequeue(out payload))
+                    if (payload.Length > 0)
+                    {
+                        // Still more to send for this payload.
                         ThreadPool.QueueUserWorkItem(state => SendPayload((UdpClientPayload)state), payload);
+                    }
                     else
-                        Interlocked.Exchange(ref m_sending, 0);
+                    {
+                        payload.WaitHandle = null;
+
+                        // Return payload and wait handle to their respective object pools.
+                        ReusableObjectPool<UdpClientPayload>.Default.ReturnObject(payload);
+                        ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
+
+                        // Begin sending next client payload.
+                        if (m_sendQueue.TryDequeue(out payload))
+                            ThreadPool.QueueUserWorkItem(state => SendPayload((UdpClientPayload)state), payload);
+                        else
+                            Interlocked.Exchange(ref m_sending, 0);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    string errorMessage = string.Format("Exception encountered while attempting to send next payload: {0}", ex.Message);
+                    OnSendDataException(new Exception(errorMessage, ex));
+                    Interlocked.Exchange(ref m_sending, 0);
                 }
             }
         }
