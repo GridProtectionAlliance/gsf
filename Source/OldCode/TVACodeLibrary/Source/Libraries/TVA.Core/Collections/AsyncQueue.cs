@@ -275,7 +275,7 @@ namespace TVA.Collections
 
         // Fields
         private readonly ConcurrentQueue<T> m_asyncQueue;
-        private SpinLock m_asyncLock;
+        private SpinLock m_dequeueLock;
         private int m_processing;
         private ProcessItemFunctionSignature m_processItemFunction;
 
@@ -289,7 +289,7 @@ namespace TVA.Collections
         public AsyncQueue()
         {
             m_asyncQueue = new ConcurrentQueue<T>();
-            m_asyncLock = new SpinLock();
+            m_dequeueLock = new SpinLock();
         }
 
         #endregion
@@ -359,7 +359,7 @@ namespace TVA.Collections
             // as items are being enqueued, this lock will never contend with lock in the ProcessItem method.
             try
             {
-                m_asyncLock.Enter(ref lockTaken);
+                m_dequeueLock.Enter(ref lockTaken);
 
                 if (Interlocked.CompareExchange(ref m_processing, 1, 0) == 0)
                 {
@@ -372,7 +372,7 @@ namespace TVA.Collections
             finally
             {
                 if (lockTaken)
-                    m_asyncLock.Exit();
+                    m_dequeueLock.Exit();
             }
         }
 
@@ -398,7 +398,7 @@ namespace TVA.Collections
 
                 try
                 {
-                    m_asyncLock.Enter(ref lockTaken);
+                    m_dequeueLock.Enter(ref lockTaken);
 
                     if (m_asyncQueue.TryDequeue(out item))
                         ThreadPool.QueueUserWorkItem(ProcessItem, item);
@@ -408,7 +408,7 @@ namespace TVA.Collections
                 finally
                 {
                     if (lockTaken)
-                        m_asyncLock.Exit();
+                        m_dequeueLock.Exit();
                 }
             }
         }
