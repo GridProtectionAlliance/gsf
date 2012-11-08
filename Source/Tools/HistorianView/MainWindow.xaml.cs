@@ -43,6 +43,7 @@ using GSF.Configuration;
 using GSF.Historian;
 using GSF.Historian.Files;
 using GSF.IO;
+using System.Globalization;
 
 namespace HistorianView
 {
@@ -971,7 +972,9 @@ namespace HistorianView
             dateString.Append(' ');
             dateString.Append(m_startTime.ToString("HH:mm:ss.fff"));
 
-            m_startTime = DateTime.Parse(dateString.ToString());
+            // Converts any date format style to US format and clubs both in dateString. 
+            string format = "MM/dd/yyyy HH:mm:ss.fff";
+            m_startTime = DateTime.ParseExact(dateString.ToString(), format, CultureInfo.CreateSpecificCulture("en-US"), DateTimeStyles.None);
         }
 
         // Occurs when the ending date is changed.
@@ -983,7 +986,9 @@ namespace HistorianView
             dateString.Append(' ');
             dateString.Append(m_endTime.ToString("HH:mm:ss.fff"));
 
-            m_endTime = DateTime.Parse(dateString.ToString());
+            // Converts any date format style to US format and clubs both in dateString.
+            string format = "MM/dd/yyyy HH:mm:ss.fff";
+            m_endTime = DateTime.ParseExact(dateString.ToString(), format, CultureInfo.CreateSpecificCulture("en-US"), DateTimeStyles.None);
         }
 
         // Occurs when the user changes the starting time.
