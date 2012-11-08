@@ -408,6 +408,7 @@ namespace TVA.Communication
         public const string DefaultConnectionString = "Server=localhost:8888";
 
         // Fields
+        private SpinLock m_sendLock;
         private ConcurrentQueue<TcpClientPayload> m_sendQueue;
         private int m_sending;
         private bool m_payloadAware;
@@ -450,6 +451,7 @@ namespace TVA.Communication
         public TcpClient(string connectString)
             : base(TransportProtocol.Tcp, connectString)
         {
+            m_sendLock = new SpinLock();
             m_sendQueue = new ConcurrentQueue<TcpClientPayload>();
             m_payloadAware = DefaultPayloadAware;
             m_payloadMarker = Payload.DefaultMarker;
@@ -893,6 +895,7 @@ namespace TVA.Communication
             TcpClientPayload payload;
             TcpClientPayload dequeuedPayload;
             ManualResetEventSlim handle;
+            bool lockTaken = false;
 
             try
             {
@@ -929,13 +932,23 @@ namespace TVA.Communication
                 // Queue payload for sending.
                 m_sendQueue.Enqueue(payload);
 
-                // Send the next queued payload.
-                if (Interlocked.CompareExchange(ref m_sending, 1, 0) == 0)
+                try
                 {
-                    if (m_sendQueue.TryDequeue(out dequeuedPayload))
-                        ThreadPool.QueueUserWorkItem(state => SendPayload((TcpClientPayload)state), dequeuedPayload);
-                    else
-                        Interlocked.Exchange(ref m_sending, 0);
+                    m_sendLock.Enter(ref lockTaken);
+
+                    // Send the next queued payload.
+                    if (Interlocked.CompareExchange(ref m_sending, 1, 0) == 0)
+                    {
+                        if (m_sendQueue.TryDequeue(out dequeuedPayload))
+                            ThreadPool.QueueUserWorkItem(state => SendPayload((TcpClientPayload)state), dequeuedPayload);
+                        else
+                            Interlocked.Exchange(ref m_sending, 0);
+                    }
+                }
+                finally
+                {
+                    if (lockTaken)
+                        m_sendLock.Exit();
                 }
 
                 // Notify that the send operation has started.
@@ -1111,6 +1124,7 @@ namespace TVA.Communication
         {
             TcpClientPayload payload = null;
             ManualResetEventSlim handle = null;
+            bool lockTaken = false;
 
             try
             {
@@ -1158,9 +1172,26 @@ namespace TVA.Communication
 
                         // Begin sending next client payload.
                         if (m_sendQueue.TryDequeue(out payload))
+                        {
                             ThreadPool.QueueUserWorkItem(state => SendPayload((TcpClientPayload)state), payload);
+                        }
                         else
-                            Interlocked.Exchange(ref m_sending, 0);
+                        {
+                            try
+                            {
+                                m_sendLock.Enter(ref lockTaken);
+
+                                if (m_sendQueue.TryDequeue(out payload))
+                                    ThreadPool.QueueUserWorkItem(state => SendPayload((TcpClientPayload)state), payload);
+                                else
+                                    Interlocked.Exchange(ref m_sending, 0);
+                            }
+                            finally
+                            {
+                                if (lockTaken)
+                                    m_sendLock.Exit();
+                            }
+                        }
                     }
                 }
                 catch (Exception ex)
