@@ -3562,6 +3562,45 @@
             <param name="endOfRange">End of range character.</param>
             <returns><c>true</c> is the character is within the range.</returns>
         </member>
+        <member name="T:TVA.Collections.AsyncQueue`1">
+            <summary>
+            Creates a fast, light-weight asynchronous processing queue with very low contention.
+            </summary>
+            <typeparam name="T">Type of items to process.</typeparam>
+        </member>
+        <member name="M:TVA.Collections.AsyncQueue`1.#ctor">
+            <summary>
+            Creates a new <see cref="T:TVA.Collections.AsyncQueue`1"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Collections.AsyncQueue`1.GetEnumerator">
+            <summary>
+            Returns an enumerator that iterates through the <see cref="T:TVA.Collections.AsyncQueue`1"/>.
+            </summary>
+            <returns>An enumerator for the contents of the <see cref="T:TVA.Collections.AsyncQueue`1"/>.</returns>
+        </member>
+        <member name="M:TVA.Collections.AsyncQueue`1.Enqueue(`0)">
+            <summary>
+            Enqueues an item for processing.
+            </summary>
+            <param name="item">Item to be queued for processing.</param>
+        </member>
+        <member name="P:TVA.Collections.AsyncQueue`1.ProcessItemFunction">
+            <summary>
+            Gets or sets item processing function.
+            </summary>
+        </member>
+        <member name="P:TVA.Collections.AsyncQueue`1.Count">
+            <summary>
+            Gets the total number of items currently in the queue.
+            </summary>
+        </member>
+        <member name="T:TVA.Collections.AsyncQueue`1.ProcessItemFunctionSignature">
+            <summary>
+            Defines an item processing function for the <see cref="T:TVA.Collections.AsyncQueue`1"/>.
+            </summary>
+            <param name="item">Item to be processed.</param>
+        </member>
         <member name="T:TVA.Collections.CollectionExtensions">
             <summary>
             Defines extension functions related to manipulation of arrays and collections.
@@ -23786,11 +23825,11 @@
             </summary>
             <param name="output">The object that was deserialized from binary image.</param>
         </member>
-        <member name="M:TVA.Parsing.FrameImageParserBase`2.PublishParsedOutput(System.Object)">
+        <member name="M:TVA.Parsing.FrameImageParserBase`2.PublishParsedOutput(TVA.EventArgs{`1})">
             <summary>
             Thread pool handler used to publish parsed output.
             </summary>
-            <param name="state">Event args to publish.</param>
+            <param name="parsedArgs">Event args to publish.</param>
         </member>
         <member name="M:TVA.Parsing.FrameImageParserBase`2.OnOutputTypeNotFound(`0)">
             <summary>
