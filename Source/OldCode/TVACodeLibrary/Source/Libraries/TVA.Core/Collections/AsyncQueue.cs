@@ -265,6 +265,16 @@ namespace TVA.Collections
     {
         #region [ Members ]
 
+        // Events
+
+        /// <summary>
+        /// Event that is raised if an exception is encountered while attempting to processing an item in the <see cref="AsyncQueue{T}"/>.
+        /// </summary>
+        /// <remarks>
+        /// Processing will not stop for any exceptions thrown by user processing function, but exceptions will be exposed through this event.
+        /// </remarks>
+        public event EventHandler<EventArgs<Exception>> ProcessException;
+
         // Delegates
 
         /// <summary>
@@ -274,10 +284,11 @@ namespace TVA.Collections
         public delegate void ProcessItemFunctionSignature(T item);
 
         // Fields
+        private ProcessItemFunctionSignature m_processItemFunction;
         private readonly ConcurrentQueue<T> m_asyncQueue;
         private SpinLock m_dequeueLock;
         private int m_processing;
-        private ProcessItemFunctionSignature m_processItemFunction;
+        private volatile bool m_enabled;
 
         #endregion
 
@@ -299,7 +310,7 @@ namespace TVA.Collections
         /// <summary>
         /// Gets or sets item processing function.
         /// </summary>
-        public ProcessItemFunctionSignature ProcessItemFunction
+        public virtual ProcessItemFunctionSignature ProcessItemFunction
         {
             get
             {
@@ -319,6 +330,54 @@ namespace TVA.Collections
             get
             {
                 return m_asyncQueue.Count;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that enables or disables processing.
+        /// </summary>
+        public virtual bool Enabled
+        {
+            get
+            {
+                return m_enabled;
+            }
+            set
+            {
+                T item;
+                bool lockTaken = false;
+
+                try
+                {
+                    m_dequeueLock.Enter(ref lockTaken);
+
+                    if (m_enabled && !value)
+                    {
+                        // If we are currently enabled and want to disable, make sure processing flag is set to 0
+                        m_enabled = false;
+                        Interlocked.Exchange(ref m_processing, 0);
+                    }
+                    else if (!m_enabled && value)
+                    {
+                        // If we are currently disabled and want to enable, kick off queue processing if needed
+                        m_enabled = true;
+
+                        if (m_asyncQueue.TryDequeue(out item))
+                        {
+                            Interlocked.Exchange(ref m_processing, 1);
+                            ThreadPool.QueueUserWorkItem(ProcessItem, item);
+                        }
+                        else
+                        {
+                            Interlocked.Exchange(ref m_processing, 0);
+                        }
+                    }
+                }
+                finally
+                {
+                    if (lockTaken)
+                        m_dequeueLock.Exit();
+                }
             }
         }
 
@@ -344,7 +403,7 @@ namespace TVA.Collections
         /// Enqueues an item for processing.
         /// </summary>
         /// <param name="item">Item to be queued for processing.</param>
-        public void Enqueue(T item)
+        public virtual void Enqueue(T item)
         {
             if ((object)m_processItemFunction == null)
                 throw new NullReferenceException("No item processing function has been assigned - cannot enqueue item for processing.");
@@ -354,56 +413,22 @@ namespace TVA.Collections
             // Queue item for processing
             m_asyncQueue.Enqueue(item);
 
-            // This lock prevents a race condition that could result during a context switch between the interlocked
-            // operation and the dequeue which could lead to items being left in the queue and not processed. As long
-            // as items are being enqueued, this lock will never contend with lock in the ProcessItem method.
-            try
+            if (m_enabled)
             {
-                m_dequeueLock.Enter(ref lockTaken);
-
-                if (Interlocked.CompareExchange(ref m_processing, 1, 0) == 0)
-                {
-                    if (m_asyncQueue.TryDequeue(out item))
-                        ThreadPool.QueueUserWorkItem(ProcessItem, item);
-                    else
-                        Interlocked.Exchange(ref m_processing, 0);
-                }
-            }
-            finally
-            {
-                if (lockTaken)
-                    m_dequeueLock.Exit();
-            }
-        }
-
-        // Process next item in the queue
-        private void ProcessItem(object state)
-        {
-            T item = (T)state;
-
-            m_processItemFunction(item);
-
-            // Attempt to dequeue next item for processing
-            if (m_asyncQueue.TryDequeue(out item))
-            {
-                ThreadPool.QueueUserWorkItem(ProcessItem, item);
-            }
-            else
-            {
-                // We need to check for items in the queue again inside a lock in case there were items added
-                // during a context switch before the lock was entered. This lock should rarely contend with
-                // lock in the Enqueue method; if you enqueue frequently the lock will never be taken since
-                // items will be dequeued outside lock above.
-                bool lockTaken = false;
-
+                // This lock prevents a race condition that could result during a context switch between the interlocked
+                // operation and the dequeue which could lead to items being left in the queue and not processed. As long
+                // as items are being enqueued, this lock will never contend with lock in the ProcessItem method.
                 try
                 {
                     m_dequeueLock.Enter(ref lockTaken);
 
-                    if (m_asyncQueue.TryDequeue(out item))
-                        ThreadPool.QueueUserWorkItem(ProcessItem, item);
-                    else
-                        Interlocked.Exchange(ref m_processing, 0);
+                    if (Interlocked.CompareExchange(ref m_processing, 1, 0) == 0)
+                    {
+                        if (m_asyncQueue.TryDequeue(out item))
+                            ThreadPool.QueueUserWorkItem(ProcessItem, item);
+                        else
+                            Interlocked.Exchange(ref m_processing, 0);
+                    }
                 }
                 finally
                 {
@@ -411,6 +436,72 @@ namespace TVA.Collections
                         m_dequeueLock.Exit();
                 }
             }
+        }
+
+        // Process next item in the queue
+        private void ProcessItem(object state)
+        {
+            try
+            {
+                T item = (T)state;
+
+                // Attempt to process current item
+                m_processItemFunction(item);
+
+                // Continue with processing next item so long as we're still enabled
+                if (!m_enabled)
+                    return;
+
+                // Attempt to dequeue next item for processing
+                if (m_asyncQueue.TryDequeue(out item))
+                {
+                    ThreadPool.QueueUserWorkItem(ProcessItem, item);
+                }
+                else
+                {
+                    // We need to check for items in the queue again inside a lock in case there were items added
+                    // during a context switch before the lock was entered. This lock should rarely contend with
+                    // lock in the Enqueue method; if you enqueue frequently the lock will never be taken since
+                    // items will be dequeued outside the lock in the code above.
+                    bool lockTaken = false;
+
+                    try
+                    {
+                        m_dequeueLock.Enter(ref lockTaken);
+
+                        if (m_asyncQueue.TryDequeue(out item))
+                            ThreadPool.QueueUserWorkItem(ProcessItem, item);
+                        else
+                            Interlocked.Exchange(ref m_processing, 0);
+                    }
+                    finally
+                    {
+                        if (lockTaken)
+                            m_dequeueLock.Exit();
+                    }
+                }
+            }
+            catch (ThreadAbortException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException("Exception occurred while processing item: " + ex.Message, ex));
+            }
+        }
+
+        /// <summary>
+        /// Raises the base class <see cref="ProcessException"/> event.
+        /// </summary>
+        /// <remarks>
+        /// Derived classes cannot raise events of their base classes, so we expose event wrapper methods to accomodate as needed.
+        /// </remarks>
+        /// <param name="ex"><see cref="Exception"/> to be passed to ProcessException.</param>
+        protected virtual void OnProcessException(Exception ex)
+        {
+            if ((object)ProcessException != null)
+                ProcessException(this, new EventArgs<Exception>(ex));
         }
 
         #endregion
