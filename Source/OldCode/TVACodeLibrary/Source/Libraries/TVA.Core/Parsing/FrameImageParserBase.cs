@@ -259,12 +259,11 @@
 #endregion
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
 using System.Text;
-using System.Threading;
+using TVA.Collections;
 
 namespace TVA.Parsing
 {
@@ -334,8 +333,7 @@ namespace TVA.Parsing
 
         // Fields
         private Dictionary<TTypeIdentifier, TypeInfo> m_outputTypes;
-        private readonly ConcurrentQueue<EventArgs<TOutputType>> m_parsedOutputQueue;
-        private int m_processing;
+        private readonly AsyncQueue<EventArgs<TOutputType>> m_parsedOutputQueue;
         private bool m_disposed;
 
         #endregion
@@ -348,7 +346,10 @@ namespace TVA.Parsing
         protected FrameImageParserBase()
         {
             m_outputTypes = new Dictionary<TTypeIdentifier, TypeInfo>();
-            m_parsedOutputQueue = new ConcurrentQueue<EventArgs<TOutputType>>();
+            m_parsedOutputQueue = new AsyncQueue<EventArgs<TOutputType>>()
+            {
+                ProcessItemFunction = PublishParsedOutput
+            };
         }
 
         #endregion
@@ -621,15 +622,6 @@ namespace TVA.Parsing
                 {
                     // Queue-up parsed output for publication
                     m_parsedOutputQueue.Enqueue(outputArgs);
-
-                    // Make sure queue processing has started
-                    if (Interlocked.CompareExchange(ref m_processing, 1, 0) == 0)
-                    {
-                        if (m_parsedOutputQueue.TryDequeue(out outputArgs))
-                            ThreadPool.QueueUserWorkItem(PublishParsedOutput, outputArgs);
-                        else
-                            Interlocked.Exchange(ref m_processing, 0);
-                    }
                 }
                 else
                 {
@@ -643,23 +635,13 @@ namespace TVA.Parsing
         /// <summary>
         /// Thread pool handler used to publish parsed output.
         /// </summary>
-        /// <param name="state">Event args to publish.</param>
-        protected virtual void PublishParsedOutput(object state)
+        /// <param name="parsedArgs">Event args to publish.</param>
+        protected virtual void PublishParsedOutput(EventArgs<TOutputType> parsedArgs)
         {
-            EventArgs<TOutputType> parsedArgs = state as EventArgs<TOutputType>;
+            if ((object)DataParsed != null)
+                DataParsed(this, parsedArgs);
 
-            if ((object)parsedArgs != null)
-            {
-                if ((object)DataParsed != null)
-                    DataParsed(this, parsedArgs);
-
-                ReusableObjectPool<EventArgs<TOutputType>>.Default.ReturnObject(parsedArgs);
-
-                if (Enabled && m_parsedOutputQueue.TryDequeue(out parsedArgs))
-                    ThreadPool.QueueUserWorkItem(PublishParsedOutput, parsedArgs);
-                else
-                    Interlocked.Exchange(ref m_processing, 0);
-            }
+            ReusableObjectPool<EventArgs<TOutputType>>.Default.ReturnObject(parsedArgs);
         }
 
         /// <summary>
