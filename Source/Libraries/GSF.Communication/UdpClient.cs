@@ -468,6 +468,7 @@ namespace GSF.Communication
 #endif
 
         private int m_sending;
+        private SpinLock m_sendLock;
         private ConcurrentQueue<UdpClientPayload> m_sendQueue;
         private SocketAsyncEventArgs m_sendArgs;
         private SocketAsyncEventArgs m_receiveArgs;
@@ -499,6 +500,7 @@ namespace GSF.Communication
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_maxSendQueueSize = DefaultMaxSendQueueSize;
 
+            m_sendLock = new SpinLock();
             m_sendQueue = new ConcurrentQueue<UdpClientPayload>();
             m_sendHandler += (sender, args) => ProcessSend();
             m_receiveHandler += (sender, args) => ProcessReceive();
@@ -982,6 +984,7 @@ namespace GSF.Communication
             UdpClientPayload payload;
             UdpClientPayload dequeuedPayload;
             ManualResetEventSlim handle;
+            bool lockTaken = false;
 
             // Check to see if the client has reached the maximum send queue size.
             if (m_maxSendQueueSize > 0 && m_sendQueue.Count >= m_maxSendQueueSize)
@@ -1013,13 +1016,23 @@ namespace GSF.Communication
             // Queue payload for sending.
             m_sendQueue.Enqueue(payload);
 
-            // Send the next queued payload.
-            if (Interlocked.CompareExchange(ref m_sending, 1, 0) == 0)
+            try
             {
-                if (m_sendQueue.TryDequeue(out dequeuedPayload))
-                    ThreadPool.QueueUserWorkItem(state => SendPayload((UdpClientPayload)state), dequeuedPayload);
-                else
-                    Interlocked.Exchange(ref m_sending, 0);
+                m_sendLock.Enter(ref lockTaken);
+
+                // Send the next queued payload.
+                if (Interlocked.CompareExchange(ref m_sending, 1, 0) == 0)
+                {
+                    if (m_sendQueue.TryDequeue(out dequeuedPayload))
+                        ThreadPool.QueueUserWorkItem(state => SendPayload((UdpClientPayload)state), dequeuedPayload);
+                    else
+                        Interlocked.Exchange(ref m_sending, 0);
+                }
+            }
+            finally
+            {
+                if (lockTaken)
+                    m_sendLock.Exit();
             }
 
             // Notify that the send operation has started.
@@ -1103,6 +1116,7 @@ namespace GSF.Communication
         {
             UdpClientPayload payload = null;
             ManualResetEventSlim handle = null;
+            bool lockTaken = false;
 
             try
             {
@@ -1150,9 +1164,26 @@ namespace GSF.Communication
 
                         // Begin sending next client payload.
                         if (m_sendQueue.TryDequeue(out payload))
+                        {
                             ThreadPool.QueueUserWorkItem(state => SendPayload((UdpClientPayload)state), payload);
+                        }
                         else
-                            Interlocked.Exchange(ref m_sending, 0);
+                        {
+                            try
+                            {
+                                m_sendLock.Enter(ref lockTaken);
+
+                                if (m_sendQueue.TryDequeue(out payload))
+                                    ThreadPool.QueueUserWorkItem(state => SendPayload((UdpClientPayload)state), payload);
+                                else
+                                    Interlocked.Exchange(ref m_sending, 0);
+                            }
+                            finally
+                            {
+                                if (lockTaken)
+                                    m_sendLock.Exit();
+                            }
+                        }
                     }
                 }
                 catch (Exception ex)

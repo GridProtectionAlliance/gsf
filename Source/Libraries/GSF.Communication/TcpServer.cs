@@ -374,8 +374,9 @@ namespace GSF.Communication
         private class TcpClientInfo
         {
             public TransportProvider<Socket> Client;
-            public ConcurrentQueue<TcpServerPayload> SendQueue;
             public SocketAsyncEventArgs SendArgs;
+            public SpinLock SendLock;
+            public ConcurrentQueue<TcpServerPayload> SendQueue;
             public int Sending;
         }
 
@@ -872,6 +873,8 @@ namespace GSF.Communication
             TcpServerPayload payload;
             ManualResetEventSlim handle;
 
+            bool lockTaken = false;
+
             if (!m_clientInfoLookup.TryGetValue(clientID, out clientInfo))
                 throw new InvalidOperationException(string.Format("No client found for ID {0}.", clientID));
 
@@ -911,13 +914,23 @@ namespace GSF.Communication
             // Queue payload for sending.
             sendQueue.Enqueue(payload);
 
-            // Send next queued payload.
-            if (Interlocked.CompareExchange(ref clientInfo.Sending, 1, 0) == 0)
+            try
             {
-                if (sendQueue.TryDequeue(out dequeuedPayload))
-                    ThreadPool.QueueUserWorkItem(state => SendPayload((TcpServerPayload)state), dequeuedPayload);
-                else
-                    Interlocked.Exchange(ref clientInfo.Sending, 0);
+                clientInfo.SendLock.Enter(ref lockTaken);
+
+                // Send next queued payload.
+                if (Interlocked.CompareExchange(ref clientInfo.Sending, 1, 0) == 0)
+                {
+                    if (sendQueue.TryDequeue(out dequeuedPayload))
+                        ThreadPool.QueueUserWorkItem(state => SendPayload((TcpServerPayload)state), dequeuedPayload);
+                    else
+                        Interlocked.Exchange(ref clientInfo.Sending, 0);
+                }
+            }
+            finally
+            {
+                if (lockTaken)
+                    clientInfo.SendLock.Exit();
             }
 
             // Notify that the send operation has started.
@@ -1033,10 +1046,13 @@ namespace GSF.Communication
                 else
                 {
                     // We can proceed further with receiving data from the client.
-                    clientInfo = new TcpClientInfo();
-                    clientInfo.Client = client;
-                    clientInfo.SendQueue = new ConcurrentQueue<TcpServerPayload>();
-                    clientInfo.SendArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
+                    clientInfo = new TcpClientInfo()
+                    {
+                        Client = client,
+                        SendArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction(),
+                        SendLock = new SpinLock(),
+                        SendQueue = new ConcurrentQueue<TcpServerPayload>()
+                    };
 
                     // Set up socket args.
                     client.SetSendBuffer(SendBufferSize);
@@ -1136,6 +1152,7 @@ namespace GSF.Communication
             TransportProvider<Socket> client = null;
             ConcurrentQueue<TcpServerPayload> sendQueue = null;
             ManualResetEventSlim handle = null;
+            bool lockTaken = false;
 
             try
             {
@@ -1187,9 +1204,26 @@ namespace GSF.Communication
 
                         // Begin sending next client payload.
                         if (sendQueue.TryDequeue(out payload))
+                        {
                             ThreadPool.QueueUserWorkItem(state => SendPayload((TcpServerPayload)state), payload);
+                        }
                         else
-                            Interlocked.Exchange(ref clientInfo.Sending, 0);
+                        {
+                            try
+                            {
+                                clientInfo.SendLock.Enter(ref lockTaken);
+
+                                if (sendQueue.TryDequeue(out payload))
+                                    ThreadPool.QueueUserWorkItem(state => SendPayload((TcpServerPayload)state), payload);
+                                else
+                                    Interlocked.Exchange(ref clientInfo.Sending, 0);
+                            }
+                            finally
+                            {
+                                if (lockTaken)
+                                    clientInfo.SendLock.Exit();
+                            }
+                        }
                     }
                 }
                 catch (Exception ex)
