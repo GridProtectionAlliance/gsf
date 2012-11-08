@@ -1334,6 +1334,9 @@ namespace GSF.Communication
                 // Create a client instance for the specified protocol.
                 switch (protocol.ToLower())
                 {
+                    case "tls":
+                        client = new TlsClient(settings.ToString());
+                        break;
                     case "tcp":
                         client = new TcpClient(settings.ToString());
                         break;

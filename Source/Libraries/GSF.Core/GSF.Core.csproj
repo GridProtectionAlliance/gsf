@@ -224,6 +224,10 @@
     <Compile Include="ISupportLifecycle.cs" />
     <Compile Include="LittleBinaryValue.cs" />
     <Compile Include="NamespaceDoc.cs" />
+    <Compile Include="Net\Security\CertificatePolicy.cs" />
+    <Compile Include="Net\Security\CertificatePolicyChecker.cs" />
+    <Compile Include="Net\Security\ICertificateChecker.cs" />
+    <Compile Include="Net\Security\SimpleCertificateChecker.cs" />
     <Compile Include="Net\Smtp\Mail.cs" />
     <Compile Include="Net\Smtp\NamespaceDoc.cs" />
     <Compile Include="NtpTimeTag.cs" />

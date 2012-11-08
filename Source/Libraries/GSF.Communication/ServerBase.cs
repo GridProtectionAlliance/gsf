@@ -1489,6 +1489,9 @@ namespace GSF.Communication
                 // Create a server instance for the specified protocol.
                 switch (protocol.ToLower())
                 {
+                    case "tls":
+                        server = new TlsServer(settings.ToString());
+                        break;
                     case "tcp":
                         server = new TcpServer(settings.ToString());
                         break;

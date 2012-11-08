@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  SslClient.cs - Gbtc
+//  TlsServer.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2012
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -265,28 +265,35 @@
 #endregion
 
 using GSF.Configuration;
+using GSF.IO;
+using GSF.Net.Security;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
-using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace GSF.Communication
 {
     /// <summary>
-    /// Represents a TCP-based communication client with SSL authentication and encryption.
+    /// Represents a TCP-based communication server with SSL authentication and encryption.
     /// </summary>
-    /// <seealso cref="TcpClient"/>
-    public class SslClient : ClientBase
+    public class TlsServer : ServerBase
     {
         #region [ Members ]
 
         // Constants
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="TrustedCertificatesPath"/> property.
+        /// </summary>
+        public readonly string DefaultTrustedCertificatesPath = FilePath.GetAbsolutePath("Trusted Certificates");
 
         /// <summary>
         /// Specifies the default value for the <see cref="PayloadAware"/> property.
@@ -299,70 +306,71 @@ namespace GSF.Communication
         public const bool DefaultAllowDualStackSocket = true;
 
         /// <summary>
-        /// Specifies the default value for the <see cref="ClientBase.ConnectionString"/> property.
+        /// Specifies the default value for the <see cref="ServerBase.ConfigurationString"/> property.
         /// </summary>
-        public const string DefaultConnectionString = "Server=localhost:8888";
+        public const string DefaultConfigurationString = "Port=8888";
 
         // Fields
+        private SimpleCertificateChecker m_defaultCertificateChecker;
+        private ICertificateChecker m_certificateChecker;
         private RemoteCertificateValidationCallback m_remoteCertificateValidationCallback;
         private LocalCertificateSelectionCallback m_localCertificateSelectionCallback;
-        private X509Certificate2Collection m_clientCertificates;
-        private SslProtocols m_enabledSslProtocols;
-        private bool m_checkCertificateRevocation;
+        private string m_trustedCertificatesPath;
         private string m_certificateFile;
         private X509Certificate m_certificate;
+        private SslProtocols m_enabledSslProtocols;
+        private bool m_requireClientCertificate;
+        private bool m_checkCertificateRevocation;
 
         private bool m_payloadAware;
         private byte[] m_payloadMarker;
         private IPStack m_ipStack;
         private bool m_allowDualStackSocket;
-        private int m_connectionAttempts;
-        private TransportProvider<SslStream> m_sslClient;
-        private Dictionary<string, string> m_connectData;
-        private ManualResetEvent m_connectWaitHandle;
-        private object m_connectLock;
-        private bool m_disposed;
+        private Socket m_tlsServer;
+        private SocketAsyncEventArgs m_acceptArgs;
+        private ConcurrentDictionary<Guid, TransportProvider<SslStream>> m_tlsClients;
+        private Dictionary<string, string> m_configData;
 
-        private EventHandler<SocketAsyncEventArgs> m_connectHandler;
+        private EventHandler<SocketAsyncEventArgs> m_acceptHandler;
 
         #endregion
 
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SslClient"/> class.
+        /// Initializes a new instance of the <see cref="TcpServer"/> class.
         /// </summary>
-        public SslClient()
-            : this(DefaultConnectionString)
+        public TlsServer()
+            : this(DefaultConfigurationString)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SslClient"/> class.
+        /// Initializes a new instance of the <see cref="TcpServer"/> class.
         /// </summary>
-        /// <param name="connectString">Connect string of the <see cref="TcpClient"/>. See <see cref="DefaultConnectionString"/> for format.</param>
-        public SslClient(string connectString)
-            : base(TransportProtocol.Tcp, connectString)
+        /// <param name="configString">Config string of the <see cref="TcpServer"/>. See <see cref="DefaultConfigurationString"/> for format.</param>
+        public TlsServer(string configString)
+            : base(TransportProtocol.Tcp, configString)
         {
+            m_defaultCertificateChecker = new SimpleCertificateChecker();
             m_localCertificateSelectionCallback = DefaultLocalCertificateSelectionCallback;
-            m_clientCertificates = new X509Certificate2Collection();
-            m_enabledSslProtocols = SslProtocols.None;
+            m_enabledSslProtocols = SslProtocols.Default;
             m_checkCertificateRevocation = true;
 
+            m_trustedCertificatesPath = DefaultTrustedCertificatesPath;
             m_payloadAware = DefaultPayloadAware;
             m_payloadMarker = Payload.DefaultMarker;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
-            m_sslClient = new TransportProvider<SslStream>();
-            m_connectLock = new object();
+            m_tlsClients = new ConcurrentDictionary<Guid, TransportProvider<SslStream>>();
 
-            m_connectHandler = (sender, args) => ProcessConnect(args);
+            m_acceptHandler = (sender, args) => ProcessAccept();
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SslClient"/> class.
+        /// Initializes a new instance of the <see cref="TcpServer"/> class.
         /// </summary>
-        /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="TcpClient"/>.</param>
-        public SslClient(IContainer container)
+        /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="TcpServer"/>.</param>
+        public TlsServer(IContainer container)
             : this()
         {
             if (container != null)
@@ -431,31 +439,38 @@ namespace GSF.Communication
         }
 
         /// <summary>
-        /// Gets the <see cref="TransportProvider{Socket}"/> object for the <see cref="TcpClient"/>.
+        /// Gets the <see cref="Socket"/> object for the <see cref="TcpServer"/>.
         /// </summary>
         [Browsable(false)]
-        public TransportProvider<SslStream> Client
+        public Socket Server
         {
             get
             {
-                return m_sslClient;
+                return m_tlsServer;
             }
         }
 
         /// <summary>
-        /// Gets the server URI of the <see cref="SslClient"/>.
+        /// Gets or sets the certificate checker used to validate remote certificates.
         /// </summary>
-        [Browsable(false)]
-        public override string ServerUri
+        /// <remarks>
+        /// The certificate checker will only be used to validate certificates if
+        /// the <see cref="RemoteCertificateValidationCallback"/> is set to null.
+        /// </remarks>
+        public ICertificateChecker CertificateChecker
         {
             get
             {
-                return string.Format("{0}://{1}", TransportProtocol, m_connectData["server"]).ToLower();
+                return m_certificateChecker ?? m_defaultCertificateChecker;
+            }
+            set
+            {
+                m_certificateChecker = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets the callback used to verify remote certificates.
+        /// Gets or sets the callback used to validate remote certificates.
         /// </summary>
         public RemoteCertificateValidationCallback RemoteCertificateValidationCallback
         {
@@ -470,7 +485,7 @@ namespace GSF.Communication
         }
 
         /// <summary>
-        /// Gets or sets the callback used to select a local certificate.
+        /// Gets or sets the callback used to select local certificates.
         /// </summary>
         public LocalCertificateSelectionCallback LocalCertificateSelectionCallback
         {
@@ -481,47 +496,6 @@ namespace GSF.Communication
             set
             {
                 m_localCertificateSelectionCallback = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets the collection of X509 certificates for this client.
-        /// </summary>
-        public X509CertificateCollection ClientCertificates
-        {
-            get
-            {
-                return m_clientCertificates;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a set of flags which determine the enabled <see cref="SslProtocols"/>.
-        /// </summary>
-        public SslProtocols EnabledSslProtocols
-        {
-            get
-            {
-                return m_enabledSslProtocols;
-            }
-            set
-            {
-                m_enabledSslProtocols = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that determines whether the certificate revocation list is checked during authentication.
-        /// </summary>
-        public bool CheckCertificateRevocation
-        {
-            get
-            {
-                return m_checkCertificateRevocation;
-            }
-            set
-            {
-                m_checkCertificateRevocation = value;
             }
         }
 
@@ -544,7 +518,7 @@ namespace GSF.Communication
         }
 
         /// <summary>
-        /// Gets or sets the local certificate selected by the default <see cref="LocalCertificateSelectionCallback"/>.
+        /// Gets or sets the certificate used to identify this server.
         /// </summary>
         public X509Certificate Certificate
         {
@@ -558,57 +532,172 @@ namespace GSF.Communication
             }
         }
 
+        /// <summary>
+        /// Gets or sets a set of flags which determine the enabled <see cref="SslProtocols"/>.
+        /// </summary>
+        public SslProtocols EnabledSslProtocols
+        {
+            get
+            {
+                return m_enabledSslProtocols;
+            }
+            set
+            {
+                m_enabledSslProtocols = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a flag that determines whether a client certificate is required during authentication.
+        /// </summary>
+        public bool RequireClientCertificate
+        {
+            get
+            {
+                return m_requireClientCertificate;
+            }
+            set
+            {
+                m_requireClientCertificate = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that determines whether the certificate revocation list is checked during authentication.
+        /// </summary>
+        public bool CheckCertificateRevocation
+        {
+            get
+            {
+                return m_checkCertificateRevocation;
+            }
+            set
+            {
+                m_checkCertificateRevocation = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the path to the directory containing the trusted certificates.
+        /// </summary>
+        public string TrustedCertificatesPath
+        {
+            get
+            {
+                return m_trustedCertificatesPath;
+            }
+            set
+            {
+                m_trustedCertificatesPath = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the set of valid policy errors when validating remote certificates.
+        /// </summary>
+        public SslPolicyErrors ValidPolicyErrors
+        {
+            get
+            {
+                return m_defaultCertificateChecker.ValidPolicyErrors;
+            }
+            set
+            {
+                m_defaultCertificateChecker.ValidPolicyErrors = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the set of valid chain flags used when validating remote certificates.
+        /// </summary>
+        public X509ChainStatusFlags ValidChainFlags
+        {
+            get
+            {
+                return m_defaultCertificateChecker.ValidChainFlags;
+            }
+            set
+            {
+                m_defaultCertificateChecker.ValidChainFlags = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
 
         /// <summary>
-        /// When overridden in a derived class, reads a number of bytes from the current received data buffer and writes those bytes into a byte array at the specified offset.
+        /// Reads a number of bytes from the current received data buffer and writes those bytes into a byte array at the specified offset.
         /// </summary>
+        /// <param name="clientID">ID of the client from which data buffer should be read.</param>
         /// <param name="buffer">Destination buffer used to hold copied bytes.</param>
         /// <param name="startIndex">0-based starting index into destination <paramref name="buffer"/> to begin writing data.</param>
         /// <param name="length">The number of bytes to read from current received data buffer and write into <paramref name="buffer"/>.</param>
         /// <returns>The number of bytes read.</returns>
         /// <remarks>
-        /// This function should only be called from within the <see cref="ClientBase.ReceiveData"/> event handler. Calling this method outside this event
-        /// will have unexpected results.
+        /// This function should only be called from within the <see cref="ServerBase.ReceiveClientData"/> event handler. Calling this method
+        /// outside this event will have unexpected results.
         /// </remarks>
-        public override int Read(byte[] buffer, int startIndex, int length)
+        /// <exception cref="InvalidOperationException">
+        /// No received data buffer has been defined to read -or-
+        /// Specified <paramref name="clientID"/> does not exist, cannot read buffer.
+        /// </exception>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <paramref name="length"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        public override int Read(Guid clientID, byte[] buffer, int startIndex, int length)
         {
             buffer.ValidateParameters(startIndex, length);
 
-            if ((object)m_sslClient.ReceiveBuffer != null)
+            TransportProvider<SslStream> tlsClient;
+
+            if (m_tlsClients.TryGetValue(clientID, out tlsClient))
             {
-                int sourceLength = m_sslClient.BytesReceived - ReadIndex;
-                int readBytes = length > sourceLength ? sourceLength : length;
-                Buffer.BlockCopy(m_sslClient.ReceiveBuffer, ReadIndex, buffer, startIndex, readBytes);
+                if ((object)tlsClient.ReceiveBuffer != null)
+                {
+                    int readIndex = ReadIndicies[clientID];
+                    int sourceLength = tlsClient.BytesReceived - readIndex;
+                    int readBytes = length > sourceLength ? sourceLength : length;
+                    Buffer.BlockCopy(tlsClient.ReceiveBuffer, readIndex, buffer, startIndex, readBytes);
 
-                // Update read index for next call
-                ReadIndex += readBytes;
+                    // Update read index for next call
+                    readIndex += readBytes;
 
-                if (ReadIndex >= m_sslClient.BytesReceived)
-                    ReadIndex = 0;
+                    if (readIndex >= tlsClient.BytesReceived)
+                        readIndex = 0;
 
-                return readBytes;
+                    ReadIndicies[clientID] = readIndex;
+
+                    return readBytes;
+                }
+
+                throw new InvalidOperationException("No received data buffer has been defined to read.");
             }
 
-            throw new InvalidOperationException("No received data buffer has been defined to read.");
+            throw new InvalidOperationException("Specified client ID does not exist, cannot read buffer.");
         }
 
         /// <summary>
-        /// Saves <see cref="TcpClient"/> settings to the config file if the <see cref="ClientBase.PersistSettings"/> property is set to true.
+        /// Saves <see cref="TcpServer"/> settings to the config file if the <see cref="ServerBase.PersistSettings"/> property is set to true.
         /// </summary>
         public override void SaveSettings()
         {
             base.SaveSettings();
+
             if (PersistSettings)
             {
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
                 settings["EnabledSslProtocols", true].Update(m_enabledSslProtocols);
+                settings["RequireClientCertificate", true].Update(m_requireClientCertificate);
                 settings["CheckCertificateRevocation", true].Update(m_checkCertificateRevocation);
                 settings["CertificateFile", true].Update(m_certificateFile);
+                settings["TrustedCertificatesPath", true].Update(m_trustedCertificatesPath);
+                settings["ValidPolicyErrors", true].Update(ValidPolicyErrors);
+                settings["ValidChainFlags", true].Update(ValidChainFlags);
                 settings["PayloadAware", true].Update(m_payloadAware);
                 settings["AllowDualStackSocket", true].Update(m_allowDualStackSocket);
                 config.Save();
@@ -616,237 +705,232 @@ namespace GSF.Communication
         }
 
         /// <summary>
-        /// Loads saved <see cref="TcpClient"/> settings from the config file if the <see cref="ClientBase.PersistSettings"/> property is set to true.
+        /// Loads saved <see cref="TcpServer"/> settings from the config file if the <see cref="ServerBase.PersistSettings"/> property is set to true.
         /// </summary>
         public override void LoadSettings()
         {
             base.LoadSettings();
+
             if (PersistSettings)
             {
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings.Add("EnabledSslProtocols", m_enabledSslProtocols, "The set of SSL protocols that are enabled for this client.");
+                settings.Add("EnabledSslProtocols", m_enabledSslProtocols, "The set of SSL protocols that are enabled for this server.");
+                settings.Add("RequireClientCertificate", m_requireClientCertificate, "True if the client certificate is required during authentication, otherwise False.");
                 settings.Add("CheckCertificateRevocation", m_checkCertificateRevocation, "True if the certificate revocation list is to be checked during authentication, otherwise False.");
-                settings.Add("CertificateFile", m_certificateFile, "Path to the certificate used by this client for authentication.");
+                settings.Add("CertificateFile", m_certificateFile, "Path to the local certificate used by this server for authentication.");
+                settings.Add("TrustedCertificatesPath", m_trustedCertificatesPath, "Path to the directory containing the trusted remote certificates.");
+                settings.Add("ValidPolicyErrors", ValidPolicyErrors, "Set of valid policy errors when validating remote certificates.");
+                settings.Add("ValidChainFlags", ValidChainFlags, "Set of valid chain flags used when validating remote certificates.");
                 settings.Add("PayloadAware", m_payloadAware, "True if payload boundaries are to be preserved during transmission, otherwise False.");
                 settings.Add("AllowDualStackSocket", m_allowDualStackSocket, "True if dual-mode socket is allowed when IP address is IPv6, otherwise False.");
                 EnabledSslProtocols = settings["EnabledSslProtocols"].ValueAs(m_enabledSslProtocols);
+                RequireClientCertificate = settings["RequireClientCertificate"].ValueAs(m_requireClientCertificate);
                 CheckCertificateRevocation = settings["CheckCertificateRevocation"].ValueAs(m_checkCertificateRevocation);
                 CertificateFile = settings["CertificateFile"].ValueAs(m_certificateFile);
+                TrustedCertificatesPath = settings["TrustedCertificatesPath"].ValueAs(m_trustedCertificatesPath);
+                ValidPolicyErrors = settings["ValidPolicyErrors"].ValueAs(ValidPolicyErrors);
+                ValidChainFlags = settings["ValidChainFlags"].ValueAs(ValidChainFlags);
                 PayloadAware = settings["PayloadAware"].ValueAs(m_payloadAware);
                 AllowDualStackSocket = settings["AllowDualStackSocket"].ValueAs(m_allowDualStackSocket);
             }
         }
 
         /// <summary>
-        /// When overridden in a derived class, disconnects client from the server synchronously.
+        /// Stops the <see cref="TcpServer"/> synchronously and disconnects all connected clients.
         /// </summary>
-        public override void Disconnect()
+        public override void Stop()
         {
-            lock (m_connectLock)
+            SocketAsyncEventArgs acceptArgs = m_acceptArgs;
+            m_acceptArgs = null;
+
+            if (CurrentState == ServerState.Running)
             {
-                if (CurrentState != ClientState.Disconnected)
-                {
-                    m_sslClient.Reset();
-                    OnConnectionTerminated();
-                }
+                DisconnectAll();        // Disconnection all clients.
+                m_tlsServer.Close();    // Stop accepting new connections.
+
+                // Clean up accept args.
+                acceptArgs.Dispose();
+
+                OnServerStopped();
             }
         }
 
         /// <summary>
-        /// Connects the <see cref="TcpClient"/> to the server asynchronously.
+        /// Starts the <see cref="TcpServer"/> synchronously and begins accepting client connections asynchronously.
         /// </summary>
-        /// <exception cref="InvalidOperationException">Attempt is made to connect the <see cref="TcpClient"/> when it is not disconnected.</exception>
-        /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
-        public override WaitHandle ConnectAsync()
+        /// <exception cref="InvalidOperationException">Attempt is made to <see cref="Start()"/> the <see cref="TcpServer"/> when it is running.</exception>
+        public override void Start()
         {
-            lock (m_connectLock)
+            if (CurrentState == ServerState.NotRunning)
             {
-                if (CurrentState == ClientState.Disconnected)
-                {
-                    if (m_connectWaitHandle == null)
-                        m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
+                // Initialize if unitialized.
+                if (!Initialized)
+                    Initialize();
 
-                    OnConnectionAttempt();
+                // Bind server socket to local end-point and listen.
+                m_tlsServer = Transport.CreateSocket(m_configData["interface"], int.Parse(m_configData["port"]), ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
+                m_tlsServer.Listen(1);
 
-                    // Create client socket to establish presence
-                    Socket socket = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
-                    Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
+                // Begin accepting incoming connection asynchronously.
+                m_acceptArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
 
-                    // Begin asynchronous connect operation and return wait handle for the asynchronous operation
-                    SocketAsyncEventArgs args = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
+                m_acceptArgs.AcceptSocket = null;
+                m_acceptArgs.SetBuffer(null, 0, 0);
+                m_acceptArgs.SocketFlags = SocketFlags.None;
+                m_acceptArgs.Completed += m_acceptHandler;
 
-                    args.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
-                    args.SocketFlags = SocketFlags.None;
-                    args.UserToken = socket;
-                    args.Completed += m_connectHandler;
+                if (!m_tlsServer.AcceptAsync(m_acceptArgs))
+                    ThreadPool.QueueUserWorkItem(state => ProcessAccept());
 
-                    if (!socket.ConnectAsync(args))
-                        ThreadPool.QueueUserWorkItem(state => ProcessConnect((SocketAsyncEventArgs)state), args);
-
-                    return m_connectWaitHandle;
-                }
-                else
-                {
-                    throw new InvalidOperationException("Client is currently not disconnected");
-                }
+                // Notify that the server has been started successfully.
+                OnServerStarted();
+            }
+            else
+            {
+                throw new InvalidOperationException("Server is currently running");
             }
         }
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="TcpClient"/> and optionally releases the managed resources.
+        /// Disconnects the specified connected client.
         /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
+        /// <param name="clientID">ID of the client to be disconnected.</param>
+        /// <exception cref="InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
+        public override void DisconnectOne(Guid clientID)
         {
-            if (!m_disposed)
+            TransportProvider<SslStream> tlsClient;
+
+            if (!TryGetClient(clientID, out tlsClient))
+                return;
+
+            try
             {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.
-                    if (disposing)
-                    {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        if ((object)m_connectWaitHandle != null)
-                            m_connectWaitHandle.Dispose();
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
-                }
+                OnClientDisconnected(clientID);
+                tlsClient.Reset();
+            }
+            catch (Exception ex)
+            {
+                OnSendClientDataException(clientID, new InvalidOperationException(string.Format("Client disconnection exception: {0}", ex.Message), ex));
             }
         }
 
         /// <summary>
-        /// When overridden in a derived class, validates the specified <paramref name="connectionString"/>.
+        /// Gets the <see cref="TransportProvider{SslStream}"/> object associated with the specified client ID.
         /// </summary>
-        /// <param name="connectionString">The connection string to be validated.</param>
-        protected override void ValidateConnectionString(string connectionString)
+        /// <param name="clientID">ID of the client.</param>
+        /// <returns>An <see cref="TransportProvider{SslStream}"/> object.</returns>
+        /// <exception cref="InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
+        public bool TryGetClient(Guid clientID, out TransportProvider<SslStream> tlsClient)
         {
-            m_connectData = connectionString.ParseKeyValuePairs();
+            return m_tlsClients.TryGetValue(clientID, out tlsClient);
+        }
+
+        /// <summary>
+        /// Validates the specified <paramref name="configurationString"/>.
+        /// </summary>
+        /// <param name="configurationString">Configuration string to be validated.</param>
+        /// <exception cref="ArgumentException">Port property is missing.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Port property value is not between <see cref="Transport.PortRangeLow"/> and <see cref="Transport.PortRangeHigh"/>.</exception>
+        protected override void ValidateConfigurationString(string configurationString)
+        {
+            m_configData = configurationString.ParseKeyValuePairs();
 
             // Derive desired IP stack based on specified "interface" setting, adding setting if it's not defined
-            m_ipStack = Transport.GetInterfaceIPStack(m_connectData);
+            m_ipStack = Transport.GetInterfaceIPStack(m_configData);
 
-            // Check if 'server' property is missing.
-            if (!m_connectData.ContainsKey("server"))
-                throw new ArgumentException(string.Format("Server property is missing (Example: {0})", DefaultConnectionString));
+            if (!m_configData.ContainsKey("port"))
+                throw new ArgumentException(string.Format("Port property is missing (Example: {0})", DefaultConfigurationString));
 
-            // Backwards compatibility adjustments.
-            // New Format: Server=localhost:8888
-            // Old Format: Server=localhost; Port=8888
-            if (m_connectData.ContainsKey("port"))
-                m_connectData["server"] = string.Format("{0}:{1}", m_connectData["server"], m_connectData["port"]);
-
-            // Check if 'server' property is valid.
-            Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
-
-            if (endpoint == Match.Empty)
-                throw new FormatException(string.Format("Server property is invalid (Example: {0})", DefaultConnectionString));
-
-            if (!Transport.IsPortNumberValid(endpoint.Groups["port"].Value))
-                throw new ArgumentOutOfRangeException("connectionString", string.Format("Server port must between {0} and {1}", Transport.PortRangeLow, Transport.PortRangeHigh));
+            if (!Transport.IsPortNumberValid(m_configData["port"]))
+                throw new ArgumentOutOfRangeException("configurationString", string.Format("Port number must be between {0} and {1}", Transport.PortRangeLow, Transport.PortRangeHigh));
         }
 
         /// <summary>
-        /// When overridden in a derived class, sends data to the server asynchronously.
+        /// Sends data to the specified client asynchronously.
         /// </summary>
+        /// <param name="clientID">ID of the client to which the data is to be sent.</param>
         /// <param name="data">The buffer that contains the binary data to be sent.</param>
         /// <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
         /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
-        protected override WaitHandle SendDataAsync(byte[] data, int offset, int length)
+        protected override WaitHandle SendDataToAsync(Guid clientID, byte[] data, int offset, int length)
         {
+            TransportProvider<SslStream> tlsClient;
             WaitHandle handle;
+
+            if (!TryGetClient(clientID, out tlsClient))
+                throw new InvalidOperationException(string.Format("No client found for ID {0}.", clientID));
 
             // Prepare for payload-aware transmission.
             if (m_payloadAware)
                 Payload.AddHeader(ref data, ref offset, ref length, m_payloadMarker);
 
             // Send payload to the client asynchronously.
-            handle = m_sslClient.Provider.BeginWrite(data, offset, length, ProcessSend, length).AsyncWaitHandle;
+            handle = tlsClient.Provider.BeginWrite(data, offset, length, ProcessSend, new Tuple<Guid, int>(clientID, length)).AsyncWaitHandle;
 
             // Notify that the send operation has started.
-            OnSendDataStart();
+            OnSendClientDataStart(tlsClient.ID);
 
             // Return the async handle that can be used to wait for the async operation to complete.
             return handle;
         }
 
         /// <summary>
-        /// Raises the <see cref="ClientBase.ReceiveDataException"/> event.
+        /// Callback method for asynchronous accept operation.
         /// </summary>
-        /// <param name="ex">Exception to send to <see cref="ClientBase.ReceiveDataException"/> event.</param>
-        protected override void OnReceiveDataException(Exception ex)
+        private void ProcessAccept()
         {
-            if (CurrentState != ClientState.Disconnected)
-                base.OnReceiveDataException(ex);
-        }
+            TransportProvider<SslStream> client = new TransportProvider<SslStream>();
+            IPEndPoint remoteEndPoint = null;
+            NetworkStream netStream;
 
-        /// <summary>
-        /// Raises the <see cref="ClientBase.ConnectionTerminated"/> event.
-        /// </summary>
-        protected override void OnConnectionTerminated()
-        {
-            if (CurrentState != ClientState.Disconnected)
-                base.OnConnectionTerminated();
-        }
+            Tuple<TransportProvider<SslStream>, IPEndPoint> asyncState;
 
-        /// <summary>
-        /// Callback method for asynchronous connect operation.
-        /// </summary>
-        private void ProcessConnect(SocketAsyncEventArgs args)
-        {
             try
             {
-                Socket connectSocket = (Socket)args.UserToken;
-                NetworkStream netStream;
+                if (CurrentState == ServerState.NotRunning)
+                    return;
 
-                // Perform post-connect operations.
-                m_connectionAttempts++;
-
-                if (args.SocketError != SocketError.Success)
-                    throw new SocketException((int)args.SocketError);
-
-                netStream = new NetworkStream(connectSocket, true);
-                m_sslClient.Provider = new SslStream(netStream, false, m_remoteCertificateValidationCallback, m_localCertificateSelectionCallback);
-
-                // Authenticate.
-                m_sslClient.Provider.BeginAuthenticateAsClient(m_connectData["server"], m_clientCertificates, m_enabledSslProtocols, m_checkCertificateRevocation, ProcessAuthenticate, null);
-            }
-            catch (SocketException ex)
-            {
-                OnConnectionException(ex);
-                if (ex.SocketErrorCode == SocketError.ConnectionRefused &&
-                    (MaxConnectionAttempts == -1 || m_connectionAttempts < MaxConnectionAttempts))
+                if (m_acceptArgs.SocketError != SocketError.Success)
                 {
-                    // Server is unavailable, so keep retrying connection to the server.
-                    try
-                    {
-                        ConnectAsync();
-                    }
-                    catch
-                    {
-                        TerminateConnection(false);
-                    }
+                    // Error is unrecoverable.
+                    // We need to make sure to restart the
+                    // server before we throw the error.
+                    SocketError error = m_acceptArgs.SocketError;
+                    ThreadPool.QueueUserWorkItem(state => ReStart());
+                    throw new SocketException((int)error);
                 }
-                else
+
+                // Process the newly connected client.
+                LoadTrustedCertificates();
+                remoteEndPoint = m_acceptArgs.AcceptSocket.RemoteEndPoint as IPEndPoint;
+                netStream = new NetworkStream(m_acceptArgs.AcceptSocket);
+                client.Provider = new SslStream(netStream, false, m_remoteCertificateValidationCallback, m_localCertificateSelectionCallback);
+
+                asyncState = new Tuple<TransportProvider<SslStream>, IPEndPoint>(client, remoteEndPoint);
+                client.Provider.BeginAuthenticateAsServer(m_certificate, m_requireClientCertificate, m_enabledSslProtocols, m_checkCertificateRevocation, ProcessAuthenticate, asyncState);
+
+                // Return to accepting new connections.
+                m_acceptArgs.AcceptSocket = null;
+
+                if (!m_tlsServer.AcceptAsync(m_acceptArgs))
                 {
-                    // For any other reason, clean-up as if the client was disconnected.
-                    TerminateConnection(false);
+                    ThreadPool.QueueUserWorkItem(state => ProcessAccept());
                 }
             }
             catch (Exception ex)
             {
-                OnConnectionException(ex);
-                TerminateConnection(false);
-            }
-            finally
-            {
-                args.Dispose();
+                // Notify of the exception.
+                if ((object)remoteEndPoint != null)
+                {
+                    string clientAddress = remoteEndPoint.Address.ToString();
+                    string errorMessage = string.Format("Unable to accept connection to client [{0}]: {1}", clientAddress, ex.Message);
+                    OnClientConnectingException(new Exception(errorMessage, ex));
+                }
+
+                TerminateConnection(client, false);
             }
         }
 
@@ -855,54 +939,43 @@ namespace GSF.Communication
         /// </summary>
         private void ProcessAuthenticate(IAsyncResult asyncResult)
         {
+            Tuple<TransportProvider<SslStream>, IPEndPoint> asyncState = (Tuple<TransportProvider<SslStream>, IPEndPoint>)asyncResult.AsyncState;
+            TransportProvider<SslStream> client = asyncState.Item1;
+            IPEndPoint remoteEndPoint = asyncState.Item2;
+
             try
             {
-                // Notify threads waiting on connect operation.
-                m_connectWaitHandle.Set();
-
-                // Finish authentication.
-                m_sslClient.Provider.EndAuthenticateAsClient(asyncResult);
+                client.Provider.EndAuthenticateAsServer(asyncResult);
 
                 if (EnabledSslProtocols != SslProtocols.None)
                 {
-                    if (!m_sslClient.Provider.IsAuthenticated)
-                        throw new InvalidOperationException("Connection could not be established because we could not authenticate with the server.");
+                    if (!client.Provider.IsAuthenticated)
+                        throw new InvalidOperationException("Unable to authenticate.");
 
-                    if (!m_sslClient.Provider.IsEncrypted)
-                        throw new InvalidOperationException("Connection could not be established because the data stream is not encrypted.");
+                    if (!client.Provider.IsEncrypted)
+                        throw new InvalidOperationException("Unable to encrypt data stream.");
                 }
 
-                // Notify of established connection
-                // and begin receiving data.
-                OnConnectionEstablished();
-                ReceivePayloadAsync();
-            }
-            catch (SocketException ex)
-            {
-                OnConnectionException(ex);
-                if (ex.SocketErrorCode == SocketError.ConnectionRefused &&
-                    (MaxConnectionAttempts == -1 || m_connectionAttempts < MaxConnectionAttempts))
+                if (MaxClientConnections != -1 && ClientIDs.Length >= MaxClientConnections)
                 {
-                    // Server is unavailable, so keep retrying connection to the server.
-                    try
-                    {
-                        ConnectAsync();
-                    }
-                    catch
-                    {
-                        TerminateConnection(false);
-                    }
+                    // Reject client connection since limit has been reached.
+                    TerminateConnection(client, false);
                 }
                 else
                 {
-                    // For any other reason, clean-up as if the client was disconnected.
-                    TerminateConnection(false);
+                    // We can proceed further with receiving data from the client.
+                    m_tlsClients.TryAdd(client.ID, client);
+                    OnClientConnected(client.ID);
+                    ReceivePayloadAsync(client);
                 }
             }
             catch (Exception ex)
             {
-                OnConnectionException(ex);
-                TerminateConnection(false);
+                // Notify of the exception.
+                string clientAddress = remoteEndPoint.Address.ToString();
+                string errorMessage = string.Format("Unable to authenticate connection to client [{0}]: {1}", clientAddress, CertificateChecker.ReasonForFailure ?? ex.Message);
+                OnClientConnectingException(new Exception(errorMessage, ex));
+                TerminateConnection(client, false);
             }
         }
 
@@ -911,53 +984,61 @@ namespace GSF.Communication
         /// </summary>
         private void ProcessSend(IAsyncResult asyncResult)
         {
+            Tuple<Guid, int> asyncState = (Tuple<Guid, int>)asyncResult.AsyncState;
+            Guid clientID = asyncState.Item1;
+
+            TransportProvider<SslStream> client;
+
+            if (!TryGetClient(clientID, out client))
+                return;
+
             try
             {
                 // Send operation is complete.
-                m_sslClient.Provider.EndWrite(asyncResult);
-                m_sslClient.Statistics.UpdateBytesSent((int)asyncResult.AsyncState);
-                OnSendDataComplete();
+                client.Provider.EndWrite(asyncResult);
+                client.Statistics.UpdateBytesSent(asyncState.Item2);
+                OnSendClientDataComplete(clientID);
             }
             catch (Exception ex)
             {
                 // Send operation failed to complete.
-                OnSendDataException(ex);
+                OnSendClientDataException(clientID, ex);
             }
         }
 
         /// <summary>
         /// Initiate method for asynchronous receive operation of payload data.
         /// </summary>
-        private void ReceivePayloadAsync()
+        private void ReceivePayloadAsync(TransportProvider<SslStream> client)
         {
             // Initialize bytes received.
-            m_sslClient.BytesReceived = 0;
+            client.BytesReceived = 0;
 
             // Initiate receiving.
             if (m_payloadAware)
             {
                 // Payload boundaries are to be preserved.
-                m_sslClient.SetReceiveBuffer(m_payloadMarker.Length + Payload.LengthSegment);
-                ReceivePayloadAwareAsync(true);
+                client.SetReceiveBuffer(m_payloadMarker.Length + Payload.LengthSegment);
+                ReceivePayloadAwareAsync(client, true);
             }
             else
             {
-                // Payload boundares are not to be preserved.
-                m_sslClient.SetReceiveBuffer(ReceiveBufferSize);
-                ReceivePayloadUnawareAsync();
+                // Payload boundaries are not to be preserved.
+                client.SetReceiveBuffer(ReceiveBufferSize);
+                ReceivePayloadUnawareAsync(client);
             }
         }
 
         /// <summary>
         /// Initiate method for asynchronous receive operation of payload data in "payload-aware" mode.
         /// </summary>
-        private void ReceivePayloadAwareAsync(bool waitingForHeader)
+        private void ReceivePayloadAwareAsync(TransportProvider<SslStream> client, bool waitingForHeader)
         {
-            m_sslClient.Provider.BeginRead(m_sslClient.ReceiveBuffer,
-                                           m_sslClient.BytesReceived,
-                                           m_sslClient.ReceiveBufferSize - m_sslClient.BytesReceived,
-                                           ProcessReceivePayloadAware,
-                                           waitingForHeader);
+            client.Provider.BeginRead(client.ReceiveBuffer,
+                                      client.BytesReceived,
+                                      client.ReceiveBufferSize - client.BytesReceived,
+                                      ProcessReceivePayloadAware,
+                                      new Tuple<Guid, bool>(client.ID, waitingForHeader));
         }
 
         /// <summary>
@@ -965,78 +1046,82 @@ namespace GSF.Communication
         /// </summary>
         private void ProcessReceivePayloadAware(IAsyncResult asyncResult)
         {
+            Tuple<Guid, bool> asyncState = (Tuple<Guid, bool>)asyncResult.AsyncState;
+            bool waitingForHeader = asyncState.Item2;
+            TransportProvider<SslStream> client;
+
+            if (!TryGetClient(asyncState.Item1, out client))
+                return;
+
             try
             {
-                bool waitingForHeader = (bool)asyncResult.AsyncState;
+                // Update statistics and pointers.
+                client.Statistics.UpdateBytesReceived(client.Provider.EndRead(asyncResult));
+                client.BytesReceived += client.Statistics.LastBytesReceived;
 
-                // Update statistics and bytes received.
-                m_sslClient.Statistics.UpdateBytesReceived(m_sslClient.Provider.EndRead(asyncResult));
-                m_sslClient.BytesReceived += m_sslClient.Statistics.LastBytesReceived;
-
-                // Client disconnected gracefully.
-                if (m_sslClient.Statistics.LastBytesReceived == 0)
+                if (client.Statistics.LastBytesReceived == 0)
                     throw new SocketException((int)SocketError.Disconnecting);
 
                 if (waitingForHeader)
                 {
                     // We're waiting on the payload length, so we'll check if the received data has this information.
-                    int payloadLength = Payload.ExtractLength(m_sslClient.ReceiveBuffer, m_sslClient.BytesReceived, m_payloadMarker);
+                    int payloadLength = Payload.ExtractLength(client.ReceiveBuffer, client.BytesReceived, m_payloadMarker);
 
                     // We have the payload length.
                     // If it is set to zero, there is no payload; wait for another header.
                     // Otherwise we'll create a buffer that's big enough to hold the entire payload.
                     if (payloadLength == 0)
                     {
-                        m_sslClient.BytesReceived = 0;
+                        client.BytesReceived = 0;
                     }
                     else if (payloadLength != -1)
                     {
-                        m_sslClient.BytesReceived = 0;
-                        m_sslClient.SetReceiveBuffer(payloadLength);
+                        client.BytesReceived = 0;
+                        client.SetReceiveBuffer(payloadLength);
                         waitingForHeader = false;
                     }
 
-                    ReceivePayloadAwareAsync(waitingForHeader);
+                    ReceivePayloadAwareAsync(client, waitingForHeader);
                 }
                 else
                 {
                     // We're accumulating the payload in the receive buffer until the entire payload is received.
-                    if (m_sslClient.BytesReceived == m_sslClient.ReceiveBufferSize)
+                    if (client.BytesReceived == client.ReceiveBufferSize)
                     {
                         // We've received the entire payload.
-                        OnReceiveDataComplete(m_sslClient.ReceiveBuffer, m_sslClient.BytesReceived);
-                        ReceivePayloadAsync();
+                        OnReceiveClientDataComplete(client.ID, client.ReceiveBuffer, client.BytesReceived);
+                        ReceivePayloadAsync(client);
                     }
                     else
                     {
                         // We've not yet received the entire payload.
-                        ReceivePayloadAwareAsync(false);
+                        ReceivePayloadAwareAsync(client, false);
                     }
                 }
             }
             catch (ObjectDisposedException)
             {
-                // Make sure connection is terminated when client is disposed.
-                TerminateConnection(true);
+                // Make sure connection is terminated when server is disposed.
+                TerminateConnection(client, true);
             }
             catch (SocketException ex)
             {
                 // Terminate connection when socket exception is encountered.
-                OnReceiveDataException(ex);
-                TerminateConnection(true);
+                OnReceiveClientDataException(client.ID, ex);
+                TerminateConnection(client, true);
             }
             catch (Exception ex)
             {
                 try
                 {
                     // For any other exception, notify and resume receive.
-                    OnReceiveDataException(ex);
-                    ReceivePayloadAsync();
+                    OnReceiveClientDataException(client.ID, ex);
+                    ReceivePayloadAsync(client);
                 }
                 catch
                 {
                     // Terminate connection if resuming receiving fails.
-                    TerminateConnection(true);
+                    TerminateConnection(client, true);
                 }
             }
         }
@@ -1044,13 +1129,13 @@ namespace GSF.Communication
         /// <summary>
         /// Initiate method for asynchronous receive operation of payload data in "payload-unaware" mode.
         /// </summary>
-        private void ReceivePayloadUnawareAsync()
+        private void ReceivePayloadUnawareAsync(TransportProvider<SslStream> client)
         {
-            m_sslClient.Provider.BeginRead(m_sslClient.ReceiveBuffer,
-                                           0,
-                                           m_sslClient.ReceiveBufferSize,
-                                           ProcessReceivePayloadUnaware,
-                                           null);
+            client.Provider.BeginRead(client.ReceiveBuffer,
+                                      0,
+                                      client.ReceiveBufferSize,
+                                      ProcessReceivePayloadUnaware,
+                                      client);
         }
 
         /// <summary>
@@ -1058,43 +1143,44 @@ namespace GSF.Communication
         /// </summary>
         private void ProcessReceivePayloadUnaware(IAsyncResult asyncResult)
         {
+            TransportProvider<SslStream> client = (TransportProvider<SslStream>)asyncResult.AsyncState;
+
             try
             {
                 // Update statistics and pointers.
-                m_sslClient.Statistics.UpdateBytesReceived(m_sslClient.Provider.EndRead(asyncResult));
-                m_sslClient.BytesReceived = m_sslClient.Statistics.LastBytesReceived;
+                client.Statistics.UpdateBytesReceived(client.Provider.EndRead(asyncResult));
+                client.BytesReceived = client.Statistics.LastBytesReceived;
 
-                // Client disconnected gracefully.
-                if (m_sslClient.Statistics.LastBytesReceived == 0)
+                if (client.Statistics.LastBytesReceived == 0)
                     throw new SocketException((int)SocketError.Disconnecting);
 
                 // Notify of received data and resume receive operation.
-                OnReceiveDataComplete(m_sslClient.ReceiveBuffer, m_sslClient.BytesReceived);
-                ReceivePayloadUnawareAsync();
+                OnReceiveClientDataComplete(client.ID, client.ReceiveBuffer, client.BytesReceived);
+                ReceivePayloadUnawareAsync(client);
             }
             catch (ObjectDisposedException)
             {
-                // Make sure connection is terminated when client is disposed.
-                TerminateConnection(true);
+                // Make sure connection is terminated when server is disposed.
+                TerminateConnection(client, true);
             }
             catch (SocketException ex)
             {
                 // Terminate connection when socket exception is encountered.
-                OnReceiveDataException(ex);
-                TerminateConnection(true);
+                OnReceiveClientDataException(client.ID, ex);
+                TerminateConnection(client, true);
             }
             catch (Exception ex)
             {
                 try
                 {
                     // For any other exception, notify and resume receive.
-                    OnReceiveDataException(ex);
-                    ReceivePayloadAsync();
+                    OnReceiveClientDataException(client.ID, ex);
+                    ReceivePayloadAsync(client);
                 }
                 catch
                 {
                     // Terminate connection if resuming receiving fails.
-                    TerminateConnection(true);
+                    TerminateConnection(client, true);
                 }
             }
         }
@@ -1102,15 +1188,14 @@ namespace GSF.Communication
         /// <summary>
         /// Processes the termination of client.
         /// </summary>
-        private void TerminateConnection(bool raiseEvent)
+        private void TerminateConnection(TransportProvider<SslStream> client, bool raiseEvent)
         {
-            lock (m_connectLock)
-            {
-                m_sslClient.Reset();
-            }
+            client.Reset();
 
             if (raiseEvent)
-                OnConnectionTerminated();
+                OnClientDisconnected(client.ID);
+
+            m_tlsClients.TryRemove(client.ID, out client);
         }
 
         /// <summary>
@@ -1119,6 +1204,23 @@ namespace GSF.Communication
         private X509Certificate DefaultLocalCertificateSelectionCallback(object sender, string targetHost, X509CertificateCollection localCertificates, X509Certificate remoteCertificate, string[] acceptableIssuers)
         {
             return m_certificate;
+        }
+
+        /// <summary>
+        /// Loads the list of trusted certificates into the default certificate checker.
+        /// </summary>
+        private void LoadTrustedCertificates()
+        {
+            string trustedCertificatesPath;
+
+            if ((object)m_remoteCertificateValidationCallback == null && (object)m_certificateChecker == null)
+            {
+                m_defaultCertificateChecker.TrustedCertificates.Clear();
+                trustedCertificatesPath = FilePath.AddPathSuffix(FilePath.GetAbsolutePath(m_trustedCertificatesPath));
+
+                foreach (string fileName in FilePath.GetFileList(trustedCertificatesPath))
+                    m_defaultCertificateChecker.TrustedCertificates.Add(new X509Certificate2(fileName));
+            }
         }
 
         #endregion
