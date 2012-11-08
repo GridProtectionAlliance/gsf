@@ -1,4 +1,5 @@
-﻿//******************************************************************************************************
+﻿
+//******************************************************************************************************
 //  MainWindow.xaml.cs - Gbtc
 //
 //  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
@@ -43,6 +44,7 @@ using TVA.Configuration;
 using TVA.Historian;
 using TVA.Historian.Files;
 using TVA.IO;
+using System.Globalization;
 
 namespace HistorianView
 {
@@ -962,7 +964,7 @@ namespace HistorianView
                 picker.SelectedDate = DateTime.Today;
         }
 
-        // Occurs when the starting date is changed.
+        // Added for improvisation Occurs when the starting date is changed.
         private void StartTimeDatePicker_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
         {
             StringBuilder dateString = new StringBuilder();
@@ -970,9 +972,13 @@ namespace HistorianView
             dateString.Append(m_startTimeDatePicker.SelectedDate.Value.ToString("MM/dd/yyyy"));
             dateString.Append(' ');
             dateString.Append(m_startTime.ToString("HH:mm:ss.fff"));
+            
+            // Converts any date format style to US format and clubs both in dateString
+            String format = "MM/dd/yyyy HH:mm:ss.fff";
+            m_startTime = DateTime.ParseExact(dateString.ToString(), format, CultureInfo.CreateSpecificCulture("en-US"), DateTimeStyles.None);
 
-            m_startTime = DateTime.Parse(dateString.ToString());
         }
+
 
         // Occurs when the ending date is changed.
         private void EndTimeDatePicker_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
@@ -983,7 +989,9 @@ namespace HistorianView
             dateString.Append(' ');
             dateString.Append(m_endTime.ToString("HH:mm:ss.fff"));
 
-            m_endTime = DateTime.Parse(dateString.ToString());
+            // Converts any date format style to US format and clubs both in dateString
+            String format = "MM/dd/yyyy HH:mm:ss.fff";
+            m_endTime = DateTime.ParseExact(dateString.ToString(), format, CultureInfo.CreateSpecificCulture("en-US"), DateTimeStyles.None);
         }
 
         // Occurs when the user changes the starting time.

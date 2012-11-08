@@ -35,6 +35,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Globalization;
 
 namespace TVA.Historian
 {
@@ -232,8 +233,8 @@ namespace TVA.Historian
             }
             else
             {
-                // Absolute time is specified.
-                dateTime = DateTime.Parse(timetag);
+                String format = "MM/dd/yyyy HH:mm:ss.fff";
+                dateTime = DateTime.ParseExact(timetag, format, CultureInfo.CreateSpecificCulture("en-US"), DateTimeStyles.None);
             }
 
             return new TimeTag(dateTime);
@@ -242,3 +243,4 @@ namespace TVA.Historian
         #endregion
     }
 }
+
