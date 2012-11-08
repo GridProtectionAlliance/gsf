@@ -1185,17 +1185,16 @@ namespace GSF.Historian
             m_parser.Parse(m_clientIDs[(IClient)sender], e.Argument1, 0, e.Argument2);
         }
 
-        private void PacketParser_DataParsed(object sender, EventArgs<Guid, IList<IPacket>> e)
+        private void PacketParser_DataParsed(object sender, EventArgs<IPacket> e)
         {
             // Extract data from the packets.
             IEnumerable<IDataPoint> extractedData;
             List<IDataPoint> dataPoints = new List<IDataPoint>();
-            foreach (IPacket packet in e.Argument2)
-            {
-                extractedData = packet.ExtractTimeSeriesData();
-                if (extractedData != null)
-                    dataPoints.AddRange(extractedData);
-            }
+
+            extractedData = e.Argument.ExtractTimeSeriesData();
+
+            if (extractedData != null)
+                dataPoints.AddRange(extractedData);
 
             if (dataPoints.Count > 0)
             {

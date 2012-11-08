@@ -298,5 +298,18 @@ namespace GSF.Parsing
         {
             get;
         }
+
+        /// <summary>
+        /// Gets flag that determines if frame image can queued for publication or should be processed immediately.
+        /// </summary>
+        /// <remarks>
+        /// Some frames, e.g., a configuration or key frame, may be critical to processing of other frames. In this
+        /// case, these types of frames should be published immediately so that subsequent frame parsing can have
+        /// access to needed critical information.
+        /// </remarks>
+        bool AllowQueuedPublication
+        {
+            get;
+        }
     }
 }

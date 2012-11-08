@@ -129,6 +129,7 @@
     <Compile Include="BufferExtensions.cs" />
     <Compile Include="ByteEncoding.cs" />
     <Compile Include="CharExtensions.cs" />
+    <Compile Include="Collections\AsyncQueue.cs" />
     <Compile Include="Collections\CollectionExtensions.cs" />
     <Compile Include="Collections\DictionaryList.cs" />
     <Compile Include="Collections\ProcessDictionary.cs" />
@@ -242,6 +243,7 @@
     <Compile Include="Parsing\IFrameImageParser.cs" />
     <Compile Include="Parsing\ISupportBinaryImage.cs" />
     <Compile Include="Parsing\ISupportFrameImage.cs" />
+    <Compile Include="Parsing\ISupportSourceIdentifiableFrameImage.cs" />
     <Compile Include="Parsing\MultiSourceFrameImageParserBase.cs" />
     <Compile Include="Parsing\NamespaceDoc.cs" />
     <Compile Include="PrecisionTimer.cs" />

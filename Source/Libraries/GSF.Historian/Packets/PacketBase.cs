@@ -57,6 +57,7 @@ namespace GSF.Historian.Packets
         private Func<IEnumerable<byte[]>> m_preProcessHandler;
         private ICommonHeader<short> m_commonHeader;
         private short m_typeID;
+        private Guid m_source;
 
         #endregion
 
@@ -157,6 +158,37 @@ namespace GSF.Historian.Packets
             get
             {
                 return m_typeID;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the data source identifier of the frame image.
+        /// </summary>
+        public Guid Source
+        {
+            get
+            {
+                return m_source;
+            }
+            set
+            {
+                m_source = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets flag that determines if frame image can queued for publication or should be processed immediately.
+        /// </summary>
+        /// <remarks>
+        /// Some frames, e.g., a configuration or key frame, may be critical to processing of other frames. In this
+        /// case, these types of frames should be published immediately so that subsequent frame parsing can have
+        /// access to needed critical information.
+        /// </remarks>
+        public bool AllowQueuedPublication
+        {
+            get
+            {
+                return true;
             }
         }
 
