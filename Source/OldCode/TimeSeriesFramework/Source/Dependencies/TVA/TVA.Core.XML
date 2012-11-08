@@ -3585,6 +3585,23 @@
             </summary>
             <param name="item">Item to be queued for processing.</param>
         </member>
+        <member name="M:TVA.Collections.AsyncQueue`1.OnProcessException(System.Exception)">
+            <summary>
+            Raises the base class <see cref="E:TVA.Collections.AsyncQueue`1.ProcessException"/> event.
+            </summary>
+            <remarks>
+            Derived classes cannot raise events of their base classes, so we expose event wrapper methods to accomodate as needed.
+            </remarks>
+            <param name="ex"><see cref="T:System.Exception"/> to be passed to ProcessException.</param>
+        </member>
+        <member name="E:TVA.Collections.AsyncQueue`1.ProcessException">
+            <summary>
+            Event that is raised if an exception is encountered while attempting to processing an item in the <see cref="T:TVA.Collections.AsyncQueue`1"/>.
+            </summary>
+            <remarks>
+            Processing will not stop for any exceptions thrown by user processing function, but exceptions will be exposed through this event.
+            </remarks>
+        </member>
         <member name="P:TVA.Collections.AsyncQueue`1.ProcessItemFunction">
             <summary>
             Gets or sets item processing function.
@@ -3593,6 +3610,11 @@
         <member name="P:TVA.Collections.AsyncQueue`1.Count">
             <summary>
             Gets the total number of items currently in the queue.
+            </summary>
+        </member>
+        <member name="P:TVA.Collections.AsyncQueue`1.Enabled">
+            <summary>
+            Gets or sets flag that enables or disables processing.
             </summary>
         </member>
         <member name="T:TVA.Collections.AsyncQueue`1.ProcessItemFunctionSignature">
@@ -23827,9 +23849,9 @@
         </member>
         <member name="M:TVA.Parsing.FrameImageParserBase`2.PublishParsedOutput(TVA.EventArgs{`1})">
             <summary>
-            Thread pool handler used to publish parsed output.
+            <see cref="T:TVA.Collections.AsyncQueue`1"/> handler used to publish queued outputs.
             </summary>
-            <param name="parsedArgs">Event args to publish.</param>
+            <param name="outputArgs">Event args continaing new output to publish.</param>
         </member>
         <member name="M:TVA.Parsing.FrameImageParserBase`2.OnOutputTypeNotFound(`0)">
             <summary>
@@ -23882,6 +23904,11 @@
         <member name="P:TVA.Parsing.FrameImageParserBase`2.QueuedOutputs">
             <summary>
             Gets the total number of parsed outputs that are currently queued for publication, if any.
+            </summary>
+        </member>
+        <member name="P:TVA.Parsing.FrameImageParserBase`2.Enabled">
+            <summary>
+            Gets or sets a boolean value that indicates whether the frame image parser is currently enabled.
             </summary>
         </member>
         <member name="P:TVA.Parsing.FrameImageParserBase`2.Status">
