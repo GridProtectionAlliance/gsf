@@ -103,7 +103,7 @@ namespace TimeSeriesFramework.Transport
                 ProcessItemFunction = ProcessMeasurements
             };
 
-            m_processQueue.ProcessException += m_processQueue_ProcessException;
+            m_processQueue.ProcessException += (sender, e) => OnProcessException(e.Argument);
         }
 
         #endregion
@@ -632,11 +632,6 @@ namespace TimeSeriesFramework.Transport
         private void BaseTimeRotationTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             RotateBaseTimes();
-        }
-
-        private void m_processQueue_ProcessException(object sender, EventArgs<Exception> e)
-        {
-            OnProcessException(e.Argument);
         }
 
         #endregion
