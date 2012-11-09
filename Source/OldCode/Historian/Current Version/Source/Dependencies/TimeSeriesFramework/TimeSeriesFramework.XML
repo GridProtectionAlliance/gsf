@@ -4781,12 +4781,6 @@
             </summary>
             <param name="measurements">Measurements to queue for processing.</param>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.FacileActionAdapterBase.OnProcessException(System.Exception)">
-            <summary>
-            Raises <see cref="E:TimeSeriesFramework.Adapters.AdapterBase.ProcessException"/> event.
-            </summary>
-            <param name="ex">Processing <see cref="T:System.Exception"/>.</param>
-        </member>
         <member name="M:TimeSeriesFramework.Adapters.FacileActionAdapterBase.OnNewMeasurements(System.Collections.Generic.ICollection{TimeSeriesFramework.IMeasurement})">
             <summary>
             Raises the <see cref="E:TimeSeriesFramework.Adapters.FacileActionAdapterBase.NewMeasurements"/> event.
