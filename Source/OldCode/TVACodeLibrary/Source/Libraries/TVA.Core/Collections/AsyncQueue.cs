@@ -478,6 +478,8 @@ namespace TVA.Collections
                     // during a context switch before the lock was entered. This lock should rarely contend with
                     // lock in the Enqueue method; if you enqueue frequently the lock will never be taken since
                     // items will be dequeued outside the lock in the code above.
+                    lockTaken = false;
+
                     try
                     {
                         m_dequeueLock.Enter(ref lockTaken);
