@@ -344,8 +344,8 @@ namespace TVA.Collections
             }
             set
             {
-                T item;
                 bool lockTaken = false;
+                T item;
 
                 try
                 {
@@ -355,21 +355,18 @@ namespace TVA.Collections
                     {
                         // If we are currently enabled and want to disable, make sure processing flag is set to 0
                         m_enabled = false;
-                        Interlocked.Exchange(ref m_processing, 0);
                     }
                     else if (!m_enabled && value)
                     {
                         // If we are currently disabled and want to enable, kick off queue processing if needed
                         m_enabled = true;
 
-                        if (m_asyncQueue.TryDequeue(out item))
+                        if (Interlocked.CompareExchange(ref m_processing, 1, 0) == 0)
                         {
-                            Interlocked.Exchange(ref m_processing, 1);
-                            ThreadPool.QueueUserWorkItem(ProcessItem, item);
-                        }
-                        else
-                        {
-                            Interlocked.Exchange(ref m_processing, 0);
+                            if (m_asyncQueue.TryDequeue(out item))
+                                ThreadPool.QueueUserWorkItem(ProcessItem, item);
+                            else
+                                Interlocked.Exchange(ref m_processing, 0);
                         }
                     }
                 }
@@ -441,6 +438,8 @@ namespace TVA.Collections
         // Process next item in the queue
         private void ProcessItem(object state)
         {
+            bool lockTaken = false;
+
             try
             {
                 T item = (T)state;
@@ -450,7 +449,23 @@ namespace TVA.Collections
 
                 // Continue with processing next item so long as we're still enabled
                 if (!m_enabled)
-                    return;
+                {
+                    try
+                    {
+                        m_dequeueLock.Enter(ref lockTaken);
+
+                        if (!m_enabled)
+                        {
+                            Interlocked.Exchange(ref m_processing, 0);
+                            return;
+                        }
+                    }
+                    finally
+                    {
+                        if (lockTaken)
+                            m_dequeueLock.Exit();
+                    }
+                }
 
                 // Attempt to dequeue next item for processing
                 if (m_asyncQueue.TryDequeue(out item))
@@ -463,8 +478,6 @@ namespace TVA.Collections
                     // during a context switch before the lock was entered. This lock should rarely contend with
                     // lock in the Enqueue method; if you enqueue frequently the lock will never be taken since
                     // items will be dequeued outside the lock in the code above.
-                    bool lockTaken = false;
-
                     try
                     {
                         m_dequeueLock.Enter(ref lockTaken);
