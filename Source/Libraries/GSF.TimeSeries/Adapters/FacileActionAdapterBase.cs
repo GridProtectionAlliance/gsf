@@ -497,15 +497,6 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Raises <see cref="AdapterBase.ProcessException"/> event.
-        /// </summary>
-        /// <param name="ex">Processing <see cref="Exception"/>.</param>
-        protected override void OnProcessException(Exception ex)
-        {
-            base.OnProcessException(ex);
-        }
-
-        /// <summary>
         /// Raises the <see cref="NewMeasurements"/> event.
         /// </summary>
         protected virtual void OnNewMeasurements(ICollection<IMeasurement> measurements)

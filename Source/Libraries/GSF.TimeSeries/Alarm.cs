@@ -342,7 +342,9 @@ namespace GSF.TimeSeries
             AlarmState previousState = State;
 
             if (State == AlarmState.Raised && ClearsAlarm(signal))
+            {
                 State = AlarmState.Cleared;
+            }
             else if (State == AlarmState.Cleared && RaisesAlarm(signal))
             {
                 State = AlarmState.Raised;
