@@ -327,10 +327,10 @@ namespace GSF.Communication
         private IPStack m_ipStack;
         private bool m_allowDualStackSocket;
         private int m_connectionAttempts;
+        private Socket m_socket;
         private TransportProvider<SslStream> m_sslClient;
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectWaitHandle;
-        private object m_connectLock;
         private bool m_disposed;
 
         private EventHandler<SocketAsyncEventArgs> m_connectHandler;
@@ -365,7 +365,6 @@ namespace GSF.Communication
             m_payloadMarker = Payload.DefaultMarker;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_sslClient = new TransportProvider<SslStream>();
-            m_connectLock = new object();
 
             m_connectHandler = (sender, args) => ProcessConnect(args);
         }
@@ -735,13 +734,26 @@ namespace GSF.Communication
         /// </summary>
         public override void Disconnect()
         {
-            lock (m_connectLock)
+            try
             {
                 if (CurrentState != ClientState.Disconnected)
                 {
+                    if ((object)m_socket != null && m_socket.Connected)
+                        m_socket.Disconnect(false);
+
+                    if ((object)m_connectWaitHandle != null)
+                        m_connectWaitHandle.Set();
+
                     m_sslClient.Reset();
-                    OnConnectionTerminated();
                 }
+            }
+            catch (Exception ex)
+            {
+                OnSendDataException(new InvalidOperationException(string.Format("Disconnect exception: {0}", ex.Message), ex));
+            }
+            finally
+            {
+                base.Disconnect();
             }
         }
 
@@ -752,36 +764,33 @@ namespace GSF.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         public override WaitHandle ConnectAsync()
         {
-            lock (m_connectLock)
+            if (CurrentState == ClientState.Disconnected)
             {
-                if (CurrentState == ClientState.Disconnected)
-                {
-                    if (m_connectWaitHandle == null)
-                        m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
+                if (m_connectWaitHandle == null)
+                    m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
 
-                    OnConnectionAttempt();
+                OnConnectionAttempt();
 
-                    // Create client socket to establish presence
-                    Socket socket = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
-                    Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
+                // Create client socket to establish presence
+                Socket socket = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
+                Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
 
-                    // Begin asynchronous connect operation and return wait handle for the asynchronous operation
-                    SocketAsyncEventArgs args = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
+                // Begin asynchronous connect operation and return wait handle for the asynchronous operation
+                SocketAsyncEventArgs args = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
 
-                    args.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
-                    args.SocketFlags = SocketFlags.None;
-                    args.UserToken = socket;
-                    args.Completed += m_connectHandler;
+                args.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
+                args.SocketFlags = SocketFlags.None;
+                args.UserToken = socket;
+                args.Completed += m_connectHandler;
 
-                    if (!socket.ConnectAsync(args))
-                        ThreadPool.QueueUserWorkItem(state => ProcessConnect((SocketAsyncEventArgs)state), args);
+                if (!socket.ConnectAsync(args))
+                    ThreadPool.QueueUserWorkItem(state => ProcessConnect((SocketAsyncEventArgs)state), args);
 
-                    return m_connectWaitHandle;
-                }
-                else
-                {
-                    throw new InvalidOperationException("Client is currently not disconnected");
-                }
+                return m_connectWaitHandle;
+            }
+            else
+            {
+                throw new InvalidOperationException("Client is currently not disconnected");
             }
         }
 
@@ -851,17 +860,24 @@ namespace GSF.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         protected override WaitHandle SendDataAsync(byte[] data, int offset, int length)
         {
-            WaitHandle handle;
+            WaitHandle handle = null;
 
-            // Prepare for payload-aware transmission.
-            if (m_payloadAware)
-                Payload.AddHeader(ref data, ref offset, ref length, m_payloadMarker);
+            try
+            {
+                // Prepare for payload-aware transmission.
+                if (m_payloadAware)
+                    Payload.AddHeader(ref data, ref offset, ref length, m_payloadMarker);
 
-            // Send payload to the client asynchronously.
-            handle = m_sslClient.Provider.BeginWrite(data, offset, length, ProcessSend, length).AsyncWaitHandle;
+                // Send payload to the client asynchronously.
+                handle = m_sslClient.Provider.BeginWrite(data, offset, length, ProcessSend, length).AsyncWaitHandle;
 
-            // Notify that the send operation has started.
-            OnSendDataStart();
+                // Notify that the send operation has started.
+                OnSendDataStart();
+            }
+            catch (Exception ex)
+            {
+                OnSendDataException(ex);
+            }
 
             // Return the async handle that can be used to wait for the async operation to complete.
             return handle;
@@ -894,7 +910,6 @@ namespace GSF.Communication
             try
             {
                 Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
-                Socket connectSocket = (Socket)args.UserToken;
                 NetworkStream netStream;
 
                 // Perform post-connect operations.
@@ -904,7 +919,8 @@ namespace GSF.Communication
                     throw new SocketException((int)args.SocketError);
 
                 LoadTrustedCertificates();
-                netStream = new NetworkStream(connectSocket, true);
+                m_socket = (Socket)args.UserToken;
+                netStream = new NetworkStream(m_socket, true);
                 m_sslClient.Provider = new SslStream(netStream, false, m_remoteCertificateValidationCallback ?? CertificateChecker.ValidateRemoteCertificate, m_localCertificateSelectionCallback);
 
                 // Authenticate.
@@ -923,19 +939,19 @@ namespace GSF.Communication
                     }
                     catch
                     {
-                        TerminateConnection(false);
+                        TerminateConnection();
                     }
                 }
                 else
                 {
                     // For any other reason, clean-up as if the client was disconnected.
-                    TerminateConnection(false);
+                    TerminateConnection();
                 }
             }
             catch (Exception ex)
             {
                 OnConnectionException(ex);
-                TerminateConnection(false);
+                TerminateConnection();
             }
             finally
             {
@@ -983,20 +999,20 @@ namespace GSF.Communication
                     }
                     catch
                     {
-                        TerminateConnection(false);
+                        TerminateConnection();
                     }
                 }
                 else
                 {
                     // For any other reason, clean-up as if the client was disconnected.
-                    TerminateConnection(false);
+                    TerminateConnection();
                 }
             }
             catch (Exception ex)
             {
                 string errorMessage = string.Format("Unable to authenticate connection to server: {0}", CertificateChecker.ReasonForFailure ?? ex.Message);
                 OnConnectionException(new Exception(errorMessage, ex));
-                TerminateConnection(false);
+                TerminateConnection();
             }
         }
 
@@ -1068,6 +1084,9 @@ namespace GSF.Communication
                 m_sslClient.BytesReceived += m_sslClient.Statistics.LastBytesReceived;
 
                 // Client disconnected gracefully.
+                if (!m_socket.Connected)
+                    throw new SocketException((int)SocketError.Disconnecting);
+
                 if (m_sslClient.Statistics.LastBytesReceived == 0)
                     throw new SocketException((int)SocketError.Disconnecting);
 
@@ -1111,13 +1130,13 @@ namespace GSF.Communication
             catch (ObjectDisposedException)
             {
                 // Make sure connection is terminated when client is disposed.
-                TerminateConnection(true);
+                TerminateConnection();
             }
             catch (SocketException ex)
             {
                 // Terminate connection when socket exception is encountered.
                 OnReceiveDataException(ex);
-                TerminateConnection(true);
+                TerminateConnection();
             }
             catch (Exception ex)
             {
@@ -1130,7 +1149,7 @@ namespace GSF.Communication
                 catch
                 {
                     // Terminate connection if resuming receiving fails.
-                    TerminateConnection(true);
+                    TerminateConnection();
                 }
             }
         }
@@ -1159,6 +1178,9 @@ namespace GSF.Communication
                 m_sslClient.BytesReceived = m_sslClient.Statistics.LastBytesReceived;
 
                 // Client disconnected gracefully.
+                if (!m_socket.Connected)
+                    throw new SocketException((int)SocketError.Disconnecting);
+
                 if (m_sslClient.Statistics.LastBytesReceived == 0)
                     throw new SocketException((int)SocketError.Disconnecting);
 
@@ -1169,13 +1191,13 @@ namespace GSF.Communication
             catch (ObjectDisposedException)
             {
                 // Make sure connection is terminated when client is disposed.
-                TerminateConnection(true);
+                TerminateConnection();
             }
             catch (SocketException ex)
             {
                 // Terminate connection when socket exception is encountered.
                 OnReceiveDataException(ex);
-                TerminateConnection(true);
+                TerminateConnection();
             }
             catch (Exception ex)
             {
@@ -1188,7 +1210,7 @@ namespace GSF.Communication
                 catch
                 {
                     // Terminate connection if resuming receiving fails.
-                    TerminateConnection(true);
+                    TerminateConnection();
                 }
             }
         }
@@ -1196,15 +1218,13 @@ namespace GSF.Communication
         /// <summary>
         /// Processes the termination of client.
         /// </summary>
-        private void TerminateConnection(bool raiseEvent)
+        private void TerminateConnection()
         {
-            lock (m_connectLock)
-            {
-                m_sslClient.Reset();
-            }
+            if ((object)m_connectWaitHandle != null)
+                m_connectWaitHandle.Set();
 
-            if (raiseEvent)
-                OnConnectionTerminated();
+            m_sslClient.Reset();
+            OnConnectionTerminated();
         }
 
         /// <summary>

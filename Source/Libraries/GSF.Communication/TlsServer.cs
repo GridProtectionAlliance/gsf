@@ -288,6 +288,36 @@ namespace GSF.Communication
     {
         #region [ Members ]
 
+        // Nested Types
+
+        /// <summary>
+        /// Represents a socket that has been wrapped
+        /// in an <see cref="SslStream"/> for encryption.
+        /// </summary>
+        public sealed class TlsSocket : IDisposable
+        {
+            /// <summary>
+            /// Gets the <see cref="Socket"/> connected to the remote host.
+            /// </summary>
+            public Socket Socket;
+
+            /// <summary>
+            /// Gets the stream through which data is passed when
+            /// sending to or receiving from the remote host.
+            /// </summary>
+            public SslStream SslStream;
+
+            /// <summary>
+            /// Performs application-defined tasks associated with
+            /// freeing, releasing, or resetting unmanaged resources.
+            /// </summary>
+            public void Dispose()
+            {
+                if ((object)SslStream != null)
+                    SslStream.Dispose();
+            }
+        }
+
         // Constants
 
         /// <summary>
@@ -328,7 +358,7 @@ namespace GSF.Communication
         private bool m_allowDualStackSocket;
         private Socket m_tlsServer;
         private SocketAsyncEventArgs m_acceptArgs;
-        private ConcurrentDictionary<Guid, TransportProvider<SslStream>> m_tlsClients;
+        private ConcurrentDictionary<Guid, TransportProvider<TlsSocket>> m_tlsClients;
         private Dictionary<string, string> m_configData;
 
         private EventHandler<SocketAsyncEventArgs> m_acceptHandler;
@@ -361,7 +391,7 @@ namespace GSF.Communication
             m_payloadAware = DefaultPayloadAware;
             m_payloadMarker = Payload.DefaultMarker;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
-            m_tlsClients = new ConcurrentDictionary<Guid, TransportProvider<SslStream>>();
+            m_tlsClients = new ConcurrentDictionary<Guid, TransportProvider<TlsSocket>>();
 
             m_acceptHandler = (sender, args) => ProcessAccept();
         }
@@ -651,7 +681,7 @@ namespace GSF.Communication
         {
             buffer.ValidateParameters(startIndex, length);
 
-            TransportProvider<SslStream> tlsClient;
+            TransportProvider<TlsSocket> tlsClient;
 
             if (m_tlsClients.TryGetValue(clientID, out tlsClient))
             {
@@ -800,13 +830,16 @@ namespace GSF.Communication
         /// <exception cref="InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
         public override void DisconnectOne(Guid clientID)
         {
-            TransportProvider<SslStream> tlsClient;
+            TransportProvider<TlsSocket> tlsClient;
 
             if (!TryGetClient(clientID, out tlsClient))
                 return;
 
             try
             {
+                if ((object)tlsClient.Provider != null && tlsClient.Provider.Socket.Connected)
+                    tlsClient.Provider.Socket.Disconnect(false);
+
                 OnClientDisconnected(clientID);
                 tlsClient.Reset();
             }
@@ -817,12 +850,13 @@ namespace GSF.Communication
         }
 
         /// <summary>
-        /// Gets the <see cref="TransportProvider{SslStream}"/> object associated with the specified client ID.
+        /// Gets the <see cref="TransportProvider{TlsSocket}"/> object associated with the specified client ID.
         /// </summary>
         /// <param name="clientID">ID of the client.</param>
-        /// <returns>An <see cref="TransportProvider{SslStream}"/> object.</returns>
+        /// <param name="tlsClient">The TLS client.</param>
+        /// <returns>An <see cref="TransportProvider{TlsSocket}"/> object.</returns>
         /// <exception cref="InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
-        public bool TryGetClient(Guid clientID, out TransportProvider<SslStream> tlsClient)
+        public bool TryGetClient(Guid clientID, out TransportProvider<TlsSocket> tlsClient)
         {
             return m_tlsClients.TryGetValue(clientID, out tlsClient);
         }
@@ -857,21 +891,28 @@ namespace GSF.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         protected override WaitHandle SendDataToAsync(Guid clientID, byte[] data, int offset, int length)
         {
-            TransportProvider<SslStream> tlsClient;
-            WaitHandle handle;
+            TransportProvider<TlsSocket> tlsClient;
+            WaitHandle handle = null;
 
             if (!TryGetClient(clientID, out tlsClient))
                 throw new InvalidOperationException(string.Format("No client found for ID {0}.", clientID));
 
-            // Prepare for payload-aware transmission.
-            if (m_payloadAware)
-                Payload.AddHeader(ref data, ref offset, ref length, m_payloadMarker);
+            try
+            {
+                // Prepare for payload-aware transmission.
+                if (m_payloadAware)
+                    Payload.AddHeader(ref data, ref offset, ref length, m_payloadMarker);
 
-            // Send payload to the client asynchronously.
-            handle = tlsClient.Provider.BeginWrite(data, offset, length, ProcessSend, new Tuple<Guid, int>(clientID, length)).AsyncWaitHandle;
+                // Send payload to the client asynchronously.
+                handle = tlsClient.Provider.SslStream.BeginWrite(data, offset, length, ProcessSend, new Tuple<Guid, int>(clientID, length)).AsyncWaitHandle;
 
-            // Notify that the send operation has started.
-            OnSendClientDataStart(tlsClient.ID);
+                // Notify that the send operation has started.
+                OnSendClientDataStart(tlsClient.ID);
+            }
+            catch (Exception ex)
+            {
+                OnSendClientDataException(clientID, ex);
+            }
 
             // Return the async handle that can be used to wait for the async operation to complete.
             return handle;
@@ -882,11 +923,9 @@ namespace GSF.Communication
         /// </summary>
         private void ProcessAccept()
         {
-            TransportProvider<SslStream> client = new TransportProvider<SslStream>();
+            TransportProvider<TlsSocket> client = new TransportProvider<TlsSocket>();
             IPEndPoint remoteEndPoint = null;
             NetworkStream netStream;
-
-            Tuple<TransportProvider<SslStream>, IPEndPoint> asyncState;
 
             try
             {
@@ -907,10 +946,14 @@ namespace GSF.Communication
                 LoadTrustedCertificates();
                 remoteEndPoint = m_acceptArgs.AcceptSocket.RemoteEndPoint as IPEndPoint;
                 netStream = new NetworkStream(m_acceptArgs.AcceptSocket);
-                client.Provider = new SslStream(netStream, false, m_remoteCertificateValidationCallback, m_localCertificateSelectionCallback);
 
-                asyncState = new Tuple<TransportProvider<SslStream>, IPEndPoint>(client, remoteEndPoint);
-                client.Provider.BeginAuthenticateAsServer(m_certificate, m_requireClientCertificate, m_enabledSslProtocols, m_checkCertificateRevocation, ProcessAuthenticate, asyncState);
+                client.Provider = new TlsSocket()
+                {
+                    Socket = m_acceptArgs.AcceptSocket,
+                    SslStream = new SslStream(netStream, false, m_remoteCertificateValidationCallback, m_localCertificateSelectionCallback)
+                };
+
+                client.Provider.SslStream.BeginAuthenticateAsServer(m_certificate, m_requireClientCertificate, m_enabledSslProtocols, m_checkCertificateRevocation, ProcessAuthenticate, client);
 
                 // Return to accepting new connections.
                 m_acceptArgs.AcceptSocket = null;
@@ -939,20 +982,20 @@ namespace GSF.Communication
         /// </summary>
         private void ProcessAuthenticate(IAsyncResult asyncResult)
         {
-            Tuple<TransportProvider<SslStream>, IPEndPoint> asyncState = (Tuple<TransportProvider<SslStream>, IPEndPoint>)asyncResult.AsyncState;
-            TransportProvider<SslStream> client = asyncState.Item1;
-            IPEndPoint remoteEndPoint = asyncState.Item2;
+            TransportProvider<TlsSocket> client = (TransportProvider<TlsSocket>)asyncResult.AsyncState;
+            IPEndPoint remoteEndPoint = client.Provider.Socket.RemoteEndPoint as IPEndPoint;
+            SslStream stream = client.Provider.SslStream;
 
             try
             {
-                client.Provider.EndAuthenticateAsServer(asyncResult);
+                stream.EndAuthenticateAsServer(asyncResult);
 
                 if (EnabledSslProtocols != SslProtocols.None)
                 {
-                    if (!client.Provider.IsAuthenticated)
+                    if (!stream.IsAuthenticated)
                         throw new InvalidOperationException("Unable to authenticate.");
 
-                    if (!client.Provider.IsEncrypted)
+                    if (!stream.IsEncrypted)
                         throw new InvalidOperationException("Unable to encrypt data stream.");
                 }
 
@@ -987,7 +1030,7 @@ namespace GSF.Communication
             Tuple<Guid, int> asyncState = (Tuple<Guid, int>)asyncResult.AsyncState;
             Guid clientID = asyncState.Item1;
 
-            TransportProvider<SslStream> client;
+            TransportProvider<TlsSocket> client;
 
             if (!TryGetClient(clientID, out client))
                 return;
@@ -995,7 +1038,7 @@ namespace GSF.Communication
             try
             {
                 // Send operation is complete.
-                client.Provider.EndWrite(asyncResult);
+                client.Provider.SslStream.EndWrite(asyncResult);
                 client.Statistics.UpdateBytesSent(asyncState.Item2);
                 OnSendClientDataComplete(clientID);
             }
@@ -1009,7 +1052,7 @@ namespace GSF.Communication
         /// <summary>
         /// Initiate method for asynchronous receive operation of payload data.
         /// </summary>
-        private void ReceivePayloadAsync(TransportProvider<SslStream> client)
+        private void ReceivePayloadAsync(TransportProvider<TlsSocket> client)
         {
             // Initialize bytes received.
             client.BytesReceived = 0;
@@ -1032,13 +1075,13 @@ namespace GSF.Communication
         /// <summary>
         /// Initiate method for asynchronous receive operation of payload data in "payload-aware" mode.
         /// </summary>
-        private void ReceivePayloadAwareAsync(TransportProvider<SslStream> client, bool waitingForHeader)
+        private void ReceivePayloadAwareAsync(TransportProvider<TlsSocket> client, bool waitingForHeader)
         {
-            client.Provider.BeginRead(client.ReceiveBuffer,
-                                      client.BytesReceived,
-                                      client.ReceiveBufferSize - client.BytesReceived,
-                                      ProcessReceivePayloadAware,
-                                      new Tuple<Guid, bool>(client.ID, waitingForHeader));
+            client.Provider.SslStream.BeginRead(client.ReceiveBuffer,
+                                                client.BytesReceived,
+                                                client.ReceiveBufferSize - client.BytesReceived,
+                                                ProcessReceivePayloadAware,
+                                                new Tuple<Guid, bool>(client.ID, waitingForHeader));
         }
 
         /// <summary>
@@ -1048,7 +1091,7 @@ namespace GSF.Communication
         {
             Tuple<Guid, bool> asyncState = (Tuple<Guid, bool>)asyncResult.AsyncState;
             bool waitingForHeader = asyncState.Item2;
-            TransportProvider<SslStream> client;
+            TransportProvider<TlsSocket> client;
 
             if (!TryGetClient(asyncState.Item1, out client))
                 return;
@@ -1056,8 +1099,11 @@ namespace GSF.Communication
             try
             {
                 // Update statistics and pointers.
-                client.Statistics.UpdateBytesReceived(client.Provider.EndRead(asyncResult));
+                client.Statistics.UpdateBytesReceived(client.Provider.SslStream.EndRead(asyncResult));
                 client.BytesReceived += client.Statistics.LastBytesReceived;
+
+                if (!client.Provider.Socket.Connected)
+                    throw new SocketException((int)SocketError.Disconnecting);
 
                 if (client.Statistics.LastBytesReceived == 0)
                     throw new SocketException((int)SocketError.Disconnecting);
@@ -1129,13 +1175,13 @@ namespace GSF.Communication
         /// <summary>
         /// Initiate method for asynchronous receive operation of payload data in "payload-unaware" mode.
         /// </summary>
-        private void ReceivePayloadUnawareAsync(TransportProvider<SslStream> client)
+        private void ReceivePayloadUnawareAsync(TransportProvider<TlsSocket> client)
         {
-            client.Provider.BeginRead(client.ReceiveBuffer,
-                                      0,
-                                      client.ReceiveBufferSize,
-                                      ProcessReceivePayloadUnaware,
-                                      client);
+            client.Provider.SslStream.BeginRead(client.ReceiveBuffer,
+                                                0,
+                                                client.ReceiveBufferSize,
+                                                ProcessReceivePayloadUnaware,
+                                                client);
         }
 
         /// <summary>
@@ -1143,13 +1189,16 @@ namespace GSF.Communication
         /// </summary>
         private void ProcessReceivePayloadUnaware(IAsyncResult asyncResult)
         {
-            TransportProvider<SslStream> client = (TransportProvider<SslStream>)asyncResult.AsyncState;
+            TransportProvider<TlsSocket> client = (TransportProvider<TlsSocket>)asyncResult.AsyncState;
 
             try
             {
                 // Update statistics and pointers.
-                client.Statistics.UpdateBytesReceived(client.Provider.EndRead(asyncResult));
+                client.Statistics.UpdateBytesReceived(client.Provider.SslStream.EndRead(asyncResult));
                 client.BytesReceived = client.Statistics.LastBytesReceived;
+
+                if (!client.Provider.Socket.Connected)
+                    throw new SocketException((int)SocketError.Disconnecting);
 
                 if (client.Statistics.LastBytesReceived == 0)
                     throw new SocketException((int)SocketError.Disconnecting);
@@ -1188,7 +1237,7 @@ namespace GSF.Communication
         /// <summary>
         /// Processes the termination of client.
         /// </summary>
-        private void TerminateConnection(TransportProvider<SslStream> client, bool raiseEvent)
+        private void TerminateConnection(TransportProvider<TlsSocket> client, bool raiseEvent)
         {
             client.Reset();
 
