@@ -301,6 +301,7 @@ namespace TVA.Collections
         {
             m_asyncQueue = new ConcurrentQueue<T>();
             m_dequeueLock = new SpinLock();
+            m_enabled = true;
         }
 
         #endregion
