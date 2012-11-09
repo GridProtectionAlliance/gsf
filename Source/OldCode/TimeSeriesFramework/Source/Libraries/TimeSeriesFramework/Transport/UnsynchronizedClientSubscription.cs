@@ -22,14 +22,13 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using TimeSeriesFramework.Adapters;
 using TVA;
+using TVA.Collections;
 using TVA.Parsing;
 
 namespace TimeSeriesFramework.Transport
@@ -56,6 +55,7 @@ namespace TimeSeriesFramework.Transport
         public event EventHandler<EventArgs<IClientSubscription, EventArgs>> ProcessingComplete;
 
         // Fields
+        private readonly AsyncQueue<IEnumerable<IMeasurement>> m_processQueue;
         private SignalIndexCache m_signalIndexCache;
         private DataPublisher m_parent;
         private Guid m_clientID;
@@ -70,8 +70,6 @@ namespace TimeSeriesFramework.Transport
         private volatile int m_timeIndex;
         private System.Timers.Timer m_baseTimeRotationTimer;
         private volatile bool m_initializedBaseTimeOffsets;
-        private ConcurrentQueue<IEnumerable<IMeasurement>> m_processQueue;
-        private int m_processing;
         private volatile bool m_startTimeSent;
         private IaonSession m_iaonSession;
         private bool m_disposed;
@@ -94,10 +92,18 @@ namespace TimeSeriesFramework.Transport
             m_parent = parent;
             m_clientID = clientID;
             m_subscriberID = subscriberID;
+
             m_signalIndexCache = new SignalIndexCache()
             {
                 SubscriberID = subscriberID
             };
+
+            m_processQueue = new AsyncQueue<IEnumerable<IMeasurement>>()
+            {
+                ProcessItemFunction = ProcessMeasurements
+            };
+
+            m_processQueue.ProcessException += m_processQueue_ProcessException;
         }
 
         #endregion
@@ -368,8 +374,6 @@ namespace TimeSeriesFramework.Transport
 
             base.Start();
 
-            m_processQueue = new ConcurrentQueue<IEnumerable<IMeasurement>>();
-
             if ((object)m_baseTimeRotationTimer != null && m_includeTime)
                 m_baseTimeRotationTimer.Start();
         }
@@ -418,8 +422,6 @@ namespace TimeSeriesFramework.Transport
         /// </remarks>
         public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
-            IEnumerable<IMeasurement> dequeuedMeasurements;
-
             if (!m_startTimeSent && (object)measurements != null && measurements.Any())
             {
                 m_startTimeSent = true;
@@ -482,89 +484,65 @@ namespace TimeSeriesFramework.Transport
                         }
 
                         // Publish latest data values...
-                        if ((object)m_processQueue != null)
-                            m_processQueue.Enqueue(currentMeasurements);
+                        m_processQueue.Enqueue(currentMeasurements);
                     }
                 }
                 else
                 {
                     // Publish unsynchronized on data receipt otherwise...
-                    if ((object)m_processQueue != null)
-                        m_processQueue.Enqueue(measurements);
-                }
-
-                if (Interlocked.CompareExchange(ref m_processing, 1, 0) == 0)
-                {
-                    if (m_processQueue.TryDequeue(out dequeuedMeasurements))
-                        ThreadPool.QueueUserWorkItem(state => ProcessMeasurements((IEnumerable<IMeasurement>)state), dequeuedMeasurements);
-                    else
-                        Interlocked.Exchange(ref m_processing, 0);
+                    m_processQueue.Enqueue(measurements);
                 }
             }
         }
 
         private void ProcessMeasurements(IEnumerable<IMeasurement> measurements)
         {
-            IEnumerable<IMeasurement> dequeuedMeasurements;
             List<ISupportBinaryImage> packet = new List<ISupportBinaryImage>();
             bool useCompactMeasurementFormat = m_useCompactMeasurementFormat;
             int packetSize = 5;
 
-            try
+            // Wait for any external events, if needed
+            WaitForExternalEvents();
+
+            // If a set of base times has not yet been initialized, initialize a set by rotating
+            if (!m_initializedBaseTimeOffsets)
             {
-                // Wait for any external events, if needed
-                WaitForExternalEvents();
+                if (m_parent.UseBaseTimeOffsets)
+                    RotateBaseTimes();
 
-                // If a set of base times has not yet been initialized, initialize a set by rotating
-                if (!m_initializedBaseTimeOffsets)
-                {
-                    if (m_parent.UseBaseTimeOffsets)
-                        RotateBaseTimes();
+                m_initializedBaseTimeOffsets = true;
+            }
 
-                    m_initializedBaseTimeOffsets = true;
-                }
+            foreach (IMeasurement measurement in measurements)
+            {
+                ISupportBinaryImage binaryMeasurement;
+                int binaryLength;
 
-                foreach (IMeasurement measurement in measurements)
-                {
-                    ISupportBinaryImage binaryMeasurement;
-                    int binaryLength;
-
-                    // Serialize the current measurement.
-                    if (useCompactMeasurementFormat)
-                        binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, m_includeTime, m_baseTimeOffsets, m_timeIndex, m_useMillisecondResolution);
-                    else
-                        binaryMeasurement = new SerializableMeasurement(measurement, m_parent.GetClientEncoding(m_clientID));
-
-                    // Determine the size of the measurement in bytes.
-                    binaryLength = binaryMeasurement.BinaryLength;
-
-                    // If the current measurement will not fit in the packet based on the max
-                    // packet size, process the current packet and start a new packet.
-                    if (packetSize + binaryLength > DataPublisher.MaxPacketSize)
-                    {
-                        ProcessBinaryMeasurements(packet, useCompactMeasurementFormat);
-                        packet.Clear();
-                        packetSize = 5;
-                    }
-
-                    // Add the current measurement to the packet.
-                    packet.Add(binaryMeasurement);
-                    packetSize += binaryLength;
-                }
-
-                // Process the remaining measurements.
-                ProcessBinaryMeasurements(packet, useCompactMeasurementFormat);
-
-                // Process the next group of measurements.
-                if (m_processQueue.TryDequeue(out dequeuedMeasurements))
-                    ThreadPool.QueueUserWorkItem(state => ProcessMeasurements((IEnumerable<IMeasurement>)state), dequeuedMeasurements);
+                // Serialize the current measurement.
+                if (useCompactMeasurementFormat)
+                    binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, m_includeTime, m_baseTimeOffsets, m_timeIndex, m_useMillisecondResolution);
                 else
-                    Interlocked.Exchange(ref m_processing, 0);
+                    binaryMeasurement = new SerializableMeasurement(measurement, m_parent.GetClientEncoding(m_clientID));
+
+                // Determine the size of the measurement in bytes.
+                binaryLength = binaryMeasurement.BinaryLength;
+
+                // If the current measurement will not fit in the packet based on the max
+                // packet size, process the current packet and start a new packet.
+                if (packetSize + binaryLength > DataPublisher.MaxPacketSize)
+                {
+                    ProcessBinaryMeasurements(packet, useCompactMeasurementFormat);
+                    packet.Clear();
+                    packetSize = 5;
+                }
+
+                // Add the current measurement to the packet.
+                packet.Add(binaryMeasurement);
+                packetSize += binaryLength;
             }
-            catch (Exception ex)
-            {
-                OnProcessException(ex);
-            }
+
+            // Process the remaining measurements.
+            ProcessBinaryMeasurements(packet, useCompactMeasurementFormat);
         }
 
         private void ProcessBinaryMeasurements(IEnumerable<ISupportBinaryImage> measurements, bool useCompactMeasurementFormat)
@@ -654,6 +632,11 @@ namespace TimeSeriesFramework.Transport
         private void BaseTimeRotationTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             RotateBaseTimes();
+        }
+
+        private void m_processQueue_ProcessException(object sender, EventArgs<Exception> e)
+        {
+            OnProcessException(e.Argument);
         }
 
         #endregion
