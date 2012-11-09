@@ -105,7 +105,7 @@ namespace GSF.Parsing
 
         // Fields
         private Dictionary<TTypeIdentifier, TypeInfo> m_outputTypes;
-        private readonly AsyncQueue<EventArgs<TOutputType>> m_parsedOutputQueue;
+        private readonly AsyncQueue<EventArgs<TOutputType>> m_outputQueue;
         private bool m_disposed;
 
         #endregion
@@ -118,10 +118,12 @@ namespace GSF.Parsing
         protected FrameImageParserBase()
         {
             m_outputTypes = new Dictionary<TTypeIdentifier, TypeInfo>();
-            m_parsedOutputQueue = new AsyncQueue<EventArgs<TOutputType>>()
+            m_outputQueue = new AsyncQueue<EventArgs<TOutputType>>()
             {
                 ProcessItemFunction = PublishParsedOutput
             };
+
+            m_outputQueue.ProcessException += m_parsedOutputQueue_ProcessException;
         }
 
         #endregion
@@ -150,10 +152,26 @@ namespace GSF.Parsing
         {
             get
             {
-                if ((object)m_parsedOutputQueue != null)
-                    return m_parsedOutputQueue.Count;
+                if ((object)m_outputQueue != null)
+                    return m_outputQueue.Count;
 
                 return 0;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the frame image parser is currently enabled.
+        /// </summary>
+        public override bool Enabled
+        {
+            get
+            {
+                return base.Enabled;
+            }
+            set
+            {
+                base.Enabled = value;
+                m_outputQueue.Enabled = value;
             }
         }
 
@@ -393,27 +411,38 @@ namespace GSF.Parsing
                 if (output.AllowQueuedPublication)
                 {
                     // Queue-up parsed output for publication
-                    m_parsedOutputQueue.Enqueue(outputArgs);
+                    m_outputQueue.Enqueue(outputArgs);
                 }
                 else
                 {
                     // Publish parsed output immediately
-                    DataParsed(this, outputArgs);
-                    ReusableObjectPool<EventArgs<TOutputType>>.Default.ReturnObject(outputArgs);
+                    try
+                    {
+                        DataParsed(this, outputArgs);
+                    }
+                    finally
+                    {
+                        ReusableObjectPool<EventArgs<TOutputType>>.Default.ReturnObject(outputArgs);
+                    }
                 }
             }
         }
 
         /// <summary>
-        /// Thread pool handler used to publish parsed output.
+        /// <see cref="AsyncQueue{T}"/> handler used to publish queued outputs.
         /// </summary>
-        /// <param name="parsedArgs">Event args to publish.</param>
-        protected virtual void PublishParsedOutput(EventArgs<TOutputType> parsedArgs)
+        /// <param name="outputArgs">Event args continaing new output to publish.</param>
+        protected virtual void PublishParsedOutput(EventArgs<TOutputType> outputArgs)
         {
-            if ((object)DataParsed != null)
-                DataParsed(this, parsedArgs);
-
-            ReusableObjectPool<EventArgs<TOutputType>>.Default.ReturnObject(parsedArgs);
+            try
+            {
+                if ((object)DataParsed != null)
+                    DataParsed(this, outputArgs);
+            }
+            finally
+            {
+                ReusableObjectPool<EventArgs<TOutputType>>.Default.ReturnObject(outputArgs);
+            }
         }
 
         /// <summary>
@@ -435,6 +464,12 @@ namespace GSF.Parsing
         {
             if ((object)DuplicateTypeHandlerEncountered != null)
                 DuplicateTypeHandlerEncountered(this, new EventArgs<Type, TTypeIdentifier>(duplicateType, id));
+        }
+
+        // Expose exceptions encountered via async queue processing to parsing exception event
+        private void m_parsedOutputQueue_ProcessException(object sender, EventArgs<Exception> e)
+        {
+            OnParsingException(e.Argument);
         }
 
         #endregion
