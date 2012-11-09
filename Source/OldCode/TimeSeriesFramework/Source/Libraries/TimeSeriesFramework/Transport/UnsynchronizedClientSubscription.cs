@@ -56,10 +56,10 @@ namespace TimeSeriesFramework.Transport
 
         // Fields
         private readonly AsyncQueue<IEnumerable<IMeasurement>> m_processQueue;
-        private SignalIndexCache m_signalIndexCache;
+        private readonly SignalIndexCache m_signalIndexCache;
+        private readonly Guid m_clientID;
+        private readonly Guid m_subscriberID;
         private DataPublisher m_parent;
-        private Guid m_clientID;
-        private Guid m_subscriberID;
         private string m_hostName;
         private bool m_useCompactMeasurementFormat;
         private long m_lastPublishTime;
