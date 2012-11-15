@@ -586,7 +586,7 @@ namespace GSF.TimeSeries.Statistics
                 {
                     for (int i = 0; i < s_statisticSources.Count; i++)
                     {
-                        if (s_statisticSources[i] == source)
+                        if (s_statisticSources[i].Source == source)
                         {
                             s_statisticSources.RemoveAt(i);
                             break;
