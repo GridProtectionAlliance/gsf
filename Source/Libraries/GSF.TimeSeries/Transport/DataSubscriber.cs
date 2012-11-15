@@ -28,6 +28,7 @@ using GSF.Collections;
 using GSF.Communication;
 using GSF.Data;
 using GSF.IO;
+using GSF.Net.Security;
 using GSF.Reflection;
 using GSF.Security.Cryptography;
 using GSF.TimeSeries.Adapters;
@@ -39,6 +40,8 @@ using System.Data;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Xml;
@@ -163,7 +166,7 @@ namespace GSF.TimeSeries.Transport
         public new event EventHandler<EventArgs<string>> ProcessingComplete;
 
         // Fields
-        private TcpClient m_commandChannel;
+        private IClient m_commandChannel;
         private UdpClient m_dataChannel;
         private LocalConcentrator m_localConcentrator;
         private System.Timers.Timer m_dataStreamMonitor;
@@ -184,12 +187,16 @@ namespace GSF.TimeSeries.Transport
         private Guid m_nodeID;
         private int m_gatewayProtocolID;
         private List<ServerCommand> m_requests;
+        private SecurityMode m_securityMode;
         private bool m_synchronizedSubscription;
-        private bool m_requireAuthentication;
         private bool m_useMillisecondResolution;
         private bool m_autoConnect;
         private string m_sharedSecret;
         private string m_authenticationID;
+        private string m_localCertificate;
+        private string m_remoteCertificate;
+        private SslPolicyErrors m_validPolicyErrors;
+        private X509ChainStatusFlags m_validChainFlags;
         private bool m_includeTime;
         private bool m_synchronizeMetadata;
         private bool m_internal;
@@ -216,17 +223,32 @@ namespace GSF.TimeSeries.Transport
         #region [ Properties ]
 
         /// <summary>
+        /// Gets or sets the security mode used for communications over the command channel.
+        /// </summary>
+        public SecurityMode SecurityMode
+        {
+            get
+            {
+                return m_securityMode;
+            }
+            set
+            {
+                m_securityMode = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets flag that determines if <see cref="DataPublisher"/> requires subscribers to authenticate before making data requests.
         /// </summary>
         public bool RequireAuthentication
         {
             get
             {
-                return m_requireAuthentication;
+                return m_securityMode != SecurityMode.None;
             }
             set
             {
-                m_requireAuthentication = value;
+                m_securityMode = value ? SecurityMode.Gateway : SecurityMode.None;
             }
         }
 
@@ -510,7 +532,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets or sets reference to <see cref="TcpClient"/> command channel, attaching and/or detaching to events as needed.
         /// </summary>
-        protected TcpClient CommandChannel
+        protected IClient CommandChannel
         {
             get
             {
@@ -593,17 +615,36 @@ namespace GSF.TimeSeries.Transport
 
             // Setup connection to data publishing server with or without authentication required
             if (settings.TryGetValue("requireAuthentication", out setting))
-                m_requireAuthentication = setting.ParseBoolean();
-            else
-                m_requireAuthentication = false;
+                RequireAuthentication = setting.ParseBoolean();
 
-            if (m_requireAuthentication)
+            // Set the security mode if explicitly defined
+            if (settings.TryGetValue("securityMode", out setting))
+                m_securityMode = (SecurityMode)Enum.Parse(typeof(SecurityMode), setting);
+
+            // Settings specific to Gateway security
+            if (m_securityMode == SecurityMode.Gateway)
             {
-                if (!settings.TryGetValue("sharedSecret", out m_sharedSecret) && !string.IsNullOrWhiteSpace(m_sharedSecret))
-                    throw new ArgumentException("The \"sharedSecret\" setting must defined when authentication is required.");
+                if (!settings.TryGetValue("sharedSecret", out m_sharedSecret) || string.IsNullOrWhiteSpace(m_sharedSecret))
+                    throw new ArgumentException("The \"sharedSecret\" setting must be defined when using Gateway security mode.");
 
-                if (!settings.TryGetValue("authenticationID", out m_authenticationID) && !string.IsNullOrWhiteSpace(m_authenticationID))
-                    throw new ArgumentException("The \"authenticationID\" setting must defined when authentication is required.");
+                if (!settings.TryGetValue("authenticationID", out m_authenticationID) || string.IsNullOrWhiteSpace(m_authenticationID))
+                    throw new ArgumentException("The \"authenticationID\" setting must be defined when using Gateway security mode.");
+            }
+
+            // Settings specific to Transport Layer Security
+            if (m_securityMode == SecurityMode.TLS)
+            {
+                if (!settings.TryGetValue("localCertificate", out m_localCertificate) || !File.Exists(m_localCertificate))
+                    throw new ArgumentException("The \"localCertificate\" setting must be defined and certificate file must exist when using TLS security mode.");
+
+                if (!settings.TryGetValue("remoteCertificate", out m_remoteCertificate) || !File.Exists(m_remoteCertificate))
+                    throw new ArgumentException("The \"remoteCertificate\" setting must be defined and certificate file must exist when using TLS security mode.");
+
+                if (!settings.TryGetValue("validPolicyErrors", out setting) || !Enum.TryParse(setting, out m_validPolicyErrors))
+                    m_validPolicyErrors = SslPolicyErrors.None;
+
+                if (!settings.TryGetValue("validChainFlags", out setting) || !Enum.TryParse(setting, out m_validChainFlags))
+                    m_validChainFlags = X509ChainStatusFlags.NoError;
             }
 
             // Check if synchronize metadata is disabled.
@@ -687,24 +728,47 @@ namespace GSF.TimeSeries.Transport
                 }
             }
 
-            // Create a new TCP client
-            TcpClient commandChannel = new TcpClient();
+            if (m_securityMode != SecurityMode.TLS)
+            {
+                // Create a new TCP client
+                TcpClient commandChannel = new TcpClient();
 
-            // Initialize default settings
-            commandChannel.ConnectionString = "server=localhost:6165";
-            commandChannel.PayloadAware = true;
-            commandChannel.PersistSettings = false;
-            commandChannel.MaxConnectionAttempts = 1;
+                // Initialize default settings
+                commandChannel.PayloadAware = true;
+                commandChannel.PersistSettings = false;
+                commandChannel.MaxConnectionAttempts = 1;
 
-            // Assign command channel client reference and attach to needed events
-            this.CommandChannel = commandChannel;
+                // Assign command channel client reference and attach to needed events
+                this.CommandChannel = commandChannel;
+            }
+            else
+            {
+                // Create a new TLS client and certificate checker
+                TlsClient commandChannel = new TlsClient();
+                SimpleCertificateChecker certificateChecker = new SimpleCertificateChecker();
+
+                // Set up certificate checker
+                certificateChecker.TrustedCertificates.Add(new X509Certificate2(m_remoteCertificate));
+                certificateChecker.ValidPolicyErrors = m_validPolicyErrors;
+                certificateChecker.ValidChainFlags = m_validChainFlags;
+
+                // Initialize default settings
+                commandChannel.PayloadAware = true;
+                commandChannel.PersistSettings = false;
+                commandChannel.MaxConnectionAttempts = 1;
+                commandChannel.CertificateFile = m_localCertificate;
+                commandChannel.CertificateChecker = certificateChecker;
+
+                // Assign command channel client reference and attach to needed events
+                this.CommandChannel = commandChannel;
+            }
 
             // Get proper connection string - either from specified command channel
             // or from base connection string
             if (settings.TryGetValue("commandChannel", out setting))
-                commandChannel.ConnectionString = setting;
+                m_commandChannel.ConnectionString = setting;
             else
-                commandChannel.ConnectionString = ConnectionString;
+                m_commandChannel.ConnectionString = ConnectionString;
 
             // Register subscriber with the statistics engine
             StatisticsEngine.Register(this, "Subscriber", "SUB");
@@ -1421,7 +1485,7 @@ namespace GSF.TimeSeries.Transport
                         commandPacket.Write(data, 0, data.Length);
 
                     // Send command packet to publisher
-                    m_commandChannel.SendAsync(commandPacket.ToArray());
+                    m_commandChannel.SendAsync(commandPacket.ToArray(), 0, (int)commandPacket.Length);
 
                     // Track server command in pending request queue
                     lock (m_requests)
@@ -1460,7 +1524,7 @@ namespace GSF.TimeSeries.Transport
             m_commandChannelConnectionAttempts = 0;
             m_dataChannelConnectionAttempts = 0;
             m_commandChannel.ConnectAsync();
-            m_authenticated = false;
+            m_authenticated = (m_securityMode == SecurityMode.TLS);
             m_subscribed = false;
             m_keyIVs = null;
             m_totalBytesReceived = 0L;
@@ -2442,7 +2506,7 @@ namespace GSF.TimeSeries.Transport
             if (m_autoConnect)
             {
                 // Attempt authentication if required, remaining steps will happen on successful authentication
-                if (m_requireAuthentication)
+                if (m_securityMode == SecurityMode.Gateway)
                     Authenticate(m_sharedSecret, m_authenticationID);
                 else
                     StartSubscription();

@@ -130,7 +130,7 @@ namespace GSF.Net.Security
         /// <param name="chain">The chain of certificate authorities associated with the remote certificate.</param>
         /// <param name="errors">One or more errors associated with the remote certificate.</param>
         /// <returns>A flag that determines whether the specified certificate is accepted for authentication.</returns>
-        public bool ValidateRemoteCertificate(object sender, X509Certificate remoteCertificate, X509Chain chain, System.Net.Security.SslPolicyErrors errors)
+        public bool ValidateRemoteCertificate(object sender, X509Certificate remoteCertificate, X509Chain chain, SslPolicyErrors errors)
         {
             X509Certificate trustedCertificate = GetTrustedCertificate(remoteCertificate);
             X509ChainStatusFlags chainFlags;
@@ -171,7 +171,7 @@ namespace GSF.Net.Security
         }
 
         // Searches the list of trusted certificates for a certificate that matches the given remote certificate.
-        private X509Certificate GetTrustedCertificate(X509Certificate remoteCertificate)
+        public X509Certificate GetTrustedCertificate(X509Certificate remoteCertificate)
         {
             byte[] hash = remoteCertificate.GetCertHash();
             byte[] key = remoteCertificate.GetPublicKey();

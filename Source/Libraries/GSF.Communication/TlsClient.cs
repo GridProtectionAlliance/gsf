@@ -268,6 +268,7 @@ using GSF.Configuration;
 using GSF.IO;
 using GSF.Net.Security;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -288,6 +289,15 @@ namespace GSF.Communication
     {
         #region [ Members ]
 
+        // Nested Types
+        private class TlsClientPayload
+        {
+            public byte[] Data;
+            public int Offset;
+            public int Length;
+            public ManualResetEventSlim WaitHandle;
+        }   
+
         // Constants
 
         /// <summary>
@@ -304,6 +314,11 @@ namespace GSF.Communication
         /// Specifies the default value for the <see cref="AllowDualStackSocket"/> property.
         /// </summary>
         public const bool DefaultAllowDualStackSocket = true;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="MaxSendQueueSize"/> property.
+        /// </summary>
+        public const int DefaultMaxSendQueueSize = -1;
 
         /// <summary>
         /// Specifies the default value for the <see cref="ClientBase.ConnectionString"/> property.
@@ -331,6 +346,10 @@ namespace GSF.Communication
         private TransportProvider<SslStream> m_sslClient;
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectWaitHandle;
+        private ConcurrentQueue<TlsClientPayload> m_sendQueue;
+        private SpinLock m_sendLock;
+        private int m_maxSendQueueSize;
+        private int m_sending;
         private bool m_disposed;
 
         private EventHandler<SocketAsyncEventArgs> m_connectHandler;
@@ -364,7 +383,10 @@ namespace GSF.Communication
             m_payloadAware = DefaultPayloadAware;
             m_payloadMarker = Payload.DefaultMarker;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
+            m_maxSendQueueSize = DefaultMaxSendQueueSize;
             m_sslClient = new TransportProvider<SslStream>();
+            m_sendQueue = new ConcurrentQueue<TlsClientPayload>();
+            m_sendLock = new SpinLock();
 
             m_connectHandler = (sender, args) => ProcessConnect(args);
         }
@@ -438,6 +460,24 @@ namespace GSF.Communication
             set
             {
                 m_allowDualStackSocket = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum size for the send queue before payloads are dumped from the queue.
+        /// </summary>
+        [Category("Settings"),
+        DefaultValue(DefaultMaxSendQueueSize),
+        Description("The maximum size for the send queue before payloads are dumped from the queue.")]
+        public int MaxSendQueueSize
+        {
+            get
+            {
+                return m_maxSendQueueSize;
+            }
+            set
+            {
+                m_maxSendQueueSize = value;
             }
         }
 
@@ -694,6 +734,7 @@ namespace GSF.Communication
                 settings["ValidChainFlags", true].Update(ValidChainFlags);
                 settings["PayloadAware", true].Update(m_payloadAware);
                 settings["AllowDualStackSocket", true].Update(m_allowDualStackSocket);
+                settings["MaxSendQueueSize", true].Update(m_maxSendQueueSize);
                 config.Save();
             }
         }
@@ -718,6 +759,7 @@ namespace GSF.Communication
                 settings.Add("ValidChainFlags", ValidChainFlags, "Set of valid chain flags used when validating remote certificates.");
                 settings.Add("PayloadAware", m_payloadAware, "True if payload boundaries are to be preserved during transmission, otherwise False.");
                 settings.Add("AllowDualStackSocket", m_allowDualStackSocket, "True if dual-mode socket is allowed when IP address is IPv6, otherwise False.");
+                settings.Add("MaxSendQueueSize", m_allowDualStackSocket, "The maximum size of the send queue before payloads are dumped from the queue.");
                 EnabledSslProtocols = settings["EnabledSslProtocols"].ValueAs(m_enabledSslProtocols);
                 CheckCertificateRevocation = settings["CheckCertificateRevocation"].ValueAs(m_checkCertificateRevocation);
                 CertificateFile = settings["CertificateFile"].ValueAs(m_certificateFile);
@@ -726,6 +768,7 @@ namespace GSF.Communication
                 ValidChainFlags = settings["ValidChainFlags"].ValueAs(ValidChainFlags);
                 PayloadAware = settings["PayloadAware"].ValueAs(m_payloadAware);
                 AllowDualStackSocket = settings["AllowDualStackSocket"].ValueAs(m_allowDualStackSocket);
+                MaxSendQueueSize = settings["MaxSendQueueSize"].ValueAs(m_maxSendQueueSize);
             }
         }
 
@@ -809,7 +852,11 @@ namespace GSF.Communication
                     {
                         // This will be done only when the object is disposed by calling Dispose().
                         if ((object)m_connectWaitHandle != null)
+                        {
+                            m_connectWaitHandle.Set();
                             m_connectWaitHandle.Dispose();
+                            m_connectWaitHandle = null;
+                        }
                     }
                 }
                 finally
@@ -860,27 +907,77 @@ namespace GSF.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         protected override WaitHandle SendDataAsync(byte[] data, int offset, int length)
         {
-            WaitHandle handle = null;
+            TlsClientPayload payload;
+            TlsClientPayload dequeuedPayload;
+            ManualResetEventSlim handle = null;
+            bool lockTaken = false;
 
             try
             {
+                // Check to see if the client has reached the maximum send queue size.
+                if (m_maxSendQueueSize > 0 && m_sendQueue.Count >= m_maxSendQueueSize)
+                {
+                    for (int i = 0; i < m_maxSendQueueSize; i++)
+                    {
+                        if (m_sendQueue.TryDequeue(out payload))
+                        {
+                            payload.WaitHandle.Set();
+                            payload.WaitHandle.Dispose();
+                            payload.WaitHandle = null;
+                        }
+                    }
+
+                    throw new InvalidOperationException(string.Format("TCP client reached maximum send queue size. {0} payloads dumped from the queue.", m_maxSendQueueSize));
+                }
+
                 // Prepare for payload-aware transmission.
                 if (m_payloadAware)
                     Payload.AddHeader(ref data, ref offset, ref length, m_payloadMarker);
 
-                // Send payload to the client asynchronously.
-                handle = m_sslClient.Provider.BeginWrite(data, offset, length, ProcessSend, length).AsyncWaitHandle;
+                // Create payload and wait handle.
+                payload = ReusableObjectPool<TlsClientPayload>.Default.TakeObject();
+                handle = ReusableObjectPool<ManualResetEventSlim>.Default.TakeObject();
+
+                payload.Data = data;
+                payload.Offset = offset;
+                payload.Length = length;
+                payload.WaitHandle = handle;
+                handle.Reset();
+
+                // Queue payload for sending.
+                m_sendQueue.Enqueue(payload);
+
+                try
+                {
+                    m_sendLock.Enter(ref lockTaken);
+
+                    // Send the next queued payload.
+                    if (Interlocked.CompareExchange(ref m_sending, 1, 0) == 0)
+                    {
+                        if (m_sendQueue.TryDequeue(out dequeuedPayload))
+                            ThreadPool.QueueUserWorkItem(state => SendPayload((TlsClientPayload)state), dequeuedPayload);
+                        else
+                            Interlocked.Exchange(ref m_sending, 0);
+                    }
+                }
+                finally
+                {
+                    if (lockTaken)
+                        m_sendLock.Exit();
+                }
 
                 // Notify that the send operation has started.
                 OnSendDataStart();
+
+                // Return the async handle that can be used to wait for the async operation to complete.
+                return handle.WaitHandle;
             }
             catch (Exception ex)
             {
                 OnSendDataException(ex);
             }
 
-            // Return the async handle that can be used to wait for the async operation to complete.
-            return handle;
+            return null;
         }
 
         /// <summary>
@@ -966,9 +1063,6 @@ namespace GSF.Communication
         {
             try
             {
-                // Notify threads waiting on connect operation.
-                m_connectWaitHandle.Set();
-
                 // Finish authentication.
                 m_sslClient.Provider.EndAuthenticateAsClient(asyncResult);
 
@@ -983,6 +1077,7 @@ namespace GSF.Communication
 
                 // Notify of established connection
                 // and begin receiving data.
+                m_connectWaitHandle.Set();
                 OnConnectionEstablished();
                 ReceivePayloadAsync();
             }
@@ -1017,21 +1112,98 @@ namespace GSF.Communication
         }
 
         /// <summary>
+        /// Sends a payload on the socket.
+        /// </summary>
+        private void SendPayload(TlsClientPayload payload)
+        {
+            byte[] data;
+            int offset;
+            int length;
+
+            try
+            {
+                data = payload.Data;
+                offset = payload.Offset;
+                length = payload.Length;
+
+                // Send payload to the client asynchronously.
+                m_sslClient.Provider.BeginWrite(data, offset, length, ProcessSend, payload);
+            }
+            catch (Exception ex)
+            {
+                OnSendDataException(ex);
+
+                // Assume process send was not able
+                // to continue the asynchronous loop.
+                Interlocked.Exchange(ref m_sending, 0);
+            }
+        }
+
+        /// <summary>
         /// Callback method for asynchronous send operation.
         /// </summary>
         private void ProcessSend(IAsyncResult asyncResult)
         {
+            TlsClientPayload payload = null;
+            ManualResetEventSlim handle = null;
+            bool lockTaken = false;
+
             try
             {
+                payload = (TlsClientPayload)asyncResult.AsyncState;
+                handle = payload.WaitHandle;
+
+                handle.Set();
+
                 // Send operation is complete.
                 m_sslClient.Provider.EndWrite(asyncResult);
-                m_sslClient.Statistics.UpdateBytesSent((int)asyncResult.AsyncState);
+                m_sslClient.Statistics.UpdateBytesSent(payload.Length);
                 OnSendDataComplete();
             }
             catch (Exception ex)
             {
                 // Send operation failed to complete.
                 OnSendDataException(ex);
+            }
+            finally
+            {
+                try
+                {
+                    payload.WaitHandle = null;
+
+                    // Return payload and wait handle to their respective object pools.
+                    ReusableObjectPool<TlsClientPayload>.Default.ReturnObject(payload);
+                    ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
+
+                    // Begin sending next client payload.
+                    if (m_sendQueue.TryDequeue(out payload))
+                    {
+                        ThreadPool.QueueUserWorkItem(state => SendPayload((TlsClientPayload)state), payload);
+                    }
+                    else
+                    {
+                        try
+                        {
+                            m_sendLock.Enter(ref lockTaken);
+
+                            if (m_sendQueue.TryDequeue(out payload))
+                                ThreadPool.QueueUserWorkItem(state => SendPayload((TlsClientPayload)state), payload);
+                            else
+                                Interlocked.Exchange(ref m_sending, 0);
+                        }
+                        finally
+                        {
+                            if (lockTaken)
+                                m_sendLock.Exit();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    string errorMessage = string.Format("Exception encountered while attempting to send next payload: {0}", ex.Message);
+                    OnSendDataException(new Exception(errorMessage, ex));
+                    Interlocked.Exchange(ref m_sending, 0);
+                }
             }
         }
 

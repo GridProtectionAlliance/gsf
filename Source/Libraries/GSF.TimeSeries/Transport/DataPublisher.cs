@@ -32,7 +32,9 @@
 //******************************************************************************************************
 
 using GSF.Communication;
+using GSF.Configuration;
 using GSF.Data;
+using GSF.Net.Security;
 using GSF.Security.Cryptography;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Statistics;
@@ -46,7 +48,9 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -55,6 +59,27 @@ using System.Xml;
 namespace GSF.TimeSeries.Transport
 {
     #region [ Enumerations ]
+
+    /// <summary>
+    /// Security modes used by the <see cref="DataPublisher"/> to secure data sent over the command channel.
+    /// </summary>
+    public enum SecurityMode
+    {
+        /// <summary>
+        /// No security.
+        /// </summary>
+        None,
+
+        /// <summary>
+        /// Transport Layer Security.
+        /// </summary>
+        TLS,
+
+        /// <summary>
+        /// Pre-shared key.
+        /// </summary>
+        Gateway
+    }
 
     /// <summary>
     /// Server commands received by <see cref="DataPublisher"/> and sent by <see cref="DataSubscriber"/>.
@@ -426,6 +451,11 @@ namespace GSF.TimeSeries.Transport
         public const bool DefaultRequireAuthentication = false;
 
         /// <summary>
+        /// Default value for <see cref="SecurityMode"/>.
+        /// </summary>
+        public const SecurityMode DefaultSecurityMode = SecurityMode.None;
+
+        /// <summary>
         /// Default value for <see cref="EncryptPayload"/>.
         /// </summary>
         public const bool DefaultEncryptPayload = false;
@@ -458,7 +488,9 @@ namespace GSF.TimeSeries.Transport
 
         // Fields
         private ManualResetEvent m_initializeWaitHandle;
-        private TcpServer m_commandChannel;
+        private IServer m_commandChannel;
+        private CertificatePolicyChecker m_certificateChecker;
+        private Dictionary<X509Certificate, DataRow> m_subscriberIdentities;
         private ConcurrentDictionary<Guid, ClientConnection> m_clientConnections;
         private ConcurrentDictionary<Guid, IServer> m_clientPublicationChannels;
         private ConcurrentDictionary<MeasurementKey, Guid> m_signalIDCache;
@@ -467,7 +499,7 @@ namespace GSF.TimeSeries.Transport
         private RoutingTables m_routingTables;
         private IAdapterCollection m_parent;
         private string m_metadataTables;
-        private bool m_requireAuthentication;
+        private SecurityMode m_securityMode;
         private bool m_encryptPayload;
         private bool m_sharedDatabase;
         private bool m_allowSynchronizedSubscription;
@@ -501,7 +533,7 @@ namespace GSF.TimeSeries.Transport
             m_clientConnections = new ConcurrentDictionary<Guid, ClientConnection>();
             m_clientPublicationChannels = new ConcurrentDictionary<Guid, IServer>();
             m_signalIDCache = new ConcurrentDictionary<MeasurementKey, Guid>();
-            m_requireAuthentication = DefaultRequireAuthentication;
+            m_securityMode = DefaultSecurityMode;
             m_encryptPayload = DefaultEncryptPayload;
             m_sharedDatabase = DefaultSharedDatabase;
             m_allowSynchronizedSubscription = DefaultAllowSynchronizedSubscription;
@@ -553,11 +585,29 @@ namespace GSF.TimeSeries.Transport
         {
             get
             {
-                return m_requireAuthentication;
+                return m_securityMode != SecurityMode.None;
             }
             set
             {
-                m_requireAuthentication = value;
+                m_securityMode = value ? SecurityMode.Gateway : SecurityMode.TLS;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the security mode of the <see cref="DataPublisher"/>'s command channel.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the security mode used for communications over the command channel."),
+        DefaultValue(DefaultSecurityMode)]
+        public SecurityMode SecurityMode
+        {
+            get
+            {
+                return m_securityMode;
+            }
+            set
+            {
+                m_securityMode = value;
             }
         }
 
@@ -682,6 +732,7 @@ namespace GSF.TimeSeries.Transport
             {
                 base.DataSource = value;
                 UpdateRights();
+                UpdateCertificateChecker();
             }
         }
 
@@ -720,10 +771,11 @@ namespace GSF.TimeSeries.Transport
             }
             set
             {
+                IPersistSettings commandChannel = m_commandChannel as IPersistSettings;
                 base.Name = value.ToUpper();
 
-                if (m_commandChannel != null)
-                    m_commandChannel.SettingsCategory = value.Replace("!", "").ToLower();
+                if ((object)commandChannel != null)
+                    commandChannel.SettingsCategory = value.Replace("!", "").ToLower();
             }
         }
 
@@ -756,7 +808,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets or sets reference to <see cref="TcpServer"/> command channel, attaching and/or detaching to events as needed.
         /// </summary>
-        protected TcpServer CommandChannel
+        protected IServer CommandChannel
         {
             get
             {
@@ -910,7 +962,7 @@ namespace GSF.TimeSeries.Transport
 
             // Setup data publishing server with or without required authentication 
             if (settings.TryGetValue("requireAuthentication", out setting))
-                m_requireAuthentication = setting.ParseBoolean();
+                RequireAuthentication = setting.ParseBoolean();
 
             // Check flag that will determine if subsciber payloads should be encrypted by default
             if (settings.TryGetValue("encryptPayload", out setting))
@@ -932,6 +984,10 @@ namespace GSF.TimeSeries.Transport
             if (settings.TryGetValue("cipherKeyRotationPeriod", out setting) && double.TryParse(setting, out period))
                 CipherKeyRotationPeriod = period;
 
+            // Get security mode used for the command channel
+            if (settings.TryGetValue("securityMode", out setting))
+                m_securityMode = (SecurityMode)Enum.Parse(typeof(SecurityMode), setting);
+
             if (settings.TryGetValue("cacheMeasurementKeys", out setting))
             {
                 LatestMeasurementCache cache = new LatestMeasurementCache(string.Format("trackLatestMeasurements=true;lagTime=60;leadTime=60;inputMeasurementKeys={{{0}}}", setting));
@@ -941,20 +997,44 @@ namespace GSF.TimeSeries.Transport
                 cache.Start();
             }
 
-            // Create a new TCP server
-            TcpServer commandChannel = new TcpServer();
+            if (m_securityMode != SecurityMode.TLS)
+            {
+                // Create a new TCP server
+                TcpServer commandChannel = new TcpServer();
 
-            // Initialize default settings
-            commandChannel.SettingsCategory = Name.Replace("!", "").ToLower();
-            commandChannel.ConfigurationString = "port=6165";
-            commandChannel.PayloadAware = true;
-            commandChannel.PersistSettings = true;
+                // Initialize default settings
+                commandChannel.SettingsCategory = Name.Replace("!", "").ToLower();
+                commandChannel.ConfigurationString = "port=6165";
+                commandChannel.PayloadAware = true;
+                commandChannel.PersistSettings = true;
 
-            // Assign command channel client reference and attach to needed events
-            this.CommandChannel = commandChannel;
+                // Assign command channel client reference and attach to needed events
+                this.CommandChannel = commandChannel;
+            }
+            else
+            {
+                // Create a new TLS server
+                TlsServer commandChannel = new TlsServer();
+
+                // Create certificate checker
+                m_certificateChecker = new CertificatePolicyChecker();
+                m_subscriberIdentities = new Dictionary<X509Certificate, DataRow>();
+                UpdateCertificateChecker();
+
+                // Initialize default settings
+                commandChannel.SettingsCategory = Name.Replace("!", "").ToLower();
+                commandChannel.ConfigurationString = "port=6165";
+                commandChannel.PayloadAware = true;
+                commandChannel.PersistSettings = true;
+                commandChannel.RequireClientCertificate = true;
+                commandChannel.CertificateChecker = m_certificateChecker;
+
+                // Assign command channel client reference and attach to needed events
+                this.CommandChannel = commandChannel;
+            }
 
             // Initialize TCP server (loads config file settings)
-            commandChannel.Initialize();
+            m_commandChannel.Initialize();
 
             // Start cipher key rotation timer when encrypting payload
             if (m_encryptPayload && m_cipherKeyRotationTimer != null)
@@ -1190,7 +1270,7 @@ namespace GSF.TimeSeries.Transport
                 // a runtime index optimization for the allowed measurements.
                 foreach (MeasurementKey key in inputMeasurementKeys)
                 {
-                    if (m_requireAuthentication)
+                    if (RequireAuthentication)
                     {
                         // Validate that subscriber has rights to this signal
                         if (SubscriberHasRights(signalIndexCache.SubscriberID, key, out signalID))
@@ -1225,7 +1305,7 @@ namespace GSF.TimeSeries.Transport
 
             // If authentication is not required,
             // rights are not applicable
-            if (!m_requireAuthentication)
+            if (!RequireAuthentication)
                 return;
 
             lock (this)
@@ -1427,6 +1507,75 @@ namespace GSF.TimeSeries.Transport
             return SendClientResponse(clientID, (byte)response, (byte)command, data);
         }
 
+        // Attempts to get the subscriber for the given client based on that client's X.509 certificate.
+        private void TryFindClientDetails(ClientConnection connection)
+        {
+            TlsServer commandChannel = m_commandChannel as TlsServer;
+            TransportProvider<TlsServer.TlsSocket> client;
+            X509Certificate remoteCertificate;
+            X509Certificate trustedCertificate;
+            DataRow subscriber;
+
+            // If connection is not TLS, there is no X.509 certificate
+            if ((object)commandChannel == null)
+                return;
+
+            // If connection is not found, cannot get X.509 certificate
+            if (!commandChannel.TryGetClient(connection.ClientID, out client))
+                return;
+
+            // Get remote certificate and corresponding trusted certificate
+            remoteCertificate = client.Provider.SslStream.RemoteCertificate;
+            trustedCertificate = m_certificateChecker.GetTrustedCertificate(remoteCertificate);
+
+            if ((object)trustedCertificate != null)
+            {
+                if (m_subscriberIdentities.TryGetValue(trustedCertificate, out subscriber))
+                {
+                    // Load client details from subscriber identity
+                    connection.SubscriberID = Guid.Parse(subscriber["ID"].ToNonNullString(Guid.Empty.ToString()).Trim());
+                    connection.SubscriberAcronym = subscriber["Acronym"].ToNonNullString().Trim();
+                    connection.SubscriberName = subscriber["Name"].ToNonNullString().Trim();
+                }
+            }
+        }
+
+        // Update certificate validation routine.
+        private void UpdateCertificateChecker()
+        {
+            CertificatePolicy policy;
+            SslPolicyErrors validPolicyErrors;
+            X509ChainStatusFlags validChainFlags;
+
+            string certificateFile;
+            X509Certificate certificate;
+
+            if ((object)m_certificateChecker == null)
+                return;
+
+            m_certificateChecker.DistrustAll();
+            m_subscriberIdentities.Clear();
+
+            foreach (DataRow subscriber in DataSource.Tables["Subscribers"].Select("Enabled <> 0"))
+            {
+                policy = new CertificatePolicy();
+                certificateFile = subscriber["CertificateFile"].ToNonNullString();
+
+                if (Enum.TryParse(subscriber["ValidPolicyErrors"].ToNonNullString(), out validPolicyErrors))
+                    policy.ValidPolicyErrors = validPolicyErrors;
+
+                if (Enum.TryParse(subscriber["ValidChainFlags"].ToNonNullString(), out validChainFlags))
+                    policy.ValidChainFlags = validChainFlags;
+
+                if (File.Exists(certificateFile))
+                {
+                    certificate = new X509Certificate2(certificateFile);
+                    m_certificateChecker.Trust(certificate, policy);
+                    m_subscriberIdentities.Add(certificate, subscriber);
+                }
+            }
+        }
+
         // Update rights for the given subscription.
         private void UpdateRights(IClientSubscription subscription)
         {
@@ -1525,7 +1674,7 @@ namespace GSF.TimeSeries.Transport
 
                     // Data packets can be published on a UDP data channel, so check for this...
                     if (dataPacketResponse)
-                        publishChannel = m_clientPublicationChannels.GetOrAdd(clientID, id => connection == null ? m_commandChannel : connection.PublishChannel);
+                        publishChannel = m_clientPublicationChannels.GetOrAdd(clientID, id => (object)connection != null ? connection.PublishChannel : m_commandChannel);
                     else
                         publishChannel = m_commandChannel;
 
@@ -1744,7 +1893,7 @@ namespace GSF.TimeSeries.Transport
             {
                 foreach (ClientConnection connection in m_clientConnections.Values)
                 {
-                    if (connection != null && connection.Authenticated)
+                    if ((object)connection != null && connection.Authenticated)
                         connection.RotateCipherKeys();
                 }
             }
@@ -1780,6 +1929,15 @@ namespace GSF.TimeSeries.Transport
             {
                 DataRow subscriber = null;
 
+                // Check security mode to determine whether authentication is supported
+                if (m_securityMode == SecurityMode.TLS)
+                {
+                    message = "WARNING: Received authentication request from client while running in TLS mode.";
+                    SendClientResponse(connection.ClientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
+                    OnProcessException(new InvalidOperationException(message));
+                    return;
+                }
+
                 // Reset existing authentication state
                 connection.Authenticated = false;
 
@@ -1787,6 +1945,7 @@ namespace GSF.TimeSeries.Transport
                 foreach (DataRow row in DataSource.Tables["Subscribers"].Select("Enabled <> 0"))
                 {
                     IEnumerable<IPAddress> ipAddresses = row["ValidIPAddresses"].ToNonNullString().Split(';', ',').Where(ip => !string.IsNullOrWhiteSpace(ip)).Select(ip => IPAddress.Parse(ip.Trim()));
+
                     foreach (IPAddress ipAddress in ipAddresses)
                     {
                         if (connection.IPAddress.ToString().Contains(ipAddress.ToString()))
@@ -2000,15 +2159,14 @@ namespace GSF.TimeSeries.Transport
                             if (subscription.Settings.TryGetValue("dataChannel", out setting))
                             {
                                 TransportProvider<Socket> client;
+                                Socket clientSocket = connection.GetCommandChannelSocket();
                                 Dictionary<string, string> settings = setting.ParseKeyValuePairs();
                                 IPEndPoint localEndPoint = null;
                                 string networkInterface = "::0";
 
                                 // Make sure return interface matches incoming client connection
-                                if (m_commandChannel.TryGetClient(connection.ClientID, out client))
-                                    localEndPoint = client.Provider.LocalEndPoint as IPEndPoint;
-                                else
-                                    localEndPoint = m_commandChannel.Server.LocalEndPoint as IPEndPoint;
+                                if ((object)clientSocket != null)
+                                    localEndPoint = clientSocket.LocalEndPoint as IPEndPoint;
 
                                 if ((object)localEndPoint != null)
                                 {
@@ -2197,7 +2355,7 @@ namespace GSF.TimeSeries.Transport
                             // If table has a NodeID column, filter table data for just this node.
                             // Also, determine whether we need to check subscriber for rights to the data
                             bool applyNodeIDFilter = table.Columns.Contains("NodeID");
-                            bool checkSubscriberRights = m_requireAuthentication && table.Columns.Contains("SignalID");
+                            bool checkSubscriberRights = RequireAuthentication && table.Columns.Contains("SignalID");
 
                             if (m_sharedDatabase || (!applyNodeIDFilter && !checkSubscriberRights))
                             {
@@ -2494,7 +2652,7 @@ namespace GSF.TimeSeries.Transport
                                 return;
                             }
 
-                            if (m_requireAuthentication && !connection.Authenticated)
+                            if (RequireAuthentication && !connection.Authenticated)
                             {
                                 message = string.Format("Subscriber not authenticated - {0} request denied.", command);
                                 SendClientResponse(clientID, ServerResponse.Failed, command, message);
@@ -2549,8 +2707,13 @@ namespace GSF.TimeSeries.Transport
         private void m_commandChannel_ClientConnected(object sender, EventArgs<Guid> e)
         {
             Guid clientID = e.Argument;
+            ClientConnection connection = new ClientConnection(this, clientID, m_commandChannel);
 
-            m_clientConnections[clientID] = new ClientConnection(this, clientID, m_commandChannel);
+            if (m_securityMode == SecurityMode.TLS)
+                TryFindClientDetails(connection);
+
+            connection.Authenticated = (m_securityMode == SecurityMode.TLS);
+            m_clientConnections[clientID] = connection;
 
             OnStatusMessage("Client connected to command channel.");
         }

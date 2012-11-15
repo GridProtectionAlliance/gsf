@@ -61,7 +61,7 @@ namespace GSF.TimeSeries.Transport
         private volatile byte[][][] m_keyIVs;
         private volatile int m_cipherIndex;
         private IPAddress m_ipAddress;
-        private TcpServer m_commandChannel;
+        private IServer m_commandChannel;
         private UdpServer m_dataChannel;
         private string m_configurationString;
         private bool m_connectionEstablished;
@@ -83,7 +83,7 @@ namespace GSF.TimeSeries.Transport
         /// <param name="parent">Parent data publisher.</param>
         /// <param name="clientID">Client ID of associated connection.</param>
         /// <param name="commandChannel"><see cref="TcpServer"/> command channel used to lookup connection information.</param>
-        public ClientConnection(DataPublisher parent, Guid clientID, TcpServer commandChannel)
+        public ClientConnection(DataPublisher parent, Guid clientID, IServer commandChannel)
         {
             m_parent = parent;
             m_clientID = clientID;
@@ -108,11 +108,11 @@ namespace GSF.TimeSeries.Transport
             // Attempt to lookup remote connection identification for logging purposes
             try
             {
-                TransportProvider<Socket> client;
+                Socket commandChannelSocket = GetCommandChannelSocket();
                 IPEndPoint remoteEndPoint = null;
 
-                if ((object)commandChannel != null && commandChannel.TryGetClient(clientID, out client))
-                    remoteEndPoint = client.Provider.RemoteEndPoint as IPEndPoint;
+                if ((object)commandChannel != null)
+                    remoteEndPoint = commandChannelSocket.RemoteEndPoint as IPEndPoint;
 
                 if ((object)remoteEndPoint != null)
                 {
@@ -224,13 +224,24 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Gets <see cref="IServer"/> command channel.
+        /// </summary>
+        public IServer CommandChannel
+        {
+            get
+            {
+                return m_commandChannel;
+            }
+        }
+
+        /// <summary>
         /// Gets <see cref="IServer"/> publication channel - that is, data channel if defined otherwise command channel.
         /// </summary>
         public IServer PublishChannel
         {
             get
             {
-                return ((object)m_dataChannel == null ? (IServer)m_commandChannel : (IServer)m_dataChannel);
+                return ((object)m_dataChannel == null ? m_commandChannel : m_dataChannel);
             }
         }
 
@@ -241,13 +252,15 @@ namespace GSF.TimeSeries.Transport
         {
             get
             {
-                TransportProvider<Socket> client;
+                Socket commandChannelSocket;
                 bool isConnected = false;
 
                 try
                 {
-                    if ((object)m_commandChannel != null && m_commandChannel.TryGetClient(m_clientID, out client))
-                        isConnected = client.Provider.Connected;
+                    commandChannelSocket = GetCommandChannelSocket();
+
+                    if ((object)commandChannelSocket != null)
+                        isConnected = commandChannelSocket.Connected;
                 }
                 catch
                 {
@@ -709,6 +722,28 @@ namespace GSF.TimeSeries.Transport
             m_parent.SendClientResponse(m_clientID, ServerResponse.Failed, ServerCommand.RotateCipherKeys, "Cipher key rotation skipped, keys were already rotated within last second.");
             m_parent.OnStatusMessage("WARNING: Cipher key rotation skipped for {0}, keys were already rotated within last second.", ConnectionID);
             return false;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Socket"/> instance used by this client
+        /// connection to send and receive data over the command channel.
+        /// </summary>
+        /// <returns>The socket instance used by the client to send and receive data over the command channel.</returns>
+        public Socket GetCommandChannelSocket()
+        {
+            TcpServer tcpCommandChannel = m_commandChannel as TcpServer;
+            TlsServer tlsCommandChannel = m_commandChannel as TlsServer;
+
+            TransportProvider<Socket> tcpProvider;
+            TransportProvider<TlsServer.TlsSocket> tlsProvider;
+
+            if ((object)tcpCommandChannel != null && tcpCommandChannel.TryGetClient(m_clientID, out tcpProvider))
+                return tcpProvider.Provider;
+
+            if ((object)tlsCommandChannel != null && tlsCommandChannel.TryGetClient(m_clientID, out tlsProvider))
+                return tlsProvider.Provider.Socket;
+
+            return null;
         }
 
         private void m_pingTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)

@@ -708,6 +708,7 @@ namespace GSF.Scheduling
                 m_startTimerThread.Name = "TVA.Scheduling.ScheduleManager.StartTimer()";
 #else
                 m_startTimerThread = new Thread(StartTimer);
+                m_startTimerThread.IsBackground = true;
 #endif
                 m_startTimerThread.Start();
             }
