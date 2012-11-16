@@ -184,7 +184,7 @@
 using System;
 using System.Text;
 using GSF.PQDIF.Physical;
-using TVA;
+using GSF;
 
 namespace GSF.PQDIF.Logical
 {

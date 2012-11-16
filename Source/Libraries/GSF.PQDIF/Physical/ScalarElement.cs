@@ -183,7 +183,7 @@
 
 using System;
 using System.Text;
-using TVA;
+using GSF;
 
 namespace GSF.PQDIF.Physical
 {
