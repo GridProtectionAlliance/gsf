@@ -76,8 +76,9 @@
       <ProjectSolution>$(LocalFolder)\Source\$(ProjectName).sln</ProjectSolution>
       <VersionRevisionChange>Increment</VersionRevisionChange>
       <PreRelease Condition="'$(PreRelease)' == ''">true</PreRelease>
-      <BuildDeployFolder Condition="'$(BuildDeployFolder)' == ''">\\rgocopgfs1\Applications\$(ProjectName)\Beta</BuildDeployFolder>
-      <NugetPackagesFolder Condition="'$(NugetPackagesFolder)' == ''">\\rgocopgfs1\Applications\NugetPackages</NugetPackagesFolder>
+      <Nuget>$(LocalFolder)\Build\Scripts\NuGet\NuGet.exe</Nuget>
+      <NugetPackagesFolder Condition="'$(NugetPackagesFolder)' == ''">\\opdat\Applications\NugetPackages</NugetPackagesFolder>
+      <BuildDeployFolder Condition="'$(BuildDeployFolder)' == ''">\\opdat\Applications\$(ProjectName)\Beta</BuildDeployFolder>     
     </PropertyGroup>
   </Target>
 
@@ -147,21 +148,21 @@
     <ItemGroup>
       <NugetLibraries Include="$(LocalFolder)\Source\Libraries\**\*.csproj" Exclude="$(LocalFolder)\Source\Libraries\Tests\**\*.csproj"/>
     </ItemGroup>
-    <Exec Command="NuGet.exe pack %22%(NugetLibraries.FullPath)%22 /Version $(Major).$(Minor).$(Build) /Symbols /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' != 'true'"/>
-    <Exec Command="NuGet.exe pack %22%(NugetLibraries.FullPath)%22 /Version $(Major).$(Minor).$(Build)-beta$(Revision) /Symbols /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' == 'true'"/>
+    <Exec Command="%22$(Nuget)%22 pack %22%(NugetLibraries.FullPath)%22 /Version $(Major).$(Minor).$(Build) /Symbols /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' != 'true'"/>
+    <Exec Command="%22$(Nuget)%22 pack %22%(NugetLibraries.FullPath)%22 /Version $(Major).$(Minor).$(Build)-beta$(Revision) /Symbols /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' == 'true'"/>
     <Message Text="Creating nuget samples packages..."/>
     <ItemGroup>
       <NugetSamples Include="$(LocalFolder)\Build\Scripts\**\*.nuspec"/>
     </ItemGroup>
-    <Exec Command="NuGet.exe pack %22%(NugetSamples.FullPath)%22 /Version $(Major).$(Minor).$(Build) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' != 'true'"/>
-    <Exec Command="NuGet.exe pack %22%(NugetSamples.FullPath)%22 /Version $(Major).$(Minor).$(Build)-beta$(Revision) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' == 'true'"/>
+    <Exec Command="%22$(Nuget)%22 pack %22%(NugetSamples.FullPath)%22 /Version $(Major).$(Minor).$(Build) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' != 'true'"/>
+    <Exec Command="%22$(Nuget)%22 pack %22%(NugetSamples.FullPath)%22 /Version $(Major).$(Minor).$(Build)-beta$(Revision) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' == 'true'"/>
     <!-- Publish nuget packages. -->
     <Message Text="Publishing nuget packages to NuGet.org..."/>
     <ItemGroup>
       <NugetPackages Remove="@(NugetPackages)"/>
       <NugetPackages Include="$(NugetPackagesFolder)\TVACodeLibrary.*.$(Major).$(Minor).$(Build)*.nupkg" Exclude="$(NugetPackagesFolder)\TVACodeLibrary.*.$(Major).$(Minor).$(Build)*.symbols.nupkg"/>
     </ItemGroup>
-    <Exec Command="NuGet.exe push %22%(NugetPackages.FullPath)%22 $(NugetApiKey)" Condition="'@(NugetPackages)' != ''"/>
+    <Exec Command="%22$(Nuget)%22 push %22%(NugetPackages.FullPath)%22 $(NugetApiKey)" Condition="'@(NugetPackages)' != ''"/>
   </Target>
 
 </Project>
