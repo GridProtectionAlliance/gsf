@@ -731,7 +731,9 @@ namespace GSF.TimeSeries.Transport
             set
             {
                 base.DataSource = value;
+
                 UpdateRights();
+                UpdateLatestMeasurementCache();
                 UpdateCertificateChecker();
             }
         }
@@ -1293,6 +1295,25 @@ namespace GSF.TimeSeries.Transport
             // Send client updated signal index cache
             if (m_clientConnections.TryGetValue(clientID, out connection) && connection.IsSubscribed)
                 SendClientResponse(clientID, ServerResponse.UpdateSignalIndexCache, ServerCommand.Subscribe, serializedSignalIndexCache);
+        }
+
+        /// <summary>
+        /// Updates the latest measurement cache when the
+        /// set of cached measurements may have changed.
+        /// </summary>
+        protected void UpdateLatestMeasurementCache()
+        {
+            string cacheMeasurementKeys;
+            IActionAdapter cache;
+
+            if (Settings.TryGetValue("cacheMeasurementKeys", out cacheMeasurementKeys))
+            {
+                if (TryGetAdapterByName("LatestMeasurementCache", out cache))
+                {
+                    cache.InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, cacheMeasurementKeys);
+                    m_routingTables.CalculateRoutingTables(null);
+                }
+            }
         }
 
         /// <summary>
