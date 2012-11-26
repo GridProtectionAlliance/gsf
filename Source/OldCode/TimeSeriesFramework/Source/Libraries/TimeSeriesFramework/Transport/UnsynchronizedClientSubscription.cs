@@ -63,6 +63,7 @@ namespace TimeSeriesFramework.Transport
         private string m_hostName;
         private bool m_useCompactMeasurementFormat;
         private long m_lastPublishTime;
+        private string m_requestedInputFilter;
         private double m_publishInterval;
         private bool m_includeTime;
         private bool m_useMillisecondResolution;
@@ -140,6 +141,17 @@ namespace TimeSeriesFramework.Transport
             get
             {
                 return m_signalIndexCache;
+            }
+        }
+
+        /// <summary>
+        /// Gets the input filter requested by the subscriber when establishing this <see cref="IClientSubscription"/>.
+        /// </summary>
+        public string RequestedInputFilter
+        {
+            get
+            {
+                return m_requestedInputFilter;
             }
         }
 
@@ -335,6 +347,11 @@ namespace TimeSeriesFramework.Transport
             base.Initialize();
 
             string setting;
+
+            if (Settings.TryGetValue("inputMeasurementKeys", out setting))
+                m_requestedInputFilter = setting;
+            else
+                m_requestedInputFilter = null;
 
             if (Settings.TryGetValue("publishInterval", out setting))
                 m_publishInterval = int.Parse(setting);

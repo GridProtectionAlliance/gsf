@@ -72,6 +72,14 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
+        /// Gets the input filter requested by the subscriber when establishing this <see cref="IClientSubscription"/>.
+        /// </summary>
+        string RequestedInputFilter
+        {
+            get;
+        }
+
+        /// <summary>
         /// Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="IClientSubscription"/>.
         /// </summary>
         bool UseCompactMeasurementFormat

@@ -56,6 +56,7 @@ namespace TimeSeriesFramework.Transport
         private Guid m_clientID;
         private Guid m_subscriberID;
         private string m_hostName;
+        private string m_requestedInputFilter;
         private volatile bool m_useCompactMeasurementFormat;
         private volatile bool m_startTimeSent;
         private IaonSession m_iaonSession;
@@ -119,6 +120,17 @@ namespace TimeSeriesFramework.Transport
             get
             {
                 return m_signalIndexCache;
+            }
+        }
+
+        /// <summary>
+        /// Gets the input filter requested by the subscriber when establishing this <see cref="IClientSubscription"/>.
+        /// </summary>
+        public string RequestedInputFilter
+        {
+            get
+            {
+                return m_requestedInputFilter;
             }
         }
 
@@ -297,6 +309,9 @@ namespace TimeSeriesFramework.Transport
         {
             base.Initialize();
             base.UsePrecisionTimer = false;
+
+            if (!Settings.TryGetValue("inputMeasurementKeys", out m_requestedInputFilter))
+                m_requestedInputFilter = null;
 
             // Handle temporal session intialization
             if (this.TemporalConstraintIsDefined())

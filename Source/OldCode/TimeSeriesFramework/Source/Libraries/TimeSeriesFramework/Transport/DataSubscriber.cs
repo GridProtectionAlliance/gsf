@@ -1597,6 +1597,9 @@ namespace TimeSeriesFramework.Transport
                                         // Key rotation may be unsolicited
                                         OnStatusMessage("Received server confirmation for unsolicited request to \"{0}\" command: {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
                                         break;
+                                    case ServerCommand.Subscribe:
+                                        OnStatusMessage("Received unsolicited response to \"{0}\" command: {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
+                                        break;
                                     default:
                                         OnProcessException(new InvalidOperationException("Publisher sent a success code for an unsolicited server command: " + commandCode));
                                         break;
