@@ -39,12 +39,10 @@
 //
 //******************************************************************************************************
 
-
-
-
 using GSF.IO;
 using System;
 using System.IO;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Runtime.Serialization.Json;
@@ -268,6 +266,62 @@ namespace GSF
 
         #endregion
 
+        #region [ Legacy ]
+
+        /// <summary>
+        /// Serialization binder used to deserialize files that were serialized using the old library frameworks
+        /// (TVA Code Library, Time Series Framework, TVA.PhasorProtocols, and PMU Connection Tester) into classes
+        /// in the Grid Solutions Framework.
+        /// </summary>
+        public static readonly SerializationBinder LegacyBinder = new LegacySerializationBinder();
+
+        // Serialization binder used to deserialize files that were serialized using the old library frameworks.
+        private class LegacySerializationBinder : SerializationBinder
+        {
+            /// <summary>
+            /// Controls the binding of a serialized object to a type.
+            /// </summary>
+            /// <param name="assemblyName">Specifies the <see cref="Assembly"/> name of the serialized object.</param>
+            /// <param name="typeName">Specifies the <see cref="Type"/> name of the serialized object.</param>
+            /// <returns>The type of the object the formatter creates a new instance of.</returns>
+            public override Type BindToType(string assemblyName, string typeName)
+            {
+                Type newType;
+                string newTypeName;
+
+                // Perform namespace transformations that occurred
+                // when migrating to the Grid Solutions Framework
+                newTypeName = typeName
+                    .Replace("TVA.", "GSF.")
+                    .Replace("TimeSeriesFramework.", "GSF.TimeSeries.")
+                    .Replace("ConnectionTester.", "GSF.PhasorProtocols.");
+
+                // Search each assembly in the current application
+                // domain for the type with the transformed name
+                foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    try
+                    {
+                        newType = assembly.GetType(newTypeName);
+
+                        if ((object)newType != null)
+                            return newType;
+                    }
+                    catch
+                    {
+                        // Ignore errors that occur when attempting to load
+                        // types from assemblies as we may still be able to
+                        // load the type from a different assembly
+                    }
+                }
+
+                // No type found; return null
+                return null;
+            }
+        }
+
+        #endregion
+
         /// <summary>
         /// Serializes an <see cref="Object"/>.
         /// </summary>
@@ -418,6 +472,7 @@ namespace GSF
             {
                 // Deserialize from binary format.
                 BinaryFormatter serializer = new BinaryFormatter();
+                serializer.Binder = LegacyBinder;
                 deserializedObject = (T)serializer.Deserialize(serializedObject);
             }
             else

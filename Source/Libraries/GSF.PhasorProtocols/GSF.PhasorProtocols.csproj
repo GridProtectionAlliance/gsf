@@ -143,6 +143,7 @@
     <Compile Include="ConfigurationFrameCollection.cs" />
     <Compile Include="ConfigurationFrameParsingState.cs" />
     <Compile Include="ConnectionParametersBase.cs" />
+    <Compile Include="ConnectionSettings.cs" />
     <Compile Include="CrcException.cs" />
     <Compile Include="DataCellBase.cs" />
     <Compile Include="DataCellCollection.cs" />
