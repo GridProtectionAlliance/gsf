@@ -455,7 +455,7 @@ namespace TVA.Collections
         {
             get
             {
-                return InternalQueue as IList<T>;
+                return InternalEnumerable as IList<T>;
             }
         }
 

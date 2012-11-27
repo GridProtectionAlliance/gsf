@@ -955,6 +955,22 @@ namespace TVA.Collections
         }
 
         /// <summary>
+        /// Gets a value that indicates whether the <see cref="ProcessQueue{T}"/> is empty.
+        /// </summary>
+        public virtual bool IsEmpty
+        {
+            get
+            {
+                ConcurrentQueue<T> queue = InternalQueue;
+
+                if ((object)queue != null)
+                    return queue.IsEmpty;
+
+                return !m_processQueue.Any();
+            }
+        }
+
+        /// <summary>
         /// Gets the total number of items currently being processed.
         /// </summary>
         /// <returns>Total number of items currently being processed.</returns>
@@ -1156,7 +1172,7 @@ namespace TVA.Collections
         /// <summary>
         /// Allows derived classes to access the interfaced internal <see cref="ProcessQueue{T}"/> directly.
         /// </summary>
-        protected IEnumerable<T> InternalQueue
+        protected IEnumerable<T> InternalEnumerable
         {
             get
             {
@@ -1172,6 +1188,15 @@ namespace TVA.Collections
             get
             {
                 return m_processQueue;
+            }
+        }
+
+        // Attempts to return process queue enuerable as a concurrent queue
+        private ConcurrentQueue<T> InternalQueue
+        {
+            get
+            {
+                return m_processQueue as ConcurrentQueue<T>;
             }
         }
 
@@ -1231,7 +1256,7 @@ namespace TVA.Collections
         /// <param name="item">The item to add to the <see cref="ProcessQueue{T}"/>.</param>
         public virtual void Add(T item)
         {
-            ConcurrentQueue<T> queue = m_processQueue as ConcurrentQueue<T>;
+            ConcurrentQueue<T> queue = InternalQueue;
 
             if ((object)queue != null)
             {
@@ -1239,7 +1264,7 @@ namespace TVA.Collections
 
                 if (m_enabled && m_processingIsRealTime && Interlocked.CompareExchange(ref m_processing, 1, 0) == 0)
                 {
-                    if (m_processQueue.Any())
+                    if (!queue.IsEmpty)
                         ThreadPool.QueueUserWorkItem(RealTimeDataProcessingLoop);
                     else
                         Interlocked.Exchange(ref m_processing, 0);
@@ -1272,6 +1297,12 @@ namespace TVA.Collections
         /// <param name="item">The object to locate in the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
         public virtual bool Contains(T item)
         {
+            ConcurrentQueue<T> queue = InternalQueue;
+
+            // Calls to ToArray on concurrent queue avoid cases where collection may be modified during a context switch between GetEnumerator and MoveNext
+            if ((object)queue != null)
+                return queue.ToArray().Contains(item);
+
             return m_processQueue.Contains(item);
         }
 
@@ -1285,7 +1316,7 @@ namespace TVA.Collections
         /// <param name="index">The zero-based index in array at which copying begins.</param>
         public virtual void CopyTo(T[] array, int index)
         {
-            m_processQueue.ToList().CopyTo(array, index);
+            ToArray().CopyTo(array, index);
         }
 
         /// <summary>
@@ -1294,6 +1325,11 @@ namespace TVA.Collections
         /// <returns>A new array containing the elements copied from the <see cref="ProcessQueue{T}"/>.</returns>
         public virtual T[] ToArray()
         {
+            ConcurrentQueue<T> queue = InternalQueue;
+
+            if ((object)queue != null)
+                return queue.ToArray();
+
             return m_processQueue.ToArray();
         }
 
@@ -1315,7 +1351,7 @@ namespace TVA.Collections
         /// <returns><c>true</c> if an object was removed and returned successfully; otherwise, <c>false</c>.</returns>
         public virtual bool TryTake(out T item)
         {
-            ConcurrentQueue<T> queue = m_processQueue as ConcurrentQueue<T>;
+            ConcurrentQueue<T> queue = InternalQueue;
 
             if ((object)queue != null)
                 return queue.TryDequeue(out item);
@@ -1330,7 +1366,7 @@ namespace TVA.Collections
         /// <returns><c>true</c> if any objects were removed and returned successfully; otherwise, <c>false</c>.</returns>
         public virtual bool TryTake(out T[] items)
         {
-            ConcurrentQueue<T> queue = m_processQueue as ConcurrentQueue<T>;
+            ConcurrentQueue<T> queue = InternalQueue;
 
             if ((object)queue != null)
             {
@@ -1369,7 +1405,7 @@ namespace TVA.Collections
         /// </summary>
         public virtual void Clear()
         {
-            ConcurrentQueue<T> queue = m_processQueue as ConcurrentQueue<T>;
+            ConcurrentQueue<T> queue = InternalQueue;
 
             if ((object)queue != null)
             {
@@ -1499,7 +1535,7 @@ namespace TVA.Collections
                 while (Count > 0)
                 {
                     // Create a real-time processing loop that will process remaining items as quickly as possible.
-                    while (m_processQueue.Any())
+                    while (!IsEmpty)
                     {
                         if ((object)m_processItemsFunction == null)
                         {
@@ -1527,7 +1563,7 @@ namespace TVA.Collections
 
         void ICollection.CopyTo(Array array, int index)
         {
-            m_processQueue.ToArray().CopyTo(array, index);
+            ToArray().CopyTo(array, index);
         }
 
         #region [ Item Processing Functions ]
@@ -1801,7 +1837,7 @@ namespace TVA.Collections
                 processing = Interlocked.CompareExchange(ref m_processing, 1, 0);
 
                 // Kick start processing when items exist that are not currently being processed
-                if (processing == 0 && m_processQueue.Any())
+                if (processing == 0 && !IsEmpty)
                 {
                     sleepTime = 1;
                     noWorkSleeps = 0L;
@@ -1838,7 +1874,7 @@ namespace TVA.Collections
             else
                 ProcessNextItems();
 
-            if (m_enabled && m_processQueue.Any())
+            if (m_enabled && !IsEmpty)
                 ThreadPool.QueueUserWorkItem(RealTimeDataProcessingLoop);
             else
                 Interlocked.Exchange(ref m_processing, 0);
@@ -1871,7 +1907,7 @@ namespace TVA.Collections
                 lock (m_processTimer)
                 {
                     // Enabled flag changes are always in a critical section to ensure all items will be processed
-                    if (!m_processQueue.Any())
+                    if (IsEmpty)
                         m_processTimer.Enabled = false;
                 }
             }

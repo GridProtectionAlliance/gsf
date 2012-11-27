@@ -526,7 +526,7 @@ namespace TVA.Collections
         {
             get
             {
-                return (DictionaryList<TKey, TValue>)InternalQueue;
+                return (DictionaryList<TKey, TValue>)InternalEnumerable;
             }
         }
 
