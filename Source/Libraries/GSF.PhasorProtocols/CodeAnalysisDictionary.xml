@@ -1,0 +1,22 @@
+﻿<Dictionary>
+  <Words>
+    <Recognized>
+      <Word>Phasor</Word>
+      <Word>phasor</Word>
+      <Word>IDCode</Word>
+      <Word>ini</Word>
+      <Word>MultiProtocolFrameParser</Word>
+      <Word>ConfigurationChanged</Word>
+      <Word>IDataFrame</Word>
+      <Word>ReceivedConfigurationFrame</Word>
+      <Word>ReceivedDataFrame</Word>
+      <Word>ReceivedCommandFrame</Word>
+      <Word>ReceivedUndeterminedFrame</Word>
+      <Word>ReceivedFrameBufferImage</Word>
+      <Word>Macrodyne</Word>
+      <Word>PDCstream</Word>
+      <Word>SignalReferenceMeasurement</Word>
+      <Word>F-NET</Word>
+    </Recognized>
+  </Words>>
+</Dictionary>
