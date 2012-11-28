@@ -1875,6 +1875,7 @@ namespace GSF.TimeSeries.Transport
                 }
 
                 // Start unsynchronized subscription
+                #pragma warning disable 0618
                 UnsynchronizedSubscribe(true, false, filterExpression.ToString(), dataChannel);
             }
             else

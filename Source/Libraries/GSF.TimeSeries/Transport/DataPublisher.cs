@@ -2179,7 +2179,6 @@ namespace GSF.TimeSeries.Transport
 
                             if (subscription.Settings.TryGetValue("dataChannel", out setting))
                             {
-                                TransportProvider<Socket> client;
                                 Socket clientSocket = connection.GetCommandChannelSocket();
                                 Dictionary<string, string> settings = setting.ParseKeyValuePairs();
                                 IPEndPoint localEndPoint = null;
