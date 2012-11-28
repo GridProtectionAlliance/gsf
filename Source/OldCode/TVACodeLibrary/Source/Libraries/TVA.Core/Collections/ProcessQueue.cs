@@ -966,7 +966,10 @@ namespace TVA.Collections
                 if ((object)queue != null)
                     return queue.IsEmpty;
 
-                return !m_processQueue.Any();
+                lock (SyncRoot)
+                {
+                    return !m_processQueue.Any();
+                }
             }
         }
 
