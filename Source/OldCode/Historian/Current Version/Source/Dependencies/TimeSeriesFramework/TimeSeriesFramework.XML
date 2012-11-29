@@ -6597,6 +6597,18 @@
             <param name="signalIndexCache">New signal index cache.</param>
             <param name="inputMeasurementKeys">Subscribed measurement keys.</param>
         </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.UpdateLatestMeasurementCache">
+            <summary>
+            Updates the latest measurement cache when the
+            set of cached measurements may have changed.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.UpdateRights">
+            <summary>
+            Updates each subscription's inputs based on
+            possible updates to that subscriber's rights.
+            </summary>
+        </member>
         <member name="M:TimeSeriesFramework.Transport.DataPublisher.SubscriberHasRights(System.Guid,System.Guid)">
             <summary>
             Determines if subscriber has rights to specified <paramref name="signalID"/>.
@@ -6739,6 +6751,12 @@
         <member name="P:TimeSeriesFramework.Transport.DataPublisher.CipherKeyRotationPeriod">
             <summary>
             Gets or sets the cipher key rotation period.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.DataSource">
+            <summary>
+            Gets or sets <see cref="T:System.Data.DataSet"/> based data source used to load each <see cref="T:TimeSeriesFramework.Adapters.IAdapter"/>.
+            Updates to this property will cascade to all items in this <see cref="T:TimeSeriesFramework.Adapters.AdapterCollectionBase`1"/>.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.DataPublisher.Status">
@@ -8159,6 +8177,11 @@
             Gets the current signal index cache of this <see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/>.
             </summary>
         </member>
+        <member name="P:TimeSeriesFramework.Transport.IClientSubscription.RequestedInputFilter">
+            <summary>
+            Gets the input filter requested by the subscriber when establishing this <see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/>.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Transport.IClientSubscription.UseCompactMeasurementFormat">
             <summary>
             Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/>.
@@ -8667,6 +8690,11 @@
             Gets the current signal index cache of this <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/>.
             </summary>
         </member>
+        <member name="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.RequestedInputFilter">
+            <summary>
+            Gets the input filter requested by the subscriber when establishing this <see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/>.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.UseCompactMeasurementFormat">
             <summary>
             Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/>.
@@ -8817,6 +8845,11 @@
         <member name="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.SignalIndexCache">
             <summary>
             Gets the current signal index cache of this <see cref="T:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.RequestedInputFilter">
+            <summary>
+            Gets the input filter requested by the subscriber when establishing this <see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/>.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.UseCompactMeasurementFormat">
