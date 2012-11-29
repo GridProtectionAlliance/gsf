@@ -12086,6 +12086,11 @@
             Gets indicator that the <see cref="T:TVA.Collections.ProcessQueue`1"/> is actively processing items.
             </summary>
         </member>
+        <member name="P:TVA.Collections.ProcessQueue`1.IsEmpty">
+            <summary>
+            Gets a value that indicates whether the <see cref="T:TVA.Collections.ProcessQueue`1"/> is empty.
+            </summary>
+        </member>
         <member name="P:TVA.Collections.ProcessQueue`1.ItemsBeingProcessed">
             <summary>
             Gets the total number of items currently being processed.
@@ -12136,7 +12141,7 @@
             Gets current status of <see cref="T:TVA.Collections.ProcessQueue`1"/>.
             </summary>
         </member>
-        <member name="P:TVA.Collections.ProcessQueue`1.InternalQueue">
+        <member name="P:TVA.Collections.ProcessQueue`1.InternalEnumerable">
             <summary>
             Allows derived classes to access the interfaced internal <see cref="T:TVA.Collections.ProcessQueue`1"/> directly.
             </summary>
