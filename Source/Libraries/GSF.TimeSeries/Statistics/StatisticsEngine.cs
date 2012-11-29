@@ -545,9 +545,6 @@ namespace GSF.TimeSeries.Statistics
             StatisticSource sourceInfo;
             IAdapter adapter;
 
-            if (s_statisticSources.Any(registeredSource => registeredSource.Source == source))
-                throw new InvalidOperationException(string.Format("Unable to register {0} as statistic source because it is already registered.", sourceName));
-
             sourceInfo = new StatisticSource()
             {
                 Source = source,
@@ -558,6 +555,9 @@ namespace GSF.TimeSeries.Statistics
 
             lock (s_statisticSources)
             {
+                if (s_statisticSources.Any(registeredSource => registeredSource.Source == source))
+                    throw new InvalidOperationException(string.Format("Unable to register {0} as statistic source because it is already registered.", sourceName));
+
                 s_statisticSources.Add(sourceInfo);
             }
 

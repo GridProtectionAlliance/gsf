@@ -56,7 +56,7 @@ namespace GSF.TimeSeries
             // Run data operations
             ValidateDefaultNode(connection, nodeIDQueryString);
             ValidateActiveMeasurements(connection, nodeIDQueryString);
-            ValidateExternalDataPublisher(connection, nodeIDQueryString);
+            ValidateDataPublishers(connection, nodeIDQueryString);
             ValidateStatistics(connection, nodeIDQueryString);
             ValidateAlarming(connection, nodeIDQueryString);
         }
@@ -102,17 +102,21 @@ namespace GSF.TimeSeries
 
         /// <summary>
         /// Data operation to validate and ensure there is a record in the
-        /// CustomActionAdapter table for the external data publisher.
+        /// CustomActionAdapter table for the external and TLS data publishers.
         /// </summary>
-        private static void ValidateExternalDataPublisher(IDbConnection connection, string nodeIDQueryString)
+        private static void ValidateDataPublishers(IDbConnection connection, string nodeIDQueryString)
         {
-            const string ExternalDataPublisherCountFormat = "SELECT COUNT(*) FROM CustomActionAdapter WHERE AdapterName='EXTERNAL!DATAPUBLISHER' AND NodeID = {0}";
-            const string ExternalDataPublisherInsertFormat = "INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, Enabled) VALUES({0}, 'EXTERNAL!DATAPUBLISHER', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Transport.DataPublisher', 'requireAuthentication=true; allowSynchronizedSubscription=false; useBaseTimeOffsets=true', 1)";
+            const string DataPublisherCountFormat = "SELECT COUNT(*) FROM CustomActionAdapter WHERE AdapterName='{0}!DATAPUBLISHER' AND NodeID = {1}";
+            const string DataPublisherInsertFormat = "INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, Enabled) VALUES({0}, '{1}!DATAPUBLISHER', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Transport.DataPublisher', 'securityMode={2}; allowSynchronizedSubscription=false; useBaseTimeOffsets=true', 1)";
 
-            int externalDataPublisherCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(ExternalDataPublisherCountFormat, nodeIDQueryString)));
+            int externalDataPublisherCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(DataPublisherCountFormat, "EXTERNAL", nodeIDQueryString)));
+            int tlsDataPublisherCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(DataPublisherCountFormat, "TLS", nodeIDQueryString)));
 
             if (externalDataPublisherCount == 0)
-                connection.ExecuteNonQuery(string.Format(ExternalDataPublisherInsertFormat, nodeIDQueryString));
+                connection.ExecuteNonQuery(string.Format(DataPublisherInsertFormat, nodeIDQueryString, "EXTERNAL", "Gateway"));
+
+            if (tlsDataPublisherCount == 0)
+                connection.ExecuteNonQuery(string.Format(DataPublisherInsertFormat, nodeIDQueryString, "TLS", "TLS"));
         }
 
         /// <summary>
