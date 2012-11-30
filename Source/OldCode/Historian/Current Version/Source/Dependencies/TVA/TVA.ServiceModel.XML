@@ -4,24 +4,6 @@
         <name>TVA.ServiceModel</name>
     </assembly>
     <members>
-        <member name="T:TVA.ServiceModel.IPolicyRetriever">
-            <summary>
-            Defines a web service interface to allow policy retrieval for cross-domain access from
-            Silverlight and Flash browser controls.
-            </summary>
-        </member>
-        <member name="M:TVA.ServiceModel.IPolicyRetriever.GetSilverlightPolicy">
-            <summary>
-            Gets policy stream for Silverlight applications.
-            </summary>
-            <returns>Stream containing clientaccesspolicy.xml.</returns>
-        </member>
-        <member name="M:TVA.ServiceModel.IPolicyRetriever.GetFlashPolicy">
-            <summary>
-            Gets policy stream for Flash applications.
-            </summary>
-            <returns>Stream containing crossdomain.xml.</returns>
-        </member>
         <member name="T:TVA.ServiceModel.Activation.SecureServiceHostFactory">
             <summary>
             A service host factory for WCF Services that enables role-based security using <see cref="T:TVA.ServiceModel.SecurityPolicy"/>.
@@ -63,6 +45,24 @@
             <summary>
             Gets or sets a boolean value that indicates whether security on the service is to be disabled. 
             </summary>
+        </member>
+        <member name="T:TVA.ServiceModel.IPolicyRetriever">
+            <summary>
+            Defines a web service interface to allow policy retrieval for cross-domain access from
+            Silverlight and Flash browser controls.
+            </summary>
+        </member>
+        <member name="M:TVA.ServiceModel.IPolicyRetriever.GetSilverlightPolicy">
+            <summary>
+            Gets policy stream for Silverlight applications.
+            </summary>
+            <returns>Stream containing clientaccesspolicy.xml.</returns>
+        </member>
+        <member name="M:TVA.ServiceModel.IPolicyRetriever.GetFlashPolicy">
+            <summary>
+            Gets policy stream for Flash applications.
+            </summary>
+            <returns>Stream containing crossdomain.xml.</returns>
         </member>
         <member name="T:TVA.ServiceModel.ISelfHostingService">
             <summary>
@@ -113,6 +113,187 @@
         <member name="P:TVA.ServiceModel.ISelfHostingService.ServiceHost">
             <summary>
             Gets the <see cref="P:TVA.ServiceModel.ISelfHostingService.ServiceHost"/> hosting the web service.
+            </summary>
+        </member>
+        <member name="T:TVA.ServiceModel.NamespaceDoc">
+            <summary>
+            Contains classes and interfaces that provide the basic infrastructure for writting web services.
+            </summary>
+        </member>
+        <member name="T:TVA.ServiceModel.Activation.SecureDataServiceHostFactory">
+            <summary>
+            A service host factory for WCF Data Services that enables role-based security using <see cref="T:TVA.ServiceModel.SecurityPolicy"/>.
+            </summary>
+            <see cref="T:TVA.ServiceModel.SecurityPolicy"/>
+        </member>
+        <member name="M:TVA.ServiceModel.Activation.SecureDataServiceHostFactory.CreateServiceHost(System.Type,System.Uri[])">
+            <summary>
+            Creates a new <see cref="T:System.Data.Services.DataServiceHost"/> from the URI.
+            </summary>
+            <param name="serviceType">Specifies the type of WCF service to host.</param>
+            <param name="baseAddresses">An array of base addresses for the service.</param>
+            <returns>New <see cref="T:System.Data.Services.DataServiceHost"/>.</returns>
+        </member>
+        <member name="T:TVA.ServiceModel.SecurityPolicy">
+            <summary>
+            Represents an <see cref="T:System.IdentityModel.Policy.IAuthorizationPolicy">authorization policy</see> that can be used by WCF services for enabling role-based security.
+            </summary>
+            <example>
+            Common config file entries:
+            <code>
+            <![CDATA[
+            <?xml version="1.0"?>
+            <configuration>
+              <configSections>
+                <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+              </configSections>
+              <categorizedSettings>
+                <securityProvider>
+                  <add name="ApplicationName" value="" description="Name of the application being secured as defined in the backend security datastore."
+                    encrypted="false" />
+                  <add name="ConnectionString" value="" description="Connection string to be used for connection to the backend security datastore."
+                    encrypted="false" />
+                  <add name="ProviderType" value="TVA.Security.LdapSecurityProvider, TVA.Security"
+                    description="The type to be used for enforcing security." encrypted="false" />
+                  <add name="IncludedResources" value="*/*.*=*" description="Semicolon delimited list of resources to be secured along with role names."
+                    encrypted="false" />
+                  <add name="ExcludedResources" value="*/SecurityService.svc*"
+                    description="Semicolon delimited list of resources to be excluded from being secured."
+                    encrypted="false" />
+                  <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
+                    encrypted="false" />
+                  <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
+                    encrypted="false" />
+                </securityProvider>
+                <activeDirectory>
+                  <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
+                    encrypted="false" />
+                  <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
+                    encrypted="false" />
+                  <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
+                    encrypted="true" />
+                </activeDirectory>
+              </categorizedSettings>
+            </configuration>
+            ]]>
+            </code>
+            Internal WCF service configuration:
+            <code>
+            <![CDATA[
+            <?xml version="1.0"?>
+            <configuration>
+              <system.serviceModel>
+                <services>
+                  <service name="WcfService1.Service1" behaviorConfiguration="serviceBehavior">
+                    <endpoint address="" contract="WcfService1.IService1" binding="webHttpBinding" 
+                              bindingConfiguration="endpointBinding" behaviorConfiguration="endpointBehavior" />
+                  </service>
+                </services>
+                <behaviors>
+                  <endpointBehaviors>
+                    <behavior name="endpointBehavior">
+                      <webHttp/>
+                    </behavior>
+                  </endpointBehaviors>
+                  <serviceBehaviors>
+                    <behavior name="serviceBehavior">
+                      <serviceAuthorization principalPermissionMode="Custom">
+                        <authorizationPolicies>
+                          <add policyType="TVA.ServiceModel.SecurityPolicy, TVA.ServiceModel" />
+                        </authorizationPolicies>
+                      </serviceAuthorization>
+                    </behavior>
+                  </serviceBehaviors>
+                </behaviors>
+                <bindings>
+                  <webHttpBinding>
+                    <binding name="endpointBinding">
+                      <security mode="TransportCredentialOnly">
+                        <transport clientCredentialType="Windows"/>
+                      </security>
+                    </binding>
+                  </webHttpBinding>
+                </bindings>
+                <serviceHostingEnvironment aspNetCompatibilityEnabled="false" />
+              </system.serviceModel>
+            </configuration>
+            ]]>
+            </code>
+            External WCF service configuration:
+            <code>
+            <![CDATA[
+            <?xml version="1.0"?>
+            <configuration>
+              <system.web>
+                <httpModules>
+                  <add name="SecurityModule" type="TVA.ServiceModel.SecurityModule, TVA.ServiceModel" />
+                </httpModules>
+              </system.web>
+              <system.serviceModel>
+                <services>
+                  <service name="WcfService1.Service1" behaviorConfiguration="serviceBehavior">
+                    <endpoint address="" contract="WcfService1.IService1" binding="webHttpBinding" 
+                              bindingConfiguration="endpointBinding" behaviorConfiguration="endpointBehavior"/>
+                  </service>
+                </services>
+                <behaviors>
+                  <endpointBehaviors>
+                    <behavior name="endpointBehavior">
+                      <webHttp/>
+                    </behavior>
+                  </endpointBehaviors>
+                  <serviceBehaviors>
+                    <behavior name="serviceBehavior">
+                      <serviceAuthorization principalPermissionMode="Custom">
+                        <authorizationPolicies>
+                          <add policyType="TVA.ServiceModel.SecurityPolicy, TVA.ServiceModel" />
+                        </authorizationPolicies>
+                      </serviceAuthorization>
+                    </behavior>
+                  </serviceBehaviors>
+                </behaviors>
+                <bindings>
+                  <webHttpBinding>
+                    <binding name="endpointBinding">
+                      <security mode="None" />
+                    </binding>
+                  </webHttpBinding>
+                </bindings>
+                <serviceHostingEnvironment aspNetCompatibilityEnabled="true" />
+              </system.serviceModel>
+            </configuration>
+            ]]>
+            </code>
+            </example>
+            <seealso cref="T:TVA.Security.ISecurityProvider"/>
+        </member>
+        <member name="M:TVA.ServiceModel.SecurityPolicy.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.ServiceModel.SecurityPolicy"/> class.
+            </summary>
+        </member>
+        <member name="M:TVA.ServiceModel.SecurityPolicy.Evaluate(System.IdentityModel.Policy.EvaluationContext,System.Object@)">
+            <summary>
+            Evaluates the <paramref name="evaluationContext"/> and initializes security.
+            </summary>
+            <param name="evaluationContext">An <see cref="T:System.IdentityModel.Policy.EvaluationContext"/> object.</param>
+            <param name="state">Custom state of the <see cref="T:TVA.ServiceModel.SecurityPolicy"/>.</param>
+            <returns></returns>
+        </member>
+        <member name="M:TVA.ServiceModel.SecurityPolicy.GetResourceName">
+            <summary>
+            Gets the name of resource being accessed.
+            </summary>
+            <returns><see cref="P:System.ServiceModel.OperationContext.IncomingMessageHeaders"/>.<see cref="P:System.ServiceModel.Channels.MessageHeaders.To"/>.<see cref="P:System.Uri.PathAndQuery"/> property value.</returns>
+        </member>
+        <member name="P:TVA.ServiceModel.SecurityPolicy.Id">
+            <summary>
+            Gets the identifier of this <see cref="T:TVA.ServiceModel.SecurityPolicy"/> instance.
+            </summary>
+        </member>
+        <member name="P:TVA.ServiceModel.SecurityPolicy.Issuer">
+            <summary>
+            Gets a claim set that represents the issuer of this <see cref="T:TVA.ServiceModel.SecurityPolicy"/>.
             </summary>
         </member>
         <member name="T:TVA.ServiceModel.SelfHostingService">
@@ -374,25 +555,6 @@
             Additional endpoints can be added to the <see cref="P:TVA.ServiceModel.SelfHostingService.ServiceHost"/> when <see cref="E:TVA.ServiceModel.SelfHostingService.ServiceHostCreated"/> event is fired.
             </remarks>
         </member>
-        <member name="T:TVA.ServiceModel.NamespaceDoc">
-            <summary>
-            Contains classes and interfaces that provide the basic infrastructure for writting web services.
-            </summary>
-        </member>
-        <member name="T:TVA.ServiceModel.Activation.SecureDataServiceHostFactory">
-            <summary>
-            A service host factory for WCF Data Services that enables role-based security using <see cref="T:TVA.ServiceModel.SecurityPolicy"/>.
-            </summary>
-            <see cref="T:TVA.ServiceModel.SecurityPolicy"/>
-        </member>
-        <member name="M:TVA.ServiceModel.Activation.SecureDataServiceHostFactory.CreateServiceHost(System.Type,System.Uri[])">
-            <summary>
-            Creates a new <see cref="T:System.Data.Services.DataServiceHost"/> from the URI.
-            </summary>
-            <param name="serviceType">Specifies the type of WCF service to host.</param>
-            <param name="baseAddresses">An array of base addresses for the service.</param>
-            <returns>New <see cref="T:System.Data.Services.DataServiceHost"/>.</returns>
-        </member>
         <member name="T:TVA.ServiceModel.Service">
             <summary>
             Defines helper methods related to WCF-based web services.
@@ -461,168 +623,6 @@
             </summary>
             <param name="serviceType"><see cref="T:System.Type"/> of the service.</param>
             <returns><see cref="T:System.Type"/> of the service contract if found, otherwise null.</returns>
-        </member>
-        <member name="T:TVA.ServiceModel.SecurityPolicy">
-            <summary>
-            Represents an <see cref="T:System.IdentityModel.Policy.IAuthorizationPolicy">authorization policy</see> that can be used by WCF services for enabling role-based security.
-            </summary>
-            <example>
-            Common config file entries:
-            <code>
-            <![CDATA[
-            <?xml version="1.0"?>
-            <configuration>
-              <configSections>
-                <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
-              </configSections>
-              <categorizedSettings>
-                <securityProvider>
-                  <add name="ApplicationName" value="" description="Name of the application being secured as defined in the backend security datastore."
-                    encrypted="false" />
-                  <add name="ConnectionString" value="" description="Connection string to be used for connection to the backend security datastore."
-                    encrypted="false" />
-                  <add name="ProviderType" value="TVA.Security.LdapSecurityProvider, TVA.Security"
-                    description="The type to be used for enforcing security." encrypted="false" />
-                  <add name="IncludedResources" value="*/*.*=*" description="Semicolon delimited list of resources to be secured along with role names."
-                    encrypted="false" />
-                  <add name="ExcludedResources" value="*/SecurityService.svc*"
-                    description="Semicolon delimited list of resources to be excluded from being secured."
-                    encrypted="false" />
-                  <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
-                    encrypted="false" />
-                  <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
-                    encrypted="false" />
-                </securityProvider>
-                <activeDirectory>
-                  <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
-                    encrypted="false" />
-                  <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
-                    encrypted="false" />
-                  <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
-                    encrypted="true" />
-                </activeDirectory>
-              </categorizedSettings>
-            </configuration>
-            ]]>
-            </code>
-            Internal WCF service configuration:
-            <code>
-            <![CDATA[
-            <?xml version="1.0"?>
-            <configuration>
-              <system.serviceModel>
-                <services>
-                  <service name="WcfService1.Service1" behaviorConfiguration="serviceBehavior">
-                    <endpoint address="" contract="WcfService1.IService1" binding="webHttpBinding" 
-                              bindingConfiguration="endpointBinding" behaviorConfiguration="endpointBehavior" />
-                  </service>
-                </services>
-                <behaviors>
-                  <endpointBehaviors>
-                    <behavior name="endpointBehavior">
-                      <webHttp/>
-                    </behavior>
-                  </endpointBehaviors>
-                  <serviceBehaviors>
-                    <behavior name="serviceBehavior">
-                      <serviceAuthorization principalPermissionMode="Custom">
-                        <authorizationPolicies>
-                          <add policyType="TVA.ServiceModel.SecurityPolicy, TVA.ServiceModel" />
-                        </authorizationPolicies>
-                      </serviceAuthorization>
-                    </behavior>
-                  </serviceBehaviors>
-                </behaviors>
-                <bindings>
-                  <webHttpBinding>
-                    <binding name="endpointBinding">
-                      <security mode="TransportCredentialOnly">
-                        <transport clientCredentialType="Windows"/>
-                      </security>
-                    </binding>
-                  </webHttpBinding>
-                </bindings>
-                <serviceHostingEnvironment aspNetCompatibilityEnabled="false" />
-              </system.serviceModel>
-            </configuration>
-            ]]>
-            </code>
-            External WCF service configuration:
-            <code>
-            <![CDATA[
-            <?xml version="1.0"?>
-            <configuration>
-              <system.web>
-                <httpModules>
-                  <add name="SecurityModule" type="TVA.ServiceModel.SecurityModule, TVA.ServiceModel" />
-                </httpModules>
-              </system.web>
-              <system.serviceModel>
-                <services>
-                  <service name="WcfService1.Service1" behaviorConfiguration="serviceBehavior">
-                    <endpoint address="" contract="WcfService1.IService1" binding="webHttpBinding" 
-                              bindingConfiguration="endpointBinding" behaviorConfiguration="endpointBehavior"/>
-                  </service>
-                </services>
-                <behaviors>
-                  <endpointBehaviors>
-                    <behavior name="endpointBehavior">
-                      <webHttp/>
-                    </behavior>
-                  </endpointBehaviors>
-                  <serviceBehaviors>
-                    <behavior name="serviceBehavior">
-                      <serviceAuthorization principalPermissionMode="Custom">
-                        <authorizationPolicies>
-                          <add policyType="TVA.ServiceModel.SecurityPolicy, TVA.ServiceModel" />
-                        </authorizationPolicies>
-                      </serviceAuthorization>
-                    </behavior>
-                  </serviceBehaviors>
-                </behaviors>
-                <bindings>
-                  <webHttpBinding>
-                    <binding name="endpointBinding">
-                      <security mode="None" />
-                    </binding>
-                  </webHttpBinding>
-                </bindings>
-                <serviceHostingEnvironment aspNetCompatibilityEnabled="true" />
-              </system.serviceModel>
-            </configuration>
-            ]]>
-            </code>
-            </example>
-            <seealso cref="T:TVA.Security.ISecurityProvider"/>
-        </member>
-        <member name="M:TVA.ServiceModel.SecurityPolicy.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.ServiceModel.SecurityPolicy"/> class.
-            </summary>
-        </member>
-        <member name="M:TVA.ServiceModel.SecurityPolicy.Evaluate(System.IdentityModel.Policy.EvaluationContext,System.Object@)">
-            <summary>
-            Evaluates the <paramref name="evaluationContext"/> and initializes security.
-            </summary>
-            <param name="evaluationContext">An <see cref="T:System.IdentityModel.Policy.EvaluationContext"/> object.</param>
-            <param name="state">Custom state of the <see cref="T:TVA.ServiceModel.SecurityPolicy"/>.</param>
-            <returns></returns>
-        </member>
-        <member name="M:TVA.ServiceModel.SecurityPolicy.GetResourceName">
-            <summary>
-            Gets the name of resource being accessed.
-            </summary>
-            <returns><see cref="P:System.ServiceModel.OperationContext.IncomingMessageHeaders"/>.<see cref="P:System.ServiceModel.Channels.MessageHeaders.To"/>.<see cref="P:System.Uri.PathAndQuery"/> property value.</returns>
-        </member>
-        <member name="P:TVA.ServiceModel.SecurityPolicy.Id">
-            <summary>
-            Gets the identifier of this <see cref="T:TVA.ServiceModel.SecurityPolicy"/> instance.
-            </summary>
-        </member>
-        <member name="P:TVA.ServiceModel.SecurityPolicy.Issuer">
-            <summary>
-            Gets a claim set that represents the issuer of this <see cref="T:TVA.ServiceModel.SecurityPolicy"/>.
-            </summary>
         </member>
     </members>
 </doc>
