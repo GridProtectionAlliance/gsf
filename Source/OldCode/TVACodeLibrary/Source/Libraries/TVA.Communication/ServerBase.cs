@@ -970,7 +970,7 @@ namespace TVA.Communication
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 settings.Add("ConfigurationString", m_configurationString, "Data required by the server to initialize.");
                 settings.Add("MaxClientConnections", m_maxClientConnections, "Maximum number of clients that can connect to the server.");
-                settings.Add("SendBufferSize", m_sendBufferSize, "Size of the buffer used by the server for sending data from the clients.");
+                settings.Add("SendBufferSize", m_sendBufferSize, "Size of the buffer used by the server for sending data to the clients.");
                 settings.Add("ReceiveBufferSize", m_receiveBufferSize, "Size of the buffer used by the server for receiving data from the clients.");
                 ConfigurationString = settings["ConfigurationString"].ValueAs(m_configurationString);
                 MaxClientConnections = settings["MaxClientConnections"].ValueAs(m_maxClientConnections);
