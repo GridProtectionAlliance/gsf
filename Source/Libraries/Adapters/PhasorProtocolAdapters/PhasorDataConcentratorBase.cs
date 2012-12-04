@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  PhasorDataConcentratorBase.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -29,6 +29,8 @@
 //      In StartDataChannel, moved EstablishPublicationChannel to before check for m_publishChannel
 //      to resolve issue with data UDP data channel not starting on first command if "auto start"
 //      is not checked.
+//  12/04/2012 - J. Ritchie Carroll
+//       Migrated to PhasorProtocolAdapters project.
 //
 //******************************************************************************************************
 
@@ -42,17 +44,17 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
+using GSF;
 using GSF.Communication;
 using GSF.Parsing;
+using GSF.PhasorProtocols;
 using GSF.PhasorProtocols.Anonymous;
-using GSF.Units;
-using GSF;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Statistics;
+using GSF.Units;
 
-namespace GSF.PhasorProtocols
+namespace PhasorProtocolAdapters
 {
     /// <summary>
     /// Represents an <see cref="IActionAdapter"/> used to generate and transmit concentrated stream
@@ -501,7 +503,7 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets the protocol independent <see cref="Anonymous.ConfigurationFrame"/> defined for this <see cref="PhasorDataConcentratorBase"/>.
+        /// Gets the protocol independent <see cref="GSF.PhasorProtocols.Anonymous.ConfigurationFrame"/> defined for this <see cref="PhasorDataConcentratorBase"/>.
         /// </summary>
         public ConfigurationFrame BaseConfigurationFrame
         {
@@ -1721,7 +1723,7 @@ namespace GSF.PhasorProtocols
             try
             {
                 // Cache configuration on an independent thread in case this takes some time
-                Anonymous.ConfigurationFrame.Cache(configurationFrame, OnProcessException, name);
+                GSF.PhasorProtocols.Anonymous.ConfigurationFrame.Cache(configurationFrame, OnProcessException, name);
             }
             catch (Exception ex)
             {

@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  PhasorMeasurementMapper.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  03/21/2010 - J. Ritchie Carroll
 //       Added new connection string settings to accomodate new MultiProtocolFrameParser properties.
+//  12/04/2012 - J. Ritchie Carroll
+//       Migrated to PhasorProtocolAdapters project.
 //
 //******************************************************************************************************
 
@@ -30,17 +32,18 @@ using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Text;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
-using GSF.TimeSeries.Transport;
+using GSF;
 using GSF.Communication;
 using GSF.IO;
+using GSF.PhasorProtocols;
 using GSF.PhasorProtocols.Anonymous;
-using GSF.Units;
-using GSF;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Statistics;
+using GSF.TimeSeries.Transport;
+using GSF.Units;
 
-namespace GSF.PhasorProtocols
+namespace PhasorProtocolAdapters
 {
     /// <summary>
     /// Represents an <see cref="IInputAdapter"/> used to map measured values from a connection

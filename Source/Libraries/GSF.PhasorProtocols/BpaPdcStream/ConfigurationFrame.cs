@@ -501,7 +501,12 @@ namespace GSF.PhasorProtocols.BpaPdcStream
             Refresh(false);
         }
 
-        internal void Refresh(bool refreshCausedByFrameParse)
+        /// <summary>
+        /// Reload BPA PDcstream INI based configuration file specifying if the refresh was caused by a frame parse.
+        /// </summary>
+        /// <param name="refreshCausedByFrameParse">Flag that specifies if the refresh was caused by a frame parse.</param>
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        public void Refresh(bool refreshCausedByFrameParse)
         {
             // The only time we need an access lock is when we reload the config file...
             lock (m_iniFile)

@@ -40,6 +40,33 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
     {
         #region [ Members ]
 
+        // Nested Types
+
+        // Defines possible signals types for an ETR file
+        private enum SignalType
+        {
+            // Current phase magnitude.
+            IPHM = 1,
+            // Current phase angle.
+            IPHA = 2,
+            // Voltage phase magnitude.
+            VPHM = 3,
+            // Voltage phase angle.
+            VPHA = 4,
+            // Frequency.
+            FREQ = 5,
+            // Frequency delta (dF/dt).
+            DFDT = 6,
+            // Analog value.
+            ALOG = 7,
+            // Status flags.
+            FLAG = 8,
+            // Digital value.
+            DIGI = 9,
+            // Undefined signal.
+            NONE = -1
+        }
+
         // Fields
         private CommonFrameHeader m_frameHeader;
         private string m_msvID;

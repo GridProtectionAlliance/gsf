@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  CommonPhasorServices.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  3/11/2011 - Mehulbhai P Thakkar
 //       Fixed bug in PhasorDataSourceValidation when CompanyID is NULL in Device table.
+//  12/04/2012 - J. Ritchie Carroll
+//       Migrated to PhasorProtocolAdapters project.
 //
 //******************************************************************************************************
 
@@ -32,18 +34,19 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using GSF;
+using GSF.Configuration;
+using GSF.Data;
+using GSF.IO;
+using GSF.PhasorProtocols;
+using GSF.PhasorProtocols.Anonymous;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Statistics;
 using GSF.TimeSeries.Transport;
-using GSF.Configuration;
-using GSF.Data;
-using GSF.IO;
-using GSF.PhasorProtocols.Anonymous;
 using GSF.Units;
-using GSF;
 
-namespace GSF.PhasorProtocols
+namespace PhasorProtocolAdapters
 {
     /// <summary>
     /// Provides common phasor services.

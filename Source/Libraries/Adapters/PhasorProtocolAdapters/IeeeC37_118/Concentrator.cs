@@ -1,7 +1,7 @@
 //******************************************************************************************************
 //  Concentrator.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -22,6 +22,8 @@
 //       Added new header and license agreement.
 //  09/27/2010 - J. Ritchie Carroll
 //       Added optional ID code validation for command requests.
+//  12/04/2012 - J. Ritchie Carroll
+//       Migrated to PhasorProtocolAdapters project.
 //
 //******************************************************************************************************
 
@@ -29,12 +31,14 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using GSF;
+using GSF.Communication;
+using GSF.PhasorProtocols;
+using GSF.PhasorProtocols.IeeeC37_118;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
-using GSF.Communication;
-using GSF;
 
-namespace GSF.PhasorProtocols.IeeeC37_118
+namespace PhasorProtocolAdapters.IeeeC37_118
 {
     /// <summary>
     /// Represents an IEEE C37.118 phasor data concentrator.

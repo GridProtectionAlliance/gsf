@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  ConfigurationErrorFrame.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -20,17 +20,19 @@
 //       Generated original version of source code.
 //  10/5/2012 - Gavin E. Holden
 //       Added new header and license agreement.
+//  12/04/2012 - J. Ritchie Carroll
+//       Migrated to PhasorProtocolAdapters project.
 //
 //******************************************************************************************************
 
-
-using GSF;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using GSF;
+using GSF.PhasorProtocols;
 
-namespace GSF.PhasorProtocols
+namespace PhasorProtocolAdapters
 {
     /// <summary>
     /// Represents an implementation of <see cref="IConfigurationFrame"/> that by existance only denotes an error state.

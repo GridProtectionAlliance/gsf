@@ -114,7 +114,6 @@
     <Compile Include="AnalogDefinitionCollection.cs" />
     <Compile Include="AnalogValueBase.cs" />
     <Compile Include="AnalogValueCollection.cs" />
-    <Compile Include="CalculatedMeasurementBase.cs" />
     <Compile Include="ChannelBase.cs" />
     <Compile Include="ChannelCellBase.cs" />
     <Compile Include="ChannelCellCollectionBase.cs" />
@@ -134,11 +133,9 @@
     <Compile Include="CommandFrameBase.cs" />
     <Compile Include="CommandFrameParsingState.cs" />
     <Compile Include="Common.cs" />
-    <Compile Include="CommonPhasorServices.cs" />
     <Compile Include="ConfigurationCellBase.cs" />
     <Compile Include="ConfigurationCellCollection.cs" />
     <Compile Include="ConfigurationCellParsingState.cs" />
-    <Compile Include="ConfigurationErrorFrame.cs" />
     <Compile Include="ConfigurationFrameBase.cs" />
     <Compile Include="ConfigurationFrameCollection.cs" />
     <Compile Include="ConfigurationFrameParsingState.cs" />
@@ -201,10 +198,8 @@
     <Compile Include="IPhasorValue.cs" />
     <Compile Include="MultiProtocolFrameParser.cs" />
     <Compile Include="NamespaceDoc.cs" />
-    <Compile Include="PhasorDataConcentratorBase.cs" />
     <Compile Include="PhasorDefinitionBase.cs" />
     <Compile Include="PhasorDefinitionCollection.cs" />
-    <Compile Include="PhasorMeasurementMapper.cs" />
     <Compile Include="PhasorValueBase.cs" />
     <Compile Include="PhasorValueCollection.cs" />
     <Compile Include="SignalReference.cs" />
@@ -238,7 +233,6 @@
     <Compile Include="Iec61850_90_5\NamespaceDoc.cs" />
     <Compile Include="Iec61850_90_5\PhasorDefinition.cs" />
     <Compile Include="Iec61850_90_5\PhasorValue.cs" />
-    <Compile Include="BpaPdcStream\Concentrator.cs" />
     <Compile Include="BpaPdcStream\NamespaceDoc.cs" />
     <Compile Include="BpaPdcStream\AnalogDefinition.cs" />
     <Compile Include="BpaPdcStream\AnalogValue.cs" />
@@ -293,7 +287,6 @@
     <Compile Include="Ieee1344\HeaderFrame.cs" />
     <Compile Include="Ieee1344\PhasorDefinition.cs" />
     <Compile Include="Ieee1344\PhasorValue.cs" />
-    <Compile Include="IeeeC37_118\Concentrator.cs" />
     <Compile Include="IeeeC37_118\ConfigurationCell3.cs" />
     <Compile Include="IeeeC37_118\ConfigurationFrame3.cs" />
     <Compile Include="IeeeC37_118\NamespaceDoc.cs" />
@@ -392,7 +385,7 @@
       <Project>{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}</Project>
       <Name>GSF.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\GSF.TimeSeries-disruptor\GSF.TimeSeries.csproj">
+    <ProjectReference Include="..\GSF.TimeSeries\GSF.TimeSeries.csproj">
       <Project>{412f9f59-d9b9-4c8e-96d2-20492644198c}</Project>
       <Name>GSF.TimeSeries</Name>
     </ProjectReference>

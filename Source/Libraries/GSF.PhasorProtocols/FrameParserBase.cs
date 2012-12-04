@@ -138,7 +138,6 @@ namespace GSF.PhasorProtocols
         // Fields
         private IConnectionParameters m_connectionParameters;
         private AsyncQueue<EventArgs<FundamentalFrameType, byte[], int, int>> m_frameImageQueue;
-        private int m_processing;
         private bool m_disposed;
 
         #endregion

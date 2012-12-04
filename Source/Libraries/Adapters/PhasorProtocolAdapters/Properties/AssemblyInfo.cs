@@ -1,11 +1,12 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("AdoAdapters")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("PhasorProtocolAdapters")]
+[assembly: AssemblyDescription("Defines adapters needed to integrate synchrophasor protocols into GSF.TimeSeries applications.")]
 [assembly: AssemblyCompany("Grid Protection Alliance")]
 [assembly: AssemblyProduct("Grid Solutions Framework")]
 [assembly: AssemblyCopyright("Copyright © 2012.  All Rights Reserved.")]
@@ -24,7 +25,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("45748fd5-d59a-4cec-9888-9d0ab9828944")]
+[assembly: Guid("069ac0c3-d729-4ff7-9549-f718c2385580")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -35,6 +36,6 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
-// [assembly: AssemblyVersion("2.0.19.0")]
-[assembly: AssemblyVersion("2.0.19.0")]
-[assembly: AssemblyFileVersion("2.0.19.0")]
+// [assembly: AssemblyVersion("1.0.*")]
+[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]
