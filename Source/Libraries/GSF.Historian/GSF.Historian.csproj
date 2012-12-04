@@ -221,7 +221,7 @@
       <Project>{0622c318-5032-4d56-bb71-5ce64b502fb0}</Project>
       <Name>GSF.ServiceModel</Name>
     </ProjectReference>
-    <ProjectReference Include="..\GSF.TimeSeries\GSF.TimeSeries.csproj">
+    <ProjectReference Include="..\GSF.TimeSeries-disruptor\GSF.TimeSeries.csproj">
       <Project>{412f9f59-d9b9-4c8e-96d2-20492644198c}</Project>
       <Name>GSF.TimeSeries</Name>
     </ProjectReference>

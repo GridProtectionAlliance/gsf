@@ -194,7 +194,7 @@
       <Project>{7e1abf87-8936-44e5-85c0-37044e0d3877}</Project>
       <Name>GSF.Historian</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Libraries\GSF.TimeSeries\GSF.TimeSeries.csproj">
+    <ProjectReference Include="..\..\Libraries\GSF.TimeSeries-disruptor\GSF.TimeSeries.csproj">
       <Project>{412f9f59-d9b9-4c8e-96d2-20492644198c}</Project>
       <Name>GSF.TimeSeries</Name>
     </ProjectReference>

@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{AD054F7A-C944-4BA3-8CD8-CA275184BD33}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>DataQualityMonitoring</RootNamespace>
+    <AssemblyName>DataQualityMonitoring</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\..\..\Build\Output\Debug\Libraries\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>..\..\..\..\Build\Output\Debug\Libraries\DataQualityMonitoring.XML</DocumentationFile>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\..\..\Build\Output\Release\Libraries\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>..\..\..\..\Build\Output\Release\Libraries\DataQualityMonitoring.XML</DocumentationFile>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Ciloci.Flee">
+      <HintPath>..\..\..\Dependencies\FLEE\Ciloci.Flee.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ServiceModel.Web" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AlarmAdapter.cs" />
+    <Compile Include="FlatlineTest.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RangeTest.cs" />
+    <Compile Include="Services\AlarmService.cs" />
+    <Compile Include="Services\FlatlineService.cs" />
+    <Compile Include="Services\IAlarmService.cs" />
+    <Compile Include="Services\IFlatlineService.cs" />
+    <Compile Include="Services\IOutOfRangeService.cs" />
+    <Compile Include="Services\ITimestampService.cs" />
+    <Compile Include="Services\OutOfRangeService.cs" />
+    <Compile Include="Services\SerializableAlarm.cs" />
+    <Compile Include="Services\SerializableAlarmCollection.cs" />
+    <Compile Include="Services\SerializableBadTimestampMeasurement.cs" />
+    <Compile Include="Services\SerializableFlatlinedMeasurement.cs" />
+    <Compile Include="Services\SerializableFlatlineTest.cs" />
+    <Compile Include="Services\SerializableMeasurement.cs" />
+    <Compile Include="Services\SerializableOutOfRangeMeasurement.cs" />
+    <Compile Include="Services\SerializableRangeTest.cs" />
+    <Compile Include="Services\SerializableRangeTestCollection.cs" />
+    <Compile Include="Services\SerializableTimestampTest.cs" />
+    <Compile Include="Services\TimestampService.cs" />
+    <Compile Include="TimestampTest.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\GSF.Core\GSF.Core.csproj">
+      <Project>{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}</Project>
+      <Name>GSF.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\GSF.ServiceModel\GSF.ServiceModel.csproj">
+      <Project>{0622c318-5032-4d56-bb71-5ce64b502fb0}</Project>
+      <Name>GSF.ServiceModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\GSF.TimeSeries-disruptor\GSF.TimeSeries.csproj">
+      <Project>{412f9f59-d9b9-4c8e-96d2-20492644198c}</Project>
+      <Name>GSF.TimeSeries</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
