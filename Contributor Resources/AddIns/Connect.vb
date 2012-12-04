@@ -130,7 +130,7 @@ Public Class Connect
             .AppendLine(commentToken & "******************************************************************************************************")
             .AppendLine(commentToken & "  " & m_applicationObject.ActiveWindow.ProjectItem.Name & " - Gbtc")
             .AppendLine(commentToken & "")
-            .AppendLine(commentToken & "  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.")
+            .AppendLine(commentToken & "  Copyright © " & DateTime.Now.ToString("yyyy") & ", Grid Protection Alliance.  All Rights Reserved.")
             .AppendLine(commentToken & "")
             .AppendLine(commentToken & "  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See")
             .AppendLine(commentToken & "  the NOTICE file distributed with this work for additional information regarding copyright ownership.")
