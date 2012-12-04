@@ -1,15 +1,34 @@
 =========================================================================================================
-==                     NOTICE file for the GPA Time Series Framework distribution                      ==
+==                      NOTICE file for the Grid Solutions Framework distribution                      ==
 =========================================================================================================
 
-GPA Time Series Framework (http://timeseriesframework.codeplex.com/)
-Copyright © 2010, The Grid Protection Alliance
+Grid Solutions Framework (http://gsf.codeplex.com/)
+Copyright © 2012, The Grid Protection Alliance
 
 This product includes software developed at the
 Grid Protection Alliance (http://www.gridprotectionalliance.org/)
 
 Portions of this software were developed at the
 Tennessee Valley Authority (http://www.tva.gov/)
+
+PQDIF components of this software were developed under contract to the
+Electric Power Research Institute (http://www.epri.com/)
+
+=========================================================================================================
+
+Copyright © 2012 Electric Power Research Institute, Inc. 
+
+The embodiments of this Program and supporting materials may be ordered from:
+ 
+	Electric Power Software Center (EPSC)
+	9625 Research Drive
+	Charlotte, NC 28262 USA
+	Phone: 1-800-313-3774
+	Email: askepri@epri.com
+
+THIS NOTICE MAY NOT BE REMOVED FROM THE PROGRAM BY ANY USER THEREOF.
+
+=========================================================================================================
 
 Tennessee Valley Authority, 2009
 No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
