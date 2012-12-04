@@ -1829,6 +1829,42 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
+        /// Gets flag that determines if the connection type is multicast.
+        /// </summary>
+        public bool ConnectionIsMulticast
+        {
+            get
+            {
+                // Multicast will only be for UDP style connections
+                if (m_transportProtocol != TransportProtocol.Udp)
+                    return false;
+
+                if (!string.IsNullOrWhiteSpace(m_connectionString))
+                {
+                    Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
+
+                    string server;
+                    Match endPoint;
+                    IPAddress serverAddress;
+
+                    if (settings.TryGetValue("server", out server))
+                    {
+                        if (!settings.ContainsKey("remotePort"))
+                        {
+                            endPoint = Regex.Match(server, Transport.EndpointFormatRegex);
+                            server = endPoint.Groups["host"].Value;
+                        }
+
+                        if (IPAddress.TryParse(server, out serverAddress))
+                            return Transport.IsMulticastIP(serverAddress);
+                    }
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Gets total time connection has been active.
         /// </summary>
         public Time ConnectionTime
@@ -2051,6 +2087,10 @@ namespace GSF.PhasorProtocols
                 status.AppendFormat("           Phasor protocol: {0}", m_phasorProtocol.GetFormattedProtocolName());
                 status.AppendLine();
                 status.AppendFormat("           Connection type: {0}", ConnectionType);
+
+                if (ConnectionIsMulticast)
+                    status.Append(" - Multicast");
+
                 status.AppendLine();
                 status.AppendFormat("               Buffer size: {0}", m_bufferSize);
                 status.AppendLine();

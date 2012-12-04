@@ -1961,7 +1961,7 @@ namespace PhasorProtocolAdapters
 
         private void m_dataStreamMonitor_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            if (m_bytesReceived == 0 && m_frameParser.DeviceSupportsCommands)
+            if (m_bytesReceived == 0 && (m_frameParser.DeviceSupportsCommands || m_frameParser.ConnectionIsMulticast))
             {
                 // If we've received no data in the last timespan, we restart connect cycle...
                 m_dataStreamMonitor.Enabled = false;
