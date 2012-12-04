@@ -43,12 +43,12 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
 using GSF;
 using GSF.Collections;
 using GSF.IO;
-using GSF.PhasorProtocols;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
+using PhasorProtocolAdapters;
 
 namespace ICCPExport
 {

@@ -112,11 +112,11 @@
     <ResourceCompile Include="app.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\TimeSeriesFramework\GSF.TimeSeries.csproj">
-      <Project>{412f9f59-d9b9-4c8e-96d2-20492644198c}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\TVA.Core\GSF.Core.csproj">
+    <ProjectReference Include="..\..\GSF.Core\GSF.Core.csproj">
       <Project>{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\GSF.TimeSeries\GSF.TimeSeries.csproj">
+      <Project>{412f9f59-d9b9-4c8e-96d2-20492644198c}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

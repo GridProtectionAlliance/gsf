@@ -31,7 +31,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
 using GSF.TimeSeries;
-using GSF.PhasorProtocols;
+using PhasorProtocolAdapters;
 
 namespace PowerCalculations
 {

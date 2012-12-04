@@ -66,6 +66,10 @@
       <Project>{412f9f59-d9b9-4c8e-96d2-20492644198c}</Project>
       <Name>GSF.TimeSeries</Name>
     </ProjectReference>
+    <ProjectReference Include="..\PhasorProtocolAdapters\PhasorProtocolAdapters.csproj">
+      <Project>{c4f3c41d-d76a-4283-8732-681b67b7ad74}</Project>
+      <Name>PhasorProtocolAdapters</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

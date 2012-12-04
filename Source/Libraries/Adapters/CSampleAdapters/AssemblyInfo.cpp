@@ -15,7 +15,7 @@ using namespace System::Security::Permissions;
 [assembly:AssemblyDescriptionAttribute("")];
 [assembly:AssemblyConfigurationAttribute("")];
 [assembly:AssemblyCompanyAttribute("Grid Protection Alliance")];
-[assembly:AssemblyProductAttribute("CSampleAdapter")];
+[assembly:AssemblyProductAttribute("Grid Solutions Framework")];
 [assembly:AssemblyCopyrightAttribute("Copyright © 2012. All Rights Reserved.")];
 [assembly:AssemblyTrademarkAttribute("")];
 [assembly:AssemblyCultureAttribute("")];
