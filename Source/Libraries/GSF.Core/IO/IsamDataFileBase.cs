@@ -1269,13 +1269,11 @@ namespace GSF.IO
                 if ((object)record != null)
                 {
                     int lastRecordIndex = (object)m_fileRecords == null ? RecordsOnDisk : RecordsInMemory;
-                    if (recordIndex > lastRecordIndex + 1)
+
+                    // Write missing intermediate records.
+                    for (int i = lastRecordIndex + 1; i < recordIndex; i++)
                     {
-                        // Write missing intermediate records.
-                        for (int i = lastRecordIndex + 1; i < recordIndex; i++)
-                        {
-                            Write(i, CreateNewRecord(i));
-                        }
+                        Write(i, CreateNewRecord(i));
                     }
 
                     if ((object)m_fileRecords == null)
@@ -1287,6 +1285,7 @@ namespace GSF.IO
                     {
                         // Update in-memory record list.
                         lastRecordIndex = RecordsInMemory;
+
                         if (recordIndex == lastRecordIndex + 1)
                         {
                             // Add new record.
@@ -1491,17 +1490,23 @@ namespace GSF.IO
         private void WriteToDisk(IEnumerable<T> records)
         {
             // Write all records to disk.
-            int index = 0;
+            int count = 0;
 
-            foreach (T item in records)
+            lock (m_fileData)
             {
-                WriteToDisk(++index, item);
+                m_fileData.Seek(0L, SeekOrigin.Begin);
+
+                foreach (T item in records)
+                {
+                    item.CopyBinaryImageToStream(m_fileData);
+                    count++;
+                }
             }
 
             // Discard previously existing records that were not written.
             lock (m_fileData)
             {
-                m_fileData.SetLength(index * m_recordBuffer.Length);
+                m_fileData.SetLength(count * m_recordBuffer.Length);
             }
         }
 
