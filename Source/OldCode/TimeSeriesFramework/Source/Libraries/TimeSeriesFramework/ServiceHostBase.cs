@@ -1036,6 +1036,9 @@ namespace TimeSeriesFramework
                     {
                         DisplayStatusMessage("Failed to cache last known configuration due to exception: {0}", UpdateType.Alarm, ex.Message);
                         m_serviceHelper.ErrorLogger.Log(ex);
+
+                        DisplayStatusMessage("Retrying attempt to cache last known configuration...", UpdateType.Information);
+                        ThreadPool.QueueUserWorkItem(QueueConfigurationCache, Interlocked.CompareExchange(ref m_latestConfiguration, null, null));
                     }
                 }
             }
