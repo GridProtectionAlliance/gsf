@@ -21,16 +21,16 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
 using GSF;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.IO;
 using GSF.Media;
 using GSF.Units;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
 
 namespace UpdateWAVMetaData
 {
@@ -46,6 +46,7 @@ namespace UpdateWAVMetaData
             string connectionString = systemSettings["ConnectionString"].Value;
             string nodeIDQueryString = null;
             string parameterizedQuery;
+            int protocolID, signalTypeID;
 
             // Define guid with query string delimeters according to database needs
             Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
@@ -61,80 +62,73 @@ namespace UpdateWAVMetaData
             if (string.IsNullOrWhiteSpace(nodeIDQueryString))
                 nodeIDQueryString = "'" + nodeID + "'";
 
-            AdoDataConnection database = new AdoDataConnection("systemSettings");
-            IDbConnection connection = database.Connection;
-
-            if (Convert.ToInt32(connection.ExecuteScalar("SELECT COUNT(*) FROM Protocol WHERE Acronym='WAV'")) == 0)
+            using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
             {
-                try
+                IDbConnection connection = database.Connection;
+
+                if (Convert.ToInt32(connection.ExecuteScalar("SELECT COUNT(*) FROM Protocol WHERE Acronym='WAV'")) == 0)
                 {
-                    connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, [Type], Category, AssemblyName, TypeName) VALUES('WAV', 'Wave Form Input Adapter', 'Frame', 'Audio', 'WavInputAdapter.dll', 'WavInputAdapter.WavInputAdapter')");
-                }
-                catch (Exception ex)
-                {
-                    if (ex.GetType().Name.ToLower().Contains("mysql"))
-                        connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName) VALUES('WAV', 'Wave Form Input Adapter', 'Frame', 'Audio', 'WavInputAdapter.dll', 'WavInputAdapter.WavInputAdapter')");
+                    if (database.IsSQLServer || database.IsJetEngine)
+                        connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, [Type], Category, AssemblyName, TypeName) VALUES('WAV', 'Wave Form Input Adapter', 'Frame', 'Audio', 'WavInputAdapter.dll', 'WavInputAdapter.WavInputAdapter')");
                     else
-                        throw ex;
+                        connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName) VALUES('WAV', 'Wave Form Input Adapter', 'Frame', 'Audio', 'WavInputAdapter.dll', 'WavInputAdapter.WavInputAdapter')");
                 }
-            }
 
-            int protocolID = Convert.ToInt32(connection.ExecuteScalar("SELECT ID FROM Protocol WHERE Acronym='WAV'"));
-            int signalTypeID = Convert.ToInt32(connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym='ALOG'"));
+                protocolID = Convert.ToInt32(connection.ExecuteScalar("SELECT ID FROM Protocol WHERE Acronym='WAV'"));
+                signalTypeID = Convert.ToInt32(connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym='ALOG'"));
 
-            string pathRoot = FilePath.GetDirectoryName((args.Length > 0) ? args[0] : systemSettings["MusicDirectory"].Value);
-            string sourcePath = pathRoot + "*\\*.wav";
+                string pathRoot = FilePath.GetDirectoryName((args.Length > 0) ? args[0] : systemSettings["MusicDirectory"].Value);
+                string sourcePath = pathRoot + "*\\*.wav";
 
-            foreach (string sourceFileName in FilePath.GetFileList(sourcePath))
-            {
-                WaveFile sourceWave = null;
-                string fileName = FilePath.GetFileName(sourceFileName);
-                char[] invalidChars = new char[] { '\'', '[', ']', '(', ')', ',', '-', '.' };
-
-                Console.WriteLine("Loading metadata for \"{0}\"...\r\n", fileName);
-                sourceWave = WaveFile.Load(sourceFileName, false);
-
-                fileName = FilePath.GetFileNameWithoutExtension(fileName).RemoveDuplicateWhiteSpace().RemoveCharacters(c => invalidChars.Contains(c)).Trim();
-                string acronym = fileName.Replace(' ', '_').ToUpper() + "_" + (int)(sourceWave.SampleRate / SI.Kilo) + "KHZ";
-                string name = GenerateSongName(sourceWave, fileName);
-
-                Console.WriteLine("   Acronym = {0}", acronym);
-                Console.WriteLine("      Name = {0}", name);
-                Console.WriteLine("");
-
-                // Check to see if device exists
-                if (Convert.ToInt32(connection.ExecuteScalar(database.ParameterizedQueryString("SELECT COUNT(*) FROM Device WHERE Acronym = {0}", "acronym"), acronym)) == 0)
+                foreach (string sourceFileName in FilePath.GetFileList(sourcePath))
                 {
-                    parameterizedQuery = database.ParameterizedQueryString("INSERT INTO Device(NodeID, Acronym, Name, ProtocolID, FramesPerSecond, " +
-                        "MeasurementReportingInterval, ConnectionString, Enabled) VALUES(" + nodeIDQueryString + ", {0}, {1}, {2}, {3}, {4}, {5}, {6})",
-                        "acronym", "name", "protocolID", "framesPerSecond", "measurementReportingInterval",
-                        "connectionString", "enabled");
+                    WaveFile sourceWave = null;
+                    string fileName = FilePath.GetFileName(sourceFileName);
+                    char[] invalidChars = new char[] { '\'', '[', ']', '(', ')', ',', '-', '.' };
 
-                    // Insert new device record
-                    connection.ExecuteNonQuery(parameterizedQuery, acronym, name, protocolID, sourceWave.SampleRate, 1000000, string.Format("wavFileName={0}; connectOnDemand=true; outputSourceIDs={1}", FilePath.GetAbsolutePath(sourceFileName), acronym), database.Bool(true));
-                    int deviceID = Convert.ToInt32(connection.ExecuteScalar(database.ParameterizedQueryString("SELECT ID FROM Device WHERE Acronym = {0}", "acronym"), acronym));
-                    string pointTag;
+                    Console.WriteLine("Loading metadata for \"{0}\"...\r\n", fileName);
+                    sourceWave = WaveFile.Load(sourceFileName, false);
 
-                    // Add a measurement for each defined wave channel
-                    for (int i = 0; i < sourceWave.Channels; i++)
+                    fileName = FilePath.GetFileNameWithoutExtension(fileName).RemoveDuplicateWhiteSpace().RemoveCharacters(c => invalidChars.Contains(c)).Trim();
+                    string acronym = fileName.Replace(' ', '_').ToUpper() + "_" + (int)(sourceWave.SampleRate / SI.Kilo) + "KHZ";
+                    string name = GenerateSongName(sourceWave, fileName);
+
+                    Console.WriteLine("   Acronym = {0}", acronym);
+                    Console.WriteLine("      Name = {0}", name);
+                    Console.WriteLine("");
+
+                    // Check to see if device exists
+                    if (Convert.ToInt32(connection.ExecuteScalar(database.ParameterizedQueryString("SELECT COUNT(*) FROM Device WHERE Acronym = {0}", "acronym"), acronym)) == 0)
                     {
-                        int index = i + 1;
-                        pointTag = acronym + ":WAVA" + index;
+                        parameterizedQuery = database.ParameterizedQueryString("INSERT INTO Device(NodeID, Acronym, Name, ProtocolID, FramesPerSecond, " +
+                            "MeasurementReportingInterval, ConnectionString, Enabled) VALUES(" + nodeIDQueryString + ", {0}, {1}, {2}, {3}, {4}, {5}, {6})",
+                            "acronym", "name", "protocolID", "framesPerSecond", "measurementReportingInterval",
+                            "connectionString", "enabled");
 
-                        parameterizedQuery = database.ParameterizedQueryString("INSERT INTO Measurement(DeviceID, PointTag, SignalTypeID, SignalReference, Description, " +
-                            "Enabled) VALUES({0}, {1}, {2}, {3}, {4}, {5})", "deviceID", "pointTag", "signalTypeID", "signalReference", "description", "enabled");
+                        // Insert new device record
+                        connection.ExecuteNonQuery(parameterizedQuery, acronym, name, protocolID, sourceWave.SampleRate, 1000000, string.Format("wavFileName={0}; connectOnDemand=true; outputSourceIDs={1}", FilePath.GetAbsolutePath(sourceFileName), acronym), database.Bool(true));
+                        int deviceID = Convert.ToInt32(connection.ExecuteScalar(database.ParameterizedQueryString("SELECT ID FROM Device WHERE Acronym = {0}", "acronym"), acronym));
+                        string pointTag;
 
-                        // Insert new measurement record
-                        connection.ExecuteNonQuery(parameterizedQuery, (object)deviceID, pointTag, signalTypeID, acronym + "-AV" + index, name + " - channel " + index, database.Bool(true));
-                        index = Convert.ToInt32(connection.ExecuteScalar(database.ParameterizedQueryString("SELECT PointID FROM Measurement WHERE PointTag = {0}", "pointTag"), pointTag));
+                        // Add a measurement for each defined wave channel
+                        for (int i = 0; i < sourceWave.Channels; i++)
+                        {
+                            int index = i + 1;
+                            pointTag = acronym + ":WAVA" + index;
+
+                            parameterizedQuery = database.ParameterizedQueryString("INSERT INTO Measurement(DeviceID, PointTag, SignalTypeID, SignalReference, Description, " +
+                                "Enabled) VALUES({0}, {1}, {2}, {3}, {4}, {5})", "deviceID", "pointTag", "signalTypeID", "signalReference", "description", "enabled");
+
+                            // Insert new measurement record
+                            connection.ExecuteNonQuery(parameterizedQuery, (object)deviceID, pointTag, signalTypeID, acronym + "-AV" + index, name + " - channel " + index, database.Bool(true));
+                            index = Convert.ToInt32(connection.ExecuteScalar(database.ParameterizedQueryString("SELECT PointID FROM Measurement WHERE PointTag = {0}", "pointTag"), pointTag));
+                        }
+
+                        // Disable all non analog measurements that may be associated with this device
+                        connection.ExecuteNonQuery(database.ParameterizedQueryString("UPDATE Measurement SET Enabled = {0} WHERE DeviceID = {1} AND SignalTypeID <> {2}", "enabled", "deviceID", "signalTypeID"), database.Bool(false), deviceID, signalTypeID);
                     }
-
-                    // Disable all non analog measurements that may be associated with this device
-                    connection.ExecuteNonQuery(database.ParameterizedQueryString("UPDATE Measurement SET Enabled = {0} WHERE DeviceID = {1} AND SignalTypeID <> {2}", "enabled", "deviceID", "signalTypeID"), database.Bool(false), deviceID, signalTypeID);
                 }
             }
-
-            connection.Close();
 
             return 0;
         }
