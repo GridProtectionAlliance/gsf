@@ -94,7 +94,7 @@ namespace TimeSeriesFramework
         protected virtual void DebugHostUnloading()
         {
             // Close remote console session
-            if (m_remoteConsole != null && !m_remoteConsole.HasExited)
+            if ((object)m_remoteConsole != null && !m_remoteConsole.HasExited)
                 m_remoteConsole.Kill();
         }
 

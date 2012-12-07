@@ -86,7 +86,7 @@ namespace TimeSeriesFramework.Transport
             m_subscriberID = remoteCache.SubscriberID;
 
             // If active measurements are defined, interpret signal cache in context of current measurement key definitions
-            if (dataSource != null && dataSource.Tables != null && dataSource.Tables.Contains("ActiveMeasurements"))
+            if ((object)dataSource != null && dataSource.Tables.Contains("ActiveMeasurements"))
             {
                 DataTable activeMeasurements = dataSource.Tables["ActiveMeasurements"];
                 m_reference = new ConcurrentDictionary<ushort, Tuple<Guid, string, uint>>();

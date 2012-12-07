@@ -194,7 +194,7 @@ namespace TimeSeriesFramework.Transport
                 base.ProcessingInterval = value;
 
                 // Update processing interval in private temporal session, if defined
-                if (m_iaonSession != null && m_iaonSession.AllAdapters != null)
+                if ((object)m_iaonSession != null && (object)m_iaonSession.AllAdapters != null)
                     m_iaonSession.AllAdapters.ProcessingInterval = value;
             }
         }
@@ -217,7 +217,7 @@ namespace TimeSeriesFramework.Transport
                 lock (this)
                 {
                     // Update signal index cache unless "detaching" from real-time
-                    if (value != null && !(value.Length == 1 && value[0] == MeasurementKey.Undefined))
+                    if ((object)value != null && !(value.Length == 1 && value[0] == MeasurementKey.Undefined))
                     {
                         m_parent.UpdateSignalIndexCache(m_clientID, m_signalIndexCache, value);
 
@@ -264,7 +264,7 @@ namespace TimeSeriesFramework.Transport
 
                 status.Append(base.Status);
 
-                if (m_iaonSession != null)
+                if ((object)m_iaonSession != null)
                     status.Append(m_iaonSession.Status);
 
                 return status.ToString();
@@ -343,10 +343,10 @@ namespace TimeSeriesFramework.Transport
             {
                 m_startTimeSent = true;
 
-                IMeasurement measurement = measurements.FirstOrDefault(m => m != null);
+                IMeasurement measurement = measurements.FirstOrDefault(m => (object)m != null);
                 Ticks timestamp = 0;
 
-                if (measurement != null)
+                if ((object)measurement != null)
                     timestamp = measurement.Timestamp;
 
                 m_parent.SendDataStartTime(m_clientID, timestamp);
@@ -439,7 +439,7 @@ namespace TimeSeriesFramework.Transport
             }
 
             // Publish data packet to client
-            if (m_parent != null)
+            if ((object)m_parent != null)
                 m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, data.ToArray());
         }
 
@@ -458,7 +458,7 @@ namespace TimeSeriesFramework.Transport
         // Explicitly implement processing completed event bubbler to satisfy IClientSubscription interface
         void IClientSubscription.OnProcessingCompleted(object sender, EventArgs e)
         {
-            if (ProcessingComplete != null)
+            if ((object)ProcessingComplete != null)
                 ProcessingComplete(sender, new EventArgs<IClientSubscription, EventArgs>(this, e));
         }
 

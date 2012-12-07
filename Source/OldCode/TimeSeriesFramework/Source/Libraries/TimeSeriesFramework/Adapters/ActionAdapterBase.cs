@@ -95,7 +95,7 @@ namespace TimeSeriesFramework.Adapters
         private List<string> m_inputSourceIDs;
         private List<string> m_outputSourceIDs;
         private int m_minimumMeasurementsToUse;
-        private ManualResetEvent m_initializeWaitHandle;
+        private ManualResetEventSlim m_initializeWaitHandle;
         private DateTime m_startTimeConstraint;
         private DateTime m_stopTimeConstraint;
         private int m_hashCode;
@@ -118,7 +118,7 @@ namespace TimeSeriesFramework.Adapters
             GenHashCode();
 
             // Create wait handle to use for adapter initialization
-            m_initializeWaitHandle = new ManualResetEvent(false);
+            m_initializeWaitHandle = new ManualResetEventSlim(false);
             m_initializationTimeout = AdapterBase.DefaultInitializationTimeout;
 
             // For most implementations millisecond resolution will be sufficient
@@ -407,7 +407,7 @@ namespace TimeSeriesFramework.Adapters
                 m_inputMeasurementKeys = value;
 
                 // Update input key lookup hash table
-                if (value != null && value.Length > 0)
+                if ((object)value != null && value.Length > 0)
                 {
                     m_inputMeasurementKeysHash = new List<MeasurementKey>(value);
                     m_inputMeasurementKeysHash.Sort();
@@ -456,14 +456,14 @@ namespace TimeSeriesFramework.Adapters
         {
             get
             {
-                if (m_inputSourceIDs == null)
+                if ((object)m_inputSourceIDs == null)
                     return null;
 
                 return m_inputSourceIDs.ToArray();
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                 {
                     m_inputSourceIDs = null;
                 }
@@ -489,14 +489,14 @@ namespace TimeSeriesFramework.Adapters
         {
             get
             {
-                if (m_outputSourceIDs == null)
+                if ((object)m_outputSourceIDs == null)
                     return null;
 
                 return m_outputSourceIDs.ToArray();
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                 {
                     m_outputSourceIDs = null;
                 }
@@ -587,7 +587,7 @@ namespace TimeSeriesFramework.Adapters
             get
             {
                 // Default to all measurements if minimum is not specified
-                if (m_minimumMeasurementsToUse < 1 && InputMeasurementKeys != null)
+                if (m_minimumMeasurementsToUse < 1 && (object)InputMeasurementKeys != null)
                     return InputMeasurementKeys.Length;
 
                 return m_minimumMeasurementsToUse;
@@ -680,9 +680,9 @@ namespace TimeSeriesFramework.Adapters
                 StringBuilder status = new StringBuilder();
                 DataSet dataSource = this.DataSource;
 
-                status.AppendFormat("       Data source defined: {0}", (dataSource != null));
+                status.AppendFormat("       Data source defined: {0}", (object)dataSource != null);
                 status.AppendLine();
-                if (dataSource != null)
+                if ((object)dataSource != null)
                 {
                     status.AppendFormat("    Referenced data source: {0}, {1} tables", dataSource.DataSetName, dataSource.Tables.Count);
                     status.AppendLine();
@@ -693,7 +693,7 @@ namespace TimeSeriesFramework.Adapters
                 status.AppendLine();
                 status.AppendFormat("       Adapter initialized: {0}", Initialized);
                 status.AppendLine();
-                status.AppendFormat("         Parent collection: {0}", m_parent == null ? "Undefined" : m_parent.Name);
+                status.AppendFormat("         Parent collection: {0}", (object)m_parent == null ? "Undefined" : m_parent.Name);
                 status.AppendLine();
                 status.AppendFormat("         Operational state: {0}", Enabled ? "Running" : "Stopped");
                 status.AppendLine();
@@ -749,7 +749,7 @@ namespace TimeSeriesFramework.Adapters
 
                 status.AppendLine();
 
-                if (OutputMeasurements != null && OutputMeasurements.Length > OutputMeasurements.Count(m => m.Key == MeasurementKey.Undefined))
+                if ((object)OutputMeasurements != null && OutputMeasurements.Length > OutputMeasurements.Count(m => m.Key == MeasurementKey.Undefined))
                 {
                     status.AppendFormat("       Output measurements: {0} defined measurements", OutputMeasurements.Length);
                     status.AppendLine();
@@ -768,7 +768,7 @@ namespace TimeSeriesFramework.Adapters
                     status.AppendLine();
                 }
 
-                if (InputMeasurementKeys != null && InputMeasurementKeys.Length > InputMeasurementKeys.Count(k => k == MeasurementKey.Undefined))
+                if ((object)InputMeasurementKeys != null && InputMeasurementKeys.Length > InputMeasurementKeys.Count(k => k == MeasurementKey.Undefined))
                 {
                     status.AppendFormat("        Input measurements: {0} defined measurements", InputMeasurementKeys.Length);
                     status.AppendLine();
@@ -785,7 +785,7 @@ namespace TimeSeriesFramework.Adapters
                     status.AppendLine();
                 }
 
-                if (RequestedInputMeasurementKeys != null && RequestedInputMeasurementKeys.Length > 0)
+                if ((object)RequestedInputMeasurementKeys != null && RequestedInputMeasurementKeys.Length > 0)
                 {
                     status.AppendFormat("      Requested input keys: {0} defined measurements", RequestedInputMeasurementKeys.Length);
                     status.AppendLine();
@@ -802,7 +802,7 @@ namespace TimeSeriesFramework.Adapters
                     status.AppendLine();
                 }
 
-                if (RequestedOutputMeasurementKeys != null && RequestedOutputMeasurementKeys.Length > 0)
+                if ((object)RequestedOutputMeasurementKeys != null && RequestedOutputMeasurementKeys.Length > 0)
                 {
                     status.AppendFormat("     Requested output keys: {0} defined measurements", RequestedOutputMeasurementKeys.Length);
                     status.AppendLine();
@@ -844,8 +844,10 @@ namespace TimeSeriesFramework.Adapters
                     if (disposing)
                     {
                         if ((object)m_initializeWaitHandle != null)
-                            m_initializeWaitHandle.Close();
-
+                        {
+                            m_initializeWaitHandle.Set();
+                            m_initializeWaitHandle.Dispose();
+                        }
                         m_initializeWaitHandle = null;
                     }
                 }
@@ -979,7 +981,7 @@ namespace TimeSeriesFramework.Adapters
                 ProcessingInterval = processingInterval;
 
             // Establish any defined external event wait handles needed for inter-adapter synchronization
-            if (settings.TryGetValue("waitHandleNames", out setting) && !string.IsNullOrWhiteSpace(setting))
+            if (!this.TemporalConstraintIsDefined() && settings.TryGetValue("waitHandleNames", out setting) && !string.IsNullOrWhiteSpace(setting))
                 ExternalEventHandles = setting.Split(',').Select(GetExternalEventHandle).ToArray();
 
             int waitHandleTimeout;
@@ -1041,8 +1043,8 @@ namespace TimeSeriesFramework.Adapters
         /// Gets a common wait handle for inter-adapter synchronization.
         /// </summary>
         /// <param name="name">Case-insensitive wait handle name.</param>
-        /// <returns>A <see cref="AutoResetEvent"/> based wait handle associated with the given <paramref name="name"/>.</returns>
-        public virtual AutoResetEvent GetExternalEventHandle(string name)
+        /// <returns>A <see cref="ManualResetEventSlim"/> based wait handle associated with the given <paramref name="name"/>.</returns>
+        public virtual ManualResetEventSlim GetExternalEventHandle(string name)
         {
             return m_parent.GetExternalEventHandle(name);
         }
@@ -1078,10 +1080,10 @@ namespace TimeSeriesFramework.Adapters
         {
             int inputCount = 0, outputCount = 0;
 
-            if (InputMeasurementKeys != null)
+            if ((object)InputMeasurementKeys != null)
                 inputCount = InputMeasurementKeys.Length;
 
-            if (OutputMeasurements != null)
+            if ((object)OutputMeasurements != null)
                 outputCount = OutputMeasurements.Length;
 
             return string.Format("Total input measurements: {0}, total output measurements: {1}", inputCount, outputCount).PadLeft(maxLength);
@@ -1142,7 +1144,7 @@ namespace TimeSeriesFramework.Adapters
         /// <returns>true if specified measurement key is defined in <see cref="InputMeasurementKeys"/>.</returns>
         public virtual bool IsInputMeasurement(MeasurementKey item)
         {
-            if (m_inputMeasurementKeysHash != null)
+            if ((object)m_inputMeasurementKeysHash != null)
                 return (m_inputMeasurementKeysHash.BinarySearch(item) >= 0);
 
             // If no input measurements are defined we must assume user wants to accept all measurements - yikes!
@@ -1157,7 +1159,7 @@ namespace TimeSeriesFramework.Adapters
         public virtual bool WaitForInitialize(int timeout)
         {
             if ((object)m_initializeWaitHandle != null)
-                return m_initializeWaitHandle.WaitOne(timeout);
+                return m_initializeWaitHandle.Wait(timeout);
 
             return false;
         }
@@ -1263,10 +1265,10 @@ namespace TimeSeriesFramework.Adapters
             IDictionary<MeasurementKey, IMeasurement> frameMeasurements = frame.Measurements;
             MeasurementKey[] measurementKeys = InputMeasurementKeys;
 
-            if (measurements == null || measurements.Length < minNeeded)
+            if ((object)measurements == null || measurements.Length < minNeeded)
                 measurements = new IMeasurement[minNeeded];
 
-            if (measurementKeys == null)
+            if ((object)measurementKeys == null)
             {
                 // No input measurements are defined, just get first set of measurements in this frame
                 foreach (IMeasurement measurement in frameMeasurements.Values)
@@ -1302,7 +1304,7 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                if (NewMeasurements != null)
+                if ((object)NewMeasurements != null)
                     NewMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
             }
             catch (Exception ex)
@@ -1320,7 +1322,7 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                if (StatusMessage != null)
+                if ((object)StatusMessage != null)
                     StatusMessage(this, new EventArgs<string>(status));
             }
             catch (Exception ex)
@@ -1342,7 +1344,7 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                if (StatusMessage != null)
+                if ((object)StatusMessage != null)
                     StatusMessage(this, new EventArgs<string>(string.Format(formattedStatus, args)));
             }
             catch (Exception ex)
@@ -1359,7 +1361,7 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                if (InputMeasurementKeysUpdated != null)
+                if ((object)InputMeasurementKeysUpdated != null)
                     InputMeasurementKeysUpdated(this, EventArgs.Empty);
             }
             catch (Exception ex)
@@ -1376,7 +1378,7 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                if (OutputMeasurementsUpdated != null)
+                if ((object)OutputMeasurementsUpdated != null)
                     OutputMeasurementsUpdated(this, EventArgs.Empty);
             }
             catch (Exception ex)

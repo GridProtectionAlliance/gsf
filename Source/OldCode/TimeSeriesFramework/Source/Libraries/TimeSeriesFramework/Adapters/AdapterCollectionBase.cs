@@ -98,7 +98,7 @@ namespace TimeSeriesFramework.Adapters
         private string[] m_outputSourceIDs;
         private MeasurementKey[] m_requestedInputMeasurementKeys;
         private MeasurementKey[] m_requestedOutputMeasurementKeys;
-        private ConcurrentDictionary<string, AutoResetEvent> m_waitHandles;
+        private ConcurrentDictionary<string, ManualResetEventSlim> m_waitHandles;
         private Ticks m_lastProcessTime;
         private Time m_totalProcessTime;
         private long m_processedMeasurements;
@@ -118,7 +118,7 @@ namespace TimeSeriesFramework.Adapters
         /// Constructs a new instance of the <see cref="AdapterCollectionBase{T}"/>.
         /// </summary>
         /// <param name="waitHandles">Wait handle dictionary.</param>
-        protected AdapterCollectionBase(ConcurrentDictionary<string, AutoResetEvent> waitHandles)
+        protected AdapterCollectionBase(ConcurrentDictionary<string, ManualResetEventSlim> waitHandles)
         {
             m_name = this.GetType().Name;
             m_settings = new Dictionary<string, string>();
@@ -344,7 +344,7 @@ namespace TimeSeriesFramework.Adapters
             get
             {
                 // If a specific set of input measurement keys has been assigned, use that set
-                if (m_inputMeasurementKeys != null)
+                if ((object)m_inputMeasurementKeys != null)
                     return m_inputMeasurementKeys;
 
                 List<MeasurementKey> cumulativeKeys = new List<MeasurementKey>();
@@ -360,7 +360,7 @@ namespace TimeSeriesFramework.Adapters
 
                             // If any of the children expects all measurements (i.e., null InputMeasurementKeys)
                             // then the parent collection must expect all measurements
-                            if (inputMeasurementKeys == null)
+                            if ((object)inputMeasurementKeys == null)
                                 return null;
 
                             if (inputMeasurementKeys.Length > 0)
@@ -386,7 +386,7 @@ namespace TimeSeriesFramework.Adapters
             get
             {
                 // If a specific set of output measurements has been assigned, use that set
-                if (m_outputMeasurements != null)
+                if ((object)m_outputMeasurements != null)
                     return m_outputMeasurements;
 
                 // Otherwise return cumulative results of all child adapters
@@ -401,7 +401,7 @@ namespace TimeSeriesFramework.Adapters
                         {
                             IMeasurement[] outputMeasurements = adapter.OutputMeasurements;
 
-                            if (outputMeasurements != null && outputMeasurements.Length > 0)
+                            if ((object)outputMeasurements != null && outputMeasurements.Length > 0)
                                 cumulativeMeasurements.AddRange(outputMeasurements);
                         }
                     }
@@ -460,17 +460,17 @@ namespace TimeSeriesFramework.Adapters
             get
             {
                 // If a specific set of input measurement keys has been assigned, use that set
-                if (m_requestedInputMeasurementKeys != null)
+                if ((object)m_requestedInputMeasurementKeys != null)
                     return m_requestedInputMeasurementKeys;
 
                 // Otherwise return cumulative results of all child adapters
                 lock (this)
                 {
                     if (typeof(T) is IActionAdapter)
-                        return this.Cast<IActionAdapter>().Where(item => item.RequestedInputMeasurementKeys != null).SelectMany(item => item.RequestedInputMeasurementKeys).Distinct().ToArray();
+                        return this.Cast<IActionAdapter>().Where(item => (object)item.RequestedInputMeasurementKeys != null).SelectMany(item => item.RequestedInputMeasurementKeys).Distinct().ToArray();
 
                     if (typeof(T) is IOutputAdapter)
-                        return this.Cast<IOutputAdapter>().Where(item => item.RequestedInputMeasurementKeys != null).SelectMany(item => item.RequestedInputMeasurementKeys).Distinct().ToArray();
+                        return this.Cast<IOutputAdapter>().Where(item => (object)item.RequestedInputMeasurementKeys != null).SelectMany(item => item.RequestedInputMeasurementKeys).Distinct().ToArray();
                 }
 
                 return null;
@@ -489,17 +489,17 @@ namespace TimeSeriesFramework.Adapters
             get
             {
                 // If a specific set of output measurement keys has been assigned, use that set
-                if (m_requestedOutputMeasurementKeys != null)
+                if ((object)m_requestedOutputMeasurementKeys != null)
                     return m_requestedOutputMeasurementKeys;
 
                 // Otherwise return cumulative results of all child adapters
                 lock (this)
                 {
                     if (typeof(T) is IActionAdapter)
-                        return this.Cast<IActionAdapter>().Where(item => item.RequestedOutputMeasurementKeys != null).SelectMany(item => item.RequestedOutputMeasurementKeys).Distinct().ToArray();
+                        return this.Cast<IActionAdapter>().Where(item => (object)item.RequestedOutputMeasurementKeys != null).SelectMany(item => item.RequestedOutputMeasurementKeys).Distinct().ToArray();
 
                     if (typeof(T) is IInputAdapter)
-                        return this.Cast<IInputAdapter>().Where(item => item.RequestedOutputMeasurementKeys != null).SelectMany(item => item.RequestedOutputMeasurementKeys).Distinct().ToArray();
+                        return this.Cast<IInputAdapter>().Where(item => (object)item.RequestedOutputMeasurementKeys != null).SelectMany(item => item.RequestedOutputMeasurementKeys).Distinct().ToArray();
                 }
 
                 return null;
@@ -651,7 +651,7 @@ namespace TimeSeriesFramework.Adapters
             {
                 m_monitorTimerEnabled = value;
 
-                if (m_monitorTimer != null)
+                if ((object)m_monitorTimer != null)
                     m_monitorTimer.Enabled = value && Enabled;
             }
         }
@@ -694,7 +694,7 @@ namespace TimeSeriesFramework.Adapters
                 status.AppendLine();
                 status.AppendFormat("    Collection initialized: {0}", Initialized);
                 status.AppendLine();
-                status.AppendFormat("         Parent collection: {0}", m_parent == null ? "Undefined" : m_parent.Name);
+                status.AppendFormat("         Parent collection: {0}", (object)m_parent == null ? "Undefined" : m_parent.Name);
                 status.AppendLine();
                 status.AppendFormat("    Initialization timeout: {0}", InitializationTimeout < 0 ? "Infinite" : InitializationTimeout.ToString() + " milliseconds");
                 status.AppendLine();
@@ -720,9 +720,9 @@ namespace TimeSeriesFramework.Adapters
                     status.AppendFormat("   Average processing rate: {0} measurements / second", ((int)(m_processedMeasurements / m_totalProcessTime)).ToString("N0"));
                     status.AppendLine();
                 }
-                status.AppendFormat("       Data source defined: {0}", (dataSource != null));
+                status.AppendFormat("       Data source defined: {0}", (object)dataSource != null);
                 status.AppendLine();
-                if (dataSource != null)
+                if ((object)dataSource != null)
                 {
                     status.AppendFormat("    Referenced data source: {0}, {1} tables", dataSource.DataSetName, dataSource.Tables.Count);
                     status.AppendLine();
@@ -775,7 +775,7 @@ namespace TimeSeriesFramework.Adapters
                         {
                             IProvideStatus statusProvider = item as IProvideStatus;
 
-                            if (statusProvider != null)
+                            if ((object)statusProvider != null)
                             {
                                 // This component provides status information.                       
                                 status.AppendLine();
@@ -828,7 +828,7 @@ namespace TimeSeriesFramework.Adapters
                 {
                     if (disposing)
                     {
-                        if (m_monitorTimer != null)
+                        if ((object)m_monitorTimer != null)
                         {
                             m_monitorTimer.Elapsed -= m_monitorTimer_Elapsed;
                             m_monitorTimer.Dispose();
@@ -844,7 +844,7 @@ namespace TimeSeriesFramework.Adapters
                 {
                     m_disposed = true;  // Prevent duplicate dispose.
 
-                    if (Disposed != null)
+                    if ((object)Disposed != null)
                         Disposed(this, EventArgs.Empty);
                 }
             }
@@ -868,7 +868,7 @@ namespace TimeSeriesFramework.Adapters
         /// <exception cref="InvalidOperationException">DataMember is null or empty.</exception>
         public virtual void Initialize()
         {
-            if (DataSource == null)
+            if ((object)DataSource == null)
                 throw new NullReferenceException(string.Format("DataSource is null, cannot load {0}", Name));
 
             if (string.IsNullOrWhiteSpace(DataMember))
@@ -907,11 +907,11 @@ namespace TimeSeriesFramework.Adapters
         /// Gets a common wait handle for inter-adapter synchronization.
         /// </summary>
         /// <param name="name">Case-insensitive wait handle name.</param>
-        /// <returns>A <see cref="AutoResetEvent"/> based wait handle associated with the given <paramref name="name"/>.</returns>
-        public virtual AutoResetEvent GetExternalEventHandle(string name)
+        /// <returns>A <see cref="ManualResetEventSlim"/> based wait handle associated with the given <paramref name="name"/>.</returns>
+        public virtual ManualResetEventSlim GetExternalEventHandle(string name)
         {
-            if (m_waitHandles != null)
-                return m_waitHandles.GetOrAdd(name, key => new AutoResetEvent(false));
+            if ((object)m_waitHandles != null)
+                return m_waitHandles.GetOrAdd(name, key => new ManualResetEventSlim(false));
 
             return null;
         }
@@ -928,7 +928,7 @@ namespace TimeSeriesFramework.Adapters
         /// <exception cref="NullReferenceException"><paramref name="adapterRow"/> is null.</exception>
         public virtual bool TryCreateAdapter(DataRow adapterRow, out T adapter)
         {
-            if (adapterRow == null)
+            if ((object)adapterRow == null)
                 throw new NullReferenceException(string.Format("Cannot initialize from null adpater DataRow"));
 
             Assembly assembly;
@@ -1359,7 +1359,7 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
         internal protected virtual void OnProcessException(Exception ex)
         {
-            if (ProcessException != null)
+            if ((object)ProcessException != null)
                 ProcessException(this, new EventArgs<Exception>(ex));
         }
 
@@ -1371,7 +1371,7 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                if (StatusMessage != null)
+                if ((object)StatusMessage != null)
                     StatusMessage(this, new EventArgs<string>(status));
             }
             catch (Exception ex)
@@ -1393,7 +1393,7 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                if (StatusMessage != null)
+                if ((object)StatusMessage != null)
                     StatusMessage(this, new EventArgs<string>(string.Format(formattedStatus, args)));
             }
             catch (Exception ex)
@@ -1411,7 +1411,7 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                if (InputMeasurementKeysUpdated != null)
+                if ((object)InputMeasurementKeysUpdated != null)
                     InputMeasurementKeysUpdated(this, EventArgs.Empty);
             }
             catch (Exception ex)
@@ -1428,7 +1428,7 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                if (OutputMeasurementsUpdated != null)
+                if ((object)OutputMeasurementsUpdated != null)
                     OutputMeasurementsUpdated(this, EventArgs.Empty);
             }
             catch (Exception ex)

@@ -130,14 +130,14 @@ namespace TimeSeriesFramework.Adapters
         {
             get
             {
-                if (m_inputSourceIDs == null)
+                if ((object)m_inputSourceIDs == null)
                     return null;
 
                 return m_inputSourceIDs.ToArray();
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                 {
                     m_inputSourceIDs = null;
                 }
@@ -163,14 +163,14 @@ namespace TimeSeriesFramework.Adapters
         {
             get
             {
-                if (m_outputSourceIDs == null)
+                if ((object)m_outputSourceIDs == null)
                     return null;
 
                 return m_outputSourceIDs.ToArray();
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                 {
                     m_outputSourceIDs = null;
                 }
@@ -504,7 +504,7 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                if (NewMeasurements != null)
+                if ((object)NewMeasurements != null)
                     NewMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
 
                 IncrementProcessedMeasurements(measurements.Count);
@@ -524,7 +524,7 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                if (UnpublishedSamples != null)
+                if ((object)UnpublishedSamples != null)
                     UnpublishedSamples(this, new EventArgs<int>(seconds));
             }
             catch (Exception ex)
@@ -542,7 +542,7 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                if (DiscardingMeasurements != null)
+                if ((object)DiscardingMeasurements != null)
                     DiscardingMeasurements(this, new EventArgs<IEnumerable<IMeasurement>>(measurements));
             }
             catch (Exception ex)

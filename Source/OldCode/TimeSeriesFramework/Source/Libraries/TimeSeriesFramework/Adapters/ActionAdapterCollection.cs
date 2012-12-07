@@ -84,7 +84,7 @@ namespace TimeSeriesFramework.Adapters
         /// Constructs a new instance of the <see cref="ActionAdapterCollection"/>.
         /// </summary>
         /// <param name="waitHandles">Wait handle dictionary.</param>
-        public ActionAdapterCollection(ConcurrentDictionary<string, AutoResetEvent> waitHandles)
+        public ActionAdapterCollection(ConcurrentDictionary<string, ManualResetEventSlim> waitHandles)
             : base(waitHandles)
         {
             base.Name = "Action Adapter Collection";
@@ -211,7 +211,7 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                if (NewMeasurements != null)
+                if ((object)NewMeasurements != null)
                     NewMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
             }
             catch (Exception ex)
@@ -229,7 +229,7 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                if (UnpublishedSamples != null)
+                if ((object)UnpublishedSamples != null)
                     UnpublishedSamples(this, new EventArgs<int>(unpublishedSamples));
             }
             catch (Exception ex)
@@ -247,7 +247,7 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                if (DiscardingMeasurements != null)
+                if ((object)DiscardingMeasurements != null)
                     DiscardingMeasurements(this, new EventArgs<IEnumerable<IMeasurement>>(measurements));
             }
             catch (Exception ex)
@@ -263,7 +263,7 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="item">New <see cref="IActionAdapter"/> implementation.</param>
         protected override void InitializeItem(IActionAdapter item)
         {
-            if (item != null)
+            if ((object)item != null)
             {
                 // Wire up events
                 item.NewMeasurements += item_NewMeasurements;
@@ -279,7 +279,7 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="item"><see cref="IActionAdapter"/> to dispose.</param>
         protected override void DisposeItem(IActionAdapter item)
         {
-            if (item != null)
+            if ((object)item != null)
             {
                 // Un-wire events
                 item.NewMeasurements -= item_NewMeasurements;
@@ -292,21 +292,21 @@ namespace TimeSeriesFramework.Adapters
         // Raise new measurements event on behalf of each item in collection
         private void item_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
         {
-            if (NewMeasurements != null)
+            if ((object)NewMeasurements != null)
                 NewMeasurements(sender, e);
         }
 
         // Raise unpublished samples event on behalf of each item in collection
         private void item_UnpublishedSamples(object sender, EventArgs<int> e)
         {
-            if (UnpublishedSamples != null)
+            if ((object)UnpublishedSamples != null)
                 UnpublishedSamples(sender, e);
         }
 
         // Raise discarding measurements event on behalf of each item in collection
         private void item_DiscardingMeasurements(object sender, EventArgs<IEnumerable<IMeasurement>> e)
         {
-            if (DiscardingMeasurements != null)
+            if ((object)DiscardingMeasurements != null)
                 DiscardingMeasurements(sender, e);
         }
 

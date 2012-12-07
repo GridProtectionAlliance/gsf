@@ -274,8 +274,8 @@ namespace TimeSeriesFramework.Adapters
         /// Gets a common wait handle for inter-adapter synchronization.
         /// </summary>
         /// <param name="name">Case-insensitive wait handle name.</param>
-        /// <returns>A <see cref="AutoResetEvent"/> based wait handle associated with the given <paramref name="name"/>.</returns>
-        AutoResetEvent GetExternalEventHandle(string name);
+        /// <returns>A <see cref="ManualResetEventSlim"/> based wait handle associated with the given <paramref name="name"/>.</returns>
+        ManualResetEventSlim GetExternalEventHandle(string name);
 
         /// <summary>
         /// Defines a temporal processing constraint for the adapter.
@@ -370,7 +370,7 @@ namespace TimeSeriesFramework.Adapters
             {
                 MeasurementKey[] adapterInputMeasurementKeys = adapter.InputMeasurementKeys;
 
-                if (adapterInputMeasurementKeys != null && adapterInputMeasurementKeys.Length > 0)
+                if ((object)adapterInputMeasurementKeys != null && adapterInputMeasurementKeys.Length > 0)
                     inputMeasurementKeys.AddRange(adapterInputMeasurementKeys);
             }
 

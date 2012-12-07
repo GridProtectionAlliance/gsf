@@ -30,7 +30,6 @@ using System.Security.Cryptography;
 using System.Text;
 using TVA;
 using TVA.Communication;
-using TVA.IO.Compression;
 using TVA.Security.Cryptography;
 
 namespace TimeSeriesFramework.Transport
@@ -158,7 +157,7 @@ namespace TimeSeriesFramework.Transport
                     m_hostName = m_connectionID;
             }
 
-            if (m_ipAddress == null)
+            if ((object)m_ipAddress == null)
                 m_ipAddress = System.Net.IPAddress.None;
         }
 
@@ -196,9 +195,9 @@ namespace TimeSeriesFramework.Transport
             }
             set
             {
-                m_connectionEstablished = (value != null);
+                m_connectionEstablished = ((object)value != null);
 
-                if (m_dataChannel != null)
+                if ((object)m_dataChannel != null)
                 {
                     // Detach from events on existing data channel reference
                     m_dataChannel.SendClientDataException -= m_dataChannel_SendClientDataException;
@@ -212,7 +211,7 @@ namespace TimeSeriesFramework.Transport
                 // Assign new data channel reference
                 m_dataChannel = value;
 
-                if (m_dataChannel != null)
+                if ((object)m_dataChannel != null)
                 {
                     // Save UDP settings so channel can be reestablished if needed
                     m_configurationString = m_dataChannel.ConfigurationString;
@@ -450,7 +449,7 @@ namespace TimeSeriesFramework.Transport
             {
                 m_subscription = value;
 
-                if (m_subscription != null)
+                if ((object)m_subscription != null)
                     m_subscription.HostName = m_hostName;
             }
         }
@@ -530,7 +529,7 @@ namespace TimeSeriesFramework.Transport
                 status.AppendLine();
                 status.AppendFormat(formatString, "Publish channel protocol", PublishChannel.TransportProtocol);
                 status.AppendLine();
-                status.AppendFormat(formatString, "Data packet security", m_keyIVs == null ? "unencrypted" : "encrypted");
+                status.AppendFormat(formatString, "Data packet security", (object)m_keyIVs == null ? "unencrypted" : "encrypted");
                 status.AppendLine();
 
                 if (m_dataChannel != null)
@@ -568,14 +567,14 @@ namespace TimeSeriesFramework.Transport
                 {
                     if (disposing)
                     {
-                        if (m_pingTimer != null)
+                        if ((object)m_pingTimer != null)
                         {
                             m_pingTimer.Elapsed -= m_pingTimer_Elapsed;
                             m_pingTimer.Dispose();
                         }
                         m_pingTimer = null;
 
-                        if (m_reconnectTimer != null)
+                        if ((object)m_reconnectTimer != null)
                         {
                             m_reconnectTimer.Elapsed -= m_reconnectTimer_Elapsed;
                             m_reconnectTimer.Dispose();
@@ -607,7 +606,7 @@ namespace TimeSeriesFramework.Transport
                 symmetricAlgorithm.GenerateKey();
                 symmetricAlgorithm.GenerateIV();
 
-                if (m_keyIVs == null)
+                if ((object)m_keyIVs == null)
                 {
                     // Initialize new key set
                     m_keyIVs = new byte[2][][];
@@ -736,7 +735,7 @@ namespace TimeSeriesFramework.Transport
             {
                 m_parent.OnStatusMessage("Data channel stopped unexpectedly, restarting data channel...");
 
-                if (m_reconnectTimer != null)
+                if ((object)m_reconnectTimer != null)
                     m_reconnectTimer.Start();
             }
             else

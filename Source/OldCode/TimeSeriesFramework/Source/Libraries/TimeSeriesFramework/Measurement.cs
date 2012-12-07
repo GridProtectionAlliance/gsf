@@ -564,20 +564,16 @@ namespace TimeSeriesFramework
         /// <returns>A <see cref="String"/> that represents the specified <see cref="IMeasurement"/>.</returns>
         public static string ToString(IMeasurement measurement, bool includeTagName = true)
         {
-            if (measurement == null)
-            {
+            if ((object)measurement == null)
                 return "Undefined";
-            }
-            else
-            {
-                string tagName = measurement.TagName;
-                string keyText = measurement.Key.ToString();
 
-                if (includeTagName && !string.IsNullOrWhiteSpace(tagName))
-                    return string.Format("{0} [{1}]", tagName, keyText);
-                else
-                    return keyText;
-            }
+            string tagName = measurement.TagName;
+            string keyText = measurement.Key.ToString();
+
+            if (includeTagName && !string.IsNullOrWhiteSpace(tagName))
+                return string.Format("{0} [{1}]", tagName, keyText);
+
+            return keyText;
         }
 
         /// <summary>

@@ -99,8 +99,8 @@ namespace TimeSeriesFramework.Adapters
         private int m_initializationTimeout;
         private bool m_autoStart;
         private bool m_processMeasurementFilter;
-        private ManualResetEvent m_initializeWaitHandle;
-        private AutoResetEvent[] m_externalEventHandles;
+        private ManualResetEventSlim m_initializeWaitHandle;
+        private ManualResetEventSlim[] m_externalEventHandles;
         private int m_externalEventTimeout;
         private MeasurementKey[] m_inputMeasurementKeys;
         private IMeasurement[] m_outputMeasurements;
@@ -134,7 +134,7 @@ namespace TimeSeriesFramework.Adapters
             GenHashCode();
 
             // Create wait handle to use for adapter initialization
-            m_initializeWaitHandle = new ManualResetEvent(false);
+            m_initializeWaitHandle = new ManualResetEventSlim(false);
             m_initializationTimeout = DefaultInitializationTimeout;
         }
 
@@ -350,7 +350,7 @@ namespace TimeSeriesFramework.Adapters
                 m_inputMeasurementKeys = value;
 
                 // Update input key lookup hash table
-                if (value != null && value.Length > 0)
+                if ((object)value != null && value.Length > 0)
                 {
                     m_inputMeasurementKeysHash = new List<MeasurementKey>(value);
                     m_inputMeasurementKeysHash.Sort();
@@ -597,9 +597,9 @@ namespace TimeSeriesFramework.Adapters
                 StringBuilder status = new StringBuilder();
                 DataSet dataSource = this.DataSource;
 
-                status.AppendFormat("       Data source defined: {0}", (dataSource != null));
+                status.AppendFormat("       Data source defined: {0}", ((object)dataSource != null));
                 status.AppendLine();
-                if (dataSource != null)
+                if ((object)dataSource != null)
                 {
                     status.AppendFormat("    Referenced data source: {0}, {1} tables", dataSource.DataSetName, dataSource.Tables.Count);
                     status.AppendLine();
@@ -610,7 +610,7 @@ namespace TimeSeriesFramework.Adapters
                 status.AppendLine();
                 status.AppendFormat("       Adapter initialized: {0}", Initialized);
                 status.AppendLine();
-                status.AppendFormat("         Parent collection: {0}", m_parent == null ? "Undefined" : m_parent.Name);
+                status.AppendFormat("         Parent collection: {0}", (object)m_parent == null ? "Undefined" : m_parent.Name);
                 status.AppendLine();
                 status.AppendFormat("         Operational state: {0}", Enabled ? "Running" : "Stopped");
                 status.AppendLine();
@@ -620,9 +620,9 @@ namespace TimeSeriesFramework.Adapters
                 status.AppendLine();
                 status.AppendFormat("    Total adapter run time: {0}", RunTime.ToString());
                 status.AppendLine();
-                status.AppendFormat("    External event handles: {0}", m_externalEventHandles == null ? "None defined" : m_externalEventHandles.Length + " defined");
+                status.AppendFormat("    External event handles: {0}", (object)m_externalEventHandles == null ? "None defined" : m_externalEventHandles.Length + " defined");
                 status.AppendLine();
-                if (m_externalEventHandles != null)
+                if ((object)m_externalEventHandles != null)
                 {
                     status.AppendFormat("    External event timeout: {0} milliseconds", m_externalEventTimeout);
                     status.AppendLine();
@@ -671,7 +671,7 @@ namespace TimeSeriesFramework.Adapters
 
                 status.AppendLine();
 
-                if (OutputMeasurements != null && OutputMeasurements.Length > OutputMeasurements.Count(m => m.Key == MeasurementKey.Undefined))
+                if ((object)OutputMeasurements != null && OutputMeasurements.Length > OutputMeasurements.Count(m => m.Key == MeasurementKey.Undefined))
                 {
                     status.AppendFormat("       Output measurements: {0} defined measurements", OutputMeasurements.Length);
                     status.AppendLine();
@@ -690,7 +690,7 @@ namespace TimeSeriesFramework.Adapters
                     status.AppendLine();
                 }
 
-                if (InputMeasurementKeys != null && InputMeasurementKeys.Length > InputMeasurementKeys.Count(k => k == MeasurementKey.Undefined))
+                if ((object)InputMeasurementKeys != null && InputMeasurementKeys.Length > InputMeasurementKeys.Count(k => k == MeasurementKey.Undefined))
                 {
                     status.AppendFormat("        Input measurements: {0} defined measurements", InputMeasurementKeys.Length);
                     status.AppendLine();
@@ -712,12 +712,12 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
-        /// Gets or sets collection of <see cref="AutoResetEvent"/> wait handles used to synchronize activity with external events.
+        /// Gets or sets collection of <see cref="ManualResetEventSlim"/> wait handles used to synchronize activity with external events.
         /// </summary>
         /// <remarks>
         /// Each defined external event in the collection should be acquired via <see cref="GetExternalEventHandle"/>.
         /// </remarks>
-        protected AutoResetEvent[] ExternalEventHandles
+        protected ManualResetEventSlim[] ExternalEventHandles
         {
             get
             {
@@ -725,7 +725,7 @@ namespace TimeSeriesFramework.Adapters
             }
             set
             {
-                if (value != null && value.Length > 0)
+                if ((object)value != null && value.Length > 0)
                     m_externalEventHandles = value;
                 else
                     m_externalEventHandles = null;
@@ -773,8 +773,10 @@ namespace TimeSeriesFramework.Adapters
                     if (disposing)
                     {
                         if ((object)m_initializeWaitHandle != null)
-                            m_initializeWaitHandle.Close();
-
+                        {
+                            m_initializeWaitHandle.Set();
+                            m_initializeWaitHandle.Dispose();
+                        }
                         m_initializeWaitHandle = null;
                     }
                 }
@@ -782,7 +784,7 @@ namespace TimeSeriesFramework.Adapters
                 {
                     m_disposed = true;  // Prevent duplicate dispose.
 
-                    if (Disposed != null)
+                    if ((object)Disposed != null)
                         Disposed(this, EventArgs.Empty);
                 }
             }
@@ -833,7 +835,7 @@ namespace TimeSeriesFramework.Adapters
                 ProcessingInterval = processingInterval;
 
             // Establish any defined external event wait handles needed for inter-adapter synchronization
-            if (settings.TryGetValue("waitHandleNames", out setting) && !string.IsNullOrWhiteSpace(setting))
+            if (!this.TemporalConstraintIsDefined() && settings.TryGetValue("waitHandleNames", out setting) && !string.IsNullOrWhiteSpace(setting))
                 m_externalEventHandles = setting.Split(',').Select(GetExternalEventHandle).ToArray();
 
             int waitHandleTimeout;
@@ -894,8 +896,8 @@ namespace TimeSeriesFramework.Adapters
         /// Gets a common wait handle for inter-adapter synchronization.
         /// </summary>
         /// <param name="name">Case-insensitive wait handle name.</param>
-        /// <returns>A <see cref="AutoResetEvent"/> based wait handle associated with the given <paramref name="name"/>.</returns>
-        public virtual AutoResetEvent GetExternalEventHandle(string name)
+        /// <returns>A <see cref="ManualResetEventSlim"/> based wait handle associated with the given <paramref name="name"/>.</returns>
+        public virtual ManualResetEventSlim GetExternalEventHandle(string name)
         {
             return m_parent.GetExternalEventHandle(name);
         }
@@ -907,12 +909,12 @@ namespace TimeSeriesFramework.Adapters
         /// <returns><c>true</c> when every all <see cref="ExternalEventHandles"/> have received a signal or there are no external events defined; otherwise, <c>false</c>.</returns>
         protected virtual bool WaitForExternalEvents(int timeout = 0)
         {
-            if (m_externalEventHandles != null)
+            if ((object)m_externalEventHandles != null)
             {
                 if (timeout == 0)
                     timeout = m_externalEventTimeout;
 
-                return WaitHandle.WaitAll(m_externalEventHandles, timeout);
+                return WaitHandle.WaitAll(m_externalEventHandles.Select(mre => mre.WaitHandle).ToArray(), timeout);
             }
 
             return true;
@@ -942,7 +944,7 @@ namespace TimeSeriesFramework.Adapters
         /// <returns>true if specified measurement key is defined in <see cref="InputMeasurementKeys"/>.</returns>
         public virtual bool IsInputMeasurement(MeasurementKey item)
         {
-            if (m_inputMeasurementKeysHash != null)
+            if ((object)m_inputMeasurementKeysHash != null)
                 return (m_inputMeasurementKeysHash.BinarySearch(item) >= 0);
 
             // If no input measurements are defined we must assume user wants to accept all measurements - yikes!
@@ -957,7 +959,7 @@ namespace TimeSeriesFramework.Adapters
         public virtual bool WaitForInitialize(int timeout)
         {
             if ((object)m_initializeWaitHandle != null)
-                return m_initializeWaitHandle.WaitOne(timeout);
+                return m_initializeWaitHandle.Wait(timeout);
 
             return false;
         }
@@ -1042,7 +1044,7 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                if (StatusMessage != null)
+                if ((object)StatusMessage != null)
                     StatusMessage(this, new EventArgs<string>(status));
             }
             catch (Exception ex)
@@ -1064,7 +1066,7 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                if (StatusMessage != null)
+                if ((object)StatusMessage != null)
                     StatusMessage(this, new EventArgs<string>(string.Format(formattedStatus, args)));
             }
             catch (Exception ex)
@@ -1080,7 +1082,7 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
         protected virtual void OnProcessException(Exception ex)
         {
-            if (ProcessException != null)
+            if ((object)ProcessException != null)
                 ProcessException(this, new EventArgs<Exception>(ex));
         }
 
@@ -1091,7 +1093,7 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                if (InputMeasurementKeysUpdated != null)
+                if ((object)InputMeasurementKeysUpdated != null)
                     InputMeasurementKeysUpdated(this, EventArgs.Empty);
             }
             catch (Exception ex)
@@ -1108,7 +1110,7 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                if (OutputMeasurementsUpdated != null)
+                if ((object)OutputMeasurementsUpdated != null)
                     OutputMeasurementsUpdated(this, EventArgs.Empty);
             }
             catch (Exception ex)
@@ -1286,7 +1288,7 @@ namespace TimeSeriesFramework.Adapters
             else if (adapter is IActionAdapter)
                 sourceIDs = (adapter as IActionAdapter).InputSourceIDs;
 
-            if (sourceIDs != null)
+            if ((object)sourceIDs != null)
             {
                 // Attempt to lookup input measurement keys for given source IDs from default measurement table, if defined
                 try
@@ -1310,10 +1312,10 @@ namespace TimeSeriesFramework.Adapters
                         if (filteredRows.Length > 0)
                             sourceIDKeys = filteredRows.Select(row => MeasurementKey.Parse(row["ID"].ToNonNullString(MeasurementKey.Undefined.ToString()), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>())).ToArray();
 
-                        if (sourceIDKeys != null)
+                        if ((object)sourceIDKeys != null)
                         {
                             // Combine input measurement keys for source IDs with any existing input measurement keys and return unique set
-                            if (adapter.InputMeasurementKeys == null)
+                            if ((object)adapter.InputMeasurementKeys == null)
                                 adapter.InputMeasurementKeys = sourceIDKeys;
                             else
                                 adapter.InputMeasurementKeys = sourceIDKeys.Concat(adapter.InputMeasurementKeys).Distinct().ToArray();
@@ -1344,7 +1346,7 @@ namespace TimeSeriesFramework.Adapters
             else if (adapter is IActionAdapter)
                 sourceIDs = (adapter as IActionAdapter).OutputSourceIDs;
 
-            if (sourceIDs != null)
+            if ((object)sourceIDs != null)
             {
                 // Attempt to lookup output measurements for given source IDs from default measurement table, if defined
                 try
@@ -1368,7 +1370,7 @@ namespace TimeSeriesFramework.Adapters
                         if (filteredRows.Length > 0)
                             sourceIDKeys = filteredRows.Select(row => MeasurementKey.Parse(row["ID"].ToNonNullString(MeasurementKey.Undefined.ToString()), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>())).ToArray();
 
-                        if (sourceIDKeys != null)
+                        if ((object)sourceIDKeys != null)
                         {
                             List<IMeasurement> measurements = new List<IMeasurement>();
 
@@ -1414,7 +1416,7 @@ namespace TimeSeriesFramework.Adapters
                             }
 
                             // Combine output measurements for source IDs with any existing output measurements and return unique set
-                            if (adapter.OutputMeasurements == null)
+                            if ((object)adapter.OutputMeasurements == null)
                                 adapter.OutputMeasurements = measurements.ToArray();
                             else
                                 adapter.OutputMeasurements = measurements.Concat(adapter.OutputMeasurements).Distinct().ToArray();

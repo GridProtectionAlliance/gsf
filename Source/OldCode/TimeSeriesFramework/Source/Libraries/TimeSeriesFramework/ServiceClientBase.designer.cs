@@ -39,7 +39,7 @@ namespace TimeSeriesFramework
             if (disposing)
             {
                 m_clientHelper.Disconnect();
-                if (components != null)
+                if ((object)components != null)
                     components.Dispose();
             }
             base.Dispose(disposing);

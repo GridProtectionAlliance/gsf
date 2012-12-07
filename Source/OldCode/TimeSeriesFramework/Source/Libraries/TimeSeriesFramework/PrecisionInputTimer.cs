@@ -217,21 +217,21 @@ namespace TimeSeriesFramework
                 {
                     if (disposing)
                     {
-                        if (m_timer != null)
+                        if ((object)m_timer != null)
                         {
                             m_timer.Tick -= m_timer_Tick;
                             m_timer.Dispose();
                         }
                         m_timer = null;
 
-                        if (m_frameWaitHandleA != null)
+                        if ((object)m_frameWaitHandleA != null)
                         {
                             m_frameWaitHandleA.Set();
                             m_frameWaitHandleA.Dispose();
                         }
                         m_frameWaitHandleA = null;
 
-                        if (m_frameWaitHandleB != null)
+                        if ((object)m_frameWaitHandleB != null)
                         {
                             m_frameWaitHandleB.Set();
                             m_frameWaitHandleB.Dispose();
@@ -318,7 +318,7 @@ namespace TimeSeriesFramework
 
                             if (resync)
                             {
-                                if (m_timer != null)
+                                if ((object)m_timer != null)
                                 {
                                     m_timer.Stop();
                                     ThreadPool.QueueUserWorkItem(SynchronizeInputTimer);
@@ -384,7 +384,7 @@ namespace TimeSeriesFramework
             m_lastMissedWindowTime = 0;
             m_missedPublicationWindows = 0;
 
-            if (m_timer != null)
+            if ((object)m_timer != null)
                 m_timer.Start();
         }
 

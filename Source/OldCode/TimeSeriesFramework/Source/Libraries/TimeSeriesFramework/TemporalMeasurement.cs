@@ -59,7 +59,7 @@ namespace TimeSeriesFramework
         /// <param name="leadTime">Future time deviation tolerance, in seconds - this becomes the tolerated +/- accuracy of the local clock to real-time.</param>
         public TemporalMeasurement(IMeasurement measurement, double lagTime, double leadTime)
         {
-            if (measurement != null)
+            if ((object)measurement != null)
             {
                 ID = measurement.ID;
                 Key = measurement.Key;

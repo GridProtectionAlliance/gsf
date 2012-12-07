@@ -524,7 +524,7 @@ namespace TimeSeriesFramework.Adapters
 
                 if ((object)m_actionAdapters != null)
                 {
-                    if (inputMeasurementKeys == null || !inputMeasurementKeys.Any())
+                    if ((object)inputMeasurementKeys == null || !inputMeasurementKeys.Any())
                     {
                         inputMeasurementKeys = m_actionAdapters.InputMeasurementKeys;
                     }

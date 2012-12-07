@@ -135,10 +135,10 @@ namespace TimeSeriesFramework
             m_serviceHelper.ServiceStarted += ServiceStartedHandler;
             m_serviceHelper.ServiceStopping += ServiceStoppingHandler;
 
-            if (m_serviceHelper.StatusLog != null)
+            if ((object)m_serviceHelper.StatusLog != null)
                 m_serviceHelper.StatusLog.LogException += LogExceptionHandler;
 
-            if (m_serviceHelper.ErrorLogger != null && m_serviceHelper.ErrorLogger.ErrorLog != null)
+            if ((object)m_serviceHelper.ErrorLogger != null && (object)m_serviceHelper.ErrorLogger.ErrorLog != null)
                 m_serviceHelper.ErrorLogger.ErrorLog.LogException += LogExceptionHandler;
         }
 
@@ -149,7 +149,7 @@ namespace TimeSeriesFramework
         public ServiceHostBase(IContainer container)
             : this()
         {
-            if (container != null)
+            if ((object)container != null)
                 container.Add(this);
         }
 
@@ -533,7 +533,7 @@ namespace TimeSeriesFramework
         protected virtual void ServiceStoppingHandler(object sender, EventArgs e)
         {
             // Stop generation zero garbage collection timer
-            if (m_gcGenZeroTimer != null)
+            if ((object)m_gcGenZeroTimer != null)
             {
                 m_gcGenZeroTimer.Enabled = false;
                 m_gcGenZeroTimer.Elapsed -= m_gcGenZeroTimer_Elapsed;
@@ -542,7 +542,7 @@ namespace TimeSeriesFramework
             m_gcGenZeroTimer = null;
 
             // Dispose system health exporter
-            if (m_healthExporter != null)
+            if ((object)m_healthExporter != null)
             {
                 m_healthExporter.Enabled = false;
                 m_serviceHelper.ServiceComponents.Remove(m_healthExporter);
@@ -553,7 +553,7 @@ namespace TimeSeriesFramework
             m_healthExporter = null;
 
             // Dispose system status exporter
-            if (m_statusExporter != null)
+            if ((object)m_statusExporter != null)
             {
                 m_statusExporter.Enabled = false;
                 m_serviceHelper.ServiceComponents.Remove(m_statusExporter);
@@ -564,7 +564,7 @@ namespace TimeSeriesFramework
             m_statusExporter = null;
 
             // Dispose Iaon session
-            if (m_iaonSession != null)
+            if ((object)m_iaonSession != null)
             {
                 m_serviceHelper.ServiceComponents.Remove(m_iaonSession.InputAdapters);
                 m_serviceHelper.ServiceComponents.Remove(m_iaonSession.ActionAdapters);
@@ -579,13 +579,13 @@ namespace TimeSeriesFramework
             m_serviceHelper.ServiceStarted -= ServiceStartedHandler;
             m_serviceHelper.ServiceStopping -= ServiceStoppingHandler;
 
-            if (m_serviceHelper.StatusLog != null)
+            if ((object)m_serviceHelper.StatusLog != null)
             {
                 m_serviceHelper.StatusLog.Flush();
                 m_serviceHelper.StatusLog.LogException -= LogExceptionHandler;
             }
 
-            if (m_serviceHelper.ErrorLogger != null && m_serviceHelper.ErrorLogger.ErrorLog != null)
+            if ((object)m_serviceHelper.ErrorLogger != null && (object)m_serviceHelper.ErrorLogger.ErrorLog != null)
             {
                 m_serviceHelper.ErrorLogger.ErrorLog.Flush();
                 m_serviceHelper.ErrorLogger.ErrorLog.LogException -= LogExceptionHandler;
@@ -664,7 +664,7 @@ namespace TimeSeriesFramework
             // Attempt to load (or reload) system configuration
             DataSet dataSource = GetConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString);
 
-            if (dataSource != null)
+            if ((object)dataSource != null)
             {
                 // Update data source on all adapters in all collections
                 m_iaonSession.DataSource = dataSource;
@@ -796,7 +796,7 @@ namespace TimeSeriesFramework
                     }
                     finally
                     {
-                        if (connection != null)
+                        if ((object)connection != null)
                             connection.Dispose();
 
                         DisplayStatusMessage("Database configuration connection closed.", UpdateType.Information);
@@ -828,7 +828,7 @@ namespace TimeSeriesFramework
                     }
                     finally
                     {
-                        if (response != null)
+                        if ((object)response != null)
                             response.Dispose();
 
                         DisplayStatusMessage("Webservice configuration connection closed.", UpdateType.Information);
@@ -1108,7 +1108,7 @@ namespace TimeSeriesFramework
             const string requestCommand = "Health";
             ClientRequestHandler requestHandler = m_serviceHelper.FindClientRequestHandler(requestCommand);
 
-            if (requestHandler != null)
+            if ((object)requestHandler != null)
             {
                 // We pretend to be a client and send a "Health" command to ourselves...
                 requestHandler.HandlerMethod(ClientHelper.PretendRequest(requestCommand));
@@ -1270,7 +1270,7 @@ namespace TimeSeriesFramework
                     IAdapter adapter = GetRequestedAdapter(requestInfo);
                     List<IAdapter> singleItemList = new List<IAdapter>();
 
-                    if (adapter != null)
+                    if ((object)adapter != null)
                         singleItemList.Add(adapter);
 
                     listItems = singleItemList;
@@ -1378,7 +1378,7 @@ namespace TimeSeriesFramework
                 {
                     IAdapter adapter = GetRequestedAdapter(requestInfo);
 
-                    if (adapter != null)
+                    if ((object)adapter != null)
                     {
                         adapterAction(adapter);
                         SendResponse(requestInfo, true);
@@ -1457,7 +1457,7 @@ namespace TimeSeriesFramework
                 else
                     SendResponse(requestInfo, false, "No command was specified to invoke.");
 
-                if (adapter != null)
+                if ((object)adapter != null)
                 {
                     try
                     {
@@ -1465,7 +1465,7 @@ namespace TimeSeriesFramework
                         MethodInfo method = adapter.GetType().GetMethod(command, BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.IgnoreCase);
 
                         // Invoke method
-                        if (method != null)
+                        if ((object)method != null)
                         {
                             AdapterCommandAttribute commandAttribute;
 
@@ -1476,7 +1476,7 @@ namespace TimeSeriesFramework
                                 object returnValue = null;
                                 bool success = true;
 
-                                if (parameterInfo == null || (parameterInfo != null && parameterInfo.Length == 0))
+                                if (parameterInfo.Length == 0)
                                 {
                                     // Invoke parameterless adapter command
                                     returnValue = method.Invoke(adapter, null);
@@ -1510,7 +1510,7 @@ namespace TimeSeriesFramework
                                 if (success)
                                 {
                                     // Return value, if any, will be returned to requesting client as a response attachment
-                                    if (returnValue == null)
+                                    if ((object)returnValue == null)
                                         SendResponse(requestInfo, true, "Command \"{0}\" successfully invoked.", command);
                                     else
                                         SendResponseWithAttachment(requestInfo, true, returnValue, "Command \"{0}\" successfully invoked, return value = {1}", command, returnValue.ToNonNullString("null"));
@@ -1581,7 +1581,7 @@ namespace TimeSeriesFramework
                 else
                     adapter = GetRequestedCollection(requestInfo);
 
-                if (adapter != null)
+                if ((object)adapter != null)
                 {
                     try
                     {
@@ -1735,7 +1735,7 @@ namespace TimeSeriesFramework
                                 IAdapter adapter = GetRequestedAdapter(requestInfo, out collection);
 
                                 // Initialize specified adapter
-                                if (adapter != null && collection != null)
+                                if ((object)adapter != null && (object)collection != null)
                                 {
                                     if (collection.TryInitializeAdapterByID(adapter.ID))
                                         SendResponse(requestInfo, true, "Adapter \"{0}\" ({1}) was successfully initialized...", adapter.Name, adapter.ID);
@@ -1753,7 +1753,7 @@ namespace TimeSeriesFramework
                             // Get specified adapter collection
                             collection = GetRequestedCollection(requestInfo);
 
-                            if (collection != null)
+                            if ((object)collection != null)
                             {
                                 DisplayStatusMessage("Initializing all adapters in {0}...", UpdateType.Information, collection.Name);
                                 collection.Initialize();
@@ -2024,7 +2024,7 @@ namespace TimeSeriesFramework
                     if (deleteSetting)
                     {
                         // Delete existing setting.
-                        if (setting != null)
+                        if ((object)setting != null)
                         {
                             settings.Remove(setting);
                             config.Save();
@@ -2038,7 +2038,7 @@ namespace TimeSeriesFramework
                     else if (addSetting)
                     {
                         // Add new setting.
-                        if (setting == null)
+                        if ((object)setting == null)
                         {
                             settings.Add(settingName, settingValue);
                             config.Save();
@@ -2052,7 +2052,7 @@ namespace TimeSeriesFramework
                     else
                     {
                         // Update existing setting.
-                        if (setting != null)
+                        if ((object)setting != null)
                         {
                             setting.Value = settingValue;
                             config.Save();
@@ -2223,7 +2223,7 @@ namespace TimeSeriesFramework
                     string arguments = requestInfo.Request.Arguments.ToString();
                     string message = responseType + (string.IsNullOrWhiteSpace(arguments) ? "" : "(" + arguments + ")");
 
-                    if (status != null)
+                    if ((object)status != null)
                     {
                         if (args.Length == 0)
                             message += " - " + status;

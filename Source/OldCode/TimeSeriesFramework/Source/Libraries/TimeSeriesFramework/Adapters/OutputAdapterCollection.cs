@@ -69,7 +69,7 @@ namespace TimeSeriesFramework.Adapters
         /// Creates a new <see cref="OutputAdapterCollection"/>.
         /// </summary>
         /// <param name="waitHandles">Wait handle dictionary.</param>
-        public OutputAdapterCollection(ConcurrentDictionary<string, AutoResetEvent> waitHandles)
+        public OutputAdapterCollection(ConcurrentDictionary<string, ManualResetEventSlim> waitHandles)
             : base(waitHandles)
         {
             base.Name = "Output Adapter Collection";
@@ -183,7 +183,7 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                if (UnprocessedMeasurements != null)
+                if ((object)UnprocessedMeasurements != null)
                     UnprocessedMeasurements(this, new EventArgs<int>(unprocessedMeasurements));
             }
             catch (Exception ex)
@@ -199,7 +199,7 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="item">New <see cref="IOutputAdapter"/> implementation.</param>
         protected override void InitializeItem(IOutputAdapter item)
         {
-            if (item != null)
+            if ((object)item != null)
             {
                 // Wire up unprocessed measurements event
                 item.UnprocessedMeasurements += item_UnprocessedMeasurements;
@@ -213,7 +213,7 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="item"><see cref="IOutputAdapter"/> to dispose.</param>
         protected override void DisposeItem(IOutputAdapter item)
         {
-            if (item != null)
+            if ((object)item != null)
             {
                 // Un-wire unprocessed measurements event
                 item.UnprocessedMeasurements -= item_UnprocessedMeasurements;
@@ -224,7 +224,7 @@ namespace TimeSeriesFramework.Adapters
         // Raise unprocessed measurements event on behalf of each item in collection
         private void item_UnprocessedMeasurements(object sender, EventArgs<int> e)
         {
-            if (UnprocessedMeasurements != null)
+            if ((object)UnprocessedMeasurements != null)
                 UnprocessedMeasurements(sender, e);
         }
 
