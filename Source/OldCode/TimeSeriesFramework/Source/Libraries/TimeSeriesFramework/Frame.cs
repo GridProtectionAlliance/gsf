@@ -198,7 +198,7 @@ namespace TimeSeriesFramework
             {
                 m_publishedTimestamp = value;
 
-                if ((object)m_measurements != null)
+                if (m_measurements != null)
                 {
                     foreach (IMeasurement measurement in m_measurements.Values)
                     {

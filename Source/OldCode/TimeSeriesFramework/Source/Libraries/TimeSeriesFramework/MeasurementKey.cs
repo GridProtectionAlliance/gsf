@@ -509,7 +509,7 @@ namespace TimeSeriesFramework
         {
             get
             {
-                if ((object)s_comparer == null)
+                if (s_comparer == null)
                     s_comparer = new MeasurementKeyComparer();
 
                 return s_comparer;

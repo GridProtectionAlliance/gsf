@@ -97,14 +97,14 @@ namespace TimeSeriesFramework.Adapters
         {
             get
             {
-                if ((object)m_outputSourceIDs == null)
+                if (m_outputSourceIDs == null)
                     return null;
 
                 return m_outputSourceIDs.ToArray();
             }
             set
             {
-                if ((object)value == null)
+                if (value == null)
                 {
                     m_outputSourceIDs = null;
                 }
@@ -167,14 +167,14 @@ namespace TimeSeriesFramework.Adapters
         {
             get
             {
-                if ((object)m_connectionTimer != null)
+                if (m_connectionTimer != null)
                     return m_connectionTimer.Interval;
 
                 return 2000.0D;
             }
             set
             {
-                if ((object)m_connectionTimer != null)
+                if (m_connectionTimer != null)
                     m_connectionTimer.Interval = value;
             }
         }
@@ -195,7 +195,7 @@ namespace TimeSeriesFramework.Adapters
 
                 status.Append(base.Status);
 
-                if ((object)RequestedOutputMeasurementKeys != null && RequestedOutputMeasurementKeys.Length > 0)
+                if (RequestedOutputMeasurementKeys != null && RequestedOutputMeasurementKeys.Length > 0)
                 {
                     status.AppendFormat("     Requested output keys: {0} defined measurements", RequestedOutputMeasurementKeys.Length);
                     status.AppendLine();
@@ -239,7 +239,7 @@ namespace TimeSeriesFramework.Adapters
                 {
                     if (disposing)
                     {
-                        if ((object)m_connectionTimer != null)
+                        if (m_connectionTimer != null)
                         {
                             m_connectionTimer.Elapsed -= m_connectionTimer_Elapsed;
                             m_connectionTimer.Dispose();
@@ -280,7 +280,7 @@ namespace TimeSeriesFramework.Adapters
             base.Start();
 
             // Start the connection cycle
-            if ((object)m_connectionTimer != null)
+            if (m_connectionTimer != null)
                 m_connectionTimer.Enabled = true;
         }
 
@@ -315,7 +315,7 @@ namespace TimeSeriesFramework.Adapters
                 bool performedDisconnect = Enabled;
 
                 // Stop the connection cycle
-                if ((object)m_connectionTimer != null)
+                if (m_connectionTimer != null)
                     m_connectionTimer.Enabled = false;
 
                 base.Stop();
@@ -364,7 +364,7 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                if ((object)NewMeasurements != null)
+                if (NewMeasurements != null)
                     NewMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
 
                 IncrementProcessedMeasurements(measurements.Count);
@@ -383,7 +383,7 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                if ((object)ProcessingComplete != null)
+                if (ProcessingComplete != null)
                     ProcessingComplete(this, EventArgs.Empty);
             }
             catch (Exception ex)

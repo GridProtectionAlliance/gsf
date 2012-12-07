@@ -91,10 +91,10 @@ namespace TimeSeriesFramework.Transport
         {
             int inputCount = 0, outputCount = 0;
 
-            if ((object)InputMeasurementKeys != null)
+            if (InputMeasurementKeys != null)
                 inputCount = InputMeasurementKeys.Length;
 
-            if ((object)OutputMeasurements != null)
+            if (OutputMeasurements != null)
                 outputCount = OutputMeasurements.Length;
 
             return string.Format("Total input measurements: {0}, total output measurements: {1}", inputCount, outputCount).PadLeft(maxLength);

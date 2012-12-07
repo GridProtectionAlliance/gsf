@@ -89,7 +89,7 @@ namespace TimeSeriesFramework
                 // Attempt to access service controller for the specified Windows service
                 ServiceController serviceController = ServiceController.GetServices().SingleOrDefault(svc => string.Compare(svc.ServiceName, serviceName, true) == 0);
 
-                if ((object)serviceController != null)
+                if (serviceController != null)
                 {
                     try
                     {
@@ -147,7 +147,7 @@ namespace TimeSeriesFramework
                 }
 
                 // Attempt to restart Windows service...
-                if ((object)serviceController != null)
+                if (serviceController != null)
                 {
                     try
                     {

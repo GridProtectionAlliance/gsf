@@ -120,13 +120,13 @@ namespace TimeSeriesFramework.Adapters
         private InputAdapterCollection m_inputAdapters;
         private ActionAdapterCollection m_actionAdapters;
         private OutputAdapterCollection m_outputAdapters;
-        private ConcurrentDictionary<string, ManualResetEventSlim> m_waitHandles;
-        private readonly ConcurrentDictionary<object, string> m_derivedNameCache;
+        private ConcurrentDictionary<string, AutoResetEvent> m_waitHandles;
+        private ConcurrentDictionary<object, string> m_derivedNameCache;
         private MeasurementKey[] m_inputMeasurementKeysRestriction;
         private bool m_useMeasurementRouting;
-        private readonly int m_measurementWarningThreshold;
-        private readonly int m_measurementDumpingThreshold;
-        private readonly int m_defaultSampleSizeWarningThreshold;
+        private int m_measurementWarningThreshold;
+        private int m_measurementDumpingThreshold;
+        private int m_defaultSampleSizeWarningThreshold;
         private string m_name;
         private bool m_disposed;
 
@@ -162,7 +162,7 @@ namespace TimeSeriesFramework.Adapters
             m_defaultSampleSizeWarningThreshold = thresholdSettings["DefaultSampleSizeWarningThreshold"].ValueAsInt32();
 
             // Create a common wait handle dictionary for all adapters in this session
-            m_waitHandles = new ConcurrentDictionary<string, ManualResetEventSlim>(StringComparer.InvariantCultureIgnoreCase);
+            m_waitHandles = new ConcurrentDictionary<string, AutoResetEvent>(StringComparer.InvariantCultureIgnoreCase);
 
             // Create a cache for derived adapter names
             m_derivedNameCache = new ConcurrentDictionary<object, string>();
@@ -358,7 +358,7 @@ namespace TimeSeriesFramework.Adapters
             {
                 m_allAdapters.DataSource = value;
 
-                if ((object)value != null)
+                if (value != null)
                     DetermineTemporalSupport();
             }
         }
@@ -406,21 +406,21 @@ namespace TimeSeriesFramework.Adapters
                 status.AppendLine(">> Input Adapters:");
                 status.AppendLine();
 
-                if ((object)m_inputAdapters != null)
+                if (m_inputAdapters != null)
                     status.AppendLine(m_inputAdapters.Status);
 
                 status.AppendLine();
                 status.AppendLine(">> Action Adapters:");
                 status.AppendLine();
 
-                if ((object)m_actionAdapters != null)
+                if (m_actionAdapters != null)
                     status.AppendLine(m_actionAdapters.Status);
 
                 status.AppendLine();
                 status.AppendLine(">> Output Adapters:");
                 status.AppendLine();
 
-                if ((object)m_outputAdapters != null)
+                if (m_outputAdapters != null)
                     status.AppendLine(m_outputAdapters.Status);
 
                 return status.ToString();
@@ -455,7 +455,7 @@ namespace TimeSeriesFramework.Adapters
                         DataSet dataSource = this.DataSource;
 
                         // Dispose input adapters collection
-                        if ((object)m_inputAdapters != null)
+                        if (m_inputAdapters != null)
                         {
                             m_inputAdapters.Stop();
 
@@ -470,7 +470,7 @@ namespace TimeSeriesFramework.Adapters
                         m_inputAdapters = null;
 
                         // Dispose action adapters collection
-                        if ((object)m_actionAdapters != null)
+                        if (m_actionAdapters != null)
                         {
                             m_actionAdapters.Stop();
 
@@ -485,7 +485,7 @@ namespace TimeSeriesFramework.Adapters
                         m_actionAdapters = null;
 
                         // Dispose output adapters collection
-                        if ((object)m_outputAdapters != null)
+                        if (m_outputAdapters != null)
                         {
                             m_outputAdapters.Stop();
                             m_outputAdapters.UnprocessedMeasurements -= UnprocessedMeasurementsHandler;
@@ -494,7 +494,7 @@ namespace TimeSeriesFramework.Adapters
                         m_outputAdapters = null;
 
                         // Dispose all adapters collection
-                        if ((object)m_allAdapters != null)
+                        if (m_allAdapters != null)
                         {
                             m_allAdapters.StatusMessage -= StatusMessageHandler;
                             m_allAdapters.ProcessException -= ProcessExceptionHandler;
@@ -506,7 +506,7 @@ namespace TimeSeriesFramework.Adapters
                         m_allAdapters = null;
 
                         // Dispose of routing tables
-                        if ((object)m_routingTables != null)
+                        if (m_routingTables != null)
                         {
                             m_routingTables.ProcessException -= m_routingTables_ProcessException;
                             m_routingTables.Dispose();
@@ -514,11 +514,11 @@ namespace TimeSeriesFramework.Adapters
                         m_routingTables = null;
 
                         // Dispose of wait handle dictionary
-                        if ((object)m_waitHandles != null)
+                        if (m_waitHandles != null)
                         {
-                            foreach (ManualResetEventSlim waitHandle in m_waitHandles.Values)
+                            foreach (AutoResetEvent waitHandle in m_waitHandles.Values)
                             {
-                                if ((object)waitHandle != null)
+                                if (waitHandle != null)
                                     waitHandle.Dispose();
                             }
 
@@ -534,7 +534,7 @@ namespace TimeSeriesFramework.Adapters
                 {
                     m_disposed = true;  // Prevent duplicate dispose.
 
-                    if ((object)Disposed != null)
+                    if (Disposed != null)
                         Disposed(this, EventArgs.Empty);
                 }
             }
@@ -640,9 +640,9 @@ namespace TimeSeriesFramework.Adapters
                 string name = null;
                 IProvideStatus statusProvider = key as IProvideStatus;
 
-                if ((object)statusProvider != null)
+                if (statusProvider != null)
                     name = statusProvider.Name;
-                else if ((object)key != null && key is string)
+                else if (key != null && key is string)
                     name = (string)key;
 
                 if (string.IsNullOrWhiteSpace(name))
@@ -660,7 +660,7 @@ namespace TimeSeriesFramework.Adapters
         /// </summary>
         public virtual void RecalculateRoutingTables()
         {
-            if (m_useMeasurementRouting && (object)m_routingTables != null && (object)m_allAdapters != null && m_allAdapters.Initialized)
+            if (m_useMeasurementRouting && m_routingTables != null && m_allAdapters != null && m_allAdapters.Initialized)
                 m_routingTables.CalculateRoutingTables(m_inputMeasurementKeysRestriction);
         }
 
@@ -672,7 +672,7 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="type"><see cref="UpdateType"/> of status message.</param>
         protected virtual void OnStatusMessage(object sender, string status, UpdateType type = UpdateType.Information)
         {
-            if ((object)StatusMessage != null)
+            if (StatusMessage != null)
             {
                 // When using default informational update type, see if an update type code was embedded in the status message - this allows for compatibility for event
                 // handlers that are normally unware of the update type
@@ -695,7 +695,7 @@ namespace TimeSeriesFramework.Adapters
         /// </remarks>
         protected virtual void OnStatusMessage(object sender, string formattedStatus, UpdateType type, params object[] args)
         {
-            if ((object)StatusMessage != null)
+            if (StatusMessage != null)
                 OnStatusMessage(sender, string.Format(formattedStatus, args), type);
         }
 
@@ -706,7 +706,7 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
         protected virtual void OnProcessException(object sender, Exception ex)
         {
-            if ((object)ProcessException != null)
+            if (ProcessException != null)
                 ProcessException(sender, new EventArgs<Exception>(ex));
         }
 
@@ -716,7 +716,7 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="sender">Object source raising the event.</param>
         protected virtual void OnInputMeasurementKeysUpdated(object sender)
         {
-            if ((object)InputMeasurementKeysUpdated != null)
+            if (InputMeasurementKeysUpdated != null)
                 InputMeasurementKeysUpdated(sender, EventArgs.Empty);
         }
 
@@ -726,7 +726,7 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="sender">Object source raising the event.</param>
         protected virtual void OnOutputMeasurementsUpdated(object sender)
         {
-            if ((object)OutputMeasurementsUpdated != null)
+            if (OutputMeasurementsUpdated != null)
                 OutputMeasurementsUpdated(sender, EventArgs.Empty);
         }
 
@@ -737,7 +737,7 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="seconds">Total number of unpublished seconds of data.</param>
         protected virtual void OnUnpublishedSamples(object sender, int seconds)
         {
-            if ((object)UnpublishedSamples != null)
+            if (UnpublishedSamples != null)
                 UnpublishedSamples(sender, new EventArgs<int>(seconds));
         }
 
@@ -748,7 +748,7 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="unprocessedMeasurements">Total measurements in the queue that have not been processed.</param>
         protected virtual void OnUnprocessedMeasurements(object sender, int unprocessedMeasurements)
         {
-            if ((object)UnprocessedMeasurements != null)
+            if (UnprocessedMeasurements != null)
                 UnprocessedMeasurements(sender, new EventArgs<int>(unprocessedMeasurements));
         }
 
@@ -759,7 +759,7 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="e"><see cref="EventArgs"/>, if any.</param>
         protected virtual void OnProcessingComplete(object sender, EventArgs e = null)
         {
-            if ((object)ProcessingComplete != null)
+            if (ProcessingComplete != null)
                 ProcessingComplete(sender, e ?? EventArgs.Empty);
         }
 
@@ -769,7 +769,7 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="sender">Object source raising the event.</param>
         protected virtual void OnDisposed(object sender)
         {
-            if ((object)Disposed != null)
+            if (Disposed != null)
                 Disposed(sender, EventArgs.Empty);
         }
 
@@ -879,7 +879,7 @@ namespace TimeSeriesFramework.Adapters
             {
                 IOutputAdapter outputAdapter = sender as IOutputAdapter;
 
-                if ((object)outputAdapter != null)
+                if (outputAdapter != null)
                 {
                     // If an output adapter queue size exceeds the defined measurement dumping threshold,
                     // then the queue will be truncated before system runs out of memory

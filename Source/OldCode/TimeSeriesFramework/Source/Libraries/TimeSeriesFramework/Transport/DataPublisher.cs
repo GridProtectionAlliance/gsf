@@ -491,7 +491,7 @@ namespace TimeSeriesFramework.Transport
         /// Creates a new <see cref="DataPublisher"/>.
         /// </summary>
         /// <param name="waitHandles">Wait handle dictionary.</param>
-        public DataPublisher(ConcurrentDictionary<string, ManualResetEventSlim> waitHandles)
+        public DataPublisher(ConcurrentDictionary<string, AutoResetEvent> waitHandles)
             : base(waitHandles)
         {
             base.Name = "Data Publisher Collection";
@@ -581,7 +581,7 @@ namespace TimeSeriesFramework.Transport
                 m_encryptPayload = value;
 
                 // Start cipher key rotation timer when encrypting payload
-                if ((object)m_cipherKeyRotationTimer != null)
+                if (m_cipherKeyRotationTimer != null)
                     m_cipherKeyRotationTimer.Enabled = value;
             }
         }
@@ -651,7 +651,7 @@ namespace TimeSeriesFramework.Transport
         {
             get
             {
-                if ((object)m_cipherKeyRotationTimer != null)
+                if (m_cipherKeyRotationTimer != null)
                     return m_cipherKeyRotationTimer.Interval;
 
                 return double.NaN;
@@ -661,7 +661,7 @@ namespace TimeSeriesFramework.Transport
                 if (value < 1000.0D)
                     throw new ArgumentOutOfRangeException("value", "Cipher key rotation period should not be set to less than 1000 milliseconds.");
 
-                if ((object)m_cipherKeyRotationTimer != null)
+                if (m_cipherKeyRotationTimer != null)
                     m_cipherKeyRotationTimer.Interval = value;
 
                 throw new ArgumentException("Cannot assign new cipher rotation period, timer is not defined.");
@@ -699,7 +699,7 @@ namespace TimeSeriesFramework.Transport
             {
                 StringBuilder status = new StringBuilder();
 
-                if ((object)m_commandChannel != null)
+                if (m_commandChannel != null)
                     status.Append(m_commandChannel.Status);
 
                 status.Append(base.Status);
@@ -724,7 +724,7 @@ namespace TimeSeriesFramework.Transport
             {
                 base.Name = value.ToUpper();
 
-                if ((object)m_commandChannel != null)
+                if (m_commandChannel != null)
                     m_commandChannel.SettingsCategory = value.Replace("!", "").ToLower();
             }
         }
@@ -766,7 +766,7 @@ namespace TimeSeriesFramework.Transport
             }
             set
             {
-                if ((object)m_commandChannel != null)
+                if (m_commandChannel != null)
                 {
                     // Detach from events on existing command channel reference
                     m_commandChannel.ClientConnected -= m_commandChannel_ClientConnected;
@@ -784,7 +784,7 @@ namespace TimeSeriesFramework.Transport
                 // Assign new command channel reference
                 m_commandChannel = value;
 
-                if ((object)m_commandChannel != null)
+                if (m_commandChannel != null)
                 {
                     // Attach to desired events on new command channel reference
                     m_commandChannel.ClientConnected += m_commandChannel_ClientConnected;
@@ -850,19 +850,19 @@ namespace TimeSeriesFramework.Transport
                     {
                         CommandChannel = null;
 
-                        if ((object)m_clientConnections != null)
+                        if (m_clientConnections != null)
                             m_clientConnections.Values.AsParallel().ForAll(cc => cc.Dispose());
 
                         m_clientConnections = null;
 
-                        if ((object)m_routingTables != null)
+                        if (m_routingTables != null)
                         {
                             m_routingTables.ProcessException -= m_routingTables_ProcessException;
                             m_routingTables.Dispose();
                         }
                         m_routingTables = null;
 
-                        if ((object)m_initializeWaitHandle != null)
+                        if (m_initializeWaitHandle != null)
                         {
                             m_initializeWaitHandle.Close();
                             m_initializeWaitHandle.Dispose();
@@ -871,7 +871,7 @@ namespace TimeSeriesFramework.Transport
                         m_initializeWaitHandle = null;
 
                         // Dispose command channel restart timer
-                        if ((object)m_commandChannelRestartTimer != null)
+                        if (m_commandChannelRestartTimer != null)
                         {
                             m_commandChannelRestartTimer.Elapsed -= m_commandChannelRestartTimer_Elapsed;
                             m_commandChannelRestartTimer.Dispose();
@@ -879,7 +879,7 @@ namespace TimeSeriesFramework.Transport
                         m_commandChannelRestartTimer = null;
 
                         // Dispose the cipher key rotation timer
-                        if ((object)m_cipherKeyRotationTimer != null)
+                        if (m_cipherKeyRotationTimer != null)
                         {
                             m_cipherKeyRotationTimer.Elapsed -= m_cipherKeyRotationTimer_Elapsed;
                             m_cipherKeyRotationTimer.Dispose();
@@ -959,7 +959,7 @@ namespace TimeSeriesFramework.Transport
             commandChannel.Initialize();
 
             // Start cipher key rotation timer when encrypting payload
-            if (m_encryptPayload && (object)m_cipherKeyRotationTimer != null)
+            if (m_encryptPayload && m_cipherKeyRotationTimer != null)
                 m_cipherKeyRotationTimer.Start();
 
             Initialized = true;
@@ -992,7 +992,7 @@ namespace TimeSeriesFramework.Transport
             {
                 base.Start();
 
-                if ((object)m_commandChannel != null)
+                if (m_commandChannel != null)
                     m_commandChannel.Start();
             }
         }
@@ -1004,7 +1004,7 @@ namespace TimeSeriesFramework.Transport
         {
             base.Stop();
 
-            if ((object)m_commandChannel != null)
+            if (m_commandChannel != null)
                 m_commandChannel.Stop();
         }
 
@@ -1025,11 +1025,11 @@ namespace TimeSeriesFramework.Transport
         /// Gets a common wait handle for inter-adapter synchronization.
         /// </summary>
         /// <param name="name">Case-insensitive wait handle name.</param>
-        /// <returns>A <see cref="ManualResetEventSlim"/> based wait handle associated with the given <paramref name="name"/>.</returns>
-        public override ManualResetEventSlim GetExternalEventHandle(string name)
+        /// <returns>A <see cref="AutoResetEvent"/> based wait handle associated with the given <paramref name="name"/>.</returns>
+        public override AutoResetEvent GetExternalEventHandle(string name)
         {
             // Since this collection can act as an adapter, proxy event handle request to its parent collection when defined
-            if ((object)m_parent != null)
+            if (m_parent != null)
                 return m_parent.GetExternalEventHandle(name);
 
             // Otherwise just handle the request normally
@@ -1056,7 +1056,7 @@ namespace TimeSeriesFramework.Transport
         /// <returns>A short one-line summary of the current status of the <see cref="DataPublisher"/>.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            if ((object)m_commandChannel != null)
+            if (m_commandChannel != null)
                 return string.Format("Publishing data to {0} clients.", m_commandChannel.ClientIDs.Length).CenterText(maxLength);
 
             return "Currently not connected".CenterText(maxLength);
@@ -1182,7 +1182,7 @@ namespace TimeSeriesFramework.Transport
             byte[] serializedSignalIndexCache;
             ClientConnection connection;
 
-            if ((object)inputMeasurementKeys != null)
+            if (inputMeasurementKeys != null)
             {
                 // We will now go through the client's requested keys and see which ones are authorized for subscription,
                 // this information will be available through the returned signal index cache which will also define
@@ -1324,7 +1324,7 @@ namespace TimeSeriesFramework.Transport
             {
                 Guid signalID = Guid.Empty;
 
-                if ((object)DataSource != null && DataSource.Tables.Contains("ActiveMeasurements"))
+                if (DataSource != null && DataSource.Tables.Contains("ActiveMeasurements"))
                 {
                     // Attempt to lookup input measurement keys for given source IDs from default measurement table, if defined
                     try
@@ -1409,7 +1409,7 @@ namespace TimeSeriesFramework.Transport
         /// <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
         internal protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, string status)
         {
-            if ((object)status != null)
+            if (status != null)
                 return SendClientResponse(clientID, response, command, GetClientEncoding(clientID).GetBytes(status));
 
             return SendClientResponse(clientID, response, command);
@@ -1543,7 +1543,7 @@ namespace TimeSeriesFramework.Transport
 
                     // Data packets can be published on a UDP data channel, so check for this...
                     if (dataPacketResponse)
-                        publishChannel = m_clientPublicationChannels.GetOrAdd(clientID, id => (object)connection == null ? m_commandChannel : connection.PublishChannel);
+                        publishChannel = m_clientPublicationChannels.GetOrAdd(clientID, id => connection == null ? m_commandChannel : connection.PublishChannel);
                     else
                         publishChannel = m_commandChannel;
 
@@ -1762,7 +1762,7 @@ namespace TimeSeriesFramework.Transport
             {
                 foreach (ClientConnection connection in m_clientConnections.Values)
                 {
-                    if ((object)connection != null && connection.Authenticated)
+                    if (connection != null && connection.Authenticated)
                         connection.RotateCipherKeys();
                 }
             }
@@ -1814,83 +1814,85 @@ namespace TimeSeriesFramework.Transport
                         }
                     }
 
-                    if ((object)subscriber != null)
+                    if (subscriber != null)
                         break;
                 }
 
-                if ((object)subscriber == null)
+                if (subscriber == null)
                 {
                     message = string.Format("No subscriber is registered for {0}, cannnot authenticate connection - {1} request denied.", connection.ConnectionID, ServerCommand.Authenticate);
                     SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
                     OnStatusMessage("WARNING: Client {0} {1} command request denied - subscriber is disabled or not registered.", connection.ConnectionID, ServerCommand.Authenticate);
                     return;
                 }
-
-                string sharedSecret = subscriber["SharedSecret"].ToNonNullString().Trim();
-                string authenticationID = subscriber["AuthKey"].ToNonNullString().Trim();
-
-                // Update subscriber data in associated connection object
-                connection.SubscriberID = Guid.Parse(subscriber["ID"].ToNonNullString(Guid.Empty.ToString()).Trim());
-                connection.SubscriberAcronym = subscriber["Acronym"].ToNonNullString().Trim();
-                connection.SubscriberName = subscriber["Name"].ToNonNullString().Trim();
-                connection.SharedSecret = sharedSecret;
-
-                if (length >= 5)
+                else
                 {
-                    // First 4 bytes beyond command byte represent an integer representing the length of the authentication string that follows
-                    int byteLength = EndianOrder.BigEndian.ToInt32(buffer, startIndex);
-                    startIndex += 4;
+                    string sharedSecret = subscriber["SharedSecret"].ToNonNullString().Trim();
+                    string authenticationID = subscriber["AuthKey"].ToNonNullString().Trim();
 
-                    // Byte length should be reasonable
-                    if (byteLength >= 16 && byteLength <= 256)
+                    // Update subscriber data in associated connection object
+                    connection.SubscriberID = Guid.Parse(subscriber["ID"].ToNonNullString(Guid.Empty.ToString()).Trim());
+                    connection.SubscriberAcronym = subscriber["Acronym"].ToNonNullString().Trim();
+                    connection.SubscriberName = subscriber["Name"].ToNonNullString().Trim();
+                    connection.SharedSecret = sharedSecret;
+
+                    if (length >= 5)
                     {
-                        if (length >= 5 + byteLength)
+                        // First 4 bytes beyond command byte represent an integer representing the length of the authentication string that follows
+                        int byteLength = EndianOrder.BigEndian.ToInt32(buffer, startIndex);
+                        startIndex += 4;
+
+                        // Byte length should be reasonable
+                        if (byteLength >= 16 && byteLength <= 256)
                         {
-                            // Decrypt encoded portion of buffer
-                            byte[] bytes = buffer.Decrypt(startIndex, byteLength, sharedSecret, CipherStrength.Aes256);
-                            startIndex += byteLength;
-
-                            // Validate the authentication ID - if it matches, connection is authenticated
-                            connection.Authenticated = (string.Compare(authenticationID, GetClientEncoding(clientID).GetString(bytes, CipherSaltLength, bytes.Length - CipherSaltLength)) == 0);
-
-                            if (connection.Authenticated)
+                            if (length >= 5 + byteLength)
                             {
-                                // Send success response
-                                message = string.Format("Registered subscriber \"{0}\" {1} was successfully authenticated.", connection.SubscriberName, connection.ConnectionID);
-                                SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.Authenticate, message);
-                                OnStatusMessage(message);
-                                return;
+                                // Decrypt encoded portion of buffer
+                                byte[] bytes = buffer.Decrypt(startIndex, byteLength, sharedSecret, CipherStrength.Aes256);
+                                startIndex += byteLength;
+
+                                // Validate the authentication ID - if it matches, connection is authenticated
+                                connection.Authenticated = (string.Compare(authenticationID, GetClientEncoding(clientID).GetString(bytes, CipherSaltLength, bytes.Length - CipherSaltLength)) == 0);
+
+                                if (connection.Authenticated)
+                                {
+                                    // Send success response
+                                    message = string.Format("Registered subscriber \"{0}\" {1} was successfully authenticated.", connection.SubscriberName, connection.ConnectionID);
+                                    SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.Authenticate, message);
+                                    OnStatusMessage(message);
+                                    return;
+                                }
+                                else
+                                {
+                                    message = string.Format("Subscriber authentication failed - {0} request denied.", ServerCommand.Authenticate);
+                                    SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
+                                    OnStatusMessage("WARNING: Client {0} {1} command request denied - subscriber authentication failed.", connection.ConnectionID, ServerCommand.Authenticate);
+                                    return;
+                                }
                             }
                             else
                             {
-                                message = string.Format("Subscriber authentication failed - {0} request denied.", ServerCommand.Authenticate);
+                                message = "Not enough buffer was provided to parse client request.";
                                 SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
-                                OnStatusMessage("WARNING: Client {0} {1} command request denied - subscriber authentication failed.", connection.ConnectionID, ServerCommand.Authenticate);
+                                OnProcessException(new InvalidOperationException(message));
                                 return;
                             }
                         }
                         else
                         {
-                            message = "Not enough buffer was provided to parse client request.";
+                            message = string.Format("Received request packet with an unexpected size from {0} - {1} request denied.", connection.ConnectionID, ServerCommand.Authenticate);
                             SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
-                            OnProcessException(new InvalidOperationException(message));
+                            OnStatusMessage("WARNING: Registered subscriber \"{0}\" {1} {2} command request was denied due to oddly sized {3} byte authentication packet.", connection.SubscriberName, connection.ConnectionID, ServerCommand.Authenticate, byteLength);
                             return;
                         }
                     }
                     else
                     {
-                        message = string.Format("Received request packet with an unexpected size from {0} - {1} request denied.", connection.ConnectionID, ServerCommand.Authenticate);
+                        message = "Not enough buffer was provided to parse client request.";
                         SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
-                        OnStatusMessage("WARNING: Registered subscriber \"{0}\" {1} {2} command request was denied due to oddly sized {3} byte authentication packet.", connection.SubscriberName, connection.ConnectionID, ServerCommand.Authenticate, byteLength);
+                        OnProcessException(new InvalidOperationException(message));
                         return;
                     }
-                }
-                else
-                {
-                    message = "Not enough buffer was provided to parse client request.";
-                    SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
-                    OnProcessException(new InvalidOperationException(message));
-                    return;
                 }
             }
             catch (Exception ex)
@@ -1943,12 +1945,12 @@ namespace TimeSeriesFramework.Transport
                             startIndex += byteLength;
 
                             // Get client subscription
-                            if ((object)connection.Subscription == null)
+                            if (connection.Subscription == null)
                                 TryGetClientSubscription(clientID, out subscription);
                             else
                                 subscription = connection.Subscription;
 
-                            if ((object)subscription == null)
+                            if (subscription == null)
                             {
                                 // Client subscription not established yet, so we create a new one
                                 if (useSynchronizedSubscription)
@@ -2124,7 +2126,7 @@ namespace TimeSeriesFramework.Transport
                             }
                             else
                             {
-                                if ((object)subscription.InputMeasurementKeys != null)
+                                if (subscription.InputMeasurementKeys != null)
                                     message = string.Format("Client subscribed as {0}compact {1}synchronized with {2} signals.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un", subscription.InputMeasurementKeys.Length);
                                 else
                                     message = string.Format("Client subscribed as {0}compact {1}synchronized, but no signals were specified. Make sure \"inputMeasurementKeys\" setting is properly defined.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un");
@@ -2169,7 +2171,7 @@ namespace TimeSeriesFramework.Transport
             RemoveClientSubscription(clientID); // This does not disconnect client command channel - nor should it...
 
             // Detach from processing completed notification
-            if ((object)connection.Subscription != null)
+            if (connection.Subscription != null)
                 connection.Subscription.ProcessingComplete -= subscription_ProcessingComplete;
 
             connection.Subscription = null;
@@ -2288,7 +2290,7 @@ namespace TimeSeriesFramework.Transport
 
                 IClientSubscription subscription = connection.Subscription;
 
-                if ((object)subscription != null)
+                if (subscription != null)
                 {
                     subscription.ProcessingInterval = processingInterval;
                     SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.UpdateProcessingInterval, "New processing interval of {0} assigned.", processingInterval);
@@ -2458,14 +2460,14 @@ namespace TimeSeriesFramework.Transport
         private void subscription_ProcessingComplete(object sender, EventArgs<IClientSubscription, EventArgs> e)
         {
             // Expose notification via data publisher event subscribers
-            if ((object)ProcessingComplete != null)
+            if (ProcessingComplete != null)
                 ProcessingComplete(sender, e.Argument2);
 
             IClientSubscription subscription = e.Argument1;
-            string senderType = (object)sender == null ? "N/A" : sender.GetType().Name;
+            string senderType = sender == null ? "N/A" : sender.GetType().Name;
 
             // Send direct notification to associated client
-            if ((object)subscription != null)
+            if (subscription != null)
                 SendClientResponse(subscription.ClientID, ServerResponse.ProcessingComplete, ServerCommand.Subscribe, senderType);
         }
 
@@ -2482,7 +2484,7 @@ namespace TimeSeriesFramework.Transport
                 int length = e.Argument3;
                 int index = 0;
 
-                if (length > 0 && (object)buffer != null)
+                if (length > 0 && buffer != null)
                 {
                     ClientConnection connection;
                     ServerCommand command;
@@ -2596,7 +2598,7 @@ namespace TimeSeriesFramework.Transport
                 OnStatusMessage("Data publisher command channel was unexpectedly terminated, restarting...");
 
                 // We must wait for command channel to completely shutdown before trying to restart...
-                if ((object)m_commandChannelRestartTimer != null)
+                if (m_commandChannelRestartTimer != null)
                     m_commandChannelRestartTimer.Start();
             }
             else

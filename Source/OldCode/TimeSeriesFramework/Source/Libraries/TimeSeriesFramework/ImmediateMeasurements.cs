@@ -67,7 +67,7 @@ namespace TimeSeriesFramework
         {
             m_parent = parent;
 
-            if ((object)m_parent != null)
+            if (m_parent != null)
             {
                 m_parent.LagTimeUpdated += OnLagTimeUpdated;
                 m_parent.LeadTimeUpdated += OnLeadTimeUpdated;
@@ -262,19 +262,19 @@ namespace TimeSeriesFramework
                 {
                     if (disposing)
                     {
-                        if ((object)m_parent != null)
+                        if (m_parent != null)
                         {
                             m_parent.LagTimeUpdated -= OnLagTimeUpdated;
                             m_parent.LeadTimeUpdated -= OnLagTimeUpdated;
                         }
                         m_parent = null;
 
-                        if ((object)m_measurements != null)
+                        if (m_measurements != null)
                             m_measurements.Clear();
 
                         m_measurements = null;
 
-                        if ((object)m_taggedMeasurements != null)
+                        if (m_taggedMeasurements != null)
                             m_taggedMeasurements.Clear();
 
                         m_taggedMeasurements = null;

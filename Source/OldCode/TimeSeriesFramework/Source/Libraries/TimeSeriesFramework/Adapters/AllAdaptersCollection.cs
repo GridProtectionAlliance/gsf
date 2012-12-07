@@ -54,7 +54,7 @@ namespace TimeSeriesFramework.Adapters
         /// Constructs a new instance of the <see cref="AllAdaptersCollection"/>.
         /// </summary>
         /// <param name="waitHandles">Wait handle dictionary.</param>
-        public AllAdaptersCollection(ConcurrentDictionary<string, ManualResetEventSlim> waitHandles)
+        public AllAdaptersCollection(ConcurrentDictionary<string, AutoResetEvent> waitHandles)
             : base(waitHandles)
         {
             base.Name = "All Adapters Collection";

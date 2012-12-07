@@ -198,7 +198,7 @@ namespace TimeSeriesFramework.Transport
             m_includeTime = includeTime;
 
             // We keep a clone of the base time offsets, if provided, since array contents can change at any time
-            if ((object)baseTimeOffsets == null)
+            if (baseTimeOffsets == null)
                 m_baseTimeOffsets = s_emptyBaseTimeOffsets;
             else
                 m_baseTimeOffsets = new long[] { baseTimeOffsets[0], baseTimeOffsets[1] };
@@ -230,7 +230,7 @@ namespace TimeSeriesFramework.Transport
             m_includeTime = includeTime;
 
             // We keep a clone of the base time offsets, if provided, since array contents can change at any time
-            if ((object)baseTimeOffsets == null)
+            if (baseTimeOffsets == null)
                 m_baseTimeOffsets = s_emptyBaseTimeOffsets;
             else
                 m_baseTimeOffsets = new long[] { baseTimeOffsets[0], baseTimeOffsets[1] };

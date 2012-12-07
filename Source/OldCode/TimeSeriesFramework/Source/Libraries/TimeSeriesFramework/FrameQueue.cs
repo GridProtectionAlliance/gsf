@@ -248,31 +248,27 @@ namespace TimeSeriesFramework
                 if (m_frameList.Count > 0)
                 {
                     LinkedListNode<TrackingFrame> node = m_frameList.First;
+                    IFrame frame;
+                    status.AppendLine();
 
-                    if ((object)node != null)
+                    for (int i = 0; i < m_frameList.Count; i++)
                     {
-                        IFrame frame;
+                        if (node.Value != null)
+                            frame = node.Value.SourceFrame;
+                        else
+                            frame = null;
+
+                        if (frame == null)
+                            status.AppendFormat("Frame {0} @ <null frame>", i.ToString().PadLeft(4, '0'));
+                        else
+                            status.AppendFormat("Frame {0} @ {1} - {2} measurements, {3} received",
+                                i.ToString().PadLeft(4, '0'),
+                                (new DateTime(frame.Timestamp)).ToString("dd-MMM-yyyy HH:mm:ss.fff"),
+                                frame.Measurements.Count,
+                                (frame.Measurements.Count / (double)expectedMeasurements).ToString("##0.00%"));
+
                         status.AppendLine();
-
-                        for (int i = 0; i < m_frameList.Count; i++)
-                        {
-                            frame = (object)node.Value != null ? node.Value.SourceFrame : null;
-
-                            if ((object)frame == null)
-                                status.AppendFormat("Frame {0} @ <null frame>", i.ToString().PadLeft(4, '0'));
-                            else
-                                status.AppendFormat("Frame {0} @ {1} - {2} measurements, {3} received",
-                                                    i.ToString().PadLeft(4, '0'),
-                                                    (new DateTime(frame.Timestamp)).ToString("dd-MMM-yyyy HH:mm:ss.fff"),
-                                                    frame.Measurements.Count,
-                                                    (frame.Measurements.Count / (double)expectedMeasurements).ToString("##0.00%"));
-
-                            status.AppendLine();
-                            node = node.Next;
-
-                            if ((object)node == null)
-                                break;
-                        }
+                        node = node.Next;
                     }
                 }
 
@@ -296,10 +292,10 @@ namespace TimeSeriesFramework
             {
                 m_queueLock.Enter(ref locked);
 
-                if ((object)m_frameList != null)
+                if (m_frameList != null)
                     m_frameList.Clear();
 
-                if ((object)m_frameHash != null)
+                if (m_frameHash != null)
                     m_frameHash.Clear();
             }
             finally
@@ -334,7 +330,7 @@ namespace TimeSeriesFramework
                     LinkedListNode<TrackingFrame> nextNode = m_frameList.First.Next;
 
                     // If next frame is available, go ahead and assign it...
-                    if ((object)nextNode != null)
+                    if (nextNode != null)
                         m_head = nextNode.Value;
 
                     // Clean up frame queues
@@ -439,7 +435,7 @@ namespace TimeSeriesFramework
 
                             node = node.Previous;
                         }
-                        while ((object)node != null);
+                        while (node != null);
                     }
 
                     if (!nodeAdded)

@@ -224,7 +224,7 @@ namespace TimeSeriesFramework.Transport
                 base.ProcessingInterval = value;
 
                 // Update processing interval in private temporal session, if defined
-                if ((object)m_iaonSession != null && (object)m_iaonSession.AllAdapters != null)
+                if (m_iaonSession != null && m_iaonSession.AllAdapters != null)
                     m_iaonSession.AllAdapters.ProcessingInterval = value;
             }
         }
@@ -247,7 +247,7 @@ namespace TimeSeriesFramework.Transport
                 lock (this)
                 {
                     // Update signal index cache unless "detaching" from real-time
-                    if ((object)value != null && !(value.Length == 1 && value[0] == MeasurementKey.Undefined))
+                    if (value != null && !(value.Length == 1 && value[0] == MeasurementKey.Undefined))
                     {
                         m_parent.UpdateSignalIndexCache(m_clientID, m_signalIndexCache, value);
 
@@ -294,7 +294,7 @@ namespace TimeSeriesFramework.Transport
 
                 status.Append(base.Status);
 
-                if ((object)m_iaonSession != null)
+                if (m_iaonSession != null)
                     status.Append(m_iaonSession.Status);
 
                 return status.ToString();
@@ -420,10 +420,10 @@ namespace TimeSeriesFramework.Transport
         {
             int inputCount = 0, outputCount = 0;
 
-            if ((object)InputMeasurementKeys != null)
+            if (InputMeasurementKeys != null)
                 inputCount = InputMeasurementKeys.Length;
 
-            if ((object)OutputMeasurements != null)
+            if (OutputMeasurements != null)
                 outputCount = OutputMeasurements.Length;
 
             return string.Format("Total input measurements: {0}, total output measurements: {1}", inputCount, outputCount).PadLeft(maxLength);
@@ -443,10 +443,10 @@ namespace TimeSeriesFramework.Transport
             {
                 m_startTimeSent = true;
 
-                IMeasurement measurement = measurements.FirstOrDefault(m => (object)m != null);
+                IMeasurement measurement = measurements.FirstOrDefault(m => m != null);
                 Ticks timestamp = 0;
 
-                if ((object)measurement != null)
+                if (measurement != null)
                     timestamp = measurement.Timestamp;
 
                 m_parent.SendDataStartTime(m_clientID, timestamp);
@@ -587,7 +587,7 @@ namespace TimeSeriesFramework.Transport
             }
 
             // Publish data packet to client
-            if ((object)m_parent != null)
+            if (m_parent != null)
                 m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, data.ToArray());
 
             // Track last publication time
@@ -642,7 +642,7 @@ namespace TimeSeriesFramework.Transport
         // Explicitly implement processing completed event bubbler to satisfy IClientSubscription interface
         void IClientSubscription.OnProcessingCompleted(object sender, EventArgs e)
         {
-            if ((object)ProcessingComplete != null)
+            if (ProcessingComplete != null)
                 ProcessingComplete(sender, new EventArgs<IClientSubscription, EventArgs>(this, e));
         }
 

@@ -72,7 +72,7 @@ namespace TimeSeriesFramework.Adapters
         /// Creates a new <see cref="InputAdapterCollection"/>.
         /// </summary>
         /// <param name="waitHandles">Wait handle dictionary.</param>
-        public InputAdapterCollection(ConcurrentDictionary<string, ManualResetEventSlim> waitHandles)
+        public InputAdapterCollection(ConcurrentDictionary<string, AutoResetEvent> waitHandles)
             : base(waitHandles)
         {
             base.Name = "Input Adapter Collection";
@@ -92,7 +92,7 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                if ((object)NewMeasurements != null)
+                if (NewMeasurements != null)
                     NewMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
             }
             catch (Exception ex)
@@ -109,7 +109,7 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                if ((object)ProcessingComplete != null)
+                if (ProcessingComplete != null)
                     ProcessingComplete(this, EventArgs.Empty);
             }
             catch (Exception ex)
@@ -125,7 +125,7 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="item">New <see cref="IInputAdapter"/> implementation.</param>
         protected override void InitializeItem(IInputAdapter item)
         {
-            if ((object)item != null)
+            if (item != null)
             {
                 // Wire up new measurement event
                 item.NewMeasurements += item_NewMeasurements;
@@ -140,7 +140,7 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="item"><see cref="IInputAdapter"/> to dispose.</param>
         protected override void DisposeItem(IInputAdapter item)
         {
-            if ((object)item != null)
+            if (item != null)
             {
                 // Un-wire new meaurements event
                 item.NewMeasurements -= item_NewMeasurements;
@@ -152,14 +152,14 @@ namespace TimeSeriesFramework.Adapters
         // Raise new measurements event on behalf of each item in collection
         private void item_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
         {
-            if ((object)NewMeasurements != null)
+            if (NewMeasurements != null)
                 NewMeasurements(sender, e);
         }
 
         // Raise processing complete event on behalf of each item in collection
         private void item_ProcessingComplete(object sender, EventArgs e)
         {
-            if ((object)ProcessingComplete != null)
+            if (ProcessingComplete != null)
                 ProcessingComplete(sender, e);
         }
 

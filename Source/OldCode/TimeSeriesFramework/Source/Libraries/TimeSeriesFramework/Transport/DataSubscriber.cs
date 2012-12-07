@@ -419,7 +419,7 @@ namespace TimeSeriesFramework.Transport
                 status.AppendLine();
                 status.AppendFormat("                Subscribed: {0}", m_subscribed);
                 status.AppendLine();
-                status.AppendFormat("      Data packet security: {0}", (object)m_keyIVs == null ? "unencrypted" : "encrypted");
+                status.AppendFormat("      Data packet security: {0}", m_keyIVs == null ? "unencrypted" : "encrypted");
                 status.AppendLine();
 
                 if (DataLossInterval > 0.0D)
@@ -481,7 +481,7 @@ namespace TimeSeriesFramework.Transport
             }
             set
             {
-                if ((object)m_dataChannel != null)
+                if (m_dataChannel != null)
                 {
                     // Detach from events on existing data channel reference
                     m_dataChannel.ConnectionException -= m_dataChannel_ConnectionException;
@@ -496,7 +496,7 @@ namespace TimeSeriesFramework.Transport
                 // Assign new data channel reference
                 m_dataChannel = value;
 
-                if ((object)m_dataChannel != null)
+                if (m_dataChannel != null)
                 {
                     // Attach to desired events on new data channel reference
                     m_dataChannel.ConnectionException += m_dataChannel_ConnectionException;
@@ -518,7 +518,7 @@ namespace TimeSeriesFramework.Transport
             }
             set
             {
-                if ((object)m_commandChannel != null)
+                if (m_commandChannel != null)
                 {
                     // Detach from events on existing command channel reference
                     m_commandChannel.ConnectionAttempt -= m_commandChannel_ConnectionAttempt;
@@ -536,7 +536,7 @@ namespace TimeSeriesFramework.Transport
                 // Assign new command channel reference
                 m_commandChannel = value;
 
-                if ((object)m_commandChannel != null)
+                if (m_commandChannel != null)
                 {
                     // Attach to desired events on new command channel reference
                     m_commandChannel.ConnectionAttempt += m_commandChannel_ConnectionAttempt;
@@ -639,7 +639,7 @@ namespace TimeSeriesFramework.Transport
                 MetaDataReceived += DataSubscriber_MetaDataReceived;
 
                 // If active measurements are defined, attempt to defined desired subscription points from there
-                if ((object)DataSource != null && DataSource.Tables.Contains("ActiveMeasurements"))
+                if (DataSource != null && (object)DataSource.Tables != null && DataSource.Tables.Contains("ActiveMeasurements"))
                 {
                     try
                     {
@@ -673,7 +673,7 @@ namespace TimeSeriesFramework.Transport
                         if (subscribedMeasurements.Count > 0)
                         {
                             // Combine subscribed output measurement with any existing output measurement and return unique set
-                            if ((object)OutputMeasurements == null)
+                            if (OutputMeasurements == null)
                                 OutputMeasurements = subscribedMeasurements.ToArray();
                             else
                                 OutputMeasurements = subscribedMeasurements.Concat(OutputMeasurements).Distinct().ToArray();
@@ -1369,7 +1369,7 @@ namespace TimeSeriesFramework.Transport
         [AdapterCommand("Gets authorized signal IDs from last subscription request.")]
         public virtual Guid[] GetAuthorizedSignalIDs()
         {
-            if ((object)m_signalIndexCache != null)
+            if (m_signalIndexCache != null)
                 return m_signalIndexCache.AuthorizedSignalIDs;
 
             return new Guid[0];
@@ -1381,7 +1381,7 @@ namespace TimeSeriesFramework.Transport
         [AdapterCommand("Gets unauthorized signal IDs from last subscription request.")]
         public virtual Guid[] GetUnauthorizedSignalIDs()
         {
-            if ((object)m_signalIndexCache != null)
+            if (m_signalIndexCache != null)
                 return m_signalIndexCache.UnauthorizedSignalIDs;
 
             return new Guid[0];
@@ -1404,7 +1404,7 @@ namespace TimeSeriesFramework.Transport
         /// <returns><c>true</c> if <paramref name="commandCode"/> transmission was successful; otherwise <c>false</c>.</returns>
         public virtual bool SendServerCommand(ServerCommand commandCode, byte[] data = null)
         {
-            if ((object)m_commandChannel != null && m_commandChannel.CurrentState == ClientState.Connected)
+            if (m_commandChannel != null && m_commandChannel.CurrentState == ClientState.Connected)
             {
                 try
                 {
@@ -1414,7 +1414,7 @@ namespace TimeSeriesFramework.Transport
                     commandPacket.WriteByte((byte)commandCode);
 
                     // Write command buffer into command packet
-                    if ((object)data != null && data.Length > 0)
+                    if (data != null && data.Length > 0)
                         commandPacket.Write(data, 0, data.Length);
 
                     // Send command packet to publisher
@@ -1486,7 +1486,7 @@ namespace TimeSeriesFramework.Transport
         /// <returns>Text of the status message.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            if ((object)m_commandChannel != null && m_commandChannel.CurrentState == ClientState.Connected)
+            if (m_commandChannel != null && m_commandChannel.CurrentState == ClientState.Connected)
                 return string.Format("Subscriber is connected and receiving {0} data points", m_synchronizedSubscription ? "synchronized" : "unsynchronized").CenterText(maxLength);
 
             return "Subscriber is not connected.".CenterText(maxLength);
@@ -1521,7 +1521,7 @@ namespace TimeSeriesFramework.Transport
         {
             // Currently this work is done on the async socket completion thread, make sure work to be done is timely and if the response processing
             // is coming in via the command channel and needs to send a command back to the server, it should be done on a separate thread...
-            if ((object)buffer != null && length > 0)
+            if (buffer != null && length > 0)
             {
                 try
                 {
@@ -1634,7 +1634,7 @@ namespace TimeSeriesFramework.Transport
                             int cipherIndex = (flags & DataPacketFlags.CipherIndex) > 0 ? 1 : 0;
 
                             // Decrypt data packet payload if keys are available
-                            if ((object)m_keyIVs != null)
+                            if (m_keyIVs != null)
                             {
                                 // Get a local copy of volatile keyIVs reference since this can change at any time
                                 keyIVs = m_keyIVs;
@@ -1796,7 +1796,7 @@ namespace TimeSeriesFramework.Transport
             if (Settings.ContainsKey("commandChannel"))
                 dataChannel = ConnectionString;
 
-            if ((object)OutputMeasurements != null)
+            if (OutputMeasurements != null)
             {
                 foreach (IMeasurement measurement in OutputMeasurements)
                 {
@@ -1808,7 +1808,6 @@ namespace TimeSeriesFramework.Transport
                 }
 
                 // Start unsynchronized subscription
-                #pragma warning disable 0618
                 UnsynchronizedSubscribe(true, false, filterExpression.ToString(), dataChannel);
             }
             else
@@ -1834,7 +1833,7 @@ namespace TimeSeriesFramework.Transport
             {
                 DataSet metadata = state as DataSet;
 
-                if ((object)metadata != null)
+                if (metadata != null)
                 {
                     // Track total meta-data synchronization process time
                     Ticks startTime = DateTime.UtcNow.Ticks;
@@ -1879,7 +1878,7 @@ namespace TimeSeriesFramework.Transport
                             uniqueIDs.Add(uniqueID);
 
                             // We will synchronize metadata only if the source owns this device and it's not defined as a concentrator (these should normally be filtered by publisher - but we check just in case).
-                            if ((object)row.Field<object>("OriginalSource") == null && !row["IsConcentrator"].ToNonNullString("0").ParseBoolean())
+                            if (row.Field<object>("OriginalSource") == null && !row["IsConcentrator"].ToNonNullString("0").ParseBoolean())
                             {
                                 // Define query to determine if this device is already defined (this should always be based on the unique device Guid)
                                 selectSql = database.ParameterizedQueryString("SELECT COUNT(*) FROM Device WHERE UniqueID = {0}", "deviceGuid");
@@ -2056,7 +2055,7 @@ namespace TimeSeriesFramework.Transport
                     }
 
                     // New signals may have been defined, take original remote signal index cache and apply changes
-                    if ((object)m_remoteSignalIndexCache != null)
+                    if (m_remoteSignalIndexCache != null)
                         m_signalIndexCache = new SignalIndexCache(DataSource, m_remoteSignalIndexCache);
 
                     OnStatusMessage("Meta-data synchronization completed successfully in {0}", (DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(3));
@@ -2281,7 +2280,7 @@ namespace TimeSeriesFramework.Transport
         {
             try
             {
-                if ((object)ConnectionEstablished != null)
+                if (ConnectionEstablished != null)
                     ConnectionEstablished(this, EventArgs.Empty);
             }
             catch (Exception ex)
@@ -2298,7 +2297,7 @@ namespace TimeSeriesFramework.Transport
         {
             try
             {
-                if ((object)ConnectionTerminated != null)
+                if (ConnectionTerminated != null)
                     ConnectionTerminated(this, EventArgs.Empty);
             }
             catch (Exception ex)
@@ -2315,7 +2314,7 @@ namespace TimeSeriesFramework.Transport
         {
             try
             {
-                if ((object)ConnectionAuthenticated != null)
+                if (ConnectionAuthenticated != null)
                     ConnectionAuthenticated(this, EventArgs.Empty);
             }
             catch (Exception ex)
@@ -2333,7 +2332,7 @@ namespace TimeSeriesFramework.Transport
         {
             try
             {
-                if ((object)MetaDataReceived != null)
+                if (MetaDataReceived != null)
                     MetaDataReceived(this, new EventArgs<DataSet>(metadata));
             }
             catch (Exception ex)
@@ -2351,7 +2350,7 @@ namespace TimeSeriesFramework.Transport
         {
             try
             {
-                if ((object)DataStartTime != null)
+                if (DataStartTime != null)
                     DataStartTime(this, new EventArgs<Ticks>(startTime));
             }
             catch (Exception ex)
@@ -2369,7 +2368,7 @@ namespace TimeSeriesFramework.Transport
         {
             try
             {
-                if ((object)ProcessingComplete != null)
+                if (ProcessingComplete != null)
                     ProcessingComplete(this, new EventArgs<string>(source));
 
                 // Also raise base class event in case this event has been subscribed
@@ -2496,7 +2495,7 @@ namespace TimeSeriesFramework.Transport
                 }
                 finally
                 {
-                    if ((object)buffer != null)
+                    if (buffer != null)
                         BufferPool.ReturnBuffer(buffer);
                 }
             }
@@ -2552,7 +2551,7 @@ namespace TimeSeriesFramework.Transport
                 }
                 finally
                 {
-                    if ((object)buffer != null)
+                    if (buffer != null)
                         BufferPool.ReturnBuffer(buffer);
                 }
             }

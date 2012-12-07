@@ -96,7 +96,7 @@ namespace TimeSeriesFramework.Statistics
                     // Attach to Disposed event of source, if defined
                     EventInfo disposedEvent = source.GetType().GetEvent("Disposed");
 
-                    if ((object)disposedEvent != null)
+                    if (disposedEvent != null)
                         disposedEvent.GetAddMethod().Invoke(source, new object[] { new EventHandler(StatisticSourceDisposed) });
                 }
             }

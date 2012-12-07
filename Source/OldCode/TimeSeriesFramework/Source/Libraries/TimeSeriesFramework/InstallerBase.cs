@@ -98,7 +98,7 @@ namespace TimeSeriesFramework
                         XmlNode systemSettingsNode = configurationFile.SelectSingleNode("configuration/categorizedSettings/systemSettings");
 
                         // Allow user to add or update custom configuration settings if desired
-                        if ((object)systemSettingsNode != null)
+                        if (systemSettingsNode != null)
                             OnSystemSettingsLoaded(configurationFile, systemSettingsNode);
 
                         // Save any updates to configuration file

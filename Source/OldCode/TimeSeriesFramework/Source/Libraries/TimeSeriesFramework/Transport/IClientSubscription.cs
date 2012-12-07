@@ -203,10 +203,10 @@ namespace TimeSeriesFramework.Transport
             // Define connection string for proxy adapter based on original inputs and ouputs as requested by client subscription
             StringBuilder connectionString = new StringBuilder();
 
-            if ((object)inputMeasurementKeys != null && inputMeasurementKeys.Length > 0)
+            if (inputMeasurementKeys != null && inputMeasurementKeys.Length > 0)
                 connectionString.AppendFormat("inputMeasurementKeys={{{0}}}", inputMeasurementKeys.Select(key => key.SignalID).ToDelimitedString(";"));
 
-            if ((object)outputMeasurements != null && outputMeasurements.Length > 0)
+            if (outputMeasurements != null && outputMeasurements.Length > 0)
             {
                 if (connectionString.Length > 0)
                     connectionString.Append("; ");
@@ -270,7 +270,7 @@ namespace TimeSeriesFramework.Transport
         /// <param name="session"><see cref="IaonSession"/> instance to dispose.</param>
         public static void DisposeTemporalSession(this IClientSubscription adapter, ref IaonSession session)
         {
-            if ((object)session != null)
+            if (session != null)
             {
                 EventHandler<EventArgs<string, UpdateType>> statusMessageFunction;
                 EventHandler<EventArgs<Exception>> processExceptionFunction;

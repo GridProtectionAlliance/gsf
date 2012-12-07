@@ -130,14 +130,14 @@ namespace TimeSeriesFramework.Adapters
         {
             get
             {
-                if ((object)m_inputSourceIDs == null)
+                if (m_inputSourceIDs == null)
                     return null;
 
                 return m_inputSourceIDs.ToArray();
             }
             set
             {
-                if ((object)value == null)
+                if (value == null)
                 {
                     m_inputSourceIDs = null;
                 }
@@ -221,7 +221,7 @@ namespace TimeSeriesFramework.Adapters
                     bool requeueOnException = ProcessQueue<IMeasurement>.DefaultRequeueOnException;
                     IMeasurement[] unprocessedMeasurements = null;
 
-                    if ((object)m_measurementQueue != null)
+                    if (m_measurementQueue != null)
                     {
                         enabled = m_measurementQueue.Enabled;
                         requeueOnException = m_measurementQueue.RequeueOnException;
@@ -252,7 +252,7 @@ namespace TimeSeriesFramework.Adapters
                     m_measurementQueue.RequeueOnException = requeueOnException;
 
                     // Requeue any existing measurements
-                    if ((object)unprocessedMeasurements != null && unprocessedMeasurements.Length > 0)
+                    if (unprocessedMeasurements != null && unprocessedMeasurements.Length > 0)
                         m_measurementQueue.AddRange(unprocessedMeasurements);
 
                     m_measurementQueue.Enabled = enabled;
@@ -278,14 +278,14 @@ namespace TimeSeriesFramework.Adapters
         {
             get
             {
-                if ((object)m_connectionTimer != null)
+                if (m_connectionTimer != null)
                     return m_connectionTimer.Interval;
 
                 return 2000.0D;
             }
             set
             {
-                if ((object)m_connectionTimer != null)
+                if (m_connectionTimer != null)
                     m_connectionTimer.Interval = value;
             }
         }
@@ -314,7 +314,7 @@ namespace TimeSeriesFramework.Adapters
 
                 status.Append(base.Status);
 
-                if ((object)RequestedInputMeasurementKeys != null && RequestedInputMeasurementKeys.Length > 0)
+                if (RequestedInputMeasurementKeys != null && RequestedInputMeasurementKeys.Length > 0)
                 {
                     status.AppendFormat("      Requested input keys: {0} defined measurements", RequestedInputMeasurementKeys.Length);
                     status.AppendLine();
@@ -331,7 +331,7 @@ namespace TimeSeriesFramework.Adapters
                     status.AppendLine();
                 }
 
-                status.AppendFormat("     Source ID filter list: {0}", ((object)m_inputSourceIDs == null ? "[No filter applied]" : m_inputSourceIDs.ToDelimitedString(',')));
+                status.AppendFormat("     Source ID filter list: {0}", (m_inputSourceIDs == null ? "[No filter applied]" : m_inputSourceIDs.ToDelimitedString(',')));
                 status.AppendLine();
                 status.AppendFormat("   Asynchronous connection: {0}", UseAsyncConnect);
                 status.AppendLine();
@@ -361,21 +361,21 @@ namespace TimeSeriesFramework.Adapters
                 {
                     if (disposing)
                     {
-                        if ((object)m_connectionTimer != null)
+                        if (m_connectionTimer != null)
                         {
                             m_connectionTimer.Elapsed -= m_connectionTimer_Elapsed;
                             m_connectionTimer.Dispose();
                         }
                         m_connectionTimer = null;
 
-                        if ((object)m_monitorTimer != null)
+                        if (m_monitorTimer != null)
                         {
                             m_monitorTimer.Elapsed -= m_monitorTimer_Elapsed;
                             m_monitorTimer.Dispose();
                         }
                         m_monitorTimer = null;
 
-                        if ((object)m_measurementQueue != null)
+                        if (m_measurementQueue != null)
                         {
                             m_measurementQueue.ProcessException -= m_measurementQueue_ProcessException;
                             m_measurementQueue.Dispose();
@@ -408,7 +408,7 @@ namespace TimeSeriesFramework.Adapters
                 InputSourceIDs = null;
 
             // Start data monitor...
-            if ((object)m_monitorTimer != null)
+            if (m_monitorTimer != null)
                 m_monitorTimer.Start();
         }
 
@@ -437,11 +437,11 @@ namespace TimeSeriesFramework.Adapters
             base.Start();
 
             // Start the connection cycle
-            if ((object)m_connectionTimer != null)
+            if (m_connectionTimer != null)
                 m_connectionTimer.Enabled = true;
 
             // Make sure data monitor is started...
-            if ((object)m_monitorTimer != null && !m_monitorTimer.Enabled)
+            if (m_monitorTimer != null && !m_monitorTimer.Enabled)
                 m_monitorTimer.Start();
         }
 
@@ -463,7 +463,7 @@ namespace TimeSeriesFramework.Adapters
         protected virtual void OnConnected()
         {
             // Start data processing thread
-            if ((object)m_measurementQueue != null)
+            if (m_measurementQueue != null)
                 m_measurementQueue.Start();
 
             OnStatusMessage("Connection established.");
@@ -479,7 +479,7 @@ namespace TimeSeriesFramework.Adapters
                 bool performedDisconnect = Enabled;
 
                 // Stop the connection cycle
-                if ((object)m_connectionTimer != null)
+                if (m_connectionTimer != null)
                     m_connectionTimer.Enabled = false;
 
                 base.Stop();
@@ -541,7 +541,7 @@ namespace TimeSeriesFramework.Adapters
             if (m_disposed)
                 return;
 
-            if (!ProcessMeasurementFilter || (object)InputMeasurementKeys == null)
+            if (!ProcessMeasurementFilter || InputMeasurementKeys == null)
             {
                 // No further filtering of incoming measurement required
                 m_measurementQueue.AddRange(measurements);
@@ -651,7 +651,7 @@ namespace TimeSeriesFramework.Adapters
         /// </remarks>
         public virtual void Flush()
         {
-            if ((object)m_measurementQueue != null)
+            if (m_measurementQueue != null)
                 m_measurementQueue.Flush();
         }
 
@@ -663,7 +663,7 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                if ((object)UnprocessedMeasurements != null)
+                if (UnprocessedMeasurements != null)
                     UnprocessedMeasurements(this, new EventArgs<int>(unprocessedMeasurements));
             }
             catch (Exception ex)

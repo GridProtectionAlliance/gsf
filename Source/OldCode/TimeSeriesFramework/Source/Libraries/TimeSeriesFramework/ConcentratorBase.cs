@@ -247,7 +247,7 @@ namespace TimeSeriesFramework
                     {
                         if (disposing)
                         {
-                            if ((object)m_timer != null)
+                            if (m_timer != null)
                             {
                                 if (m_processingInterval == -1)
                                     m_timer.Tick -= SetTimerPeriod;
@@ -403,52 +403,52 @@ namespace TimeSeriesFramework
         internal event Action<double> LeadTimeUpdated;
 
         // Fields
-        private FrameQueue m_frameQueue;                        // Queue of frames to be published
-        private Thread m_publicationThread;                     // Thread that handles frame publication
-        private AutoResetEvent m_publicationWaitHandle;         // Interframe publication wait handle
-        private ManualResetEventSlim[] m_externalEventHandles;  // External event wait handles
-        private int m_externalEventTimeout;                     // External event timeout
-        private bool m_usePrecisionTimer;                       // Flag that enables use of precision timer (over just simple thread sleep)
-        private bool m_attachedToFrameRateTimer;                // Flag that tracks if instance is attached to a frame rate timer
-        private System.Timers.Timer m_monitorTimer;             // Sample monitor - tracks total number of unpublished frames
-        private int m_framesPerSecond;                          // Frames per second
-        private double m_ticksPerFrame;                         // Ticks per frame
-        private double m_lagTime;                               // Allowed past time deviation tolerance, in seconds
-        private double m_leadTime;                              // Allowed future time deviation tolerance, in seconds
-        private long m_timeResolution;                          // Maximum sorting resolution in ticks
-        private int m_processingInterval;                       // Defines a specific processing interval for data, if desired
-        private DownsamplingMethod m_downsamplingMethod;        // Downsampling method to use if input is at a higher-resolution than output
-        private double m_timeOffset;                            // Half the distance of the time resolution used for index calculation
-        private int m_maximumPublicationTimeout;                // Maximum publication wait timeout
-        private Ticks m_lagTicks;                               // Current lag time calculated in ticks
-        private volatile bool m_enabled;                        // Enabled state of concentrator
-        private long m_startTime;                               // Start time of concentrator
-        private long m_stopTime;                                // Stop time of concentrator
-        private long m_realTimeTicks;                           // Timestamp of real-time or the most recently received measurement
-        private bool m_ignoreBadTimestamps;                     // Determines whether or not to ignore bad timestamps when sorting measurements
-        private bool m_allowSortsByArrival;                     // Determines whether or not to sort incoming measurements with a bad timestamp by arrival
-        private bool m_useLocalClockAsRealTime;                 // Determines whether or not to use local system clock as "real-time"
-        private bool m_allowPreemptivePublishing;               // Determines whether or not to preemptively publish frame if expected measurements arrive
-        private bool m_performTimestampReasonabilityCheck;      // Determines whether or not to execute timestamp reasonability checks (i.e., lead time validation)
-        private bool m_processByReceivedTimestamp;              // Determines whether or not to sort and publish measurements by their ReceivedTimestamp
-        private bool m_trackPublishedTimestamp;                 // Determines whether or not to track timestamp of publication for all processed frames and measurements
-        private int m_expectedMeasurements;                     // Expected number of measurements to be sorted into a frame
-        private long m_receivedMeasurements;                    // Total number of measurements ever received for sorting
-        private long m_processedMeasurements;                   // Total number of measurements ever successfully sorted
-        private long m_discardedMeasurements;                   // Total number of discarded measurements
-        private long m_measurementsSortedByArrival;             // Total number of measurements that were sorted by arrival
-        private long m_publishedMeasurements;                   // Total number of published measurements
-        private long m_downsampledMeasurements;                 // Total number of downsampled measurements
-        private long m_missedSortsByTimeout;                    // Total number of unsorted measurements due to timeout waiting for lock
-        private long m_waitHandleExpirations;                   // Total number of wait handle expirations encounted due to delayed precision timer releases
-        private long m_framesAheadOfSchedule;                   // Total number of frames published ahead of schedule
-        private long m_publishedFrames;                         // Total number of published frames
-        private long m_totalPublishTime;                        // Total cumulative frame user function publication time (in ticks) - used to calculate average
-        private bool m_trackLatestMeasurements;                 // Determines whether or not to track latest measurements
-        private ImmediateMeasurements m_latestMeasurements;     // Absolute latest received measurement values
-        private IMeasurement m_lastDiscardedMeasurement;        // Last measurement that was discarded by the concentrator
-        private long m_lastDiscardedMeasurementLatency;         // Latency of last measurement that was discarded by the concentrator
-        private bool m_disposed;                                // Disposed flag detects redundant calls to dispose method
+        private FrameQueue m_frameQueue;                    // Queue of frames to be published
+        private Thread m_publicationThread;                 // Thread that handles frame publication
+        private AutoResetEvent m_publicationWaitHandle;     // Interframe publication wait handle
+        private AutoResetEvent[] m_externalEventHandles;    // External event wait handles
+        private int m_externalEventTimeout;                 // External event timeout
+        private bool m_usePrecisionTimer;                   // Flag that enables use of precision timer (over just simple thread sleep)
+        private bool m_attachedToFrameRateTimer;            // Flag that tracks if instance is attached to a frame rate timer
+        private System.Timers.Timer m_monitorTimer;         // Sample monitor - tracks total number of unpublished frames
+        private int m_framesPerSecond;                      // Frames per second
+        private double m_ticksPerFrame;                     // Ticks per frame
+        private double m_lagTime;                           // Allowed past time deviation tolerance, in seconds
+        private double m_leadTime;                          // Allowed future time deviation tolerance, in seconds
+        private long m_timeResolution;                      // Maximum sorting resolution in ticks
+        private int m_processingInterval;                   // Defines a specific processing interval for data, if desired
+        private DownsamplingMethod m_downsamplingMethod;    // Downsampling method to use if input is at a higher-resolution than output
+        private double m_timeOffset;                        // Half the distance of the time resolution used for index calculation
+        private int m_maximumPublicationTimeout;            // Maximum publication wait timeout
+        private Ticks m_lagTicks;                           // Current lag time calculated in ticks
+        private volatile bool m_enabled;                    // Enabled state of concentrator
+        private long m_startTime;                           // Start time of concentrator
+        private long m_stopTime;                            // Stop time of concentrator
+        private long m_realTimeTicks;                       // Timestamp of real-time or the most recently received measurement
+        private bool m_ignoreBadTimestamps;                 // Determines whether or not to ignore bad timestamps when sorting measurements
+        private bool m_allowSortsByArrival;                 // Determines whether or not to sort incoming measurements with a bad timestamp by arrival
+        private bool m_useLocalClockAsRealTime;             // Determines whether or not to use local system clock as "real-time"
+        private bool m_allowPreemptivePublishing;           // Determines whether or not to preemptively publish frame if expected measurements arrive
+        private bool m_performTimestampReasonabilityCheck;  // Determines whether or not to execute timestamp reasonability checks (i.e., lead time validation)
+        private bool m_processByReceivedTimestamp;          // Determines whether or not to sort and publish measurements by their ReceivedTimestamp
+        private bool m_trackPublishedTimestamp;             // Determines whether or not to track timestamp of publication for all processed frames and measurements
+        private int m_expectedMeasurements;                 // Expected number of measurements to be sorted into a frame
+        private long m_receivedMeasurements;                // Total number of measurements ever received for sorting
+        private long m_processedMeasurements;               // Total number of measurements ever successfully sorted
+        private long m_discardedMeasurements;               // Total number of discarded measurements
+        private long m_measurementsSortedByArrival;         // Total number of measurements that were sorted by arrival
+        private long m_publishedMeasurements;               // Total number of published measurements
+        private long m_downsampledMeasurements;             // Total number of downsampled measurements
+        private long m_missedSortsByTimeout;                // Total number of unsorted measurements due to timeout waiting for lock
+        private long m_waitHandleExpirations;               // Total number of wait handle expirations encounted due to delayed precision timer releases
+        private long m_framesAheadOfSchedule;               // Total number of frames published ahead of schedule
+        private long m_publishedFrames;                     // Total number of published frames
+        private long m_totalPublishTime;                    // Total cumulative frame user function publication time (in ticks) - used to calculate average
+        private bool m_trackLatestMeasurements;             // Determines whether or not to track latest measurements
+        private ImmediateMeasurements m_latestMeasurements; // Absolute latest received measurement values
+        private IMeasurement m_lastDiscardedMeasurement;    // Last measurement that was discarded by the concentrator
+        private long m_lastDiscardedMeasurementLatency;     // Latency of last measurement that was discarded by the concentrator
+        private bool m_disposed;                            // Disposed flag detects redundant calls to dispose method
 
         #endregion
 
@@ -564,7 +564,7 @@ namespace TimeSeriesFramework
                 m_lagTime = value;
                 m_lagTicks = (long)(m_lagTime * Ticks.PerSecond);
 
-                if ((object)LagTimeUpdated != null)
+                if (LagTimeUpdated != null)
                     LagTimeUpdated(m_lagTime);
             }
         }
@@ -602,7 +602,7 @@ namespace TimeSeriesFramework
 
                 m_leadTime = value;
 
-                if ((object)LeadTimeUpdated != null)
+                if (LeadTimeUpdated != null)
                     LeadTimeUpdated(m_leadTime);
             }
         }
@@ -644,11 +644,11 @@ namespace TimeSeriesFramework
         {
             get
             {
-                if ((object)m_frameQueue != null)
+                if (m_frameQueue != null)
                 {
                     TrackingFrame last = m_frameQueue.Last;
 
-                    if ((object)last != null)
+                    if (last != null)
                         return last.SourceFrame;
                 }
 
@@ -688,7 +688,7 @@ namespace TimeSeriesFramework
                         DetachFromFrameRateTimer(m_framesPerSecond, m_processingInterval);
 
                         // Make sure to release publication wait wandle if it's currently waiting...
-                        if ((object)m_publicationWaitHandle != null)
+                        if (m_publicationWaitHandle != null)
                             m_publicationWaitHandle.Set();
                     }
                 }
@@ -724,7 +724,7 @@ namespace TimeSeriesFramework
                     // this comes out to be 40 milliseconds at 30 frames per second and 20 milliseconds at 60 frames per second
                     m_maximumPublicationTimeout = (int)Math.Round((m_ticksPerFrame + m_ticksPerFrame * 0.2D) / Ticks.PerMillisecond);
 
-                    if ((object)m_frameQueue != null)
+                    if (m_frameQueue != null)
                         m_frameQueue.FramesPerSecond = m_framesPerSecond;
 
                     if (m_usePrecisionTimer)
@@ -735,7 +735,7 @@ namespace TimeSeriesFramework
                     else
                     {
                         // Make sure to release publication wait wandle if it's currently waiting...
-                        if ((object)m_publicationWaitHandle != null)
+                        if (m_publicationWaitHandle != null)
                             m_publicationWaitHandle.Set();
                     }
                 }
@@ -830,7 +830,7 @@ namespace TimeSeriesFramework
                         m_usePrecisionTimer = false;
 
                         // Make sure to release publication wait wandle if it's currently waiting...
-                        if ((object)m_publicationWaitHandle != null)
+                        if (m_publicationWaitHandle != null)
                             m_publicationWaitHandle.Set();
                     }
                     else if (m_processingInterval > 0)
@@ -853,7 +853,7 @@ namespace TimeSeriesFramework
                             DetachFromFrameRateTimer(m_framesPerSecond, m_processingInterval);
 
                             // Make sure to release publication wait wandle if it's currently waiting...
-                            if ((object)m_publicationWaitHandle != null)
+                            if (m_publicationWaitHandle != null)
                                 m_publicationWaitHandle.Set();
                         }
                     }
@@ -888,9 +888,9 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>
-        /// Gets or sets collection of <see cref="ManualResetEventSlim"/> wait handles used to synchronize concentration publication with external events.
+        /// Gets or sets collection of <see cref="AutoResetEvent"/> wait handles used to synchronize concentration publication with external events.
         /// </summary>
-        protected ManualResetEventSlim[] ExternalEventHandles
+        protected AutoResetEvent[] ExternalEventHandles
         {
             get
             {
@@ -898,7 +898,7 @@ namespace TimeSeriesFramework
             }
             set
             {
-                if ((object)value != null && value.Length > 0)
+                if (value != null && value.Length > 0)
                 {
                     m_externalEventHandles = value;
 
@@ -977,7 +977,7 @@ namespace TimeSeriesFramework
                 m_timeOffset = (m_timeResolution > 1 ? m_timeResolution / 2 : 1);
 
                 // Assign desired time resolution to frame queue
-                if ((object)m_frameQueue != null)
+                if (m_frameQueue != null)
                     m_frameQueue.TimeResolution = m_timeResolution;
             }
         }
@@ -999,7 +999,7 @@ namespace TimeSeriesFramework
                 m_downsamplingMethod = value;
 
                 // Assign desired downsampling method to frame queue
-                if ((object)m_frameQueue != null)
+                if (m_frameQueue != null)
                     m_frameQueue.DownsamplingMethod = m_downsamplingMethod;
             }
         }
@@ -1509,7 +1509,7 @@ namespace TimeSeriesFramework
         {
             get
             {
-                if ((object)m_frameQueue != null)
+                if (m_frameQueue != null)
                     return m_frameQueue.ExamineQueueState(m_expectedMeasurements);
 
                 return "";
@@ -1544,9 +1544,9 @@ namespace TimeSeriesFramework
                 status.AppendLine();
                 status.AppendFormat("       Downsampling method: {0}", m_downsamplingMethod);
                 status.AppendLine();
-                status.AppendFormat("    External event handles: {0}", (object)m_externalEventHandles == null ? "None defined" : m_externalEventHandles.Length + " defined");
+                status.AppendFormat("    External event handles: {0}", m_externalEventHandles == null ? "None defined" : m_externalEventHandles.Length + " defined");
                 status.AppendLine();
-                if ((object)m_externalEventHandles != null)
+                if (m_externalEventHandles != null)
                 {
                     status.AppendFormat("    External event timeout: {0} milliseconds", m_externalEventTimeout);
                     status.AppendLine();
@@ -1593,7 +1593,7 @@ namespace TimeSeriesFramework
                 status.Append("Last discarded measurement: ");
 
                 Interlocked.Exchange(ref lastDiscardedMeasurement, m_lastDiscardedMeasurement);
-                if ((object)lastDiscardedMeasurement == null)
+                if (lastDiscardedMeasurement == null)
                 {
                     status.Append("<none>");
                 }
@@ -1658,7 +1658,7 @@ namespace TimeSeriesFramework
                 status.AppendLine();
                 status.Append("      Last published frame: ");
 
-                if ((object)lastFrame == null)
+                if (lastFrame == null)
                 {
                     status.Append("<none>");
                 }
@@ -1707,7 +1707,7 @@ namespace TimeSeriesFramework
 
                         m_publicationThread = null;
 
-                        if ((object)m_publicationWaitHandle != null)
+                        if (m_publicationWaitHandle != null)
                         {
                             AutoResetEvent publicationWaitHandle = m_publicationWaitHandle;
                             m_publicationWaitHandle = null;
@@ -1715,20 +1715,20 @@ namespace TimeSeriesFramework
                             publicationWaitHandle.Dispose();
                         }
 
-                        if ((object)m_frameQueue != null)
+                        if (m_frameQueue != null)
                         {
                             m_frameQueue.Dispose();
                         }
                         m_frameQueue = null;
 
-                        if ((object)m_monitorTimer != null)
+                        if (m_monitorTimer != null)
                         {
                             m_monitorTimer.Elapsed -= MonitorUnpublishedSamples;
                             m_monitorTimer.Dispose();
                         }
                         m_monitorTimer = null;
 
-                        if ((object)m_latestMeasurements != null)
+                        if (m_latestMeasurements != null)
                         {
                             m_latestMeasurements.Dispose();
                         }
@@ -1744,7 +1744,7 @@ namespace TimeSeriesFramework
                 {
                     m_disposed = true;  // Prevent duplicate dispose.
 
-                    if ((object)Disposed != null)
+                    if (Disposed != null)
                         Disposed(this, EventArgs.Empty);
                 }
             }
@@ -1786,10 +1786,10 @@ namespace TimeSeriesFramework
             {
                 m_enabled = false;
 
-                if ((object)m_monitorTimer != null)
+                if (m_monitorTimer != null)
                     m_monitorTimer.Stop();
 
-                if ((object)m_frameQueue != null)
+                if (m_frameQueue != null)
                     m_frameQueue.Clear();
 
 #if UseHighResolutionTime
@@ -1935,7 +1935,7 @@ namespace TimeSeriesFramework
                     // Get the destination frame for the measurement. Note that groups of parsed measurements will
                     // typically be coming in from the same source and will have the same ticks. If we have already
                     // found the destination frame for the same ticks, then there is no need to lookup frame again.
-                    if ((object)frame == null || timestamp != lastTimestamp)
+                    if (frame == null || timestamp != lastTimestamp)
                     {
                         if (m_processByReceivedTimestamp)
                         {
@@ -1968,7 +1968,7 @@ namespace TimeSeriesFramework
                         }
                     }
 
-                    if ((object)frame == null)
+                    if (frame == null)
                     {
                         // Measurement is discarded if no bucket (i.e., destination frame) was found for it.
                         discardMeasurement = true;
@@ -1979,7 +1979,7 @@ namespace TimeSeriesFramework
                         // Derive new measurement value applying any needed downsampling
                         derivedMeasurement = frame.DeriveMeasurementValue(measurement);
 
-                        if ((object)derivedMeasurement == null)
+                        if (derivedMeasurement == null)
                         {
                             // Count this as a discarded measurement if downsampling derivation was not applied.
                             discardMeasurement = true;
@@ -2036,7 +2036,7 @@ namespace TimeSeriesFramework
                     Interlocked.Increment(ref m_discardedMeasurements);
 
                     // Make sure discarded measurement collection exists
-                    if ((object)discardedMeasurements == null)
+                    if (discardedMeasurements == null)
                         discardedMeasurements = new List<IMeasurement>();
 
                     // Add discarded measurement to local collection
@@ -2096,7 +2096,7 @@ namespace TimeSeriesFramework
             }
 
             // Provide discarded measurements to consumers, if any
-            if ((object)discardedMeasurements != null)
+            if (discardedMeasurements != null)
                 OnDiscardingMeasurements(discardedMeasurements);
         }
 
@@ -2151,7 +2151,7 @@ namespace TimeSeriesFramework
         /// </remarks>
         protected virtual void OnProcessException(Exception ex)
         {
-            if ((object)ProcessException != null)
+            if (ProcessException != null)
                 ProcessException(this, new EventArgs<Exception>(ex));
         }
 
@@ -2161,7 +2161,7 @@ namespace TimeSeriesFramework
         /// <param name="seconds">Total number of unpublished seconds of data.</param>
         protected virtual void OnUnpublishedSamples(int seconds)
         {
-            if ((object)UnpublishedSamples != null)
+            if (UnpublishedSamples != null)
                 UnpublishedSamples(this, new EventArgs<int>(seconds));
         }
 
@@ -2174,7 +2174,7 @@ namespace TimeSeriesFramework
         /// </remarks>
         protected virtual void OnDiscardingMeasurements(IEnumerable<IMeasurement> measurements)
         {
-            if ((object)DiscardingMeasurements != null)
+            if (DiscardingMeasurements != null)
                 DiscardingMeasurements(this, new EventArgs<IEnumerable<IMeasurement>>(measurements));
         }
 
@@ -2195,7 +2195,7 @@ namespace TimeSeriesFramework
             int frameIndex;
 
             // Keep thread alive...
-            while ((object)m_publicationWaitHandle != null)
+            while (m_publicationWaitHandle != null)
             {
                 // Keep publishing frames so long as they are ready for publication. This handles case where
                 // system may be falling behind because user function is taking too long - exit when no
@@ -2207,7 +2207,7 @@ namespace TimeSeriesFramework
                         // Get top frame
                         frame = m_frameQueue.Head;
 
-                        if ((object)frame == null)
+                        if (frame == null)
                         {
                             // No frame ready to publish, exit
                             break;
@@ -2244,8 +2244,8 @@ namespace TimeSeriesFramework
                             }
 
                             // Handle any needed external synchronization, if defined
-                            if ((object)m_externalEventHandles != null)
-                                WaitHandle.WaitAll(m_externalEventHandles.Select(mre => mre.WaitHandle).ToArray(), m_externalEventTimeout);
+                            if (m_externalEventHandles != null)
+                                WaitHandle.WaitAll(m_externalEventHandles, m_externalEventTimeout);
 
                             // Mark start time for publication
 #if UseHighResolutionTime
@@ -2314,7 +2314,7 @@ namespace TimeSeriesFramework
                 }
 
                 // Wait for next publication signal, timing out if signal takes too long
-                if (m_usePrecisionTimer && (object)m_publicationWaitHandle != null && !m_publicationWaitHandle.WaitOne(m_maximumPublicationTimeout))
+                if (m_usePrecisionTimer && m_publicationWaitHandle != null && !m_publicationWaitHandle.WaitOne(m_maximumPublicationTimeout))
                     m_waitHandleExpirations++;
                 else
                     Thread.Sleep(1);

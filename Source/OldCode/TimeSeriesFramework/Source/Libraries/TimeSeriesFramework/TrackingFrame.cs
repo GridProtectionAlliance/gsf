@@ -186,7 +186,7 @@ namespace TimeSeriesFramework
                                 MeasurementValueFilterFunction measurementValueFilter = derivedMeasurement.MeasurementValueFilter;
 
                                 // Default to average value filter if none is specified
-                                if ((object)measurementValueFilter == null)
+                                if (measurementValueFilter == null)
                                     measurementValueFilter = Measurement.AverageValueFilter;
 
                                 // Add new measurement to tracking collection
