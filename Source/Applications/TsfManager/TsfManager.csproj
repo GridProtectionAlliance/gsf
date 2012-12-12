@@ -161,7 +161,7 @@
       <Project>{2e23e926-cf64-4607-bde1-1b2fc76f4919}</Project>
       <Name>GSF.ServiceProcess</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Libraries\GSF.TimeSeries-disruptor\GSF.TimeSeries.csproj">
+    <ProjectReference Include="..\..\Libraries\GSF.TimeSeries\GSF.TimeSeries.csproj">
       <Project>{412f9f59-d9b9-4c8e-96d2-20492644198c}</Project>
       <Name>GSF.TimeSeries</Name>
     </ProjectReference>
