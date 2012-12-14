@@ -413,7 +413,6 @@ namespace TVA
             public PreciseTime(long synchronizePeriodSeconds)
             {
                 m_stopwatch = Stopwatch.StartNew();
-                m_stopwatch.Start();
 
                 DateTime t = DateTime.UtcNow;
                 m_timeState = new ImmutableTimeState(t, t, m_stopwatch.ElapsedTicks, Stopwatch.Frequency);
@@ -434,10 +433,15 @@ namespace TVA
                     {
                         // Perform clock resynchronization
                         DateTime systemTime = DateTime.UtcNow;
+                        long systemTicks = systemTime.Ticks;
+                        long observedTicks = timeState.ObservedTime.Ticks;
+                        long systemFrequencyEstimationDenominator = systemTicks - observedTicks + systemTicks + systemTicks - precisionTime.Ticks - observedTicks;
 
-                        // Last parameter is a calculation that asymptotically approachs the measured system frequency
-                        m_timeState = new ImmutableTimeState(systemTime, precisionTime, elapsedTicks, ((elapsedTicks - timeState.ElapsedTicks) * Ticks.PerSecond * 2) /
-                            (systemTime.Ticks - timeState.ObservedTime.Ticks + systemTime.Ticks + systemTime.Ticks - precisionTime.Ticks - timeState.ObservedTime.Ticks));
+                        if (systemFrequencyEstimationDenominator != 0L)
+                        {
+                            // Last parameter is a calculation that asymptotically approachs the measured system frequency
+                            m_timeState = new ImmutableTimeState(systemTime, precisionTime, elapsedTicks, ((elapsedTicks - timeState.ElapsedTicks) * Ticks.PerSecond * 2) / systemFrequencyEstimationDenominator);
+                        }
                     }
 
                     // Return high-resolution timestamp
