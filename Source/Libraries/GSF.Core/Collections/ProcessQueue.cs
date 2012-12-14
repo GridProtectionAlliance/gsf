@@ -387,6 +387,7 @@ namespace GSF.Collections
 #endif
 
         private System.Timers.Timer m_processTimer;
+        private object m_processLock;
 
         #endregion
 
@@ -444,6 +445,7 @@ namespace GSF.Collections
             m_processTimeout = processTimeout;
             m_requeueOnTimeout = requeueOnTimeout;
             m_requeueOnException = requeueOnException;
+            m_processLock = new object();
 
             if (processInterval == RealTimeProcessInterval)
             {
@@ -721,7 +723,7 @@ namespace GSF.Collections
                 if (m_processingIsRealTime)
                     return ((object)m_realTimeProcessThread != null);
 
-                lock (m_processTimer)
+                lock (m_processLock)
                 {
                     // Enabled flag changes are always in a critical section to ensure all items will be processed
                     return m_processTimer.Enabled;
@@ -1228,7 +1230,7 @@ namespace GSF.Collections
             else
             {
                 // Start intervaled processing, if there items in the queue
-                lock (m_processTimer)
+                lock (m_processLock)
                 {
                     // Enabled flag changes are always in a critical section to ensure all items will be processed
                     m_processTimer.Enabled = Count > 0;
@@ -1260,7 +1262,7 @@ namespace GSF.Collections
                 // Stops intervaled processing, if active.
                 if ((object)m_processTimer != null)
                 {
-                    lock (m_processTimer)
+                    lock (m_processLock)
                     {
                         // Enabled flag changes are always in a critical section to ensure all items will be processed
                         m_processTimer.Enabled = false;
@@ -1435,7 +1437,7 @@ namespace GSF.Collections
             // when data is added, if it's not running already
             if (!m_processingIsRealTime)
             {
-                lock (m_processTimer)
+                lock (m_processLock)
                 {
                     // Enabled flag changes are always in a critical section to ensure all items will be processed
                     if (m_enabled && !m_processTimer.Enabled)
@@ -1682,7 +1684,7 @@ namespace GSF.Collections
             if ((object)m_processTimer != null)
             {
                 // Stop the process timer if there is no more data to process.
-                lock (m_processTimer)
+                lock (m_processLock)
                 {
                     // Enabled flag changes are always in a critical section to ensure all items will be processed
                     if (IsEmpty)
