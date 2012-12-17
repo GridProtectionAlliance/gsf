@@ -233,8 +233,8 @@ namespace TVA.Historian
             }
             else
             {
-                String format = "MM/dd/yyyy HH:mm:ss.fff";
-                dateTime = DateTime.ParseExact(timetag, format, CultureInfo.CreateSpecificCulture("en-US"), DateTimeStyles.None);
+                // Absolute time is specified.
+                dateTime = DateTime.Parse(timetag, CultureInfo.InvariantCulture);
             }
 
             return new TimeTag(dateTime);
