@@ -233,7 +233,6 @@
 
 using System;
 using System.Text;
-using GSF;
 using GSF.Parsing;
 
 namespace GSF.PhasorProtocols.FNet
@@ -290,6 +289,12 @@ namespace GSF.PhasorProtocols.FNet
             // Make sure all the needed data elements exist (could be a bad frame)
             if (m_data.Length < 8)
                 throw new InvalidOperationException("Bad data stream, invalid number of data elements encountered in F-NET data stream line: \"" + Encoding.ASCII.GetString(buffer, startIndex + 1, stopIndex - startIndex - 1).RemoveControlCharacters().Trim() + "\".  Got " + m_data.Length + " elements, expected 8.");
+
+            // Remove any extraneous spaces or control characters that may have been injected by the source device
+            for (int i = 0; i < m_data.Length; i++)
+            {
+                m_data[i] = m_data[i].RemoveWhiteSpace().RemoveControlCharacters();
+            }
 
             // Calculate total bytes parsed including start and stop bytes
             m_parsedLength = endIndex - startIndex + 1;
