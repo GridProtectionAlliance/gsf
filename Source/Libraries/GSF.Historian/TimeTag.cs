@@ -234,8 +234,7 @@ namespace GSF.Historian
             else
             {
                 // Absolute time is specified.
-                string format = "MM/dd/yyyy HH:mm:ss.fff";
-                dateTime = DateTime.ParseExact(timetag, format, CultureInfo.CreateSpecificCulture("en-US"), DateTimeStyles.None);
+                dateTime = DateTime.Parse(timetag, CultureInfo.InvariantCulture);
             }
 
             return new TimeTag(dateTime);
