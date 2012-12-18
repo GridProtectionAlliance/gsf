@@ -763,7 +763,7 @@ namespace GSF.Media.Music
             double samplesPerSecond = SampleRate;
             long samplePeriod;
 
-            // Calculate value time, start and end time indicies for each note to be added
+            // Calculate value time, start and end time indices for each note to be added
             foreach (Note note in notes)
             {
                 // Calculate note value time given current tempo

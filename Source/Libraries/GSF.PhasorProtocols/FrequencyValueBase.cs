@@ -25,7 +25,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
@@ -35,7 +34,7 @@ namespace GSF.PhasorProtocols
     #region [ Enumerations ]
 
     /// <summary>
-    /// Composite frequency value indicies enumeration.
+    /// Composite frequency value indices enumeration.
     /// </summary>
     public enum CompositeFrequencyValue
     {
@@ -44,7 +43,7 @@ namespace GSF.PhasorProtocols
         /// </summary>
         Frequency,
         /// <summary>
-        /// Composite df/ft value index.
+        /// Composite dF/dt value index.
         /// </summary>
         DfDt
     }
@@ -52,7 +51,7 @@ namespace GSF.PhasorProtocols
     #endregion
 
     /// <summary>
-    /// Represents the common implementation of the protocol independent representation of a frequency and df/dt value.
+    /// Represents the common implementation of the protocol independent representation of a frequency and dF/dt value.
     /// </summary>
     [Serializable()]
     public abstract class FrequencyValueBase : ChannelValueBase<IFrequencyDefinition>, IFrequencyValue
@@ -242,7 +241,7 @@ namespace GSF.PhasorProtocols
             {
                 byte[] buffer = new byte[BodyLength];
 
-                // Had to make a descision on usage versus typical protocol implementation when
+                // Had to make a decision on usage versus typical protocol implementation when
                 // exposing values as double / int when protocols typically use float / short for
                 // transmission. Exposing values as double / int makes class more versatile by
                 // allowing future protocol implementations to support higher resolution values
@@ -279,9 +278,9 @@ namespace GSF.PhasorProtocols
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
                 baseAttributes.Add("Frequency Value", Frequency.ToString());
-                baseAttributes.Add("df/dt Value", DfDt.ToString());
+                baseAttributes.Add("dF/dt Value", DfDt.ToString());
                 baseAttributes.Add("Unscaled Frequency Value", UnscaledFrequency.ToString());
-                baseAttributes.Add("Unscaled df/dt Value", UnscaledDfDt.ToString());
+                baseAttributes.Add("Unscaled dF/dt Value", UnscaledDfDt.ToString());
 
                 return baseAttributes;
             }

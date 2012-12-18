@@ -254,8 +254,8 @@
 
 #endregion
 
-using GSF.Parsing;
 using System;
+using GSF.Parsing;
 
 namespace GSF.IO.Compression
 {
@@ -786,7 +786,7 @@ namespace GSF.IO.Compression
         {
             const int SizeOf32Bits = sizeof(uint);
 
-            // Queue length of 32 forces reservation of 3 bits on single byte decompression key to allow for back track indicies of 0 to 31, this
+            // Queue length of 32 forces reservation of 3 bits on single byte decompression key to allow for back track indices of 0 to 31, this
             // means minimal compression size of 4 total bytes would be 1 byte (i.e., 1 byte for decompression key), or max of 75% compression.
             // Compression algorithm is best suited for data that differs fractionally over time (e.g., 60.05, 60.08, 60.09, 60.11...)
 
@@ -985,7 +985,7 @@ namespace GSF.IO.Compression
         //{
         //    const int SizeOf64Bits = sizeof(ulong);
 
-        //    // Algorithm uses all 8-bits of decompression key plus 1 full byte for back track indicies, 256 maximum, to yield 75% maximum compression.
+        //    // Algorithm uses all 8-bits of decompression key plus 1 full byte for back track indices, 256 maximum, to yield 75% maximum compression.
         //    // Compression algorithm is best suited for data that differs fractionally over time (e.g., 60.05, 60.08, 60.09, 60.11...)
         //    if (source == null)
         //        throw new ArgumentNullException("source");

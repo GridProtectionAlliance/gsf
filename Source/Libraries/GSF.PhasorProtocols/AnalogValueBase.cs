@@ -28,7 +28,6 @@
 //******************************************************************************************************
 
 
-using GSF;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
@@ -182,7 +181,7 @@ namespace GSF.PhasorProtocols
             {
                 byte[] buffer = new byte[BodyLength];
 
-                // Had to make a descision on usage versus typical protocol implementation when
+                // Had to make a decision on usage versus typical protocol implementation when
                 // exposing values as double / int when protocols typically use float / short for
                 // transmission. Exposing values as double / int makes class more versatile by
                 // allowing future protocol implementations to support higher resolution values

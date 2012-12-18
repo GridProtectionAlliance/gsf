@@ -27,14 +27,13 @@ using System.Linq;
 using System.Runtime.Serialization;
 using GSF.TimeSeries;
 using GSF.Units;
-using GSF;
 
 namespace GSF.PhasorProtocols
 {
     #region [ Enumerations ]
 
     /// <summary>
-    /// Composite polar value indicies enumeration.
+    /// Composite polar value indices enumeration.
     /// </summary>
     public enum CompositePhasorValue
     {
@@ -304,7 +303,7 @@ namespace GSF.PhasorProtocols
             {
                 byte[] buffer = new byte[BodyLength];
 
-                // Had to make a descision on usage versus typical protocol implementation when
+                // Had to make a decision on usage versus typical protocol implementation when
                 // exposing values as double / int when protocols typically use float / short for
                 // transmission. Exposing values as double / int makes class more versatile by
                 // allowing future protocol implementations to support higher resolution values

@@ -1162,7 +1162,7 @@ namespace PhasorProtocolAdapters
                     // of work during primary measurement sorting
                     if (!signalCellIndexes.TryGetValue(signal.Acronym, out signal.CellIndex))
                     {
-                        // We cache these indicies locally to speed up initialization as we'll be
+                        // We cache these indices locally to speed up initialization as we'll be
                         // requesting them for the same devices over and over
                         signal.CellIndex = m_baseConfigurationFrame.Cells.IndexOfStationName(signal.Acronym);
                         signalCellIndexes.Add(signal.Acronym, signal.CellIndex);

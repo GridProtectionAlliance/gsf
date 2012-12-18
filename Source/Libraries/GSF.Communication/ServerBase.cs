@@ -23,7 +23,7 @@
 //  06/18/2009 - Pinal C. Patel
 //       Fixed the implementation of Enabled property.
 //  07/02/2009 - Pinal C. Patel
-//       Modified state alterning properties to restart the server when changed.
+//       Modified state alternating properties to restart the server when changed.
 //  07/17/2009 - Pinal C. Patel
 //       Modified SharedSecret to be persisted as an encrypted value.
 //  08/05/2009 - Josh L. Patterson
@@ -33,7 +33,7 @@
 //  04/14/2011 - Pinal C. Patel
 //       Updated to use new serialization methods in GSF.Serialization class.
 //  12/02/2011 - J. Ritchie Carroll
-//       Updated event data publication to provide "copy" of resuable buffer instead of original
+//       Updated event data publication to provide "copy" of reusable buffer instead of original
 //       buffer since you cannot assume how user will use the buffer (they may cache it).
 //  12/04/2011 - J. Ritchie Carroll
 //       Modified to use concurrent dictionary.
@@ -278,8 +278,6 @@
 
 #endregion
 
-using GSF.Configuration;
-using GSF.Units;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -290,6 +288,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using GSF.Configuration;
+using GSF.Units;
 
 namespace GSF.Communication
 {
@@ -752,7 +752,7 @@ namespace GSF.Communication
         }
 
         /// <summary>
-        /// Gets current read indicies for received data buffers incremented at each <see cref="Read"/> call.
+        /// Gets current read indices for received data buffers incremented at each <see cref="Read"/> call.
         /// </summary>
         protected ConcurrentDictionary<Guid, int> ReadIndicies
         {
