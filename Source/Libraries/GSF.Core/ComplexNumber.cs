@@ -22,12 +22,13 @@
 //       Updated comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
-//  10/8/2012 - Danyelle Gilliam
-//        Modified Header
+//  10/08/2012 - Danyelle Gilliam
+//       Modified headers.
+//  12/18/2012 - J. Ritchie Carroll
+//       Updated operation such that class will used cached angle and magnitude values
+//       when these are provided to improve accuracy and operational speed.
 //
 //******************************************************************************************************
-
-
 
 #region [ Contributor License Agreements ]
 
@@ -63,9 +64,9 @@
 
 #endregion
 
-using GSF.Units;
 using System;
 using System.Text;
+using GSF.Units;
 
 namespace GSF
 {
@@ -76,15 +77,16 @@ namespace GSF
     {
         #region [ Members ]
 
+        // Complex number will cache assigned polar components as an optimization and for increased accuracy,
+        // however, preferential treatment is given to rectangular components when used in mixed mode.
+
         // Fields
         private double? m_real;         // Real value of complex number
         private double? m_imaginary;    // Imaginary value of complex number
 
-        // Polar value fields will only cache values until both exist in order
-        // to create equivalent rectangular values
-        private double? m_angle;        // Temporary angle value of complex number
-        private double? m_magnitude;    // Temporary magnitude value of complex number
-        
+        private double? m_angle;        // Angle value of complex number
+        private double? m_magnitude;    // Magnitude value of complex number
+
         #endregion
 
         #region [ Constructors ]
@@ -104,7 +106,7 @@ namespace GSF
         /// <summary>
         /// Creates a <see cref="ComplexNumber"/> from the given polar values.
         /// </summary>
-        /// <param name="angle">The angle component, in radians, of the <see cref="ComplexNumber"/>.</param>
+        /// <param name="angle">The <see cref="Angle"/> component, in radians, of the <see cref="ComplexNumber"/>.</param>
         /// <param name="magnitude">The magnitude (or absolute value) component of the <see cref="ComplexNumber"/>.</param>
         public ComplexNumber(Angle angle, double magnitude)
             : this()
@@ -122,10 +124,10 @@ namespace GSF
         public ComplexNumber(ComplexNumber z)
             : this()
         {
-            // Make sure state of source complex number is replicated extactly
+            // Make sure state of source complex number is replicated exactly
             m_real = z.m_real;
             m_imaginary = z.m_imaginary;
-            
+
             m_angle = z.m_angle;
             m_magnitude = z.m_magnitude;
         }
@@ -141,11 +143,18 @@ namespace GSF
         {
             get
             {
-                return m_real.GetValueOrDefault();
+                if (m_real.HasValue)
+                    return m_real.Value;
+
+                return double.NaN;
             }
             set
             {
                 m_real = value;
+
+                // If we are updating a rectangular component, clear polar components so they will be recalculated
+                m_angle = null;
+                m_magnitude = null;
             }
         }
 
@@ -156,11 +165,18 @@ namespace GSF
         {
             get
             {
-                return m_imaginary.GetValueOrDefault();
+                if (m_imaginary.HasValue)
+                    return m_imaginary.Value;
+
+                return double.NaN;
             }
             set
             {
                 m_imaginary = value;
+
+                // If we are updating a rectangular component, clear polar components so they will be recalculated
+                m_angle = null;
+                m_magnitude = null;
             }
         }
 
@@ -171,32 +187,31 @@ namespace GSF
         {
             get
             {
+                // Return any assigned magnitude value
+                if (m_magnitude.HasValue)
+                    return m_magnitude.Value;
+
+                // If complex number is internally represented in rectangular coordinates and no magnitude has been assigned,
+                // return a calculated magnitude
                 if (AllAssigned)
                 {
-                    // Complex number is internally represented in rectangluar coordinates, so we return calculated magnitude
                     double real = m_real.Value;
                     double imaginary = m_imaginary.Value;
 
                     return Math.Sqrt(real * real + imaginary * imaginary);
                 }
-                else if (m_magnitude.HasValue)
-                {
-                    // Return any assigned value if magnitude can't be calculated
-                    return m_magnitude.Value;
-                }
-                else
-                    return double.NaN;
+
+                return double.NaN;
             }
             set
             {
+                // Cache assigned magnitude value
+                m_magnitude = value;
+
                 if (!m_real.HasValue || !m_imaginary.HasValue)
                 {
-                    // Complex number is internally represented in rectangluar coordinates but these values have yet to be
-                    // fully assigned so we cache magnitude so we can calculate the real and imaginary components once we
-                    // also receive the angle value
-                    m_magnitude = value;
-
-                    // If all composite polar values have been received, we can calculate real and imaginary values
+                    // Rectangular coordinates have yet to be fully assigned, if all composite polar values have been received,
+                    // we can calculate real and imaginary values
                     CalculateRectangularFromPolar();
                 }
                 else
@@ -219,29 +234,26 @@ namespace GSF
         {
             get
             {
-                if (AllAssigned)
-                {
-                    // Complex number is internally represented in rectangluar coordinates, so we return calculated angle
-                    return Math.Atan2(m_imaginary.Value, m_real.Value);
-                }
-                else if (m_angle.HasValue)
-                {
-                    // Return any assigned value if angle can't be calculated
+                // Return any assigned angle value
+                if (m_angle.HasValue)
                     return m_angle.Value;
-                }
-                else
-                    return double.NaN;
+
+                // If complex number is internally represented in rectangular coordinates and no angle has been assigned,
+                // return a calculated angle
+                if (AllAssigned)
+                    return Math.Atan2(m_imaginary.Value, m_real.Value);
+
+                return double.NaN;
             }
             set
             {
+                // Cache assigned angle value
+                m_angle = value;
+
                 if (!m_real.HasValue || !m_imaginary.HasValue)
                 {
-                    // Complex number is internally represented in rectangluar coordinates but these values have yet to be
-                    // fully assigned so we cache angle so we can calculate the real and imaginary components once we also
-                    // receive the magnitude value
-                    m_angle = value;
-
-                    // If all composite polar values have been received, we can calculate real and imaginary values
+                    // Rectangular coordinates have yet to be fully assigned, if all composite polar values have been received,
+                    // we can calculate real and imaginary values
                     CalculateRectangularFromPolar();
                 }
                 else
@@ -301,12 +313,13 @@ namespace GSF
         /// </summary>
         /// <param name="obj">An object to compare, or null.</param>
         /// <returns>
-        /// True if obj is an instance of ComplexNumber and equals the value of this instance;
+        /// True if <paramref name="obj"/> is an instance of ComplexNumber and equals the value of this instance;
         /// otherwise, False.
         /// </returns>
         public override bool Equals(object obj)
         {
-            if (obj is ComplexNumber) return Equals((ComplexNumber)obj);
+            if (obj is ComplexNumber)
+                return Equals((ComplexNumber)obj);
             return false;
         }
 
@@ -366,10 +379,6 @@ namespace GSF
 
                 m_real = magnitude * Math.Cos(angle);
                 m_imaginary = magnitude * Math.Sin(angle);
-
-                // Once rectangular values are available, polar values are no longer needed
-                m_angle = null;
-                m_magnitude = null;
             }
         }
 
