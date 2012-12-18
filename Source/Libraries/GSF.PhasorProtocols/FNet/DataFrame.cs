@@ -250,7 +250,7 @@ namespace GSF.PhasorProtocols.FNet
 
         // Fields
         private CommonFrameHeader m_frameHeader;
-        private short m_sampleIndex;
+        private uint m_sampleIndex;
 
         #endregion
 
@@ -277,7 +277,7 @@ namespace GSF.PhasorProtocols.FNet
         /// <remarks>
         /// This constructor is used by a consumer to generate a F-NET data frame.
         /// </remarks>
-        public DataFrame(Ticks timestamp, ConfigurationFrame configurationFrame, short sampleIndex)
+        public DataFrame(Ticks timestamp, ConfigurationFrame configurationFrame, uint sampleIndex)
             : base(new DataCellCollection(), timestamp, configurationFrame)
         {
             m_sampleIndex = sampleIndex;
@@ -292,7 +292,7 @@ namespace GSF.PhasorProtocols.FNet
             : base(info, context)
         {
             // Deserialize data frame
-            m_sampleIndex = info.GetInt16("sampleIndex");
+            m_sampleIndex = info.GetUInt32("sampleIndex");
         }
 
         #endregion
@@ -340,7 +340,7 @@ namespace GSF.PhasorProtocols.FNet
         /// <summary>
         /// Gets or sets the sample index of this <see cref="DataFrame"/>.
         /// </summary>
-        public short SampleIndex
+        public uint SampleIndex
         {
             get
             {

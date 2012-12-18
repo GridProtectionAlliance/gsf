@@ -501,7 +501,7 @@ namespace GSF.PhasorProtocols.FNet
         /// <returns>The length of the data that was parsed.</returns>
         /// <remarks>
         /// The longitude, latitude and number of satellites arrive at the top of minute in F-NET data as the analog
-        /// data in a siggle row, each on their own row, as sample 1, 2, and 3 respectively.
+        /// data in a single row, each on their own row, as sample 1, 2, and 3 respectively.
         /// </remarks>
         protected override int ParseBodyImage(byte[] buffer, int startIndex, int length)
         {
@@ -511,7 +511,7 @@ namespace GSF.PhasorProtocols.FNet
             ConfigurationCell configurationCell = ConfigurationCell;
 
             // Assign sample index
-            parent.SampleIndex = short.Parse(data[Element.SampleIndex]);
+            parent.SampleIndex = uint.Parse(data[Element.SampleIndex]);
 
             // Get timestamp of data record
             parent.Timestamp = configurationCell.TimeOffset + ParseTimestamp(data[Element.Date], data[Element.Time], parent.SampleIndex, configurationCell.FrameRate);
@@ -519,7 +519,7 @@ namespace GSF.PhasorProtocols.FNet
             // Parse out first analog value (can be long/lat at top of minute)
             m_analogValue = double.Parse(data[Element.Analog]);
 
-            if (int.Parse(data[Element.Time].Substring(4, 2)) == 0)
+            if (data[Element.Time].Length >= 7 && int.Parse(data[Element.Time].Substring(4, 2)) == 0)
             {
                 switch (parent.SampleIndex)
                 {
@@ -582,7 +582,7 @@ namespace GSF.PhasorProtocols.FNet
         // Static Methods
 
         // Converts F-NET date (mm/dd/yy), time (hh:mm:ss) and subsecond to time in ticks
-        internal static Ticks ParseTimestamp(string fnetDate, string fnetTime, int sampleIndex, int frameRate)
+        internal static Ticks ParseTimestamp(string fnetDate, string fnetTime, uint sampleIndex, int frameRate)
         {
             fnetDate = fnetDate.PadLeft(6, '0');
             fnetTime = fnetTime.PadLeft(6, '0');
@@ -590,7 +590,7 @@ namespace GSF.PhasorProtocols.FNet
             if (sampleIndex == 10)
                 return new DateTime(2000 + int.Parse(fnetDate.Substring(4, 2)), int.Parse(fnetDate.Substring(0, 2).Trim()), int.Parse(fnetDate.Substring(2, 2)), int.Parse(fnetTime.Substring(0, 2)), int.Parse(fnetTime.Substring(2, 2)), int.Parse(fnetTime.Substring(4, 2)), 0).AddSeconds(1.0D).Ticks;
             else
-                return new DateTime(2000 + int.Parse(fnetDate.Substring(4, 2)), int.Parse(fnetDate.Substring(0, 2).Trim()), int.Parse(fnetDate.Substring(2, 2)), int.Parse(fnetTime.Substring(0, 2)), int.Parse(fnetTime.Substring(2, 2)), int.Parse(fnetTime.Substring(4, 2)), (int)(sampleIndex / (double)frameRate * 1000.0D)).Ticks;
+                return new DateTime(2000 + int.Parse(fnetDate.Substring(4, 2)), int.Parse(fnetDate.Substring(0, 2).Trim()), int.Parse(fnetDate.Substring(2, 2)), int.Parse(fnetTime.Substring(0, 2)), int.Parse(fnetTime.Substring(2, 2)), int.Parse(fnetTime.Substring(4, 2)), (int)(sampleIndex / (double)frameRate * 1000.0D) % 1000).Ticks;
         }
 
         // Delegate handler to create a new F-NET data cell
