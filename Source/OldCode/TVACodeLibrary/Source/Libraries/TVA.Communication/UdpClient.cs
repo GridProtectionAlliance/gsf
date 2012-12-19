@@ -793,6 +793,27 @@ namespace TVA.Communication
         }
 
         /// <summary>
+        /// Adds a multicast membership to the UDP socket.
+        /// </summary>
+        /// <param name="serverAddress">Multicast address to join.</param>
+        /// <param name="sourceAddress">Address which defines the source of the data or null if the membership is not source-specific.</param>
+        public void AddMulticastMembership(IPAddress serverAddress, IPAddress sourceAddress)
+        {
+            byte[] multicastMembershipAddresses;
+            AddMulticastMembership(serverAddress, sourceAddress, out multicastMembershipAddresses);
+        }
+
+        /// <summary>
+        /// Drops a multicast membership from the UDP socket.
+        /// </summary>
+        /// <param name="serverAddress">Multicast address to drop.</param>
+        /// <param name="sourceAddress">Address which defines the source of the data or null if the membership is not source-specific.</param>
+        public void DropMulticastMembership(IPAddress serverAddress, IPAddress sourceAddress)
+        {
+            DropMulticastMembership(serverAddress, sourceAddress, null);
+        }
+
+        /// <summary>
         /// Releases the unmanaged resources used by the <see cref="UdpClient"/> and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
@@ -887,38 +908,14 @@ namespace TVA.Communication
                     if (Transport.IsMulticastIP(serverEndpoint.Address))
                     {
                         string multicastSource;
+                        byte[] multicastMembershipAddresses;
+                        IPAddress sourceAddress = null;
 
                         if (m_connectData.TryGetValue("multicastSource", out multicastSource))
-                        {
-                            IPAddress sourceAddress = IPAddress.Parse(multicastSource);
-                            IPAddress localAddress = ((IPEndPoint)m_udpClient.Provider.LocalEndPoint).Address;
+                            sourceAddress = IPAddress.Parse(multicastSource);
 
-                            if (sourceAddress.AddressFamily != serverEndpoint.AddressFamily)
-                                throw new InvalidOperationException(string.Format("Source address \"{0}\" is not in the same IP format as server address \"{1}\"", sourceAddress, serverEndpoint.Address));
-
-                            if (localAddress.AddressFamily != serverEndpoint.AddressFamily)
-                                throw new InvalidOperationException(string.Format("Local address \"{0}\" is not in the same IP format as server address \"{1}\"", localAddress, serverEndpoint.Address));
-
-                            MemoryStream membershipAddresses = new MemoryStream();
-
-                            byte[] serverAddressBytes = serverEndpoint.Address.GetAddressBytes();
-                            byte[] sourceAddressBytes = sourceAddress.GetAddressBytes();
-                            byte[] localAddressBytes = localAddress.GetAddressBytes();
-
-                            membershipAddresses.Write(serverAddressBytes, 0, serverAddressBytes.Length);
-                            membershipAddresses.Write(sourceAddressBytes, 0, sourceAddressBytes.Length);
-                            membershipAddresses.Write(localAddressBytes, 0, localAddressBytes.Length);
-
-                            m_udpClient.MulticastMembershipAddresses = membershipAddresses.ToArray();
-
-                            // Execute multicast subscribe for specific source
-                            m_udpClient.Provider.SetSocketOption(serverEndpoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.AddSourceMembership, m_udpClient.MulticastMembershipAddresses);
-                        }
-                        else
-                        {
-                            // Execute multicast subscribe for any source
-                            m_udpClient.Provider.SetSocketOption(serverEndpoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(serverEndpoint.Address));
-                        }
+                        AddMulticastMembership(serverEndpoint.Address, sourceAddress, out multicastMembershipAddresses);
+                        m_udpClient.MulticastMembershipAddresses = multicastMembershipAddresses;
                     }
 
                     // Listen for data to send.
@@ -1258,6 +1255,83 @@ namespace TVA.Communication
                     // Terminate connection if resuming receiving fails.
                     TerminateConnection(true);
                 }
+            }
+        }
+
+        private void AddMulticastMembership(IPAddress serverAddress, IPAddress sourceAddress, out byte[] multicastMembershipAddresses)
+        {
+            if (!Transport.IsMulticastIP(serverAddress))
+                throw new InvalidOperationException("Cannot add multicast membership if server address is not a multicast IP.");
+
+            if ((object)sourceAddress == null)
+            {
+                // Execute multicast subscribe for any source
+                m_udpClient.Provider.SetSocketOption(serverAddress.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(serverAddress));
+                multicastMembershipAddresses = null;
+            }
+            else
+            {
+                IPAddress localAddress = ((IPEndPoint)m_udpClient.Provider.LocalEndPoint).Address;
+
+                if (sourceAddress.AddressFamily != serverAddress.AddressFamily)
+                    throw new InvalidOperationException(string.Format("Source address \"{0}\" is not in the same IP format as server address \"{1}\"", sourceAddress, serverAddress));
+
+                if (localAddress.AddressFamily != serverAddress.AddressFamily)
+                    throw new InvalidOperationException(string.Format("Local address \"{0}\" is not in the same IP format as server address \"{1}\"", localAddress, serverAddress));
+
+                MemoryStream membershipAddresses = new MemoryStream();
+
+                byte[] serverAddressBytes = serverAddress.GetAddressBytes();
+                byte[] sourceAddressBytes = sourceAddress.GetAddressBytes();
+                byte[] localAddressBytes = localAddress.GetAddressBytes();
+
+                membershipAddresses.Write(serverAddressBytes, 0, serverAddressBytes.Length);
+                membershipAddresses.Write(sourceAddressBytes, 0, sourceAddressBytes.Length);
+                membershipAddresses.Write(localAddressBytes, 0, localAddressBytes.Length);
+
+                multicastMembershipAddresses = membershipAddresses.ToArray();
+
+                // Execute multicast subscribe for specific source
+                m_udpClient.Provider.SetSocketOption(serverAddress.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.AddSourceMembership, multicastMembershipAddresses);
+            }
+        }
+
+        private void DropMulticastMembership(IPAddress serverAddress, IPAddress sourceAddress, byte[] multicastMembershipAddresses)
+        {
+            if (!Transport.IsMulticastIP(serverAddress))
+                throw new InvalidOperationException("Cannot drop multicast membership if server address is not a multicast IP.");
+
+            if ((object)sourceAddress == null && (object)multicastMembershipAddresses == null)
+            {
+                // Execute multicast unsubscribe for any source
+                m_udpClient.Provider.SetSocketOption(serverAddress.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.DropMembership, new MulticastOption(serverAddress));
+            }
+            else
+            {
+                if ((object)multicastMembershipAddresses == null)
+                {
+                    IPAddress localAddress = ((IPEndPoint)m_udpClient.Provider.LocalEndPoint).Address;
+
+                    if (sourceAddress.AddressFamily != serverAddress.AddressFamily)
+                        throw new InvalidOperationException(string.Format("Source address \"{0}\" is not in the same IP format as server address \"{1}\"", sourceAddress, serverAddress));
+
+                    if (localAddress.AddressFamily != serverAddress.AddressFamily)
+                        throw new InvalidOperationException(string.Format("Local address \"{0}\" is not in the same IP format as server address \"{1}\"", localAddress, serverAddress));
+
+                    MemoryStream membershipAddresses = new MemoryStream();
+                    byte[] serverAddressBytes = serverAddress.GetAddressBytes();
+                    byte[] sourceAddressBytes = sourceAddress.GetAddressBytes();
+                    byte[] localAddressBytes = localAddress.GetAddressBytes();
+
+                    membershipAddresses.Write(serverAddressBytes, 0, serverAddressBytes.Length);
+                    membershipAddresses.Write(sourceAddressBytes, 0, sourceAddressBytes.Length);
+                    membershipAddresses.Write(localAddressBytes, 0, localAddressBytes.Length);
+
+                    multicastMembershipAddresses = membershipAddresses.ToArray();
+                }
+
+                // Execute multicast unsubscribe for specific source
+                m_udpClient.Provider.SetSocketOption(serverAddress.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.DropSourceMembership, multicastMembershipAddresses);
             }
         }
 
