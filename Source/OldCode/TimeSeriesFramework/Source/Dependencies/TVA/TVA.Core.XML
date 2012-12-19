@@ -6727,7 +6727,7 @@
             <summary>
             Creates a <see cref="T:TVA.ComplexNumber"/> from the given polar values.
             </summary>
-            <param name="angle">The angle component, in radians, of the <see cref="T:TVA.ComplexNumber"/>.</param>
+            <param name="angle">The <see cref="P:TVA.ComplexNumber.Angle"/> component, in radians, of the <see cref="T:TVA.ComplexNumber"/>.</param>
             <param name="magnitude">The magnitude (or absolute value) component of the <see cref="T:TVA.ComplexNumber"/>.</param>
         </member>
         <member name="M:TVA.ComplexNumber.#ctor(TVA.ComplexNumber)">
@@ -6742,7 +6742,7 @@
             </summary>
             <param name="obj">An object to compare, or null.</param>
             <returns>
-            True if obj is an instance of ComplexNumber and equals the value of this instance;
+            True if <paramref name="obj"/> is an instance of ComplexNumber and equals the value of this instance;
             otherwise, False.
             </returns>
         </member>
