@@ -74,12 +74,11 @@ using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using GSF.TimeSeries;
 using GSF.Communication;
 using GSF.IO;
 using GSF.Parsing;
+using GSF.TimeSeries;
 using GSF.Units;
-using GSF;
 
 // Ignore warnings about unused events that are required by IClient
 #pragma warning disable 67
@@ -91,7 +90,7 @@ namespace GSF.PhasorProtocols
     /// <summary>
     /// Phasor data protocols enumeration.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum PhasorProtocol
     {
         /// <summary>
@@ -548,6 +547,8 @@ namespace GSF.PhasorProtocols
             // Fields
             private UdpClient m_udpClient;
             private EndPoint m_sendDestination;
+            private IPAddress m_multicastServerAddress;
+            private IPAddress m_multicastSourceAddress;
             private string m_connectionString;
             private int m_receiveBufferSize;
             private int m_maxConnectionAttempts;
@@ -771,8 +772,10 @@ namespace GSF.PhasorProtocols
                 Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
                 Match endPointMatch;
                 IPStack ipStack;
+                IPEndPoint sendDestination;
                 string serverSetting;
                 string remotePortSetting;
+                string multicastSourceSetting;
                 int remotePort;
 
                 // Set up destination used for send operations
@@ -786,11 +789,21 @@ namespace GSF.PhasorProtocols
                     if (int.TryParse(endPointMatch.Groups["port"].Value, out remotePort))
                     {
                         ipStack = Transport.GetInterfaceIPStack(settings);
-                        m_sendDestination = Transport.CreateEndPoint(endPointMatch.Groups["host"].Value, remotePort, ipStack);
+                        sendDestination = Transport.CreateEndPoint(endPointMatch.Groups["host"].Value, remotePort, ipStack);
+                        m_sendDestination = sendDestination;
+
+                        if (Transport.IsMulticastIP(sendDestination.Address))
+                        {
+                            m_multicastServerAddress = sendDestination.Address;
+
+                            if (settings.TryGetValue("multicastSource", out multicastSourceSetting))
+                                m_multicastSourceAddress = IPAddress.Parse(multicastSourceSetting);
+                        }
                     }
                 }
 
-                m_udpClient = GetSharedClient();
+                GetSharedClient();
+
                 return null;
             }
 
@@ -799,6 +812,9 @@ namespace GSF.PhasorProtocols
             /// </summary>
             public void Disconnect()
             {
+                if ((object)m_multicastServerAddress != null)
+                    m_udpClient.DropMulticastMembership(m_multicastServerAddress, m_multicastSourceAddress);
+
                 ReturnSharedClient();
             }
 
@@ -876,7 +892,7 @@ namespace GSF.PhasorProtocols
             /// on this client's local end point.
             /// </summary>
             /// <returns>A reference to a shared client.</returns>
-            private UdpClient GetSharedClient()
+            private void GetSharedClient()
             {
                 const string ConfigurationMismatchError = "Configuration mismatch detected between parsers using shared UDP client: {0}";
 
@@ -906,6 +922,10 @@ namespace GSF.PhasorProtocols
                         s_sharedReferenceCount.Add(localEndPoint, 0);
                     }
 
+                    // Set the UDP client member variable ASAP to guarantee
+                    // that it is set before callbacks can be triggered
+                    m_udpClient = sharedClient;
+
                     // Attach to event handlers
                     sharedClient.ConnectionAttempt += SharedClient_ConnectionAttempt;
                     sharedClient.ConnectionEstablished += SharedClient_ConnectionEstablished;
@@ -930,8 +950,6 @@ namespace GSF.PhasorProtocols
 
                 if (sharing && sharedClient.CurrentState == ClientState.Connected)
                     OnConnectionEstablished();
-
-                return sharedClient;
             }
 
             /// <summary>
@@ -1041,6 +1059,9 @@ namespace GSF.PhasorProtocols
             // Triggers the ConnectionEstablished event.
             private void OnConnectionEstablished()
             {
+                if ((object)m_multicastServerAddress != null)
+                    m_udpClient.AddMulticastMembership(m_multicastServerAddress, m_multicastSourceAddress);
+
                 if ((object)ConnectionEstablished != null)
                     ConnectionEstablished(this, new EventArgs());
             }
