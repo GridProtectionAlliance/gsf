@@ -250,8 +250,8 @@ namespace GSF.PhasorProtocols.FNet
         #region [ Members ]
 
         // Fields
-        private string[] m_data;
-        private int m_parsedLength;
+        private readonly string[] m_data;
+        private readonly int m_parsedLength;
 
         #endregion
 
@@ -283,21 +283,24 @@ namespace GSF.PhasorProtocols.FNet
                     break;
             }
 
-            // Parse F-NET data frame into individual fields separated by spaces
-            m_data = Encoding.ASCII.GetString(buffer, startIndex + 1, stopIndex - startIndex - 1).RemoveDuplicateWhiteSpace().Trim().Split(' ');
-
-            // Make sure all the needed data elements exist (could be a bad frame)
-            if (m_data.Length < 8)
-                throw new InvalidOperationException("Bad data stream, invalid number of data elements encountered in F-NET data stream line: \"" + Encoding.ASCII.GetString(buffer, startIndex + 1, stopIndex - startIndex - 1).RemoveControlCharacters().Trim() + "\".  Got " + m_data.Length + " elements, expected 8.");
-
-            // Remove any extraneous spaces or control characters that may have been injected by the source device
-            for (int i = 0; i < m_data.Length; i++)
+            if (endIndex > -1)
             {
-                m_data[i] = m_data[i].RemoveWhiteSpace().RemoveControlCharacters();
-            }
+                // Parse F-NET data frame into individual fields separated by spaces
+                m_data = Encoding.ASCII.GetString(buffer, startIndex + 1, stopIndex - startIndex - 1).RemoveDuplicateWhiteSpace().Trim().Split(' ');
 
-            // Calculate total bytes parsed including start and stop bytes
-            m_parsedLength = endIndex - startIndex + 1;
+                // Make sure all the needed data elements exist (could be a bad frame)
+                if (m_data.Length != 8)
+                    throw new InvalidOperationException("Bad data stream, invalid number of data elements encountered in F-NET data stream line: \"" + Encoding.ASCII.GetString(buffer, startIndex + 1, stopIndex - startIndex - 1).RemoveControlCharacters().Trim() + "\".  Got " + m_data.Length + " elements, expected 8.");
+
+                // Remove any extraneous spaces or control characters that may have been injected by the source device
+                for (int i = 0; i < m_data.Length; i++)
+                {
+                    m_data[i] = m_data[i].RemoveWhiteSpace().RemoveControlCharacters();
+                }
+
+                // Calculate total bytes parsed including start and stop bytes
+                m_parsedLength = endIndex - startIndex + 1;
+            }
         }
 
         #endregion

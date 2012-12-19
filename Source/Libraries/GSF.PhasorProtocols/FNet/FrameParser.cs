@@ -428,7 +428,7 @@ namespace GSF.PhasorProtocols.FNet
                     status.Append(m_configurationFrame.Latitude);
                     status.Append('°');
                     status.AppendLine();
-                    status.Append("      Number of satellites:");
+                    status.Append("      Number of satellites: ");
                     status.Append(m_configurationFrame.NumberOfSatellites);
                     status.AppendLine();
                     status.Append(base.Status);
@@ -514,33 +514,38 @@ namespace GSF.PhasorProtocols.FNet
                 // Pre-parse F-NET data row...
                 CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(buffer, offset, length);
 
-                // Create configuration frame if it doesn't exist
-                if (m_configurationFrame == null)
+                int parsedLength = parsedFrameHeader.ParsedLength;
+
+                if (parsedLength > 0)
                 {
-                    string[] data = parsedFrameHeader.DataElements;
+                    // Create configuration frame if it doesn't exist
+                    if (m_configurationFrame == null)
+                    {
+                        string[] data = parsedFrameHeader.DataElements;
 
-                    // Create virtual configuration frame
-                    m_configurationFrame = new ConfigurationFrame(ushort.Parse(data[Element.UnitID]), DateTime.Now.Ticks, m_frameRate, m_nominalFrequency, m_timeOffset, m_stationName);
+                        // Create virtual configuration frame
+                        m_configurationFrame = new ConfigurationFrame(ushort.Parse(data[Element.UnitID]), DateTime.Now.Ticks, m_frameRate, m_nominalFrequency, m_timeOffset, m_stationName);
 
-                    // Notify clients of new configuration frame
-                    OnReceivedChannelFrame(m_configurationFrame);
-                }
+                        // Notify clients of new configuration frame
+                        OnReceivedChannelFrame(m_configurationFrame);
+                    }
 
-                if (m_configurationFrame != null)
-                {
-                    int parsedLength = parsedFrameHeader.ParsedLength;
+                    if (m_configurationFrame != null)
+                    {
+                        // Assign common header and data frame parsing state
+                        parsedFrameHeader.State = new DataFrameParsingState(parsedLength, m_configurationFrame, DataCell.CreateNewCell);
 
-                    // Assign common header and data frame parsing state
-                    parsedFrameHeader.State = new DataFrameParsingState(parsedLength, m_configurationFrame, DataCell.CreateNewCell);
+                        // Expose the frame buffer image in case client needs this data for any reason
+                        OnReceivedFrameBufferImage(FundamentalFrameType.DataFrame, buffer, offset, parsedLength);
 
-                    // Expose the frame buffer image in case client needs this data for any reason
-                    OnReceivedFrameBufferImage(FundamentalFrameType.DataFrame, buffer, offset, parsedLength);
-
-                    return parsedFrameHeader;
+                        return parsedFrameHeader;
+                    }
                 }
             }
             else if (scanLength == Common.MaximumPracticalFrameSize)
+            {
                 throw new InvalidOperationException(string.Format("Possible bad F-NET data stream, scanned {0} bytes without finding an expected termination byte 0x0", Common.MaximumPracticalFrameSize));
+            }
 
             return null;
         }

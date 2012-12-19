@@ -237,7 +237,6 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Text;
 using GSF.Units;
-using GSF;
 
 namespace GSF.PhasorProtocols.FNet
 {
@@ -509,57 +508,61 @@ namespace GSF.PhasorProtocols.FNet
             CommonFrameHeader commonHeader = parent.CommonHeader;
             string[] data = commonHeader.DataElements;
             ConfigurationCell configurationCell = ConfigurationCell;
+            uint sampleIndex;
 
-            // Assign sample index
-            parent.SampleIndex = uint.Parse(data[Element.SampleIndex]);
-
-            // Get timestamp of data record
-            parent.Timestamp = configurationCell.TimeOffset + ParseTimestamp(data[Element.Date], data[Element.Time], parent.SampleIndex, configurationCell.FrameRate);
-
-            // Parse out first analog value (can be long/lat at top of minute)
-            m_analogValue = double.Parse(data[Element.Analog]);
-
-            if (data[Element.Time].Length >= 7 && int.Parse(data[Element.Time].Substring(4, 2)) == 0)
+            // Attempt to parse sample index
+            if (uint.TryParse(data[Element.SampleIndex], out sampleIndex))
             {
-                switch (parent.SampleIndex)
+                parent.SampleIndex = sampleIndex;
+
+                // Get timestamp of data record
+                parent.Timestamp = configurationCell.TimeOffset + ParseTimestamp(data[Element.Date], data[Element.Time], parent.SampleIndex, configurationCell.FrameRate);
+
+                // Parse out first analog value (can be long/lat at top of minute)
+                m_analogValue = double.Parse(data[Element.Analog]);
+
+                if (data[Element.Time].Length >= 7 && int.Parse(data[Element.Time].Substring(4, 2)) == 0)
                 {
-                    case 1:
-                        configurationCell.Latitude = m_analogValue;
-                        break;
-                    case 2:
-                        configurationCell.Longitude = m_analogValue;
-                        break;
-                    case 3:
-                        configurationCell.NumberOfSatellites = (int)m_analogValue;
-                        break;
+                    switch (parent.SampleIndex)
+                    {
+                        case 1:
+                            configurationCell.Latitude = m_analogValue;
+                            break;
+                        case 2:
+                            configurationCell.Longitude = m_analogValue;
+                            break;
+                        case 3:
+                            configurationCell.NumberOfSatellites = (int)m_analogValue;
+                            break;
+                    }
                 }
-            }
 
-            // Update (or create) frequency value
-            double frequency = double.Parse(data[Element.Frequency]);
+                // Update (or create) frequency value
+                double frequency = double.Parse(data[Element.Frequency]);
 
-            if (FrequencyValue != null)
-                FrequencyValue.Frequency = frequency;
-            else
-                FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition as FrequencyDefinition, frequency, 0.0D);
+                if (FrequencyValue != null)
+                    FrequencyValue.Frequency = frequency;
+                else
+                    FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition as FrequencyDefinition, frequency, 0.0D);
 
-            // Update (or create) phasor value
-            Angle angle = double.Parse(data[Element.Angle]);
-            double magnitude = double.Parse(data[Element.Voltage]);
-            PhasorValue phasor = null;
+                // Update (or create) phasor value
+                Angle angle = double.Parse(data[Element.Angle]);
+                double magnitude = double.Parse(data[Element.Voltage]);
+                PhasorValue phasor = null;
 
-            if (PhasorValues.Count > 0)
-                phasor = PhasorValues[0] as PhasorValue;
+                if (PhasorValues.Count > 0)
+                    phasor = PhasorValues[0] as PhasorValue;
 
-            if (phasor != null)
-            {
-                phasor.Angle = angle;
-                phasor.Magnitude = magnitude;
-            }
-            else
-            {
-                phasor = new PhasorValue(this, configurationCell.PhasorDefinitions[0] as PhasorDefinition, angle, magnitude);
-                PhasorValues.Add(phasor);
+                if (phasor != null)
+                {
+                    phasor.Angle = angle;
+                    phasor.Magnitude = magnitude;
+                }
+                else
+                {
+                    phasor = new PhasorValue(this, configurationCell.PhasorDefinitions[0] as PhasorDefinition, angle, magnitude);
+                    PhasorValues.Add(phasor);
+                }
             }
 
             return commonHeader.ParsedLength;
@@ -589,8 +592,8 @@ namespace GSF.PhasorProtocols.FNet
 
             if (sampleIndex == 10)
                 return new DateTime(2000 + int.Parse(fnetDate.Substring(4, 2)), int.Parse(fnetDate.Substring(0, 2).Trim()), int.Parse(fnetDate.Substring(2, 2)), int.Parse(fnetTime.Substring(0, 2)), int.Parse(fnetTime.Substring(2, 2)), int.Parse(fnetTime.Substring(4, 2)), 0).AddSeconds(1.0D).Ticks;
-            else
-                return new DateTime(2000 + int.Parse(fnetDate.Substring(4, 2)), int.Parse(fnetDate.Substring(0, 2).Trim()), int.Parse(fnetDate.Substring(2, 2)), int.Parse(fnetTime.Substring(0, 2)), int.Parse(fnetTime.Substring(2, 2)), int.Parse(fnetTime.Substring(4, 2)), (int)(sampleIndex / (double)frameRate * 1000.0D) % 1000).Ticks;
+
+            return new DateTime(2000 + int.Parse(fnetDate.Substring(4, 2)), int.Parse(fnetDate.Substring(0, 2).Trim()), int.Parse(fnetDate.Substring(2, 2)), int.Parse(fnetTime.Substring(0, 2)), int.Parse(fnetTime.Substring(2, 2)), int.Parse(fnetTime.Substring(4, 2)), ((int)(sampleIndex / (double)frameRate * 1000.0D) % 1000)).Ticks;
         }
 
         // Delegate handler to create a new F-NET data cell
