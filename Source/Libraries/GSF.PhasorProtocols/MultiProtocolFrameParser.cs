@@ -71,6 +71,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -79,6 +80,8 @@ using GSF.IO;
 using GSF.Parsing;
 using GSF.TimeSeries;
 using GSF.Units;
+using TcpClient = GSF.Communication.TcpClient;
+using UdpClient = GSF.Communication.UdpClient;
 
 // Ignore warnings about unused events that are required by IClient
 #pragma warning disable 67
@@ -538,7 +541,7 @@ namespace GSF.PhasorProtocols
 
             public event EventHandler<EventArgs<int>> ReceiveData;
             public event EventHandler<EventArgs<byte[], int>> ReceiveDataComplete;
-            public event EventHandler<EventArgs<EndPoint, int>> ReceiveDataFrom;
+            public event EventHandler<EventArgs<EndPoint, IPPacketInformation, int>> ReceiveDataFrom;
             public event EventHandler<EventArgs<Exception>> ReceiveDataException;
 
             public event EventHandler<EventArgs<Exception>> UnhandledUserException;
@@ -1117,7 +1120,7 @@ namespace GSF.PhasorProtocols
 
             // Shared client receive data from handler.
             // Forwards event to users attached to this client.
-            private void SharedClient_ReceiveDataFrom(object sender, EventArgs<EndPoint, int> e)
+            private void SharedClient_ReceiveDataFrom(object sender, EventArgs<EndPoint, IPPacketInformation, int> e)
             {
                 if ((object)ReceiveDataFrom != null)
                     ReceiveDataFrom(this, e);
@@ -1323,6 +1326,7 @@ namespace GSF.PhasorProtocols
         private IServer m_serverBasedDataChannel;
         private IClient m_commandChannel;
         private IPAddress m_receiveFromAddress;
+        private IPAddress m_multicastServerAddress;
         private PrecisionInputTimer m_inputTimer;
         private System.Timers.Timer m_rateCalcTimer;
         private IConfigurationFrame m_configurationFrame;
@@ -2625,6 +2629,12 @@ namespace GSF.PhasorProtocols
             IPStack ipStack;
 
             string receiveFromSetting;
+            string serverSetting;
+            string remotePortSetting;
+            Match endPointMatch;
+            IPAddress serverAddress;
+
+            m_multicastServerAddress = null;
 
             if (!settings.TryGetValue("receiveFrom", out receiveFromSetting))
             {
@@ -2639,6 +2649,17 @@ namespace GSF.PhasorProtocols
                 udpRef = new SharedUdpClientReference();
                 udpRef.ReceiveDataFrom += m_dataChannel_ReceiveDataFrom;
                 m_dataChannel = udpRef;
+
+                if (settings.TryGetValue("server", out serverSetting))
+                {
+                    if (settings.TryGetValue("remoteport", out remotePortSetting))
+                        serverSetting = string.Format("{0}:{1}", serverSetting, remotePortSetting);
+
+                    endPointMatch = Regex.Match(serverSetting, Transport.EndpointFormatRegex);
+
+                    if (IPAddress.TryParse(endPointMatch.Groups["host"].Value, out serverAddress) && Transport.IsMulticastIP(serverAddress))
+                        m_multicastServerAddress = serverAddress;
+                }
             }
         }
 
@@ -3284,16 +3305,20 @@ namespace GSF.PhasorProtocols
 
         #region [ Data Channel Event Handlers ]
 
-        private void m_dataChannel_ReceiveDataFrom(object sender, EventArgs<EndPoint, int> e)
+        private void m_dataChannel_ReceiveDataFrom(object sender, EventArgs<EndPoint, IPPacketInformation, int> e)
         {
             IPEndPoint remoteEndPoint = e.Argument1 as IPEndPoint;
-            int length = e.Argument2;
+            IPAddress destinationAddress = e.Argument2.Address;
+            int length = e.Argument3;
             byte[] buffer = null;
 
             if ((object)remoteEndPoint == null)
                 return;
 
             if (!remoteEndPoint.Address.Equals(m_receiveFromAddress))
+                return;
+
+            if ((object)destinationAddress != null && (object)m_multicastServerAddress != null && !destinationAddress.Equals(m_multicastServerAddress))
                 return;
 
             try

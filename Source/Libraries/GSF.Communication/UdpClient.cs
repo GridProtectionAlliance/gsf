@@ -438,7 +438,7 @@ namespace GSF.Communication
         /// </remarks>
         [Category("Data"),
         Description("Occurs when unprocessed data has been received from the server.")]
-        public event EventHandler<EventArgs<EndPoint, int>> ReceiveDataFrom;
+        public event EventHandler<EventArgs<EndPoint, IPPacketInformation, int>> ReceiveDataFrom;
 
         /// <summary>
         /// Occurs when data received from the server has been processed and is ready for consumption.
@@ -450,7 +450,7 @@ namespace GSF.Communication
         /// </remarks>
         [Category("Data"),
         Description("Occurs when data received from the server has been processed and is ready for consumption.")]
-        public event EventHandler<EventArgs<EndPoint, byte[], int>> ReceiveDataFromComplete;
+        public event EventHandler<EventArgs<EndPoint, IPPacketInformation, byte[], int>> ReceiveDataFromComplete;
 
         // Fields
         //private bool m_destinationReachableCheck;
@@ -905,6 +905,7 @@ namespace GSF.Communication
 
                         AddMulticastMembership(serverEndpoint.Address, sourceAddress, out multicastMembershipAddresses);
                         m_udpClient.MulticastMembershipAddresses = multicastMembershipAddresses;
+                        m_udpClient.Provider.SetSocketOption(serverEndpoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.PacketInformation, true);
                     }
 
                     // Listen for data to send.
@@ -1190,7 +1191,7 @@ namespace GSF.Communication
             m_receiveArgs.SetBuffer(m_udpClient.ReceiveBuffer, 0, m_udpClient.ReceiveBufferSize);
             m_receiveArgs.RemoteEndPoint = m_udpServer;
 
-            if (!m_udpClient.Provider.ReceiveFromAsync(m_receiveArgs))
+            if (!m_udpClient.Provider.ReceiveMessageFromAsync(m_receiveArgs))
                 ThreadPool.QueueUserWorkItem(state => ProcessReceive());
         }
 
@@ -1209,7 +1210,7 @@ namespace GSF.Communication
                 m_udpClient.BytesReceived = m_udpClient.Statistics.LastBytesReceived;
 
                 // Notify of received data and resume receive operation.
-                OnReceive(m_receiveArgs.RemoteEndPoint, m_udpClient.ReceiveBuffer, m_udpClient.BytesReceived);
+                OnReceive(m_receiveArgs.RemoteEndPoint, m_receiveArgs.ReceiveMessageFromPacketInfo, m_udpClient.ReceiveBuffer, m_udpClient.BytesReceived);
                 ReceivePayloadAsync();
             }
             catch (ObjectDisposedException)
@@ -1338,10 +1339,10 @@ namespace GSF.Communication
         /// <summary>
         /// Calls all the receive handlers in sequence.
         /// </summary>
-        private void OnReceive(EndPoint remoteEndPoint, byte[] data, int size)
+        private void OnReceive(EndPoint remoteEndPoint, IPPacketInformation packetInformation, byte[] data, int size)
         {
-            OnReceiveDataFrom(remoteEndPoint, size);
-            OnReceiveDataFromComplete(remoteEndPoint, data, size);
+            OnReceiveDataFrom(remoteEndPoint, packetInformation, size);
+            OnReceiveDataFromComplete(remoteEndPoint, packetInformation, data, size);
             OnReceiveDataComplete(data, size);
         }
 
@@ -1350,12 +1351,12 @@ namespace GSF.Communication
         /// </summary>
         /// <param name="remoteEndPoint">End-point from which data has been received.</param>
         /// <param name="size">Number of bytes received from the client.</param>
-        private void OnReceiveDataFrom(EndPoint remoteEndPoint, int size)
+        private void OnReceiveDataFrom(EndPoint remoteEndPoint, IPPacketInformation packetInformation, int size)
         {
             try
             {
                 if ((object)ReceiveDataFrom != null)
-                    ReceiveDataFrom(this, new EventArgs<EndPoint, int>(remoteEndPoint, size));
+                    ReceiveDataFrom(this, new EventArgs<EndPoint, IPPacketInformation, int>(remoteEndPoint, packetInformation, size));
             }
             catch (Exception userException)
             {
@@ -1369,12 +1370,12 @@ namespace GSF.Communication
         /// <param name="remoteEndPoint">End-point from which data has been received.</param>
         /// <param name="data">Data received from the client.</param>
         /// <param name="size">Number of bytes received from the client.</param>
-        private void OnReceiveDataFromComplete(EndPoint remoteEndPoint, byte[] data, int size)
+        private void OnReceiveDataFromComplete(EndPoint remoteEndPoint, IPPacketInformation packetInformation, byte[] data, int size)
         {
             try
             {
                 if ((object)ReceiveDataFromComplete != null)
-                    ReceiveDataFromComplete(this, new EventArgs<EndPoint, byte[], int>(remoteEndPoint, data, size));
+                    ReceiveDataFromComplete(this, new EventArgs<EndPoint, IPPacketInformation, byte[], int>(remoteEndPoint, packetInformation, data, size));
             }
             catch (Exception userException)
             {
