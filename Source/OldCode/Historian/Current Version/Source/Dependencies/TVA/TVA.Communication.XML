@@ -1273,19 +1273,19 @@
             Processes the termination of client.
             </summary>
         </member>
-        <member name="M:TVA.Communication.UdpClient.OnReceive(System.Net.EndPoint,System.Byte[],System.Int32)">
+        <member name="M:TVA.Communication.UdpClient.OnReceive(System.Net.EndPoint,System.Net.Sockets.IPPacketInformation,System.Byte[],System.Int32)">
             <summary>
             Calls all the receive handlers in sequence.
             </summary>
         </member>
-        <member name="M:TVA.Communication.UdpClient.OnReceiveDataFrom(System.Net.EndPoint,System.Int32)">
+        <member name="M:TVA.Communication.UdpClient.OnReceiveDataFrom(System.Net.EndPoint,System.Net.Sockets.IPPacketInformation,System.Int32)">
             <summary>
             Raises the <see cref="E:TVA.Communication.UdpClient.ReceiveDataFrom"/> event.
             </summary>
             <param name="remoteEndPoint">End-point from which data has been received.</param>
             <param name="size">Number of bytes received from the client.</param>
         </member>
-        <member name="M:TVA.Communication.UdpClient.OnReceiveDataFromComplete(System.Net.EndPoint,System.Byte[],System.Int32)">
+        <member name="M:TVA.Communication.UdpClient.OnReceiveDataFromComplete(System.Net.EndPoint,System.Net.Sockets.IPPacketInformation,System.Byte[],System.Int32)">
             <summary>
             Raises the <see cref="E:TVA.Communication.UdpClient.ReceiveDataFrom"/> event.
             </summary>
