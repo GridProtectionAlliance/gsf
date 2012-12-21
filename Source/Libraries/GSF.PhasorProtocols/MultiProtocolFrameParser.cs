@@ -937,6 +937,7 @@ namespace GSF.PhasorProtocols
                     sharedClient.ReceiveDataException += SharedClient_ReceiveDataException;
                     sharedClient.ReceiveDataFrom += SharedClient_ReceiveDataFrom;
                     sharedClient.SendDataException += SharedClient_SendDataException;
+                    sharedClient.UnhandledUserException += SharedClient_UnhandledUserException;
 
                     if (!sharing)
                     {
@@ -1137,6 +1138,14 @@ namespace GSF.PhasorProtocols
 
                 if ((object)SendDataException != null)
                     SendDataException(this, e);
+            }
+
+            // Shared client unhandled user exception handler.
+            // Forwards event to users attached to this client.
+            private void SharedClient_UnhandledUserException(object sender, EventArgs<Exception> e)
+            {
+                if ((object)UnhandledUserException != null)
+                    UnhandledUserException(this, e);
             }
 
             #endregion
@@ -2527,6 +2536,7 @@ namespace GSF.PhasorProtocols
             m_commandChannel.ReceiveData += m_commandChannel_ReceiveData;
             m_commandChannel.ReceiveDataException += m_commandChannel_ReceiveDataException;
             m_commandChannel.SendDataException += m_commandChannel_SendDataException;
+            m_commandChannel.UnhandledUserException += m_commandChannel_UnhandledUserException;
 
             // Attempt connection to device over command channel
             m_commandChannel.ReceiveBufferSize = m_bufferSize;
@@ -2595,6 +2605,7 @@ namespace GSF.PhasorProtocols
                 m_dataChannel.ReceiveData += m_dataChannel_ReceiveData;
                 m_dataChannel.ReceiveDataException += m_dataChannel_ReceiveDataException;
                 m_dataChannel.SendDataException += m_dataChannel_SendDataException;
+                m_dataChannel.UnhandledUserException += m_dataChannel_UnhandledUserException;
 
                 // Attempt connection to device
                 m_dataChannel.ReceiveBufferSize = m_bufferSize;
@@ -2612,6 +2623,7 @@ namespace GSF.PhasorProtocols
                 m_serverBasedDataChannel.ReceiveClientData += m_serverBasedDataChannel_ReceiveClientData;
                 m_serverBasedDataChannel.ReceiveClientDataException += m_serverBasedDataChannel_ReceiveClientDataException;
                 m_serverBasedDataChannel.SendClientDataException += m_serverBasedDataChannel_SendClientDataException;
+                m_serverBasedDataChannel.UnhandledUserException += m_serverBasedDataChannel_UnhandledUserException;
 
                 // Listen for device connection
                 m_serverBasedDataChannel.ReceiveBufferSize = m_bufferSize;
@@ -2702,6 +2714,7 @@ namespace GSF.PhasorProtocols
                     m_dataChannel.ReceiveData -= m_dataChannel_ReceiveData;
                     m_dataChannel.ReceiveDataException -= m_dataChannel_ReceiveDataException;
                     m_dataChannel.SendDataException -= m_dataChannel_SendDataException;
+                    m_dataChannel.UnhandledUserException -= m_dataChannel_UnhandledUserException;
                     m_dataChannel.Dispose();
                 }
             }
@@ -2726,6 +2739,7 @@ namespace GSF.PhasorProtocols
                     m_serverBasedDataChannel.ReceiveClientData -= m_serverBasedDataChannel_ReceiveClientData;
                     m_serverBasedDataChannel.ReceiveClientDataException -= m_serverBasedDataChannel_ReceiveClientDataException;
                     m_serverBasedDataChannel.SendClientDataException -= m_serverBasedDataChannel_SendClientDataException;
+                    m_serverBasedDataChannel.UnhandledUserException -= m_serverBasedDataChannel_UnhandledUserException;
                     m_serverBasedDataChannel.Dispose();
                 }
             }
@@ -2750,6 +2764,7 @@ namespace GSF.PhasorProtocols
                     m_commandChannel.ReceiveData -= m_commandChannel_ReceiveData;
                     m_commandChannel.ReceiveDataException -= m_commandChannel_ReceiveDataException;
                     m_commandChannel.SendDataException -= m_commandChannel_SendDataException;
+                    m_commandChannel.UnhandledUserException -= m_commandChannel_UnhandledUserException;
                     m_commandChannel.Dispose();
                 }
             }
@@ -3415,6 +3430,14 @@ namespace GSF.PhasorProtocols
                 OnParsingException(e.Argument, "Data channel receive exception: {0}", ex.Message);
         }
 
+        private void m_dataChannel_UnhandledUserException(object sender, EventArgs<Exception> e)
+        {
+            Exception ex = e.Argument;
+
+            if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException))
+                OnParsingException(e.Argument, "Data channel user unhandled exception: {0}", ex.Message);
+        }
+
         #endregion
 
         #region [ Server Based Data Channel Event Handlers ]
@@ -3475,6 +3498,14 @@ namespace GSF.PhasorProtocols
 
             if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException))
                 OnParsingException(e.Argument2, "Server based data channel receive exception: {0}", ex.Message);
+        }
+
+        private void m_serverBasedDataChannel_UnhandledUserException(object sender, EventArgs<Exception> e)
+        {
+            Exception ex = e.Argument;
+
+            if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException))
+                OnParsingException(e.Argument, "Server based data channel user unhandled exception: {0}", ex.Message);
         }
 
         #endregion
@@ -3551,6 +3582,14 @@ namespace GSF.PhasorProtocols
 
             if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException))
                 OnParsingException(e.Argument, "Command channel send exception: {0}", ex.Message);
+        }
+
+        private void m_commandChannel_UnhandledUserException(object sender, EventArgs<Exception> e)
+        {
+            Exception ex = e.Argument;
+
+            if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException))
+                OnParsingException(e.Argument, "Command channel user unhandled exception: {0}", ex.Message);
         }
 
         #endregion
