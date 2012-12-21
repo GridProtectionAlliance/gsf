@@ -24,6 +24,7 @@
 using UnityEngine;
 using Vectrosity;
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using GSF;
@@ -129,6 +130,8 @@ public class EnergyLine : MonoBehaviour
 		}
 	}
 	
+	private const string iniFileName = "GraphLines.ini";
+	
 	public string connectionString = "server=localhost:6165";
 	public string filterExpression = "PPA:2;PPA:5;PPA:6;PPA:9;PPA:10";
 	public Material lineMaterial;
@@ -145,6 +148,18 @@ public class EnergyLine : MonoBehaviour
 
 	protected void Start()
 	{
+		string iniFilePath = Application.dataPath + "/" + iniFileName;
+		
+		if (File.Exists(iniFilePath))
+		{
+			IniFile iniFile = new IniFile(iniFilePath);			
+			connectionString = iniFile["Settings", "ConnectionString", connectionString];
+			filterExpression = iniFile["Settings", "FilterExpression", filterExpression];			
+			lineWidth = int.Parse(iniFile["Settings", "LineWidth", lineWidth.ToString()]);
+			lineDepthOffset = float.Parse(iniFile["Settings", "LineDepthOffset", lineDepthOffset.ToString()]);
+			pointsInLine = int.Parse(iniFile["Settings", "PointsInLine", pointsInLine.ToString()]);
+		}
+		
 		// Create line dictionary and data queue
 		lines = new ConcurrentDictionary<Guid, Line>();
 		dataQueue = new ConcurrentQueue<IMeasurement>();		
