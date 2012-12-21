@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  MainWindow.xaml.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -23,6 +23,8 @@
 //       display list.
 //  09/29/2012 - J. Ritchie Carroll
 //       Updated to code to use roll-over yielding ArchiveReader.
+//  12/20/2012 - Starlynn Danyelle Gilliam
+//       Modified Header.
 //
 //******************************************************************************************************
 

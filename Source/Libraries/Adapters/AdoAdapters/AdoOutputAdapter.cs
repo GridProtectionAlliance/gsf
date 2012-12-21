@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  AdoOutputAdapter.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  05/02/2011 - J. Ritchie Carroll
 //       Cast ID field back to a signed integer to work with most database types per suggestion by Hugo.
+//  12/13/2012 - Starlynn Danyelle Gilliam
+//       Modified Header.
 //
 //******************************************************************************************************
 

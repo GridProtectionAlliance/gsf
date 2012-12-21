@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  DataSubscriber.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -21,6 +21,8 @@
 //  02/07/2012 - Mehulbhai Thakkar
 //       Modified SynchronizeMetadata to filter devices by original source and modified insert query
 //       to populate OriginalSource value. Added to flag to optionally avoid metadata synchronization.
+//  12/20/2012 - Starlynn Danyelle Gilliam
+//       Modified Header.
 //
 //******************************************************************************************************
 

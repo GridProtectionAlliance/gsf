@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  TypeExtensions.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -34,31 +34,10 @@
 //       Added Mono implementation exception regions.
 //  10/11/2011 - Pinal C. Patel
 //       Updated LoadImplementations() method to add support for attributes.
-//  10/8/2012 - Danyelle Gilliam
-//        Modified Header
+//  12/14/2012 - Starlynn Danyelle Gilliam
+//       Modified Header.
 //
 //******************************************************************************************************
-
-
-
-#region [ Contributor License Agreements ]
-
-//******************************************************************************************************
-//
-//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
-//
-//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
-//  not use this file except in compliance with the License. You may obtain a copy of the License at:
-//
-//      http://www.opensource.org/licenses/eclipse-1.0.php
-//
-//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
-//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
-//  License for the specific language governing permissions and limitations.
-//
-//******************************************************************************************************
-
-#endregion
 
 using GSF.IO;
 using System;

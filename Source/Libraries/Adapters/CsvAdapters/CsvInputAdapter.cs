@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  CsvInputAdapter.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  07/03/2012 - J. Ritchie Carroll
 //       Added high-resolution input timer, auto-repeat and transverse operational mode.
+//  12/13/2012 - Starlynn Danyelle Gilliam
+//       Modified Header.
 //
 //******************************************************************************************************
 

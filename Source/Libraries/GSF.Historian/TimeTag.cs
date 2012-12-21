@@ -1,7 +1,7 @@
 //******************************************************************************************************
 //  TimeTag.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -15,7 +15,7 @@
 //  License for the specific language governing permissions and limitations.
 //
 //  Code Modification History:
-//  -----------------------------------------------------------------------------------------------------
+//  ----------------------------------------------------------------------------------------------------
 //  05/03/2006 - J. Ritchie Carroll
 //       Generated original version of code based on DatAWare system specifications by Brian B. Fox, GSF.
 //  07/12/2006 - J. Ritchie Carroll
@@ -31,6 +31,8 @@
 //       Added Now and UtcNow static properties for ease-of-use.
 //  10/11/2010 - Mihir Brahmbhatt
 //       Updated header and license agreement.
+//  12/14/2012 - Starlynn Danyelle Gilliam
+//       Modified Header.
 //
 //******************************************************************************************************
 

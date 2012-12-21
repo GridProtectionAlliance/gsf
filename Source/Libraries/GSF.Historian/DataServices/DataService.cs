@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  DataService.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -15,7 +15,7 @@
 //  License for the specific language governing permissions and limitations.
 //
 //  Code Modification History:
-//  -----------------------------------------------------------------------------------------------------
+//  ----------------------------------------------------------------------------------------------------
 //  08/27/2009 - Pinal C. Patel
 //       Generated original version of source code.
 //  09/02/2009 - Pinal C. Patel
@@ -33,6 +33,8 @@
 //  03/31/2011 - J. Ritchie Carroll
 //       Updated to allow customizable close timeout and maximum possible number of items to be
 //       returned from data service.
+//  12/14/2012 - Starlynn Danyelle Gilliam
+//       Modified Header.
 //
 //******************************************************************************************************
 

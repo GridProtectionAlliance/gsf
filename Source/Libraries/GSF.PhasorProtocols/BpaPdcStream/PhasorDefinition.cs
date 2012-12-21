@@ -20,6 +20,8 @@
 //       Initial version of source generated.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  12/17/2012 - Starlynn Danyelle Gilliam
+//       Modified Header.
 //
 //******************************************************************************************************
 

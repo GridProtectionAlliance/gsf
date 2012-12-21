@@ -1,7 +1,7 @@
 //******************************************************************************************************
 //  Cipher.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -58,6 +58,8 @@
 //       Modified check for FIPS compliance to work with Windows XP and Windows Server 2003.
 //  02/17/2012 - Stephen C. Wills
 //       Added public method to manually reload the key cache.
+//  12/14/2012 - Starlynn Danyelle Gilliam
+//       Modified Header.
 //
 //******************************************************************************************************
 

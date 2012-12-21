@@ -1,7 +1,7 @@
 //******************************************************************************************************
 //  RemoteOutputAdapter.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -30,6 +30,8 @@
 //       Switched to ManualResetEvent for waiting on historian acknowledgement for efficiency.
 //  01/20/2011 - Pinal C. Patel
 //       Modified to use Settings for the ConnectionString property of historian socket.
+//  12/13/2012 - Starlynn Danyelle Gilliam
+//       Modified Header.
 //
 //******************************************************************************************************
 

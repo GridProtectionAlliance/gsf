@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  SecurityGroup.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -26,6 +26,8 @@
 //       Added NULL handling for Save() operation.
 //  05/13/2011 - Aniket Salver
 //                  Modified the way Guid is retrived from the Data Base.
+//  12/20/2012 - Starlynn Danyelle Gilliam
+//       Modified Header.
 //
 //******************************************************************************************************
 

@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  FlatlineService.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -24,6 +24,8 @@
 //       Replaced TryGetMeasurementInfo() with SerializableMeasurement.SetDeviceAndSignalType().
 //  11/07/2010 - Pinal C. Patel
 //       Modified to fix breaking changes made to SelfHostingService.
+//  12/13/2012 - Starlynn Danyelle Gilliam
+//       Modified Header.
 //
 //******************************************************************************************************
 

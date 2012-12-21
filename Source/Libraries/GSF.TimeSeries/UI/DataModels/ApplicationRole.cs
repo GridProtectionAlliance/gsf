@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  ApplicationRole.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -24,6 +24,8 @@
 //       Guid field related changes as well as static functions update.
 //  05/05/2011 - Mehulbhai P Thakkar
 //       Added NULL value and Guid parameter handling for Save() operation.
+//  12/20/2012 - Starlynn Danyelle Gilliam
+//       Modified Header.
 //
 //******************************************************************************************************
 

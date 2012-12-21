@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  SignalType.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -22,6 +22,8 @@
 //       Added regular expression validator for Acronym.
 //  09/15/2011 - Mehulbhai P Thakkar
 //       Hard coded signal types for PMU, Voltage Phasor and Current Phasor.
+//  12/20/2012 - Starlynn Danyelle Gilliam
+//       Modified Header.
 //
 //******************************************************************************************************
 

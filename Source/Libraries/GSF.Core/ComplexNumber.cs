@@ -1,7 +1,7 @@
 //******************************************************************************************************
 //  ComplexNumber.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -22,8 +22,8 @@
 //       Updated comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
-//  10/08/2012 - Danyelle Gilliam
-//       Modified headers.
+//  12/14/2012 - Starlynn Danyelle Gilliam
+//       Modified Header.
 //  12/18/2012 - J. Ritchie Carroll
 //       Updated operation such that class will used cached angle and magnitude values
 //       when these are provided to improve accuracy and operational speed.
@@ -86,7 +86,7 @@ namespace GSF
 
         private double? m_angle;        // Angle value of complex number
         private double? m_magnitude;    // Magnitude value of complex number
-
+        
         #endregion
 
         #region [ Constructors ]
@@ -127,7 +127,7 @@ namespace GSF
             // Make sure state of source complex number is replicated exactly
             m_real = z.m_real;
             m_imaginary = z.m_imaginary;
-
+            
             m_angle = z.m_angle;
             m_magnitude = z.m_magnitude;
         }
@@ -201,12 +201,12 @@ namespace GSF
                     return Math.Sqrt(real * real + imaginary * imaginary);
                 }
 
-                return double.NaN;
+                    return double.NaN;
             }
             set
             {
                 // Cache assigned magnitude value
-                m_magnitude = value;
+                    m_magnitude = value;
 
                 if (!m_real.HasValue || !m_imaginary.HasValue)
                 {
@@ -243,12 +243,12 @@ namespace GSF
                 if (AllAssigned)
                     return Math.Atan2(m_imaginary.Value, m_real.Value);
 
-                return double.NaN;
+                    return double.NaN;
             }
             set
             {
                 // Cache assigned angle value
-                m_angle = value;
+                    m_angle = value;
 
                 if (!m_real.HasValue || !m_imaginary.HasValue)
                 {

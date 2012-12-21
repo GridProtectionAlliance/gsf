@@ -31,6 +31,8 @@
 //      is not checked.
 //  12/04/2012 - J. Ritchie Carroll
 //       Migrated to PhasorProtocolAdapters project.
+//  12/13/2012 - Starlynn Danyelle Gilliam
+//       Modified Header.
 //
 //******************************************************************************************************
 

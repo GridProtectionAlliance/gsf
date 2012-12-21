@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  SerializableFlatlinedMeasurement.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -22,6 +22,8 @@
 //       Changed Timestamp to string and TimeSinceLastChange to double.
 //  12/16/2009 - Stephen C. Wills
 //       Refactored most of the implementation into the SerializableMeasurement base class.
+//  12/13/2012 - Starlynn Danyelle Gilliam
+//       Modified Header.
 //
 //******************************************************************************************************
 

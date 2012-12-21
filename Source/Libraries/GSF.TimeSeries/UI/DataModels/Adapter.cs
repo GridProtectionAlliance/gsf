@@ -1,11 +1,11 @@
 ﻿//******************************************************************************************************
 //  Adapter.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
-//  The GPA licenses this file to you under the Eclipse private License -v 1.0 (the "License"); you may
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
 //  not use this file except in compliance with the License. You may obtain a copy of the License at:
 //
 //      http://www.opensource.org/licenses/eclipse-1.0.php
@@ -26,6 +26,8 @@
 //       Guid field related changes as well as static functions update.
 //  05/05/2011 - Mehulbhai P Thakkar
 //       Added NULL value and Guid parameter handling for Save() operation.
+//  12/20/2012 - Starlynn Danyelle Gilliam
+//       Modified Header.
 //
 //******************************************************************************************************
 

@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  ArchiveFile.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -15,7 +15,7 @@
 //  License for the specific language governing permissions and limitations.
 //
 //  Code Modification History:
-//  -----------------------------------------------------------------------------------------------------
+//  ----------------------------------------------------------------------------------------------------
 //  02/18/2007 - Pinal C. Patel
 //       Generated original version of source code.
 //  01/23/2008 - Pinal C. Patel
@@ -82,6 +82,8 @@
 //       Modified to support buffer optimized ISupportBinaryImage.
 //  10/03/2012 - J. Ritchie Carroll
 //       Modified to support resumable read after roll-over completes.
+//  12/14/2012 - Starlynn Danyelle Gilliam
+//       Modified Header.
 //
 //******************************************************************************************************
 

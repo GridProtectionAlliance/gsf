@@ -1,7 +1,7 @@
 //******************************************************************************************************
 //  ConfigurationFrame.cs - Gbtc
 //
-//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -22,6 +22,8 @@
 //       Added new header and license agreement.
 //  12/20/2011 - J. Ritchie Carroll
 //       Updated configuration caching algorithm to create multiple backup configurations.
+//  12/17/2012 - Starlynn Danyelle Gilliam
+//       Modified Header.
 //
 //******************************************************************************************************
 

@@ -1,7 +1,7 @@
 //******************************************************************************************************
 //  ClientInfo.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -32,12 +32,10 @@
 //       Corrected the assignment of ClientName property for web applications.
 //  06/16/2010 - Pinal C. Patel
 //       Made changes necessary to implement role-based security.
-//  10/8/2012 - Danyelle Gilliam
-//        Modified Header
+//  12/20/2012 - Starlynn Danyelle Gilliam
+//       Modified Header.
 //
 //******************************************************************************************************
-
-
 
 using GSF.Identity;
 using GSF.Reflection;

@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  AlarmAdapter.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  01/31/2012 - Stephen C. Wills
 //       Generated original version of source code.
+//  12/13/2012 - Starlynn Danyelle Gilliam
+//       Modified Header.
 //
 //******************************************************************************************************
 

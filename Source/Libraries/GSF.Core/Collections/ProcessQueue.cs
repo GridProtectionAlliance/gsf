@@ -62,6 +62,8 @@
 //  11/27/2012 - J. Ritchie Carroll
 //       Modified process queue to be based on ConcurrentQueue<T>. New ProcessList<T> class now assumes
 //       the List<T> based functionality of original code.
+//  12/13/2012 - Starlynn Danyelle Gilliam
+//       Modified Header.
 //
 //******************************************************************************************************
 

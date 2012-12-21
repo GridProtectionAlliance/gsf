@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  UserData.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -24,12 +24,10 @@
 //       Added IsDisabled property.
 //  01/14/2011 - Pinal C. Patel
 //       Updated field attributes used by XmlSerializer.
-//  10/8/2012 - Danyelle Gilliam
-//        Modified Header
+//  12/20/2012 - Starlynn Danyelle Gilliam
+//       Modifeid Header.
 //
 //******************************************************************************************************
-
-
 
 using System;
 using System.Collections.Generic;

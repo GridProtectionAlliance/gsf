@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  FastObjectFactory.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -18,13 +18,10 @@
 //  ----------------------------------------------------------------------------------------------------
 //  01/25/2010 - James R. Carroll
 //       Generated original version of source code.
-//  10/8/2012 - Danyelle Gilliam
-//        Modified Header
+//  12/14/2012 - Starlynn Danyelle Gilliam
+//       Modified Header.
 //
 //******************************************************************************************************
-
-
-
 
 using System;
 using System.Collections.Concurrent;
