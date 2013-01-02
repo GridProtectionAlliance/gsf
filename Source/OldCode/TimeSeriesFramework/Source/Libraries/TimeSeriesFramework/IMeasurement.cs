@@ -354,12 +354,12 @@ namespace TimeSeriesFramework
         /// </summary>
         /// <param name="measurements"><see cref="IMeasurement"/> enumeration to convert.</param>
         /// <returns><see cref="MeasurementKey"/> values of the <see cref="IMeasurement"/> enumeration.</returns>
-        public static IEnumerable<MeasurementKey> MeasurementKeys(this IEnumerable<IMeasurement> measurements)
+        public static MeasurementKey[] MeasurementKeys(this IEnumerable<IMeasurement> measurements)
         {
             if (measurements == null)
                 return new MeasurementKey[0];
 
-            return measurements.Select(m => m.Key);
+            return measurements.Select(m => m.Key).ToArray();
         }
     }
 }
