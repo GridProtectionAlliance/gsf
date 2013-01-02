@@ -352,9 +352,9 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="adapter"><see cref="IAdapter"/> instance output measurements to convert.</param>
         /// <returns><see cref="MeasurementKey"/> values of the <see cref="IAdapter"/> output measurements.</returns>
-        public static IEnumerable<MeasurementKey> OutputMeasurementKeys(this IAdapter adapter)
+        public static MeasurementKey[] OutputMeasurementKeys(this IAdapter adapter)
         {
-            return adapter.OutputMeasurements.MeasurementKeys();
+            return adapter.OutputMeasurements.MeasurementKeys().ToArray();
         }
 
         /// <summary>
@@ -363,7 +363,7 @@ namespace GSF.TimeSeries.Adapters
         /// <typeparam name="T">Type of <see cref="IAdapter"/>.</typeparam>
         /// <param name="adapters">Source <see cref="IAdapter"/> enumeration.</param>
         /// <returns>Distinct list of input measurement keys for all of the provided adapters.</returns>
-        public static IEnumerable<MeasurementKey> InputMeasurementKeys<T>(this IEnumerable<T> adapters) where T : IAdapter
+        public static MeasurementKey[] InputMeasurementKeys<T>(this IEnumerable<T> adapters) where T : IAdapter
         {
             List<MeasurementKey> inputMeasurementKeys = new List<MeasurementKey>();
 
@@ -375,7 +375,7 @@ namespace GSF.TimeSeries.Adapters
                     inputMeasurementKeys.AddRange(adapterInputMeasurementKeys);
             }
 
-            return inputMeasurementKeys.Distinct();
+            return inputMeasurementKeys.Distinct().ToArray();
         }
 
         /// <summary>
@@ -384,7 +384,7 @@ namespace GSF.TimeSeries.Adapters
         /// <typeparam name="T">Type of <see cref="IAdapter"/>.</typeparam>
         /// <param name="adapters">Source <see cref="IAdapter"/> enumeration.</param>
         /// <returns>Distinct list of output measurement keys for all of the provided adapters.</returns>
-        public static IEnumerable<MeasurementKey> OutputMeasurementKeys<T>(this IEnumerable<T> adapters) where T : IAdapter
+        public static MeasurementKey[] OutputMeasurementKeys<T>(this IEnumerable<T> adapters) where T : IAdapter
         {
             List<MeasurementKey> outputMeasurementKeys = new List<MeasurementKey>();
 
@@ -396,7 +396,7 @@ namespace GSF.TimeSeries.Adapters
                     outputMeasurementKeys.AddRange(adapterOutputMeasurementKeys);
             }
 
-            return outputMeasurementKeys.Distinct();
+            return outputMeasurementKeys.Distinct().ToArray();
         }
     }
 }

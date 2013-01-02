@@ -1901,6 +1901,32 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
+        /// Gets flag that determines if the connection type is a TCP server.
+        /// </summary>
+        public bool ConnectionIsListener
+        {
+            get
+            {
+                Dictionary<string, string> settings;
+                string setting;
+
+                // Listener setting is only valid for TCP data channels
+                if (m_transportProtocol != TransportProtocol.Tcp)
+                    return false;
+
+                if (!string.IsNullOrWhiteSpace(m_connectionString))
+                {
+                    settings = m_connectionString.ParseKeyValuePairs();
+
+                    if (settings.TryGetValue("islistener", out setting))
+                        return setting.ParseBoolean();
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Gets total time connection has been active.
         /// </summary>
         public Time ConnectionTime

@@ -237,6 +237,45 @@ namespace GSF.TimeSeries.Adapters
 
         private void CalculateRoutingTables(object state)
         {
+            IInputAdapter[] inputAdapterCollection = null;
+            IActionAdapter[] actionAdapterCollection = null;
+            IOutputAdapter[] outputAdapterCollection = null;
+            bool retry = true;
+
+            // Attempt to cache input, action, and output adapters for routing table calculation.
+            // This could fail if another thread modifies the collections while caching is in
+            // progress (rare), so retry if the caching fails.
+            //
+            // We don't attempt to lock here because we don't own the collections.
+            while (retry)
+            {
+                try
+                {
+                    if ((object)m_inputAdapters != null)
+                        inputAdapterCollection = m_inputAdapters.ToArray<IInputAdapter>();
+
+                    if ((object)m_actionAdapters != null)
+                        actionAdapterCollection = m_actionAdapters.ToArray<IActionAdapter>();
+
+                    if ((object)m_outputAdapters != null)
+                        outputAdapterCollection = m_outputAdapters.ToArray<IOutputAdapter>();
+
+                    retry = false;
+                }
+                catch (InvalidOperationException)
+                {
+                    // Attempt to catch "Collection was modified; enumeration operation may not execute."
+                }
+                catch (NullReferenceException)
+                {
+                    // Catch rare exceptions where IaonSession is disposed during a context switch
+                    inputAdapterCollection = null;
+                    actionAdapterCollection = null;
+                    outputAdapterCollection = null;
+                    retry = false;
+                }
+            }
+
             try
             {
                 // Pre-calculate internal routes to improve performance
@@ -246,71 +285,65 @@ namespace GSF.TimeSeries.Adapters
                 List<IOutputAdapter> outputAdapters, outputBroadcastRoutes = new List<IOutputAdapter>();
                 MeasurementKey[] measurementKeys;
 
-                if ((object)m_actionAdapters != null)
+                if ((object)actionAdapterCollection != null)
                 {
-                    lock (m_actionAdapters)
+                    foreach (IActionAdapter actionAdapter in actionAdapterCollection)
                     {
-                        foreach (IActionAdapter actionAdapter in m_actionAdapters)
+                        // Make sure adapter is initialized before calculating route
+                        if (actionAdapter.WaitForInitialize(actionAdapter.InitializationTimeout))
                         {
-                            // Make sure adapter is initialized before calculating route
-                            if (actionAdapter.WaitForInitialize(actionAdapter.InitializationTimeout))
+                            measurementKeys = actionAdapter.InputMeasurementKeys;
+
+                            if ((object)measurementKeys != null)
                             {
-                                measurementKeys = actionAdapter.InputMeasurementKeys;
-
-                                if ((object)measurementKeys != null)
+                                foreach (MeasurementKey key in measurementKeys)
                                 {
-                                    foreach (MeasurementKey key in measurementKeys)
+                                    if (!actionRoutes.TryGetValue(key, out actionAdapters))
                                     {
-                                        if (!actionRoutes.TryGetValue(key, out actionAdapters))
-                                        {
-                                            actionAdapters = new List<IActionAdapter>();
-                                            actionRoutes.Add(key, actionAdapters);
-                                        }
-
-                                        if (!actionAdapters.Contains(actionAdapter))
-                                            actionAdapters.Add(actionAdapter);
+                                        actionAdapters = new List<IActionAdapter>();
+                                        actionRoutes.Add(key, actionAdapters);
                                     }
+
+                                    if (!actionAdapters.Contains(actionAdapter))
+                                        actionAdapters.Add(actionAdapter);
                                 }
-                                else
-                                    actionBroadcastRoutes.Add(actionAdapter);
                             }
                             else
                                 actionBroadcastRoutes.Add(actionAdapter);
                         }
+                        else
+                            actionBroadcastRoutes.Add(actionAdapter);
                     }
                 }
 
-                if ((object)m_outputAdapters != null)
+                if ((object)outputAdapterCollection != null)
                 {
-                    lock (m_outputAdapters)
+                    foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
                     {
-                        foreach (IOutputAdapter outputAdapter in m_outputAdapters)
+                        // Make sure adapter is initialized before calculating route
+                        if (outputAdapter.WaitForInitialize(outputAdapter.InitializationTimeout))
                         {
-                            // Make sure adapter is initialized before calculating route
-                            if (outputAdapter.WaitForInitialize(outputAdapter.InitializationTimeout))
+                            measurementKeys = outputAdapter.InputMeasurementKeys;
+
+                            if ((object)measurementKeys != null)
                             {
-                                measurementKeys = outputAdapter.InputMeasurementKeys;
-
-                                if ((object)measurementKeys != null)
+                                foreach (MeasurementKey key in measurementKeys)
                                 {
-                                    foreach (MeasurementKey key in measurementKeys)
+                                    if (!outputRoutes.TryGetValue(key, out outputAdapters))
                                     {
-                                        if (!outputRoutes.TryGetValue(key, out outputAdapters))
-                                        {
-                                            outputAdapters = new List<IOutputAdapter>();
-                                            outputRoutes.Add(key, outputAdapters);
-                                        }
-
-                                        if (!outputAdapters.Contains(outputAdapter))
-                                            outputAdapters.Add(outputAdapter);
+                                        outputAdapters = new List<IOutputAdapter>();
+                                        outputRoutes.Add(key, outputAdapters);
                                     }
+
+                                    if (!outputAdapters.Contains(outputAdapter))
+                                        outputAdapters.Add(outputAdapter);
                                 }
-                                else
-                                    outputBroadcastRoutes.Add(outputAdapter);
                             }
                             else
                                 outputBroadcastRoutes.Add(outputAdapter);
                         }
+                        else
+                            outputBroadcastRoutes.Add(outputAdapter);
                     }
                 }
 
@@ -330,7 +363,7 @@ namespace GSF.TimeSeries.Adapters
                 }
 
                 // Start or stop any connect on demand adapters
-                HandleConnectOnDemandAdapters((MeasurementKey[])state);
+                HandleConnectOnDemandAdapters((MeasurementKey[])state, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
             }
             catch (Exception ex)
             {
@@ -483,10 +516,13 @@ namespace GSF.TimeSeries.Adapters
         /// Starts or stops connect on demand adapters based on current state of demanded input or output measurements.
         /// </summary>
         /// <param name="inputMeasurementKeysRestriction">Input measurement keys restriction.</param>
+        /// <param name="inputAdapterCollection">Collection of input adapters at start of routing table calculation.</param>
+        /// <param name="actionAdapterCollection">Collection of action adapters at start of routing table calculation.</param>
+        /// <param name="outputAdapterCollection">Collection of output adapters at start of routing table calculation.</param>
         /// <remarks>
         /// Set the <paramref name="inputMeasurementKeysRestriction"/> to null to use full adapter routing demands.
         /// </remarks>
-        protected virtual void HandleConnectOnDemandAdapters(MeasurementKey[] inputMeasurementKeysRestriction)
+        protected virtual void HandleConnectOnDemandAdapters(MeasurementKey[] inputMeasurementKeysRestriction, IInputAdapter[] inputAdapterCollection, IActionAdapter[] actionAdapterCollection, IOutputAdapter[] outputAdapterCollection)
         {
             IEnumerable<MeasurementKey> outputMeasurementKeys = null;
             IEnumerable<MeasurementKey> inputMeasurementKeys = null;
@@ -496,23 +532,23 @@ namespace GSF.TimeSeries.Adapters
             {
                 // When an input measurement keys restriction has been defined, extract the needed input and output measurement keys by
                 // walking the dependency chain of the restriction
-                TraverseMeasurementKeyDependencyChain(inputMeasurementKeysRestriction, out outputMeasurementKeys, out inputMeasurementKeys);
+                TraverseMeasurementKeyDependencyChain(inputMeasurementKeysRestriction, inputAdapterCollection, actionAdapterCollection, out outputMeasurementKeys, out inputMeasurementKeys);
             }
             else
             {
                 // Get the full list of output measurements keys that can be provided in this Iaon session
-                if ((object)m_inputAdapters != null)
-                    outputMeasurementKeys = m_inputAdapters.OutputMeasurementKeys();
+                if ((object)inputAdapterCollection != null)
+                    outputMeasurementKeys = inputAdapterCollection.OutputMeasurementKeys();
 
-                if ((object)m_actionAdapters != null)
+                if ((object)actionAdapterCollection != null)
                 {
                     if ((object)outputMeasurementKeys == null || !outputMeasurementKeys.Any())
                     {
-                        outputMeasurementKeys = m_actionAdapters.OutputMeasurementKeys();
+                        outputMeasurementKeys = actionAdapterCollection.OutputMeasurementKeys();
                     }
                     else
                     {
-                        IEnumerable<MeasurementKey> actionAdapterOutputMeasurementKeys = m_actionAdapters.OutputMeasurementKeys();
+                        IEnumerable<MeasurementKey> actionAdapterOutputMeasurementKeys = actionAdapterCollection.OutputMeasurementKeys();
 
                         if ((object)actionAdapterOutputMeasurementKeys != null && actionAdapterOutputMeasurementKeys.Any())
                             outputMeasurementKeys = outputMeasurementKeys.Concat(actionAdapterOutputMeasurementKeys).Distinct();
@@ -520,18 +556,18 @@ namespace GSF.TimeSeries.Adapters
                 }
 
                 // Get the full list of input measurements that can be demanded in this Iaon session
-                if ((object)m_outputAdapters != null)
-                    inputMeasurementKeys = m_outputAdapters.InputMeasurementKeys;
+                if ((object)outputAdapterCollection != null)
+                    inputMeasurementKeys = outputAdapterCollection.InputMeasurementKeys();
 
-                if ((object)m_actionAdapters != null)
+                if ((object)actionAdapterCollection != null)
                 {
                     if (inputMeasurementKeys == null || !inputMeasurementKeys.Any())
                     {
-                        inputMeasurementKeys = m_actionAdapters.InputMeasurementKeys;
+                        inputMeasurementKeys = actionAdapterCollection.InputMeasurementKeys();
                     }
                     else
                     {
-                        MeasurementKey[] actionAdapterInputMeasurementKeys = m_actionAdapters.InputMeasurementKeys;
+                        MeasurementKey[] actionAdapterInputMeasurementKeys = actionAdapterCollection.InputMeasurementKeys();
 
                         if ((object)actionAdapterInputMeasurementKeys != null && actionAdapterInputMeasurementKeys.Length > 0)
                             inputMeasurementKeys = inputMeasurementKeys.Concat(actionAdapterInputMeasurementKeys).Distinct();
@@ -542,10 +578,10 @@ namespace GSF.TimeSeries.Adapters
             // Handle connect on demand action adapters and output adapters based on currently provisioned output measurements
             if ((object)outputMeasurementKeys != null && outputMeasurementKeys.Any())
             {
-                if ((object)m_actionAdapters != null)
+                if ((object)actionAdapterCollection != null)
                 {
                     // Start or stop connect on demand action adapters based on need, i.e., they handle any of the currently created output measurements
-                    foreach (IActionAdapter actionAdapter in m_actionAdapters)
+                    foreach (IActionAdapter actionAdapter in actionAdapterCollection)
                     {
                         if (!actionAdapter.AutoStart && actionAdapter.RespectInputDemands)
                         {
@@ -566,10 +602,10 @@ namespace GSF.TimeSeries.Adapters
                     }
                 }
 
-                if ((object)m_outputAdapters != null)
+                if ((object)outputAdapterCollection != null)
                 {
                     // Start or stop connect on demand output adapters based on need, i.e., they handle any of the currently created output measurements
-                    foreach (IOutputAdapter outputAdapter in m_outputAdapters)
+                    foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
                     {
                         if (!outputAdapter.AutoStart)
                         {
@@ -592,9 +628,9 @@ namespace GSF.TimeSeries.Adapters
             else
             {
                 // Handle special case of clearing requested input keys for connect on demand action adapters when no output measurement keys are defined
-                if ((object)m_actionAdapters != null)
+                if ((object)actionAdapterCollection != null)
                 {
-                    foreach (IActionAdapter actionAdapter in m_actionAdapters)
+                    foreach (IActionAdapter actionAdapter in actionAdapterCollection)
                     {
                         if (!actionAdapter.AutoStart && (object)actionAdapter.RequestedInputMeasurementKeys != null && actionAdapter.RespectInputDemands)
                             actionAdapter.RequestedInputMeasurementKeys = null;
@@ -606,9 +642,9 @@ namespace GSF.TimeSeries.Adapters
                 }
 
                 // Handle special case of clearing requested input keys and stopping connect on demand output adapters when no output measurement keys are defined
-                if ((object)m_outputAdapters != null)
+                if ((object)outputAdapterCollection != null)
                 {
-                    foreach (IOutputAdapter outputAdapter in m_outputAdapters)
+                    foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
                     {
                         if (!outputAdapter.AutoStart)
                         {
@@ -624,10 +660,10 @@ namespace GSF.TimeSeries.Adapters
             // Handle connect on demand action adapters and input adapters based on currently demanded input measurements
             if ((object)inputMeasurementKeys != null && inputMeasurementKeys.Any())
             {
-                if ((object)m_actionAdapters != null)
+                if ((object)actionAdapterCollection != null)
                 {
                     // Start or stop connect on demand action adapters based on need, i.e., they provide any of the currently demanded input measurements
-                    foreach (IActionAdapter actionAdapter in m_actionAdapters)
+                    foreach (IActionAdapter actionAdapter in actionAdapterCollection)
                     {
                         if (!actionAdapter.AutoStart)
                         {
@@ -653,10 +689,10 @@ namespace GSF.TimeSeries.Adapters
                     }
                 }
 
-                if ((object)m_inputAdapters != null)
+                if ((object)inputAdapterCollection != null)
                 {
                     // Start or stop connect on demand input adapters based on need, i.e., they provide any of the currently demanded input measurements
-                    foreach (IInputAdapter inputAdapter in m_inputAdapters)
+                    foreach (IInputAdapter inputAdapter in inputAdapterCollection)
                     {
                         if (!inputAdapter.AutoStart)
                         {
@@ -679,9 +715,9 @@ namespace GSF.TimeSeries.Adapters
             else
             {
                 // Handle special case of clearing requested output keys and stopping connect on demand action adapters when no input measurement keys are defined
-                if ((object)m_actionAdapters != null)
+                if ((object)actionAdapterCollection != null)
                 {
-                    foreach (IActionAdapter actionAdapter in m_actionAdapters)
+                    foreach (IActionAdapter actionAdapter in actionAdapterCollection)
                     {
                         if (!actionAdapter.AutoStart)
                         {
@@ -699,9 +735,9 @@ namespace GSF.TimeSeries.Adapters
                 }
 
                 // Handle special case of clearing requested output keys and stopping connect on demand input adapters when no input measurement keys are defined
-                if ((object)m_inputAdapters != null)
+                if ((object)inputAdapterCollection != null)
                 {
-                    foreach (IInputAdapter inputAdapter in m_inputAdapters)
+                    foreach (IInputAdapter inputAdapter in inputAdapterCollection)
                     {
                         if (!inputAdapter.AutoStart)
                         {
@@ -719,9 +755,11 @@ namespace GSF.TimeSeries.Adapters
         /// Calculates the input and output measurement key dependency chain based on a set of input measurement keys restriction.
         /// </summary>
         /// <param name="inputMeasurementKeysRestriction">Input measurement keys restriction.</param>
+        /// <param name="inputAdapterCollection">Collection of input adapters at start of routing table calculation.</param>
+        /// <param name="actionAdapterCollection">Collection of action adapters at start of routing table calculation.</param>
         /// <param name="outputMeasurementKeys">Dependent output measurement keys to return.</param>
         /// <param name="inputMeasurementKeys">Dependent input measurement keys to return.</param>
-        protected virtual void TraverseMeasurementKeyDependencyChain(MeasurementKey[] inputMeasurementKeysRestriction, out IEnumerable<MeasurementKey> outputMeasurementKeys, out IEnumerable<MeasurementKey> inputMeasurementKeys)
+        protected virtual void TraverseMeasurementKeyDependencyChain(MeasurementKey[] inputMeasurementKeysRestriction, IInputAdapter[] inputAdapterCollection, IActionAdapter[] actionAdapterCollection, out IEnumerable<MeasurementKey> outputMeasurementKeys, out IEnumerable<MeasurementKey> inputMeasurementKeys)
         {
             List<MeasurementKey> inputMeasurementKeyList = new List<MeasurementKey>(inputMeasurementKeysRestriction);
             outputMeasurementKeys = null;
@@ -742,7 +780,7 @@ namespace GSF.TimeSeries.Adapters
                         inputMeasurementKeyList = inputMeasurementKeyList.Concat(newInputKeys).Distinct().ToList();
                 }
 
-                actionAdapters = FindDistinctAdapters(m_actionAdapters, inputMeasurementKeyList, actionAdapterList);
+                actionAdapters = FindDistinctAdapters(actionAdapterCollection, inputMeasurementKeyList, actionAdapterList);
             }
             while ((object)actionAdapters != null);
 
@@ -765,7 +803,7 @@ namespace GSF.TimeSeries.Adapters
                         inputMeasurementKeyList = inputMeasurementKeyList.Concat(newInputKeys).Distinct().ToList();
                 }
 
-                inputAdapters = FindDistinctAdapters(m_inputAdapters, inputMeasurementKeyList, inputAdapterList);
+                inputAdapters = FindDistinctAdapters(inputAdapterCollection, inputMeasurementKeyList, inputAdapterList);
             }
             while ((object)inputAdapters != null);
 
