@@ -87,7 +87,7 @@ namespace GSF.TimeSeries
         /// </summary>
         FlatlineAlarm = (uint)Bits.Bit08,
         /// <summary>
-        /// Defines comparision alarm, i.e., outside threshold of comparison with a real-time value.
+        /// Defines comparison alarm, i.e., outside threshold of comparison with a real-time value.
         /// </summary>
         ComparisonAlarm = (uint)Bits.Bit09,
         /// <summary>
@@ -212,7 +212,7 @@ namespace GSF.TimeSeries
         /// Gets the adjusted numeric value of this <see cref="IMeasurement"/>, taking into account the specified <see cref="Adder"/> and <see cref="Multiplier"/> offsets.
         /// </summary>
         /// <remarks>
-        /// <para>Implementors need to account for <see cref="Adder"/> and <see cref="Multiplier"/> in return value, e.g.:<br/>
+        /// <para>Implementers need to account for <see cref="Adder"/> and <see cref="Multiplier"/> in return value, e.g.:<br/>
         /// <c>return <see cref="ITimeSeriesValue{T}.Value"/> * <see cref="Multiplier"/> + <see cref="Adder"/></c>
         /// </para>
         /// </remarks>
@@ -225,7 +225,7 @@ namespace GSF.TimeSeries
         /// Defines an offset to add to the <see cref="IMeasurement"/> value.
         /// </summary>
         /// <remarks>
-        /// Implementors should make sure this value defaults to zero.
+        /// Implementers should make sure this value defaults to zero.
         /// </remarks>
         double Adder
         {
@@ -234,10 +234,10 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Defines a mulplicative offset to apply to the <see cref="IMeasurement"/> value.
+        /// Defines a multiplicative offset to apply to the <see cref="IMeasurement"/> value.
         /// </summary>
         /// <remarks>
-        /// Implementors should make sure this value defaults to one.
+        /// Implementers should make sure this value defaults to one.
         /// </remarks>
         double Multiplier
         {
@@ -258,7 +258,7 @@ namespace GSF.TimeSeries
         /// Gets or sets exact timestamp, in ticks, of when this <see cref="IMeasurement"/> was received (i.e., created).
         /// </summary>
         /// <remarks>
-        /// <para>Implementors should set this timestamp to be the ticks of <see cref="PrecisionTimer.UtcNow"/> of when this class was created.</para>
+        /// <para>Implementers should set this timestamp to be the ticks of <see cref="PrecisionTimer.UtcNow"/> of when this class was created.</para>
         /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
         /// </remarks>
         Ticks ReceivedTimestamp

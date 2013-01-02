@@ -29,12 +29,12 @@
 //
 //******************************************************************************************************
 
-using GSF.Units;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using GSF.Units;
 
 namespace GSF.TimeSeries
 {
@@ -136,7 +136,7 @@ namespace GSF.TimeSeries
             /// <param name="processingInterval">Desired processing interval, if applicable.</param>
             /// <remarks>
             /// When the <paramref name="processingInterval"/> is set to -1, the frame rate timer interval will be calculated as a distribution
-            /// of whole milliseonds over the specified number of <paramref name="framesPerSecond"/>. Otherwise the specified
+            /// of whole milliseconds over the specified number of <paramref name="framesPerSecond"/>. Otherwise the specified
             /// <paramref name="processingInterval"/> will be used as the timer interval.
             /// </remarks>
             public FrameRateTimer(int framesPerSecond, int processingInterval)
@@ -441,7 +441,7 @@ namespace GSF.TimeSeries
         private long m_publishedMeasurements;               // Total number of published measurements
         private long m_downsampledMeasurements;             // Total number of downsampled measurements
         private long m_missedSortsByTimeout;                // Total number of unsorted measurements due to timeout waiting for lock
-        private long m_waitHandleExpirations;               // Total number of wait handle expirations encounted due to delayed precision timer releases
+        private long m_waitHandleExpirations;               // Total number of wait handle expirations encountered due to delayed precision timer releases
         private long m_framesAheadOfSchedule;               // Total number of frames published ahead of schedule
         private long m_publishedFrames;                     // Total number of published frames
         private long m_totalPublishTime;                    // Total cumulative frame user function publication time (in ticks) - used to calculate average
@@ -612,7 +612,7 @@ namespace GSF.TimeSeries
         /// Gets or sets flag to start tracking the absolute latest received measurement values.
         /// </summary>
         /// <remarks>
-        /// Lastest received measurement value will be available via the <see cref="LatestMeasurements"/> property.
+        /// Latest received measurement value will be available via the <see cref="LatestMeasurements"/> property.
         /// Note that enabling this option will slightly increase the required sorting time.
         /// </remarks>
         public bool TrackLatestMeasurements
@@ -688,7 +688,7 @@ namespace GSF.TimeSeries
                         // Unsubscribe from last frame rate timer, if any
                         DetachFromFrameRateTimer(m_framesPerSecond, m_processingInterval);
 
-                        // Make sure to release publication wait wandle if it's currently waiting...
+                        // Make sure to release publication wait handle if it's currently waiting...
                         if (m_publicationWaitHandle != null)
                             m_publicationWaitHandle.Set();
                     }
@@ -735,7 +735,7 @@ namespace GSF.TimeSeries
                     }
                     else
                     {
-                        // Make sure to release publication wait wandle if it's currently waiting...
+                        // Make sure to release publication wait handle if it's currently waiting...
                         if (m_publicationWaitHandle != null)
                             m_publicationWaitHandle.Set();
                     }
@@ -754,7 +754,7 @@ namespace GSF.TimeSeries
         /// </para>
         /// <para>
         /// With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, e.g.,
-        /// a timer interval, overwhich to process data. A value of -1 means to use the default processing interval, i.e., use
+        /// a timer interval, over which to process data. A value of -1 means to use the default processing interval, i.e., use
         /// the <see cref="FramesPerSecond"/>, while a value of 0 means to process data as fast as possible.
         /// </para>
         /// <para>
@@ -830,7 +830,7 @@ namespace GSF.TimeSeries
                     {
                         m_usePrecisionTimer = false;
 
-                        // Make sure to release publication wait wandle if it's currently waiting...
+                        // Make sure to release publication wait handle if it's currently waiting...
                         if (m_publicationWaitHandle != null)
                             m_publicationWaitHandle.Set();
                     }
@@ -853,7 +853,7 @@ namespace GSF.TimeSeries
                             // Unsubscribe from last frame rate timer, if any
                             DetachFromFrameRateTimer(m_framesPerSecond, m_processingInterval);
 
-                            // Make sure to release publication wait wandle if it's currently waiting...
+                            // Make sure to release publication wait handle if it's currently waiting...
                             if (m_publicationWaitHandle != null)
                                 m_publicationWaitHandle.Set();
                         }
@@ -867,7 +867,7 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <remarks>
         /// <para>
-        /// The concentrator automatically defines a precision timer to provide the heatbeat for frame publication, however if the system
+        /// The concentrator automatically defines a precision timer to provide the heartbeat for frame publication, however if the system
         /// gets busy the heartbeat signals can be missed. This property defines a maximum wait timeout before reception of the heartbeat
         /// signal to make sure frame publications continue to occur in a timely fashion even when a system is under stress.
         /// </para>
@@ -1214,7 +1214,7 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <remarks>
         /// Setting this property to <c>true</c> forces system to use timestamps as-is without checking quality.
-        /// If this property is <c>true</c>, it will supercede operation of <see cref="AllowSortsByArrival"/>.
+        /// If this property is <c>true</c>, it will supersede operation of <see cref="AllowSortsByArrival"/>.
         /// </remarks>
         public bool IgnoreBadTimestamps
         {
@@ -1338,7 +1338,7 @@ namespace GSF.TimeSeries
                             Thread.VolatileWrite(ref m_realTimeTicks, currentTimeTicks);
                     }
 
-                    // Assume lastest measurement timestamp is the best value we have for real-time.
+                    // Assume latest measurement timestamp is the best value we have for real-time.
                     return Thread.VolatileRead(ref m_realTimeTicks);
                 }
             }
@@ -1456,7 +1456,7 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Gets the total number of wait handle expirations encounted due to delayed precision timer releases.
+        /// Gets the total number of wait handle expirations encountered due to delayed precision timer releases.
         /// </summary>
         public long WaitHandleExpirations
         {
@@ -1864,7 +1864,7 @@ namespace GSF.TimeSeries
         /// <param name="measurement"><see cref="IMeasurement"/> to sort.</param>
         public virtual void SortMeasurement(IMeasurement measurement)
         {
-            SortMeasurements(new IMeasurement[] { measurement });
+            SortMeasurements(new[] { measurement });
         }
 
         /// <summary>
@@ -2059,7 +2059,7 @@ namespace GSF.TimeSeries
                         {
                             if (m_performTimestampReasonabilityCheck)
                             {
-                                // Apply a resonability check to this value using the local clock. Since the lead time
+                                // Apply a reasonability check to this value using the local clock. Since the lead time
                                 // typically defines the tolerated accuracy of the local clock to real-time, this value
                                 // is used as the + and - timestamp tolerance to validate if the time is reasonable.
 #if UseHighResolutionTime
@@ -2261,7 +2261,7 @@ namespace GSF.TimeSeries
                             frameIndex = (int)(((double)timestamp.DistanceBeyondSecond() + m_timeOffset) / m_ticksPerFrame);
 
                             // Mark the frame as published to prevent any further sorting into this frame - setting this flag
-                            // is in a critcal section to ensure that sorting into this frame has ceased prior to publication
+                            // is in a critical section to ensure that sorting into this frame has ceased prior to publication
                             frame.Lock.EnterWriteLock();
 
                             try
