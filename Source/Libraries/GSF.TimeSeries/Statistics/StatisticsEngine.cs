@@ -388,7 +388,7 @@ namespace GSF.TimeSeries.Statistics
                 foreach (StatisticSource source in sources)
                 {
                     // Send calculated statistics into the system
-                    OnNewMeasurements(CalculateStatistics(serverTime, source));
+                    OnNewMeasurements(CalculateStatistics(statistics, serverTime, source));
                 }
 
                 OnCalculated();
@@ -402,7 +402,7 @@ namespace GSF.TimeSeries.Statistics
             }
         }
 
-        private ICollection<IMeasurement> CalculateStatistics(DateTime serverTime, StatisticSource source)
+        private ICollection<IMeasurement> CalculateStatistics(Statistic[] statistics, DateTime serverTime, StatisticSource source)
         {
             List<IMeasurement> calculatedStatistics = new List<IMeasurement>();
             IMeasurement calculatedStatistic;
@@ -416,7 +416,7 @@ namespace GSF.TimeSeries.Statistics
                 // Calculate statistics
                 foreach (DataRow measurement in source.StatisticMeasurements)
                 {
-                    calculatedStatistic = CalculateStatistic(serverTime, source, measurement);
+                    calculatedStatistic = CalculateStatistic(statistics, serverTime, source, measurement);
 
                     if ((object)calculatedStatistic != null)
                         calculatedStatistics.Add(calculatedStatistic);
@@ -431,7 +431,7 @@ namespace GSF.TimeSeries.Statistics
             return calculatedStatistics;
         }
 
-        private IMeasurement CalculateStatistic(DateTime serverTime, StatisticSource source, DataRow measurement)
+        private IMeasurement CalculateStatistic(Statistic[] statistics, DateTime serverTime, StatisticSource source, DataRow measurement)
         {
             Guid signalID;
             string signalReference;
