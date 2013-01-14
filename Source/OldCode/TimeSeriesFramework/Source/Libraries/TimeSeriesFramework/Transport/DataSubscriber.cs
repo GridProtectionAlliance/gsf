@@ -42,6 +42,7 @@ using TVA.Data;
 using TVA.IO;
 using TVA.Reflection;
 using TVA.Security.Cryptography;
+using TimeSeriesFramework.Statistics;
 
 namespace TimeSeriesFramework.Transport
 {
@@ -705,6 +706,9 @@ namespace TimeSeriesFramework.Transport
                 commandChannel.ConnectionString = setting;
             else
                 commandChannel.ConnectionString = ConnectionString;
+
+            // Register subscriber with the statistics engine
+            StatisticsEngine.Register(this, "Subscriber", "SUB");
 
             Initialized = true;
         }

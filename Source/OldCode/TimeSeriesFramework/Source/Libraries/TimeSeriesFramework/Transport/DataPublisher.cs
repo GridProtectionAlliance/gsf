@@ -47,6 +47,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml;
 using TimeSeriesFramework.Adapters;
+using TimeSeriesFramework.Statistics;
 using TVA;
 using TVA.Communication;
 using TVA.Data;
@@ -961,6 +962,9 @@ namespace TimeSeriesFramework.Transport
             // Start cipher key rotation timer when encrypting payload
             if (m_encryptPayload && m_cipherKeyRotationTimer != null)
                 m_cipherKeyRotationTimer.Start();
+
+            // Register publisher with the statistics engine
+            StatisticsEngine.Register(this, "Publisher", "PUB");
 
             Initialized = true;
         }
