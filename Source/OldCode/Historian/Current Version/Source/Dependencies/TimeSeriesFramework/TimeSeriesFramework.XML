@@ -395,20 +395,25 @@
             </summary>
             <param name="ex">Processing <see cref="T:System.Exception"/>.</param>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.RoutingTables.HandleConnectOnDemandAdapters(TimeSeriesFramework.MeasurementKey[])">
+        <member name="M:TimeSeriesFramework.Adapters.RoutingTables.HandleConnectOnDemandAdapters(TimeSeriesFramework.MeasurementKey[],TimeSeriesFramework.Adapters.IInputAdapter[],TimeSeriesFramework.Adapters.IActionAdapter[],TimeSeriesFramework.Adapters.IOutputAdapter[])">
             <summary>
             Starts or stops connect on demand adapters based on current state of demanded input or output measurements.
             </summary>
             <param name="inputMeasurementKeysRestriction">Input measurement keys restriction.</param>
+            <param name="inputAdapterCollection">Collection of input adapters at start of routing table calculation.</param>
+            <param name="actionAdapterCollection">Collection of action adapters at start of routing table calculation.</param>
+            <param name="outputAdapterCollection">Collection of output adapters at start of routing table calculation.</param>
             <remarks>
             Set the <paramref name="inputMeasurementKeysRestriction"/> to null to use full adapter routing demands.
             </remarks>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.RoutingTables.TraverseMeasurementKeyDependencyChain(TimeSeriesFramework.MeasurementKey[],System.Collections.Generic.IEnumerable{TimeSeriesFramework.MeasurementKey}@,System.Collections.Generic.IEnumerable{TimeSeriesFramework.MeasurementKey}@)">
+        <member name="M:TimeSeriesFramework.Adapters.RoutingTables.TraverseMeasurementKeyDependencyChain(TimeSeriesFramework.MeasurementKey[],TimeSeriesFramework.Adapters.IInputAdapter[],TimeSeriesFramework.Adapters.IActionAdapter[],System.Collections.Generic.IEnumerable{TimeSeriesFramework.MeasurementKey}@,System.Collections.Generic.IEnumerable{TimeSeriesFramework.MeasurementKey}@)">
             <summary>
             Calculates the input and output measurement key dependency chain based on a set of input measurement keys restriction.
             </summary>
             <param name="inputMeasurementKeysRestriction">Input measurement keys restriction.</param>
+            <param name="inputAdapterCollection">Collection of input adapters at start of routing table calculation.</param>
+            <param name="actionAdapterCollection">Collection of action adapters at start of routing table calculation.</param>
             <param name="outputMeasurementKeys">Dependent output measurement keys to return.</param>
             <param name="inputMeasurementKeys">Dependent input measurement keys to return.</param>
         </member>
@@ -5729,13 +5734,6 @@
             The arguments to be passed into the statistic calculation function.
             </summary>
         </member>
-        <member name="T:TimeSeriesFramework.Statistics.GetAcronymFunction">
-            <summary>
-            Defines function signature for getting the acronym of a source.
-            </summary>
-            <param name="source">The source.</param>
-            <returns>The acronym of the given source.</returns>
-        </member>
         <member name="T:TimeSeriesFramework.Statistics.StatisticsEngine">
             <summary>
             Represents the engine that computes statistics within applications of the TimeSeriesFramework.
@@ -5766,39 +5764,12 @@
             Loads or reloads system statistics.
             </summary>
         </member>
-        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.MapMeasurement(TimeSeriesFramework.IMeasurement,System.String)">
-            <summary>
-            Maps the given measurement to the given source name.
-            </summary>
-            <param name="measurement">The measurement to be mapped.</param>
-            <param name="source">The name of the source of the measurement.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.AddSource(System.String,System.Object)">
-            <summary>
-            Adds the given source under the source collection with the given source name.
-            </summary>
-            <param name="sourceName">The name of the source.</param>
-            <param name="source">The source to be added.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.MapAcronymFunction(System.String,TimeSeriesFramework.Statistics.GetAcronymFunction)">
-            <summary>
-            Maps the given source name to the given acronym function.
-            </summary>
-            <param name="sourceName">The source name.</param>
-            <param name="acronymFunction">The function used to get the acronym of the source.</param>
-        </member>
         <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.GetShortStatus(System.Int32)">
             <summary>
             Gets a short one-line status of this <see cref="T:TimeSeriesFramework.Statistics.StatisticsEngine"/>.
             </summary>
             <param name="maxLength">Maximum number of available characters for display.</param>
             <returns>A short one-line summary of the current status of this <see cref="T:TimeSeriesFramework.Statistics.StatisticsEngine"/>.</returns>
-        </member>
-        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.AssignParentCollection(TimeSeriesFramework.Adapters.IAdapterCollection)">
-            <summary>
-            Assigns the reference to the parent <see cref="T:TimeSeriesFramework.Adapters.IAdapterCollection"/> that will contain this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
-            </summary>
-            <param name="parent">Parent adapter collection.</param>
         </member>
         <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.Dispose(System.Boolean)">
             <summary>
@@ -5810,6 +5781,36 @@
             <summary>
             Static initialization of <see cref="T:TimeSeriesFramework.Statistics.StatisticsEngine"/> class.
             </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.Register(TimeSeriesFramework.Adapters.IAdapter,System.String,System.String)">
+            <summary>
+            Registers the given adapter with the statistics engine as a source of statistics.
+            </summary>
+            <param name="adapter">The source of the statistics.</param>
+            <param name="sourceCategory">The category of the statistics.</param>
+            <param name="sourceAcronym">The acronym used in signal references.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.Register(System.Object,System.String,System.String,System.String)">
+            <summary>
+            Registers the given object with the statistics engine as a source of statistics.
+            </summary>
+            <param name="source">The source of the statistics.</param>
+            <param name="sourceName">The name of the source.</param>
+            <param name="sourceCategory">The category of the statistics.</param>
+            <param name="sourceAcronym">The acronym used in signal references.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.Unregister(System.Object)">
+            <summary>
+            Unregisters the given source, removing it from the list of
+            statistic sources so that it no longer generates statistics.
+            </summary>
+            <param name="source">The adapter to be unregistered with the statistics engine.</param>
+            <remarks>
+            Sources that implement <see cref="T:TimeSeriesFramework.Adapters.IAdapter"/> do not need to
+            explicitly unregister themselves from the statistics engine.
+            The engine automatically unregisters them by attaching to the
+            <see cref="E:TVA.ISupportLifecycle.Disposed"/> event.
+            </remarks>
         </member>
         <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.RegexMatch(System.String,System.String)">
             <summary>
@@ -5826,25 +5827,6 @@
             used to differentiate between statistics with the same source and type.
             </remarks>
         </member>
-        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.WaitForDefaultInstance(System.Int32)">
-            <summary>
-            Waits for the default instance to be created.
-            </summary>
-            <param name="timeout">The amount of time to wait before giving up.</param>
-            <returns>Boolean to indicate whether the default instance was created or not.</returns>
-        </member>
-        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.GetAdapterAcronym(System.Object)">
-            <summary>
-            Gets the adapter acronym of the given source object.
-            </summary>
-            <param name="source">The source object.</param>
-            <returns>The given source object's adapter acronym.</returns>
-        </member>
-        <member name="E:TimeSeriesFramework.Statistics.StatisticsEngine.Loaded">
-            <summary>
-            Event is raised when statistics are loaded from the database.
-            </summary>
-        </member>
         <member name="E:TimeSeriesFramework.Statistics.StatisticsEngine.BeforeCalculate">
             <summary>
             Event is raised before statistics calculation.
@@ -5855,9 +5837,9 @@
             Event is raised after statistics calculation.
             </summary>
         </member>
-        <member name="P:TimeSeriesFramework.Statistics.StatisticsEngine.DefinedMeasurements">
+        <member name="P:TimeSeriesFramework.Statistics.StatisticsEngine.DataSource">
             <summary>
-            Returns the collection of statistics measurements defined in the system.
+            Gets or sets <see cref="T:System.Data.DataSet"/> based data source available to the <see cref="T:TimeSeriesFramework.Statistics.StatisticsEngine"/>.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Statistics.StatisticsEngine.SupportsTemporalProcessing">
@@ -5868,28 +5850,6 @@
         <member name="P:TimeSeriesFramework.Statistics.StatisticsEngine.Status">
             <summary>
             Returns the detailed status of the statistics engine.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.Statistics.StatisticsEngine.Default">
-            <summary>
-            Gets the <see cref="T:TimeSeriesFramework.Statistics.StatisticsEngine"/> singleton instance.
-            </summary>
-        </member>
-        <member name="T:TimeSeriesFramework.Statistics.StatisticsEngine.UnmappedMeasurementsEventArgs">
-            <summary>
-            Represents arguments to an event that needs to pass a read-only
-            collection of unmapped measurements to its subscribers.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.Statistics.StatisticsEngine.UnmappedMeasurementsEventArgs.#ctor(System.Collections.ObjectModel.ReadOnlyCollection{TimeSeriesFramework.IMeasurement})">
-            <summary>
-            Creates a new instance of the <see cref="T:TimeSeriesFramework.Statistics.StatisticsEngine.UnmappedMeasurementsEventArgs"/> class.
-            </summary>
-            <param name="undefinedMeasurements">The undefined measurements.</param>
-        </member>
-        <member name="P:TimeSeriesFramework.Statistics.StatisticsEngine.UnmappedMeasurementsEventArgs.UnmappedMeasurements">
-            <summary>
-            Gets the collection of undefined measurements.
             </summary>
         </member>
         <member name="T:TimeSeriesFramework.Statistics.StatisticValueState">
