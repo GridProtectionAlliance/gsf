@@ -57,7 +57,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -68,6 +67,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using GSF.Configuration;
 
 namespace GSF.Communication
 {
@@ -172,7 +172,7 @@ namespace GSF.Communication
         /// <summary>
         /// Specifies the default value for the <see cref="ClientBase.ReceiveBufferSize"/> property.
         /// </summary>
-        public new const int DefaultReceiveBufferSize = 32768;
+        public new const int DefaultReceiveBufferSize = 65536;
 
         /// <summary>
         /// Specifies the default value for the <see cref="AllowDualStackSocket"/> property.

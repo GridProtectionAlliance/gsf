@@ -21,16 +21,19 @@
 //
 //******************************************************************************************************
 
-var target : Transform;
+var target:Transform;
 var distance = 10.0;
 var xSpeed = 300.0;
 var ySpeed = 300.0;
 var zoomRate:int = 50;
 var mouseDownFrames:int = 10;
 var minX = -9999.0;
+var arrowSpeed = 0.25f;
 
 private var x = 0.0;
 private var y = 0.0;
+private var xOffset = 0.0;
+private var yOffset = 0.0;
 private var buttonDown:boolean;
 private var rot:boolean;
 private var downCount:int = 0;
@@ -98,6 +101,20 @@ function Update ()
        		       
         var rotation = Quaternion.Euler(y, x, 0);
         var position = rotation * Vector3(0.0, 0.0, -distance) + target.position;
+        
+        // Handle X/Y camera offset movement based on arrow keys
+ 		if (Input.GetKey(KeyCode.RightArrow))
+ 			xOffset -= arrowSpeed;
+  		else if (Input.GetKey(KeyCode.LeftArrow))
+  			xOffset += arrowSpeed;
+  		
+  		if (Input.GetKey(KeyCode.UpArrow))
+  			yOffset -= arrowSpeed;
+  		else if (Input.GetKey(KeyCode.DownArrow))
+  			yOffset += arrowSpeed;
+  			
+  		position.x += xOffset;
+  		position.y += yOffset;
         
         transform.rotation = rotation;
         transform.position = position;                 
