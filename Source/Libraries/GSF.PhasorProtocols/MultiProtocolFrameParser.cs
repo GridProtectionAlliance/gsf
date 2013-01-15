@@ -519,6 +519,716 @@ namespace GSF.PhasorProtocols
             #endregion
         }
 
+        private sealed class SharedTcpServerReference : IServer
+        {
+            #region [ Members ]
+
+            // Events
+
+            /// <summary>
+            /// Occurs when the server is started.
+            /// </summary>
+            public event EventHandler ServerStarted;
+
+            /// <summary>
+            /// Occurs when the server is stopped.
+            /// </summary>
+            public event EventHandler ServerStopped;
+
+            /// <summary>
+            /// Occurs when a client connects to the server.
+            /// </summary>
+            /// <remarks>
+            /// <see cref="EventArgs{T}.Argument"/> is the ID of the client that connected to the server.
+            /// </remarks>
+            public event EventHandler<EventArgs<Guid>> ClientConnected;
+
+            /// <summary>
+            /// Occurs when a client disconnects from the server.
+            /// </summary>
+            /// <remarks>
+            /// <see cref="EventArgs{T}.Argument"/> is the ID of the client that disconnected from the server.
+            /// </remarks>
+            public event EventHandler<EventArgs<Guid>> ClientDisconnected;
+
+            /// <summary>
+            /// Occurs when data is being sent to a client.
+            /// </summary>
+            /// <remarks>
+            /// <see cref="EventArgs{T}.Argument"/> is the ID of the client to which the data is being sent.
+            /// </remarks>
+            public event EventHandler<EventArgs<Guid>> SendClientDataStart;
+
+            /// <summary>
+            /// Occurs when data has been sent to a client.
+            /// </summary>
+            /// <remarks>
+            /// <see cref="EventArgs{T}.Argument"/> is the ID of the client to which the data has been sent.
+            /// </remarks>
+            public event EventHandler<EventArgs<Guid>> SendClientDataComplete;
+
+            /// <summary>
+            /// Occurs when an <see cref="Exception"/> is encountered when sending data to a client.
+            /// </summary>
+            /// <remarks>
+            /// <see cref="EventArgs{T1,T2}.Argument1"/> is the ID of the client to which the data was being sent.<br/>
+            /// <see cref="EventArgs{T1,T2}.Argument2"/> is the <see cref="Exception"/> encountered when sending data to a client.
+            /// </remarks>
+            public event EventHandler<EventArgs<Guid, Exception>> SendClientDataException;
+
+            /// <summary>
+            /// Occurs when unprocessed data has been received from a client.
+            /// </summary>
+            /// <remarks>
+            /// <para>
+            /// This event can be used to receive a notification that client data has arrived. The <see cref="Read"/> method can then be used
+            /// to copy data to an existing buffer. In many cases it will be optimal to use an existing buffer instead of subscribing to the
+            /// <see cref="ReceiveClientDataComplete"/> event, however, the data that is available after calling the <see cref="Read"/> method
+            /// will be the original unprocessed data received by the client, i.e., not optionally decrypted or decompressed data.
+            /// </para>
+            /// <para>
+            /// <see cref="EventArgs{T1,T2}.Argument1"/> is the ID of the client from which data is received.<br/>
+            /// <see cref="EventArgs{T1,T2}.Argument2"/> is the number of bytes received in the buffer from the client.
+            /// </para>
+            /// </remarks>
+            public event EventHandler<EventArgs<Guid, int>> ReceiveClientData;
+
+            /// <summary>
+            /// Occurs when data received from a client has been processed and is ready for consumption.
+            /// </summary>
+            /// <remarks>
+            /// <see cref="EventArgs{T1,T2,T3}.Argument1"/> is the ID of the client from which data is received.<br/>
+            /// <see cref="EventArgs{T1,T2,T3}.Argument2"/> is a new buffer containing post-processed data received from the client starting at index zero.<br/>
+            /// <see cref="EventArgs{T1,T2,T3}.Argument3"/> is the number of post-processed bytes received in the buffer from the client.
+            /// </remarks>
+            public event EventHandler<EventArgs<Guid, byte[], int>> ReceiveClientDataComplete;
+
+            /// <summary>
+            /// Occurs when an <see cref="Exception"/> is encountered when receiving data from a client.
+            /// </summary>
+            /// <remarks>
+            /// <see cref="EventArgs{T1,T2}.Argument1"/> is the ID of the client from which the data was being received.<br/>
+            /// <see cref="EventArgs{T1,T2}.Argument2"/> is the <see cref="Exception"/> encountered when receiving data from a client.
+            /// </remarks>
+            public event EventHandler<EventArgs<Guid, Exception>> ReceiveClientDataException;
+
+            /// <summary>
+            /// Occurs when an <see cref="Exception"/> is encountered in a user-defined function via an event dispatch.
+            /// </summary>
+            /// <remarks>
+            /// <see cref="EventArgs{T}.Argument"/> is the <see cref="Exception"/> thrown by the user-defined function.
+            /// </remarks>
+            public event EventHandler<EventArgs<Exception>> UnhandledUserException;
+
+            /// <summary>
+            /// Raised after the source object has been properly disposed.
+            /// </summary>
+            public event EventHandler Disposed;
+
+            // Fields
+            private TcpServer m_tcpServer;
+            private IPAddress m_remoteAddress;
+            private Guid m_clientID;
+            private string m_configurationString;
+            private int m_receiveBufferSize;
+
+            #endregion
+
+            #region [ Properties ]
+
+            /// <summary>
+            /// Gets the name of the object providing status information.
+            /// </summary>
+            public string Name
+            {
+                get
+                {
+                    if ((object)m_tcpServer != null)
+                        return m_tcpServer.Name;
+
+                    return null;
+                }
+            }
+
+            /// <summary>
+            /// Gets the current status details about object providing status information.
+            /// </summary>
+            public string Status
+            {
+                get
+                {
+                    if ((object)m_tcpServer != null)
+                        return m_tcpServer.Status;
+
+                    return string.Empty;
+                }
+            }
+
+            /// <summary>
+            /// Gets or sets the data required by the server to initialize.
+            /// </summary>
+            public string ConfigurationString
+            {
+                get
+                {
+                    return m_configurationString;
+                }
+                set
+                {
+                    m_configurationString = value;
+                }
+            }
+
+            /// <summary>
+            /// Gets or sets the maximum number of clients that can connect to the server.
+            /// </summary>
+            public int MaxClientConnections
+            {
+                get
+                {
+                    if ((object)m_tcpServer != null)
+                        return m_tcpServer.MaxClientConnections;
+
+                    return ServerBase.DefaultMaxClientConnections;
+                }
+                set
+                {
+                    // Ignore this setting since we need to share
+                }
+            }
+
+            /// <summary>
+            /// Gets or sets the size of the buffer used by the client for receiving data from the server.
+            /// </summary>
+            public int SendBufferSize
+            {
+                get
+                {
+                    if ((object)m_tcpServer != null)
+                        return m_tcpServer.SendBufferSize;
+
+                    return ServerBase.DefaultSendBufferSize;
+                }
+                set
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            /// <summary>
+            /// Gets or sets the size of the buffer used by the server for receiving data from the clients.
+            /// </summary>
+            public int ReceiveBufferSize
+            {
+                get
+                {
+                    return m_receiveBufferSize;
+                }
+                set
+                {
+                    m_receiveBufferSize = value;
+                }
+            }
+
+            /// <summary>
+            /// Gets or sets the <see cref="Encoding"/> to be used for the text sent to the connected clients.
+            /// </summary>
+            public Encoding TextEncoding
+            {
+                get
+                {
+                    if ((object)m_tcpServer != null)
+                        return m_tcpServer.TextEncoding;
+
+                    return null;
+                }
+                set
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            /// <summary>
+            /// Gets the current <see cref="ServerState"/>.
+            /// </summary>
+            public ServerState CurrentState
+            {
+                get
+                {
+                    if ((object)m_tcpServer != null)
+                        return m_tcpServer.CurrentState;
+
+                    return ServerState.NotRunning;
+                }
+            }
+
+            /// <summary>
+            /// Gets the <see cref="TransportProtocol"/> used by the server for the transportation of data with the clients.
+            /// </summary>
+            public TransportProtocol TransportProtocol
+            {
+                get
+                {
+                    return TransportProtocol.Tcp;
+                }
+            }
+
+            /// <summary>
+            /// Gets the server's ID.
+            /// </summary>
+            public Guid ServerID
+            {
+                get
+                {
+                    if ((object)m_tcpServer != null)
+                        return m_tcpServer.ServerID;
+
+                    return Guid.Empty;
+                }
+            }
+
+            /// <summary>
+            /// Gets the IDs of clients connected to the server.
+            /// </summary>
+            public Guid[] ClientIDs
+            {
+                get
+                {
+                    if ((object)m_tcpServer != null)
+                        return m_tcpServer.ClientIDs;
+
+                    return new Guid[0];
+                }
+            }
+
+            /// <summary>
+            /// Gets the <see cref="Time"/> for which the server has been running.
+            /// </summary>
+            public Time RunTime
+            {
+                get
+                {
+                    if ((object)m_tcpServer != null)
+                        return m_tcpServer.RunTime;
+
+                    return 0.0D;
+                }
+            }
+
+            /// <summary>
+            /// Gets or sets a boolean value that indicates whether the object is enabled.
+            /// </summary>
+            public bool Enabled
+            {
+                get
+                {
+                    if ((object)m_tcpServer != null)
+                        return m_tcpServer.Enabled;
+
+                    return false;
+                }
+                set
+                {
+                    if ((object)m_tcpServer != null)
+                        m_tcpServer.Enabled = true;
+                }
+            }
+
+            #endregion
+
+            #region [ Methods ]
+
+            /// <summary>
+            /// Initializes the state of the object.
+            /// </summary>
+            public void Initialize()
+            {
+                Dictionary<string, string> settings = m_configurationString.ParseKeyValuePairs();
+                Match endPointMatch;
+                IPStack ipStack;
+                string receiveFromSetting;
+
+                if (settings.TryGetValue("receiveFrom", out receiveFromSetting))
+                {
+                    ipStack = Transport.GetInterfaceIPStack(settings);
+                    m_remoteAddress = Transport.CreateEndPoint(receiveFromSetting, 0, ipStack).Address;
+                }
+            }
+
+            /// <summary>
+            /// Starts the server.
+            /// </summary>
+            public void Start()
+            {
+                GetSharedServer();
+            }
+
+            /// <summary>
+            /// Stops the server.
+            /// </summary>
+            public void Stop()
+            {
+                ReturnSharedServer();
+            }
+
+            /// <summary>
+            /// Disconnects a connected client.
+            /// </summary>
+            /// <param name="clientID">ID of the client to be disconnected.</param>
+            public void DisconnectOne(Guid clientID)
+            {
+                if ((object)m_tcpServer != null && clientID == m_clientID)
+                    m_tcpServer.DisconnectOne(clientID);
+            }
+
+            /// <summary>
+            /// Disconnects all of the connected clients.
+            /// </summary>
+            public void DisconnectAll()
+            {
+                if ((object)m_tcpServer != null)
+                    m_tcpServer.DisconnectOne(m_clientID);
+            }
+
+            /// <summary>
+            /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            /// </summary>
+            /// <filterpriority>2</filterpriority>
+            public void Dispose()
+            {
+                ReturnSharedServer();
+            }
+
+            /// <summary>
+            /// Sends data to the specified client synchronously.
+            /// </summary>
+            /// <param name="clientID">ID of the client to which the data is to be sent.</param>
+            /// <param name="data">The buffer that contains the binary data to be sent.</param>
+            /// <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
+            /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
+            public void SendTo(Guid clientID, byte[] data, int offset, int length)
+            {
+                SendToAsync(m_clientID, data, offset, length).WaitOne();
+            }
+
+            /// <summary>
+            /// Sends data to all of the connected clients synchronously.
+            /// </summary>
+            /// <param name="data">The buffer that contains the binary data to be sent.</param>
+            /// <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
+            /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
+            public void Multicast(byte[] data, int offset, int length)
+            {
+                WaitHandle.WaitAll(MulticastAsync(data, offset, length));
+            }
+
+            /// <summary>
+            /// Sends data to the specified client asynchronously.
+            /// </summary>
+            /// <param name="clientID">ID of the client to which the data is to be sent.</param>
+            /// <param name="data">The buffer that contains the binary data to be sent.</param>
+            /// <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
+            /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
+            /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
+            public WaitHandle SendToAsync(Guid clientID, byte[] data, int offset, int length)
+            {
+                if ((object)m_tcpServer != null)
+                    return m_tcpServer.SendToAsync(clientID, data, offset, length);
+
+                return new ManualResetEvent(true);
+            }
+
+            /// <summary>
+            /// Sends data to all of the connected clients asynchronously.
+            /// </summary>
+            /// <param name="data">The buffer that contains the binary data to be sent.</param>
+            /// <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
+            /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
+            /// <returns>Array of <see cref="WaitHandle"/> for the asynchronous operation.</returns>
+            public WaitHandle[] MulticastAsync(byte[] data, int offset, int length)
+            {
+                if ((object)m_tcpServer != null)
+                    return new WaitHandle[] { m_tcpServer.SendToAsync(m_clientID, data, offset, length) };
+
+                return new WaitHandle[0];
+            }
+
+            /// <summary>
+            /// Reads a number of bytes from the current received data buffer and writes those bytes into a byte array at the specified offset.
+            /// </summary>
+            /// <param name="clientID">ID of the client from which data buffer should be read.</param>
+            /// <param name="buffer">Destination buffer used to hold copied bytes.</param>
+            /// <param name="startIndex">0-based starting index into destination <paramref name="buffer"/> to begin writing data.</param>
+            /// <param name="length">The number of bytes to read from current received data buffer and write into <paramref name="buffer"/>.</param>
+            /// <returns>The number of bytes read.</returns>
+            /// <remarks>
+            /// This function should only be called from within the <see cref="ReceiveClientData"/> event handler. Calling this method outside this
+            /// event will have unexpected results.
+            /// </remarks>
+            public int Read(Guid clientID, byte[] buffer, int startIndex, int length)
+            {
+                if ((object)m_tcpServer != null)
+                    return m_tcpServer.Read(clientID, buffer, startIndex, length);
+
+                return 0;
+            }
+
+            /// <summary>
+            /// Gets a reference to the shared server listening
+            /// on this server's local end point.
+            /// </summary>
+            /// <returns>A reference to a shared server.</returns>
+            private void GetSharedServer()
+            {
+                const string ConfigurationMismatchError = "Configuration mismatch detected between parsers using shared TCP server: {0}";
+
+                bool sharing;
+                EndPoint localEndPoint;
+                TcpServer sharedServer;
+                
+                lock (s_sharedServers)
+                {
+                    localEndPoint = GetLocalEndPoint();
+                    sharing = s_sharedServers.TryGetValue(localEndPoint, out sharedServer);
+
+                    if (sharing)
+                    {
+                        // Validate settings to ensure that they match
+                        if (sharedServer.ReceiveBufferSize != m_receiveBufferSize)
+                            throw new InvalidOperationException(string.Format(ConfigurationMismatchError, "Receive buffer size"));
+                    }
+                    else
+                    {
+                        // Create new client and add it to the shared list
+                        sharedServer = new TcpServer();
+                        s_sharedServers.Add(localEndPoint, sharedServer);
+                        s_sharedReferenceCount.Add(localEndPoint, 0);
+                    }
+
+                    // Set the TCP server member variable ASAP to guarantee
+                    // that it is set before callbacks can be triggered
+                    m_tcpServer = sharedServer;
+
+                    // Attach to event handlers
+                    sharedServer.ClientConnected += SharedServer_ClientConnected;
+                    sharedServer.ClientDisconnected += SharedServer_ClientDisconnected;
+                    sharedServer.ReceiveClientData += SharedServer_ReceiveClientData;
+                    sharedServer.ReceiveClientDataException += SharedServer_ReceiveClientDataException;
+                    sharedServer.SendClientDataException += SharedServer_SendClientDataException;
+                    sharedServer.ServerStarted += SharedServer_ServerStarted;
+                    sharedServer.ServerStopped += SharedServer_ServerStopped;
+                    sharedServer.UnhandledUserException += SharedServer_UnhandledUserException;
+
+                    if (!sharing)
+                    {
+                        // Initialize settings and connect
+                        sharedServer.ConfigurationString = m_configurationString;
+                        sharedServer.ReceiveBufferSize = m_receiveBufferSize;
+                        sharedServer.Start();
+                    }
+
+                    // Increment reference count
+                    s_sharedReferenceCount[localEndPoint]++;
+                }
+            }
+
+            /// <summary>
+            /// Releases a reference to this server's shared server,
+            /// and disposes of the shared server if nobody is using it.
+            /// </summary>
+            private void ReturnSharedServer()
+            {
+                EndPoint localEndPoint;
+
+                lock (s_sharedServers)
+                {
+                    if ((object)m_tcpServer == null)
+                        return;
+
+                    // Detach from event handlers
+                    m_tcpServer.ClientConnected -= SharedServer_ClientConnected;
+                    m_tcpServer.ClientDisconnected -= SharedServer_ClientDisconnected;
+                    m_tcpServer.ReceiveClientData -= SharedServer_ReceiveClientData;
+                    m_tcpServer.ReceiveClientDataException -= SharedServer_ReceiveClientDataException;
+                    m_tcpServer.SendClientDataException -= SharedServer_SendClientDataException;
+                    m_tcpServer.ServerStarted -= SharedServer_ServerStarted;
+                    m_tcpServer.ServerStopped -= SharedServer_ServerStopped;
+                    m_tcpServer.UnhandledUserException -= SharedServer_UnhandledUserException;
+
+                    // Decrement reference count
+                    localEndPoint = GetLocalEndPoint();
+                    s_sharedReferenceCount[localEndPoint]--;
+
+                    if (s_sharedReferenceCount[localEndPoint] == 0)
+                    {
+                        // No more references to TCP server
+                        // exist so dispose of it
+                        m_tcpServer.Stop();
+                        m_tcpServer.Dispose();
+                        s_sharedServers.Remove(localEndPoint);
+                        s_sharedReferenceCount.Remove(localEndPoint);
+                    }
+
+                    // Release reference to TCP server
+                    m_tcpServer = null;
+                }
+            }
+
+            /// <summary>
+            /// Terminates the server as quickly as possible and
+            /// removes it from the collection of shared servers.
+            /// </summary>
+            private void TerminateSharedClient()
+            {
+                EndPoint localEndPoint;
+                TcpServer sharedServer;
+
+                lock (s_sharedServers)
+                {
+                    localEndPoint = GetLocalEndPoint();
+
+                    if (s_sharedServers.TryGetValue(localEndPoint, out sharedServer))
+                    {
+                        // If the wrapped server and the shared server are the same,
+                        // no one has terminated the shared server yet
+                        if (m_tcpServer == sharedServer)
+                        {
+                            // Disconnect and dispose of the old server
+                            m_tcpServer.Stop();
+                            m_tcpServer.Dispose();
+
+                            // Remove the old server from the
+                            // collection of shared servers
+                            localEndPoint = GetLocalEndPoint();
+                            s_sharedServers.Remove(localEndPoint);
+                            s_sharedReferenceCount.Remove(localEndPoint);
+                        }
+                    }
+
+                    m_tcpServer = null;
+                }
+            }
+
+            /// <summary>
+            /// Determines the local end point this server intends
+            /// to listen on via configuration string properties.
+            /// </summary>
+            /// <returns>The local end point.</returns>
+            private EndPoint GetLocalEndPoint()
+            {
+                Dictionary<string, string> settings;
+                IPStack ipStack;
+                string localInterface;
+                string localPortSetting;
+                int localPort;
+
+                settings = m_configurationString.ParseKeyValuePairs();
+                ipStack = Transport.GetInterfaceIPStack(settings);
+
+                if (!settings.TryGetValue("interface", out localInterface))
+                    localInterface = string.Empty;
+
+                if (!settings.TryGetValue("port", out localPortSetting))
+                    throw new InvalidOperationException(string.Format("Local port property missing from connection string: {0}", m_configurationString));
+
+                if (!int.TryParse(localPortSetting, out localPort))
+                    throw new InvalidOperationException(string.Format("Unable to parse local port from \"{0}\".", localPortSetting));
+
+                return Transport.CreateEndPoint(localInterface, localPort, ipStack);
+            }
+
+            // Shared server client connected handler.
+            // Forwards event to users attached to this server.
+            private void SharedServer_ClientConnected(object sender, EventArgs<Guid> e)
+            {
+                TransportProvider<Socket> client;
+                Guid clientID = e.Argument;
+                IPEndPoint remoteEndPoint;
+
+                if (m_tcpServer.TryGetClient(clientID, out client))
+                {
+                    remoteEndPoint = client.Provider.RemoteEndPoint as IPEndPoint;
+
+                    if ((object)remoteEndPoint != null)
+                    {
+                        if (remoteEndPoint.Address.Equals(m_remoteAddress))
+                        {
+                            m_clientID = clientID;
+
+                            if ((object)ClientConnected != null)
+                                ClientConnected(this, e);
+                        }
+                    }
+                }
+            }
+
+            // Shared server client disconnected handler.
+            // Forwards event to users attached to this server.
+            private void SharedServer_ClientDisconnected(object sender, EventArgs<Guid> e)
+            {
+                if ((object)ClientDisconnected != null && e.Argument == m_clientID)
+                    ClientDisconnected(this, e);
+            }
+
+            // Shared server receive client data handler.
+            // Forwards event to users attached to this server.
+            private void SharedServer_ReceiveClientData(object sender, EventArgs<Guid, int> e)
+            {
+                if ((object)ReceiveClientData != null && e.Argument1 == m_clientID)
+                    ReceiveClientData(this, e);
+            }
+
+            // Shared server receive client data exception handler.
+            // Forwards event to users attached to this server.
+            private void SharedServer_ReceiveClientDataException(object sender, EventArgs<Guid, Exception> e)
+            {
+                if ((object)ReceiveClientDataException != null && e.Argument1 == m_clientID)
+                    ReceiveClientDataException(this, e);
+            }
+
+            // Shared server send client data exception handler.
+            // Forwards event to users attached to this server.
+            private void SharedServer_SendClientDataException(object sender, EventArgs<Guid, Exception> e)
+            {
+                if ((object)SendClientDataException != null && e.Argument1 == m_clientID)
+                    SendClientDataException(this, e);
+            }
+
+            // Shared server server started handler.
+            // Forwards event to users attached to this server.
+            private void SharedServer_ServerStarted(object sender, EventArgs e)
+            {
+                if ((object)ServerStarted != null)
+                    ServerStarted(this, e);
+            }
+
+            // Shared server server stopped handler.
+            // Forwards event to users attached to this server.
+            private void SharedServer_ServerStopped(object sender, EventArgs e)
+            {
+                if ((object)ServerStopped != null)
+                    ServerStopped(this, e);
+            }
+
+            // Shared server unhandled user exception handler.
+            // Forwards event to users attached to this server.
+            private void SharedServer_UnhandledUserException(object sender, EventArgs<Exception> e)
+            {
+                if ((object)UnhandledUserException != null)
+                    UnhandledUserException(this, e);
+            }
+
+            #endregion
+
+            #region [ Static ]
+
+            // Static Fields
+            private static readonly Dictionary<EndPoint, TcpServer> s_sharedServers = new Dictionary<EndPoint, TcpServer>();
+            private static readonly Dictionary<EndPoint, int> s_sharedReferenceCount = new Dictionary<EndPoint, int>();
+
+            #endregion
+        }
+
         /// <summary>
         /// Shared UDP client reference.
         /// </summary>
@@ -2590,7 +3300,7 @@ namespace GSF.PhasorProtocols
                     if (settings.TryGetValue("islistener", out setting))
                     {
                         if (setting.ParseBoolean())
-                            m_serverBasedDataChannel = new TcpServer();
+                            m_serverBasedDataChannel = settings.ContainsKey("receiveFrom") ? (IServer)new SharedTcpServerReference() : new TcpServer();
                         else
                             m_dataChannel = new TcpClient();
                     }
