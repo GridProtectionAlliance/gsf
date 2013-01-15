@@ -850,6 +850,15 @@ namespace PhasorProtocolAdapters
                             m_primaryDataSource.ConnectionTerminated -= m_primaryDataSource_ConnectionTerminated;
                         }
                         m_primaryDataSource = null;
+
+                        if ((object)m_definedDevices != null)
+                        {
+                            // Unregister each existing device from the statistics engine
+                            foreach (ConfigurationCell device in m_definedDevices.Values)
+                            {
+                                StatisticsEngine.Unregister(device);
+                            }
+                        }
                     }
                 }
                 finally
