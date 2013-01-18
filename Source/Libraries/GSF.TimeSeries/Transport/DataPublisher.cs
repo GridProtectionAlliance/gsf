@@ -1641,6 +1641,7 @@ namespace GSF.TimeSeries.Transport
                 {
                     MemoryStream responsePacket = new MemoryStream();
                     bool dataPacketResponse = responseCode == (byte)ServerResponse.DataPacket;
+                    bool useDataChannel = (dataPacketResponse || responseCode == (byte)ServerResponse.BufferBlock);
 
                     // Add response code
                     responsePacket.WriteByte(responseCode);
@@ -1702,8 +1703,8 @@ namespace GSF.TimeSeries.Transport
 
                     IServer publishChannel;
 
-                    // Data packets can be published on a UDP data channel, so check for this...
-                    if (dataPacketResponse)
+                    // Data packets and buffer blocks can be published on a UDP data channel, so check for this...
+                    if (useDataChannel)
                         publishChannel = m_clientPublicationChannels.GetOrAdd(clientID, id => (object)connection != null ? connection.PublishChannel : m_commandChannel);
                     else
                         publishChannel = m_commandChannel;
