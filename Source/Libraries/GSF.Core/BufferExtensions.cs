@@ -261,7 +261,7 @@ namespace GSF
         /// </summary>
         /// <param name="buffer">Buffer to search.</param>
         /// <param name="bytesToFind">Byte sequence to search for.</param>
-        /// <returns>The zero-based index of the first occurance of the sequence of <paramref name="bytesToFind"/> in the <paramref name="buffer"/>, if found; otherwise, -1.</returns>
+        /// <returns>The zero-based index of the first occurrence of the sequence of <paramref name="bytesToFind"/> in the <paramref name="buffer"/>, if found; otherwise, -1.</returns>
         public static int IndexOfSequence(this byte[] buffer, byte[] bytesToFind)
         {
             if ((object)buffer == null)
@@ -279,7 +279,7 @@ namespace GSF
         /// <param name="buffer">Buffer to search.</param>
         /// <param name="bytesToFind">Byte sequence to search for.</param>
         /// <param name="startIndex">Start index in the <paramref name="buffer"/> to start searching.</param>
-        /// <returns>The zero-based index of the first occurance of the sequence of <paramref name="bytesToFind"/> in the <paramref name="buffer"/>, if found; otherwise, -1.</returns>
+        /// <returns>The zero-based index of the first occurrence of the sequence of <paramref name="bytesToFind"/> in the <paramref name="buffer"/>, if found; otherwise, -1.</returns>
         public static int IndexOfSequence(this byte[] buffer, byte[] bytesToFind, int startIndex)
         {
             if ((object)buffer == null)
@@ -298,7 +298,7 @@ namespace GSF
         /// <param name="bytesToFind">Byte sequence to search for.</param>
         /// <param name="startIndex">Start index in the <paramref name="buffer"/> to start searching.</param>
         /// <param name="length">Number of bytes in the <paramref name="buffer"/> to search through.</param>
-        /// <returns>The zero-based index of the first occurance of the sequence of <paramref name="bytesToFind"/> in the <paramref name="buffer"/>, if found; otherwise, -1.</returns>
+        /// <returns>The zero-based index of the first occurrence of the sequence of <paramref name="bytesToFind"/> in the <paramref name="buffer"/>, if found; otherwise, -1.</returns>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="bytesToFind"/> is null or has zero length.
         /// </exception>
@@ -342,7 +342,7 @@ namespace GSF
                     // See if next bytes in sequence match
                     for (int x = 1; x < bytesToFind.Length; x++)
                     {
-                        // Make sure there's enough buffer remaining to accomodate this byte
+                        // Make sure there's enough buffer remaining to accommodate this byte
                         if (index + x < startIndex + length)
                         {
                             // If sequence doesn't match, search for next first-byte
@@ -367,7 +367,7 @@ namespace GSF
             return index;
         }
 
-        /// <summary>Returns comparision results of two binary buffers.</summary>
+        /// <summary>Returns comparison results of two binary buffers.</summary>
         /// <param name="source">Source buffer.</param>
         /// <param name="other">Other buffer to compare to <paramref name="source"/> buffer.</param>
         /// <returns>
@@ -441,7 +441,7 @@ namespace GSF
         }
 
         /// <summary>
-        /// Returns comparision results of two binary buffers.
+        /// Returns comparison results of two binary buffers.
         /// </summary>
         /// <param name="source">Source buffer.</param>
         /// <param name="sourceOffset">Offset into <paramref name="source"/> buffer to begin compare.</param>
@@ -480,65 +480,59 @@ namespace GSF
         /// </exception>
         public static int CompareTo(this byte[] source, int sourceOffset, byte[] other, int otherOffset, int count)
         {
+            // Both buffers are assumed equal if both are nothing.
             if ((object)source == null && (object)other == null)
-            {
-                // Both buffers are assumed equal if both are nothing.
                 return 0;
-            }
-            else if ((object)source == null)
-            {
-                // Buffer 2 has data, and buffer 1 is nothing. Buffer 2 is assumed larger.
+
+            // Buffer 2 has data, and buffer 1 is nothing. Buffer 2 is assumed larger.
+            if ((object)source == null)
                 return 1;
-            }
-            else if ((object)other == null)
-            {
-                // Buffer 1 has data, and buffer 2 is nothing. Buffer 1 is assumed larger.
+
+            // Buffer 1 has data, and buffer 2 is nothing. Buffer 1 is assumed larger.
+            if ((object)other == null)
                 return -1;
-            }
-            else
+
+            if (sourceOffset < 0)
+                throw new ArgumentOutOfRangeException("sourceOffset", "cannot be negative");
+
+            if (otherOffset < 0)
+                throw new ArgumentOutOfRangeException("otherOffset", "cannot be negative");
+
+            if (count < 0)
+                throw new ArgumentOutOfRangeException("count", "cannot be negative");
+
+            if (sourceOffset >= source.Length)
+                throw new ArgumentOutOfRangeException("sourceOffset", "not a valid index into source buffer");
+
+            if (otherOffset >= other.Length)
+                throw new ArgumentOutOfRangeException("otherOffset", "not a valid index into other buffer");
+
+            if (sourceOffset + count > source.Length)
+                throw new ArgumentOutOfRangeException("count", "exceeds source buffer size");
+
+            if (otherOffset + count > other.Length)
+                throw new ArgumentOutOfRangeException("count", "exceeds other buffer size");
+
+            // Overflow is possible, but unlikely.  Therefore, this is omitted for performance
+            // if ((int.MaxValue - sourceOffset - count) < 0)
+            //    throw new ArgumentOutOfRangeException("sourceOffset + count", "exceeds maximum buffer size");
+
+            // Overflow is possible, but unlikely.  Therefore, this is omitted for performance
+            // if ((int.MaxValue - otherOffset - count) < 0)
+            //    throw new ArgumentOutOfRangeException("sourceOffset + count", "exceeds maximum buffer size");
+
+            int comparision = 0;
+
+            // Compares elements of buffers that are of equal size.
+            for (int x = 0; x < count; x++)
             {
-                if (sourceOffset < 0)
-                    throw new ArgumentOutOfRangeException("sourceOffset", "cannot be negative");
+                comparision = source[sourceOffset + x].CompareTo(other[otherOffset + x]);
 
-                if (otherOffset < 0)
-                    throw new ArgumentOutOfRangeException("otherOffset", "cannot be negative");
-
-                if (count < 0)
-                    throw new ArgumentOutOfRangeException("count", "cannot be negative");
-
-                if (sourceOffset >= source.Length)
-                    throw new ArgumentOutOfRangeException("sourceOffset", "not a valid index into source buffer");
-
-                if (otherOffset >= other.Length)
-                    throw new ArgumentOutOfRangeException("otherOffset", "not a valid index into other buffer");
-
-                if (sourceOffset + count > source.Length)
-                    throw new ArgumentOutOfRangeException("count", "exceeds source buffer size");
-
-                if (otherOffset + count > other.Length)
-                    throw new ArgumentOutOfRangeException("count", "exceeds other buffer size");
-
-                // Overflow is possible, but unlikely.  Therefore, this is omitted for performance
-                // if ((int.MaxValue - sourceOffset - count) < 0)
-                //    throw new ArgumentOutOfRangeException("sourceOffset + count", "exceeds maximum buffer size");
-
-                // Overflow is possible, but unlikely.  Therefore, this is omitted for performance
-                // if ((int.MaxValue - otherOffset - count) < 0)
-                //    throw new ArgumentOutOfRangeException("sourceOffset + count", "exceeds maximum buffer size");
-
-                int comparision = 0;
-
-                // Compares elements of buffers that are of equal size.
-                for (int x = 0; x < count; x++)
-                {
-                    comparision = source[sourceOffset + x].CompareTo(other[otherOffset + x]);
-
-                    if (comparision != 0)
-                        break;
-                }
-
-                return comparision;
+                if (comparision != 0)
+                    break;
             }
+
+            return comparision;
         }
     }
 }

@@ -23,14 +23,14 @@
 //
 //******************************************************************************************************
 
-using GSF.Collections;
-using GSF.TimeSeries.Adapters;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
+using GSF.Collections;
+using GSF.TimeSeries.Adapters;
 
 namespace GSF.TimeSeries.Transport
 {
@@ -44,7 +44,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <remarks>
         /// This event is expected to only be raised when an input adapter has been designed to process
-        /// a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+        /// a finite amount of data, e.g., reading a historical range of data during temporal processing.
         /// </remarks>
         event EventHandler<EventArgs<IClientSubscription, EventArgs>> ProcessingComplete;
 
@@ -107,19 +107,19 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
-        /// Explictly raises the <see cref="IAdapter.StatusMessage"/> event.
+        /// Explicitly raises the <see cref="IAdapter.StatusMessage"/> event.
         /// </summary>
         /// <param name="status">New status message.</param>
         void OnStatusMessage(string status);
 
         /// <summary>
-        /// Explictly raises the <see cref="IAdapter.ProcessException"/> event.
+        /// Explicitly raises the <see cref="IAdapter.ProcessException"/> event.
         /// </summary>
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
         void OnProcessException(Exception ex);
 
         /// <summary>
-        /// Explictly raises the <see cref="IInputAdapter.ProcessingComplete"/> event.
+        /// Explicitly raises the <see cref="IInputAdapter.ProcessingComplete"/> event.
         /// </summary>
         /// <param name="sender"><see cref="IInputAdapter"/> raising the notification.</param>
         /// <param name="e">Event arguments for notification, if any.</param>
@@ -201,13 +201,13 @@ namespace GSF.TimeSeries.Transport
             DataTable actionAdapters = session.DataSource.Tables["ActionAdapters"];
             DataRow proxyAdapterRow = actionAdapters.NewRow();
 
-            // Define connection string for proxy adapter based on original inputs and ouputs as requested by client subscription
+            // Define connection string for proxy adapter based on original inputs and outputs as requested by client subscription
             StringBuilder connectionString = new StringBuilder();
 
-            if (inputMeasurementKeys != null && inputMeasurementKeys.Length > 0)
+            if ((object)inputMeasurementKeys != null && inputMeasurementKeys.Length > 0)
                 connectionString.AppendFormat("inputMeasurementKeys={{{0}}}", inputMeasurementKeys.Select(key => key.SignalID).ToDelimitedString(";"));
 
-            if (outputMeasurements != null && outputMeasurements.Length > 0)
+            if ((object)outputMeasurements != null && outputMeasurements.Length > 0)
             {
                 if (connectionString.Length > 0)
                     connectionString.Append("; ");
@@ -257,7 +257,7 @@ namespace GSF.TimeSeries.Transport
             // Start temporal session adapters
             session.AllAdapters.Start();
 
-            // Recalculate routing tables to accomodate addtion of proxy adapter and handle
+            // Recalculate routing tables to accommodate addition of proxy adapter and handle
             // input measurement keys restriction
             session.RecalculateRoutingTables();
 
@@ -271,13 +271,13 @@ namespace GSF.TimeSeries.Transport
         /// <param name="session"><see cref="IaonSession"/> instance to dispose.</param>
         public static void DisposeTemporalSession(this IClientSubscription adapter, ref IaonSession session)
         {
-            if (session != null)
+            if ((object)session != null)
             {
                 EventHandler<EventArgs<string, UpdateType>> statusMessageFunction;
                 EventHandler<EventArgs<Exception>> processExceptionFunction;
                 EventHandler processingCompletedFunction;
 
-                // Remove and detatch from event handlers
+                // Remove and detach from event handlers
                 if (s_statusMessageHandlers.TryRemove(adapter, out statusMessageFunction))
                     session.StatusMessage -= statusMessageFunction;
 

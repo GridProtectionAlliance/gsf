@@ -23,13 +23,13 @@
 //
 //******************************************************************************************************
 
-using GSF.Parsing;
-using GSF.TimeSeries.Adapters;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using GSF.Parsing;
+using GSF.TimeSeries.Adapters;
 
 namespace GSF.TimeSeries.Transport
 {
@@ -47,7 +47,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <remarks>
         /// This event is expected to only be raised when an input adapter has been designed to process
-        /// a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+        /// a finite amount of data, e.g., reading a historical range of data during temporal processing.
         /// </remarks>
         public event EventHandler<EventArgs<IClientSubscription, EventArgs>> ProcessingComplete;
 
@@ -178,7 +178,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <remarks>
         /// With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
-        /// basically a delay, or timer interval, overwhich to process data. A value of -1 means to use the default processing
+        /// basically a delay, or timer interval, over which to process data. A value of -1 means to use the default processing
         /// interval while a value of 0 means to process data as fast as possible.
         /// </remarks>
         public override int ProcessingInterval
@@ -311,7 +311,7 @@ namespace GSF.TimeSeries.Transport
             if (!Settings.TryGetValue("inputMeasurementKeys", out m_requestedInputFilter))
                 m_requestedInputFilter = null;
 
-            // Handle temporal session intialization
+            // Handle temporal session initialization
             if (this.TemporalConstraintIsDefined())
                 m_iaonSession = this.CreateTemporalSession();
         }
@@ -371,18 +371,30 @@ namespace GSF.TimeSeries.Transport
         /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
         protected override void PublishFrame(IFrame frame, int index)
         {
-            if (!m_disposed)
+            if ((object)m_parent == null || m_disposed)
+                return;
+
+            List<ISupportBinaryImage> packet = new List<ISupportBinaryImage>();
+            bool useCompactMeasurementFormat = m_useCompactMeasurementFormat;
+            long frameLevelTimestamp = frame.Timestamp;
+            BufferBlockMeasurement bufferBlockMeasurement;
+            ISupportBinaryImage binaryMeasurement;
+            byte[] bufferBlock;
+            int binaryLength;
+            int packetSize = 13;
+
+            foreach (IMeasurement measurement in frame.Measurements.Values)
             {
-                List<ISupportBinaryImage> packet = new List<ISupportBinaryImage>();
-                bool useCompactMeasurementFormat = m_useCompactMeasurementFormat;
-                long frameLevelTimestamp = frame.Timestamp;
-                int packetSize = 13;
-
-                foreach (IMeasurement measurement in frame.Measurements.Values)
+                if (measurement is BufferBlockMeasurement)
                 {
-                    ISupportBinaryImage binaryMeasurement;
-                    int binaryLength;
-
+                    // Handle buffer block measurements as a special case - this can be any kind of data,
+                    // measurement subscriber will need to know how to interpret buffer
+                    bufferBlockMeasurement = (BufferBlockMeasurement)measurement;
+                    bufferBlock = bufferBlockMeasurement.Buffer.BlockCopy(0, bufferBlockMeasurement.Length);
+                    m_parent.SendClientResponse(m_clientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, bufferBlock);
+                }
+                else
+                {
                     // Serialize the current measurement.
                     if (useCompactMeasurementFormat)
                         binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, false);
@@ -405,10 +417,11 @@ namespace GSF.TimeSeries.Transport
                     packet.Add(binaryMeasurement);
                     packetSize += binaryLength;
                 }
-
-                // Process the remaining measurements.
-                ProcessBinaryMeasurements(packet, frameLevelTimestamp, useCompactMeasurementFormat);
             }
+
+            // Process the remaining measurements.
+            if (packet.Count > 0)
+                ProcessBinaryMeasurements(packet, frameLevelTimestamp, useCompactMeasurementFormat);
         }
 
         private void ProcessBinaryMeasurements(IEnumerable<ISupportBinaryImage> measurements, long frameLevelTimestamp, bool useCompactMeasurementFormat)
@@ -424,7 +437,7 @@ namespace GSF.TimeSeries.Transport
             data.WriteByte((byte)flags);
 
             // Serialize frame timestamp into data packet - this only occurs in synchronized data packets,
-            // unsynchronized subcriptions always include timestamps in the serialized measurements
+            // unsynchronized subscriptions always include timestamps in the serialized measurements
             data.Write(EndianOrder.BigEndian.GetBytes(frameLevelTimestamp), 0, 8);
 
             // Serialize total number of measurement values to follow

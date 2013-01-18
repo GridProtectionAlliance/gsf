@@ -23,16 +23,14 @@
 //
 //******************************************************************************************************
 
-using GSF.Collections;
-using GSF.Parsing;
-using GSF.TimeSeries.Adapters;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
+using GSF.Collections;
+using GSF.Parsing;
+using GSF.TimeSeries.Adapters;
 
 namespace GSF.TimeSeries.Transport
 {
@@ -43,9 +41,6 @@ namespace GSF.TimeSeries.Transport
     {
         #region [ Members ]
 
-        // Constants
-        private const int ProcessWaitTimeout = 1000;
-
         // Events
 
         /// <summary>
@@ -53,7 +48,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <remarks>
         /// This event is expected to only be raised when an input adapter has been designed to process
-        /// a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+        /// a finite amount of data, e.g., reading a historical range of data during temporal processing.
         /// </remarks>
         public event EventHandler<EventArgs<IClientSubscription, EventArgs>> ProcessingComplete;
 
@@ -213,7 +208,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <remarks>
         /// With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
-        /// basically a delay, or timer interval, overwhich to process data. A value of -1 means to use the default processing
+        /// basically a delay, or timer interval, over which to process data. A value of -1 means to use the default processing
         /// interval while a value of 0 means to process data as fast as possible.
         /// </remarks>
         public override int ProcessingInterval
@@ -227,7 +222,7 @@ namespace GSF.TimeSeries.Transport
                 base.ProcessingInterval = value;
 
                 // Update processing interval in private temporal session, if defined
-                if (m_iaonSession != null && m_iaonSession.AllAdapters != null)
+                if ((object)m_iaonSession != null && m_iaonSession.AllAdapters != null)
                     m_iaonSession.AllAdapters.ProcessingInterval = value;
             }
         }
@@ -250,7 +245,7 @@ namespace GSF.TimeSeries.Transport
                 lock (this)
                 {
                     // Update signal index cache unless "detaching" from real-time
-                    if (value != null && !(value.Length == 1 && value[0] == MeasurementKey.Undefined))
+                    if ((object)value != null && !(value.Length == 1 && value[0] == MeasurementKey.Undefined))
                     {
                         m_parent.UpdateSignalIndexCache(m_clientID, m_signalIndexCache, value);
 
@@ -297,7 +292,7 @@ namespace GSF.TimeSeries.Transport
 
                 status.Append(base.Status);
 
-                if (m_iaonSession != null)
+                if ((object)m_iaonSession != null)
                     status.Append(m_iaonSession.Status);
 
                 return status.ToString();
@@ -379,7 +374,7 @@ namespace GSF.TimeSeries.Transport
                 m_baseTimeRotationTimer.Elapsed += BaseTimeRotationTimer_Elapsed;
             }
 
-            // Handle temporal session intialization
+            // Handle temporal session initialization
             if (this.TemporalConstraintIsDefined())
                 m_iaonSession = this.CreateTemporalSession();
         }
@@ -423,10 +418,10 @@ namespace GSF.TimeSeries.Transport
         {
             int inputCount = 0, outputCount = 0;
 
-            if (InputMeasurementKeys != null)
+            if ((object)InputMeasurementKeys != null)
                 inputCount = InputMeasurementKeys.Length;
 
-            if (OutputMeasurements != null)
+            if ((object)OutputMeasurements != null)
                 outputCount = OutputMeasurements.Length;
 
             return string.Format("Total input measurements: {0}, total output measurements: {1}", inputCount, outputCount).PadLeft(maxLength);
@@ -438,18 +433,21 @@ namespace GSF.TimeSeries.Transport
         /// <param name="measurements">Collection of measurements to queue for processing.</param>
         /// <remarks>
         /// Measurements are filtered against the defined <see cref="InputMeasurementKeys"/> so we override method
-        /// so that dyanmic updates to keys will be synchronized with filtering to prevent interference.
+        /// so that dynamic updates to keys will be synchronized with filtering to prevent interference.
         /// </remarks>
         public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
-            if (!m_startTimeSent && (object)measurements != null && measurements.Any())
+            if ((object)measurements == null)
+                return;
+
+            if (!m_startTimeSent && measurements.Any())
             {
                 m_startTimeSent = true;
 
-                IMeasurement measurement = measurements.FirstOrDefault(m => m != null);
+                IMeasurement measurement = measurements.FirstOrDefault(m => (object)m != null);
                 Ticks timestamp = 0;
 
-                if (measurement != null)
+                if ((object)measurement != null)
                     timestamp = measurement.Timestamp;
 
                 m_parent.SendDataStartTime(m_clientID, timestamp);
@@ -471,55 +469,62 @@ namespace GSF.TimeSeries.Transport
                 measurements = filteredMeasurements;
             }
 
-            if (measurements.Any() && Enabled)
+            if (!measurements.Any() || !Enabled)
+                return;
+
+            if (TrackLatestMeasurements)
             {
-                if (TrackLatestMeasurements)
+                double publishInterval;
+
+                // Keep track of latest measurements
+                base.QueueMeasurementsForProcessing(measurements);
+                publishInterval = (m_publishInterval > 0) ? m_publishInterval : LagTime;
+
+                if (DateTime.UtcNow.Ticks > m_lastPublishTime + Ticks.FromSeconds(publishInterval))
                 {
-                    double publishInterval;
+                    List<IMeasurement> currentMeasurements = new List<IMeasurement>();
+                    Measurement newMeasurement;
 
-                    // Keep track of latest measurements
-                    base.QueueMeasurementsForProcessing(measurements);
-                    publishInterval = (m_publishInterval > 0) ? m_publishInterval : LagTime;
-
-                    if (DateTime.UtcNow.Ticks > m_lastPublishTime + Ticks.FromSeconds(publishInterval))
+                    // Create a new set of measurements that represent the latest known values setting value to NaN if it is old
+                    foreach (TemporalMeasurement measurement in LatestMeasurements)
                     {
-                        List<IMeasurement> currentMeasurements = new List<IMeasurement>();
-                        Measurement newMeasurement;
-
-                        // Create a new set of measurements that represent the latest known values setting value to NaN if it is old
-                        foreach (TemporalMeasurement measurement in LatestMeasurements)
+                        newMeasurement = new Measurement()
                         {
-                            newMeasurement = new Measurement()
-                            {
-                                ID = measurement.ID,
-                                Key = measurement.Key,
-                                Value = measurement.GetValue(RealTime),
-                                Adder = measurement.Adder,
-                                Multiplier = measurement.Multiplier,
-                                Timestamp = measurement.Timestamp,
-                                StateFlags = measurement.StateFlags
-                            };
+                            ID = measurement.ID,
+                            Key = measurement.Key,
+                            Value = measurement.GetValue(RealTime),
+                            Adder = measurement.Adder,
+                            Multiplier = measurement.Multiplier,
+                            Timestamp = measurement.Timestamp,
+                            StateFlags = measurement.StateFlags
+                        };
 
-                            currentMeasurements.Add(newMeasurement);
-                        }
-
-                        // Publish latest data values...
-                        if ((object)m_processQueue != null)
-                            m_processQueue.Enqueue(currentMeasurements);
+                        currentMeasurements.Add(newMeasurement);
                     }
+
+                    // Publish latest data values...
+                    if ((object)m_processQueue != null)
+                        m_processQueue.Enqueue(currentMeasurements);
                 }
-                else
-                {
-                    // Publish unsynchronized on data receipt otherwise...
-                    m_processQueue.Enqueue(measurements);
-                }
+            }
+            else
+            {
+                // Publish unsynchronized on data receipt otherwise...
+                m_processQueue.Enqueue(measurements);
             }
         }
 
         private void ProcessMeasurements(IEnumerable<IMeasurement> measurements)
         {
+            if ((object)m_parent == null || m_disposed)
+                return;
+
             List<ISupportBinaryImage> packet = new List<ISupportBinaryImage>();
             bool useCompactMeasurementFormat = m_useCompactMeasurementFormat;
+            BufferBlockMeasurement bufferBlockMeasurement;
+            ISupportBinaryImage binaryMeasurement;
+            byte[] bufferBlock;
+            int binaryLength;
             int packetSize = 5;
 
             // Wait for any external events, if needed
@@ -536,34 +541,43 @@ namespace GSF.TimeSeries.Transport
 
             foreach (IMeasurement measurement in measurements)
             {
-                ISupportBinaryImage binaryMeasurement;
-                int binaryLength;
-
-                // Serialize the current measurement.
-                if (useCompactMeasurementFormat)
-                    binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, m_includeTime, m_baseTimeOffsets, m_timeIndex, m_useMillisecondResolution);
-                else
-                    binaryMeasurement = new SerializableMeasurement(measurement, m_parent.GetClientEncoding(m_clientID));
-
-                // Determine the size of the measurement in bytes.
-                binaryLength = binaryMeasurement.BinaryLength;
-
-                // If the current measurement will not fit in the packet based on the max
-                // packet size, process the current packet and start a new packet.
-                if (packetSize + binaryLength > DataPublisher.MaxPacketSize)
+                if (measurement is BufferBlockMeasurement)
                 {
-                    ProcessBinaryMeasurements(packet, useCompactMeasurementFormat);
-                    packet.Clear();
-                    packetSize = 5;
+                    // Handle buffer block measurements as a special case - this can be any kind of data,
+                    // measurement subscriber will need to know how to interpret buffer
+                    bufferBlockMeasurement = (BufferBlockMeasurement)measurement;
+                    bufferBlock = bufferBlockMeasurement.Buffer.BlockCopy(0, bufferBlockMeasurement.Length);
+                    m_parent.SendClientResponse(m_clientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, bufferBlock);
                 }
+                else
+                {
+                    // Serialize the current measurement.
+                    if (useCompactMeasurementFormat)
+                        binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, m_includeTime, m_baseTimeOffsets, m_timeIndex, m_useMillisecondResolution);
+                    else
+                        binaryMeasurement = new SerializableMeasurement(measurement, m_parent.GetClientEncoding(m_clientID));
 
-                // Add the current measurement to the packet.
-                packet.Add(binaryMeasurement);
-                packetSize += binaryLength;
+                    // Determine the size of the measurement in bytes.
+                    binaryLength = binaryMeasurement.BinaryLength;
+
+                    // If the current measurement will not fit in the packet based on the max
+                    // packet size, process the current packet and start a new packet.
+                    if (packetSize + binaryLength > DataPublisher.MaxPacketSize)
+                    {
+                        ProcessBinaryMeasurements(packet, useCompactMeasurementFormat);
+                        packet.Clear();
+                        packetSize = 5;
+                    }
+
+                    // Add the current measurement to the packet.
+                    packet.Add(binaryMeasurement);
+                    packetSize += binaryLength;
+                }
             }
 
             // Process the remaining measurements.
-            ProcessBinaryMeasurements(packet, useCompactMeasurementFormat);
+            if (packet.Count > 0)
+                ProcessBinaryMeasurements(packet, useCompactMeasurementFormat);
         }
 
         private void ProcessBinaryMeasurements(IEnumerable<ISupportBinaryImage> measurements, bool useCompactMeasurementFormat)
@@ -591,7 +605,7 @@ namespace GSF.TimeSeries.Transport
             }
 
             // Publish data packet to client
-            if (m_parent != null)
+            if ((object)m_parent != null)
                 m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, data.ToArray());
 
             // Track last publication time
@@ -646,7 +660,7 @@ namespace GSF.TimeSeries.Transport
         // Explicitly implement processing completed event bubbler to satisfy IClientSubscription interface
         void IClientSubscription.OnProcessingCompleted(object sender, EventArgs e)
         {
-            if (ProcessingComplete != null)
+            if ((object)ProcessingComplete != null)
                 ProcessingComplete(sender, new EventArgs<IClientSubscription, EventArgs>(this, e));
         }
 

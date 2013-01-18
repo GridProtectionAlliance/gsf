@@ -98,6 +98,7 @@
     <Compile Include="Statistics\StatisticValueState.cs" />
     <Compile Include="Statistics\StatisticValueStateCache.cs" />
     <Compile Include="TimeSeriesStartupOperations.cs" />
+    <Compile Include="BufferBlockMeasurement.cs" />
     <Compile Include="Transport\ClientConnection.cs" />
     <Compile Include="Transport\Common.cs" />
     <Compile Include="Transport\DataPublisher.cs" />

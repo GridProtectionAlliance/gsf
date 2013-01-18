@@ -23,7 +23,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Units;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -35,6 +34,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using GSF.Units;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -234,7 +234,7 @@ namespace GSF.TimeSeries.Adapters
         ///     <item>
         ///         <term>Multiplier</term>
         ///         <term>FLOAT</term>
-        ///         <description>Multipler to apply to value, if any (default to 1.0).</description>
+        ///         <description>Multiplier to apply to value, if any (default to 1.0).</description>
         ///     </item>
         /// </list>
         /// </para>
@@ -488,7 +488,7 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets the start time temporal procesing constraint defined by call to <see cref="SetTemporalConstraint"/>.
+        /// Gets the start time temporal processing constraint defined by call to <see cref="SetTemporalConstraint"/>.
         /// </summary>
         /// <remarks>
         /// This value will be <see cref="DateTime.MinValue"/> when start time constraint is not set - meaning the adapter
@@ -522,7 +522,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <remarks>
         /// With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
-        /// basically a delay, or timer interval, overwhich to process data. A value of -1 means to use the default processing
+        /// basically a delay, or timer interval, over which to process data. A value of -1 means to use the default processing
         /// interval while a value of 0 means to process data as fast as possible.
         /// </remarks>
         public virtual int ProcessingInterval
@@ -641,7 +641,7 @@ namespace GSF.TimeSeries.Adapters
                 }
                 status.AppendFormat("   Item reporting interval: {0}", MeasurementReportingInterval);
                 status.AppendLine();
-                status.AppendFormat("                Adpater ID: {0}", ID);
+                status.AppendFormat("                Adapter ID: {0}", ID);
                 status.AppendLine();
 
                 Dictionary<string, string> keyValuePairs = Settings;
@@ -790,7 +790,7 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Intializes <see cref="AdapterBase"/>.
+        /// Initializes <see cref="AdapterBase"/>.
         /// </summary>
         public virtual void Initialize()
         {
@@ -855,7 +855,7 @@ namespace GSF.TimeSeries.Adapters
             if (m_enabled)
                 Stop();
 
-            // Wait for adapter intialization to complete...
+            // Wait for adapter initialization to complete...
             m_enabled = WaitForInitialize(InitializationTimeout);
 
             if (m_enabled)
@@ -920,10 +920,10 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Manually sets the intialized state of the <see cref="AdapterBase"/>.
+        /// Manually sets the initialized state of the <see cref="AdapterBase"/>.
         /// </summary>
         /// <param name="initialized">Desired initialized state.</param>
-        [AdapterCommand("Manually sets the intialized state of the adapter.")]
+        [AdapterCommand("Manually sets the initialized state of the adapter.")]
         public virtual void SetInitializedState(bool initialized)
         {
             this.Initialized = initialized;
@@ -971,9 +971,9 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="constraintParameters">Defines any temporal parameters related to the constraint.</param>
         /// <remarks>
         /// <para>
-        /// This method defines a temporal processing contraint for an adapter, i.e., the start and stop time over which an
+        /// This method defines a temporal processing constraint for an adapter, i.e., the start and stop time over which an
         /// adapter will process data. Actual implementation of the constraint will be adapter specific. Implementations
-        /// should be able to dynamically handle multitple calls to this function with new constraints. Passing in <c>null</c>
+        /// should be able to dynamically handle multiple calls to this function with new constraints. Passing in <c>null</c>
         /// for the <paramref name="startTime"/> and <paramref name="stopTime"/> should cancel the temporal constraint and
         /// return the adapter to standard / real-time operation.
         /// </para>
@@ -1059,7 +1059,7 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="formattedStatus">Formatted status message.</param>
         /// <param name="args">Arguments for <paramref name="formattedStatus"/>.</param>
         /// <remarks>
-        /// This overload combines string.Format and SendStatusMessage for convienence.
+        /// This overload combines string.Format and SendStatusMessage for convenience.
         /// </remarks>
         protected virtual void OnStatusMessage(string formattedStatus, params object[] args)
         {
@@ -1441,7 +1441,7 @@ namespace GSF.TimeSeries.Adapters
         //      SignalID    GUID        Unique identification for measurement
         //      PointTag    NVARCHAR    Point tag of measurement
         //      Adder       FLOAT       Adder to apply to value, if any (default to 0.0)
-        //      Multiplier  FLOAT       Multipler to apply to value, if any (default to 1.0)
+        //      Multiplier  FLOAT       Multiplier to apply to value, if any (default to 1.0)
         //
         // Could have used standard SQL syntax here but didn't want to give user the impression
         // that this a standard SQL expression when it isn't - so chose the word FILTER to make
@@ -1670,7 +1670,7 @@ namespace GSF.TimeSeries.Adapters
                                 }
                             }
 
-                            // Adder and multipler may be optionally specified
+                            // Adder and multiplier may be optionally specified
                             if (elem.Length > 1)
                             {
                                 if (!double.TryParse(elem[1].Trim(), out adder))

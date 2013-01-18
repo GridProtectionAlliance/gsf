@@ -23,8 +23,6 @@
 //
 //******************************************************************************************************
 
-using GSF.IO;
-using GSF.Units;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -36,6 +34,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using GSF.IO;
+using GSF.Units;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -526,7 +526,7 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets the start time temporal procesing constraint defined by call to <see cref="SetTemporalConstraint"/>.
+        /// Gets the start time temporal processing constraint defined by call to <see cref="SetTemporalConstraint"/>.
         /// </summary>
         /// <remarks>
         /// This value will be <see cref="DateTime.MinValue"/> when start time constraint is not set - meaning the adapter
@@ -560,7 +560,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <remarks>
         /// With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
-        /// basically a delay, or timer interval, overwhich to process data. A value of -1 means to use the default processing
+        /// basically a delay, or timer interval, over which to process data. A value of -1 means to use the default processing
         /// interval while a value of 0 means to process data as fast as possible.
         /// </remarks>
         public virtual int ProcessingInterval
@@ -658,7 +658,7 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets flag that detemines if <see cref="IAdapter"/> implementations are automatically initialized
+        /// Gets flag that determines if <see cref="IAdapter"/> implementations are automatically initialized
         /// when they are added to the collection.
         /// </summary>
         protected virtual bool AutoInitialize
@@ -930,7 +930,7 @@ namespace GSF.TimeSeries.Adapters
         public virtual bool TryCreateAdapter(DataRow adapterRow, out T adapter)
         {
             if (adapterRow == null)
-                throw new NullReferenceException(string.Format("Cannot initialize from null adpater DataRow"));
+                throw new NullReferenceException(string.Format("Cannot initialize from null adapter DataRow"));
 
             Assembly assembly;
             string name = "", assemblyName = "", typeName = "", connectionString, setting;
@@ -1161,7 +1161,7 @@ namespace GSF.TimeSeries.Adapters
                     {
                         try
                         {
-                            // We start items from thread pool if auto-intializing since
+                            // We start items from thread pool if auto-initializing since
                             // start will block and wait for initialization to complete
                             if (AutoInitialize)
                                 ThreadPool.QueueUserWorkItem(StartItem, item);
@@ -1195,7 +1195,7 @@ namespace GSF.TimeSeries.Adapters
 
             try
             {
-                // Wait for adapter intialization to complete and see if item is set to auto-start
+                // Wait for adapter initialization to complete and see if item is set to auto-start
                 if (item.WaitForInitialize(item.InitializationTimeout))
                 {
                     if (item.AutoStart)
@@ -1283,16 +1283,16 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Defines a temporal processing constraint for the adapter collection and applies this contraint to each adapter.
+        /// Defines a temporal processing constraint for the adapter collection and applies this constraint to each adapter.
         /// </summary>
         /// <param name="startTime">Defines a relative or exact start time for the temporal constraint.</param>
         /// <param name="stopTime">Defines a relative or exact stop time for the temporal constraint.</param>
         /// <param name="constraintParameters">Defines any temporal parameters related to the constraint.</param>
         /// <remarks>
         /// <para>
-        /// This method defines a temporal processing contraint for an adapter, i.e., the start and stop time over which an
+        /// This method defines a temporal processing constraint for an adapter, i.e., the start and stop time over which an
         /// adapter will process data. Actual implementation of the constraint will be adapter specific. Implementations
-        /// should be able to dynamically handle multitple calls to this function with new constraints. Passing in <c>null</c>
+        /// should be able to dynamically handle multiple calls to this function with new constraints. Passing in <c>null</c>
         /// for the <paramref name="startTime"/> and <paramref name="stopTime"/> should cancel the temporal constraint and
         /// return the adapter to standard / real-time operation.
         /// </para>
@@ -1388,7 +1388,7 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="formattedStatus">Formatted status message.</param>
         /// <param name="args">Arguments for <paramref name="formattedStatus"/>.</param>
         /// <remarks>
-        /// This overload combines string.Format and SendStatusMessage for convienence.
+        /// This overload combines string.Format and SendStatusMessage for convenience.
         /// </remarks>
         internal protected virtual void OnStatusMessage(string formattedStatus, params object[] args)
         {
@@ -1585,7 +1585,7 @@ namespace GSF.TimeSeries.Adapters
                 // Dissociate parent collection
                 item.AssignParentCollection(null);
 
-                // Dipose of item, then un-wire disposed event
+                // Dispose of item, then un-wire disposed event
                 item.Dispose();
                 item.Disposed -= item_Disposed;
             }

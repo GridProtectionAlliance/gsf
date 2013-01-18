@@ -23,8 +23,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Collections;
-using GSF.Configuration;
 using System;
 using System.Collections.Concurrent;
 using System.Data;
@@ -32,6 +30,8 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using GSF.Collections;
+using GSF.Configuration;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -105,7 +105,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <remarks>
         /// This event is expected to only be raised when an input adapter has been designed to process
-        /// a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+        /// a finite amount of data, e.g., reading a historical range of data during temporal processing.
         /// </remarks>
         public event EventHandler ProcessingComplete;
 
@@ -676,7 +676,7 @@ namespace GSF.TimeSeries.Adapters
             if (StatusMessage != null)
             {
                 // When using default informational update type, see if an update type code was embedded in the status message - this allows for compatibility for event
-                // handlers that are normally unware of the update type
+                // handlers that are normally unaware of the update type
                 if (type == UpdateType.Information && (object)status != null && status.Length > 3 && status.StartsWith("0x") && Enum.TryParse(status[2].ToString(), out type))
                     status = status.Substring(3);
 
@@ -692,7 +692,7 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="type"><see cref="UpdateType"/> of status message.</param>
         /// <param name="args">Arguments for <paramref name="formattedStatus"/>.</param>
         /// <remarks>
-        /// This overload combines string.Format and SendStatusMessage for convienence.
+        /// This overload combines string.Format and SendStatusMessage for convenience.
         /// </remarks>
         protected virtual void OnStatusMessage(object sender, string formattedStatus, UpdateType type, params object[] args)
         {

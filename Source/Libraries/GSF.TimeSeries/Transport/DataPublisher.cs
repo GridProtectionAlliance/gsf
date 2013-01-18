@@ -18,7 +18,7 @@
 //  ----------------------------------------------------------------------------------------------------
 //  08/20/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
-//  11/15/2010 - Mehulbhai P Thakkar
+//  11/15/2010 - Mehulbhai P Thakker
 //       Fixed bug when DataSubscriber tries to resubscribe by setting subscriber. Initialized manually 
 //       in ReceiveClientDataComplete event handler.
 //  12/02/2010 - J. Ritchie Carroll
@@ -27,19 +27,12 @@
 //  05/26/2011 - J. Ritchie Carroll
 //       Implemented subscriber authentication model.
 //  02/07/2012 - Mehulbhai Thakkar
-//       Modified m_metadataTables to include filter expression and made the list ";" seperated.
+//       Modified m_metadataTables to include filter expression and made the list ";" separated.
 //  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modifeid Header.
+//       Modified Header.
 //
 //******************************************************************************************************
 
-using GSF.Communication;
-using GSF.Configuration;
-using GSF.Data;
-using GSF.Net.Security;
-using GSF.Security.Cryptography;
-using GSF.TimeSeries.Adapters;
-using GSF.TimeSeries.Statistics;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -57,6 +50,13 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml;
+using GSF.Communication;
+using GSF.Configuration;
+using GSF.Data;
+using GSF.Net.Security;
+using GSF.Security.Cryptography;
+using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Statistics;
 
 namespace GSF.TimeSeries.Transport
 {
@@ -91,7 +91,7 @@ namespace GSF.TimeSeries.Transport
     /// response code along with an associated success or failure message. Message type for successful responses will be based
     /// on server command - for example, server response for a successful MetaDataRefresh command will return a serialized
     /// <see cref="DataSet"/> of the available server metadata. Message type for failed responses will always be a string of
-    /// text respresenting the error message.
+    /// text representing the error message.
     /// </remarks>
     public enum ServerCommand : byte
     {
@@ -230,6 +230,13 @@ namespace GSF.TimeSeries.Transport
         /// </remarks>
         ProcessingComplete = 0x87,
         /// <summary>
+        /// Buffer block response.
+        /// </summary>
+        /// <remarks>
+        /// Unsolicited response informs client that a raw buffer block follows.
+        /// </remarks>
+        BufferBlock = 0x88,
+        /// <summary>
         /// No operation keep-alive ping.
         /// </summary>
         /// <remarks>
@@ -259,7 +266,7 @@ namespace GSF.TimeSeries.Transport
         /// </remarks>
         Compact = (byte)Bits.Bit01,
         /// <summary>
-        /// Detemines which cipher index to use when encrypting data packet.
+        /// Determines which cipher index to use when encrypting data packet.
         /// </summary>
         /// <remarks>
         /// Bit set = use odd cipher index (i.e., 1), bit clear = use even cipher index (i.e., 0).
@@ -323,7 +330,7 @@ namespace GSF.TimeSeries.Transport
         /// </remarks>
         CompressSignalIndexCache = (uint)Bits.Bit30,
         /// <summary>
-        /// Determines whether is compressed when exchanging between publisher and subscriber.
+        /// Determines whether metadata is compressed when exchanging between publisher and subscriber.
         /// </summary>
         /// <remarks>
         /// Bit set = compress, bit clear = no compression
@@ -441,7 +448,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <remarks>
         /// This event is expected to only be raised when an input adapter has been designed to process
-        /// a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+        /// a finite amount of data, e.g., reading a historical range of data during temporal processing.
         /// </remarks>
         public event EventHandler ProcessingComplete;
 
@@ -633,7 +640,7 @@ namespace GSF.TimeSeries.Transport
                 m_encryptPayload = value;
 
                 // Start cipher key rotation timer when encrypting payload
-                if (m_cipherKeyRotationTimer != null)
+                if ((object)m_cipherKeyRotationTimer != null)
                     m_cipherKeyRotationTimer.Enabled = value;
             }
         }
@@ -703,7 +710,7 @@ namespace GSF.TimeSeries.Transport
         {
             get
             {
-                if (m_cipherKeyRotationTimer != null)
+                if ((object)m_cipherKeyRotationTimer != null)
                     return m_cipherKeyRotationTimer.Interval;
 
                 return double.NaN;
@@ -713,7 +720,7 @@ namespace GSF.TimeSeries.Transport
                 if (value < 1000.0D)
                     throw new ArgumentOutOfRangeException("value", "Cipher key rotation period should not be set to less than 1000 milliseconds.");
 
-                if (m_cipherKeyRotationTimer != null)
+                if ((object)m_cipherKeyRotationTimer != null)
                     m_cipherKeyRotationTimer.Interval = value;
 
                 throw new ArgumentException("Cannot assign new cipher rotation period, timer is not defined.");
@@ -752,7 +759,7 @@ namespace GSF.TimeSeries.Transport
             {
                 StringBuilder status = new StringBuilder();
 
-                if (m_commandChannel != null)
+                if ((object)m_commandChannel != null)
                     status.Append(m_commandChannel.Status);
 
                 status.Append(base.Status);
@@ -784,7 +791,7 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
-        /// Gets or sets comma seperated list of tables to include in meta-data exchange.
+        /// Gets or sets comma separated list of tables to include in meta-data exchange.
         /// </summary>
         public string MetadataTables
         {
@@ -820,7 +827,7 @@ namespace GSF.TimeSeries.Transport
             }
             set
             {
-                if (m_commandChannel != null)
+                if ((object)m_commandChannel != null)
                 {
                     // Detach from events on existing command channel reference
                     m_commandChannel.ClientConnected -= m_commandChannel_ClientConnected;
@@ -838,7 +845,7 @@ namespace GSF.TimeSeries.Transport
                 // Assign new command channel reference
                 m_commandChannel = value;
 
-                if (m_commandChannel != null)
+                if ((object)m_commandChannel != null)
                 {
                     // Attach to desired events on new command channel reference
                     m_commandChannel.ClientConnected += m_commandChannel_ClientConnected;
@@ -904,19 +911,19 @@ namespace GSF.TimeSeries.Transport
                     {
                         CommandChannel = null;
 
-                        if (m_clientConnections != null)
+                        if ((object)m_clientConnections != null)
                             m_clientConnections.Values.AsParallel().ForAll(cc => cc.Dispose());
 
                         m_clientConnections = null;
 
-                        if (m_routingTables != null)
+                        if ((object)m_routingTables != null)
                         {
                             m_routingTables.ProcessException -= m_routingTables_ProcessException;
                             m_routingTables.Dispose();
                         }
                         m_routingTables = null;
 
-                        if (m_initializeWaitHandle != null)
+                        if ((object)m_initializeWaitHandle != null)
                         {
                             m_initializeWaitHandle.Close();
                             m_initializeWaitHandle.Dispose();
@@ -925,7 +932,7 @@ namespace GSF.TimeSeries.Transport
                         m_initializeWaitHandle = null;
 
                         // Dispose command channel restart timer
-                        if (m_commandChannelRestartTimer != null)
+                        if ((object)m_commandChannelRestartTimer != null)
                         {
                             m_commandChannelRestartTimer.Elapsed -= m_commandChannelRestartTimer_Elapsed;
                             m_commandChannelRestartTimer.Dispose();
@@ -933,7 +940,7 @@ namespace GSF.TimeSeries.Transport
                         m_commandChannelRestartTimer = null;
 
                         // Dispose the cipher key rotation timer
-                        if (m_cipherKeyRotationTimer != null)
+                        if ((object)m_cipherKeyRotationTimer != null)
                         {
                             m_cipherKeyRotationTimer.Elapsed -= m_cipherKeyRotationTimer_Elapsed;
                             m_cipherKeyRotationTimer.Dispose();
@@ -950,7 +957,7 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
-        /// Intializes <see cref="DataPublisher"/>.
+        /// Initializes <see cref="DataPublisher"/>.
         /// </summary>
         public override void Initialize()
         {
@@ -968,7 +975,7 @@ namespace GSF.TimeSeries.Transport
             if (settings.TryGetValue("requireAuthentication", out setting))
                 RequireAuthentication = setting.ParseBoolean();
 
-            // Check flag that will determine if subsciber payloads should be encrypted by default
+            // Check flag that will determine if subscriber payloads should be encrypted by default
             if (settings.TryGetValue("encryptPayload", out setting))
                 m_encryptPayload = setting.ParseBoolean();
 
@@ -1041,7 +1048,7 @@ namespace GSF.TimeSeries.Transport
             m_commandChannel.Initialize();
 
             // Start cipher key rotation timer when encrypting payload
-            if (m_encryptPayload && m_cipherKeyRotationTimer != null)
+            if (m_encryptPayload && (object)m_cipherKeyRotationTimer != null)
                 m_cipherKeyRotationTimer.Start();
 
             // Register publisher with the statistics engine
@@ -1077,7 +1084,7 @@ namespace GSF.TimeSeries.Transport
             {
                 base.Start();
 
-                if (m_commandChannel != null)
+                if ((object)m_commandChannel != null)
                     m_commandChannel.Start();
             }
         }
@@ -1089,7 +1096,7 @@ namespace GSF.TimeSeries.Transport
         {
             base.Stop();
 
-            if (m_commandChannel != null)
+            if ((object)m_commandChannel != null)
                 m_commandChannel.Stop();
         }
 
@@ -1114,7 +1121,7 @@ namespace GSF.TimeSeries.Transport
         public override AutoResetEvent GetExternalEventHandle(string name)
         {
             // Since this collection can act as an adapter, proxy event handle request to its parent collection when defined
-            if (m_parent != null)
+            if ((object)m_parent != null)
                 return m_parent.GetExternalEventHandle(name);
 
             // Otherwise just handle the request normally
@@ -1141,7 +1148,7 @@ namespace GSF.TimeSeries.Transport
         /// <returns>A short one-line summary of the current status of the <see cref="DataPublisher"/>.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            if (m_commandChannel != null)
+            if ((object)m_commandChannel != null)
                 return string.Format("Publishing data to {0} clients.", m_commandChannel.ClientIDs.Length).CenterText(maxLength);
 
             return "Currently not connected".CenterText(maxLength);
@@ -1267,7 +1274,7 @@ namespace GSF.TimeSeries.Transport
             byte[] serializedSignalIndexCache;
             ClientConnection connection;
 
-            if (inputMeasurementKeys != null)
+            if ((object)inputMeasurementKeys != null)
             {
                 // We will now go through the client's requested keys and see which ones are authorized for subscription,
                 // this information will be available through the returned signal index cache which will also define
@@ -1409,7 +1416,7 @@ namespace GSF.TimeSeries.Transport
             {
                 Guid signalID = Guid.Empty;
 
-                if (DataSource != null && DataSource.Tables.Contains("ActiveMeasurements"))
+                if ((object)DataSource != null && DataSource.Tables.Contains("ActiveMeasurements"))
                 {
                     // Attempt to lookup input measurement keys for given source IDs from default measurement table, if defined
                     try
@@ -1449,7 +1456,7 @@ namespace GSF.TimeSeries.Transport
                     return clientEncoding;
             }
 
-            // Default to unicode
+            // Default to Unicode
             return Encoding.Unicode;
         }
 
@@ -1494,7 +1501,7 @@ namespace GSF.TimeSeries.Transport
         /// <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
         internal protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, string status)
         {
-            if (status != null)
+            if ((object)status != null)
                 return SendClientResponse(clientID, response, command, GetClientEncoding(clientID).GetBytes(status));
 
             return SendClientResponse(clientID, response, command);
@@ -1819,7 +1826,7 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
-        // Handle notfication on input measurement key change
+        // Handle notification on input measurement key change
         private void NotifyHostOfSubscriptionRemoval(object state)
         {
             OnInputMeasurementKeysUpdated();
@@ -1851,7 +1858,7 @@ namespace GSF.TimeSeries.Transport
             return false;
         }
 
-        // Gets specfied property from client connection based on subscriber ID
+        // Gets specified property from client connection based on subscriber ID
         private TResult GetConnectionProperty<TResult>(Guid subscriberID, Func<ClientConnection, TResult> predicate)
         {
             TResult result = default(TResult);
@@ -1978,16 +1985,15 @@ namespace GSF.TimeSeries.Transport
                         }
                     }
 
-                    if (subscriber != null)
+                    if ((object)subscriber != null)
                         break;
                 }
 
-                if (subscriber == null)
+                if ((object)subscriber == null)
                 {
-                    message = string.Format("No subscriber is registered for {0}, cannnot authenticate connection - {1} request denied.", connection.ConnectionID, ServerCommand.Authenticate);
+                    message = string.Format("No subscriber is registered for {0}, cannot authenticate connection - {1} request denied.", connection.ConnectionID, ServerCommand.Authenticate);
                     SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
                     OnStatusMessage("WARNING: Client {0} {1} command request denied - subscriber is disabled or not registered.", connection.ConnectionID, ServerCommand.Authenticate);
-                    return;
                 }
                 else
                 {
@@ -2024,14 +2030,12 @@ namespace GSF.TimeSeries.Transport
                                     message = string.Format("Registered subscriber \"{0}\" {1} was successfully authenticated.", connection.SubscriberName, connection.ConnectionID);
                                     SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.Authenticate, message);
                                     OnStatusMessage(message);
-                                    return;
                                 }
                                 else
                                 {
                                     message = string.Format("Subscriber authentication failed - {0} request denied.", ServerCommand.Authenticate);
                                     SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
                                     OnStatusMessage("WARNING: Client {0} {1} command request denied - subscriber authentication failed.", connection.ConnectionID, ServerCommand.Authenticate);
-                                    return;
                                 }
                             }
                             else
@@ -2039,7 +2043,6 @@ namespace GSF.TimeSeries.Transport
                                 message = "Not enough buffer was provided to parse client request.";
                                 SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
                                 OnProcessException(new InvalidOperationException(message));
-                                return;
                             }
                         }
                         else
@@ -2047,7 +2050,6 @@ namespace GSF.TimeSeries.Transport
                             message = string.Format("Received request packet with an unexpected size from {0} - {1} request denied.", connection.ConnectionID, ServerCommand.Authenticate);
                             SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
                             OnStatusMessage("WARNING: Registered subscriber \"{0}\" {1} {2} command request was denied due to oddly sized {3} byte authentication packet.", connection.SubscriberName, connection.ConnectionID, ServerCommand.Authenticate, byteLength);
-                            return;
                         }
                     }
                     else
@@ -2055,7 +2057,6 @@ namespace GSF.TimeSeries.Transport
                         message = "Not enough buffer was provided to parse client request.";
                         SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
                         OnProcessException(new InvalidOperationException(message));
-                        return;
                     }
                 }
             }
@@ -2064,7 +2065,6 @@ namespace GSF.TimeSeries.Transport
                 message = "Failed to process authentication request due to exception: " + ex.Message;
                 SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
                 OnProcessException(new InvalidOperationException(message, ex));
-                return;
             }
         }
 
@@ -2109,12 +2109,12 @@ namespace GSF.TimeSeries.Transport
                             startIndex += byteLength;
 
                             // Get client subscription
-                            if (connection.Subscription == null)
+                            if ((object)connection.Subscription == null)
                                 TryGetClientSubscription(clientID, out subscription);
                             else
                                 subscription = connection.Subscription;
 
-                            if (subscription == null)
+                            if ((object)subscription == null)
                             {
                                 // Client subscription not established yet, so we create a new one
                                 if (useSynchronizedSubscription)
@@ -2251,7 +2251,7 @@ namespace GSF.TimeSeries.Transport
                             // Make sure adapter is started
                             subscription.Start();
 
-                            // TODO: Add a flag to the database to allow payload encryption to be subsciber specific instead of global to publisher...
+                            // TODO: Add a flag to the database to allow payload encryption to be subscriber specific instead of global to publisher...
                             // Send new or updated cipher keys
                             if (connection.Authenticated && m_encryptPayload)
                                 connection.RotateCipherKeys();
@@ -2288,7 +2288,7 @@ namespace GSF.TimeSeries.Transport
                             }
                             else
                             {
-                                if (subscription.InputMeasurementKeys != null)
+                                if ((object)subscription.InputMeasurementKeys != null)
                                     message = string.Format("Client subscribed as {0}compact {1}synchronized with {2} signals.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un", subscription.InputMeasurementKeys.Length);
                                 else
                                     message = string.Format("Client subscribed as {0}compact {1}synchronized, but no signals were specified. Make sure \"inputMeasurementKeys\" setting is properly defined.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un");
@@ -2333,7 +2333,7 @@ namespace GSF.TimeSeries.Transport
             RemoveClientSubscription(clientID); // This does not disconnect client command channel - nor should it...
 
             // Detach from processing completed notification
-            if (connection.Subscription != null)
+            if ((object)connection.Subscription != null)
                 connection.Subscription.ProcessingComplete -= subscription_ProcessingComplete;
 
             connection.Subscription = null;
@@ -2452,7 +2452,7 @@ namespace GSF.TimeSeries.Transport
 
                 IClientSubscription subscription = connection.Subscription;
 
-                if (subscription != null)
+                if ((object)subscription != null)
                 {
                     subscription.ProcessingInterval = processingInterval;
                     SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.UpdateProcessingInterval, "New processing interval of {0} assigned.", processingInterval);
@@ -2460,7 +2460,7 @@ namespace GSF.TimeSeries.Transport
                 }
                 else
                 {
-                    message = "Client subcription was not available, could not update processing interval.";
+                    message = "Client subscription was not available, could not update processing interval.";
                     SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.UpdateProcessingInterval, message);
                     OnProcessException(new InvalidOperationException(message));
                 }
@@ -2622,14 +2622,14 @@ namespace GSF.TimeSeries.Transport
         private void subscription_ProcessingComplete(object sender, EventArgs<IClientSubscription, EventArgs> e)
         {
             // Expose notification via data publisher event subscribers
-            if (ProcessingComplete != null)
+            if ((object)ProcessingComplete != null)
                 ProcessingComplete(sender, e.Argument2);
 
             IClientSubscription subscription = e.Argument1;
-            string senderType = sender == null ? "N/A" : sender.GetType().Name;
+            string senderType = (object)sender == null ? "N/A" : sender.GetType().Name;
 
             // Send direct notification to associated client
-            if (subscription != null)
+            if ((object)subscription != null)
                 SendClientResponse(subscription.ClientID, ServerResponse.ProcessingComplete, ServerCommand.Subscribe, senderType);
         }
 
@@ -2646,7 +2646,7 @@ namespace GSF.TimeSeries.Transport
                 int length = e.Argument3;
                 int index = 0;
 
-                if (length > 0 && buffer != null)
+                if (length > 0 && (object)buffer != null)
                 {
                     ClientConnection connection;
                     ServerCommand command;
@@ -2706,7 +2706,7 @@ namespace GSF.TimeSeries.Transport
                                 HandleUpdateProcessingInterval(connection, buffer, index, length);
                                 break;
                             case ServerCommand.DefineOperationalModes:
-                                // Handle request to define oeprational modes
+                                // Handle request to define operational modes
                                 HandleDefineOperationalModes(connection, buffer, index, length);
                                 break;
                         }
@@ -2765,7 +2765,7 @@ namespace GSF.TimeSeries.Transport
                 OnStatusMessage("Data publisher command channel was unexpectedly terminated, restarting...");
 
                 // We must wait for command channel to completely shutdown before trying to restart...
-                if (m_commandChannelRestartTimer != null)
+                if ((object)m_commandChannelRestartTimer != null)
                     m_commandChannelRestartTimer.Start();
             }
             else

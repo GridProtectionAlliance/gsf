@@ -26,15 +26,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Collections;
-using GSF.Communication;
-using GSF.Data;
-using GSF.IO;
-using GSF.Net.Security;
-using GSF.Reflection;
-using GSF.Security.Cryptography;
-using GSF.TimeSeries.Adapters;
-using GSF.TimeSeries.Statistics;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -47,6 +38,15 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Xml;
+using GSF.Collections;
+using GSF.Communication;
+using GSF.Data;
+using GSF.IO;
+using GSF.Net.Security;
+using GSF.Reflection;
+using GSF.Security.Cryptography;
+using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Statistics;
 
 namespace GSF.TimeSeries.Transport
 {
@@ -779,7 +779,7 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
-        /// Authenticates subcriber to a data publisher.
+        /// Authenticates subscriber to a data publisher.
         /// </summary>
         /// <param name="sharedSecret">Shared secret used to look up private crypto key and initialization vector.</param>
         /// <param name="authenticationID">Authentication ID that publisher will use to validate subscriber identity.</param>
@@ -1765,6 +1765,10 @@ namespace GSF.TimeSeries.Transport
                             else
                                 OnNewMeasurements(measurements);
                             break;
+                        case ServerResponse.BufferBlock:
+                            // Buffer block received - wrap as a buffer block measurement and expose back to consumer
+                            OnNewMeasurements(new IMeasurement[] { new BufferBlockMeasurement(buffer, responseIndex, responseLength) });
+                            break;
                         case ServerResponse.DataStartTime:
                             // Raise data start time event
                             OnDataStartTime(EndianOrder.BigEndian.ToInt64(buffer, responseIndex));
@@ -1877,7 +1881,7 @@ namespace GSF.TimeSeries.Transport
                 }
 
                 // Start unsynchronized subscription
-                #pragma warning disable 0618
+#pragma warning disable 0618
                 UnsynchronizedSubscribe(true, false, filterExpression.ToString(), dataChannel);
             }
             else
