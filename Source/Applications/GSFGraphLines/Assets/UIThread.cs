@@ -26,8 +26,12 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading;
 
+// Generally you should only apply this class to a single game object (e.g., Main Camera),
+// multiple instances would simply compete to process queued method calls
 public class UIThread : MonoBehaviour
 {		
+    #region [ Methods ]
+	
 	// Execute any queued methods on UI thread...
 	protected void FixedUpdate()
 	{
@@ -46,14 +50,23 @@ public class UIThread : MonoBehaviour
 			resetEvent.Set();
 		}
 	}
-	
+
+    #endregion
+
+    #region [ Static ]
+
+    // Static Fields
+
 	// Queue of methods and parameters
 	private static ConcurrentQueue<Tuple<Action<object[]>, object[], ManualResetEventSlim>> m_methodCalls;
 
+    // Static Constructor
 	static UIThread()
 	{
 		m_methodCalls = new ConcurrentQueue<Tuple<Action<object[]>, object[], ManualResetEventSlim>>();
 	}
+
+    // Static Methods
 	
 	/// <summary>
 	/// Invokes the specified method on the main UI thread.
@@ -83,4 +96,6 @@ public class UIThread : MonoBehaviour
 		
 		return resetEvent.WaitHandle;
 	}
+
+    #endregion	
 }

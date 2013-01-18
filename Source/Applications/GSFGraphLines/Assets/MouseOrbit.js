@@ -63,7 +63,7 @@ function Update ()
         }
         else        
         {
-        	// Mouse button functions also work for touch input
+        	// Mouse button functions also work for touch input on Android
 			if (Input.GetMouseButtonDown(0))
 			{
 				buttonDown = true;

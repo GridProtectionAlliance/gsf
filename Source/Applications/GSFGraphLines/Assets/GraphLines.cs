@@ -36,6 +36,10 @@ using GSF.TimeSeries.Transport;
 
 public class GraphLines : MonoBehaviour
 {
+    #region [ Members ]
+
+    // Nested Types
+
 	// Creates a dynamically scaled 3D line using Vectrosity asset to draw line for data
 	private class DataLine
 	{
@@ -189,8 +193,18 @@ public class GraphLines : MonoBehaviour
 			return "<" + format + ">";
         }
 	}
-	
+
+    // Constants
 	private const string IniFileName = "GraphLines.ini";
+
+    // Fields	
+	private ConcurrentDictionary<Guid, DataLine> m_dataLines;
+	private ConcurrentQueue<IMeasurement> m_dataQueue;
+	private DataSubscriber m_subscriber;
+	private DataTable m_measurementMetadata;
+	private List<LegendLine> m_legendLines;
+	private WaitHandle m_linesInitializedWaitHandle;
+	private bool m_subscribed;
 	
 	// Public fields are exposed to Unity UI interface
 	public string m_title = "GPA Grid Solutions Framework Subscription Demo";
@@ -205,29 +219,41 @@ public class GraphLines : MonoBehaviour
 	public Color[] m_lineColors = new Color[] { Color.blue, Color.yellow, Color.red, Color.white, Color.cyan, Color.magenta, Color.black, Color.gray };
 	public TextMesh m_legendMesh;
 	public string m_legendFormat = "{0:SignalAcronym}: {0:Description} [{0:PointTag}]";
-	
-	private ConcurrentDictionary<Guid, DataLine> m_dataLines;
-	private ConcurrentQueue<IMeasurement> m_dataQueue;
-	private DataSubscriber m_subscriber;
-	private DataTable m_measurementMetadata;
-	private List<LegendLine> m_legendLines;
-	private WaitHandle m_linesInitializedWaitHandle;
-	private bool m_subscribed;
 
+    #endregion
+
+    #region [ Methods ]
+	
+	#region [ Unity Event Handlers ]
+	
 	protected void Start()
 	{
 		string iniFilePath = Application.dataPath + "/" + IniFileName;
 		
-		if (File.Exists(iniFilePath))
+		if (Application.platform == RuntimePlatform.Android)
+			iniFilePath = Application.persistentDataPath + "/" + IniFileName;
+		
+		IniFile iniFile = new IniFile(iniFilePath);
+		
+		m_title = iniFile["Settings", "Title", m_title];
+		m_connectionString = iniFile["Settings", "ConnectionString", m_connectionString];
+		m_filterExpression = iniFile["Settings", "FilterExpression", m_filterExpression];			
+		m_lineWidth = int.Parse(iniFile["Settings", "LineWidth", m_lineWidth.ToString()]);
+		m_lineDepthOffset = float.Parse(iniFile["Settings", "LineDepthOffset", m_lineDepthOffset.ToString()]);
+		m_pointsInLine = int.Parse(iniFile["Settings", "PointsInLine", m_pointsInLine.ToString()]);
+		m_legendFormat = iniFile["Settings", "LegendFormat", m_legendFormat];
+
+		// Attempt to save new INI file if one doesn't exist
+		if (!File.Exists(iniFilePath))
 		{
-			IniFile iniFile = new IniFile(iniFilePath);
-			m_title = iniFile["Settings", "Title", m_title];
-			m_connectionString = iniFile["Settings", "ConnectionString", m_connectionString];
-			m_filterExpression = iniFile["Settings", "FilterExpression", m_filterExpression];			
-			m_lineWidth = int.Parse(iniFile["Settings", "LineWidth", m_lineWidth.ToString()]);
-			m_lineDepthOffset = float.Parse(iniFile["Settings", "LineDepthOffset", m_lineDepthOffset.ToString()]);
-			m_pointsInLine = int.Parse(iniFile["Settings", "PointsInLine", m_pointsInLine.ToString()]);
-			m_legendFormat = iniFile["Settings", "LegendFormat", m_legendFormat];
+			try
+			{
+				iniFile.Save();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
 		}
 		
 		// Attempt to update title
@@ -286,6 +312,13 @@ public class GraphLines : MonoBehaviour
 
 	protected void Update()
 	{
+//		// Check for screen resize
+//		if (m_lastScreenHeight != Screen.height)
+//			OnScreenResize();
+		
+//		if (m_controlWindowLocation.Contains(Input.mousePosition) && Input.GetMouseButtonUp(0))
+//			m_controlWindowVisible = !m_controlWindowVisible;
+		
 		// Nothing to update if we haven't subscribed yet
 		if (!m_subscribed)
 			return;
@@ -310,35 +343,43 @@ public class GraphLines : MonoBehaviour
 		}		
 	}
 	
-	// Line creation must occur on main UI thread
-	private DataLine CreateDataLine(Guid id)
-	{
-		return new DataLine(this, id, m_dataLines.Count);
-	}
+//	private int m_lastScreenHeight = -1;
+//	private Rect m_controlWindowLocation;
+//	private Rect m_controlWindowContentVisible;
+//	private Rect m_controlWindowContentHidden;
+//	private bool m_controlWindowVisible = true;
+//	
+//	private void OnGUI()
+//	{
+//		Rect controlWindowLocation = m_controlWindowVisible ? m_controlWindowContentVisible : m_controlWindowContentHidden;
+//		GUILayout.Window(0, controlWindowLocation, DrawControlsWindow, "Subscription Controls");
+//		
+//		m_controlWindowLocation = new Rect(0, m_controlWindowVisible ? 50 : 20, Screen.width, 50);
+//	}
+//	
+//	private void OnScreenResize()
+//	{
+//		m_lastScreenHeight = Screen.height;
+//		m_controlWindowContentVisible = new Rect(0, Screen.height - 50, Screen.width, 50);
+//		m_controlWindowContentHidden = new Rect(0, Screen.height - 20, Screen.width, 50);
+//		
+//		Debug.Log(m_controlWindowContentVisible.ToString());
+//	}
+//	
+//	private void DrawControlsWindow(int windowID)
+//	{
+//		GUILayout.BeginHorizontal();
+//		GUILayout.Label("Filter Expression:");
+//		GUILayout.TextField(m_filterExpression);
+//		
+//		if (GUILayout.Button("Hello World", GUILayout.Width(100)))
+//			print("Got a click");
+//		GUILayout.EndHorizontal();		
+//	}
 	
-	// Creates a new data line for each subscribed measurement
-	private void CreateDataLines(object[] args)
-	{
-		if ((object)args == null || args.Length < 1)
-			return;
-		
-		Guid[] subscribedMeasurementIDs = args[0] as Guid[];
-		
-		if ((object)subscribedMeasurementIDs == null || (object)m_dataLines == null)
-			return;
-		
-		m_dataLines.Clear();
-		
-		foreach (Guid measurementID in subscribedMeasurementIDs)
-		{
-			m_dataLines.TryAdd(measurementID, CreateDataLine(measurementID));
-		}
-			
-		// Update legend - we do this on a different thread since we've already
-		// waited around for initial set of lines to be created on a UI thread,
-		// no need to keep UI thread operations pending
-		ThreadPool.QueueUserWorkItem(UpdateLegend, subscribedMeasurementIDs);
-	}
+    #endregion
+	
+	#region [ Subscription Event Handlers ]
 	
 	private void subscriber_ConnectionEstablished(object sender, EventArgs e)
 	{
@@ -421,6 +462,32 @@ public class GraphLines : MonoBehaviour
 	{
 		Debug.LogException(e.Argument);
 	}
+
+    #endregion
+	
+	// Creates a new data line for each subscribed measurement
+	private void CreateDataLines(object[] args)
+	{
+		if ((object)args == null || args.Length < 1)
+			return;
+		
+		Guid[] subscribedMeasurementIDs = args[0] as Guid[];
+		
+		if ((object)subscribedMeasurementIDs == null || (object)m_dataLines == null)
+			return;
+		
+		m_dataLines.Clear();
+		
+		foreach (Guid measurementID in subscribedMeasurementIDs)
+		{
+			m_dataLines.TryAdd(measurementID, new DataLine(this, measurementID, m_dataLines.Count));
+		}
+			
+		// Update legend - we do this on a different thread since we've already
+		// waited around for initial set of lines to be created on a UI thread,
+		// no need to keep UI thread operations pending
+		ThreadPool.QueueUserWorkItem(UpdateLegend, subscribedMeasurementIDs);
+	}
 	
 	private void UpdateLegend(object state)
 	{
@@ -468,7 +535,10 @@ public class GraphLines : MonoBehaviour
 		DataLine dataLine;
 		Guid id = (Guid)args[0];
 		
+		// Attempt to look up associated data line (for line color)
 		if (m_dataLines.TryGetValue(id, out dataLine))
 			m_legendLines.Add(new LegendLine(this, id, m_legendLines.Count, dataLine.VectorColor));
 	}
+
+    #endregion
 }

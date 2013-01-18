@@ -24,6 +24,7 @@
 using UnityEngine;
 using System.Collections;
 
+// Defines extension functions for text objects
 public static class TextExtensions
 {
 	/// <summary>
