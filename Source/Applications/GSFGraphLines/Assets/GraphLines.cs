@@ -83,6 +83,12 @@ public class GraphLines : MonoBehaviour
 			}
 		}
 		
+		public void Stop()
+		{
+			if ((object)m_vector != null)
+				m_vector.StopDrawing3DAuto();
+		}
+		
 		public void UpdateValue(float newValue)
 		{
 			bool scaleUpdated = false;
@@ -173,6 +179,12 @@ public class GraphLines : MonoBehaviour
 			linePoints[0] = point1;
 			linePoints[1] = point2;
 		}
+		
+		public void Stop()
+		{
+			if ((object)m_vector != null)
+				m_vector.StopDrawing3DAuto();
+		}
 	}
 	
 	// Exposes DataRow field value in a string.Format expression
@@ -252,7 +264,7 @@ public class GraphLines : MonoBehaviour
 			}
 			catch (Exception ex)
 			{
-				Debug.LogException(ex);
+				Debug.Log("ERROR: " + ex.Message);
 			}
 		}
 		
@@ -449,6 +461,27 @@ public class GraphLines : MonoBehaviour
 		
 	private void subscriber_ConnectionTerminated(object sender, EventArgs e)
 	{
+		if (m_subscribed)
+		{
+			m_subscribed = false;
+			m_linesInitializedWaitHandle = null;
+			
+			foreach (DataLine dataLine in m_dataLines.Values)
+			{
+				UIThread.Invoke(StopDataLine, dataLine);
+			}
+			
+			m_dataLines.Clear();
+			
+			foreach (LegendLine legendLine in m_legendLines)
+			{
+				UIThread.Invoke(StopLegendLine, legendLine);
+			}
+			
+			m_legendLines.Clear();			
+			m_legendMesh.UpdateText("");
+		}
+		
 		// Restart connection cycle when connection is terminated - could be that PDC is being restarted
 		m_subscriber.Start();
 	}
@@ -460,7 +493,7 @@ public class GraphLines : MonoBehaviour
 	
 	private void subscriber_ProcessException(object sender, GSF.EventArgs<Exception> e)
 	{
-		Debug.LogException(e.Argument);
+		Debug.Log("ERROR: " + e.Argument.Message);
 	}
 
     #endregion
@@ -538,6 +571,28 @@ public class GraphLines : MonoBehaviour
 		// Attempt to look up associated data line (for line color)
 		if (m_dataLines.TryGetValue(id, out dataLine))
 			m_legendLines.Add(new LegendLine(this, id, m_legendLines.Count, dataLine.VectorColor));
+	}
+	
+	private void StopDataLine(object[] args)
+	{
+		if ((object)args == null || args.Length < 1)
+			return;
+		
+		DataLine dataLine = args[0] as DataLine;
+		
+		if ((object)dataLine != null)
+			dataLine.Stop();
+	}
+
+	private void StopLegendLine(object[] args)
+	{
+		if ((object)args == null || args.Length < 1)
+			return;
+		
+		LegendLine legendLine = args[0] as LegendLine;
+		
+		if ((object)legendLine != null)
+			legendLine.Stop();
 	}
 
     #endregion
