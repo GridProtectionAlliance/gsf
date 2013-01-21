@@ -23,11 +23,12 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using GSF;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
-using System.Collections.Generic;
-using System.ComponentModel;
 
 namespace OneSecondFrequencyAverager
 {
@@ -42,13 +43,35 @@ namespace OneSecondFrequencyAverager
 
         // Constants
         private const bool DefaultSupportsTemporalProcessing = false;
+        private const int DefaultFlatlineCount = -1;
 
         // Fields
+        private Dictionary<Guid, Tuple<double, int>> m_valuesAndLatchedCounts;
+        private int m_flatlineCount;
         private bool m_supportsTemporalProcessing;
 
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the number of consecutive points the <see cref="OneSecondFrequencyAverager"/>
+        /// can receive with the same value before it considers that signal flatlined and discards it.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the number of consecutive points that can be received with the same value before discarding the value as being flatlined."),
+        DefaultValue("-1")]
+        public int FlatlineCount
+        {
+            get
+            {
+                return m_flatlineCount;
+            }
+            set
+            {
+                m_flatlineCount = value;
+            }
+        }
 
         /// <summary>
         /// Gets a flag indicating whether this adapter supports temporal processing.
@@ -84,10 +107,43 @@ namespace OneSecondFrequencyAverager
 
             base.Initialize();
 
+            if (!settings.TryGetValue("flatlineCount", out setting) || !int.TryParse(setting, out m_flatlineCount))
+                m_flatlineCount = DefaultFlatlineCount;
+
             if (settings.TryGetValue("supportsTemporalProcessing", out setting))
                 m_supportsTemporalProcessing = setting.ParseBoolean();
             else
                 m_supportsTemporalProcessing = DefaultSupportsTemporalProcessing;
+
+            m_valuesAndLatchedCounts = new Dictionary<Guid, Tuple<double, int>>();
+        }
+
+        /// <summary>
+        /// Queues a collection of measurements for processing. Measurements are automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
+        /// </summary>
+        /// <param name="measurements">Collection of measurements to queue for processing.</param>
+        /// <remarks>
+        /// Measurements are filtered against the defined <see cref="ActionAdapterBase.InputMeasurementKeys"/>.
+        /// </remarks>
+        public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
+        {
+            Guid signalID;
+            Tuple<double, int> valueAndLatchedCount;
+
+            if (m_flatlineCount > 0)
+            {
+                foreach (IMeasurement measurement in measurements)
+                {
+                    signalID = measurement.ID;
+
+                    if (!m_valuesAndLatchedCounts.TryGetValue(signalID, out valueAndLatchedCount) || valueAndLatchedCount.Item1 != measurement.Value)
+                        m_valuesAndLatchedCounts[signalID] = Tuple.Create(measurement.Value, 0);
+                    else
+                        m_valuesAndLatchedCounts[signalID] = Tuple.Create(valueAndLatchedCount.Item1, valueAndLatchedCount.Item2 + 1);
+                }
+            }
+
+            base.QueueMeasurementsForProcessing(measurements);
         }
 
         /// <summary>
@@ -102,10 +158,14 @@ namespace OneSecondFrequencyAverager
 
             IMeasurement inMeasurement;
             IMeasurement outMeasurement;
+            Tuple<double, int> valueAndLatchedCount;
 
             for (int i = 0; i < InputMeasurementKeys.Length; i++)
             {
                 if (!frame.Measurements.TryGetValue(InputMeasurementKeys[i], out inMeasurement))
+                    continue;
+
+                if (m_valuesAndLatchedCounts.TryGetValue(inMeasurement.ID, out valueAndLatchedCount) && valueAndLatchedCount.Item2 >= m_flatlineCount)
                     continue;
 
                 outMeasurement = Measurement.Clone(OutputMeasurements[i]);
