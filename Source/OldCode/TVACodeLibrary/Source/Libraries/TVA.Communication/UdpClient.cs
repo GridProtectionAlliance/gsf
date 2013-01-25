@@ -616,7 +616,7 @@ namespace TVA.Communication
             {
                 m_receivePacketInfo = value;
 
-                if ((object)m_udpClient.Provider != null)
+                if ((object)m_udpClient != null && (object)m_udpClient.Provider != null)
                     m_udpClient.Provider.SetSocketOption(m_udpClient.Provider.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.PacketInformation, value);
             }
         }
