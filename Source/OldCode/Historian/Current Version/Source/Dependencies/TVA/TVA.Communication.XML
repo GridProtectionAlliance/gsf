@@ -1345,6 +1345,13 @@
             </summary>
             <exception cref="T:System.ArgumentException">The value being assigned is either zero or negative.</exception>
         </member>
+        <member name="P:TVA.Communication.UdpClient.ReceivePacketInfo">
+            <summary>
+            Gets or sets the flag that determines whether the UDP client
+            should attempt to receive packet info when receiving data
+            from the socket.
+            </summary>
+        </member>
         <member name="P:TVA.Communication.UdpClient.Status">
             <summary>
             Gets the descriptive status of the client.
