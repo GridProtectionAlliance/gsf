@@ -1267,6 +1267,7 @@ namespace GSF.PhasorProtocols
             private string m_connectionString;
             private int m_receiveBufferSize;
             private int m_maxConnectionAttempts;
+            private bool m_receivePacketInfo;
 
             #endregion
 
@@ -1443,6 +1444,29 @@ namespace GSF.PhasorProtocols
                         return m_udpClient.Name;
 
                     return null;
+                }
+            }
+
+            /// <summary>
+            /// Gets or sets the flag that determines whether the UDP client
+            /// should attempt to receive packet info when receiving data
+            /// from the socket.
+            /// </summary>
+            public bool ReceivePacketInfo
+            {
+                get
+                {
+                    if ((object)m_udpClient != null)
+                        return m_udpClient.ReceivePacketInfo;
+
+                    return m_receivePacketInfo;
+                }
+                set
+                {
+                    if ((object)m_udpClient != null)
+                        m_udpClient.ReceivePacketInfo = value;
+
+                    m_receivePacketInfo = value;
                 }
             }
 
@@ -1650,6 +1674,11 @@ namespace GSF.PhasorProtocols
                     sharedClient.ReceiveDataFrom += SharedClient_ReceiveDataFrom;
                     sharedClient.SendDataException += SharedClient_SendDataException;
                     sharedClient.UnhandledUserException += SharedClient_UnhandledUserException;
+
+                    // Make sure to set packet info flag if needed since
+                    // other SharedUdpClientReferences may not need it
+                    if (m_receivePacketInfo)
+                        sharedClient.ReceivePacketInfo = true;
 
                     if (!sharing)
                     {
@@ -3408,7 +3437,10 @@ namespace GSF.PhasorProtocols
                     endPointMatch = Regex.Match(serverSetting, Transport.EndpointFormatRegex);
 
                     if (IPAddress.TryParse(endPointMatch.Groups["host"].Value, out serverAddress) && Transport.IsMulticastIP(serverAddress))
+                    {
                         m_multicastServerAddress = serverAddress;
+                        udpRef.ReceivePacketInfo = true;
+                    }
                 }
             }
         }

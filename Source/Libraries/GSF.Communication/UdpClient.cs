@@ -248,6 +248,7 @@ namespace GSF.Communication
         private SocketAsyncEventArgs m_receiveArgs;
         private EventHandler<SocketAsyncEventArgs> m_sendHandler;
         private EventHandler<SocketAsyncEventArgs> m_receiveHandler;
+        private bool m_receivePacketInfo;
 
         private bool m_disposed;
 
@@ -371,6 +372,26 @@ namespace GSF.Communication
 
                 if ((object)m_udpClient != null)
                     m_udpClient.SetReceiveBuffer(value);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the flag that determines whether the UDP client
+        /// should attempt to receive packet info when receiving data
+        /// from the socket.
+        /// </summary>
+        public bool ReceivePacketInfo
+        {
+            get
+            {
+                return m_receivePacketInfo;
+            }
+            set
+            {
+                m_receivePacketInfo = value;
+
+                if ((object)m_udpClient.Provider != null)
+                    m_udpClient.Provider.SetSocketOption(m_udpClient.Provider.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.PacketInformation, value);
             }
         }
 
@@ -679,6 +700,12 @@ namespace GSF.Communication
 
                         AddMulticastMembership(serverEndpoint.Address, sourceAddress, out multicastMembershipAddresses);
                         m_udpClient.MulticastMembershipAddresses = multicastMembershipAddresses;
+                    }
+
+                    // If the client requires packet info when
+                    // receiving data, set the socket option now.
+                    if (m_receivePacketInfo)
+                    {
                         m_udpClient.Provider.SetSocketOption(serverEndpoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.PacketInformation, true);
                     }
 
@@ -965,8 +992,16 @@ namespace GSF.Communication
             m_receiveArgs.SetBuffer(m_udpClient.ReceiveBuffer, 0, m_udpClient.ReceiveBufferSize);
             m_receiveArgs.RemoteEndPoint = m_udpServer;
 
-            if (!m_udpClient.Provider.ReceiveMessageFromAsync(m_receiveArgs))
-                ThreadPool.QueueUserWorkItem(state => ProcessReceive());
+            if (!m_receivePacketInfo)
+            {
+                if (!m_udpClient.Provider.ReceiveFromAsync(m_receiveArgs))
+                    ThreadPool.QueueUserWorkItem(state => ProcessReceive());
+            }
+            else
+            {
+                if (!m_udpClient.Provider.ReceiveMessageFromAsync(m_receiveArgs))
+                    ThreadPool.QueueUserWorkItem(state => ProcessReceive());
+            }
         }
 
         /// <summary>
