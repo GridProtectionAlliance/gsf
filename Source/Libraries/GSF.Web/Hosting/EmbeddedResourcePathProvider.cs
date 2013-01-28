@@ -170,7 +170,7 @@ namespace GSF.Web.Hosting
 		/// embedded files.
 		/// </summary>
 		/// <seealso cref="GSF.Web.Hosting.EmbeddedResourcePathProvider" />
-		public const string ConfigKeyAllowOverrides = "TVA.Web.Hosting.EmbeddedResourcePathProvider.AllowOverrides";
+		public const string ConfigKeyAllowOverrides = "GSF.Web.Hosting.EmbeddedResourcePathProvider.AllowOverrides";
 
 		#endregion
 

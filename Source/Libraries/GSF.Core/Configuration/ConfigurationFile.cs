@@ -263,7 +263,7 @@ namespace GSF.Configuration
 
         // Constants
         private const string CustomSectionName = "categorizedSettings";
-        private const string CustomSectionType = "TVA.Configuration.CategorizedSettingsSection, TVA.Core";
+        private const string CustomSectionType = "GSF.Configuration.CategorizedSettingsSection, GSF.Core";
 
         // Fields
         private string m_cryptoKey;

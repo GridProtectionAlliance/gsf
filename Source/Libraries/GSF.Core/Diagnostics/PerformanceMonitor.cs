@@ -87,7 +87,7 @@ namespace GSF.Diagnostics
         /// <summary>
         /// Name of the custom thread pool counters category.
         /// </summary>
-        public const string ThreadPoolCountersCategoryName = "TVA Thread Pool Counters";
+        public const string ThreadPoolCountersCategoryName = "GSF Thread Pool Counters";
 
         /// <summary>
         /// Default interval for sampling the <see cref="Counters"/>.

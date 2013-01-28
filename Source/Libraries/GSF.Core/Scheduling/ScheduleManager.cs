@@ -499,7 +499,7 @@ namespace GSF.Scheduling
                 // Spawn new thread to start timer at top of the minute.
 #if ThreadTracking
                 m_startTimerThread = new ManagedThread(StartTimer);
-                m_startTimerThread.Name = "TVA.Scheduling.ScheduleManager.StartTimer()";
+                m_startTimerThread.Name = "GSF.Scheduling.ScheduleManager.StartTimer()";
 #else
                 m_startTimerThread = new Thread(StartTimer);
                 m_startTimerThread.IsBackground = true;

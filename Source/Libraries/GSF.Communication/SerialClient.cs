@@ -310,7 +310,7 @@ namespace GSF.Communication
 
 #if ThreadTracking
             m_connectionThread = new ManagedThread(OpenPort);
-            m_connectionThread.Name = "TVA.Communication.SerialClient.OpenPort()";
+            m_connectionThread.Name = "GSF.Communication.SerialClient.OpenPort()";
 #else
             m_connectionThread = new Thread(OpenPort);
 #endif

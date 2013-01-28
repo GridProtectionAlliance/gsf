@@ -240,7 +240,7 @@ namespace GSF.Net.Ftp
         {
 #if ThreadTracking
             ManagedThread thread = new ManagedThread(TransferThreadProc);
-            thread.Name = "TVA.Net.Ftp.FileTransferer.TransferThreadProc() [" + m_remoteFile + "]";
+            thread.Name = "GSF.Net.Ftp.FileTransferer.TransferThreadProc() [" + m_remoteFile + "]";
 #else
             Thread thread = new Thread(TransferThreadProc);
             thread.Name = "Transfer file thread: " + m_remoteFile;

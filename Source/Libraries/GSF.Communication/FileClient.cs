@@ -761,7 +761,7 @@ namespace GSF.Communication
 
 #if ThreadTracking
             m_connectionThread = new ManagedThread(OpenFile);
-            m_connectionThread.Name = "TVA.Communication.FileClient.OpenFile()";
+            m_connectionThread.Name = "GSF.Communication.FileClient.OpenFile()";
 #else
             m_connectionThread = new Thread(OpenFile);
 #endif

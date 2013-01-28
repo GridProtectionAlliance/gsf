@@ -789,7 +789,7 @@ namespace GSF.IO
             // So as to not delay calling thread due to share authentication, we perform initialization on another thread...
 #if ThreadTracking
             ManagedThread thread = ManagedThreadPool.QueueUserWorkItem(Initialize, defaultDestinations.ToList());
-            thread.Name = "TVA.IO.MultipleDestinationExporter.Initialize()";
+            thread.Name = "GSF.IO.MultipleDestinationExporter.Initialize()";
 #else
             ThreadPool.QueueUserWorkItem(Initialize, defaultDestinations.ToList());
 #endif

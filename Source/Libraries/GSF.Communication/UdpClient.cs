@@ -567,7 +567,7 @@ namespace GSF.Communication
 
 #if ThreadTracking
             m_connectionThread = new ManagedThread(OpenPort);
-            m_connectionThread.Name = "TVA.Communication.UdpClient.OpenPort()";
+            m_connectionThread.Name = "GSF.Communication.UdpClient.OpenPort()";
 #else
             m_connectionThread = new Thread(OpenPort);
 #endif

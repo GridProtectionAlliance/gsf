@@ -150,7 +150,7 @@ namespace GSF.TimeSeries.UI.DataModels
         /// Gets or sets <see cref="Protocol"/> AssemblyName.
         /// </summary>
         [Required(ErrorMessage = "Protocol AssemblyName is a required field, please provide value.")]
-        [DefaultValue("TVA.PhasorProtocols.dll")]
+        [DefaultValue("GSF.PhasorProtocols.dll")]
         public string AssemblyName
         {
             get
@@ -168,7 +168,7 @@ namespace GSF.TimeSeries.UI.DataModels
         /// Gets or sets <see cref="Protocol"/> TypeName.
         /// </summary>
         [Required(ErrorMessage = "Protocol TypeName is a required field, please provide value.")]
-        [DefaultValue("TVA.PhasorProtocols.PhasorMeasurementMapper")]
+        [DefaultValue("GSF.PhasorProtocols.PhasorMeasurementMapper")]
         public string TypeName
         {
             get

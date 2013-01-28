@@ -280,7 +280,7 @@ namespace GSF.Parsing
                     };
 
                     // If object pooling is allowed and class implementation supports life cycle, use object pool instead of creating an object each time one is parsed
-                    if (AllowObjectPooling && (object)type.GetInterface("TVA.ISupportLifecycle") != null)
+                    if (AllowObjectPooling && (object)type.GetInterface("GSF.ISupportLifecycle") != null)
                     {
                         outputType.SupportsLifecycle = true;
                         outputType.CreateNew = () => ReusableObjectPool.TakeObject<TOutputType>(type);

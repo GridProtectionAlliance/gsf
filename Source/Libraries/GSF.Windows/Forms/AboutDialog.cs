@@ -66,8 +66,8 @@ namespace GSF.Windows.Forms
 
             AssemblyInfo executingAssembly = AssemblyInfo.ExecutingAssembly;
             SetCompanyUrl("http://www.tva.gov");
-            SetCompanyLogo(executingAssembly.GetEmbeddedResource("TVA.Windows.Forms.TVALogo.bmp"));
-            SetCompanyDisclaimer(executingAssembly.GetEmbeddedResource("TVA.Windows.Forms.TVADisclaimer.txt"));
+            SetCompanyLogo(executingAssembly.GetEmbeddedResource("GSF.Windows.Forms.TVALogo.bmp"));
+            SetCompanyDisclaimer(executingAssembly.GetEmbeddedResource("GSF.Windows.Forms.TVADisclaimer.txt"));
         }
 
         #endregion

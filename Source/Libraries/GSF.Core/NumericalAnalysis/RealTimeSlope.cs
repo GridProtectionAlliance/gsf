@@ -139,7 +139,7 @@ namespace GSF.NumericalAnalysis
                 // Performs curve fit calculation on seperate thread, since it could be time consuming.
 #if ThreadTracking
                 ManagedThread thread = ManagedThreadPool.QueueUserWorkItem(PerformCalculation);
-                thread.Name = "TVA.Math.RealTimeSlope.PerformCalculation()";
+                thread.Name = "GSF.Math.RealTimeSlope.PerformCalculation()";
 #else
                 ThreadPool.QueueUserWorkItem(PerformCalculation);
 #endif
