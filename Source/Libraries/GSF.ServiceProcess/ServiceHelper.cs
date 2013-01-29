@@ -89,6 +89,18 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Configuration;
+using System.Diagnostics;
+using System.Drawing;
+using System.Linq;
+using System.Security;
+using System.Security.Principal;
+using System.ServiceProcess;
+using System.Text;
+using System.Threading;
 using GSF.Collections;
 using GSF.Communication;
 using GSF.Configuration;
@@ -99,17 +111,6 @@ using GSF.Reflection;
 using GSF.Scheduling;
 using GSF.Security;
 using GSF.Security.Cryptography;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Configuration;
-using System.Diagnostics;
-using System.Drawing;
-using System.Security;
-using System.Security.Principal;
-using System.ServiceProcess;
-using System.Text;
-using System.Threading;
 
 namespace GSF.ServiceProcess
 {
@@ -1255,12 +1256,25 @@ namespace GSF.ServiceProcess
         /// <param name="response">The <see cref="ServiceResponse"/> to be sent to the <paramref name="client"/>.</param>
         public void SendResponse(Guid client, ServiceResponse response)
         {
+            SendResponse(client, response, true);
+        }
+
+        /// <summary>
+        /// Sends the specified <paramref name="response"/> to the specified <paramref name="client"/> only.
+        /// </summary>
+        /// <param name="client">ID of the client to whom the <paramref name="response"/> is to be sent.</param>
+        /// <param name="response">The <see cref="ServiceResponse"/> to be sent to the <paramref name="client"/>.</param>
+        /// <param name="async">Flag to determine whether to wait for the send operations to complete.</param>
+        public void SendResponse(Guid client, ServiceResponse response, bool async)
+        {
             try
             {
+                WaitHandle[] handles = new WaitHandle[0];
+
                 if (client != Guid.Empty)
                 {
                     // Send message directly to specified client.
-                    m_remotingServer.SendToAsync(client, response);
+                    handles = new WaitHandle[] { m_remotingServer.SendToAsync(client, response) };
                 }
                 else
                 {
@@ -1269,13 +1283,13 @@ namespace GSF.ServiceProcess
                     {
                         lock (m_remoteClients)
                         {
-                            foreach (ClientInfo clientInfo in m_remoteClients)
-                            {
-                                m_remotingServer.SendToAsync(clientInfo.ClientID, response);
-                            }
+                            handles = m_remoteClients.Select(clientInfo => m_remotingServer.SendToAsync(clientInfo.ClientID, response)).ToArray();
                         }
                     }
                 }
+
+                if (!async)
+                    WaitHandle.WaitAll(handles);
             }
             catch (Exception ex)
             {
@@ -2003,7 +2017,7 @@ namespace GSF.ServiceProcess
                 {
                     try
                     {
-                        SendResponse(e.Argument1, new ServiceResponse("AuthenticationFailure"));
+                        SendResponse(e.Argument1, new ServiceResponse("AuthenticationFailure"), false);
                         m_remotingServer.DisconnectOne(e.Argument1);
 
                         UpdateStatus(UpdateType.Warning, "Remote client connection rejected - {0} from {1}.\r\n\r\n", client.ClientUser.Identity.Name, client.MachineName);

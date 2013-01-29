@@ -57,7 +57,7 @@ namespace GSF.Security
         //Constants
 
         private const string SettingsCategory = "SecurityProvider";
-        private const string DefaultProviderType = "GSF.Security.LdapSecurityProvider, TVA.Security";
+        private const string DefaultProviderType = "GSF.Security.LdapSecurityProvider, GSF.Security";
         private const string DefaultIncludedResources = "*=*";
         private const string DefaultExcludedResources = "";
         private const string DefaultNotificationSmtpServer = Mail.DefaultSmtpServer;
