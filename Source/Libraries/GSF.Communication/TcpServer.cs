@@ -152,6 +152,8 @@ namespace GSF.Communication
             public SpinLock SendLock;
             public ConcurrentQueue<TcpServerPayload> SendQueue;
             public int Sending;
+
+            public WindowsPrincipal ClientPrincipal;
         }
 
         private class TcpServerPayload
@@ -530,11 +532,16 @@ namespace GSF.Communication
         {
             if (CurrentState == ServerState.NotRunning)
             {
+                string integratedSecuritySetting;
                 int maxClientConnections, maxSendQueueSize;
 
                 // Initialize if unitialized.
                 if (!Initialized)
                     Initialize();
+
+                // Overwrite config file if integrated security exists in connection string.
+                if (m_configData.TryGetValue("integratedSecurity", out integratedSecuritySetting))
+                    m_integratedSecurity = integratedSecuritySetting.ParseBoolean();
 
                 // Overwrite config file if max client connections exists in connection string.
                 if (m_configData.ContainsKey("maxClientConnections") && int.TryParse(m_configData["maxClientConnections"], out maxClientConnections))
@@ -595,8 +602,7 @@ namespace GSF.Communication
         /// </summary>
         /// <param name="clientID">ID of the client.</param>
         /// <param name="tcpClient">The TCP client.</param>
-        /// <returns>An <see cref="TransportProvider{Socket}"/> object.</returns>
-        /// <exception cref="InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
+        /// <returns>A <see cref="TransportProvider{Socket}"/> object.</returns>
         public bool TryGetClient(Guid clientID, out TransportProvider<Socket> tcpClient)
         {
             TcpClientInfo clientInfo;
@@ -606,6 +612,25 @@ namespace GSF.Communication
                 tcpClient = clientInfo.Client;
             else
                 tcpClient = null;
+
+            return clientExists;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="WindowsPrincipal"/> object associated with the specified client ID.
+        /// </summary>
+        /// <param name="clientID">ID of the client.</param>
+        /// <param name="clientPrincipal">The principal of the client.</param>
+        /// <returns>A <see cref="WindowsPrincipal"/> object.</returns>
+        public bool TryGetClientPrincipal(Guid clientID, out WindowsPrincipal clientPrincipal)
+        {
+            TcpClientInfo clientInfo;
+            bool clientExists = m_clientInfoLookup.TryGetValue(clientID, out clientInfo);
+
+            if (clientExists)
+                clientPrincipal = clientInfo.ClientPrincipal;
+            else
+                clientPrincipal = null;
 
             return clientExists;
         }
@@ -754,6 +779,7 @@ namespace GSF.Communication
         {
             TransportProvider<Socket> client = new TransportProvider<Socket>();
             SocketAsyncEventArgs receiveArgs = null;
+            WindowsPrincipal clientPrincipal = null;
             TcpClientInfo clientInfo;
 
             try
@@ -799,7 +825,7 @@ namespace GSF.Communication
                         authenticationStream.AuthenticateAsServer();
 
                         if (authenticationStream.RemoteIdentity is WindowsIdentity)
-                            Thread.CurrentPrincipal = new WindowsPrincipal((WindowsIdentity)authenticationStream.RemoteIdentity);
+                            clientPrincipal = new WindowsPrincipal((WindowsIdentity)authenticationStream.RemoteIdentity);
                     }
                     finally
                     {
@@ -825,7 +851,8 @@ namespace GSF.Communication
                         Client = client,
                         SendArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction(),
                         SendLock = new SpinLock(),
-                        SendQueue = new ConcurrentQueue<TcpServerPayload>()
+                        SendQueue = new ConcurrentQueue<TcpServerPayload>(),
+                        ClientPrincipal = clientPrincipal
                     };
 
                     // Set up socket args.
