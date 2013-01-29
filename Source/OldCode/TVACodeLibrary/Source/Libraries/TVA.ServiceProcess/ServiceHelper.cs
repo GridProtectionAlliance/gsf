@@ -2206,6 +2206,10 @@ namespace TVA.ServiceProcess
         private void RemotingServer_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
         {
             ClientInfo requestSender = FindConnectedClient(e.Argument1);
+
+            TcpServer remotingServer = m_remotingServer as TcpServer;
+            WindowsPrincipal clientPrincipal;
+
             if (requestSender == null)
             {
                 // First message from a remote client should be its info.
@@ -2217,6 +2221,9 @@ namespace TVA.ServiceProcess
                     {
                         client.ClientID = e.Argument1;
                         client.ConnectedAt = DateTime.Now;
+
+                        if ((object)remotingServer != null && remotingServer.TryGetClientPrincipal(e.Argument1, out clientPrincipal))
+                            Thread.CurrentPrincipal = clientPrincipal;
 
                         // Engage security for the remote client connection if configured.
                         if (!m_secureRemoteInteractions || (m_secureRemoteInteractions && VerifySecurity(client)))

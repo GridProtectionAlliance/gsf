@@ -761,6 +761,8 @@ namespace TVA.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         public override WaitHandle ConnectAsync()
         {
+            string integratedSecuritySetting;
+
             if (CurrentState == ClientState.Disconnected && !m_disposed)
             {
                 try
@@ -770,6 +772,10 @@ namespace TVA.Communication
 
                     OnConnectionAttempt();
                     m_connectWaitHandle.Reset();
+
+                    // Overwrite config file if integrated security exists in connection string
+                    if (m_connectData.TryGetValue("integratedSecurity", out integratedSecuritySetting))
+                        m_integratedSecurity = integratedSecuritySetting.ParseBoolean();
 
                     // Create client socket to establish presence
                     if (m_tcpClient.Provider == null)
