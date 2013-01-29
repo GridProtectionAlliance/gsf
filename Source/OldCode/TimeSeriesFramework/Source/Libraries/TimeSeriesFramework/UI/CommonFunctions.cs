@@ -257,7 +257,10 @@ namespace TimeSeriesFramework.UI
                 if (settings.ContainsKey("remotestatusserverconnectionstring"))
                 {
                     //s_remoteStatusServerConnectionString = settings["remotestatusserverconnectionstring"];
-                    Dictionary<string, string> serviceSettings = settings["remotestatusserverconnectionstring"].ParseKeyValuePairs();
+                    Dictionary<string, string> serviceSettings;
+
+                    s_serviceConnectionString = settings["remotestatusserverconnectionstring"];
+                    serviceSettings = s_serviceConnectionString.ParseKeyValuePairs();
 
                     if (serviceSettings.ContainsKey("interface"))
                         interfaceValue = serviceSettings["interface"];
@@ -265,11 +268,6 @@ namespace TimeSeriesFramework.UI
                     if (serviceSettings.ContainsKey("server"))
                     {
                         string server = serviceSettings["server"];
-
-                        s_serviceConnectionString = "server=" + server;
-
-                        if (!string.IsNullOrEmpty(interfaceValue))
-                            s_serviceConnectionString += ";interface=" + interfaceValue;
 
                         if (serviceSettings.ContainsKey("datapublisherport"))
                         {
