@@ -3334,8 +3334,15 @@
             </summary>
             <param name="clientID">ID of the client.</param>
             <param name="tcpClient">The TCP client.</param>
-            <returns>An <see cref="T:TVA.Communication.TransportProvider`1"/> object.</returns>
-            <exception cref="T:System.InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
+            <returns>A <see cref="T:TVA.Communication.TransportProvider`1"/> object.</returns>
+        </member>
+        <member name="M:TVA.Communication.TcpServer.TryGetClientPrincipal(System.Guid,System.Security.Principal.WindowsPrincipal@)">
+            <summary>
+            Gets the <see cref="T:System.Security.Principal.WindowsPrincipal"/> object associated with the specified client ID.
+            </summary>
+            <param name="clientID">ID of the client.</param>
+            <param name="clientPrincipal">The principal of the client.</param>
+            <returns>A <see cref="T:System.Security.Principal.WindowsPrincipal"/> object.</returns>
         </member>
         <member name="M:TVA.Communication.TcpServer.ValidateConfigurationString(System.String)">
             <summary>
