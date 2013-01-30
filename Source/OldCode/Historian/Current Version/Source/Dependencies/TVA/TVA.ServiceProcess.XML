@@ -345,6 +345,14 @@
             <param name="client">ID of the client to whom the <paramref name="response"/> is to be sent.</param>
             <param name="response">The <see cref="T:TVA.ServiceProcess.ServiceResponse"/> to be sent to the <paramref name="client"/>.</param>
         </member>
+        <member name="M:TVA.ServiceProcess.ServiceHelper.SendResponse(System.Guid,TVA.ServiceProcess.ServiceResponse,System.Boolean)">
+            <summary>
+            Sends the specified <paramref name="response"/> to the specified <paramref name="client"/> only.
+            </summary>
+            <param name="client">ID of the client to whom the <paramref name="response"/> is to be sent.</param>
+            <param name="response">The <see cref="T:TVA.ServiceProcess.ServiceResponse"/> to be sent to the <paramref name="client"/>.</param>
+            <param name="async">Flag to determine whether to wait for the send operations to complete.</param>
+        </member>
         <member name="M:TVA.ServiceProcess.ServiceHelper.SendActionableResponse(TVA.ServiceProcess.ClientRequestInfo,System.Boolean,System.Object,System.String,System.Object[])">
             <summary>
             Sends an actionable response to client along with an optional formatted message and attachment.
