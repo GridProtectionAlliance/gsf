@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO.Ports;
+using System.Net;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -32,9 +33,9 @@ using System.Windows.Documents;
 using System.Windows.Media;
 using TimeSeriesFramework.UI.DataModels;
 using TVA;
+using TVA.Communication;
 using TVA.Data;
 using TVA.Security;
-using System.Windows.Threading;
 
 namespace TimeSeriesFramework.UI
 {
@@ -484,6 +485,10 @@ namespace TimeSeriesFramework.UI
         /// </summary>
         public static void ConnectWindowsServiceClient(bool overwrite = false)
         {
+            TcpClient remotingClient;
+            ISecurityProvider provider;
+            UserData userData;
+
             if (overwrite)
             {
                 DisconnectWindowsServiceClient();
@@ -504,9 +509,26 @@ namespace TimeSeriesFramework.UI
                         if (!string.IsNullOrWhiteSpace(connectionString))
                         {
                             s_windowsServiceClient = new WindowsServiceClient(connectionString);
-                            s_windowsServiceClient.Helper.RemotingClient.MaxConnectionAttempts = -1;
-                            s_windowsServiceClient.Helper.RemotingClient.ConnectionEstablished += new EventHandler(RemotingClient_ConnectionEstablished);
-                            System.Threading.ThreadPool.QueueUserWorkItem(ConnectAsync, null);
+
+                            if (SecurityProviderCache.TryGetCachedProvider(CurrentUser, out provider))
+                            {
+                                userData = provider.UserData;
+                                remotingClient = s_windowsServiceClient.Helper.RemotingClient as TcpClient;
+
+                                s_windowsServiceClient.Helper.RemotingClient.MaxConnectionAttempts = -1;
+                                s_windowsServiceClient.Helper.RemotingClient.ConnectionEstablished += new EventHandler(RemotingClient_ConnectionEstablished);
+
+                                if ((object)userData != null)
+                                {
+                                    s_windowsServiceClient.Helper.Username = userData.LoginID;
+                                    s_windowsServiceClient.Helper.Password = SecurityProviderUtility.EncryptPassword(provider.Password);
+
+                                    if ((object)remotingClient != null && (object)provider.SecurePassword != null && provider.SecurePassword.Length > 0)
+                                        remotingClient.NetworkCredential = new NetworkCredential(userData.LoginID, provider.SecurePassword);
+                                }
+
+                                ThreadPool.QueueUserWorkItem(ConnectAsync, null);
+                            }
                         }
                     }
                     finally
@@ -548,7 +570,7 @@ namespace TimeSeriesFramework.UI
             }
             catch (Exception ex)
             {
-                 Popup("The IP address is not Valid,Please Re-check your IP address." + ex.Message + Environment.NewLine, " Exception:", MessageBoxImage.Error);
+                Application.Current.MainWindow.Dispatcher.BeginInvoke(Popup, "The IP address is not Valid,Please Re-check your IP address." + ex.Message + Environment.NewLine, " Exception:", MessageBoxImage.Error);
             }
         }
 

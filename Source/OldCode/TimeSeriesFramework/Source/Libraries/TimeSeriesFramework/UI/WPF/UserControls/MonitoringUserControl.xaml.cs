@@ -85,11 +85,6 @@ namespace TimeSeriesFramework.UI.UserControls
         /// <param name="e">Event arguments.</param>
         private void MonitoringUserControl_Loaded(object sender, RoutedEventArgs e)
         {
-            if (CommonFunctions.CurrentPrincipal.IsInRole("Administrator, Editor"))
-                ButtonSendServiceRequest.IsEnabled = true;
-            else
-                ButtonSendServiceRequest.IsEnabled = false;
-
             TextBoxServiceRequest.Focus();
             SetupServiceConnection();
             if (!int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("NumberOfMessages").ToString(), out m_numberOfMessages))
