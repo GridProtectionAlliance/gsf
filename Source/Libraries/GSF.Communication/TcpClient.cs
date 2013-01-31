@@ -54,16 +54,17 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using GSF.Configuration;
 
 namespace GSF.Communication
 {
@@ -195,6 +196,7 @@ namespace GSF.Communication
         private TransportProvider<Socket> m_tcpClient;
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectWaitHandle;
+        private NetworkCredential m_networkCredential;
 
         private SocketAsyncEventArgs m_connectArgs;
         private SocketAsyncEventArgs m_receiveArgs;
@@ -383,6 +385,22 @@ namespace GSF.Communication
             get
             {
                 return m_payloadAware ? m_receivePayloadAwareHandler : m_receivePayloadUnawareHandler;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets network credential that is used when
+        /// <see cref="IntegratedSecurity"/> is set to <c>true</c>.
+        /// </summary>
+        public NetworkCredential NetworkCredential
+        {
+            get
+            {
+                return m_networkCredential;
+            }
+            set
+            {
+                m_networkCredential = value;
             }
         }
 
@@ -798,7 +816,7 @@ namespace GSF.Communication
                     {
                         socketStream = new NetworkStream(m_tcpClient.Provider);
                         authenticationStream = new NegotiateStream(socketStream);
-                        authenticationStream.AuthenticateAsClient();
+                        authenticationStream.AuthenticateAsClient(m_networkCredential ?? (NetworkCredential)CredentialCache.DefaultCredentials, string.Empty);
                     }
                     finally
                     {

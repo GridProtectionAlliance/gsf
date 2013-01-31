@@ -23,15 +23,20 @@
 //
 //******************************************************************************************************
 
-using GSF.Console;
-using GSF.Reflection;
-using GSF.ServiceProcess;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
+using System.Runtime.InteropServices;
 using System.ServiceProcess;
 using System.Text;
+using System.Threading;
+using GSF.Console;
+using GSF.Identity;
+using GSF.Reflection;
+using GSF.Security;
+using GSF.ServiceProcess;
 
 namespace GSF.TimeSeries
 {
@@ -42,10 +47,16 @@ namespace GSF.TimeSeries
     {
         #region [ Members ]
 
+        // Constants
+        private const int VK_RETURN = 0x0D;
+        private const int WM_KEYDOWN = 0x100;
+
         // Fields
+        private bool m_innerLoopActive;
         private bool m_telnetActive;
         private ConsoleColor m_originalBgColor;
         private ConsoleColor m_originalFgColor;
+        private ManualResetEvent m_authenticationWaitHandle;
 
         #endregion
 
@@ -68,6 +79,9 @@ namespace GSF.TimeSeries
             m_clientHelper.ReceivedServiceResponse += ClientHelper_ReceivedServiceResponse;
             m_clientHelper.TelnetSessionEstablished += ClientHelper_TelnetSessionEstablished;
             m_clientHelper.TelnetSessionTerminated += ClientHelper_TelnetSessionTerminated;
+
+            // Authentication wait handle.
+            m_authenticationWaitHandle = new ManualResetEvent(true);
         }
 
         #endregion
@@ -174,42 +188,51 @@ namespace GSF.TimeSeries
                     m_remotingClient.ConnectionString = string.Format("Server={0}", arguments["server"]);
                 }
 
-                // Connect to service and send commands. 
-                m_clientHelper.Connect();
-
-                while (m_clientHelper.Enabled && string.Compare(userInput, "Exit", true) != 0)
+                // Connect to service and send commands.
+                while (!m_clientHelper.Enabled)
                 {
-                    // Wait for a command from the user. 
-                    userInput = System.Console.ReadLine();
-                    // Write a blank line to the console.
-                    System.Console.WriteLine();
+                    m_authenticationWaitHandle.WaitOne();
+                    m_clientHelper.Connect();
 
-                    if (!string.IsNullOrWhiteSpace(userInput))
+                    while (m_clientHelper.Enabled && string.Compare(userInput, "Exit", true) != 0)
                     {
-                        // The user typed in a command and didn't just hit <ENTER>. 
-                        switch (userInput.ToUpper())
-                        {
-                            case "CLS":
-                                // User wants to clear the console window. 
-                                System.Console.Clear();
-                                break;
-                            case "EXIT":
-                                // User wants to exit the telnet session with the service. 
-                                if (m_telnetActive)
-                                {
-                                    userInput = string.Empty;
-                                    m_clientHelper.SendRequest("Telnet -disconnect");
-                                }
-                                break;
-                            default:
-                                // User wants to send a request to the service. 
-                                m_clientHelper.SendRequest(userInput);
-                                if (string.Compare(userInput, "Help", true) == 0)
-                                    DisplayHelp();
+                        m_innerLoopActive = true;
 
-                                break;
+                        // Wait for a command from the user. 
+                        userInput = System.Console.ReadLine();
+
+                        // Write a blank line to the console.
+                        System.Console.WriteLine();
+
+                        if (!string.IsNullOrWhiteSpace(userInput))
+                        {
+                            // The user typed in a command and didn't just hit <ENTER>. 
+                            switch (userInput.ToUpper())
+                            {
+                                case "CLS":
+                                    // User wants to clear the console window. 
+                                    System.Console.Clear();
+                                    break;
+                                case "EXIT":
+                                    // User wants to exit the telnet session with the service. 
+                                    if (m_telnetActive)
+                                    {
+                                        userInput = string.Empty;
+                                        m_clientHelper.SendRequest("Telnet -disconnect");
+                                    }
+                                    break;
+                                default:
+                                    // User wants to send a request to the service. 
+                                    m_clientHelper.SendRequest(userInput);
+                                    if (string.Compare(userInput, "Help", true) == 0)
+                                        DisplayHelp();
+
+                                    break;
+                            }
                         }
                     }
+
+                    m_innerLoopActive = false;
                 }
             }
         }
@@ -247,6 +270,11 @@ namespace GSF.TimeSeries
         {
             // Prompt for credentials.
             StringBuilder prompt = new StringBuilder();
+
+            UserInfo userInfo;
+            string username;
+            StringBuilder passwordBuilder = new StringBuilder();
+
             prompt.AppendLine();
             prompt.AppendLine();
             prompt.Append("Connection to the service was rejected due to authentication failure. \r\n");
@@ -255,20 +283,45 @@ namespace GSF.TimeSeries
             prompt.AppendLine();
             System.Console.Write(prompt.ToString());
 
+            // Tell outer connect loop to wait for authentication.
+            m_authenticationWaitHandle.Reset();
+
+            // If the inner loop is active, post enter to the console
+            // to escape the Console.ReadLine() in the inner loop.
+            if (m_innerLoopActive)
+            {
+                m_remotingClient.Enabled = false;
+                IntPtr hWnd = Process.GetCurrentProcess().MainWindowHandle;
+                PostMessage(hWnd, WM_KEYDOWN, VK_RETURN, 0);
+                Thread.Sleep(500);
+            }
+
             // Capture the username.
             System.Console.Write("Enter username: ");
-            m_clientHelper.Username = System.Console.ReadLine();
+            username = System.Console.ReadLine();
 
             // Capture the password.
             ConsoleKeyInfo key;
             System.Console.Write("Enter password: ");
             while ((key = System.Console.ReadKey(true)).KeyChar != '\r')
             {
-                m_clientHelper.Password += key.KeyChar;
+                passwordBuilder.Append(key.KeyChar);
             }
 
+            // Set network credentials used when attempting AD authentication
+            userInfo = new UserInfo(username);
+            userInfo.Initialize();
+            m_remotingClient.NetworkCredential = new NetworkCredential(userInfo.LoginID, passwordBuilder.ToString());
+
+            // Set the username on the client helper.
+            m_clientHelper.Username = username;
+            m_clientHelper.Password = SecurityProviderUtility.EncryptPassword(passwordBuilder.ToString());
+
+            // Done with the console; signal reconnect.
+            m_authenticationWaitHandle.Set();
+
             // Re-attempt connection with new credentials.
-            e.Cancel = false;
+            e.Cancel = true;
             System.Console.WriteLine();
             System.Console.WriteLine();
         }
@@ -360,6 +413,15 @@ namespace GSF.TimeSeries
             System.Console.ForegroundColor = m_originalFgColor;
             System.Console.Clear();
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        [DllImport("User32.Dll", EntryPoint = "PostMessageA")]
+        private static extern bool PostMessage(IntPtr hWnd, uint msg, int wParam, int lParam);
 
         #endregion
     }

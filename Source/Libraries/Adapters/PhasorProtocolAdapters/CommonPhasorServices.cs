@@ -1074,7 +1074,7 @@ namespace PhasorProtocolAdapters
             if (Convert.ToInt32(connection.ExecuteScalar("SELECT COUNT(*) FROM Node")) == 0)
             {
                 statusMessage("CommonPhasorServices", new EventArgs<string>("Creating default record for Node..."));
-                connection.ExecuteNonQuery("INSERT INTO Node(Name, CompanyID, Description, Settings, MenuType, MenuData, Master, LoadOrder, Enabled) VALUES('Default', NULL, 'Default node', 'RemoteStatusServerConnectionString={server=localhost:8500};datapublisherport=6165;RealTimeStatisticServiceUrl=http://localhost:6052/historian', 'File', 'Menu.xml', 1, 0, 1)");
+                connection.ExecuteNonQuery("INSERT INTO Node(Name, CompanyID, Description, Settings, MenuType, MenuData, Master, LoadOrder, Enabled) VALUES('Default', NULL, 'Default node', 'RemoteStatusServerConnectionString={server=localhost:8500;integratedSecurity=true};datapublisherport=6165;AlarmServiceUrl=http://localhost:5018/alarmservices', 'File', 'Menu.xml', 1, 0, 1)");
                 connection.ExecuteNonQuery("UPDATE Node SET ID=" + nodeIDQueryString);
             }
         }

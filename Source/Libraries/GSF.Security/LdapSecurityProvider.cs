@@ -33,8 +33,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
-using GSF.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,6 +40,8 @@ using System.Reflection;
 using System.Security;
 using System.Security.Principal;
 using System.Threading;
+using GSF.Configuration;
+using GSF.Identity;
 
 namespace GSF.Security
 {
@@ -301,6 +301,8 @@ namespace GSF.Security
             if (!UserData.IsDefined || UserData.IsDisabled || UserData.IsLockedOut ||
                 (UserData.PasswordChangeDateTime != DateTime.MinValue && UserData.PasswordChangeDateTime <= DateTime.UtcNow))
                 return false;
+
+            Password = password;
 
             if (string.IsNullOrEmpty(password))
             {

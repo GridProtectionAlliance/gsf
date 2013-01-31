@@ -30,8 +30,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
-using GSF.Data;
 using System;
 using System.Configuration;
 using System.Data;
@@ -39,6 +37,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Security;
 using System.Text.RegularExpressions;
+using GSF.Configuration;
+using GSF.Data;
 
 namespace GSF.Security
 {
@@ -398,8 +398,10 @@ namespace GSF.Security
                     }
                     else
                     {
+                        Password = password;
+
                         // Authenticate against backend datastore
-                        UserData.IsAuthenticated = (UserData.Password == SecurityProviderUtility.EncryptPassword(password));
+                        UserData.IsAuthenticated = (UserData.Password == password || UserData.Password == SecurityProviderUtility.EncryptPassword(password));
                     }
                 }
                 catch (Exception ex)
