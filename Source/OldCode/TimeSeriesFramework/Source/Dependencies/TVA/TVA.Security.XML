@@ -241,6 +241,16 @@
             Gets or sets the connection string to be used for connection to the backend security datastore.
             </summary>
         </member>
+        <member name="P:TVA.Security.ISecurityProvider.SecurePassword">
+            <summary>
+            Gets or sets the password as a <see cref="T:System.Security.SecureString"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.ISecurityProvider.Password">
+            <summary>
+            Gets or sets <see cref="P:TVA.Security.ISecurityProvider.SecurePassword"/> as cleartext password.
+            </summary>
+        </member>
         <member name="P:TVA.Security.ISecurityProvider.UserData">
             <summary>
             Gets the <see cref="P:TVA.Security.ISecurityProvider.UserData"/> object containing information about the user.
@@ -388,6 +398,16 @@
         <member name="P:TVA.Security.SecurityProviderBase.ConnectionString">
             <summary>
             Gets or sets the connection string to be used for connection to the backend security datastore.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecurityProviderBase.SecurePassword">
+            <summary>
+            Gets or sets the password as a <see cref="T:System.Security.SecureString"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecurityProviderBase.Password">
+            <summary>
+            Gets or sets <see cref="P:TVA.Security.SecurityProviderBase.SecurePassword"/> as cleartext password.
             </summary>
         </member>
         <member name="P:TVA.Security.SecurityProviderBase.PersistSettings">
@@ -788,6 +808,14 @@
             <summary>
             Number of minutes upto which <see cref="T:TVA.Security.ISecurityProvider"/>s are to be cached.
             </summary>
+        </member>
+        <member name="M:TVA.Security.SecurityProviderCache.TryGetCachedProvider(System.String,TVA.Security.ISecurityProvider@)">
+            <summary>
+            Attempts to get cached <see cref="T:TVA.Security.ISecurityProvider"/> for the given username.
+            </summary>
+            <param name="username">Name of the user.</param>
+            <param name="provider">Security provider to return.</param>
+            <returns>True if provider is cached; false otherwise.</returns>
         </member>
         <member name="P:TVA.Security.SecurityProviderCache.CurrentProvider">
             <summary>
