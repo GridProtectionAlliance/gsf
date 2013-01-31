@@ -418,6 +418,7 @@ namespace TVA.ServiceProcess
                     // Detach events from any existing instance
                     m_remotingClient.ConnectionEstablished -= RemotingClient_ConnectionEstablished;
                     m_remotingClient.ConnectionAttempt -= RemotingClient_ConnectionAttempt;
+                    m_remotingClient.ConnectionException -= RemotingClient_ConnectionException;
                     m_remotingClient.ConnectionTerminated -= RemotingClient_ConnectionTerminated;
                     m_remotingClient.ReceiveDataComplete -= RemotingClient_ReceiveDataComplete;
                 }
@@ -429,6 +430,7 @@ namespace TVA.ServiceProcess
                     // Attach events to new instance
                     m_remotingClient.ConnectionEstablished += RemotingClient_ConnectionEstablished;
                     m_remotingClient.ConnectionAttempt += RemotingClient_ConnectionAttempt;
+                    m_remotingClient.ConnectionException += RemotingClient_ConnectionException;
                     m_remotingClient.ConnectionTerminated += RemotingClient_ConnectionTerminated;
                     m_remotingClient.ReceiveDataComplete += RemotingClient_ReceiveDataComplete;
                 }
@@ -841,6 +843,22 @@ namespace TVA.ServiceProcess
             status.Append(m_remotingClient.Status);
             status.AppendLine();
             UpdateStatus(UpdateType.Information, status.ToString());
+        }
+
+        private void RemotingClient_ConnectionException(object sender, EventArgs<Exception> e)
+        {
+            StringBuilder status = new StringBuilder();
+            TcpClient remotingClient;
+
+            status.AppendFormat("Exception during connection attempt: {0}", e.Argument.Message);
+            status.AppendLine();
+            status.AppendLine();
+            UpdateStatus(UpdateType.Alarm, status.ToString());
+
+            remotingClient = m_remotingClient as TcpClient;
+
+            if ((object)remotingClient != null)
+                remotingClient.NetworkCredential = null;
         }
 
         private void RemotingClient_ConnectionTerminated(object sender, System.EventArgs e)

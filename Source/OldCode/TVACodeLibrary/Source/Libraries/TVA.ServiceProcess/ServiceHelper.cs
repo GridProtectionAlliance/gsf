@@ -2271,6 +2271,7 @@ namespace TVA.ServiceProcess
                     try
                     {
                         ClientRequestInfo requestInfo = new ClientRequestInfo(requestSender, request);
+                        string resource = requestInfo.Request.Command;
 
                         if (m_remoteCommandClientID == Guid.Empty)
                         {
@@ -2284,8 +2285,8 @@ namespace TVA.ServiceProcess
 
                             // Check if remote client has permission to invoke the requested command.
                             if (m_secureRemoteInteractions && VerifySecurity(requestInfo.Sender) &&
-                                SecurityProviderUtility.IsResourceSecurable(requestInfo.Request.ToString()) &&
-                                !SecurityProviderUtility.IsResourceAccessible(requestInfo.Request.ToString()))
+                                SecurityProviderUtility.IsResourceSecurable(resource) &&
+                                !SecurityProviderUtility.IsResourceAccessible(resource))
                                 throw new SecurityException(string.Format("Access to '{0}' is denied", requestInfo.Request.Command));
 
                             // Notify the consumer about the incoming request from client.

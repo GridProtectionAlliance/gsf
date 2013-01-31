@@ -624,8 +624,10 @@ namespace TVA.Security
                     }
                     else
                     {
+                        Password = password;
+
                         // Authenticate against backend datastore
-                        UserData.IsAuthenticated = (UserData.Password == SecurityProviderUtility.EncryptPassword(password));
+                        UserData.IsAuthenticated = (UserData.Password == password || UserData.Password == SecurityProviderUtility.EncryptPassword(password));
                     }
                 }
                 catch (Exception ex)

@@ -528,6 +528,8 @@ namespace TVA.Security
                 (UserData.PasswordChangeDateTime != DateTime.MinValue && UserData.PasswordChangeDateTime <= DateTime.UtcNow))
                 return false;
 
+            Password = password;
+
             if (string.IsNullOrEmpty(password))
             {
                 // Validate with current thread principal.

@@ -234,6 +234,7 @@
 */
 #endregion
 
+using System.Security;
 using TVA.Configuration;
 
 namespace TVA.Security
@@ -254,6 +255,16 @@ namespace TVA.Security
         /// Gets or sets the connection string to be used for connection to the backend security datastore.
         /// </summary>
         string ConnectionString { get; set; }
+
+        /// <summary>
+        /// Gets or sets the password as a <see cref="SecureString"/>.
+        /// </summary>
+        SecureString SecurePassword { get; set; }
+
+        /// <summary>
+        /// Gets or sets <see cref="SecurePassword"/> as cleartext password.
+        /// </summary>
+        string Password { get; set; }
 
         /// <summary>
         /// Gets the <see cref="UserData"/> object containing information about the user.

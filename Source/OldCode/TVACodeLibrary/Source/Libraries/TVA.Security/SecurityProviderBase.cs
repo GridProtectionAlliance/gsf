@@ -268,6 +268,8 @@
 
 using System;
 using System.Configuration;
+using System.Runtime.InteropServices;
+using System.Security;
 using TVA.Configuration;
 
 namespace TVA.Security
@@ -405,6 +407,7 @@ namespace TVA.Security
         // Fields
         private string m_applicationName;
         private string m_connectionString;
+        private SecureString m_securePassword;
         private string m_authenticationFailureReason;
         private string m_settingsCategory;
         private UserData m_userData;
@@ -482,6 +485,65 @@ namespace TVA.Security
             set
             {
                 m_connectionString = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the password as a <see cref="SecureString"/>.
+        /// </summary>
+        public virtual SecureString SecurePassword
+        {
+            get
+            {
+                return m_securePassword;
+            }
+            set
+            {
+                if ((object)m_securePassword != null)
+                    m_securePassword.Dispose();
+
+                m_securePassword = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="SecurePassword"/> as cleartext password.
+        /// </summary>
+        public unsafe string Password
+        {
+            get
+            {
+                string result;
+                SecureString securePassword = SecurePassword;
+                IntPtr intPtr;
+
+                if ((object)securePassword == null)
+                    return null;
+
+                intPtr = Marshal.SecureStringToBSTR(securePassword);
+
+                try
+                {
+                    result = new string((char*)((void*)intPtr));
+                }
+                finally
+                {
+                    Marshal.ZeroFreeBSTR(intPtr);
+                }
+
+                return result;
+            }
+            set
+            {
+                SecureString securePassword = new SecureString();
+
+                if (value == null)
+                    value = string.Empty;
+
+                foreach (char c in value)
+                    securePassword.AppendChar(c);
+
+                SecurePassword = securePassword;
             }
         }
 
@@ -750,6 +812,9 @@ namespace TVA.Security
                     // This will be done regardless of whether the object is finalized or disposed.	
                     if (disposing)
                     {
+                        // Disposes of secure password.
+                        SecurePassword = null;
+
                         // This will be done only when the object is disposed by calling Dispose().
                         SaveSettings();
                     }

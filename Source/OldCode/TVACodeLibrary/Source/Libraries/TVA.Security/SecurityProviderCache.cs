@@ -411,6 +411,20 @@ namespace TVA.Security
 
         // Static Methods
 
+        /// <summary>
+        /// Attempts to get cached <see cref="ISecurityProvider"/> for the given username.
+        /// </summary>
+        /// <param name="username">Name of the user.</param>
+        /// <param name="provider">Security provider to return.</param>
+        /// <returns>True if provider is cached; false otherwise.</returns>
+        public static bool TryGetCachedProvider(string username, out ISecurityProvider provider)
+        {
+            CacheContext cacheContext;
+            bool result = s_cache.TryGetValue(username, out cacheContext);
+            provider = result ? cacheContext.Provider : null;
+            return result;
+        }
+
         private static ISecurityProvider SetupPrincipal(ISecurityProvider provider, bool restore)
         {
             // Initialize the principal object.
