@@ -69,7 +69,6 @@ namespace PhasorProtocolAdapters
         private ManualResetEvent m_configurationWaitHandle;
         private MultiProtocolFrameParser m_frameParser;
         private IConfigurationFrame m_configurationFrame;
-        private DataPublisher m_dataPublisher;
         private bool m_disposed;
 
         #endregion
@@ -103,117 +102,11 @@ namespace PhasorProtocolAdapters
             m_frameParser.AutoRepeatCapturedPlayback = false;
             m_frameParser.AutoStartDataParsingSequence = false;
             m_frameParser.SkipDisableRealTimeData = true;
-
-            // Create a new data publishing server
-            m_dataPublisher = new DataPublisher();
-            m_dataPublisher.Name = "dataPublisher";
-            m_dataPublisher.UseBaseTimeOffsets = true;
-            m_dataPublisher.ConnectionString = "cacheMeasurementKeys={FILTER ActiveMeasurements WHERE SignalType = 'STAT'}";
-
-            // Attach to events on new data publishing server reference
-            m_dataPublisher.StatusMessage += m_dataPublisher_StatusMessage;
-            m_dataPublisher.ProcessException += m_dataPublisher_ProcessException;
-            m_dataPublisher.InputMeasurementKeysUpdated += m_dataPublisher_InputMeasurementKeysUpdated;
-            m_dataPublisher.OutputMeasurementsUpdated += m_dataPublisher_OutputMeasurementsUpdated;
-            m_dataPublisher.NewMeasurements += m_dataPublisher_NewMeasurements;
-            m_dataPublisher.UnpublishedSamples += m_dataPublisher_UnpublishedSamples;
-            m_dataPublisher.DiscardingMeasurements += m_dataPublisher_DiscardingMeasurements;
         }
 
         #endregion
 
         #region [ Properties ]
-
-        /// <summary>
-        /// Gets the status of this <see cref="CommonPhasorServices"/> instance.
-        /// </summary>
-        /// <remarks>
-        /// Derived classes should provide current status information about the adapter for display purposes.
-        /// </remarks>
-        public override string Status
-        {
-            get
-            {
-                StringBuilder status = new StringBuilder();
-
-                status.Append(base.Status);
-
-                if (m_dataPublisher != null)
-                {
-                    status.AppendLine();
-                    status.AppendLine("Data Publishing Server:");
-                    status.AppendLine();
-                    status.Append(m_dataPublisher.Status);
-                }
-
-                return status.ToString();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets <see cref="DataSet"/> based data source available to the <see cref="CommonPhasorServices"/> instance.
-        /// </summary>
-        public override DataSet DataSource
-        {
-            get
-            {
-                return base.DataSource;
-            }
-            set
-            {
-                base.DataSource = value;
-
-                if (m_dataPublisher != null)
-                    m_dataPublisher.DataSource = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets primary keys of input measurements the <see cref="CommonPhasorServices"/> expects, if any.
-        /// </summary>
-        public override MeasurementKey[] InputMeasurementKeys
-        {
-            get
-            {
-                if (m_dataPublisher != null)
-                {
-                    if (base.InputMeasurementKeys != null && base.InputMeasurementKeys.Length > 0)
-                        return m_dataPublisher.InputMeasurementKeys.Concat(base.InputMeasurementKeys).Distinct().ToArray();
-
-                    return m_dataPublisher.InputMeasurementKeys;
-                }
-
-                return base.InputMeasurementKeys;
-            }
-            set
-            {
-                base.InputMeasurementKeys = value;
-            }
-        }
-
-
-        /// <summary>
-        /// Gets or sets output measurements that the <see cref="CommonPhasorServices"/> will produce, if any.
-        /// </summary>
-        public override IMeasurement[] OutputMeasurements
-        {
-            get
-            {
-                if (m_dataPublisher != null)
-                {
-                    if (base.OutputMeasurements != null && base.OutputMeasurements.Length > 0)
-                        return m_dataPublisher.OutputMeasurements.Concat(base.OutputMeasurements).Distinct().ToArray();
-
-                    return m_dataPublisher.OutputMeasurements;
-                }
-
-                return base.OutputMeasurements;
-            }
-            set
-            {
-                base.OutputMeasurements = value;
-            }
-        }
 
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
@@ -266,20 +159,6 @@ namespace PhasorProtocolAdapters
 
                         m_configurationWaitHandle = null;
                         m_configurationFrame = null;
-
-                        // Dispose of data publishing server
-                        if (m_dataPublisher != null)
-                        {
-                            m_dataPublisher.StatusMessage -= m_dataPublisher_StatusMessage;
-                            m_dataPublisher.ProcessException -= m_dataPublisher_ProcessException;
-                            m_dataPublisher.InputMeasurementKeysUpdated -= m_dataPublisher_InputMeasurementKeysUpdated;
-                            m_dataPublisher.OutputMeasurementsUpdated -= m_dataPublisher_OutputMeasurementsUpdated;
-                            m_dataPublisher.NewMeasurements -= m_dataPublisher_NewMeasurements;
-                            m_dataPublisher.UnpublishedSamples -= m_dataPublisher_UnpublishedSamples;
-                            m_dataPublisher.DiscardingMeasurements -= m_dataPublisher_DiscardingMeasurements;
-                            m_dataPublisher.Dispose();
-                        }
-                        m_dataPublisher = null;
                     }
                 }
                 finally
@@ -288,76 +167,6 @@ namespace PhasorProtocolAdapters
                     base.Dispose(disposing);    // Call base class Dispose().
                 }
             }
-        }
-
-        /// <summary>
-        /// Intializes <see cref="CommonPhasorServices"/>.
-        /// </summary>
-        public override void Initialize()
-        {
-            base.Initialize();
-
-            // Initialize the data publishing server (load settings from config file)
-            if (m_dataPublisher != null)
-                m_dataPublisher.Initialize();
-        }
-
-        /// <summary>
-        /// Starts the <see cref="CommonPhasorServices"/> or restarts it if it is already running.
-        /// </summary>
-        [AdapterCommand("Starts the common phasor services adapter or restarts it if it is already running.")]
-        public override void Start()
-        {
-            base.Start();
-
-            if (Enabled && m_dataPublisher != null)
-                m_dataPublisher.Start();
-        }
-
-        /// <summary>
-        /// Stops the <see cref="CommonPhasorServices"/>.
-        /// </summary>		
-        [AdapterCommand("Stops the common phasor services adapter.")]
-        public override void Stop()
-        {
-            base.Stop();
-
-            if (m_dataPublisher != null)
-                m_dataPublisher.Stop();
-        }
-
-        /// <summary>
-        /// Enumerates connected clients.
-        /// </summary>
-        [AdapterCommand("Enumerates connected clients.")]
-        public virtual void EnumerateClients()
-        {
-            if ((object)m_dataPublisher != null)
-                m_dataPublisher.EnumerateClients();
-        }
-
-        /// <summary>
-        /// Rotates cipher keys for specified client connection.
-        /// </summary>
-        /// <param name="clientIndex">Enumerated index for client connection.</param>
-        [AdapterCommand("Rotates cipher keys for a client connection using its enumerated index.")]
-        public virtual void RotateCipherKeys(int clientIndex)
-        {
-            if ((object)m_dataPublisher != null)
-                m_dataPublisher.RotateCipherKeys(clientIndex);
-        }
-
-        /// <summary>
-        /// Gets subscriber information for specified client connection.
-        /// </summary>
-        /// <param name="clientIndex">Enumerated index for client connection.</param>
-        [AdapterCommand("Gets subscriber information for client connection using its enumerated index.")]
-        public virtual string GetSubscriberInfo(int clientIndex)
-        {
-            if ((object)m_dataPublisher != null)
-                return m_dataPublisher.GetSubscriberInfo(clientIndex);
-
-            return null;
         }
 
         /// <summary>
@@ -383,10 +192,6 @@ namespace PhasorProtocolAdapters
                 m_actionAdapters = null;
                 //m_outputAdapters = null;
             }
-
-            // Assign parent collection for data publishing server
-            if ((object)m_dataPublisher != null)
-                ((IAdapter)m_dataPublisher).AssignParentCollection(parent);
         }
 
         /// <summary>
@@ -505,18 +310,6 @@ namespace PhasorProtocolAdapters
             }
         }
 
-        /// <summary>
-        /// Queues a collection of measurements for processing.
-        /// </summary>
-        /// <param name="measurements">Collection of measurements to queue for processing.</param>
-        public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
-        {
-            base.QueueMeasurementsForProcessing(measurements);
-
-            if (m_dataPublisher != null)
-                m_dataPublisher.QueueMeasurementsForProcessing(measurements);
-        }
-
         private void m_frameParser_ReceivedConfigurationFrame(object sender, EventArgs<IConfigurationFrame> e)
         {
             // Cache received configuration frame
@@ -570,41 +363,6 @@ namespace PhasorProtocolAdapters
         private void m_frameParser_ConnectionAttempt(object sender, EventArgs e)
         {
             OnStatusMessage("Attempting {0} {1} based connection...", m_frameParser.PhasorProtocol.GetFormattedProtocolName(), m_frameParser.TransportProtocol.ToString().ToUpper());
-        }
-
-        private void m_dataPublisher_StatusMessage(object sender, EventArgs<string> e)
-        {
-            OnStatusMessage(e.Argument);
-        }
-
-        private void m_dataPublisher_ProcessException(object sender, EventArgs<Exception> e)
-        {
-            OnProcessException(e.Argument);
-        }
-
-        private void m_dataPublisher_InputMeasurementKeysUpdated(object sender, EventArgs e)
-        {
-            OnInputMeasurementKeysUpdated();
-        }
-
-        private void m_dataPublisher_OutputMeasurementsUpdated(object sender, EventArgs e)
-        {
-            OnOutputMeasurementsUpdated();
-        }
-
-        private void m_dataPublisher_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
-        {
-            OnNewMeasurements(e.Argument);
-        }
-
-        private void m_dataPublisher_UnpublishedSamples(object sender, EventArgs<int> e)
-        {
-            OnUnpublishedSamples(e.Argument);
-        }
-
-        private void m_dataPublisher_DiscardingMeasurements(object sender, EventArgs<IEnumerable<IMeasurement>> e)
-        {
-            OnDiscardingMeasurements(e.Argument);
         }
 
         #endregion
