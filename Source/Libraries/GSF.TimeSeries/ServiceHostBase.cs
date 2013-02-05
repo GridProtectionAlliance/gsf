@@ -72,13 +72,13 @@ namespace GSF.TimeSeries
         /// </summary>
         WebService,
         /// <summary>
-        /// Configuration source is a XML file.
-        /// </summary>
-        XmlFile,
-        /// <summary>
         /// Configuration source is a binary file.
         /// </summary>
-        BinaryFile
+        BinaryFile,
+        /// <summary>
+        /// Configuration source is a XML file.
+        /// </summary>
+        XmlFile
     }
 
     #endregion
@@ -694,6 +694,9 @@ namespace GSF.TimeSeries
         private DataSet GetConfigurationDataSet(ConfigurationType configType, string connectionString, string dataProviderString, bool isCachedConfiguration)
         {
             DataSet configuration = null;
+            bool configException = false;
+            Ticks startTime = PrecisionTimer.UtcNow.Ticks;
+            double elapsedTime;
 
             switch (configType)
             {
@@ -741,23 +744,23 @@ namespace GSF.TimeSeries
                         // Add configuration entities table to system configuration for reference
                         configuration.Tables.Add(entities.Copy());
 
-                        Ticks startTime;
-                        double elapsedTime;
+                        Ticks operationStartTime;
+                        double operationElapsedTime;
 
                         // Add each configuration entity to the system configuration
                         foreach (DataRow entityRow in entities.Rows)
                         {
                             // Load configuration entity data filtered by node ID
-                            startTime = PrecisionTimer.UtcNow.Ticks;
+                            operationStartTime = PrecisionTimer.UtcNow.Ticks;
                             source = connection.RetrieveData(adapterType, string.Format("SELECT * FROM {0} WHERE NodeID={1}", entityRow["SourceName"].ToString(), m_nodeIDQueryString));
-                            elapsedTime = (PrecisionTimer.UtcNow.Ticks - startTime).ToSeconds();
+                            operationElapsedTime = (PrecisionTimer.UtcNow.Ticks - operationStartTime).ToSeconds();
 
                             // Update table name as defined in configuration entity
                             source.TableName = entityRow["RuntimeName"].ToString();
 
-                            DisplayStatusMessage("Loaded {0} row{1} from \"{2}\" in {3}...", UpdateType.Information, source.Rows.Count, source.Rows.Count == 1 ? "" : "s", source.TableName, elapsedTime < 0.01D ? "less than a second" : elapsedTime.ToString("0.00") + " seconds");
+                            DisplayStatusMessage("Loaded {0} row{1} from \"{2}\" in {3}...", UpdateType.Information, source.Rows.Count, source.Rows.Count == 1 ? "" : "s", source.TableName, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds");
 
-                            startTime = PrecisionTimer.UtcNow.Ticks;
+                            operationStartTime = PrecisionTimer.UtcNow.Ticks;
 
                             // Clone data source
                             destination = source.Clone();
@@ -791,12 +794,12 @@ namespace GSF.TimeSeries
                                 destination.Rows.Add(newRow);
                             }
 
-                            elapsedTime = (PrecisionTimer.UtcNow.Ticks - startTime).ToSeconds();
+                            operationElapsedTime = (PrecisionTimer.UtcNow.Ticks - operationStartTime).ToSeconds();
 
                             // Add entity configuration data to system configuration
                             configuration.Tables.Add(destination);
 
-                            DisplayStatusMessage("Configuration cache completed in {0}.", UpdateType.Information, elapsedTime < 0.01D ? "less than a second" : elapsedTime.ToString("0.00") + " seconds");
+                            DisplayStatusMessage("{0} configuration pre-cache completed in {1}.", UpdateType.Information, source.TableName, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds");
                         }
 
                         DisplayStatusMessage("Database configuration successfully loaded.", UpdateType.Information);
@@ -805,6 +808,7 @@ namespace GSF.TimeSeries
                     }
                     catch (Exception ex)
                     {
+                        configException = true;
                         DisplayStatusMessage("Failed to load database configuration due to exception: {0} Attempting to use last known good configuration.", UpdateType.Warning, ex.Message);
                         m_serviceHelper.ErrorLogger.Log(ex);
 
@@ -839,6 +843,7 @@ namespace GSF.TimeSeries
                     }
                     catch (Exception ex)
                     {
+                        configException = true;
                         DisplayStatusMessage("Failed to load webservice configuration due to exception: {0} Attempting to use last known good configuration.", UpdateType.Warning, ex.Message);
                         m_serviceHelper.ErrorLogger.Log(ex);
 
@@ -851,6 +856,35 @@ namespace GSF.TimeSeries
                             response.Dispose();
 
                         DisplayStatusMessage("Webservice configuration connection closed.", UpdateType.Information);
+                    }
+
+                    break;
+                case ConfigurationType.BinaryFile:
+                    // Attempt to load cached binary configuration file
+                    try
+                    {
+                        DisplayStatusMessage("Loading binary based configuration from \"{0}\".", UpdateType.Information, connectionString);
+
+                        configuration = Serialization.Deserialize<DataSet>(File.ReadAllBytes(connectionString), SerializationFormat.Binary);
+
+                        DisplayStatusMessage("Binary based configuration successfully loaded.", UpdateType.Information);
+                    }
+                    catch (Exception ex)
+                    {
+                        configException = true;
+                        DisplayStatusMessage("Failed to load binary based configuration due to exception: {0}.", UpdateType.Alarm, ex.Message);
+                        m_serviceHelper.ErrorLogger.Log(ex);
+                        configuration = null;
+
+                        if (isCachedConfiguration)
+                        {
+                            configuration = GetConfigurationDataSet(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile, null, true);
+                        }
+                        else
+                        {
+                            if (!m_preferCachedConfiguration)
+                                configuration = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile, null, true);
+                        }
                     }
 
                     break;
@@ -867,6 +901,7 @@ namespace GSF.TimeSeries
                     }
                     catch (Exception ex)
                     {
+                        configException = true;
                         DisplayStatusMessage("Failed to load XML based configuration due to exception: {0}.", UpdateType.Alarm, ex.Message);
                         m_serviceHelper.ErrorLogger.Log(ex);
                         configuration = null;
@@ -884,34 +919,12 @@ namespace GSF.TimeSeries
                     }
 
                     break;
-                case ConfigurationType.BinaryFile:
-                    // Attempt to load cached binary configuration file
-                    try
-                    {
-                        DisplayStatusMessage("Loading binary based configuration from \"{0}\".", UpdateType.Information, connectionString);
+            }
 
-                        configuration = Serialization.Deserialize<DataSet>(File.ReadAllBytes(connectionString), SerializationFormat.Binary);
-
-                        DisplayStatusMessage("Binary based configuration successfully loaded.", UpdateType.Information);
-                    }
-                    catch (Exception ex)
-                    {
-                        DisplayStatusMessage("Failed to load binary based configuration due to exception: {0}.", UpdateType.Alarm, ex.Message);
-                        m_serviceHelper.ErrorLogger.Log(ex);
-                        configuration = null;
-
-                        if (isCachedConfiguration)
-                        {
-                            configuration = GetConfigurationDataSet(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile, null, true);
-                        }
-                        else
-                        {
-                            if (!m_preferCachedConfiguration)
-                                configuration = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile, null, true);
-                        }
-                    }
-
-                    break;
+            if (!configException)
+            {
+                elapsedTime = (PrecisionTimer.UtcNow.Ticks - startTime).ToSeconds();
+                DisplayStatusMessage("{0} configuration load process completed in {1}...", UpdateType.Information, configType, elapsedTime < 0.01D ? "less than a second" : elapsedTime.ToString("0.00") + " seconds");
             }
 
             return configuration;
@@ -1041,54 +1054,29 @@ namespace GSF.TimeSeries
 
                 if ((object)configuration != null)
                 {
+                    // Create backups of binary configurations
+                    BackupConfiguration(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile);
+                    
+                    // Create backups of XML configurations
+                    BackupConfiguration(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile);
+
+                    // Serialize current data set to configuration files
                     try
                     {
-                        // Create multiple backup configurations, if requested
-                        for (int i = m_configurationBackups; i > 0; i--)
-                        {
-                            string origConfigFile = m_cachedXmlConfigurationFile + ".backup" + (i == 1 ? "" : (i - 1).ToString());
+                        // Wait a moment for write lock in case binary file is open by another process
+                        if (File.Exists(m_cachedBinaryConfigurationFile))
+                            FilePath.WaitForWriteLock(m_cachedBinaryConfigurationFile);
 
-                            if (File.Exists(origConfigFile))
-                            {
-                                string nextConfigFile = m_cachedXmlConfigurationFile + ".backup" + i;
-
-                                if (File.Exists(nextConfigFile))
-                                    File.Delete(nextConfigFile);
-
-                                File.Move(origConfigFile, nextConfigFile);
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        DisplayStatusMessage("Failed to create extra backup configurations due to exception: {0}", UpdateType.Warning, ex.Message);
-                        m_serviceHelper.ErrorLogger.Log(ex);
-                    }
-
-                    try
-                    {
-                        // Back up current configuration file, if any
-                        if (File.Exists(m_cachedXmlConfigurationFile))
-                        {
-                            string backupConfigFile = m_cachedXmlConfigurationFile + ".backup";
-
-                            if (File.Exists(backupConfigFile))
-                                File.Delete(backupConfigFile);
-
-                            File.Move(m_cachedXmlConfigurationFile, backupConfigFile);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        DisplayStatusMessage("Failed to backup last known cached configuration due to exception: {0}", UpdateType.Warning, ex.Message);
-                        m_serviceHelper.ErrorLogger.Log(ex);
-                    }
-
-                    try
-                    {
-                        // Write current data set to a file
+                        // Cache binary serialized version of data set
                         File.WriteAllBytes(m_cachedBinaryConfigurationFile, Serialization.Serialize(configuration, SerializationFormat.Binary));
+
+                        // Wait a moment for write lock in case XML file is open by another process
+                        if (File.Exists(m_cachedXmlConfigurationFile))
+                            FilePath.WaitForWriteLock(m_cachedXmlConfigurationFile);
+
+                        // Cache XML serialized version of data set
                         configuration.WriteXml(m_cachedXmlConfigurationFile, XmlWriteMode.WriteSchema);
+                        
                         DisplayStatusMessage("Successfully cached current configuration.", UpdateType.Information);
                     }
                     catch (Exception ex)
@@ -1106,6 +1094,52 @@ namespace GSF.TimeSeries
                 // Release any waiting threads
                 if ((object)m_configurationCacheComplete != null)
                     m_configurationCacheComplete.Set();
+            }
+        }
+
+        private void BackupConfiguration(ConfigurationType configType, string configurationFile)
+        {
+            try
+            {
+                // Create multiple backup configurations, if requested
+                for (int i = m_configurationBackups; i > 0; i--)
+                {
+                    string origConfigFile = configurationFile + ".backup" + (i == 1 ? "" : (i - 1).ToString());
+
+                    if (File.Exists(origConfigFile))
+                    {
+                        string nextConfigFile = configurationFile + ".backup" + i;
+
+                        if (File.Exists(nextConfigFile))
+                            File.Delete(nextConfigFile);
+
+                        File.Move(origConfigFile, nextConfigFile);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                DisplayStatusMessage("Failed to create extra backup {0} configurations due to exception: {1}", UpdateType.Warning, configType, ex.Message);
+                m_serviceHelper.ErrorLogger.Log(ex);
+            }
+
+            try
+            {
+                // Back up current configuration file, if any
+                if (File.Exists(configurationFile))
+                {
+                    string backupConfigFile = configurationFile + ".backup";
+
+                    if (File.Exists(backupConfigFile))
+                        File.Delete(backupConfigFile);
+
+                    File.Move(configurationFile, backupConfigFile);
+                }
+            }
+            catch (Exception ex)
+            {
+                DisplayStatusMessage("Failed to backup last known cached {0} configuration due to exception: {1}", UpdateType.Warning, configType, ex.Message);
+                m_serviceHelper.ErrorLogger.Log(ex);
             }
         }
 
