@@ -372,7 +372,7 @@ namespace GSF.TimeSeries
             m_configurationBackups = systemSettings["ConfigurationBackups"].ValueAs<int>(DefaultConfigurationBackups);
             m_uniqueAdapterIDs = systemSettings["UniqueAdaptersIDs"].ValueAsBoolean(true);
             m_allowRemoteRestart = systemSettings["AllowRemoteRestart"].ValueAsBoolean(true);
-            m_preferCachedConfiguration = systemSettings["ConfigurationSerializationFormat"].ValueAsBoolean(false);
+            m_preferCachedConfiguration = systemSettings["PreferCachedConfiguration"].ValueAsBoolean(false);
             m_configurationCacheComplete = new AutoResetEvent(true);
             m_queuedConfigurationCachePending = new object();
 
