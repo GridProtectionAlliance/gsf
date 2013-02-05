@@ -865,7 +865,7 @@ namespace GSF.TimeSeries
                     {
                         DisplayStatusMessage("Loading binary based configuration from \"{0}\".", UpdateType.Information, connectionString);
 
-                        configuration = Serialization.Deserialize<DataSet>(File.ReadAllBytes(connectionString), SerializationFormat.Binary);
+                        configuration = Serialization.Deserialize<DataSet>(File.OpenRead(connectionString), SerializationFormat.Binary);
 
                         DisplayStatusMessage("Binary based configuration successfully loaded.", UpdateType.Information);
                     }
@@ -1051,6 +1051,7 @@ namespace GSF.TimeSeries
             try
             {
                 DataSet configuration = state as DataSet;
+                bool cacheSuccessful = false;
 
                 if ((object)configuration != null)
                 {
@@ -1060,7 +1061,6 @@ namespace GSF.TimeSeries
                     // Create backups of XML configurations
                     BackupConfiguration(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile);
 
-                    // Serialize current data set to configuration files
                     try
                     {
                         // Wait a moment for write lock in case binary file is open by another process
@@ -1068,7 +1068,24 @@ namespace GSF.TimeSeries
                             FilePath.WaitForWriteLock(m_cachedBinaryConfigurationFile);
 
                         // Cache binary serialized version of data set
-                        File.WriteAllBytes(m_cachedBinaryConfigurationFile, Serialization.Serialize(configuration, SerializationFormat.Binary));
+                        using (FileStream configurationFileStream = File.OpenWrite(m_cachedBinaryConfigurationFile))
+                        {
+                            Stream configurationStream = configurationFileStream;
+                            Serialization.Serialize(configuration, SerializationFormat.Binary, ref configurationStream);
+                        }
+
+                        DisplayStatusMessage("Successfully cached current configuration to binary.", UpdateType.Information);
+                        cacheSuccessful = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        DisplayStatusMessage("Failed to cache last known configuration due to exception: {0}", UpdateType.Alarm, ex.Message);
+                        m_serviceHelper.ErrorLogger.Log(ex);
+                    }
+
+                    // Serialize current data set to configuration files
+                    try
+                    {
 
                         // Wait a moment for write lock in case XML file is open by another process
                         if (File.Exists(m_cachedXmlConfigurationFile))
@@ -1077,13 +1094,18 @@ namespace GSF.TimeSeries
                         // Cache XML serialized version of data set
                         configuration.WriteXml(m_cachedXmlConfigurationFile, XmlWriteMode.WriteSchema);
                         
-                        DisplayStatusMessage("Successfully cached current configuration.", UpdateType.Information);
+                        DisplayStatusMessage("Successfully cached current configuration to XML.", UpdateType.Information);
+                        cacheSuccessful = true;
                     }
                     catch (Exception ex)
                     {
                         DisplayStatusMessage("Failed to cache last known configuration due to exception: {0}", UpdateType.Alarm, ex.Message);
                         m_serviceHelper.ErrorLogger.Log(ex);
+                    }
 
+                    if (!cacheSuccessful)
+                    {
+                        // Both attempts to cache failed; attempt to retry
                         DisplayStatusMessage("Retrying attempt to cache last known configuration...", UpdateType.Information);
                         ThreadPool.QueueUserWorkItem(QueueConfigurationCache, Interlocked.CompareExchange(ref m_latestConfiguration, null, null));
                     }
