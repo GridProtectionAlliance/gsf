@@ -315,7 +315,7 @@ namespace GSF.TimeSeries
 
             // System settings
             CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
-            systemSettings.Add("ConfigurationType", "Database", "Specifies type of configuration: Database, WebService, XmlFile or BinaryFile");
+            systemSettings.Add("ConfigurationType", "Database", "Specifies type of configuration: Database, WebService, BinaryFile or XmlFile");
             systemSettings.Add("ConnectionString", "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=IaonHost.mdb", "Configuration database connection string");
             systemSettings.Add("DataProviderString", "AssemblyName={System.Data, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089};ConnectionType=System.Data.OleDb.OleDbConnection;AdapterType=System.Data.OleDb.OleDbDataAdapter", "Configuration database ADO.NET data provider assembly type creation string");
             systemSettings.Add("ConfigurationCachePath", cachePath, "Defines the path used to cache serialized configurations");
@@ -329,7 +329,7 @@ namespace GSF.TimeSeries
             systemSettings.Add("MaxThreadPoolIOPortThreads", DefaultMaxThreadPoolSize, "Defines the maximum number of allowed thread pool I/O completion port threads (used by socket layer).");
             systemSettings.Add("GCGenZeroInterval", DefaultGCGenZeroInterval, "Defines the interval, in milliseconds, over which to force a generation zero garbage collection. Set to -1 to disable.");
             systemSettings.Add("ConfigurationBackups", DefaultConfigurationBackups, "Defines the total number of older backup configurations to maintain.");
-            systemSettings.Add("PreferCachedConfiguration", "False", "Set to true to try the cached configuration first, before loading database configuration.");
+            systemSettings.Add("PreferCachedConfiguration", "False", "Set to true to try the cached configuration first, before loading database configuration - typically used when cache is updated by external process.");
 
             // Example connection settings
             CategorizedSettingsElementCollection exampleSettings = configFile.Settings["exampleConnectionSettings"];
