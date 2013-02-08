@@ -1975,11 +1975,22 @@ namespace GSF.TimeSeries.Transport
                 // Subscriber connection is first referenced by its IP
                 foreach (DataRow row in DataSource.Tables["Subscribers"].Select("Enabled <> 0"))
                 {
-                    IEnumerable<IPAddress> ipAddresses = row["ValidIPAddresses"].ToNonNullString().Split(';', ',').Where(ip => !string.IsNullOrWhiteSpace(ip)).Select(ip => IPAddress.Parse(ip.Trim()));
+                    // Attempt to parse the defined valid IP addresses of this subscriber
+                    IEnumerable<IPAddress> ipAddresses = row["ValidIPAddresses"].ToNonNullString().Split(';', ',').Select(ip =>
+                    {
+                        IPAddress address = null;
 
+                        if (!string.IsNullOrWhiteSpace(ip))
+                            IPAddress.TryParse(ip.Trim(), out address);
+
+                        return address;
+
+                    }).Where(ip => (object)ip != null);
+
+                    // See if any of these IP addresses match the connection source of the subscriber
                     foreach (IPAddress ipAddress in ipAddresses)
                     {
-                        if (connection.IPAddress.ToString().Contains(ipAddress.ToString()))
+                        if (connection.IPAddress.Equals(ipAddress))
                         {
                             subscriber = row;
                             break;
@@ -1998,6 +2009,7 @@ namespace GSF.TimeSeries.Transport
                 }
                 else
                 {
+                    // Found the subscriber record with a matching IP address, extract authentication information
                     string sharedSecret = subscriber["SharedSecret"].ToNonNullString().Trim();
                     string authenticationID = subscriber["AuthKey"].ToNonNullString().Trim();
 

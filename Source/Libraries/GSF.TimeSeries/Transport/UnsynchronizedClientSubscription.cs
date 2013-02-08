@@ -541,7 +541,9 @@ namespace GSF.TimeSeries.Transport
 
             foreach (IMeasurement measurement in measurements)
             {
-                if (measurement is BufferBlockMeasurement)
+                bufferBlockMeasurement = measurement as BufferBlockMeasurement;
+
+                if ((object)bufferBlockMeasurement != null)
                 {
                     // Handle buffer block measurements as a special case - this can be any kind of data,
                     // measurement subscriber will need to know how to interpret buffer

@@ -385,11 +385,12 @@ namespace GSF.TimeSeries.Transport
 
             foreach (IMeasurement measurement in frame.Measurements.Values)
             {
-                if (measurement is BufferBlockMeasurement)
+                bufferBlockMeasurement = measurement as BufferBlockMeasurement;
+
+                if ((object)bufferBlockMeasurement != null)
                 {
                     // Handle buffer block measurements as a special case - this can be any kind of data,
                     // measurement subscriber will need to know how to interpret buffer
-                    bufferBlockMeasurement = (BufferBlockMeasurement)measurement;
                     bufferBlock = bufferBlockMeasurement.Buffer.BlockCopy(0, bufferBlockMeasurement.Length);
                     m_parent.SendClientResponse(m_clientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, bufferBlock);
                 }

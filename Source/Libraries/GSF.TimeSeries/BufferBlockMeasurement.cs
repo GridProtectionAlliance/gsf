@@ -64,7 +64,7 @@ namespace GSF.TimeSeries
             buffer.ValidateParameters(startIndex, length);
 
             // We don't hold on to source buffer (we don't own it), so we grab one from the buffer pool
-            TakeBufferFromPool(length);
+            m_buffer = BufferPool.TakeBuffer(length);
 
             // Copy buffer contents onto our local buffer
             System.Buffer.BlockCopy(buffer, startIndex, m_buffer, 0, length);
@@ -84,6 +84,16 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Cached buffer image;
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Copy data from this buffer onto your own buffer - this buffer is from the buffer pool
+        /// and will be returned back to the pool by this class.
+        /// </para>
+        /// <para>
+        /// Set <see cref="Buffer"/> property to <c>null</c> when operations on buffer are complete
+        /// to return buffer to pool and unregister measurement instance from the finalizer queue.
+        /// </para>
+        /// </remarks>
         public byte[] Buffer
         {
             get
@@ -113,13 +123,6 @@ namespace GSF.TimeSeries
         #endregion
 
         #region [ Methods ]
-
-        private void TakeBufferFromPool(int length)
-        {
-            ReturnBufferToPool();
-            m_buffer = BufferPool.TakeBuffer(length);
-            GC.ReRegisterForFinalize(true);
-        }
 
         private void ReturnBufferToPool(bool destructorCall = false)
         {
