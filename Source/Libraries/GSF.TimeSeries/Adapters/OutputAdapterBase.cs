@@ -23,6 +23,7 @@
 //
 //******************************************************************************************************
 
+using System.ComponentModel;
 using GSF.Collections;
 using System;
 using System.Collections.Generic;
@@ -100,6 +101,49 @@ namespace GSF.TimeSeries.Adapters
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the comma-separated list of adapter names that this adapter depends on.
+        /// </summary>
+        /// <remarks>
+        /// Adapters can specify a list of adapters that it depends on. The measurement routing
+        /// system will hold on to measurements that need to be passed through an adapter's
+        /// dependencies. Those measurements will be routed to the dependent adapter when all of
+        /// its dependencies have finished processing them.
+        /// </remarks>
+        [ConnectionStringParameter,
+        DefaultValue(""),
+        Description("Defines a comma-separated list of adapter names which represent this adapter's dependencies.")]
+        public override string Dependencies
+        {
+            get
+            {
+                return base.Dependencies;
+            }
+            set
+            {
+                base.Dependencies = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum time the system will wait on inter-adapter
+        /// dependencies before publishing queued measurements to an adapter.
+        /// </summary>
+        [ConnectionStringParameter,
+        DefaultValue(0.0333333D),
+        Description("Defines the amount of time, in seconds, that measurements should be held for the adapter while waiting for its dependencies to finish processing.")]
+        public override long DependencyTimeout
+        {
+            get
+            {
+                return base.DependencyTimeout;
+            }
+            set
+            {
+                base.DependencyTimeout = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets whether or not to automatically place measurements back into the processing

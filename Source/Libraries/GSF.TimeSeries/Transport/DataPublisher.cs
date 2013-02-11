@@ -508,6 +508,7 @@ namespace GSF.TimeSeries.Transport
         private RoutingTables m_routingTables;
         private IAdapterCollection m_parent;
         private string m_metadataTables;
+        private string m_dependencies;
         private SecurityMode m_securityMode;
         private bool m_encryptPayload;
         private bool m_sharedDatabase;
@@ -724,6 +725,49 @@ namespace GSF.TimeSeries.Transport
                     m_cipherKeyRotationTimer.Interval = value;
 
                 throw new ArgumentException("Cannot assign new cipher rotation period, timer is not defined.");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the comma-separated list of adapter names that this adapter depends on.
+        /// </summary>
+        /// <remarks>
+        /// Adapters can specify a list of adapters that it depends on. The measurement routing
+        /// system will hold on to measurements that need to be passed through an adapter's
+        /// dependencies. Those measurements will be routed to the dependent adapter when all of
+        /// its dependencies have finished processing them.
+        /// </remarks>
+        [ConnectionStringParameter,
+        DefaultValue(""),
+        Description("Defines a comma-separated list of adapter names which represent this adapter's dependencies.")]
+        public string Dependencies
+        {
+            get
+            {
+                return m_dependencies;
+            }
+            set
+            {
+                m_dependencies = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum time the system will wait on inter-adapter
+        /// dependencies before publishing queued measurements to an adapter.
+        /// </summary>
+        [ConnectionStringParameter,
+        DefaultValue(0.0333333D),
+        Description("Defines the amount of time, in seconds, that measurements should be held for the adapter while waiting for its dependencies to finish processing.")]
+        public override long DependencyTimeout
+        {
+            get
+            {
+                return base.DependencyTimeout;
+            }
+            set
+            {
+                base.DependencyTimeout = value;
             }
         }
 
@@ -999,6 +1043,11 @@ namespace GSF.TimeSeries.Transport
             if (settings.TryGetValue("securityMode", out setting))
                 m_securityMode = (SecurityMode)Enum.Parse(typeof(SecurityMode), setting);
 
+            if (settings.TryGetValue("dependencyTimeout", out setting))
+                DependencyTimeout = Ticks.FromSeconds(double.Parse(setting));
+            else
+                DependencyTimeout = Ticks.PerSecond / 30L;
+
             if (settings.TryGetValue("cacheMeasurementKeys", out setting))
             {
                 LatestMeasurementCache cache = new LatestMeasurementCache(string.Format("trackLatestMeasurements=true;lagTime=60;leadTime=60;inputMeasurementKeys={{{0}}}", setting));
@@ -1111,21 +1160,6 @@ namespace GSF.TimeSeries.Transport
 
             // Pass reference along to base class
             base.AssignParentCollection(parent);
-        }
-
-        /// <summary>
-        /// Gets a common wait handle for inter-adapter synchronization.
-        /// </summary>
-        /// <param name="name">Case-insensitive wait handle name.</param>
-        /// <returns>A <see cref="AutoResetEvent"/> based wait handle associated with the given <paramref name="name"/>.</returns>
-        public override AutoResetEvent GetExternalEventHandle(string name)
-        {
-            // Since this collection can act as an adapter, proxy event handle request to its parent collection when defined
-            if ((object)m_parent != null)
-                return m_parent.GetExternalEventHandle(name);
-
-            // Otherwise just handle the request normally
-            return base.GetExternalEventHandle(name);
         }
 
         /// <summary>

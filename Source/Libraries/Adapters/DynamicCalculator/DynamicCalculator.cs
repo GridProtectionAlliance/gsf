@@ -264,11 +264,6 @@ namespace DynamicCalculator
                 m_supportsTemporalProcessing = setting.ParseBoolean();
             else
                 m_supportsTemporalProcessing = false;
-
-            if (settings.TryGetValue("waitHandleReleaseName", out setting))
-                m_waitHandleReleaseName = setting;
-            else
-                m_waitHandleReleaseName = null;
         }
 
         /// <summary>
@@ -301,10 +296,6 @@ namespace DynamicCalculator
 
             // Evaluate the expression and generate the measurement
             GenerateCalculatedMeasurement(m_expression.Evaluate() as IConvertible);
-
-            // Release wait handle for adapter synchronization
-            if ((object)m_waitHandleReleaseName != null)
-                GetExternalEventHandle(m_waitHandleReleaseName).Set();
         }
 
         // Adds a variable to the key-variable map.

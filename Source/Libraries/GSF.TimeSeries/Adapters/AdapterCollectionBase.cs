@@ -51,6 +51,14 @@ namespace GSF.TimeSeries.Adapters
         // Events
 
         /// <summary>
+        /// Notifies dependent adapters that this adapter has finished processing a measurement.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the processed measurement.
+        /// </remarks>
+        public event EventHandler<EventArgs<IMeasurement>> Notify;
+
+        /// <summary>
         /// Provides status messages to consumer.
         /// </summary>
         /// <remarks>
@@ -91,6 +99,7 @@ namespace GSF.TimeSeries.Adapters
         private DataSet m_dataSource;
         private string m_dataMember;
         private int m_initializationTimeout;
+        private long m_dependencyTimeout;
         private bool m_autoStart;
         private bool m_processMeasurementFilter;
         private IMeasurement[] m_outputMeasurements;
@@ -295,6 +304,22 @@ namespace GSF.TimeSeries.Adapters
             set
             {
                 m_initializationTimeout = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum time the system will wait on inter-adapter
+        /// dependencies before publishing queued measurements to an adapter.
+        /// </summary>
+        public virtual long DependencyTimeout
+        {
+            get
+            {
+                return m_dependencyTimeout;
+            }
+            set
+            {
+                m_dependencyTimeout = value;
             }
         }
 
@@ -885,6 +910,11 @@ namespace GSF.TimeSeries.Adapters
             if (settings.TryGetValue("initializationTimeout", out setting))
                 InitializationTimeout = int.Parse(setting);
 
+            if (settings.TryGetValue("dependencyTimeout", out setting))
+                m_dependencyTimeout = Ticks.FromSeconds(double.Parse(setting));
+            else
+                m_dependencyTimeout = Ticks.PerSecond / 30L;
+
             lock (this)
             {
                 Clear();
@@ -902,19 +932,6 @@ namespace GSF.TimeSeries.Adapters
                 else
                     throw new InvalidOperationException(string.Format("Data set member \"{0}\" was not found in data source, check ConfigurationEntity. Failed to initialize {1}.", DataMember, Name));
             }
-        }
-
-        /// <summary>
-        /// Gets a common wait handle for inter-adapter synchronization.
-        /// </summary>
-        /// <param name="name">Case-insensitive wait handle name.</param>
-        /// <returns>A <see cref="AutoResetEvent"/> based wait handle associated with the given <paramref name="name"/>.</returns>
-        public virtual AutoResetEvent GetExternalEventHandle(string name)
-        {
-            if (m_waitHandles != null)
-                return m_waitHandles.GetOrAdd(name, key => new AutoResetEvent(false));
-
-            return null;
         }
 
         /// <summary>
@@ -1355,6 +1372,37 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
+        /// Raises the <see cref="Notify"/> event with a collection of measurements that have been processed.
+        /// </summary>
+        /// <param name="measurements">The processed measurements.</param>
+        protected virtual void OnNotify(IEnumerable<IMeasurement> measurements)
+        {
+            if ((object)measurements != null)
+            {
+                foreach (IMeasurement measurement in measurements)
+                    OnNotify(measurement);
+            }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="Notify"/> event with a measurement that has been processed.
+        /// </summary>
+        /// <param name="measurement">The processed measurement.</param>
+        protected virtual void OnNotify(IMeasurement measurement)
+        {
+            try
+            {
+                if (Notify != null)
+                    Notify(this, new EventArgs<IMeasurement>(measurement));
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for Notify event: {0}", ex.Message), ex));
+            }
+        }
+
+        /// <summary>
         /// Raises <see cref="ProcessException"/> event.
         /// </summary>
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
@@ -1516,6 +1564,7 @@ namespace GSF.TimeSeries.Adapters
             if ((object)item != null)
             {
                 // Wire up events
+                item.Notify += item_Notify;
                 item.StatusMessage += item_StatusMessage;
                 item.ProcessException += item_ProcessException;
                 item.InputMeasurementKeysUpdated += item_InputMeasurementKeysUpdated;
@@ -1573,6 +1622,7 @@ namespace GSF.TimeSeries.Adapters
             if ((object)item != null)
             {
                 // Un-wire events
+                item.Notify -= item_Notify;
                 item.StatusMessage -= item_StatusMessage;
                 item.ProcessException -= item_ProcessException;
                 item.InputMeasurementKeysUpdated -= item_InputMeasurementKeysUpdated;
@@ -1596,6 +1646,13 @@ namespace GSF.TimeSeries.Adapters
         {
             if ((object)StatusMessage != null)
                 StatusMessage(sender, e);
+        }
+
+        // Raise notify event on behalf of each item in collection
+        private void item_Notify(object sender, EventArgs<IMeasurement> e)
+        {
+            if ((object)Notify != null)
+                Notify(sender, e);
         }
 
         // Raise process exception event on behalf of each item in collection

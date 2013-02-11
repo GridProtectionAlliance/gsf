@@ -768,29 +768,6 @@ namespace PhasorProtocolAdapters
                     }
                 }
 
-                statusMessage("CommonPhasorServices", new EventArgs<string>("Validating statistics engine..."));
-
-                string statConnectionString = connection.ExecuteScalar(string.Format("SELECT ConnectionString FROM CustomActionAdapter WHERE AdapterName = 'STATISTIC!SERVICES' AND NodeID = {0}", nodeIDQueryString)).ToNonNullString();
-                Dictionary<string, string> statSettings = statConnectionString.ParseKeyValuePairs();
-                string statWaitHandleNames;
-
-                if (!statSettings.TryGetValue("waitHandleNames", out statWaitHandleNames))
-                    statWaitHandleNames = string.Empty;
-
-                if (!statWaitHandleNames.Split(',').Any(name => name == "CommonPhasorServicesInitialize"))
-                {
-                    string updateQuery = ParameterizedQueryString(adapterType, "UPDATE CustomActionAdapter SET ConnectionString = {0} WHERE AdapterName = 'STATISTIC!SERVICES' AND NodeID = " + nodeIDQueryString, "connectionString");
-
-                    if (string.IsNullOrEmpty(statWaitHandleNames))
-                        statWaitHandleNames = "CommonPhasorServicesInitialize";
-                    else
-                        statWaitHandleNames += ",CommonPhasorServicesInitialize";
-
-                    statSettings["waitHandleNames"] = statWaitHandleNames;
-                    statConnectionString = statSettings.JoinKeyValuePairs();
-                    connection.ExecuteNonQuery(updateQuery, statConnectionString);
-                }
-
                 if (skipOptimization)
                 {
                     // If skipOptimization is set to true, automatically set it back to false

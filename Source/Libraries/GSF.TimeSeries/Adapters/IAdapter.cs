@@ -46,6 +46,14 @@ namespace GSF.TimeSeries.Adapters
         event EventHandler<EventArgs<string>> StatusMessage;
 
         /// <summary>
+        /// Notifies dependent adapters that this adapter has finished processing a measurement.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the processed measurement.
+        /// </remarks>
+        event EventHandler<EventArgs<IMeasurement>> Notify;
+
+        /// <summary>
         /// Event is raised when there is an exception encountered while processing.
         /// </summary>
         /// <remarks>
@@ -142,6 +150,16 @@ namespace GSF.TimeSeries.Adapters
         /// Implementors should use value <see cref="Timeout.Infinite"/> to wait indefinitely.
         /// </remarks>
         int InitializationTimeout
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum time the system will wait on inter-adapter
+        /// dependencies before publishing queued measurements to an adapter.
+        /// </summary>
+        long DependencyTimeout
         {
             get;
             set;
@@ -270,13 +288,6 @@ namespace GSF.TimeSeries.Adapters
         /// can call this method and wait for the adapter intialization to complete before using the adapter.
         /// </remarks>
         bool WaitForInitialize(int timeout);
-
-        /// <summary>
-        /// Gets a common wait handle for inter-adapter synchronization.
-        /// </summary>
-        /// <param name="name">Case-insensitive wait handle name.</param>
-        /// <returns>A <see cref="AutoResetEvent"/> based wait handle associated with the given <paramref name="name"/>.</returns>
-        AutoResetEvent GetExternalEventHandle(string name);
 
         /// <summary>
         /// Defines a temporal processing constraint for the adapter.

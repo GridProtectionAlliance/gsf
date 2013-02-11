@@ -53,9 +53,6 @@ namespace GSF.TimeSeries.Transport
         private string m_constraintParameters;
         private int m_processingInterval;
 
-        private string m_waitHandleNames;
-        private int m_waitHandleTimeout;
-
         private string m_extraConnectionStringParameters;
 
         #endregion
@@ -365,39 +362,6 @@ namespace GSF.TimeSeries.Transport
             set
             {
                 m_processingInterval = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the wait handle names used to deterministically
-        /// wait for data to become available on the server side.
-        /// </summary>
-        public virtual string WaitHandleNames
-        {
-            get
-            {
-                return m_waitHandleNames;
-            }
-            set
-            {
-                m_waitHandleNames = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the amount of time to wait on the wait handles
-        /// identified by the <see cref="WaitHandleNames"/> before the
-        /// operation times out.
-        /// </summary>
-        public virtual int WaitHandleTimeout
-        {
-            get
-            {
-                return m_waitHandleTimeout;
-            }
-            set
-            {
-                m_waitHandleTimeout = value;
             }
         }
 

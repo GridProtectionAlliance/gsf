@@ -203,11 +203,13 @@ namespace GSF.TimeSeries.Adapters
 
             m_actionAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
             m_actionAdapters.UnpublishedSamples += UnpublishedSamplesHandler;
+            m_actionAdapters.Notify += m_routingTables.NotifyHandler;
 
             // Create output adapters collection
             m_outputAdapters = new OutputAdapterCollection(m_waitHandles);
             m_outputAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
             m_outputAdapters.UnprocessedMeasurements += UnprocessedMeasurementsHandler;
+            m_outputAdapters.Notify += m_routingTables.NotifyHandler;
 
             // Associate adapter collections with routing tables
             m_routingTables.InputAdapters = m_inputAdapters;
@@ -316,6 +318,8 @@ namespace GSF.TimeSeries.Adapters
                     m_inputAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
                     m_actionAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
                     m_outputAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
+                    m_actionAdapters.Notify -= m_routingTables.NotifyHandler;
+                    m_outputAdapters.Notify -= m_routingTables.NotifyHandler;
                 }
             }
         }
