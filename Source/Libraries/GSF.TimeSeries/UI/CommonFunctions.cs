@@ -514,22 +514,21 @@ namespace GSF.TimeSeries.UI
                             if (SecurityProviderCache.TryGetCachedProvider(CurrentUser, out provider))
                             {
                                 userData = provider.UserData;
-                                remotingClient = s_windowsServiceClient.Helper.RemotingClient as TcpClient;
-
-                                s_windowsServiceClient.Helper.RemotingClient.MaxConnectionAttempts = -1;
-                                s_windowsServiceClient.Helper.RemotingClient.ConnectionEstablished += new EventHandler(RemotingClient_ConnectionEstablished);
 
                                 if ((object)userData != null)
                                 {
                                     s_windowsServiceClient.Helper.Username = userData.LoginID;
                                     s_windowsServiceClient.Helper.Password = SecurityProviderUtility.EncryptPassword(provider.Password);
+                                    remotingClient = s_windowsServiceClient.Helper.RemotingClient as TcpClient;
 
                                     if ((object)remotingClient != null && (object)provider.SecurePassword != null && provider.SecurePassword.Length > 0)
                                         remotingClient.NetworkCredential = new NetworkCredential(userData.LoginID, provider.SecurePassword);
                                 }
-
-                                ThreadPool.QueueUserWorkItem(ConnectAsync, null);
                             }
+
+                            s_windowsServiceClient.Helper.RemotingClient.MaxConnectionAttempts = -1;
+                            s_windowsServiceClient.Helper.RemotingClient.ConnectionEstablished += RemotingClient_ConnectionEstablished;
+                            ThreadPool.QueueUserWorkItem(ConnectAsync, null);
                         }
                     }
                     finally
