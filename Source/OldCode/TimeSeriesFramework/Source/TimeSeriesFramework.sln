@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Applications", "Applications", "{F2F990DA-EC53-4B01-86FC-5557EF149769}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Data", "Data", "{0DB3505F-CC49-4D22-A67F-14688BABB192}"
@@ -124,9 +124,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "x86", "x86", "{9963387D-7D8
 		Dependencies\OpenDNP3\x86\DotNetInterface.dll = Dependencies\OpenDNP3\x86\DotNetInterface.dll
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{F13A693A-0852-4D96-BECF-5F5BEF784526}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigurationCacher", "Tools\ConfigurationCacher\ConfigurationCacher.csproj", "{5DF2EAAB-8498-44A5-8777-30B73849D01E}"
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 21
+		SccNumberOfProjects = 22
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs07
 		SccLocalPath0 = .
@@ -210,6 +214,10 @@ Global
 		SccProjectTopLevelParentUniqueName20 = TimeSeriesFramework.sln
 		SccProjectName20 = Libraries/Adapters/FrequencyAverager
 		SccLocalPath20 = Libraries\\Adapters\\FrequencyAverager
+		SccProjectUniqueName21 = Tools\\ConfigurationCacher\\ConfigurationCacher.csproj
+		SccProjectTopLevelParentUniqueName21 = TimeSeriesFramework.sln
+		SccProjectName21 = Tools/ConfigurationCacher
+		SccLocalPath21 = Tools\\ConfigurationCacher
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -370,6 +378,14 @@ Global
 		{A04A48C2-112D-4EE3-A6B0-3784A1315BCF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A04A48C2-112D-4EE3-A6B0-3784A1315BCF}.Release|x86.ActiveCfg = Release|x86
 		{A04A48C2-112D-4EE3-A6B0-3784A1315BCF}.Release|x86.Build.0 = Release|x86
+		{5DF2EAAB-8498-44A5-8777-30B73849D01E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DF2EAAB-8498-44A5-8777-30B73849D01E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DF2EAAB-8498-44A5-8777-30B73849D01E}.Debug|x86.ActiveCfg = Debug|x86
+		{5DF2EAAB-8498-44A5-8777-30B73849D01E}.Debug|x86.Build.0 = Debug|x86
+		{5DF2EAAB-8498-44A5-8777-30B73849D01E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DF2EAAB-8498-44A5-8777-30B73849D01E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DF2EAAB-8498-44A5-8777-30B73849D01E}.Release|x86.ActiveCfg = Release|x86
+		{5DF2EAAB-8498-44A5-8777-30B73849D01E}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -406,5 +422,6 @@ Global
 		{D78C3B1B-F673-45EB-86CB-93DCB4572905} = {7877F254-782B-4221-83B4-DB31D9107A43}
 		{5E75D20E-228E-4ACC-B73D-E9471D9E0852} = {7877F254-782B-4221-83B4-DB31D9107A43}
 		{9963387D-7D8C-4B3F-8584-93CC8279E87D} = {109F186F-C8B9-43EC-8D5B-F2494DBE8923}
+		{5DF2EAAB-8498-44A5-8777-30B73849D01E} = {F13A693A-0852-4D96-BECF-5F5BEF784526}
 	EndGlobalSection
 EndGlobal

@@ -202,11 +202,13 @@ namespace TimeSeriesFramework.Adapters
 
             m_actionAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
             m_actionAdapters.UnpublishedSamples += UnpublishedSamplesHandler;
+            m_actionAdapters.Notify += m_routingTables.NotifyHandler;
 
             // Create output adapters collection
             m_outputAdapters = new OutputAdapterCollection(m_waitHandles);
             m_outputAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
             m_outputAdapters.UnprocessedMeasurements += UnprocessedMeasurementsHandler;
+            m_outputAdapters.Notify += m_routingTables.NotifyHandler;
 
             // Associate adapter collections with routing tables
             m_routingTables.InputAdapters = m_inputAdapters;
@@ -480,6 +482,7 @@ namespace TimeSeriesFramework.Adapters
                                 m_actionAdapters.NewMeasurements -= m_routingTables.BroadcastMeasurementsHandler;
 
                             m_actionAdapters.UnpublishedSamples -= UnpublishedSamplesHandler;
+                            m_actionAdapters.Notify -= m_routingTables.NotifyHandler;
                             m_actionAdapters.Dispose();
                         }
                         m_actionAdapters = null;
@@ -489,6 +492,7 @@ namespace TimeSeriesFramework.Adapters
                         {
                             m_outputAdapters.Stop();
                             m_outputAdapters.UnprocessedMeasurements -= UnprocessedMeasurementsHandler;
+                            m_outputAdapters.Notify -= m_routingTables.NotifyHandler;
                             m_outputAdapters.Dispose();
                         }
                         m_outputAdapters = null;

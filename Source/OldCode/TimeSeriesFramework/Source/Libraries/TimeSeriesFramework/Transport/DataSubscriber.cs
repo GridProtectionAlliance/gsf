@@ -817,12 +817,6 @@ namespace TimeSeriesFramework.Transport
                 if (!string.IsNullOrWhiteSpace(info.ConstraintParameters))
                     connectionString.AppendFormat("timeConstraintParameters={0};", info.ConstraintParameters);
 
-                if (!string.IsNullOrWhiteSpace(info.WaitHandleNames))
-                {
-                    connectionString.AppendFormat("waitHandleNames={0};", info.WaitHandleNames);
-                    connectionString.AppendFormat("waitHandleTimeout={0};", info.WaitHandleTimeout);
-                }
-
                 if (!string.IsNullOrWhiteSpace(info.ExtraConnectionStringParameters))
                     connectionString.AppendFormat("{0};", info.ExtraConnectionStringParameters);
 
@@ -913,12 +907,6 @@ namespace TimeSeriesFramework.Transport
 
             if (!string.IsNullOrWhiteSpace(info.ConstraintParameters))
                 connectionString.AppendFormat("timeConstraintParameters={0};", info.ConstraintParameters);
-
-            if (!string.IsNullOrWhiteSpace(info.WaitHandleNames))
-            {
-                connectionString.AppendFormat("waitHandleNames={0};", info.WaitHandleNames);
-                connectionString.AppendFormat("waitHandleTimeout={0};", info.WaitHandleTimeout);
-            }
 
             if (!string.IsNullOrWhiteSpace(info.ExtraConnectionStringParameters))
                 connectionString.AppendFormat("{0};", info.ExtraConnectionStringParameters);
@@ -2196,8 +2184,6 @@ namespace TimeSeriesFramework.Transport
                 StopTime = info.StopTime,
                 ConstraintParameters = info.ConstraintParameters,
                 ProcessingInterval = info.ProcessingInterval,
-                WaitHandleNames = info.WaitHandleNames,
-                WaitHandleTimeout = info.WaitHandleTimeout,
                 ExtraConnectionStringParameters = info.ExtraConnectionStringParameters
             };
         }

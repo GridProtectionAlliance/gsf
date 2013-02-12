@@ -39,6 +39,15 @@ namespace TimeSeriesFramework.Adapters
     {
         #region [ Members ]
 
+        // Nested Types
+
+        private class DependencyMeasurement
+        {
+            public ISet<IAdapter> Dependencies = new HashSet<IAdapter>();
+            public ISet<IAdapter> Notifications = new HashSet<IAdapter>();
+            public IMeasurement Measurement;
+        }
+
         // Events
 
         /// <summary>
@@ -60,6 +69,14 @@ namespace TimeSeriesFramework.Adapters
         private ReaderWriterLockSlim m_adapterRoutesCacheLock;
         private AutoResetEvent m_calculationComplete;
         private object m_queuedCalculationPending;
+
+        private AsyncQueue<Tuple<IAdapter, object>> m_dependencyOperationQueue;
+        private volatile Dictionary<IAdapter, ISet<IAdapter>> m_dependencies;
+        private volatile Dictionary<IAdapter, ISet<IAdapter>> m_backwardDependencies;
+        private Dictionary<IAdapter, Dictionary<Guid, Queue<DependencyMeasurement>>> m_dependencyMeasurementsLookup;
+        private Dictionary<IAdapter, IList<IMeasurement>> m_notifiedMeasurementLookup;
+        private volatile int m_operationsUntilNextPublish;
+
         private bool m_disposed;
 
         #endregion
@@ -74,6 +91,14 @@ namespace TimeSeriesFramework.Adapters
             m_adapterRoutesCacheLock = new ReaderWriterLockSlim();
             m_calculationComplete = new AutoResetEvent(true);
             m_queuedCalculationPending = new object();
+
+            m_dependencyOperationQueue = new AsyncQueue<Tuple<IAdapter, object>>();
+            m_dependencies = new Dictionary<IAdapter, ISet<IAdapter>>();
+            m_backwardDependencies = new Dictionary<IAdapter, ISet<IAdapter>>();
+            m_dependencyMeasurementsLookup = new Dictionary<IAdapter, Dictionary<Guid, Queue<DependencyMeasurement>>>();
+            m_notifiedMeasurementLookup = new Dictionary<IAdapter, IList<IMeasurement>>();
+
+            m_dependencyOperationQueue.ProcessItemFunction = ProcessDependencyOperation;
         }
 
         /// <summary>
@@ -284,6 +309,9 @@ namespace TimeSeriesFramework.Adapters
                 List<IOutputAdapter> outputAdapters, outputBroadcastRoutes = new List<IOutputAdapter>();
                 MeasurementKey[] measurementKeys;
 
+                Dictionary<IAdapter, ISet<IAdapter>> dependencies = new Dictionary<IAdapter, ISet<IAdapter>>();
+                Dictionary<IAdapter, ISet<IAdapter>> backwardDependencies = new Dictionary<IAdapter, ISet<IAdapter>>();
+
                 if ((object)actionAdapterCollection != null)
                 {
                     foreach (IActionAdapter actionAdapter in actionAdapterCollection)
@@ -309,6 +337,8 @@ namespace TimeSeriesFramework.Adapters
                             }
                             else
                                 actionBroadcastRoutes.Add(actionAdapter);
+
+                            AddDependencies(actionAdapter, dependencies, backwardDependencies);
                         }
                         else
                             actionBroadcastRoutes.Add(actionAdapter);
@@ -340,11 +370,16 @@ namespace TimeSeriesFramework.Adapters
                             }
                             else
                                 outputBroadcastRoutes.Add(outputAdapter);
+
+                            AddDependencies(outputAdapter, dependencies, backwardDependencies);
                         }
                         else
                             outputBroadcastRoutes.Add(outputAdapter);
                     }
                 }
+
+                m_dependencies = dependencies;
+                m_backwardDependencies = backwardDependencies;
 
                 // Synchronously update adapter routing cache
                 m_adapterRoutesCacheLock.EnterWriteLock();
@@ -375,6 +410,48 @@ namespace TimeSeriesFramework.Adapters
             }
         }
 
+        private void AddDependencies(IAdapter adapter, Dictionary<IAdapter, ISet<IAdapter>> dependencies, Dictionary<IAdapter, ISet<IAdapter>> backwardDependencies)
+        {
+            IAdapter dependency = null;
+            IActionAdapter actionAdapter;
+            IOutputAdapter outputAdapter;
+            string dependenciesSetting;
+
+            ISet<IAdapter> adapterSet;
+
+            if (adapter.Settings.TryGetValue("dependencies", out dependenciesSetting))
+            {
+                foreach (string adapterName in dependenciesSetting.Split(','))
+                {
+                    if (m_actionAdapters.TryGetAdapterByName(adapterName, out actionAdapter))
+                        dependency = actionAdapter;
+                    else if (m_outputAdapters.TryGetAdapterByName(adapterName, out outputAdapter))
+                        dependency = outputAdapter;
+
+                    if ((object)dependency != null)
+                    {
+                        // Add dependency adapter to collection of dependencies for adapter
+                        if (!dependencies.TryGetValue(adapter, out adapterSet))
+                        {
+                            adapterSet = new HashSet<IAdapter>();
+                            dependencies.Add(adapter, adapterSet);
+                        }
+
+                        adapterSet.Add(actionAdapter);
+
+                        // Add adapter to collection of backward dependencies for dependency adapter
+                        if (!backwardDependencies.TryGetValue(actionAdapter, out adapterSet))
+                        {
+                            adapterSet = new HashSet<IAdapter>();
+                            backwardDependencies.Add(actionAdapter, adapterSet);
+                        }
+
+                        adapterSet.Add(adapter);
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Event handler for distributing new measurements in a routed fashion.
         /// </summary>
@@ -400,12 +477,15 @@ namespace TimeSeriesFramework.Adapters
             if ((object)m_actionRoutes == null || (object)m_outputRoutes == null)
                 return;
 
+            Dictionary<IAdapter, List<IMeasurement>> adapterMeasurementsLookup = new Dictionary<IAdapter, List<IMeasurement>>();
+
             List<IActionAdapter> actionRoutes;
             List<IOutputAdapter> outputRoutes;
-            Dictionary<IActionAdapter, List<IMeasurement>> actionMeasurements = new Dictionary<IActionAdapter, List<IMeasurement>>();
-            Dictionary<IOutputAdapter, List<IMeasurement>> outputMeasurements = new Dictionary<IOutputAdapter, List<IMeasurement>>();
             List<IMeasurement> measurements;
+            ISet<IAdapter> adapters;
+            ISet<IAdapter> dependencies;
             MeasurementKey key;
+            DependencyMeasurement dependencyMeasurement;
 
             m_adapterRoutesCacheLock.EnterReadLock();
 
@@ -416,49 +496,60 @@ namespace TimeSeriesFramework.Adapters
                 {
                     key = measurement.Key;
 
+                    // Create the set of adapters to which this measurement is routed
+                    adapters = new HashSet<IAdapter>();
+                    m_actionBroadcastRoutes.ForEach(adapter => adapters.Add(adapter));
+                    m_outputBroadcastRoutes.ForEach(adapter => adapters.Add(adapter));
+
                     if (m_actionRoutes.TryGetValue(key, out actionRoutes))
                     {
-                        // Add measurements for each destination action adapter route
+                        // Add action adapters to the adapter set
                         foreach (IActionAdapter actionAdapter in actionRoutes)
-                        {
-                            if (!actionMeasurements.TryGetValue(actionAdapter, out measurements))
-                            {
-                                measurements = new List<IMeasurement>();
-                                actionMeasurements.Add(actionAdapter, measurements);
-                            }
-
-                            measurements.Add(measurement);
-                        }
+                            adapters.Add(actionAdapter);
                     }
 
                     if (m_outputRoutes.TryGetValue(key, out outputRoutes))
                     {
-                        // Add measurements for each destination output adapter route
+                        // Add output adapters to the adapter set
                         foreach (IOutputAdapter outputAdapter in outputRoutes)
-                        {
-                            if (!outputMeasurements.TryGetValue(outputAdapter, out measurements))
-                            {
-                                measurements = new List<IMeasurement>();
-                                outputMeasurements.Add(outputAdapter, measurements);
-                            }
-
-                            measurements.Add(measurement);
-                        }
+                            adapters.Add(outputAdapter);
                     }
-                }
 
-                // Send broadcast action measurements
-                foreach (IActionAdapter actionAdapter in m_actionBroadcastRoutes)
-                {
-                    if (actionAdapter.Enabled)
-                        actionAdapter.QueueMeasurementsForProcessing(newMeasurements);
-                }
+                    // Search for dependencies in each adapter receiving this measurement
+                    foreach (IAdapter adapter in adapters)
+                    {
+                        // Get dependencies for the adapter
+                        if (m_dependencies.TryGetValue(adapter, out dependencies))
+                        {
+                            // Intersect with the set of adapters to see if this measurement
+                            // is also routed to the adapters it is dependent upon
+                            dependencies = new HashSet<IAdapter>(dependencies);
+                            dependencies.IntersectWith(adapters);
 
-                // Send broadcast output measurements
-                foreach (IOutputAdapter outputAdapter in m_outputBroadcastRoutes)
-                {
-                    if (outputAdapter.Enabled)
-                        outputAdapter.QueueMeasurementsForProcessing(newMeasurements);
+                            if (dependencies.Count > 0)
+                            {
+                                // Add a queuing operation to the dependency operation queue
+                                dependencyMeasurement = new DependencyMeasurement()
+                                {
+                                    Dependencies = dependencies,
+                                    Measurement = measurement
+                                };
+
+                                m_dependencyOperationQueue.Enqueue(Tuple.Create(adapter, (object)dependencyMeasurement));
+
+                                continue;
+                            }
+                        }
+
+                        // Dependencies are not receiving this measurement, so add this measurement to the list
+                        if (!adapterMeasurementsLookup.TryGetValue(adapter, out measurements))
+                        {
+                            measurements = new List<IMeasurement>();
+                            adapterMeasurementsLookup.Add(adapter, measurements);
+                        }
+
+                        measurements.Add(measurement);
+                    }
                 }
             }
             finally
@@ -466,22 +557,23 @@ namespace TimeSeriesFramework.Adapters
                 m_adapterRoutesCacheLock.ExitReadLock();
             }
 
-            // Send routed action measurements
-            foreach (KeyValuePair<IActionAdapter, List<IMeasurement>> actionAdapterMeasurements in actionMeasurements)
+            // Send independent measurements
+            foreach (KeyValuePair<IAdapter, List<IMeasurement>> pair in adapterMeasurementsLookup)
+                QueueMeasurementsForProcessing(pair.Key, pair.Value);
+        }
+
+        private void QueueMeasurementsForProcessing(IAdapter adapter, IEnumerable<IMeasurement> measurements)
+        {
+            IActionAdapter actionAdapter;
+
+            if (adapter.Enabled)
             {
-                IActionAdapter actionAdapter = actionAdapterMeasurements.Key;
+                actionAdapter = adapter as IActionAdapter;
 
-                if (actionAdapter.Enabled)
-                    actionAdapter.QueueMeasurementsForProcessing(actionAdapterMeasurements.Value);
-            }
-
-            // Send routed output measurements
-            foreach (KeyValuePair<IOutputAdapter, List<IMeasurement>> outputAdapterMeasurements in outputMeasurements)
-            {
-                IOutputAdapter outputAdapter = outputAdapterMeasurements.Key;
-
-                if (outputAdapter.Enabled)
-                    outputAdapter.QueueMeasurementsForProcessing(outputAdapterMeasurements.Value);
+                if ((object)actionAdapter != null)
+                    actionAdapter.QueueMeasurementsForProcessing(measurements);
+                else
+                    ((IOutputAdapter)adapter).QueueMeasurementsForProcessing(measurements);
             }
         }
 
@@ -834,6 +926,181 @@ namespace TimeSeriesFramework.Adapters
             }
 
             return adapters;
+        }
+
+        /// <summary>
+        /// Event handler for notifying dependent adapters of updates to measurements.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="args">The measurement that was updated.</param>
+        public void NotifyHandler(object sender, EventArgs<IMeasurement> args)
+        {
+            IAdapter adapter = sender as IAdapter;
+
+            if ((object)adapter != null)
+                m_dependencyOperationQueue.Enqueue(Tuple.Create(adapter, (object)args.Argument));
+        }
+
+        private void ProcessDependencyOperation(Tuple<IAdapter, object> operationParameters)
+        {
+            DependencyMeasurement dependencyMeasurement = operationParameters.Item2 as DependencyMeasurement;
+
+            // Determine the type of operation based on the type of the parameters
+            if ((object)dependencyMeasurement != null)
+                ProcessQueue(operationParameters.Item1, dependencyMeasurement);
+            else
+                ProcessNotify(operationParameters.Item1, (IMeasurement)operationParameters.Item2);
+
+            // Determine if we need to run publish and timeout operations.
+            // To improve performance, we do not publish measurements every
+            // time a notification is received. Instead, the number of operations
+            // between each publication is determined by the number of operations
+            // in the async queue after each publication. This allows the system
+            // to perform more publications when the system is keeping up and
+            // perform fewer when the system is falling behind while still
+            // guaranteeing that all notified measurements get published.
+            if (m_operationsUntilNextPublish == 0)
+                m_operationsUntilNextPublish = m_dependencyOperationQueue.Count;
+            else
+                m_operationsUntilNextPublish--;
+
+            if (m_operationsUntilNextPublish == 0)
+            {
+                ProcessTimeouts();
+                PublishNotifiedMeasurements();
+            }
+        }
+
+        private void ProcessQueue(IAdapter adapter, DependencyMeasurement dependencyMeasurement)
+        {
+            Dictionary<Guid, Queue<DependencyMeasurement>> queueLookup;
+            Queue<DependencyMeasurement> dependencyMeasurements;
+            Guid signalID = dependencyMeasurement.Measurement.ID;
+
+            // Get the lookup table for the adapter's dependency measurements
+            if (!m_dependencyMeasurementsLookup.TryGetValue(adapter, out queueLookup))
+            {
+                queueLookup = new Dictionary<Guid, Queue<DependencyMeasurement>>();
+                m_dependencyMeasurementsLookup.Add(adapter, queueLookup);
+            }
+
+            // Get the queue of dependency measurements for this signal
+            if (!queueLookup.TryGetValue(signalID, out dependencyMeasurements))
+            {
+                dependencyMeasurements = new Queue<DependencyMeasurement>();
+                queueLookup.Add(signalID, dependencyMeasurements);
+            }
+
+            // Add the dependency measurement to the queue
+            dependencyMeasurements.Enqueue(dependencyMeasurement);
+        }
+
+        private void ProcessNotify(IAdapter notifier, IMeasurement processedMeasurement)
+        {
+            ISet<IAdapter> dependentAdapters;
+            Dictionary<Guid, Queue<DependencyMeasurement>> queueLookup;
+            Queue<DependencyMeasurement> dependencyMeasurements;
+            IList<IMeasurement> notifiedMeasurements;
+            DependencyMeasurement dependencyMeasurement;
+            DependencyMeasurement dequeuedMeasurement;
+
+            // Look up dependent adapters using reverse lookup table
+            if (!m_backwardDependencies.TryGetValue(notifier, out dependentAdapters))
+                return;
+
+            // Determine if notification means that all dependencies have been met for any dependent adapter
+            foreach (IAdapter dependentAdapter in dependentAdapters)
+            {
+                dequeuedMeasurement = null;
+
+                // Look up collection of queues for the dependent adapter
+                if (!m_dependencyMeasurementsLookup.TryGetValue(dependentAdapter, out queueLookup))
+                    continue;
+
+                // Look up the specific queue for this signal
+                if (!queueLookup.TryGetValue(processedMeasurement.ID, out dependencyMeasurements))
+                    continue;
+
+                // Attempt to find the notified measurement in the queue
+                dependencyMeasurement = dependencyMeasurements.FirstOrDefault(depMeasurement => depMeasurement.Measurement.GetHashCode() == processedMeasurement.GetHashCode());
+
+                if ((object)dependencyMeasurement == null)
+                    continue;
+
+                // Add the notification to the set of notifications for that measurement
+                dependencyMeasurement.Notifications.Add(notifier);
+
+                // Check to see if all dependencies have been met
+                if (dependencyMeasurement.Dependencies.Count != dependencyMeasurement.Notifications.Count)
+                    continue;
+
+                // Get the collection of measurements that have been notified since the last adapter queueing operation
+                if (!m_notifiedMeasurementLookup.TryGetValue(dependentAdapter, out notifiedMeasurements))
+                {
+                    notifiedMeasurements = new List<IMeasurement>();
+                    m_notifiedMeasurementLookup.Add(dependentAdapter, notifiedMeasurements);
+                }
+
+                // If the measurement that was notified is not the first measurement in the queue,
+                // assume that all the ones that came before it have timed out
+                while (dequeuedMeasurement != dependencyMeasurement)
+                {
+                    dequeuedMeasurement = dependencyMeasurements.Dequeue();
+                    notifiedMeasurements.Add(dequeuedMeasurement.Measurement);
+                }
+            }
+        }
+
+        private void ProcessTimeouts()
+        {
+            long now = PrecisionTimer.UtcNow.Ticks;
+
+            IAdapter adapter;
+            DependencyMeasurement dequeuedMeasurement;
+            IList<IMeasurement> notifiedMeasurements = null;
+            int timedOutMeasurements;
+
+            // Search through all the queues to find all the measurements which have timed out
+            foreach (KeyValuePair<IAdapter, Dictionary<Guid, Queue<DependencyMeasurement>>> pair in m_dependencyMeasurementsLookup)
+            {
+                adapter = pair.Key;
+
+                foreach (Queue<DependencyMeasurement> measurementQueue in pair.Value.Values)
+                {
+                    // Determine the number of measurements in this queue which have timed out
+                    timedOutMeasurements = measurementQueue.TakeWhile(depMeasurement => (now - depMeasurement.Measurement.Timestamp).ToMilliseconds() > adapter.DependencyTimeout).Count();
+
+                    // If there are any measurements that have timed out, get the collection
+                    // of notified measurements for that adapter so we can put them in it
+                    if (timedOutMeasurements > 0)
+                    {
+                        if (!m_notifiedMeasurementLookup.TryGetValue(adapter, out notifiedMeasurements))
+                        {
+                            notifiedMeasurements = new List<IMeasurement>();
+                            m_notifiedMeasurementLookup.Add(adapter, notifiedMeasurements);
+                        }
+                    }
+
+                    // Place the measurements in the queue.
+                    // NOTE: If we are able to enter the loop, then notifiedMeasurements cannot be
+                    //       null because the for-loop condition is the same as the if statement above.
+                    for (int i = 0; i < timedOutMeasurements; i++)
+                    {
+                        dequeuedMeasurement = measurementQueue.Dequeue();
+                        notifiedMeasurements.Add(dequeuedMeasurement.Measurement);
+                    }
+                }
+            }
+        }
+
+        private void PublishNotifiedMeasurements()
+        {
+            // Go through each key-value pair and queue the measurements for the adapter
+            foreach (KeyValuePair<IAdapter, IList<IMeasurement>> pair in m_notifiedMeasurementLookup)
+                QueueMeasurementsForProcessing(pair.Key, pair.Value);
+
+            // Clear out the collections of notified measurements and start over
+            m_notifiedMeasurementLookup.Clear();
         }
 
         #endregion

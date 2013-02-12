@@ -50,6 +50,14 @@ namespace TimeSeriesFramework.Adapters
         // Events
 
         /// <summary>
+        /// Notifies dependent adapters that this adapter has finished processing a measurement.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the processed measurement.
+        /// </remarks>
+        public event EventHandler<EventArgs<IMeasurement>> Notify;
+
+        /// <summary>
         /// Provides status messages to consumer.
         /// </summary>
         /// <remarks>
@@ -83,6 +91,8 @@ namespace TimeSeriesFramework.Adapters
         private Dictionary<string, string> m_settings;
         private DataSet m_dataSource;
         private int m_initializationTimeout;
+        private string m_dependencies;
+        private long m_dependencyTimeout;
         private bool m_autoStart;
         private bool m_respectInputDemands;
         private bool m_respectOutputDemands;
@@ -248,6 +258,49 @@ namespace TimeSeriesFramework.Adapters
             set
             {
                 m_initializationTimeout = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the comma-separated list of adapter names that this adapter depends on.
+        /// </summary>
+        /// <remarks>
+        /// Adapters can specify a list of adapters that it depends on. The measurement routing
+        /// system will hold on to measurements that need to be passed through an adapter's
+        /// dependencies. Those measurements will be routed to the dependent adapter when all of
+        /// its dependencies have finished processing them.
+        /// </remarks>
+        [ConnectionStringParameter,
+        DefaultValue(""),
+        Description("Defines a comma-separated list of adapter names which represent this adapter's dependencies.")]
+        public virtual string Dependencies
+        {
+            get
+            {
+                return m_dependencies;
+            }
+            set
+            {
+                m_dependencies = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum time the system will wait on inter-adapter
+        /// dependencies before publishing queued measurements to an adapter.
+        /// </summary>
+        [ConnectionStringParameter,
+        DefaultValue(0.0333333D),
+        Description("Defines the amount of time, in seconds, that measurements should be held for the adapter while waiting for its dependencies to finish processing.")]
+        public virtual long DependencyTimeout
+        {
+            get
+            {
+                return m_dependencyTimeout;
+            }
+            set
+            {
+                m_dependencyTimeout = value;
             }
         }
 
@@ -978,14 +1031,10 @@ namespace TimeSeriesFramework.Adapters
             if (settings.TryGetValue("processingInterval", out setting) && !string.IsNullOrWhiteSpace(setting) && int.TryParse(setting, out processingInterval))
                 ProcessingInterval = processingInterval;
 
-            // Establish any defined external event wait handles needed for inter-adapter synchronization
-            if (settings.TryGetValue("waitHandleNames", out setting) && !string.IsNullOrWhiteSpace(setting))
-                ExternalEventHandles = setting.Split(',').Select(GetExternalEventHandle).ToArray();
-
-            int waitHandleTimeout;
-
-            if (settings.TryGetValue("waitHandleTimeout", out setting) && !string.IsNullOrWhiteSpace(setting) && int.TryParse(setting, out waitHandleTimeout))
-                ExternalEventTimeout = waitHandleTimeout;
+            if (settings.TryGetValue("dependencyTimeout", out setting))
+                m_dependencyTimeout = Ticks.FromSeconds(double.Parse(setting));
+            else
+                m_dependencyTimeout = Ticks.PerSecond / 30L;
         }
 
         /// <summary>
@@ -1035,16 +1084,6 @@ namespace TimeSeriesFramework.Adapters
         void IAdapter.AssignParentCollection(IAdapterCollection parent)
         {
             AssignParentCollection(parent);
-        }
-
-        /// <summary>
-        /// Gets a common wait handle for inter-adapter synchronization.
-        /// </summary>
-        /// <param name="name">Case-insensitive wait handle name.</param>
-        /// <returns>A <see cref="AutoResetEvent"/> based wait handle associated with the given <paramref name="name"/>.</returns>
-        public virtual AutoResetEvent GetExternalEventHandle(string name)
-        {
-            return m_parent.GetExternalEventHandle(name);
         }
 
         /// <summary>
@@ -1309,6 +1348,37 @@ namespace TimeSeriesFramework.Adapters
             {
                 // We protect our code from consumer thrown exceptions
                 OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for NewMeasurements event: {0}", ex.Message), ex));
+            }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="Notify"/> event with a collection of measurements that have been processed.
+        /// </summary>
+        /// <param name="measurements">The processed measurements.</param>
+        protected virtual void OnNotify(IEnumerable<IMeasurement> measurements)
+        {
+            if ((object)measurements != null)
+            {
+                foreach (IMeasurement measurement in measurements)
+                    OnNotify(measurement);
+            }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="Notify"/> event with a measurement that has been processed.
+        /// </summary>
+        /// <param name="measurement">The processed measurement.</param>
+        protected virtual void OnNotify(IMeasurement measurement)
+        {
+            try
+            {
+                if (Notify != null)
+                    Notify(this, new EventArgs<IMeasurement>(measurement));
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for Notify event: {0}", ex.Message), ex));
             }
         }
 
