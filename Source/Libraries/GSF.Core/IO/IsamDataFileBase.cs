@@ -57,8 +57,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
-using GSF.Parsing;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -66,6 +64,8 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Xml.Serialization;
+using GSF.Configuration;
+using GSF.Parsing;
 
 namespace GSF.IO
 {
@@ -1280,7 +1280,7 @@ namespace GSF.IO
             // Discard previously existing records that were not written.
             lock (m_fileData)
             {
-                m_fileData.SetLength(count * m_recordBuffer.Length);
+                m_fileData.SetLength(count * (long)m_recordBuffer.Length);
             }
         }
 
@@ -1293,7 +1293,7 @@ namespace GSF.IO
         {
             lock (m_fileData)
             {
-                m_fileData.Seek((recordIndex - 1) * record.BinaryLength, SeekOrigin.Begin);
+                m_fileData.Seek((recordIndex - 1) * (long)record.BinaryLength, SeekOrigin.Begin);
                 record.CopyBinaryImageToStream(m_fileData);
             }
         }
@@ -1320,7 +1320,7 @@ namespace GSF.IO
             T newRecord = CreateNewRecord(recordIndex);
             lock (m_fileData)
             {
-                m_fileData.Seek((recordIndex - 1) * m_recordBuffer.Length, SeekOrigin.Begin);
+                m_fileData.Seek((recordIndex - 1) * (long)m_recordBuffer.Length, SeekOrigin.Begin);
                 m_fileData.Read(m_recordBuffer, 0, m_recordBuffer.Length);
                 newRecord.ParseBinaryImage(m_recordBuffer, 0, m_recordBuffer.Length);
             }
