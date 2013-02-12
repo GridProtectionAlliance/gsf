@@ -107,7 +107,6 @@ namespace TimeSeriesFramework.Adapters
         private string[] m_outputSourceIDs;
         private MeasurementKey[] m_requestedInputMeasurementKeys;
         private MeasurementKey[] m_requestedOutputMeasurementKeys;
-        private ConcurrentDictionary<string, AutoResetEvent> m_waitHandles;
         private Ticks m_lastProcessTime;
         private Time m_totalProcessTime;
         private long m_processedMeasurements;
@@ -135,7 +134,6 @@ namespace TimeSeriesFramework.Adapters
             m_stopTimeConstraint = DateTime.MaxValue;
             m_processingInterval = -1;
             m_initializationTimeout = AdapterBase.DefaultInitializationTimeout;
-            m_waitHandles = waitHandles;
             m_autoStart = true;
 
             m_monitorTimer = new System.Timers.Timer();
@@ -861,8 +859,6 @@ namespace TimeSeriesFramework.Adapters
                         m_monitorTimer = null;
 
                         Clear();        // This disposes all items in collection...
-
-                        m_waitHandles = null;
                     }
                 }
                 finally
