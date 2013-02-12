@@ -38,6 +38,7 @@ using System.Windows.Media;
 using System.Windows.Navigation;
 using System.Xml;
 using System.Xml.Serialization;
+using System.Linq;
 
 namespace TsfManager
 {
@@ -55,6 +56,7 @@ namespace TsfManager
         private LinkedListNode<TextBlock> m_currentNode;
         private AlarmMonitor m_alarmMonitor;
         private bool m_navigationProcessed;
+        private Guid m_selectedNodeId;
 
         #endregion
 
@@ -107,11 +109,18 @@ namespace TsfManager
             try
             {
                 KeyValuePair<Guid, string> currentNode = (KeyValuePair<Guid, string>)ComboboxNode.SelectedItem;
-                ComboboxNode.ItemsSource = Node.GetLookupList(null);
+                m_selectedNodeId = currentNode.Key;
+                
+                Dictionary<Guid, string> updatedNodeList = Node.GetLookupList(null);
+                ComboboxNode.ItemsSource = updatedNodeList;
                 if (ComboboxNode.Items.Count > 0)
                 {
-                    ComboboxNode.SelectedItem = currentNode;
+                    if (updatedNodeList.ContainsKey(m_selectedNodeId))
+                        ComboboxNode.SelectedItem = (from r in updatedNodeList
+                                                     where r.Key == m_selectedNodeId
+                                                     select r).FirstOrDefault();
                 }
+
             }
             finally
             {
@@ -167,9 +176,13 @@ namespace TsfManager
         /// <param name="e">Event argument.</param>
         private void ComboboxNode_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            ((App)Application.Current).NodeID = ((KeyValuePair<Guid, string>)ComboboxNode.SelectedItem).Key;
+            if (ComboboxNode.SelectionBoxItem != "")
+                ((App)Application.Current).NodeID = ((KeyValuePair<Guid, string>)ComboboxNode.SelectionBoxItem).Key;
+            else
+                ((App)Application.Current).NodeID = ((KeyValuePair<Guid, string>)ComboboxNode.SelectedItem).Key;
             m_menuDataItems[0].Command.Execute(null);
             ConnectToService();
+
         }
 
         private void ConnectToService()

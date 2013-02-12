@@ -662,6 +662,12 @@ namespace GSF.TimeSeries.UI.DataModels
                 }
                 else
                 {
+                    query = string.Format("Select Name From NodeDetail WHERE ID IN ('{0}')", node.ID);
+                    DataTable nodeTable = database.Connection.RetrieveData(database.AdapterType, query);
+
+                    query = string.Format("Select SignalIndex From Statistic WHERE Source='SYSTEM'");
+                    DataTable systemTable = database.Connection.RetrieveData(database.AdapterType, query);
+
                     query = database.ParameterizedQueryString("UPDATE Node SET Name = {0}, CompanyID = {1}, Longitude = {2}, Latitude = {3}, " +
                         "Description = {4}, ImagePath = {5}, Settings = {6}, MenuType = {7}, MenuData = {8}, Master = {9}, LoadOrder = {10}, Enabled = {11}, " +
                         "UpdatedBy = {12}, UpdatedOn = {13} WHERE ID = {14}", "name", "companyID", "longitude", "latitude", "description", "imagePath",
@@ -670,8 +676,20 @@ namespace GSF.TimeSeries.UI.DataModels
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, node.Name, node.CompanyID.ToNotNull(), node.Longitude.ToNotNull(), node.Latitude.ToNotNull(),
                         node.Description.ToNotNull(), node.ImagePath.ToNotNull(), node.Settings.ToNotNull(), node.MenuType, node.MenuData, database.Bool(node.Master), node.LoadOrder,
                         database.Bool(node.Enabled), CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(node.ID));
-                }
 
+                    if (nodeTable.Rows.Count > 0)
+                    {
+                        string oldNodeName = nodeTable.Rows[0]["Name"].ToString();
+                        int signalIndex = 0;
+                        //SystemTable is read from the database. 
+                        for (int i = 0; i < systemTable.Rows.Count; i++)
+                        {
+                            signalIndex = Convert.ToInt16(systemTable.Rows[i]["SignalIndex"].ToString());
+                            query = string.Format("UPDATE Measurement SET PointTag = '{0}!SYSTEM:ST{1}', SignalReference = '{0}!SYSTEM-ST{1}' where SignalReference = '{2}!SYSTEM-ST{1}' ", node.Name, signalIndex, oldNodeName);
+                            database.Connection.ExecuteNonQuery(query, DefaultTimeout);
+                        }
+                    }
+                }
                 return "Node information saved successfully";
             }
             finally
