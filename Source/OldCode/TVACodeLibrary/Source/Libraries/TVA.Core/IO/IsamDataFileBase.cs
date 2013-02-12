@@ -1506,7 +1506,7 @@ namespace TVA.IO
             // Discard previously existing records that were not written.
             lock (m_fileData)
             {
-                m_fileData.SetLength(count * m_recordBuffer.Length);
+                m_fileData.SetLength(count * (long)m_recordBuffer.Length);
             }
         }
 
@@ -1519,7 +1519,7 @@ namespace TVA.IO
         {
             lock (m_fileData)
             {
-                m_fileData.Seek((recordIndex - 1) * record.BinaryLength, SeekOrigin.Begin);
+                m_fileData.Seek((recordIndex - 1) * (long)record.BinaryLength, SeekOrigin.Begin);
                 record.CopyBinaryImageToStream(m_fileData);
             }
         }
@@ -1546,7 +1546,7 @@ namespace TVA.IO
             T newRecord = CreateNewRecord(recordIndex);
             lock (m_fileData)
             {
-                m_fileData.Seek((recordIndex - 1) * m_recordBuffer.Length, SeekOrigin.Begin);
+                m_fileData.Seek((recordIndex - 1) * (long)m_recordBuffer.Length, SeekOrigin.Begin);
                 m_fileData.Read(m_recordBuffer, 0, m_recordBuffer.Length);
                 newRecord.ParseBinaryImage(m_recordBuffer, 0, m_recordBuffer.Length);
             }
