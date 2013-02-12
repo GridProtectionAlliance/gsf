@@ -335,7 +335,6 @@ namespace GSF.TimeSeries.Adapters
                                     if (!actionAdapters.Contains(actionAdapter))
                                         actionAdapters.Add(actionAdapter);
                                 }
-
                             }
                             else
                                 actionBroadcastRoutes.Add(actionAdapter);

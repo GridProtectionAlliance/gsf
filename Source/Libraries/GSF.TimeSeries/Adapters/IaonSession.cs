@@ -318,8 +318,6 @@ namespace GSF.TimeSeries.Adapters
                     m_inputAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
                     m_actionAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
                     m_outputAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
-                    m_actionAdapters.Notify -= m_routingTables.NotifyHandler;
-                    m_outputAdapters.Notify -= m_routingTables.NotifyHandler;
                 }
             }
         }
@@ -485,6 +483,7 @@ namespace GSF.TimeSeries.Adapters
                                 m_actionAdapters.NewMeasurements -= m_routingTables.BroadcastMeasurementsHandler;
 
                             m_actionAdapters.UnpublishedSamples -= UnpublishedSamplesHandler;
+                            m_actionAdapters.Notify -= m_routingTables.NotifyHandler;
                             m_actionAdapters.Dispose();
                         }
                         m_actionAdapters = null;
@@ -494,6 +493,7 @@ namespace GSF.TimeSeries.Adapters
                         {
                             m_outputAdapters.Stop();
                             m_outputAdapters.UnprocessedMeasurements -= UnprocessedMeasurementsHandler;
+                            m_outputAdapters.Notify -= m_routingTables.NotifyHandler;
                             m_outputAdapters.Dispose();
                         }
                         m_outputAdapters = null;

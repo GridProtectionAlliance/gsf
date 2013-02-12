@@ -38,20 +38,20 @@ namespace GSF.TimeSeries.Adapters
     public interface IAdapter : ISupportLifecycle, IProvideStatus
     {
         /// <summary>
-        /// Provides status messages to consumer.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is new status message.
-        /// </remarks>
-        event EventHandler<EventArgs<string>> StatusMessage;
-
-        /// <summary>
         /// Notifies dependent adapters that this adapter has finished processing a measurement.
         /// </summary>
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is the processed measurement.
         /// </remarks>
         event EventHandler<EventArgs<IMeasurement>> Notify;
+
+        /// <summary>
+        /// Provides status messages to consumer.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is new status message.
+        /// </remarks>
+        event EventHandler<EventArgs<string>> StatusMessage;
 
         /// <summary>
         /// Event is raised when there is an exception encountered while processing.

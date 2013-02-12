@@ -52,7 +52,6 @@ namespace DynamicCalculator
         private string m_variableList;
         private string m_imports;
         private bool m_supportsTemporalProcessing;
-        private string m_waitHandleReleaseName;
 
         private HashSet<string> m_variableNames;
         private Dictionary<MeasurementKey, string> m_keyMapping;
@@ -199,27 +198,6 @@ namespace DynamicCalculator
             get
             {
                 return m_supportsTemporalProcessing;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the name of the wait handle to be released when
-        /// the calculation is finished. The default value of null indicates
-        /// that there will be no wait handle sent and therefore no adapter
-        /// synchronization.
-        /// </summary>
-        [ConnectionStringParameter,
-        Description("Define the name of the wait handle to be released for adapter synchronization."),
-        DefaultValue(null)]
-        public string WaitHandleReleaseName
-        {
-            get
-            {
-                return m_waitHandleReleaseName;
-            }
-            set
-            {
-                m_waitHandleReleaseName = value;
             }
         }
 

@@ -274,7 +274,7 @@ namespace GSF.TimeSeries.Adapters
         [ConnectionStringParameter,
         DefaultValue(""),
         Description("Defines a comma-separated list of adapter names which represent this adapter's dependencies.")]
-        public string Dependencies
+        public virtual string Dependencies
         {
             get
             {
@@ -293,7 +293,7 @@ namespace GSF.TimeSeries.Adapters
         [ConnectionStringParameter,
         DefaultValue(0.0333333D),
         Description("Defines the amount of time, in seconds, that measurements should be held for the adapter while waiting for its dependencies to finish processing.")]
-        public long DependencyTimeout
+        public virtual long DependencyTimeout
         {
             get
             {

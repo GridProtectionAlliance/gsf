@@ -108,7 +108,6 @@ namespace GSF.TimeSeries.Adapters
         private string[] m_outputSourceIDs;
         private MeasurementKey[] m_requestedInputMeasurementKeys;
         private MeasurementKey[] m_requestedOutputMeasurementKeys;
-        private ConcurrentDictionary<string, AutoResetEvent> m_waitHandles;
         private Ticks m_lastProcessTime;
         private Time m_totalProcessTime;
         private long m_processedMeasurements;
@@ -136,7 +135,6 @@ namespace GSF.TimeSeries.Adapters
             m_stopTimeConstraint = DateTime.MaxValue;
             m_processingInterval = -1;
             m_initializationTimeout = AdapterBase.DefaultInitializationTimeout;
-            m_waitHandles = waitHandles;
             m_autoStart = true;
 
             m_monitorTimer = new System.Timers.Timer();
@@ -862,8 +860,6 @@ namespace GSF.TimeSeries.Adapters
                         m_monitorTimer = null;
 
                         Clear();        // This disposes all items in collection...
-
-                        m_waitHandles = null;
                     }
                 }
                 finally
@@ -1641,18 +1637,18 @@ namespace GSF.TimeSeries.Adapters
             }
         }
 
-        // Raise status message event on behalf of each item in collection
-        private void item_StatusMessage(object sender, EventArgs<string> e)
-        {
-            if ((object)StatusMessage != null)
-                StatusMessage(sender, e);
-        }
-
         // Raise notify event on behalf of each item in collection
         private void item_Notify(object sender, EventArgs<IMeasurement> e)
         {
             if ((object)Notify != null)
                 Notify(sender, e);
+        }
+
+        // Raise status message event on behalf of each item in collection
+        private void item_StatusMessage(object sender, EventArgs<string> e)
+        {
+            if ((object)StatusMessage != null)
+                StatusMessage(sender, e);
         }
 
         // Raise process exception event on behalf of each item in collection
