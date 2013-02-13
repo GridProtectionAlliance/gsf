@@ -52,8 +52,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
-using GSF.Units;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -1263,7 +1261,7 @@ namespace GSF.Communication
                 }
 
                 // Create a server instance for the specified protocol.
-                switch (protocol.ToLower())
+                switch (protocol.Trim().ToLower())
                 {
                     case "tls":
                         server = new TlsServer(settings.ToString());

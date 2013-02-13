@@ -285,8 +285,6 @@
 
 #endregion
 
-using GSF.Configuration;
-using GSF.Units;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -295,6 +293,8 @@ using System.Drawing;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using GSF.Configuration;
+using GSF.Units;
 
 namespace GSF.Communication
 {
@@ -1332,7 +1332,7 @@ namespace GSF.Communication
                 }
 
                 // Create a client instance for the specified protocol.
-                switch (protocol.ToLower())
+                switch (protocol.Trim().ToLower())
                 {
                     case "tls":
                         client = new TlsClient(settings.ToString());

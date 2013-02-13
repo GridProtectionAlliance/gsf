@@ -51,7 +51,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -63,6 +62,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using GSF.Configuration;
 
 namespace GSF.Communication
 {
@@ -227,7 +227,7 @@ namespace GSF.Communication
         /// <summary>
         /// Initializes a new instance of the <see cref="UdpServer"/> class.
         /// </summary>
-        /// <param name="configString">Config string of the <see cref="UdpServer"/>. See <see cref="DefaultConfigurationString"/> for format.</param>
+        /// <param name="configString">Configuration string of the <see cref="UdpServer"/>. See <see cref="DefaultConfigurationString"/> for format.</param>
         public UdpServer(string configString)
             : base(TransportProtocol.Udp, configString)
         {
@@ -457,7 +457,7 @@ namespace GSF.Communication
             {
                 int maxSendQueueSize;
 
-                // Initialize if unitialized
+                // Initialize if uninitialized
                 if (!Initialized)
                     Initialize();
 
@@ -504,6 +504,7 @@ namespace GSF.Communication
                             // If the IP specified for the client is a multicast IP, subscribe to the specified multicast group.
                             if (Transport.IsMulticastIP(clientEndpoint.Address))
                             {
+                                SocketOptionLevel level = clientEndpoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP;
                                 string multicastSource;
 
                                 if (m_configData.TryGetValue("multicastSource", out multicastSource))
@@ -530,14 +531,12 @@ namespace GSF.Communication
                                     udpClient.MulticastMembershipAddresses = membershipAddresses.ToArray();
 
                                     // Execute multicast subscribe for specific source
-                                    SocketOptionLevel level = clientEndpoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP;
                                     m_udpServer.Provider.SetSocketOption(level, SocketOptionName.AddSourceMembership, udpClient.MulticastMembershipAddresses);
                                     m_udpServer.Provider.SetSocketOption(level, SocketOptionName.MulticastTimeToLive, int.Parse(m_configData["multicastTimeToLive"]));
                                 }
                                 else
                                 {
                                     // Execute multicast subscribe for any source
-                                    SocketOptionLevel level = clientEndpoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP;
                                     m_udpServer.Provider.SetSocketOption(level, SocketOptionName.AddMembership, new MulticastOption(clientEndpoint.Address));
                                     m_udpServer.Provider.SetSocketOption(level, SocketOptionName.MulticastTimeToLive, int.Parse(m_configData["multicastTimeToLive"]));
                                 }

@@ -646,6 +646,9 @@ namespace GSF.Communication
         /// <exception cref="ArgumentOutOfRangeException">Port property value is not between <see cref="Transport.PortRangeLow"/> and <see cref="Transport.PortRangeHigh"/>.</exception>
         protected override void ValidateConnectionString(string connectionString)
         {
+            string setting;
+            int value;
+
             m_connectData = connectionString.ParseKeyValuePairs();
 
             // Derive desired IP stack based on specified "interface" setting, adding setting if it's not defined
@@ -667,6 +670,13 @@ namespace GSF.Communication
             // Check if 'port' property is valid.
             if (!Transport.IsPortNumberValid(m_connectData["port"]) && int.Parse(m_connectData["port"]) != -1)
                 throw new ArgumentOutOfRangeException("connectionString", string.Format("Port number must be {0} or between {1} and {2}", -1, Transport.PortRangeLow, Transport.PortRangeHigh));
+
+            if (!m_connectData.ContainsKey("multicastTimeToLive"))
+                m_connectData.Add("multicastTimeToLive", "10");
+
+            // Make sure a valid multi-cast time-to-live value is defined in the connection string
+            if (!(m_connectData.TryGetValue("multicastTimeToLive", out setting) && int.TryParse(setting, out value)))
+                m_connectData["multicastTimeToLive"] = "10";
         }
 
         /// <summary>
@@ -682,7 +692,7 @@ namespace GSF.Communication
                 {
                     OnConnectionAttempt();
 
-                    // Disable SocketError.ConnectionReset exception from being thrown when the enpoint is not listening.
+                    // Disable SocketError.ConnectionReset exception from being thrown when the endpoint is not listening.
                     m_udpClient.Provider = Transport.CreateSocket(m_connectData["interface"], int.Parse(m_connectData["port"]), ProtocolType.Udp, m_ipStack, m_allowDualStackSocket);
                     m_udpClient.Provider.IOControl(SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
 
@@ -1066,10 +1076,13 @@ namespace GSF.Communication
                 if (!Transport.IsMulticastIP(serverAddress))
                     throw new InvalidOperationException("Cannot add multicast membership if server address is not a multicast IP.");
 
+                SocketOptionLevel level = serverAddress.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP;
+
                 if ((object)sourceAddress == null)
                 {
                     // Execute multicast subscribe for any source
-                    m_udpClient.Provider.SetSocketOption(serverAddress.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(serverAddress));
+                    m_udpClient.Provider.SetSocketOption(level, SocketOptionName.AddMembership, new MulticastOption(serverAddress));
+                    m_udpClient.Provider.SetSocketOption(level, SocketOptionName.MulticastTimeToLive, int.Parse(m_connectData["multicastTimeToLive"]));
                 }
                 else
                 {
@@ -1094,11 +1107,13 @@ namespace GSF.Communication
                     multicastMembershipAddresses = membershipAddresses.ToArray();
 
                     // Execute multicast subscribe for specific source
-                    m_udpClient.Provider.SetSocketOption(serverAddress.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.AddSourceMembership, multicastMembershipAddresses);
+                    m_udpClient.Provider.SetSocketOption(level, SocketOptionName.AddSourceMembership, multicastMembershipAddresses);
+                    m_udpClient.Provider.SetSocketOption(level, SocketOptionName.MulticastTimeToLive, int.Parse(m_connectData["multicastTimeToLive"]));
                 }
             }
             catch (SocketException ex)
             {
+                // TODO: Explain why this is necessary...
                 if (ex.SocketErrorCode != SocketError.InvalidArgument)
                     throw;
             }
@@ -1176,6 +1191,7 @@ namespace GSF.Communication
         /// Raises the <see cref="ReceiveDataFrom"/> event.
         /// </summary>
         /// <param name="remoteEndPoint">End-point from which data has been received.</param>
+        /// <param name="packetInformation">Packet information for received data, if available.</param>
         /// <param name="size">Number of bytes received from the client.</param>
         private void OnReceiveDataFrom(EndPoint remoteEndPoint, IPPacketInformation packetInformation, int size)
         {
@@ -1191,9 +1207,10 @@ namespace GSF.Communication
         }
 
         /// <summary>
-        /// Raises the <see cref="ReceiveDataFrom"/> event.
+        /// Raises the <see cref="ReceiveDataFromComplete"/> event.
         /// </summary>
         /// <param name="remoteEndPoint">End-point from which data has been received.</param>
+        /// <param name="packetInformation">Packet information for received data, if available.</param>
         /// <param name="data">Data received from the client.</param>
         /// <param name="size">Number of bytes received from the client.</param>
         private void OnReceiveDataFromComplete(EndPoint remoteEndPoint, IPPacketInformation packetInformation, byte[] data, int size)
