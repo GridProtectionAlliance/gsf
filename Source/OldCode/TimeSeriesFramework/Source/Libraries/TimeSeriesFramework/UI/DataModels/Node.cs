@@ -678,13 +678,14 @@ namespace TimeSeriesFramework.UI.DataModels
                     if (nodeTable.Rows.Count > 0)
                     {
                         string oldNodeName = nodeTable.Rows[0]["Name"].ToString();
-                        int signalIndex = 0;
+                        string signalIndex = string.Empty;
                         //SystemTable is read from the database. 
                         for (int i = 0; i < systemTable.Rows.Count; i++)
                         {
-                            signalIndex = Convert.ToInt16(systemTable.Rows[i]["SignalIndex"].ToString());
-                            query = string.Format("UPDATE Measurement SET PointTag = '{0}!SYSTEM:ST{1}', SignalReference = '{0}!SYSTEM-ST{1}' where SignalReference = '{2}!SYSTEM-ST{1}' ", node.Name, signalIndex, oldNodeName);
-                            database.Connection.ExecuteNonQuery(query, DefaultTimeout);
+                            signalIndex = systemTable.Rows[i]["SignalIndex"].ToString();
+                            query = database.ParameterizedQueryString("UPDATE Measurement SET PointTag = {0} +'!SYSTEM:ST'+ {1}, SignalReference = {0} +'!SYSTEM-ST'+ {1} where SignalReference = {2} +'!SYSTEM-ST'+ {1}",
+                                "name", "signalindex", "oldnodename");
+                            database.Connection.ExecuteNonQuery(query, DefaultTimeout, node.Name, signalIndex, oldNodeName);
                         }
                     }
                 }
