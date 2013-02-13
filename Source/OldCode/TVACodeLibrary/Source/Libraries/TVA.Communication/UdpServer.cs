@@ -683,7 +683,7 @@ namespace TVA.Communication
             {
                 int maxSendQueueSize;
 
-                // Initialize if unitialized
+                // Initialize if uninitialized
                 if (!Initialized)
                     Initialize();
 
@@ -722,6 +722,7 @@ namespace TVA.Communication
                             UdpClientInfo clientInfo;
                             TransportProvider<EndPoint> udpClient = new TransportProvider<EndPoint>();
                             IPEndPoint clientEndpoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
+                            SocketOptionLevel level = clientEndpoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP;
 
                             udpClient.SetReceiveBuffer(ReceiveBufferSize);
                             udpClient.SetSendBuffer(SendBufferSize);
@@ -756,14 +757,12 @@ namespace TVA.Communication
                                     udpClient.MulticastMembershipAddresses = membershipAddresses.ToArray();
 
                                     // Execute multicast subscribe for specific source
-                                    SocketOptionLevel level = clientEndpoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP;
                                     m_udpServer.Provider.SetSocketOption(level, SocketOptionName.AddSourceMembership, udpClient.MulticastMembershipAddresses);
                                     m_udpServer.Provider.SetSocketOption(level, SocketOptionName.MulticastTimeToLive, int.Parse(m_configData["multicastTimeToLive"]));
                                 }
                                 else
                                 {
                                     // Execute multicast subscribe for any source
-                                    SocketOptionLevel level = clientEndpoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP;
                                     m_udpServer.Provider.SetSocketOption(level, SocketOptionName.AddMembership, new MulticastOption(clientEndpoint.Address));
                                     m_udpServer.Provider.SetSocketOption(level, SocketOptionName.MulticastTimeToLive, int.Parse(m_configData["multicastTimeToLive"]));
                                 }

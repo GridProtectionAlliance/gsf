@@ -883,6 +883,9 @@ namespace TVA.Communication
         /// <exception cref="ArgumentOutOfRangeException">Port property value is not between <see cref="Transport.PortRangeLow"/> and <see cref="Transport.PortRangeHigh"/>.</exception>
         protected override void ValidateConnectionString(string connectionString)
         {
+            string setting;
+            int value;
+
             m_connectData = connectionString.ParseKeyValuePairs();
 
             // Derive desired IP stack based on specified "interface" setting, adding setting if it's not defined
@@ -904,6 +907,13 @@ namespace TVA.Communication
             // Check if 'port' property is valid.
             if (!Transport.IsPortNumberValid(m_connectData["port"]) && int.Parse(m_connectData["port"]) != -1)
                 throw new ArgumentOutOfRangeException("connectionString", string.Format("Port number must be {0} or between {1} and {2}", -1, Transport.PortRangeLow, Transport.PortRangeHigh));
+
+            if (!m_connectData.ContainsKey("multicastTimeToLive"))
+                m_connectData.Add("multicastTimeToLive", "10");
+
+            // Make sure a valid multi-cast time-to-live value is defined in the connection string
+            if (!(m_connectData.TryGetValue("multicastTimeToLive", out setting) && int.TryParse(setting, out value)))
+                m_connectData["multicastTimeToLive"] = "10";
         }
 
         /// <summary>
@@ -1303,10 +1313,13 @@ namespace TVA.Communication
                 if (!Transport.IsMulticastIP(serverAddress))
                     throw new InvalidOperationException("Cannot add multicast membership if server address is not a multicast IP.");
 
+                SocketOptionLevel level = serverAddress.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP;
+
                 if ((object)sourceAddress == null)
                 {
                     // Execute multicast subscribe for any source
-                    m_udpClient.Provider.SetSocketOption(serverAddress.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(serverAddress));
+                    m_udpClient.Provider.SetSocketOption(level, SocketOptionName.AddMembership, new MulticastOption(serverAddress));
+                    m_udpClient.Provider.SetSocketOption(level, SocketOptionName.MulticastTimeToLive, int.Parse(m_connectData["multicastTimeToLive"]));
                 }
                 else
                 {
@@ -1331,7 +1344,8 @@ namespace TVA.Communication
                     multicastMembershipAddresses = membershipAddresses.ToArray();
 
                     // Execute multicast subscribe for specific source
-                    m_udpClient.Provider.SetSocketOption(serverAddress.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.AddSourceMembership, multicastMembershipAddresses);
+                    m_udpClient.Provider.SetSocketOption(level, SocketOptionName.AddSourceMembership, multicastMembershipAddresses);
+                    m_udpClient.Provider.SetSocketOption(level, SocketOptionName.MulticastTimeToLive, int.Parse(m_connectData["multicastTimeToLive"]));
                 }
             }
             catch (SocketException ex)
