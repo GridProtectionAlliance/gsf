@@ -722,7 +722,6 @@ namespace TVA.Communication
                             UdpClientInfo clientInfo;
                             TransportProvider<EndPoint> udpClient = new TransportProvider<EndPoint>();
                             IPEndPoint clientEndpoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
-                            SocketOptionLevel level = clientEndpoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP;
 
                             udpClient.SetReceiveBuffer(ReceiveBufferSize);
                             udpClient.SetSendBuffer(SendBufferSize);
@@ -731,6 +730,7 @@ namespace TVA.Communication
                             // If the IP specified for the client is a multicast IP, subscribe to the specified multicast group.
                             if (Transport.IsMulticastIP(clientEndpoint.Address))
                             {
+                                SocketOptionLevel level = clientEndpoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP;
                                 string multicastSource;
 
                                 if (m_configData.TryGetValue("multicastSource", out multicastSource))
