@@ -553,6 +553,10 @@ namespace GSF.TimeSeries.Adapters
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException(string.Format("Error occurred in routed measurements handler: {0}", ex.Message), ex));
+            }
             finally
             {
                 m_adapterRoutesCacheLock.ExitReadLock();
@@ -560,7 +564,16 @@ namespace GSF.TimeSeries.Adapters
 
             // Send independent measurements
             foreach (KeyValuePair<IAdapter, List<IMeasurement>> pair in adapterMeasurementsLookup)
-                QueueMeasurementsForProcessing(pair.Key, pair.Value);
+            {
+                try
+                {
+                    QueueMeasurementsForProcessing(pair.Key, pair.Value);
+                }
+                catch (Exception ex)
+                {
+                    OnProcessException(new InvalidOperationException(string.Format("ERROR: Exception queuing data to adapter [{0}]: {1}", pair.Key.Name, ex.Message), ex));
+                }
+            }
         }
 
         private void QueueMeasurementsForProcessing(IAdapter adapter, IEnumerable<IMeasurement> measurements)
