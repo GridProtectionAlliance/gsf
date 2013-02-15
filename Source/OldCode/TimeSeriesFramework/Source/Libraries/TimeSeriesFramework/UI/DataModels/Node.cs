@@ -34,6 +34,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
+using TVA;
 using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
@@ -660,10 +661,10 @@ namespace TimeSeriesFramework.UI.DataModels
                 }
                 else
                 {
-                    query = string.Format("Select Name From NodeDetail WHERE ID IN ('{0}')", node.ID);
+                    query = string.Format("SELECT Name FROM NodeDetail WHERE ID IN ('{0}')", node.ID);
                     DataTable nodeTable = database.Connection.RetrieveData(database.AdapterType, query);
 
-                    query = string.Format("Select SignalIndex From Statistic WHERE Source='SYSTEM'");
+                    query = string.Format("SELECT SignalIndex FROM Statistic WHERE Source = 'System'");
                     DataTable systemTable = database.Connection.RetrieveData(database.AdapterType, query);
 
                     query = database.ParameterizedQueryString("UPDATE Node SET Name = {0}, CompanyID = {1}, Longitude = {2}, Latitude = {3}, " +
@@ -677,15 +678,26 @@ namespace TimeSeriesFramework.UI.DataModels
 
                     if (nodeTable.Rows.Count > 0)
                     {
-                        string oldNodeName = nodeTable.Rows[0]["Name"].ToString();
-                        string signalIndex = string.Empty;
+                        string newNodeName = node.Name
+                            .RemoveCharacters(c => !char.IsLetterOrDigit(c))
+                            .Replace(' ', '_')
+                            .ToUpper();
+
+                        string oldNodeName = nodeTable.Rows[0]["Name"].ToString()
+                            .RemoveCharacters(c => !char.IsLetterOrDigit(c))
+                            .Replace(' ', '_')
+                            .ToUpper();
+
                         //SystemTable is read from the database. 
                         for (int i = 0; i < systemTable.Rows.Count; i++)
                         {
-                            signalIndex = systemTable.Rows[i]["SignalIndex"].ToString();
-                            query = database.ParameterizedQueryString("UPDATE Measurement SET PointTag = {0} +'!SYSTEM:ST'+ {1}, SignalReference = {0} +'!SYSTEM-ST'+ {1} where SignalReference = {2} +'!SYSTEM-ST'+ {1}",
-                                "name", "signalindex", "oldnodename");
-                            database.Connection.ExecuteNonQuery(query, DefaultTimeout, node.Name, signalIndex, oldNodeName);
+                            string signalIndex = systemTable.Rows[i]["SignalIndex"].ToString();
+                            string pointTag = string.Format("{0}!SYSTEM:ST{1}", newNodeName, signalIndex);
+                            string newSignalReference = string.Format("{0}!SYSTEM-ST{1}", newNodeName, signalIndex);
+                            string oldSignalReference = string.Format("{0}!SYSTEM-ST{1}", oldNodeName, signalIndex);
+
+                            query = database.ParameterizedQueryString("UPDATE Measurement SET PointTag = {0}, SignalReference = {1} WHERE SignalReference = {2}", "name", "newSignalReference", "oldSignalReference");
+                            database.Connection.ExecuteNonQuery(query, DefaultTimeout, pointTag, newSignalReference, oldSignalReference);
                         }
                     }
                 }
