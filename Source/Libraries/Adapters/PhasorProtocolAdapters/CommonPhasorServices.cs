@@ -404,10 +404,6 @@ namespace PhasorProtocolAdapters
                 if (args.TryGetValue("skipOptimization", out arg))
                     skipOptimization = arg.ParseBoolean();
 
-                // Verify data publisher settings are set to no compression
-                settings = configFile.Settings["datapublisher"];
-                settings["Compression", true].Update("NoCompression");
-
                 CreateDefaultNode(connection, nodeIDQueryString, statusMessage, processException);
                 LoadDefaultConfigurationEntity(connection, statusMessage, processException);
                 LoadDefaultInterconnection(connection, statusMessage, processException);

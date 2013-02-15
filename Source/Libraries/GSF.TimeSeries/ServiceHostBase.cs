@@ -28,17 +28,7 @@
 //
 //******************************************************************************************************
 
-using GSF.Communication;
-using GSF.Configuration;
-using GSF.Data;
-using GSF.IO;
-using GSF.Reflection;
-using GSF.ServiceProcess;
-using GSF.TimeSeries.Adapters;
-using GSF.Units;
-using Microsoft.Win32;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -53,6 +43,15 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
+using GSF.Communication;
+using GSF.Configuration;
+using GSF.Data;
+using GSF.IO;
+using GSF.Reflection;
+using GSF.ServiceProcess;
+using GSF.TimeSeries.Adapters;
+using GSF.Units;
+using Microsoft.Win32;
 
 namespace GSF.TimeSeries
 {
@@ -104,7 +103,7 @@ namespace GSF.TimeSeries
         // Constants
         private const int DefaultMinThreadPoolSize = 25;
         private const int DefaultMaxThreadPoolSize = 2048;
-        private const int DefaultGCGenZeroInterval = 500;
+        private const int DefaultGCCollectInterval = 500;
         private const int DefaultConfigurationBackups = 5;
 
         // Fields
@@ -119,7 +118,7 @@ namespace GSF.TimeSeries
         private bool m_uniqueAdapterIDs;
         private bool m_allowRemoteRestart;
         private bool m_preferCachedConfiguration;
-        private System.Timers.Timer m_gcGenZeroTimer;
+        private System.Timers.Timer m_gcCollectTimer;
         private MultipleDestinationExporter m_healthExporter;
         private MultipleDestinationExporter m_statusExporter;
         private AutoResetEvent m_configurationCacheComplete;
@@ -327,7 +326,7 @@ namespace GSF.TimeSeries
             systemSettings.Add("MaxThreadPoolWorkerThreads", DefaultMaxThreadPoolSize, "Defines the maximum number of allowed thread pool worker threads.");
             systemSettings.Add("MinThreadPoolIOPortThreads", DefaultMinThreadPoolSize, "Defines the minimum number of allowed thread pool I/O completion port threads (used by socket layer).");
             systemSettings.Add("MaxThreadPoolIOPortThreads", DefaultMaxThreadPoolSize, "Defines the maximum number of allowed thread pool I/O completion port threads (used by socket layer).");
-            systemSettings.Add("GCGenZeroInterval", DefaultGCGenZeroInterval, "Defines the interval, in milliseconds, over which to force a generation zero garbage collection. Set to -1 to disable.");
+            systemSettings.Add("GCCollectInterval", DefaultGCCollectInterval, "Defines the interval, in milliseconds, over which to force a generation zero garbage collection. Set to -1 to disable.");
             systemSettings.Add("ConfigurationBackups", DefaultConfigurationBackups, "Defines the total number of older backup configurations to maintain.");
             systemSettings.Add("PreferCachedConfiguration", "False", "Set to true to try the cached configuration first, before loading database configuration - typically used when cache is updated by external process.");
 
@@ -389,14 +388,14 @@ namespace GSF.TimeSeries
             }
 
             // Define a generation zero garbage collection timer
-            int gcGenZeroInterval = systemSettings["GCGenZeroInterval"].ValueAs<int>(DefaultGCGenZeroInterval);
+            int gcCollectInterval = systemSettings["GCCollectInterval"].ValueAs<int>(DefaultGCCollectInterval);
 
-            if (gcGenZeroInterval > 0)
+            if (gcCollectInterval > 0)
             {
-                m_gcGenZeroTimer = new System.Timers.Timer();
-                m_gcGenZeroTimer.Elapsed += m_gcGenZeroTimer_Elapsed;
-                m_gcGenZeroTimer.Interval = gcGenZeroInterval;
-                m_gcGenZeroTimer.Enabled = true;
+                m_gcCollectTimer = new System.Timers.Timer();
+                m_gcCollectTimer.Elapsed += m_gcCollectTimer_Elapsed;
+                m_gcCollectTimer.Interval = gcCollectInterval;
+                m_gcCollectTimer.Enabled = true;
             }
 
             // Define guid with query string delimeters according to database needs
@@ -543,13 +542,13 @@ namespace GSF.TimeSeries
         protected virtual void ServiceStoppingHandler(object sender, EventArgs e)
         {
             // Stop generation zero garbage collection timer
-            if (m_gcGenZeroTimer != null)
+            if (m_gcCollectTimer != null)
             {
-                m_gcGenZeroTimer.Enabled = false;
-                m_gcGenZeroTimer.Elapsed -= m_gcGenZeroTimer_Elapsed;
-                m_gcGenZeroTimer.Dispose();
+                m_gcCollectTimer.Enabled = false;
+                m_gcCollectTimer.Elapsed -= m_gcCollectTimer_Elapsed;
+                m_gcCollectTimer.Dispose();
             }
-            m_gcGenZeroTimer = null;
+            m_gcCollectTimer = null;
 
             // Dispose system health exporter
             if (m_healthExporter != null)
@@ -616,21 +615,21 @@ namespace GSF.TimeSeries
 
         // Generation zero garbage collection handler
         [SuppressMessage("Microsoft.Reliability", "CA2002")]
-        private void m_gcGenZeroTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_gcCollectTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             // The time-series framework can allocate hundreds of thousands of measurements per second, non-stop, as a result the typical
             // wait for breathing room style algorithms for timing garbage collections are not practical. A simple forced generation zero
             // collection on a timer is often the best way to stabilize garbage collection so that it can stay ahead of the curve and
             // reduce overall garbage collection times, which pauses all threads, for the large volumes of short lifespan data.
-            if (Monitor.TryEnter(m_gcGenZeroTimer))
+            if (Monitor.TryEnter(m_gcCollectTimer))
             {
                 try
                 {
-                    GC.Collect(0);
+                    GC.Collect(3, GCCollectionMode.Optimized, false);
                 }
                 finally
                 {
-                    Monitor.Exit(m_gcGenZeroTimer);
+                    Monitor.Exit(m_gcCollectTimer);
                 }
             }
         }
