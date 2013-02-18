@@ -286,7 +286,7 @@ namespace DataQualityMonitoring
                     raisedAlarms = alarms.Where(a => a.Test(measurement)).ToList();
                 }
 
-                // Create event measurements and send them into the system
+                // Create event measurements to be sent into the system
                 foreach (Alarm alarm in raisedAlarms)
                 {
                     alarmEvent = new Measurement()
@@ -313,7 +313,6 @@ namespace DataQualityMonitoring
             // then reset the collection for the next
             // group of measurements
             OnNewMeasurements(alarmEvents);
-            alarmEvents.Clear();
 
             // Increment total count of processed measurements
             IncrementProcessedMeasurements(processedMeasurements);
