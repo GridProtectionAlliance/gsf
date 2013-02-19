@@ -489,6 +489,14 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public const double DefaultCipherKeyRotationPeriod = 60000.0D;
 
+        /// <summary>
+        /// Default value for <see cref="MeatadataTables"/>.
+        /// </summary>
+        public const string DefaultMetadataTables =
+            "SELECT NodeID, UniqueID, OriginalSource, IsConcentrator, Acronym, Name, ParentAcronym, ProtocolName, FramesPerSecond, Enabled FROM DeviceDetail WHERE OriginalSource IS NULL AND IsConcentrator = 0;" +
+            "SELECT Internal, DeviceAcronym, DeviceName, SignalAcronym, ID, SignalID, PointTag, SignalReference, Description, Enabled FROM MeasurementDetail WHERE Internal <> 0;" +
+            "SELECT DeviceAcronym, Label, Type, Phase, SourceIndex FROM PhasorDetail";
+
         // Maximum packet size before software fragmentation of UDP payload
         internal const int MaxPacketSize = ushort.MaxValue / 2;
 
@@ -548,11 +556,7 @@ namespace GSF.TimeSeries.Transport
             m_sharedDatabase = DefaultSharedDatabase;
             m_allowSynchronizedSubscription = DefaultAllowSynchronizedSubscription;
             m_useBaseTimeOffsets = DefaultUseBaseTimeOffsets;
-
-            m_metadataTables =
-                "SELECT NodeID, UniqueID, OriginalSource, IsConcentrator, Acronym, Name, ParentAcronym, ProtocolName, FramesPerSecond, Enabled FROM DeviceDetail WHERE OriginalSource IS NULL AND IsConcentrator = 0;" +
-                "SELECT Internal, DeviceAcronym, DeviceName, SignalAcronym, ID, SignalID, PointTag, SignalReference, Description, Enabled FROM MeasurementDetail WHERE Internal <> 0;" +
-                "SELECT DeviceAcronym, Label, Type, Phase, SourceIndex FROM PhasorDetail";
+            m_metadataTables = DefaultMetadataTables;
 
             m_routingTables = new RoutingTables()
             {
@@ -835,8 +839,11 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
-        /// Gets or sets comma separated list of tables to include in meta-data exchange.
+        /// Gets or sets semi-colon separated list of SQL select statements used to create data for meta-data exchange.
         /// </summary>
+        [ConnectionStringParameter]
+        [Description("Semi-colon separated list of SQL select statements used to create data for meta-data exchange.")]
+        [DefaultValue(DefaultMetadataTables)]
         public string MetadataTables
         {
             get
@@ -1027,6 +1034,10 @@ namespace GSF.TimeSeries.Transport
             // that its node subscribed to from another node in a shared database
             if (settings.TryGetValue("sharedDatabase", out setting))
                 m_sharedDatabase = setting.ParseBoolean();
+
+            // Extract custom metadata table expressions if provided
+            if (settings.TryGetValue("metadataTables", out setting) && !string.IsNullOrWhiteSpace(setting))
+                m_metadataTables = setting;
 
             // Check flag to see if synchronized subscriptions are allowed
             if (settings.TryGetValue("allowSynchronizedSubscription", out setting))
