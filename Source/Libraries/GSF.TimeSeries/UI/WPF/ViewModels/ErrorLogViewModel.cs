@@ -36,6 +36,8 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
+using GSF.TimeSeries.UI.Modal;
+using GSF.TimeSeries.UI.Commands;
 
 namespace GSF.TimeSeries.UI.ViewModels
 {
@@ -45,7 +47,7 @@ namespace GSF.TimeSeries.UI.ViewModels
 
         //private ErrorMonitor m_exMonitor;
           private Dispatcher m_dispatcher;
-       //private RelayCommand m_showCommand;
+        private RelayCommand m_showCommand;
         //private string m_currentSortMemberPath;
         //private ListSortDirection m_currentSortDirection;
 
@@ -77,6 +79,20 @@ namespace GSF.TimeSeries.UI.ViewModels
             get { return false; }
         }
 
+        /// <summary>
+        /// Gets Show command.
+        /// </summary>
+        public ICommand ShowCommand
+        {
+            get
+            {
+                if (m_showCommand == null)
+                    m_showCommand = new RelayCommand(ShowErrorLog);
+
+                return m_showCommand;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -102,6 +118,15 @@ namespace GSF.TimeSeries.UI.ViewModels
             SortDirection = (sortDirection == ListSortDirection.Descending) ? "DESC" : "ASC";
             ItemsKeys = null;
             Load();
+        }
+
+        /// <summary>
+        /// Show brief error log details.
+        /// </summary>
+        private void ShowErrorLog()
+        {
+            ErrorDetailDisplay logDisplay = new ErrorDetailDisplay(CurrentItem.Detail);
+            logDisplay.ShowDialog();
         }
 
         /// <summary>
