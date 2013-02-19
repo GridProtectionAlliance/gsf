@@ -417,6 +417,13 @@
             <param name="outputMeasurementKeys">Dependent output measurement keys to return.</param>
             <param name="inputMeasurementKeys">Dependent input measurement keys to return.</param>
         </member>
+        <member name="M:TimeSeriesFramework.Adapters.RoutingTables.NotifyHandler(System.Object,TVA.EventArgs{TimeSeriesFramework.IMeasurement})">
+            <summary>
+            Event handler for notifying dependent adapters of updates to measurements.
+            </summary>
+            <param name="sender">The source of the event.</param>
+            <param name="args">The measurement that was updated.</param>
+        </member>
         <member name="E:TimeSeriesFramework.Adapters.RoutingTables.ProcessException">
             <summary>
             Event is raised when there is an exception encountered while processing.
@@ -2768,13 +2775,6 @@
             can call this method and wait for the adapter intialization to complete before using the adapter.
             </remarks>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.IAdapter.GetExternalEventHandle(System.String)">
-            <summary>
-            Gets a common wait handle for inter-adapter synchronization.
-            </summary>
-            <param name="name">Case-insensitive wait handle name.</param>
-            <returns>A <see cref="T:System.Threading.AutoResetEvent"/> based wait handle associated with the given <paramref name="name"/>.</returns>
-        </member>
         <member name="M:TimeSeriesFramework.Adapters.IAdapter.SetTemporalConstraint(System.String,System.String,System.String)">
             <summary>
             Defines a temporal processing constraint for the adapter.
@@ -2824,6 +2824,14 @@
                 </item>
             </list>
             </para>
+            </remarks>
+        </member>
+        <member name="E:TimeSeriesFramework.Adapters.IAdapter.Notify">
+            <summary>
+            Notifies dependent adapters that this adapter has finished processing a measurement.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is the processed measurement.
             </remarks>
         </member>
         <member name="E:TimeSeriesFramework.Adapters.IAdapter.StatusMessage">
@@ -2905,6 +2913,12 @@
             <remarks>
             Implementors should use value <see cref="F:System.Threading.Timeout.Infinite"/> to wait indefinitely.
             </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.IAdapter.DependencyTimeout">
+            <summary>
+            Gets or sets the maximum time the system will wait on inter-adapter
+            dependencies before publishing queued measurements to an adapter.
+            </summary>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.IAdapter.AutoStart">
             <summary>
@@ -3079,13 +3093,6 @@
             </summary>
             <param name="parent">Parent adapter collection.</param>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.ActionAdapterBase.GetExternalEventHandle(System.String)">
-            <summary>
-            Gets a common wait handle for inter-adapter synchronization.
-            </summary>
-            <param name="name">Case-insensitive wait handle name.</param>
-            <returns>A <see cref="T:System.Threading.AutoResetEvent"/> based wait handle associated with the given <paramref name="name"/>.</returns>
-        </member>
         <member name="M:TimeSeriesFramework.Adapters.ActionAdapterBase.ResetStatistics">
             <summary>
             Resets the statistics of the <see cref="T:TimeSeriesFramework.Adapters.ActionAdapterBase"/>.
@@ -3216,6 +3223,18 @@
             Raises the <see cref="E:TimeSeriesFramework.Adapters.ActionAdapterBase.NewMeasurements"/> event.
             </summary>
         </member>
+        <member name="M:TimeSeriesFramework.Adapters.ActionAdapterBase.OnNotify(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Adapters.ActionAdapterBase.Notify"/> event with a collection of measurements that have been processed.
+            </summary>
+            <param name="measurements">The processed measurements.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.ActionAdapterBase.OnNotify(TimeSeriesFramework.IMeasurement)">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Adapters.ActionAdapterBase.Notify"/> event with a measurement that has been processed.
+            </summary>
+            <param name="measurement">The processed measurement.</param>
+        </member>
         <member name="M:TimeSeriesFramework.Adapters.ActionAdapterBase.OnStatusMessage(System.String)">
             <summary>
             Raises the <see cref="E:TimeSeriesFramework.Adapters.ActionAdapterBase.StatusMessage"/> event.
@@ -3241,6 +3260,14 @@
             <summary>
             Raises <see cref="E:TimeSeriesFramework.Adapters.ActionAdapterBase.OutputMeasurementsUpdated"/> event.
             </summary>
+        </member>
+        <member name="E:TimeSeriesFramework.Adapters.ActionAdapterBase.Notify">
+            <summary>
+            Notifies dependent adapters that this adapter has finished processing a measurement.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is the processed measurement.
+            </remarks>
         </member>
         <member name="E:TimeSeriesFramework.Adapters.ActionAdapterBase.StatusMessage">
             <summary>
@@ -3347,6 +3374,23 @@
             <remarks>
             Set to <see cref="F:System.Threading.Timeout.Infinite"/> to wait indefinitely.
             </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.Dependencies">
+            <summary>
+            Gets or sets the comma-separated list of adapter names that this adapter depends on.
+            </summary>
+            <remarks>
+            Adapters can specify a list of adapters that it depends on. The measurement routing
+            system will hold on to measurements that need to be passed through an adapter's
+            dependencies. Those measurements will be routed to the dependent adapter when all of
+            its dependencies have finished processing them.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.DependencyTimeout">
+            <summary>
+            Gets or sets the maximum time the system will wait on inter-adapter
+            dependencies before publishing queued measurements to an adapter.
+            </summary>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.AutoStart">
             <summary>
@@ -3608,13 +3652,6 @@
             <exception cref="T:System.NullReferenceException">DataSource is null.</exception>
             <exception cref="T:System.InvalidOperationException">DataMember is null or empty.</exception>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.GetExternalEventHandle(System.String)">
-            <summary>
-            Gets a common wait handle for inter-adapter synchronization.
-            </summary>
-            <param name="name">Case-insensitive wait handle name.</param>
-            <returns>A <see cref="T:System.Threading.AutoResetEvent"/> based wait handle associated with the given <paramref name="name"/>.</returns>
-        </member>
         <member name="M:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.TryCreateAdapter(System.Data.DataRow,`0@)">
             <summary>
             Attempts to create an <see cref="T:TimeSeriesFramework.Adapters.IAdapter"/> from the specified <see cref="T:System.Data.DataRow"/>.
@@ -3745,6 +3782,18 @@
             </para>
             </remarks>
         </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.OnNotify(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.Notify"/> event with a collection of measurements that have been processed.
+            </summary>
+            <param name="measurements">The processed measurements.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.OnNotify(TimeSeriesFramework.IMeasurement)">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.Notify"/> event with a measurement that has been processed.
+            </summary>
+            <param name="measurement">The processed measurement.</param>
+        </member>
         <member name="M:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.OnProcessException(System.Exception)">
             <summary>
             Raises <see cref="E:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.ProcessException"/> event.
@@ -3818,6 +3867,14 @@
             <param name="item"><see cref="T:TimeSeriesFramework.Adapters.IAdapter"/> to dispose.</param>
             <remarks>
             Derived classes should override if more events are defined.
+            </remarks>
+        </member>
+        <member name="E:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.Notify">
+            <summary>
+            Notifies dependent adapters that this adapter has finished processing a measurement.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is the processed measurement.
             </remarks>
         </member>
         <member name="E:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.StatusMessage">
@@ -3906,6 +3963,12 @@
             <remarks>
             Set to <see cref="F:System.Threading.Timeout.Infinite"/> to wait indefinitely.
             </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.DependencyTimeout">
+            <summary>
+            Gets or sets the maximum time the system will wait on inter-adapter
+            dependencies before publishing queued measurements to an adapter.
+            </summary>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.AutoStart">
             <summary>
@@ -4180,13 +4243,6 @@
             </summary>
             <param name="parent">Parent adapter collection.</param>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.GetExternalEventHandle(System.String)">
-            <summary>
-            Gets a common wait handle for inter-adapter synchronization.
-            </summary>
-            <param name="name">Case-insensitive wait handle name.</param>
-            <returns>A <see cref="T:System.Threading.AutoResetEvent"/> based wait handle associated with the given <paramref name="name"/>.</returns>
-        </member>
         <member name="M:TimeSeriesFramework.Adapters.AdapterBase.WaitForExternalEvents(System.Int32)">
             <summary>
             Waits for all external events to fire; no wait will happen if no external events are defined.
@@ -4277,6 +4333,18 @@
             Serves as a hash function for the current <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
             </summary>
             <returns>A hash code for the current <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.OnNotify(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Adapters.AdapterBase.Notify"/> event with a collection of measurements that have been processed.
+            </summary>
+            <param name="measurements">The processed measurements.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.OnNotify(TimeSeriesFramework.IMeasurement)">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Adapters.AdapterBase.Notify"/> event with a measurement that has been processed.
+            </summary>
+            <param name="measurement">The processed measurement.</param>
         </member>
         <member name="M:TimeSeriesFramework.Adapters.AdapterBase.OnStatusMessage(System.String)">
             <summary>
@@ -4412,6 +4480,14 @@
             <param name="measurementTable">Measurement table name used to load additional meta-data; this is not used when specifying a FILTER expression.</param>
             <returns>User selected output measurements.</returns>
         </member>
+        <member name="E:TimeSeriesFramework.Adapters.AdapterBase.Notify">
+            <summary>
+            Notifies dependent adapters that this adapter has finished processing a measurement.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is the processed measurement.
+            </remarks>
+        </member>
         <member name="E:TimeSeriesFramework.Adapters.AdapterBase.StatusMessage">
             <summary>
             Provides status messages to consumer.
@@ -4533,6 +4609,23 @@
             Set to <see cref="F:System.Threading.Timeout.Infinite"/> to wait indefinitely.
             </remarks>
         </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.Dependencies">
+            <summary>
+            Gets or sets the comma-separated list of adapter names that this adapter depends on.
+            </summary>
+            <remarks>
+            Adapters can specify a list of adapters that it depends on. The measurement routing
+            system will hold on to measurements that need to be passed through an adapter's
+            dependencies. Those measurements will be routed to the dependent adapter when all of
+            its dependencies have finished processing them.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.DependencyTimeout">
+            <summary>
+            Gets or sets the maximum time the system will wait on inter-adapter
+            dependencies before publishing queued measurements to an adapter.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Adapters.AdapterBase.AutoStart">
             <summary>
             Gets or sets flag indicating if adapter should automatically start or otherwise connect on demand.
@@ -4649,7 +4742,7 @@
             Gets or sets collection of <see cref="T:System.Threading.AutoResetEvent"/> wait handles used to synchronize activity with external events.
             </summary>
             <remarks>
-            Each defined external event in the collection should be acquired via <see cref="M:TimeSeriesFramework.Adapters.AdapterBase.GetExternalEventHandle(System.String)"/>.
+            Each defined external event in the collection should be acquired via <see cref="!:GetExternalEventHandle"/>.
             </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.AdapterBase.ExternalEventTimeout">
@@ -4840,6 +4933,23 @@
             This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
             Set to <c>null</c> apply no filter.
             </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.FacileActionAdapterBase.Dependencies">
+            <summary>
+            Gets or sets the comma-separated list of adapter names that this adapter depends on.
+            </summary>
+            <remarks>
+            Adapters can specify a list of adapters that it depends on. The measurement routing
+            system will hold on to measurements that need to be passed through an adapter's
+            dependencies. Those measurements will be routed to the dependent adapter when all of
+            its dependencies have finished processing them.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.FacileActionAdapterBase.DependencyTimeout">
+            <summary>
+            Gets or sets the maximum time the system will wait on inter-adapter
+            dependencies before publishing queued measurements to an adapter.
+            </summary>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.FacileActionAdapterBase.OutputSourceIDs">
             <summary>
@@ -5450,6 +5560,23 @@
             <see cref="F:TVA.EventArgs`1.Argument"/> is total number of unprocessed measurements.
             </para>
             </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.Dependencies">
+            <summary>
+            Gets or sets the comma-separated list of adapter names that this adapter depends on.
+            </summary>
+            <remarks>
+            Adapters can specify a list of adapters that it depends on. The measurement routing
+            system will hold on to measurements that need to be passed through an adapter's
+            dependencies. Those measurements will be routed to the dependent adapter when all of
+            its dependencies have finished processing them.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.DependencyTimeout">
+            <summary>
+            Gets or sets the maximum time the system will wait on inter-adapter
+            dependencies before publishing queued measurements to an adapter.
+            </summary>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.RequeueOnException">
             <summary>
@@ -6456,6 +6583,11 @@
             Default value for <see cref="P:TimeSeriesFramework.Transport.DataPublisher.CipherKeyRotationPeriod"/>.
             </summary>
         </member>
+        <member name="F:TimeSeriesFramework.Transport.DataPublisher.DefaultMetadataTables">
+            <summary>
+            Default value for <see cref="P:TimeSeriesFramework.Transport.DataPublisher.MetadataTables"/>.
+            </summary>
+        </member>
         <member name="M:TimeSeriesFramework.Transport.DataPublisher.#ctor">
             <summary>
             Creates a new <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/>.
@@ -6504,13 +6636,6 @@
             Assigns the reference to the parent <see cref="T:TimeSeriesFramework.Adapters.IAdapterCollection"/> that will contain this <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/>, if any.
             </summary>
             <param name="parent">Parent adapter collection.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Transport.DataPublisher.GetExternalEventHandle(System.String)">
-            <summary>
-            Gets a common wait handle for inter-adapter synchronization.
-            </summary>
-            <param name="name">Case-insensitive wait handle name.</param>
-            <returns>A <see cref="T:System.Threading.AutoResetEvent"/> based wait handle associated with the given <paramref name="name"/>.</returns>
         </member>
         <member name="M:TimeSeriesFramework.Transport.DataPublisher.WaitForInitialize(System.Int32)">
             <summary>
@@ -6713,6 +6838,23 @@
             Gets or sets the cipher key rotation period.
             </summary>
         </member>
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.Dependencies">
+            <summary>
+            Gets or sets the comma-separated list of adapter names that this adapter depends on.
+            </summary>
+            <remarks>
+            Adapters can specify a list of adapters that it depends on. The measurement routing
+            system will hold on to measurements that need to be passed through an adapter's
+            dependencies. Those measurements will be routed to the dependent adapter when all of
+            its dependencies have finished processing them.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.DependencyTimeout">
+            <summary>
+            Gets or sets the maximum time the system will wait on inter-adapter
+            dependencies before publishing queued measurements to an adapter.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Transport.DataPublisher.DataSource">
             <summary>
             Gets or sets <see cref="T:System.Data.DataSet"/> based data source used to load each <see cref="T:TimeSeriesFramework.Adapters.IAdapter"/>.
@@ -6737,7 +6879,7 @@
         </member>
         <member name="P:TimeSeriesFramework.Transport.DataPublisher.MetadataTables">
             <summary>
-            Gets or sets comma seperated list of tables to include in meta-data exchange.
+            Gets or sets semi-colon separated list of SQL select statements used to create data for meta-data exchange.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.DataPublisher.ClientConnections">
@@ -7468,6 +7610,11 @@
         <member name="F:TimeSeriesFramework.ConfigurationType.WebService">
             <summary>
             Configuration source is a webservice.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.ConfigurationType.BinaryFile">
+            <summary>
+            Configuration source is a binary file.
             </summary>
         </member>
         <member name="F:TimeSeriesFramework.ConfigurationType.XmlFile">
@@ -8446,19 +8593,6 @@
             processing interval in milliseconds. This is basically a delay, or timer interval, overwhich to process data. Setting this value to -1 means
             to use the default processing interval while setting the value to 0 means to process data as fast as possible.
             </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.Transport.SubscriptionInfo.WaitHandleNames">
-            <summary>
-            Gets or sets the wait handle names used to deterministically
-            wait for data to become available on the server side.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.Transport.SubscriptionInfo.WaitHandleTimeout">
-            <summary>
-            Gets or sets the amount of time to wait on the wait handles
-            identified by the <see cref="P:TimeSeriesFramework.Transport.SubscriptionInfo.WaitHandleNames"/> before the
-            operation times out.
-            </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.SubscriptionInfo.ExtraConnectionStringParameters">
             <summary>
