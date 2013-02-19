@@ -864,7 +864,10 @@ namespace GSF.TimeSeries
                     {
                         DisplayStatusMessage("Loading binary based configuration from \"{0}\".", UpdateType.Information, connectionString);
 
-                        configuration = Serialization.Deserialize<DataSet>(File.OpenRead(connectionString), SerializationFormat.Binary);
+                        using (FileStream stream = File.OpenRead(connectionString))
+                        {
+                            configuration = stream.DeserializeToDataSet();
+                        }
 
                         DisplayStatusMessage("Binary based configuration successfully loaded.", UpdateType.Information);
                     }
@@ -1069,8 +1072,7 @@ namespace GSF.TimeSeries
                         // Cache binary serialized version of data set
                         using (FileStream configurationFileStream = File.OpenWrite(m_cachedBinaryConfigurationFile))
                         {
-                            Stream configurationStream = configurationFileStream;
-                            Serialization.Serialize(configuration, SerializationFormat.Binary, ref configurationStream);
+                            configuration.SerializeToStream(configurationFileStream);
                         }
 
                         DisplayStatusMessage("Successfully cached current configuration to binary.", UpdateType.Information);

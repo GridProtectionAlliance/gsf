@@ -86,6 +86,7 @@
     </CodeAnalysisDependentAssemblyPaths>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataSetSerializationTest.cs" />
     <Compile Include="DateTimeExtensionTest.cs" />
     <Compile Include="EnumExtensionsTest.cs" />
     <Compile Include="PatternCompressorTest.cs" />

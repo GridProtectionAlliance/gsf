@@ -490,7 +490,7 @@ namespace GSF.TimeSeries.Transport
         public const double DefaultCipherKeyRotationPeriod = 60000.0D;
 
         /// <summary>
-        /// Default value for <see cref="MeatadataTables"/>.
+        /// Default value for <see cref="MetadataTables"/>.
         /// </summary>
         public const string DefaultMetadataTables =
             "SELECT NodeID, UniqueID, OriginalSource, IsConcentrator, Acronym, Name, ParentAcronym, ProtocolName, FramesPerSecond, Enabled FROM DeviceDetail WHERE OriginalSource IS NULL AND IsConcentrator = 0;" +
