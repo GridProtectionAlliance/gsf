@@ -45,7 +45,7 @@ namespace TimeSeriesFramework.UI.ViewModels
 
         //private ErrorMonitor m_exMonitor;
           private Dispatcher m_dispatcher;
-       //private RelayCommand m_showCommand;
+          private RelayCommand m_showCommand;
         //private string m_currentSortMemberPath;
         //private ListSortDirection m_currentSortDirection;
 
@@ -77,6 +77,20 @@ namespace TimeSeriesFramework.UI.ViewModels
             get { return false; }
         }
 
+        /// <summary>
+        /// Gets Show command.
+        /// </summary>
+        public ICommand ShowCommand
+        {
+            get
+            {
+                if (m_showCommand == null)
+                    m_showCommand = new RelayCommand(ShowErrorLog);
+
+                return m_showCommand;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -103,6 +117,16 @@ namespace TimeSeriesFramework.UI.ViewModels
             ItemsKeys = null;
             Load();
         }
+
+        /// <summary>
+        /// Show brief error log details.
+        /// </summary>
+        private void ShowErrorLog()
+        {
+            ErrorDetailDisplay logDisplay = new ErrorDetailDisplay(CurrentItem.Detail);
+            logDisplay.ShowDialog();
+        }
+
 
         /// <summary>
         /// Overriden method
