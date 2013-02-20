@@ -41,19 +41,22 @@ namespace GSF.Core.Tests
         [TestMethod]
         public void DataSetSerialization_ValidCase()
         {
-            const int RowCount = ushort.MaxValue * 20;
+            const int RowCount = ushort.MaxValue * 10;// * 20;
 
             //Act
             StringBuilder results = new StringBuilder();
             Ticks stopTime, startTime;
             
-            // TODO: Add more tables and columns for all serializable data types to make test more comprehensive
             DataSet sourceDataSet = new DataSet("source");
             DataTable table = sourceDataSet.Tables.Add("table1");
 
-            table.Columns.Add("col1", typeof(string));
-            table.Columns.Add("col2", typeof(int));
-            table.Columns.Add("col3", typeof(bool));
+            table.Columns.Add("col0", typeof(string));
+            table.Columns.Add("col1", typeof(int));
+            table.Columns.Add("col2", typeof(bool));
+            table.Columns.Add("col3", typeof(Guid));
+            table.Columns.Add("col4", typeof(DateTime));
+            table.Columns.Add("col5", typeof(TimeSpan));
+            table.Columns.Add("col6", typeof(byte[]));
 
             startTime = PrecisionTimer.UtcNow.Ticks;
 
@@ -61,9 +64,58 @@ namespace GSF.Core.Tests
             {
                 DataRow row = table.NewRow();
 
-                row[0] = new string((char)GSF.Security.Cryptography.Random.Int16Between(32, 128), GSF.Security.Cryptography.Random.Int16Between(5, 30));
-                row[1] = GSF.Security.Cryptography.Random.Int32;
-                row[2] = GSF.Security.Cryptography.Random.Boolean;
+                if (Security.Cryptography.Random.Boolean || Security.Cryptography.Random.Boolean)
+                    row[0] = new string((char)Security.Cryptography.Random.Int16Between(32, 128), Security.Cryptography.Random.Int16Between(5, 30));
+                else
+                    row[0] = DBNull.Value;
+                
+                row[1] = Security.Cryptography.Random.Int32;
+                row[2] = Security.Cryptography.Random.Boolean;
+                
+                if (Security.Cryptography.Random.Boolean || Security.Cryptography.Random.Boolean)
+                    row[3] = Guid.NewGuid();
+                else
+                    row[3] = DBNull.Value;
+
+                row[4] = PrecisionTimer.UtcNow;
+                row[5] = new TimeSpan(Security.Cryptography.Random.Int64Between(Ticks.PerSecond, Ticks.PerHour));
+
+                byte[] bytes = null;
+
+                if (Security.Cryptography.Random.Boolean || Security.Cryptography.Random.Boolean)
+                {
+                    bytes = new byte[Security.Cryptography.Random.Int16Between(0, 1000)];
+                    Security.Cryptography.Random.GetBytes(bytes);
+                }
+
+                row[6] = bytes;
+
+                table.Rows.Add(row);
+            }
+
+            table = sourceDataSet.Tables.Add("table2");
+
+            table.Columns.Add("col0", typeof(ulong));
+            table.Columns.Add("col1", typeof(double));
+            table.Columns.Add("col2", typeof(byte));
+            table.Columns.Add("col3", typeof(char));
+
+            for (int i = 0; i < Security.Cryptography.Random.Int32Between(100, 500); i++)
+            {
+                DataRow row = table.NewRow();
+
+                if (Security.Cryptography.Random.Boolean || Security.Cryptography.Random.Boolean)
+                    row[0] = Security.Cryptography.Random.UInt64;
+                else
+                    row[0] = DBNull.Value;
+
+                row[1] = Security.Cryptography.Random.Number;
+                row[2] = Security.Cryptography.Random.Byte;
+
+                if (Security.Cryptography.Random.Boolean || Security.Cryptography.Random.Boolean)
+                    row[3] = (char)Security.Cryptography.Random.Int16Between(32, 1024);
+                else
+                    row[3] = DBNull.Value;
 
                 table.Rows.Add(row);
             }
@@ -156,7 +208,15 @@ namespace GSF.Core.Tests
 
                     for (int j = 0; j < sourceTable.Columns.Count; j++)
                     {
-                        Assert.AreEqual(sourceRow[j], destinationRow[j]);
+                        if (sourceRow[j] != DBNull.Value && destinationRow[j] != DBNull.Value)
+                        {
+                            byte[] bytes = sourceRow[j] as byte[];
+
+                            if (bytes != null)
+                                Assert.IsTrue(bytes.CompareTo((byte[])destinationRow[j]) == 0);
+                            else
+                                Assert.AreEqual(sourceRow[j], destinationRow[j]);
+                        }
                     }
                 }
             }
