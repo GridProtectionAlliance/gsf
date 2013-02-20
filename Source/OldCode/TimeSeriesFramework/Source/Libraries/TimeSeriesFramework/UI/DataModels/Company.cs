@@ -35,6 +35,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
 using TVA.Data;
+using DataType = System.ComponentModel.DataAnnotations.DataType;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
