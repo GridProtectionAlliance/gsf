@@ -437,58 +437,58 @@ namespace TVA.Data
                         switch (columnDataTypes[i])
                         {
                             case DataType.Boolean:
-                                output.Write((bool)value);
+                                output.Write(value.NotDBNull<bool>());
                                 break;
                             case DataType.Byte:
-                                output.Write((byte)value);
+                                output.Write(value.NotDBNull<byte>());
                                 break;
                             case DataType.Char:
-                                output.Write((char)value);
+                                output.Write(value.NotDBNull<char>());
                                 break;
                             case DataType.DateTime:
-                                output.Write(((DateTime)value).Ticks);
+                                output.Write(value.NotDBNull<DateTime>().Ticks);
                                 break;
                             case DataType.Decimal:
-                                output.Write((decimal)value);
+                                output.Write(value.NotDBNull<decimal>());
                                 break;
                             case DataType.Double:
-                                output.Write((double)value);
+                                output.Write(value.NotDBNull<double>());
                                 break;
                             case DataType.Guid:
-                                output.Write(((Guid)value).ToByteArray());
+                                output.Write(value.NotDBNull<Guid>().ToByteArray());
                                 break;
                             case DataType.Int16:
-                                output.Write((short)value);
+                                output.Write(value.NotDBNull<short>());
                                 break;
                             case DataType.Int32:
-                                output.Write((int)value);
+                                output.Write(value.NotDBNull<int>());
                                 break;
                             case DataType.Int64:
-                                output.Write((long)value);
+                                output.Write(value.NotDBNull<long>());
                                 break;
                             case DataType.SByte:
-                                output.Write((sbyte)value);
+                                output.Write(value.NotDBNull<sbyte>());
                                 break;
                             case DataType.Single:
-                                output.Write((float)value);
+                                output.Write(value.NotDBNull<float>());
                                 break;
                             case DataType.String:
-                                output.Write((string)value);
+                                output.Write(value.NotDBNull(""));
                                 break;
                             case DataType.TimeSpan:
-                                output.Write(((TimeSpan)value).Ticks);
+                                output.Write(value.NotDBNull<TimeSpan>().Ticks);
                                 break;
                             case DataType.UInt16:
-                                output.Write((ushort)value);
+                                output.Write(value.NotDBNull<ushort>());
                                 break;
                             case DataType.UInt32:
-                                output.Write((uint)value);
+                                output.Write(value.NotDBNull<uint>());
                                 break;
                             case DataType.UInt64:
-                                output.Write((ulong)value);
+                                output.Write(value.NotDBNull<ulong>());
                                 break;
                             case DataType.Blob:
-                                byte[] blob = (byte[])value;
+                                byte[] blob = value.NotDBNull<byte[]>();
 
                                 if ((object)blob == null || blob.Length == 0)
                                 {
@@ -670,6 +670,16 @@ namespace TVA.Data
         public static Type DeriveColumnType(this DataType dataType)
         {
             return s_supportedDataTypes[(int)dataType];
+        }
+
+        private static T NotDBNull<T>(this object value, T defaultValue)
+        {
+            return value == DBNull.Value ? defaultValue : (T)value;
+        }
+
+        private static T NotDBNull<T>(this object value)
+        {
+            return value.NotDBNull(default(T));
         }
     }
 }
