@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  ServiceHost.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -793,12 +793,12 @@ namespace TimeSeriesFramework
                                 destination.Rows.Add(newRow);
                             }
 
-                            elapsedTime = (PrecisionTimer.UtcNow.Ticks - startTime).ToSeconds();
+                            operationElapsedTime = (PrecisionTimer.UtcNow.Ticks - operationStartTime).ToSeconds();
 
                             // Add entity configuration data to system configuration
                             configuration.Tables.Add(destination);
 
-                            DisplayStatusMessage("Configuration cache completed in {0}.", UpdateType.Information, elapsedTime < 0.01D ? "less than a second" : elapsedTime.ToString("0.00") + " seconds");
+                            DisplayStatusMessage("{0} configuration pre-cache completed in {1}.", UpdateType.Information, source.TableName, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds");
                         }
 
                         DisplayStatusMessage("Database configuration successfully loaded.", UpdateType.Information);
@@ -864,7 +864,10 @@ namespace TimeSeriesFramework
                     {
                         DisplayStatusMessage("Loading binary based configuration from \"{0}\".", UpdateType.Information, connectionString);
 
-                        configuration = Serialization.Deserialize<DataSet>(File.OpenRead(connectionString), TVA.SerializationFormat.Binary);
+                        using (FileStream stream = File.OpenRead(connectionString))
+                        {
+                            configuration = stream.DeserializeToDataSet();
+                        }
 
                         DisplayStatusMessage("Binary based configuration successfully loaded.", UpdateType.Information);
                     }
@@ -1056,7 +1059,7 @@ namespace TimeSeriesFramework
                 {
                     // Create backups of binary configurations
                     BackupConfiguration(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile);
-
+                    
                     // Create backups of XML configurations
                     BackupConfiguration(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile);
 
@@ -1069,8 +1072,7 @@ namespace TimeSeriesFramework
                         // Cache binary serialized version of data set
                         using (FileStream configurationFileStream = File.OpenWrite(m_cachedBinaryConfigurationFile))
                         {
-                            Stream configurationStream = configurationFileStream;
-                            Serialization.Serialize(configuration, TVA.SerializationFormat.Binary, ref configurationStream);
+                            configuration.SerializeToStream(configurationFileStream);
                         }
 
                         DisplayStatusMessage("Successfully cached current configuration to binary.", UpdateType.Information);
@@ -1092,7 +1094,7 @@ namespace TimeSeriesFramework
 
                         // Cache XML serialized version of data set
                         configuration.WriteXml(m_cachedXmlConfigurationFile, XmlWriteMode.WriteSchema);
-
+                        
                         DisplayStatusMessage("Successfully cached current configuration to XML.", UpdateType.Information);
                         cacheSuccessful = true;
                     }
