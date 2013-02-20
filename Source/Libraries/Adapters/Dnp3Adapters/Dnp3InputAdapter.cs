@@ -34,6 +34,9 @@ using System.IO;
 
 namespace Dnp3Adapters
 {
+    /// <summary>
+    /// DNP3 Adapter
+    /// </summary>
     [Description("DNP3: Reads measurements from a remote dnp3 endpoint")]
     public class Dnp3InputAdapter : InputAdapterBase
     {
@@ -114,7 +117,9 @@ namespace Dnp3Adapters
             }
         }
 
-       
+       /// <summary>
+       /// Initializes <see cref="Dnp3InputAdapter"/>
+       /// </summary>
         public override void Initialize()
         {
             base.Initialize();
@@ -136,6 +141,10 @@ namespace Dnp3Adapters
             }            
         }
 
+        /// <summary>
+        /// Disposes the <see cref="Dnp3InputAdapter"/>
+        /// </summary>
+        /// <param name="disposing"><c>true</c> if disposing</param>
         protected override void Dispose(bool disposing)
         {
             if (this.m_active)
@@ -160,12 +169,17 @@ namespace Dnp3Adapters
             }
         }
         
-
+        /// <summary>
+        /// Async connection flag
+        /// </summary>
         protected override bool UseAsyncConnect
         {
             get { return false; }
         }
 
+        /// <summary>
+        /// Connection attempt method
+        /// </summary>
         protected override void AttemptConnection()
         {            
             var tcp = this.m_MasterConfig.client;
@@ -184,6 +198,9 @@ namespace Dnp3Adapters
             this.m_numMeasurementsReceived += measurements.Count;                      
         }        
 
+        /// <summary>
+        /// Disconnect attempt method
+        /// </summary>
         protected override void AttemptDisconnection()
         {
             if (this.m_active)
@@ -193,11 +210,19 @@ namespace Dnp3Adapters
             }
         }
 
+        /// <summary>
+        /// Temporal support flag
+        /// </summary>
         public override bool SupportsTemporalProcessing
         {
             get { return false; }
         }
 
+        /// <summary>
+        /// Short status of adapter
+        /// </summary>
+        /// <param name="maxLength">Maximum length of status message</param>
+        /// <returns>Short status of adapter</returns>
         public override string GetShortStatus(int maxLength)
         {
             return "The adapter has received " + this.m_numMeasurementsReceived + " measurements";

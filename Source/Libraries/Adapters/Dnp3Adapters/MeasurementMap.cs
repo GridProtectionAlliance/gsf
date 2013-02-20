@@ -28,14 +28,26 @@ using System.Collections.Generic;
 
 namespace Dnp3Adapters
 {
+    /// <summary>
+    /// Mapping
+    /// </summary>
     public class Mapping
     {
+        /// <summary>
+        /// Creates a new <see cref="Mapping"/>.
+        /// </summary>
         public Mapping()
         {
             this.tsfId = 0;
             this.dnpIndex = 0;
         }
 
+        /// <summary>
+        /// Creates a new <see cref="Mapping"/> with the specified parameters.
+        /// </summary>
+        /// <param name="id">ID</param>
+        /// <param name="source">Source</param>
+        /// <param name="index">Index</param>
         public Mapping(uint id, String source, UInt32 index)
         {
             this.tsfId = id;
@@ -43,19 +55,50 @@ namespace Dnp3Adapters
             this.dnpIndex = index;
         }
 
+        /// <summary>
+        /// TSF ID
+        /// </summary>
         public uint tsfId;
+
+        /// <summary>
+        /// TSF Source
+        /// </summary>
         public String tsfSource;        
+        
+        /// <summary>
+        /// DNP Index
+        /// </summary>
         public UInt32 dnpIndex;
     }
 
+    /// <summary>
+    /// Measurement Map
+    /// </summary>
     public class MeasurementMap
     {
+        /// <summary>
+        /// Binary Map
+        /// </summary>
         public List<Mapping> binaryMap = new List<Mapping>();
+        
+        /// <summary>
+        /// Analog Map
+        /// </summary>
         public List<Mapping> analogMap = new List<Mapping>();
+        
+        /// <summary>
+        /// Counter Map
+        /// </summary>
         public List<Mapping> counterMap = new List<Mapping>();
+        
+        /// <summary>
+        /// Control Status Map
+        /// </summary>
         public List<Mapping> controlStatusMap = new List<Mapping>();
+        
+        /// <summary>
+        /// Set Point Status Map
+        /// </summary>
         public List<Mapping> setpointStatusMap = new List<Mapping>();
     }
-
-   
 }

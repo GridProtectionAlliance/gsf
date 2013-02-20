@@ -648,7 +648,7 @@ namespace GSF.ServiceBus
         }
 
         /// <summary>
-        /// Saves <see cref="ServiceBusService"/> settings to the config file if the <see cref="TVA.Adapters.Adapter.PersistSettings"/> property is set to true.
+        /// Saves <see cref="ServiceBusService"/> settings to the config file if the <see cref="GSF.Adapters.Adapter.PersistSettings"/> property is set to true.
         /// </summary>
         public override void SaveSettings()
         {
@@ -665,7 +665,7 @@ namespace GSF.ServiceBus
         }
 
         /// <summary>
-        /// Loads saved <see cref="ServiceBusService"/> settings from the config file if the <see cref="TVA.Adapters.Adapter.PersistSettings"/> property is set to true.
+        /// Loads saved <see cref="ServiceBusService"/> settings from the config file if the <see cref="GSF.Adapters.Adapter.PersistSettings"/> property is set to true.
         /// </summary>
         public override void LoadSettings()
         {

@@ -28,6 +28,9 @@ using System;
 
 namespace Dnp3Adapters
 {
+    /// <summary>
+    /// Master Configuration
+    /// </summary>
     public class MasterConfiguration
     {
         /// <summary>
@@ -41,6 +44,9 @@ namespace Dnp3Adapters
         public MasterStackConfig master = new MasterStackConfig();
     }
 
+    /// <summary>
+    /// TCP Client Configuration class.
+    /// </summary>
     public class TcpClientConfig
     {
         /// <summary>

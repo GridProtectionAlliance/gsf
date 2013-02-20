@@ -111,8 +111,6 @@ namespace GSF.TimeSeries.Adapters
         private bool m_autoStart;
         private bool m_processMeasurementFilter;
         private ManualResetEvent m_initializeWaitHandle;
-        private AutoResetEvent[] m_externalEventHandles;
-        private int m_externalEventTimeout;
         private MeasurementKey[] m_inputMeasurementKeys;
         private IMeasurement[] m_outputMeasurements;
         private List<MeasurementKey> m_inputMeasurementKeysHash;
@@ -668,13 +666,6 @@ namespace GSF.TimeSeries.Adapters
                 status.AppendLine();
                 status.AppendFormat("    Total adapter run time: {0}", RunTime.ToString());
                 status.AppendLine();
-                status.AppendFormat("    External event handles: {0}", m_externalEventHandles == null ? "None defined" : m_externalEventHandles.Length + " defined");
-                status.AppendLine();
-                if (m_externalEventHandles != null)
-                {
-                    status.AppendFormat("    External event timeout: {0} milliseconds", m_externalEventTimeout);
-                    status.AppendLine();
-                }
                 status.AppendFormat("       Temporal processing: {0}", SupportsTemporalProcessing ? "Supported" : "Unsupported");
                 status.AppendLine();
                 if (SupportsTemporalProcessing)
@@ -756,42 +747,6 @@ namespace GSF.TimeSeries.Adapters
                 }
 
                 return status.ToString();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets collection of <see cref="AutoResetEvent"/> wait handles used to synchronize activity with external events.
-        /// </summary>
-        /// <remarks>
-        /// Each defined external event in the collection should be acquired via <see cref="GetExternalEventHandle"/>.
-        /// </remarks>
-        protected AutoResetEvent[] ExternalEventHandles
-        {
-            get
-            {
-                return m_externalEventHandles;
-            }
-            set
-            {
-                if (value != null && value.Length > 0)
-                    m_externalEventHandles = value;
-                else
-                    m_externalEventHandles = null;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets maximum to time to wait, in milliseconds, for external events before proceeding.
-        /// </summary>
-        protected int ExternalEventTimeout
-        {
-            get
-            {
-                return m_externalEventTimeout;
-            }
-            set
-            {
-                m_externalEventTimeout = value;
             }
         }
 
@@ -930,24 +885,6 @@ namespace GSF.TimeSeries.Adapters
         void IAdapter.AssignParentCollection(IAdapterCollection parent)
         {
             AssignParentCollection(parent);
-        }
-
-        /// <summary>
-        /// Waits for all external events to fire; no wait will happen if no external events are defined.
-        /// </summary>
-        /// <param name="timeout">Maximum to time to wait, in milliseconds, for external events before proceeding - value defaults to <see cref="ExternalEventTimeout"/>.</param>
-        /// <returns><c>true</c> when every all <see cref="ExternalEventHandles"/> have received a signal or there are no external events defined; otherwise, <c>false</c>.</returns>
-        protected virtual bool WaitForExternalEvents(int timeout = 0)
-        {
-            if (m_externalEventHandles != null)
-            {
-                if (timeout == 0)
-                    timeout = m_externalEventTimeout;
-
-                return WaitHandle.WaitAll(m_externalEventHandles, timeout);
-            }
-
-            return true;
         }
 
         /// <summary>

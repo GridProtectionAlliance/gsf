@@ -176,7 +176,7 @@ namespace TsfManager
         /// <param name="e">Event argument.</param>
         private void ComboboxNode_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            if (ComboboxNode.SelectionBoxItem != "")
+            if (!string.IsNullOrEmpty(ComboboxNode.SelectionBoxItem.ToString()))
                 ((App)Application.Current).NodeID = ((KeyValuePair<Guid, string>)ComboboxNode.SelectionBoxItem).Key;
             else
                 ((App)Application.Current).NodeID = ((KeyValuePair<Guid, string>)ComboboxNode.SelectedItem).Key;

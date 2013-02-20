@@ -230,7 +230,6 @@ namespace GSF.Media
         /// <param name="sampleValue">An <see cref="UInt16"/> value representing the sample value.</param>
         /// <param name="channelMask">A <see cref="Speakers"/> object.</param>
         /// <param name="subFormat">A <see cref="Guid"/> value.</param>
-        [CLSCompliant(false)]
         public WaveFormatExtensible(ushort sampleValue, Speakers channelMask, Guid subFormat)
         {
             m_sampleValue = sampleValue;
@@ -245,7 +244,6 @@ namespace GSF.Media
         /// <summary>
         /// Gets or sets sample value.
         /// </summary>
-        [CLSCompliant(false)]
         public ushort SampleValue
         {
             get

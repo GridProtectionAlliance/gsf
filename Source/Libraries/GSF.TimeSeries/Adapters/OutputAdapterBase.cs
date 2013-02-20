@@ -78,7 +78,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         protected OutputAdapterBase()
         {
-            m_measurementQueue = ProcessQueue<IMeasurement>.CreateRealTimeQueue(StartMeasurementProcessing);
+            m_measurementQueue = ProcessQueue<IMeasurement>.CreateRealTimeQueue(ProcessMeasurements);
             m_measurementQueue.ProcessException += m_measurementQueue_ProcessException;
 
             m_connectionTimer = new System.Timers.Timer();
@@ -284,12 +284,12 @@ namespace GSF.TimeSeries.Adapters
                     if (value <= 0)
                     {
                         // The default processing interval is "as fast as possible"
-                        m_measurementQueue = ProcessQueue<IMeasurement>.CreateRealTimeQueue(StartMeasurementProcessing);
+                        m_measurementQueue = ProcessQueue<IMeasurement>.CreateRealTimeQueue(ProcessMeasurements);
                     }
                     else
                     {
                         // Set the desired processing interval
-                        m_measurementQueue = ProcessQueue<IMeasurement>.CreateSynchronousQueue(StartMeasurementProcessing);
+                        m_measurementQueue = ProcessQueue<IMeasurement>.CreateSynchronousQueue(ProcessMeasurements);
                         m_measurementQueue.ProcessInterval = value;
                     }
 
@@ -608,16 +608,6 @@ namespace GSF.TimeSeries.Adapters
                     IncrementProcessedMeasurements(filteredMeasurements.Count());
                 }
             }
-        }
-
-        // Proxy function to process measurements after waiting for any external events, if needed
-        private void StartMeasurementProcessing(IMeasurement[] measurements)
-        {
-            // Wait for any defined external events
-            WaitForExternalEvents();
-
-            // Call user measurement processing function
-            ProcessMeasurements(measurements);
         }
 
         /// <summary>

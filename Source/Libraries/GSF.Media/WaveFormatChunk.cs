@@ -101,7 +101,6 @@ namespace GSF.Media
         /// <param name="channels">Audio channels for the <see cref="WaveFormatChunk"/>.</param>
         /// <param name="audioFormat">Audio format for the <see cref="WaveFormatChunk"/>.</param>
         /// <exception cref="InvalidDataException">Invalid bit rate specified - wave file bit rates must be a multiple of 8.</exception>
-        [CLSCompliant(false)]
         public WaveFormatChunk(int sampleRate, short bitsPerSample, short channels, ushort audioFormat)
             : base(RiffTypeID)
         {
@@ -197,7 +196,6 @@ namespace GSF.Media
         /// PCM = 1 (i.e., linear quantization), values other than 1 typically indicate some form of compression.
         /// See <see cref="WaveFormat"/> enumeration for more details.
         /// </remarks>
-        [CLSCompliant(false)]
         public ushort AudioFormat
         {
             get

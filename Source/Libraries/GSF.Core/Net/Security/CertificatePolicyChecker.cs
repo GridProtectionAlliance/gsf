@@ -172,7 +172,11 @@ namespace GSF.Net.Security
             return true;
         }
 
-        // Searches the list of trusted certificates for a certificate that matches the given remote certificate.
+        /// <summary>
+        /// Searches the list of trusted certificates for a certificate that matches the given remote certificate. 
+        /// </summary>
+        /// <param name="remoteCertificate">Remote certificate to search for.</param>
+        /// <returns>Trusted X509 certificate, if found; otherwise, <c>null</c>.</returns>
         public X509Certificate GetTrustedCertificate(X509Certificate remoteCertificate)
         {
             byte[] hash = remoteCertificate.GetCertHash();

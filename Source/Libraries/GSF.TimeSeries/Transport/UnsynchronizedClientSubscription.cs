@@ -527,9 +527,6 @@ namespace GSF.TimeSeries.Transport
             int binaryLength;
             int packetSize = 5;
 
-            // Wait for any external events, if needed
-            WaitForExternalEvents();
-
             // If a set of base times has not yet been initialized, initialize a set by rotating
             if (!m_initializedBaseTimeOffsets)
             {

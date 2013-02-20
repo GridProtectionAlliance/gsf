@@ -90,6 +90,7 @@
     <Compile Include="Adapters\NamespaceDoc.cs" />
     <Compile Include="Adapters\OutputAdapterBase.cs" />
     <Compile Include="Adapters\OutputAdapterCollection.cs" />
+    <Compile Include="NativeMethods.cs" />
     <Compile Include="PrecisionInputTimer.cs" />
     <Compile Include="Statistics\GatewayStatistics.cs" />
     <Compile Include="Statistics\PerformanceStatistics.cs" />

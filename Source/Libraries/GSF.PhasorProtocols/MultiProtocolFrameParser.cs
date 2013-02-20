@@ -844,7 +844,6 @@ namespace GSF.PhasorProtocols
             public void Initialize()
             {
                 Dictionary<string, string> settings = m_configurationString.ParseKeyValuePairs();
-                Match endPointMatch;
                 IPStack ipStack;
                 string receiveFromSetting;
 

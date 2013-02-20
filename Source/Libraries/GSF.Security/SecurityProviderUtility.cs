@@ -199,6 +199,7 @@ namespace GSF.Security
         public static string EncryptPassword(string password)
         {
             // We prepend salt text to the password and then has it to make it even more secure.
+            #pragma warning disable 612, 618
             return FormsAuthentication.HashPasswordForStoringInConfigFile(@"O3990\P78f9E66b:a35_V©6M13©6~2&[" + password, "SHA1");
         }
 

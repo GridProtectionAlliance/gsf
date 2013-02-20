@@ -203,7 +203,6 @@ namespace GSF.Media
     /// tapes (DATs). PCM is also a very common format for AIFF and WAV files.
     /// </para>
     /// </remarks>
-    [CLSCompliant(false)]
     public enum WaveFormat : ushort
     {
         /// <summary>Wave format type is undefined.</summary>
@@ -470,7 +469,6 @@ namespace GSF.Media
         /// <param name="channels">Desired data channels.</param>
         /// <param name="audioFormat">Desired audio format.</param>
         /// <remarks>Consumer will need to apply appropriate data compression for non-PCM data formats.</remarks>
-        [CLSCompliant(false)]
         public WaveFile(SampleRate sampleRate, BitsPerSample bitsPerSample, DataChannels channels, WaveFormat audioFormat)
             : this((int)sampleRate, (short)bitsPerSample, (short)channels, (ushort)audioFormat)
         {
@@ -497,7 +495,6 @@ namespace GSF.Media
         /// <remarks>
         /// Consumer will need to apply appropriate data compression for non-PCM data formats.
         /// </remarks>
-        [CLSCompliant(false)]
         public WaveFile(int sampleRate, short bitsPerSample, short channels, ushort audioFormat)
         {
             m_waveHeader = new RiffHeaderChunk("WAVE");
@@ -532,7 +529,6 @@ namespace GSF.Media
         /// PCM = 1 (i.e., linear quantization), values other than 1 typically indicate some form of compression.
         /// See <see cref="WaveFormat"/> enumeration for more details.
         /// </remarks>
-        [CLSCompliant(false)]
         public ushort AudioFormat
         {
             get

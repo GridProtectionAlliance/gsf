@@ -33,6 +33,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
+using DataType = System.ComponentModel.DataAnnotations.DataType;
 
 namespace GSF.TimeSeries.UI.DataModels
 {
@@ -227,10 +228,9 @@ namespace GSF.TimeSeries.UI.DataModels
         /// LoadKeys <see cref="VendorDevice"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="deviceID">ID of the <see cref="Device"/> to filter data.</param>
         /// <param name="sortMember">The field to sort by.</param>
         /// <param name="sortDirection"><c>ASC</c> or <c>DESC</c> for ascending or descending respectively.</param>
-        /// <returns>Collection of <see cref="Phasor"/>.</returns>
+        /// <returns>Collection of vendor device IDs.</returns>
         public static IList<int> LoadKeys(AdoDataConnection database, string sortMember, string sortDirection)
         {
             bool createdConnection = false;

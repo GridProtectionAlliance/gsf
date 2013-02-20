@@ -28,7 +28,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
-using System.Runtime.InteropServices;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
@@ -56,7 +55,7 @@ namespace GSF.TimeSeries
         private bool m_telnetActive;
         private ConsoleColor m_originalBgColor;
         private ConsoleColor m_originalFgColor;
-        private ManualResetEvent m_authenticationWaitHandle;
+        private readonly ManualResetEvent m_authenticationWaitHandle;
 
         #endregion
 
@@ -150,7 +149,7 @@ namespace GSF.TimeSeries
                         }
 
                         if (total > 0)
-                            System.Console.WriteLine(string.Format("Stopped {0} {1} instance{2}.", total, serviceName, total > 1 ? "s" : ""));
+                            System.Console.WriteLine("Stopped {0} {1} instance{2}.", total, serviceName, total > 1 ? "s" : "");
 
                         // Add an extra line for visual separation of process termination status
                         System.Console.WriteLine("");
@@ -292,7 +291,7 @@ namespace GSF.TimeSeries
             {
                 m_remotingClient.Enabled = false;
                 IntPtr hWnd = Process.GetCurrentProcess().MainWindowHandle;
-                PostMessage(hWnd, WM_KEYDOWN, VK_RETURN, 0);
+                NativeMethods.PostMessage(hWnd, WM_KEYDOWN, VK_RETURN, 0);
                 Thread.Sleep(500);
             }
 
@@ -368,18 +367,18 @@ namespace GSF.TimeSeries
                 if (responseSuccess)
                 {
                     if (string.IsNullOrWhiteSpace(message))
-                        System.Console.Write(string.Format("{0} command processed successfully.\r\n\r\n", sourceCommand));
+                        System.Console.Write("{0} command processed successfully.\r\n\r\n", sourceCommand);
                     else
-                        System.Console.Write(string.Format("{0}\r\n\r\n", message));
+                        System.Console.Write("{0}\r\n\r\n", message);
                 }
                 else
                 {
                     System.Console.ForegroundColor = ConsoleColor.Red;
 
                     if (string.IsNullOrWhiteSpace(message))
-                        System.Console.Write(string.Format("{0} failure.\r\n\r\n", sourceCommand));
+                        System.Console.Write("{0} failure.\r\n\r\n", sourceCommand);
                     else
-                        System.Console.Write(string.Format("{0} failure: {1}\r\n\r\n", sourceCommand, message));
+                        System.Console.Write("{0} failure: {1}\r\n\r\n", sourceCommand, message);
 
                     System.Console.ForegroundColor = m_originalFgColor;
                 }
@@ -413,15 +412,6 @@ namespace GSF.TimeSeries
             System.Console.ForegroundColor = m_originalFgColor;
             System.Console.Clear();
         }
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Methods
-
-        [DllImport("User32.Dll", EntryPoint = "PostMessageA")]
-        private static extern bool PostMessage(IntPtr hWnd, uint msg, int wParam, int lParam);
 
         #endregion
     }

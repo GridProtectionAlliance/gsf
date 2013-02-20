@@ -404,7 +404,8 @@ namespace GSF.TimeSeries.UI.DataModels
         /// <summary>
         /// Loads <see cref="Historian"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
-        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>        
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="keys">Keys to load, if any.</param>
         /// <returns>Collection of <see cref="Historian"/>.</returns>
         public static ObservableCollection<Historian> Load(AdoDataConnection database, IList<int> keys)
         {

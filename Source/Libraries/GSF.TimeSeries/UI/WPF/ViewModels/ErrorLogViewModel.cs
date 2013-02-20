@@ -97,6 +97,7 @@ namespace GSF.TimeSeries.UI.ViewModels
 
         #region [ Methods ]
 
+        /// <summary>
         /// Initialization to be done before the initial call to <see cref="Load"/>.
         /// </summary>
         public override void Initialize()

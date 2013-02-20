@@ -55,6 +55,9 @@ namespace GSF.PQDIF.Logical
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets nominal frequency.
+        /// </summary>
         public double NominalFrequency
         {
             get
@@ -104,6 +107,9 @@ namespace GSF.PQDIF.Logical
         /// </summary>
         public static readonly Guid OneChannelSettingTag = new Guid("3d786f9a-f76e-11cf-9d89-0080c72e70a3");
 
+        /// <summary>
+        /// Tag that identifies the nominal frequency.
+        /// </summary>
         public static readonly Guid NominalFrequencyTag = new Guid("0fa118c3-cb4a-11d2-b30b-fe25cb9a1760");
 
         // Static Methods

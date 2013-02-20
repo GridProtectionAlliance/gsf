@@ -37,6 +37,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
+using DataType = System.ComponentModel.DataAnnotations.DataType;
 
 namespace GSF.TimeSeries.UI.DataModels
 {

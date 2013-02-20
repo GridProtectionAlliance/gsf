@@ -72,6 +72,9 @@ namespace GSF.TimeSeries
 
         }
 
+        /// <summary>
+        /// Finalizer for <see cref="BufferBlockMeasurement"/>.
+        /// </summary>
         ~BufferBlockMeasurement()
         {
             ReturnBufferToPool(true);

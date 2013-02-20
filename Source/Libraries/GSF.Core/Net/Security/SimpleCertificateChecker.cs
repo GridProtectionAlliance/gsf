@@ -48,7 +48,7 @@ namespace GSF.Net.Security
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new instance of the <see cref="CertificateCheckerBase"/> class.
+        /// Creates a new instance of the <see cref="SimpleCertificateChecker"/> class.
         /// </summary>
         public SimpleCertificateChecker()
         {
