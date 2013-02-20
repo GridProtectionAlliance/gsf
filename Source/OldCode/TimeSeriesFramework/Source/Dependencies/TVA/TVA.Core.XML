@@ -10006,6 +10006,138 @@
             <param name="header">true, if the delimited text should have header information.</param>
             <returns>A string of delimited text.</returns>
         </member>
+        <member name="T:TVA.Data.DataType">
+            <summary>
+            Data types available to a <see cref="T:System.Data.DataSet"/> object.
+            </summary>
+        </member>
+        <member name="F:TVA.Data.DataType.Boolean">
+            <summary>
+            Boolean data type, <see cref="F:TVA.Data.DataType.Boolean"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Data.DataType.Byte">
+            <summary>
+            Unsigned 8-bit byte data type, <see cref="F:TVA.Data.DataType.Byte"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Data.DataType.Char">
+            <summary>
+            16-bit character data type, <see cref="F:TVA.Data.DataType.Char"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Data.DataType.DateTime">
+            <summary>
+            Date/time data type, <see cref="F:TVA.Data.DataType.DateTime"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Data.DataType.Decimal">
+            <summary>
+            Decimal data type, <see cref="F:TVA.Data.DataType.Decimal"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Data.DataType.Double">
+            <summary>
+            64-dit double precision floating point numeric data type, <see cref="F:TVA.Data.DataType.Double"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Data.DataType.Guid">
+            <summary>
+            Unisgned 128-bit Guid integer data type, <see cref="F:TVA.Data.DataType.Guid"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Data.DataType.Int16">
+            <summary>
+            Signed 16-bit integer data type, <see cref="F:TVA.Data.DataType.Int16"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Data.DataType.Int32">
+            <summary>
+            Signed 32-bit integer data type, <see cref="F:TVA.Data.DataType.Int32"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Data.DataType.Int64">
+            <summary>
+            Signed 64-bit integer data type, <see cref="F:TVA.Data.DataType.Int64"/>
+            </summary>
+        </member>
+        <member name="F:TVA.Data.DataType.SByte">
+            <summary>
+            Signed byte data type, <see cref="F:TVA.Data.DataType.SByte"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Data.DataType.Single">
+            <summary>
+            32-bit single precision floating point numeric data type, <see cref="F:TVA.Data.DataType.Single"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Data.DataType.String">
+            <summary>
+            Character array data type, <see cref="F:TVA.Data.DataType.String"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Data.DataType.TimeSpan">
+            <summary>
+            Timespan data type, <see cref="F:TVA.Data.DataType.TimeSpan"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Data.DataType.UInt16">
+            <summary>
+            Unsigned 16-bit integer data type, <see cref="F:TVA.Data.DataType.UInt16"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Data.DataType.UInt32">
+            <summary>
+            Unsigned 32-bit integer data type, <see cref="F:TVA.Data.DataType.UInt32"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Data.DataType.UInt64">
+            <summary>
+            Unsigned 64-bit integer data type, <see cref="F:TVA.Data.DataType.UInt64"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Data.DataType.Blob">
+            <summary>
+            Unsigned byte array data type.
+            </summary>
+        </member>
+        <member name="F:TVA.Data.DataType.Object">
+            <summary>
+            User defined/other data type.
+            </summary>
+        </member>
+        <member name="T:TVA.Data.DataSetExtensions">
+            <summary>
+            Defines extension functions related to <see cref="T:System.Data.DataSet"/> instances.
+            </summary>
+        </member>
+        <member name="M:TVA.Data.DataSetExtensions.SerializeToStream(System.Data.DataSet,System.IO.Stream)">
+            <summary>
+            Serializes a <see cref="T:System.Data.DataSet"/> to a destination <see cref="T:System.IO.Stream"/>.
+            </summary>
+            <param name="source"><see cref="T:System.Data.DataSet"/> to serialize.</param>
+            <param name="destination"><see cref="T:System.IO.Stream"/> to seralize <see cref="T:System.Data.DataSet"/> on.</param>
+        </member>
+        <member name="M:TVA.Data.DataSetExtensions.DeserializeToDataSet(System.IO.Stream)">
+            <summary>
+            Deserializes a <see cref="T:System.Data.DataSet"/> from a <see cref="T:System.IO.Stream"/>.
+            </summary>
+            <param name="source"><see cref="T:System.IO.Stream"/> to deseralize <see cref="T:System.Data.DataSet"/> from.</param>
+        </member>
+        <member name="M:TVA.Data.DataSetExtensions.GetDataType(System.Type)">
+            <summary>
+            Attempts to derive <see cref="T:TVA.Data.DataType"/> based on object <see cref="T:System.Type"/>.
+            </summary>
+            <param name="objectType"><see cref="T:System.Type"/> of object to test.</param>
+            <returns>Derived <see cref="T:TVA.Data.DataType"/> based on object <see cref="T:System.Type"/> if matched; otherse <see cref="F:TVA.Data.DataType.Object"/>.</returns>
+        </member>
+        <member name="M:TVA.Data.DataSetExtensions.DeriveColumnType(TVA.Data.DataType)">
+            <summary>
+            Gets column object <see cref="T:System.Type"/> from given <see cref="T:TVA.Data.DataType"/>.
+            </summary>
+            <param name="dataType"><see cref="T:TVA.Data.DataType"/> to derive object <see cref="T:System.Type"/> from.</param>
+            <returns>Object <see cref="T:System.Type"/> derived from given <see cref="T:TVA.Data.DataType"/>.</returns>
+        </member>
         <member name="T:TVA.Data.NamespaceDoc">
             <summary>
             Contains extension functions used to simplify and standardize database access.
