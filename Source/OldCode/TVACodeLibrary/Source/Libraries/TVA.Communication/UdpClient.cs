@@ -597,7 +597,12 @@ namespace TVA.Communication
                 base.ReceiveBufferSize = value;
 
                 if ((object)m_udpClient != null)
+                {
                     m_udpClient.SetReceiveBuffer(value);
+
+                    if ((object)m_udpClient.Provider != null)
+                        m_udpClient.Provider.ReceiveBufferSize = value;
+                }
             }
         }
 
@@ -932,6 +937,7 @@ namespace TVA.Communication
                     // Disable SocketError.ConnectionReset exception from being thrown when the enpoint is not listening.
                     m_udpClient.Provider = Transport.CreateSocket(m_connectData["interface"], int.Parse(m_connectData["port"]), ProtocolType.Udp, m_ipStack, m_allowDualStackSocket);
                     m_udpClient.Provider.IOControl(SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
+                    m_udpClient.Provider.ReceiveBufferSize = ReceiveBufferSize;
 
                     // If the IP specified for the server is a multicast IP, subscribe to the specified multicast group.
                     IPEndPoint serverEndpoint = (IPEndPoint)m_udpServer;
@@ -1236,7 +1242,11 @@ namespace TVA.Communication
         private void ReceivePayloadAsync()
         {
             // Set up event args for receive operation.
-            m_receiveArgs.SetBuffer(m_udpClient.ReceiveBuffer, 0, m_udpClient.ReceiveBufferSize);
+            if (m_udpClient.ReceiveBufferSize != m_receiveArgs.Count)
+                m_receiveArgs.SetBuffer(m_udpClient.ReceiveBuffer, 0, m_udpClient.ReceiveBufferSize);
+            else
+                m_receiveArgs.SetBuffer(0, m_udpClient.ReceiveBufferSize);
+
             m_receiveArgs.RemoteEndPoint = m_udpServer;
 
             if (!m_receivePacketInfo)

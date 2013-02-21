@@ -799,6 +799,9 @@ namespace TVA.Communication
                     if (m_tcpClient.Provider == null)
                         m_tcpClient.Provider = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
 
+                    // Set socket receive buffer size; larger buffer size helps prevent buffer overrun
+                    m_tcpClient.Provider.ReceiveBufferSize = ReceiveBufferSize;
+
                     Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
 
                     // Begin asynchronous connect operation and return wait handle for the asynchronous operation
