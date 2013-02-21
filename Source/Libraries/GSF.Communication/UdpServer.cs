@@ -469,6 +469,7 @@ namespace GSF.Communication
                 m_udpServer = new TransportProvider<Socket>();
                 m_udpServer.SetReceiveBuffer(ReceiveBufferSize);
                 m_udpServer.Provider = Transport.CreateSocket(m_configData["interface"], int.Parse(m_configData["port"]), ProtocolType.Udp, m_ipStack, m_allowDualStackSocket);
+                m_udpServer.Provider.ReceiveBufferSize = ReceiveBufferSize;
 
                 // Disable SocketError.ConnectionReset exception from being thrown when the endpoint is not listening
                 m_udpServer.Provider.IOControl(SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);

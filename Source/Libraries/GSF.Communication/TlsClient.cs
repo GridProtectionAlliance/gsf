@@ -776,6 +776,7 @@ namespace GSF.Communication
 
                 LoadTrustedCertificates();
                 m_socket = (Socket)args.UserToken;
+                m_socket.ReceiveBufferSize = ReceiveBufferSize;
                 netStream = new NetworkStream(m_socket, true);
                 m_sslClient.Provider = new SslStream(netStream, false, m_remoteCertificateValidationCallback ?? CertificateChecker.ValidateRemoteCertificate, m_localCertificateSelectionCallback);
 

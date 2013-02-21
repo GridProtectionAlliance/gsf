@@ -799,6 +799,7 @@ namespace GSF.Communication
 
                 // Process the newly connected client.
                 client.Provider = m_acceptArgs.AcceptSocket;
+                client.Provider.ReceiveBufferSize = ReceiveBufferSize;
 
                 // Set up SocketAsyncEventArgs for receive operations.
                 receiveArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();

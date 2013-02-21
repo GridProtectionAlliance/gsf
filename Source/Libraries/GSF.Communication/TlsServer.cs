@@ -818,6 +818,7 @@ namespace GSF.Communication
                     SslStream = new SslStream(netStream, false, m_remoteCertificateValidationCallback ?? CertificateChecker.ValidateRemoteCertificate, m_localCertificateSelectionCallback)
                 };
 
+                client.Provider.Socket.ReceiveBufferSize = ReceiveBufferSize;
                 client.Provider.SslStream.BeginAuthenticateAsServer(m_certificate, m_requireClientCertificate, m_enabledSslProtocols, m_checkCertificateRevocation, ProcessAuthenticate, client);
 
                 // Return to accepting new connections.
