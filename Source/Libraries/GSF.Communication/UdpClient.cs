@@ -175,6 +175,11 @@ namespace GSF.Communication
         public new const int DefaultReceiveBufferSize = 65536;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="MaxPacketSize"/> property.
+        /// </summary>
+        public const int DefaultMaxPacketSize = 65536;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="AllowDualStackSocket"/> property.
         /// </summary>
         public const bool DefaultAllowDualStackSocket = true;
@@ -232,6 +237,7 @@ namespace GSF.Communication
         private TransportProvider<Socket> m_udpClient;
         private IPStack m_ipStack;
         private bool m_allowDualStackSocket;
+        private int m_maxPacketSize;
         private int m_maxSendQueueSize;
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectionHandle;
@@ -272,6 +278,7 @@ namespace GSF.Communication
             : base(TransportProtocol.Udp, connectString)
         {
             base.ReceiveBufferSize = DefaultReceiveBufferSize;
+            m_maxPacketSize = DefaultMaxPacketSize;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_maxSendQueueSize = DefaultMaxSendQueueSize;
 
@@ -370,13 +377,26 @@ namespace GSF.Communication
             {
                 base.ReceiveBufferSize = value;
 
-                if ((object)m_udpClient != null)
-                {
-                    m_udpClient.SetReceiveBuffer(value);
+                if ((object)m_udpClient != null && (object)m_udpClient.Provider != null)
+                    m_udpClient.Provider.ReceiveBufferSize = value;
+            }
+        }
 
-                    if ((object)m_udpClient.Provider != null)
-                        m_udpClient.Provider.ReceiveBufferSize = value;
-                }
+        /// <summary>
+        /// Gets or sets the maximum expected size for packets being received by this <see cref="UdpClient"/>.
+        /// </summary>
+        public int MaxPacketSize
+        {
+            get
+            {
+                return m_maxPacketSize;
+            }
+            set
+            {
+                m_maxPacketSize = value;
+
+                if ((object)m_udpClient != null)
+                    m_udpClient.SetReceiveBuffer(value);
             }
         }
 
@@ -551,7 +571,7 @@ namespace GSF.Communication
             m_connectionHandle = (ManualResetEvent)base.ConnectAsync();
 
             m_udpClient = new TransportProvider<Socket>();
-            m_udpClient.SetReceiveBuffer(ReceiveBufferSize);
+            m_udpClient.SetReceiveBuffer(m_maxPacketSize);
 
             // Create a server endpoint.
             if (m_connectData.ContainsKey("server"))
