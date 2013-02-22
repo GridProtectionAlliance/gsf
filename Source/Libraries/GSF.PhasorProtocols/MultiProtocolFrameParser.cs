@@ -2239,6 +2239,7 @@ namespace GSF.PhasorProtocols
                 // Parse connection string to see if a phasor or transport protocol was assigned
                 Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
                 string setting;
+                int bufferSize;
 
                 if (settings.TryGetValue("phasorProtocol", out setting))
                     PhasorProtocol = (PhasorProtocol)Enum.Parse(typeof(PhasorProtocol), setting, true);
@@ -2248,6 +2249,9 @@ namespace GSF.PhasorProtocols
 
                 if (settings.TryGetValue("keepCommandChannelOpen", out setting))
                     m_keepCommandChannelOpen = setting.ParseBoolean();
+
+                if (settings.TryGetValue("bufferSize", out setting) && int.TryParse(setting, out bufferSize) && bufferSize >= 1)
+                    BufferSize = bufferSize;
 
                 m_deviceSupportsCommands = DeriveCommandSupport();
             }
