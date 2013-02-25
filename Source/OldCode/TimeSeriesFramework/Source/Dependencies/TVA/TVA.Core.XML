@@ -11301,6 +11301,18 @@
             <param name="value">The number to convert.</param>
             <returns>An array of bytes with length 16.</returns>
         </member>
+        <member name="M:TVA.EndianOrder.CopyBytes``1(``0,System.Byte[],System.Int32)">
+            <summary>
+            Copies the specified primitive type value as an array of bytes in the target endian-order to the destination array.
+            </summary>
+            <param name="value">The <see cref="T:System.Boolean"/> value to convert and copy.</param>
+            <param name="destinationArray">The destination buffer.</param>
+            <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            <typeparam name="T">Native value type to get bytes for.</typeparam>
+            <exception cref="T:System.ArgumentException"><paramref name="value"/> type is not primitive.</exception>
+            <exception cref="T:System.InvalidOperationException">Cannot get bytes for <paramref name="value"/> type.</exception>
+            <returns>Length of bytes copied into array based on size of <typeparamref name="T"/>.</returns>
+        </member>
         <member name="M:TVA.EndianOrder.CopyBytes(System.Boolean,System.Byte[],System.Int32)">
             <summary>
             Copies the specified <see cref="T:System.Boolean"/> value as an array of 1 byte in the target endian-order to the destination array.
@@ -11308,6 +11320,7 @@
             <param name="value">The <see cref="T:System.Boolean"/> value to convert and copy.</param>
             <param name="destinationArray">The destination buffer.</param>
             <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         </member>
         <member name="M:TVA.EndianOrder.CopyBytes(System.Char,System.Byte[],System.Int32)">
             <summary>
@@ -11316,6 +11329,7 @@
             <param name="value">The Unicode character value to convert and copy.</param>
             <param name="destinationArray">The destination buffer.</param>
             <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         </member>
         <member name="M:TVA.EndianOrder.CopyBytes(System.Double,System.Byte[],System.Int32)">
             <summary>
@@ -11324,6 +11338,7 @@
             <param name="value">The number to convert and copy.</param>
             <param name="destinationArray">The destination buffer.</param>
             <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         </member>
         <member name="M:TVA.EndianOrder.CopyBytes(System.Int16,System.Byte[],System.Int32)">
             <summary>
@@ -11332,6 +11347,7 @@
             <param name="value">The number to convert and copy.</param>
             <param name="destinationArray">The destination buffer.</param>
             <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         </member>
         <member name="M:TVA.EndianOrder.CopyBytes(TVA.Int24,System.Byte[],System.Int32)">
             <summary>
@@ -11340,6 +11356,7 @@
             <param name="value">The number to convert and copy.</param>
             <param name="destinationArray">The destination buffer.</param>
             <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         </member>
         <member name="M:TVA.EndianOrder.CopyBytes(System.Int32,System.Byte[],System.Int32)">
             <summary>
@@ -11348,6 +11365,7 @@
             <param name="value">The number to convert and copy.</param>
             <param name="destinationArray">The destination buffer.</param>
             <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         </member>
         <member name="M:TVA.EndianOrder.CopyBytes(System.Int64,System.Byte[],System.Int32)">
             <summary>
@@ -11356,6 +11374,7 @@
             <param name="value">The number to convert and copy.</param>
             <param name="destinationArray">The destination buffer.</param>
             <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         </member>
         <member name="M:TVA.EndianOrder.CopyBytes(System.Single,System.Byte[],System.Int32)">
             <summary>
@@ -11364,6 +11383,7 @@
             <param name="value">The number to convert and copy.</param>
             <param name="destinationArray">The destination buffer.</param>
             <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         </member>
         <member name="M:TVA.EndianOrder.CopyBytes(System.UInt16,System.Byte[],System.Int32)">
             <summary>
@@ -11372,6 +11392,7 @@
             <param name="value">The number to convert and copy.</param>
             <param name="destinationArray">The destination buffer.</param>
             <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         </member>
         <member name="M:TVA.EndianOrder.CopyBytes(TVA.UInt24,System.Byte[],System.Int32)">
             <summary>
@@ -11380,6 +11401,7 @@
             <param name="value">The number to convert and copy.</param>
             <param name="destinationArray">The destination buffer.</param>
             <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         </member>
         <member name="M:TVA.EndianOrder.CopyBytes(System.UInt32,System.Byte[],System.Int32)">
             <summary>
@@ -11388,6 +11410,7 @@
             <param name="value">The number to convert and copy.</param>
             <param name="destinationArray">The destination buffer.</param>
             <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         </member>
         <member name="M:TVA.EndianOrder.CopyBytes(System.UInt64,System.Byte[],System.Int32)">
             <summary>
@@ -11396,6 +11419,7 @@
             <param name="value">The number to convert and copy.</param>
             <param name="destinationArray">The destination buffer.</param>
             <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         </member>
         <member name="M:TVA.EndianOrder.CopyBytes(System.Guid,System.Byte[],System.Int32)">
             <summary>
@@ -11404,6 +11428,7 @@
             <param name="value">The <see cref="T:System.Guid"/> to convert and copy.</param>
             <param name="destinationArray">The destination buffer.</param>
             <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         </member>
         <member name="F:TVA.EndianOrder.BigEndian">
             <summary>Default instance of the Big-Endian byte order conversion class.</summary>
