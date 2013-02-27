@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  07/25/2011 - J. Ritchie Carroll
 //       Added code to handle connect on demand adapters (i.e., where AutoStart = false).
+//  02/11/2013 - Stephen C. Wills
+//       Added code to handle queue and notify for adapter synchronization.
 //
 //******************************************************************************************************
 
@@ -1022,7 +1024,7 @@ namespace TimeSeriesFramework.Adapters
                     continue;
 
                 // Attempt to find the notified measurement in the queue
-                dependencyMeasurement = dependencyMeasurements.FirstOrDefault(depMeasurement => depMeasurement.Measurement.GetHashCode() == processedMeasurement.GetHashCode());
+                dependencyMeasurement = dependencyMeasurements.FirstOrDefault(depMeasurement => (object)depMeasurement.Measurement == (object)processedMeasurement);
 
                 if ((object)dependencyMeasurement == null)
                     continue;
@@ -1068,7 +1070,7 @@ namespace TimeSeriesFramework.Adapters
                 foreach (Queue<DependencyMeasurement> measurementQueue in pair.Value.Values)
                 {
                     // Determine the number of measurements in this queue which have timed out
-                    timedOutMeasurements = measurementQueue.TakeWhile(depMeasurement => (now - depMeasurement.Measurement.Timestamp).ToMilliseconds() > adapter.DependencyTimeout).Count();
+                    timedOutMeasurements = measurementQueue.TakeWhile(depMeasurement => (now - depMeasurement.Measurement.Timestamp) > adapter.DependencyTimeout).Count();
 
                     // If there are any measurements that have timed out, get the collection
                     // of notified measurements for that adapter so we can put them in it
