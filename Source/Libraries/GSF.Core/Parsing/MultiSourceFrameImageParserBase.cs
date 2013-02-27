@@ -378,16 +378,19 @@ namespace GSF.Parsing
 
             try
             {
-                // Get an identifiable buffer object
-                identifiableBuffer = ReusableObjectPool<SourceIdentifiableBuffer>.Default.TakeObject();
-                identifiableBuffer.Source = source;
-                identifiableBuffer.Count = count;
+                if (count > 0)
+                {
+                    // Get an identifiable buffer object
+                    identifiableBuffer = ReusableObjectPool<SourceIdentifiableBuffer>.Default.TakeObject();
+                    identifiableBuffer.Source = source;
+                    identifiableBuffer.Count = count;
 
-                // Copy buffer data for processing (destination buffer preallocated from buffer pool)
-                Buffer.BlockCopy(buffer, offset, identifiableBuffer.Buffer, 0, count);
+                    // Copy buffer data for processing (destination buffer preallocated from buffer pool)
+                    Buffer.BlockCopy(buffer, offset, identifiableBuffer.Buffer, 0, count);
 
-                // Add buffer to the queue for parsing
-                m_bufferQueue.Add(identifiableBuffer);
+                    // Add buffer to the queue for parsing
+                    m_bufferQueue.Add(identifiableBuffer);
+                }
             }
             catch
             {
