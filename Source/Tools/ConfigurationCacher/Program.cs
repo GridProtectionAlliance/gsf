@@ -377,8 +377,7 @@ namespace ConfigurationCacher
                     // Cache binary serialized version of data set
                     using (FileStream configurationFileStream = File.OpenWrite(s_cachedBinaryConfigurationFile))
                     {
-                        Stream configurationStream = configurationFileStream;
-                        Serialization.Serialize(configuration, GSF.SerializationFormat.Binary, ref configurationStream);
+                        configuration.SerializeToStream(configurationFileStream);
                     }
 
                     DisplayStatusMessage("Successfully cached current configuration to binary.", UpdateType.Information);
