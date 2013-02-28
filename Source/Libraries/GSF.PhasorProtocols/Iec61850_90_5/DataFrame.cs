@@ -27,10 +27,11 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization;
+using System.Security.Cryptography;
 using GSF.IO;
 using GSF.Parsing;
-using GSF;
 
 namespace GSF.PhasorProtocols.Iec61850_90_5
 {
@@ -72,14 +73,16 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         // Fields
         private CommonFrameHeader m_frameHeader;
         private string m_msvID;
-        private string m_dataSet;
+        private int m_asduCount;
+        private byte[][] m_asduImages;
+        private byte[] m_binaryImage;
         private ushort m_sampleCount;
         private uint m_configurationRevision;
         private byte m_sampleSynchronization;
         private ushort m_sampleRate;
         private ushort m_idCode;
         private string m_stationName;
-        private ConfigurationFrame m_configuration;
+        private ConfigurationFrame m_configurationFrame;
 
         #endregion
 
@@ -102,15 +105,20 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         /// </summary>
         /// <param name="timestamp">The exact timestamp, in <see cref="Ticks"/>, of the data represented by this <see cref="DataFrame"/>.</param>
         /// <param name="configurationFrame">The <see cref="ConfigurationFrame"/> associated with this <see cref="DataFrame"/>.</param>
+        /// <param name="msvID">MSVID to use for <see cref="DataFrame"/>.</param>
+        /// <param name="asduCount">ASDU count.</param>
+        /// <param name="asduImages">Concentrator's ASDU image cache.</param>
+        /// <param name="configurationRevision">Configuration revision.</param>
         /// <remarks>
         /// This constructor is used by a consumer to generate an IEC 61850-90-5 data frame.
         /// </remarks>
-        public DataFrame(Ticks timestamp, ConfigurationFrame configurationFrame)
+        public DataFrame(Ticks timestamp, ConfigurationFrame configurationFrame, string msvID, int asduCount, byte[][] asduImages, uint configurationRevision)
             : base(new DataCellCollection(), timestamp, configurationFrame)
         {
-            // Pass timebase along to DataFrame's common header
-            if (configurationFrame != null)
-                CommonHeader.Timebase = configurationFrame.Timebase;
+            m_msvID = msvID;
+            m_asduCount = asduCount;
+            m_asduImages = asduImages;
+            m_configurationRevision = configurationRevision;
         }
 
         /// <summary>
@@ -124,7 +132,6 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
             // Deserialize data frame
             m_frameHeader = (CommonFrameHeader)info.GetValue("frameHeader", typeof(CommonFrameHeader));
             m_msvID = info.GetString("msvID");
-            m_dataSet = info.GetString("dataSet");
             m_sampleCount = info.GetUInt16("sampleCount");
             m_configurationRevision = info.GetUInt32("configurationRevision");
             SampleSynchronization = info.GetByte("sampleSynchronization");
@@ -208,6 +215,21 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         }
 
         /// <summary>
+        /// Gets or sets sample count for the <see cref="DataFrame"/>.
+        /// </summary>
+        public ushort SampleCount
+        {
+            get
+            {
+                return m_sampleCount;
+            }
+            set
+            {
+                m_sampleCount = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets current <see cref="CommonFrameHeader"/>.
         /// </summary>
         public CommonFrameHeader CommonHeader
@@ -216,8 +238,13 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
             {
                 // Make sure frame header exists - using base class timestamp to
                 // prevent recursion (m_frameHeader doesn't exist yet)
-                if (m_frameHeader == null)
-                    m_frameHeader = new CommonFrameHeader(TypeID, base.IDCode, base.Timestamp);
+                if ((object)m_frameHeader == null)
+                {
+                    m_frameHeader = new CommonFrameHeader(TypeID, base.IDCode, base.Timestamp, m_msvID, m_asduCount, m_configurationRevision)
+                    {
+                        ConfigurationFrame = ConfigurationFrame
+                    };
+                }
 
                 return m_frameHeader;
             }
@@ -229,6 +256,10 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
                 {
                     State = m_frameHeader.State as IDataFrameParsingState;
                     base.Timestamp = m_frameHeader.Timestamp;
+
+                    // Reference header MSVID in data frame if it's defined
+                    if ((object)m_frameHeader.MsvID != null)
+                        m_msvID = m_frameHeader.MsvID;
                 }
             }
         }
@@ -257,23 +288,110 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
             }
         }
 
-        // IEC 61850-90-5 implementation currently only supports a read-only mode.
-        ///// <summary>
-        ///// Gets the binary header image of the <see cref="DataFrame"/> object.
-        ///// </summary>
-        //protected override byte[] HeaderImage
-        //{
-        //    get
-        //    {
-        //        // Make sure to provide proper frame length for use in the common header image
-        //        unchecked
-        //        {
-        //            CommonHeader.FrameLength = (ushort)BinaryLength;
-        //        }
+        /// <summary>
+        /// Gets the binary header image of the <see cref="DataFrame"/> object.
+        /// </summary>
+        protected override byte[] HeaderImage
+        {
+            get
+            {
+                return CommonHeader.BinaryImage;
+            }
+        }
 
-        //        return CommonHeader.BinaryImage;
-        //    }
-        //}
+        /// <summary>
+        /// Gets the length of the <see cref="BinaryImage"/>.
+        /// </summary>
+        public override int BinaryLength
+        {
+            get
+            {
+                if ((object)m_binaryImage == null)
+                {
+                    // If parsing instead of publishing, we just return parsed frame length
+                    if ((object)m_asduImages == null)
+                        return CommonHeader.FrameLength;
+
+                    m_binaryImage = GenerateBinaryImage();
+                }
+
+                if ((object)m_binaryImage != null)
+                    return m_binaryImage.Length;
+
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// Gets the binary image of this <see cref="DataFrame"/> object.
+        /// </summary>
+        public override byte[] BinaryImage
+        {
+            get
+            {
+                return m_binaryImage;
+            }
+        }
+
+        /// <summary>
+        /// Gets the length of the <see cref="FooterImage"/>.
+        /// </summary>
+        protected override int FooterLength
+        {
+            get
+            {
+                if (CommonHeader.SecurityAlgorithm != SecurityAlgorithm.None)
+                    return 64;
+
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// Gets the binary footer image of the <see cref="DataFrame"/> object.
+        /// </summary>
+        protected override byte[] FooterImage
+        {
+            get
+            {
+                int length = FooterLength;
+
+                if (length > 0)
+                {
+                    SignatureAlgorithm algorithm = CommonHeader.SignatureAlgorithm;
+                    byte[] buffer = new byte[length];
+
+                    // Set signature tag
+                    buffer[0] = 0x85;
+
+                    // KeyID in common header is tehcnically a lookup into derived rotating keys, but all implementations are using dummy key for now
+                    HMAC hmac = (byte)algorithm <= (byte)SignatureAlgorithm.Sha256 ? (HMAC)(new CommonFrameHeader.ShaHmac(Common.DummyKey)) : (HMAC)(new CommonFrameHeader.AesHmac(Common.DummyKey));
+
+                    switch (algorithm)
+                    {
+                        case SignatureAlgorithm.None:
+                            break;
+                        case SignatureAlgorithm.Aes64:
+                            Buffer.BlockCopy(hmac.ComputeHash(BodyImage, 0, BodyLength).BlockCopy(0, 8), 0, buffer, 1, 8);
+                            break;
+                        case SignatureAlgorithm.Sha80:
+                            Buffer.BlockCopy(hmac.ComputeHash(BodyImage, 0, BodyLength).BlockCopy(0, 10), 0, buffer, 1, 10);
+                            break;
+                        case SignatureAlgorithm.Sha128:
+                        case SignatureAlgorithm.Aes128:
+                            Buffer.BlockCopy(hmac.ComputeHash(BodyImage, 0, BodyLength).BlockCopy(0, 16), 0, buffer, 1, 16);
+                            break;
+                        case SignatureAlgorithm.Sha256:
+                            Buffer.BlockCopy(hmac.ComputeHash(BodyImage, 0, BodyLength).BlockCopy(0, 32), 0, buffer, 1, 32);
+                            break;
+                        default:
+                            throw new NotSupportedException(string.Format("IEC 61850-90-5 signature algorithm \"{0}\" is not currently supported: ", algorithm));
+                    }
+                }
+
+                return null;
+            }
+        }
 
         /// <summary>
         /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="DataFrame"/> object.
@@ -285,8 +403,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
                 CommonHeader.AppendHeaderAttributes(baseAttributes);
-                baseAttributes.Add("MSVID", m_msvID);
-                baseAttributes.Add("Dataset", m_dataSet);
+                baseAttributes.Add("MSVID", m_msvID.ToNonNullString());
                 baseAttributes.Add("Sample Count", m_sampleCount.ToString());
                 baseAttributes.Add("Configuration Revision", m_configurationRevision.ToString());
                 baseAttributes.Add("Sample Synchronization", SampleSynchronization + ": " + (SampleSynchronization == 0 ? "Not Synchronized" : "Synchronized"));
@@ -299,6 +416,116 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         #endregion
 
         #region [ Methods ]
+
+        // Does the work of generating binary image - this is a separate function since
+        // the binary length cannot be calculated in advance due variable tag lengths
+        private byte[] GenerateBinaryImage()
+        {
+            CommonFrameHeader header = CommonHeader;
+            ConfigurationFrame configurationFrame = ConfigurationFrame;
+            byte[] asduImage = null;
+            int index = 0;
+
+            try
+            {
+                // Get a buffer with extra room for variable length tags to hold new image 
+                asduImage = BufferPool.TakeBuffer(100 + configurationFrame.GetCalculatedSampleLength() + m_msvID.Length);
+
+                //
+                // Generate current ASDU image
+                //
+
+                // Encode place holder for ASDU sequence tag
+                ushort asduSequence = (ushort)(header.AsduLength - 8);
+                asduSequence.EncodeTagLength(SampledValueTag.AsduSequence, asduImage, ref index);
+
+                // Encode MSVID value
+                m_msvID.EncodeTagValue(SampledValueTag.MsvID, asduImage, ref index);
+
+                // Encode sample count
+                m_sampleCount.EncodeTagValue(SampledValueTag.SmpCnt, asduImage, ref index);
+
+                // Encode configuration revision
+                m_configurationRevision.EncodeTagValue(SampledValueTag.ConfRev, asduImage, ref index);
+
+                // Encode timestamp
+                ulong timestamp = Word.MakeQword(header.SecondOfCentury, (uint)(header.FractionOfSecond | (int)header.TimeQualityFlags));
+                timestamp.EncodeTagValue(SampledValueTag.RefrTm, asduImage, ref index);
+
+                // Defaulting sample synchronization state to true - not sure what value this has
+                m_sampleSynchronization = 0x01;
+                m_sampleSynchronization.EncodeTagValue(SampledValueTag.SmpSynch, asduImage, ref index);
+
+                // Can optionally encode sample rate here - seems like a waste of space so we skip this
+                //m_sampleRate.EncodeTagValue(SampledValueTag.SmpRate, bodyImage, ref index);
+
+                // Encode sample length
+                ushort sampleLength = (ushort)configurationFrame.GetCalculatedSampleLength();
+                sampleLength.EncodeTagLength(SampledValueTag.Samples, asduImage, ref index);
+
+                // Copy in base image
+                Cells.BinaryImage().CopyImage(asduImage, ref index, sampleLength);
+
+                // Update actual ASDU length in header for proper tag size encoding
+                header.AsduLength = (ushort)index;
+
+                // Encode actual ASDU sequence length - wireshark uses this value to locate ASDU data
+                index = 0;
+                asduSequence = (ushort)(header.AsduLength - 4);
+                asduSequence.EncodeTagLength(SampledValueTag.AsduSequence, asduImage, ref index);
+
+                // Next two tags, sample mod and UTC timestamp, are optional so we skip them to conserve bandwidth
+
+                //
+                // Manage ASDU image queue
+                //
+
+                // Cascade old ASDU images up one in buffer (newest last)
+                for (int i = 0; i < m_asduCount - 1; i++)
+                {
+                    m_asduImages[i] = m_asduImages[i + 1];
+                }
+
+                // Cache current ASDU image into image cache
+                m_asduImages[m_asduCount - 1] = asduImage.BlockCopy(0, header.AsduLength);
+
+                // Make sure ASDU image buffers are initialized (first time through they will all be null)
+                for (int i = 0; i < m_asduCount - 1; i++)
+                {
+                    if ((object)m_asduImages[i] == null)
+                        m_asduImages[i] = m_asduImages[m_asduCount - 1];
+                }
+            }
+            finally
+            {
+                if ((object)asduImage != null)
+                    BufferPool.ReturnBuffer(asduImage);
+            }
+
+            //
+            // Create combined ASDU primary buffer image
+            //
+
+            // Reset index for use in primary buffer
+            index = 0;
+
+            // Generate header image
+            byte[] headerImage = header.BinaryImage;
+
+            // Create a buffer large enough to hold combined ASDU images plus header
+            byte[] buffer = new byte[headerImage.Length + m_asduImages.Sum(image => image.Length)];
+
+            // Copy in common header
+            headerImage.CopyImage(buffer, ref index, header.Length);
+
+            // Publish each ASDU image in outgoing frame (e.g, DataCell(t-2), DataCell(t-1), DataCell(t))
+            for (int i = 0; i < m_asduCount; i++)
+            {
+                m_asduImages[i].CopyImage(buffer, ref index, m_asduImages[i].Length);
+            }
+
+            return buffer;
+        }
 
         /// <summary>
         /// Parses the binary image.
@@ -326,7 +553,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
             index += header.Length;
 
             // Get reference to configuration frame, if available
-            m_configuration = ConfigurationFrame;
+            m_configurationFrame = ConfigurationFrame;
 
             // Parse each ASDU in incoming frame (e.g, DataCell(t-2), DataCell(t-1), DataCell(t))
             for (int i = 0; i < header.AsduCount; i++)
@@ -339,7 +566,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
                         // Create a new data frame to hold redundant ASDU data
                         DataFrame dataFrame = new DataFrame
                         {
-                            ConfigurationFrame = m_configuration,
+                            ConfigurationFrame = m_configurationFrame,
                             CommonHeader = header
                         };
 
@@ -396,10 +623,10 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
                 //// Parse dataset name
                 //m_dataSet = buffer.ParseStringTag(SampledValueTag.Dataset, ref index);
 
-                // Parse sample count (for some reason this is coming in as 3 bytes)
+                // Parse sample count
                 m_sampleCount = buffer.ParseUInt16Tag(SampledValueTag.SmpCnt, ref index);
 
-                // Parse configuration revision (for some reason this is coming in as 5 bytes)
+                // Parse configuration revision
                 m_configurationRevision = buffer.ParseUInt32Tag(SampledValueTag.ConfRev, ref index);
 
                 // Parse refresh time
@@ -407,7 +634,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
                     throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[startIndex].ToString("X").PadLeft(2, '0'));
 
                 index++;
-                tagLength = buffer.GetTagLength(ref index);
+                tagLength = buffer.ParseTagLength(ref index);
 
                 if (tagLength < 8)
                     throw new InvalidOperationException(string.Format("Unexpected length for \"{0}\" tag: {1}", SampledValueTag.RefrTm, tagLength));
@@ -420,7 +647,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
                 long timestamp = (new UnixTimeTag((double)secondOfCentury)).ToDateTime().Ticks;
 
                 // Add fraction seconds of timestamp
-                decimal fractionalSeconds = (fractionOfSecond & ~Common.TimeQualityFlagsMask) / (decimal)Common.Timebase;
+                decimal fractionalSeconds = (fractionOfSecond & ~Common.TimeQualityFlagsMask) / (decimal)header.Timebase;
                 timestamp += (long)(fractionalSeconds * (decimal)Ticks.PerSecond);
 
                 // Apply parsed timestamp to common header
@@ -439,21 +666,21 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
                     throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[startIndex].ToString("X").PadLeft(2, '0'));
 
                 index++;
-                tagLength = buffer.GetTagLength(ref index);
+                tagLength = buffer.ParseTagLength(ref index);
 
                 // Attempt to derive a configuration if none is defined
-                if ((object)m_configuration == null)
+                if ((object)m_configurationFrame == null)
                 {
                     // If requested, attempt to load configuration from an associated ETR file
                     if (header.UseETRConfiguration)
                         ParseETRConfiguration();
 
                     // If we still have no configuration, see if a "guess" is requested
-                    if ((object)m_configuration == null && header.GuessConfiguration)
+                    if ((object)m_configurationFrame == null && header.GuessConfiguration)
                         GuessAtConfiguration(tagLength);
                 }
 
-                if ((object)m_configuration == null)
+                if ((object)m_configurationFrame == null)
                 {
                     // If the configuration is still unavailable, skip past sample values - don't know the details otherwise
                     index += tagLength;
@@ -469,7 +696,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
                     else
                     {
                         // Validate that sample size matches current configuration
-                        if (tagLength != m_configuration.GetCalculatedSampleLength())
+                        if (tagLength != m_configurationFrame.GetCalculatedSampleLength())
                             throw new InvalidOperationException("Configuration does match data sample size - cannot parse data");
 
                         // Parse standard synchrophasor sequence
@@ -622,7 +849,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
             }
         }
 
-        // Complex function used to read next signal type and lable from the ETR file...
+        // Complex function used to read next signal type and label from the ETR file...
         // Note that current parsing depends on sample tag name format defined in the IEC 61850-90-5 implementation agreement
         private bool ParseNextSampleDefinition(StreamReader reader, out SignalType signalType, out string label, out bool endOfFile)
         {
@@ -837,7 +1064,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         private void PublishNewConfigurationFrame(ConfigurationFrame configFrame)
         {
             // Cache new configuration
-            m_configuration = configFrame;
+            m_configurationFrame = configFrame;
 
             // Cache new associated configuration frame
             ConfigurationFrame = configFrame;
@@ -904,7 +1131,6 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
             // Serialize data frame
             info.AddValue("frameHeader", m_frameHeader, typeof(CommonFrameHeader));
             info.AddValue("msvID", m_msvID);
-            info.AddValue("dataSet", m_dataSet);
             info.AddValue("sampleCount", m_sampleCount);
             info.AddValue("configurationRevision", m_configurationRevision);
             info.AddValue("sampleSynchronization", SampleSynchronization);

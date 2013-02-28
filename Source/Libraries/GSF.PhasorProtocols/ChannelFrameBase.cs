@@ -429,7 +429,11 @@ namespace GSF.PhasorProtocols
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Total Cells", Cells.Count.ToString());
+                if ((object)Cells == null)
+                    baseAttributes.Add("Total Cells", "null");
+                else
+                    baseAttributes.Add("Total Cells", Cells.Count.ToString());
+
                 baseAttributes.Add("Fundamental Frame Type", (int)FrameType + ": " + FrameType);
                 baseAttributes.Add("ID Code", IDCode.ToString());
                 baseAttributes.Add("Published", Published.ToString());

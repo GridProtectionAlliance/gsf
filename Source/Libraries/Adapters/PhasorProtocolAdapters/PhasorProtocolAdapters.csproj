@@ -51,6 +51,7 @@
     <Compile Include="Common.cs" />
     <Compile Include="CommonPhasorServices.cs" />
     <Compile Include="ConfigurationErrorFrame.cs" />
+    <Compile Include="Iec61850_90_5\Concentrator.cs" />
     <Compile Include="IeeeC37_118\Concentrator.cs" />
     <Compile Include="PhasorDataConcentratorBase.cs" />
     <Compile Include="PhasorMeasurementMapper.cs" />

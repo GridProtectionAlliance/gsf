@@ -30,7 +30,6 @@ using System.Linq;
 using System.Runtime.Serialization;
 using GSF.IO.Checksums;
 using GSF.Parsing;
-using GSF;
 
 namespace GSF.PhasorProtocols.Iec61850_90_5
 {
@@ -218,7 +217,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
             }
             set
             {
-                m_timebase = (value & ~Common.TimeQualityFlagsMask);
+                m_timebase = value;
                 CommonHeader.Timebase = m_timebase;
             }
         }
@@ -358,7 +357,8 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
             // Skip past header that was already parsed...
             startIndex += CommonFrameHeader.FixedLength;
 
-            m_timebase = EndianOrder.BigEndian.ToUInt32(buffer, startIndex) & ~Common.TimeQualityFlagsMask;
+            m_timebase = EndianOrder.BigEndian.ToUInt32(buffer, startIndex);
+            CommonHeader.Timebase = m_timebase;
             State.CellCount = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 4);
 
             return FixedHeaderLength;

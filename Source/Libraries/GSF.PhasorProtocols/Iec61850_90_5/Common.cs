@@ -24,8 +24,8 @@
 //******************************************************************************************************
 
 using System;
+using System.Runtime.InteropServices;
 using System.Text;
-using GSF;
 
 namespace GSF.PhasorProtocols.Iec61850_90_5
 {
@@ -548,14 +548,14 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         /// </summary>
         /// <param name="buffer">Buffer containing sampled value tag length.</param>
         /// <param name="tag">Sampled value tag to validate.</param>
-        /// <param name="startIndex">Start index of buffer where tag length begins - will be auto-incremented.</param>
-        public static int ValidateTag(this byte[] buffer, SampledValueTag tag, ref int startIndex)
+        /// <param name="index">Start index of buffer where tag length begins - will be auto-incremented.</param>
+        public static int ValidateTag(this byte[] buffer, SampledValueTag tag, ref int index)
         {
-            if ((SampledValueTag)buffer[startIndex] != tag)
-                throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[startIndex].ToString("X").PadLeft(2, '0'));
+            if ((SampledValueTag)buffer[index] != tag)
+                throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[index].ToString("X").PadLeft(2, '0'));
 
-            startIndex++;
-            return buffer.GetTagLength(ref startIndex);
+            index++;
+            return buffer.ParseTagLength(ref index);
         }
 
         /// <summary>
@@ -563,20 +563,20 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         /// </summary>
         /// <param name="buffer">Buffer containing sampled value.</param>
         /// <param name="tag">Sampled value tag to parse.</param>
-        /// <param name="startIndex">Start index of buffer where tag length begins - will be auto-incremented.</param>
-        public static byte ParseByteTag(this byte[] buffer, SampledValueTag tag, ref int startIndex)
+        /// <param name="index">Start index of buffer where tag length begins - will be auto-incremented.</param>
+        public static byte ParseByteTag(this byte[] buffer, SampledValueTag tag, ref int index)
         {
-            if ((SampledValueTag)buffer[startIndex] != tag)
-                throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[startIndex].ToString("X").PadLeft(2, '0'));
+            if ((SampledValueTag)buffer[index] != tag)
+                throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[index].ToString("X").PadLeft(2, '0'));
 
-            startIndex++;
-            int tagLength = buffer.GetTagLength(ref startIndex);
+            index++;
+            int tagLength = buffer.ParseTagLength(ref index);
 
             if (tagLength < 1)
                 throw new InvalidOperationException(string.Format("Unexpected length for \"{0}\" tag: {1}", tag, tagLength));
 
-            byte result = buffer[startIndex];
-            startIndex += tagLength;
+            byte result = buffer[index];
+            index += tagLength;
 
             return result;
         }
@@ -586,20 +586,20 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         /// </summary>
         /// <param name="buffer">Buffer containing sampled value.</param>
         /// <param name="tag">Sampled value tag to parse.</param>
-        /// <param name="startIndex">Start index of buffer where tag length begins - will be auto-incremented.</param>
-        public static ushort ParseUInt16Tag(this byte[] buffer, SampledValueTag tag, ref int startIndex)
+        /// <param name="index">Start index of buffer where tag length begins - will be auto-incremented.</param>
+        public static ushort ParseUInt16Tag(this byte[] buffer, SampledValueTag tag, ref int index)
         {
-            if ((SampledValueTag)buffer[startIndex] != tag)
-                throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[startIndex].ToString("X").PadLeft(2, '0'));
+            if ((SampledValueTag)buffer[index] != tag)
+                throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[index].ToString("X").PadLeft(2, '0'));
 
-            startIndex++;
-            int tagLength = buffer.GetTagLength(ref startIndex);
+            index++;
+            int tagLength = buffer.ParseTagLength(ref index);
 
             if (tagLength < 2)
                 throw new InvalidOperationException(string.Format("Unexpected length for \"{0}\" tag: {1}", tag, tagLength));
 
-            ushort result = EndianOrder.BigEndian.ToUInt16(buffer, startIndex);
-            startIndex += tagLength;
+            ushort result = EndianOrder.BigEndian.ToUInt16(buffer, index);
+            index += tagLength;
 
             return result;
         }
@@ -609,20 +609,20 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         /// </summary>
         /// <param name="buffer">Buffer containing sampled value.</param>
         /// <param name="tag">Sampled value tag to parse.</param>
-        /// <param name="startIndex">Start index of buffer where tag length begins - will be auto-incremented.</param>
-        public static UInt24 ParseUInt24Tag(this byte[] buffer, SampledValueTag tag, ref int startIndex)
+        /// <param name="index">Start index of buffer where tag length begins - will be auto-incremented.</param>
+        public static UInt24 ParseUInt24Tag(this byte[] buffer, SampledValueTag tag, ref int index)
         {
-            if ((SampledValueTag)buffer[startIndex] != tag)
-                throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[startIndex].ToString("X").PadLeft(2, '0'));
+            if ((SampledValueTag)buffer[index] != tag)
+                throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[index].ToString("X").PadLeft(2, '0'));
 
-            startIndex++;
-            int tagLength = buffer.GetTagLength(ref startIndex);
+            index++;
+            int tagLength = buffer.ParseTagLength(ref index);
 
             if (tagLength < 3)
                 throw new InvalidOperationException(string.Format("Unexpected length for \"{0}\" tag: {1}", tag, tagLength));
 
-            UInt24 result = EndianOrder.BigEndian.ToUInt24(buffer, startIndex);
-            startIndex += tagLength;
+            UInt24 result = EndianOrder.BigEndian.ToUInt24(buffer, index);
+            index += tagLength;
 
             return result;
         }
@@ -632,20 +632,20 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         /// </summary>
         /// <param name="buffer">Buffer containing sampled value.</param>
         /// <param name="tag">Sampled value tag to parse.</param>
-        /// <param name="startIndex">Start index of buffer where tag length begins - will be auto-incremented.</param>
-        public static uint ParseUInt32Tag(this byte[] buffer, SampledValueTag tag, ref int startIndex)
+        /// <param name="index">Start index of buffer where tag length begins - will be auto-incremented.</param>
+        public static uint ParseUInt32Tag(this byte[] buffer, SampledValueTag tag, ref int index)
         {
-            if ((SampledValueTag)buffer[startIndex] != tag)
-                throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[startIndex].ToString("X").PadLeft(2, '0'));
+            if ((SampledValueTag)buffer[index] != tag)
+                throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[index].ToString("X").PadLeft(2, '0'));
 
-            startIndex++;
-            int tagLength = buffer.GetTagLength(ref startIndex);
+            index++;
+            int tagLength = buffer.ParseTagLength(ref index);
 
             if (tagLength < 4)
                 throw new InvalidOperationException(string.Format("Unexpected length for \"{0}\" tag: {1}", tag, tagLength));
 
-            uint result = EndianOrder.BigEndian.ToUInt32(buffer, startIndex);
-            startIndex += tagLength;
+            uint result = EndianOrder.BigEndian.ToUInt32(buffer, index);
+            index += tagLength;
 
             return result;
         }
@@ -655,20 +655,20 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         /// </summary>
         /// <param name="buffer">Buffer containing sampled value.</param>
         /// <param name="tag">Sampled value tag to parse.</param>
-        /// <param name="startIndex">Start index of buffer where tag length begins - will be auto-incremented.</param>
-        public static ulong ParseUInt64Tag(this byte[] buffer, SampledValueTag tag, ref int startIndex)
+        /// <param name="index">Start index of buffer where tag length begins - will be auto-incremented.</param>
+        public static ulong ParseUInt64Tag(this byte[] buffer, SampledValueTag tag, ref int index)
         {
-            if ((SampledValueTag)buffer[startIndex] != tag)
-                throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[startIndex].ToString("X").PadLeft(2, '0'));
+            if ((SampledValueTag)buffer[index] != tag)
+                throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[index].ToString("X").PadLeft(2, '0'));
 
-            startIndex++;
-            int tagLength = buffer.GetTagLength(ref startIndex);
+            index++;
+            int tagLength = buffer.ParseTagLength(ref index);
 
             if (tagLength < 8)
                 throw new InvalidOperationException(string.Format("Unexpected length for \"{0}\" tag: {1}", tag, tagLength));
 
-            ulong result = EndianOrder.BigEndian.ToUInt64(buffer, startIndex);
-            startIndex += tagLength;
+            ulong result = EndianOrder.BigEndian.ToUInt64(buffer, index);
+            index += tagLength;
 
             return result;
         }
@@ -678,45 +678,160 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         /// </summary>
         /// <param name="buffer">Buffer containing sampled value.</param>
         /// <param name="tag">Sampled value tag to parse.</param>
-        /// <param name="startIndex">Start index of buffer where tag length begins - will be auto-incremented.</param>
-        public static string ParseStringTag(this byte[] buffer, SampledValueTag tag, ref int startIndex)
+        /// <param name="index">Start index of buffer where tag length begins - will be auto-incremented.</param>
+        public static string ParseStringTag(this byte[] buffer, SampledValueTag tag, ref int index)
         {
-            if ((SampledValueTag)buffer[startIndex] != tag)
-                throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[startIndex].ToString("X").PadLeft(2, '0'));
+            if ((SampledValueTag)buffer[index] != tag)
+                throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[index].ToString("X").PadLeft(2, '0'));
 
-            startIndex++;
-            int tagLength = buffer.GetTagLength(ref startIndex);
+            index++;
+            int tagLength = buffer.ParseTagLength(ref index);
 
-            string result = Encoding.ASCII.GetString(buffer, startIndex, tagLength);
-            startIndex += tagLength;
+            string result = Encoding.ASCII.GetString(buffer, index, tagLength);
+            index += tagLength;
 
             return result;
         }
 
         /// <summary>
-        /// Gets decoded sample value tag length.
+        /// Encodes sampled value tag with only a 16-bit length.
+        /// </summary>
+        /// <param name="length">Value to encode.</param>
+        /// <param name="tag">Sampled value tag to encode.</param>
+        /// <param name="buffer">Buffer to hold encoded sampled value.</param>
+        /// <param name="index">Start index of buffer where tag will begin - will be auto-incremented.</param>
+        public static void EncodeTagLength(this ushort length, SampledValueTag tag, byte[] buffer, ref int index)
+        {
+            buffer[index++] = (byte)tag;
+            buffer[index++] = 0x80 | 2;
+            buffer[index++] = (byte)(length & 0xFF00);
+            buffer[index++] = (byte)(length & 0x00FF);
+        }
+        /// <summary>
+        /// Encodes primitive type sampled value tag.
+        /// </summary>
+        /// <param name="value">Value to encode.</param>
+        /// <param name="tag">Sampled value tag to encode.</param>
+        /// <param name="buffer">Buffer to hold encoded sampled value.</param>
+        /// <param name="index">Start index of buffer where tag will begin - will be auto-incremented.</param>
+        public static void EncodeTagValue<T>(this T value, SampledValueTag tag, byte[] buffer, ref int index) where T : struct, IConvertible
+        {
+            if (!typeof(T).IsPrimitive)
+                throw new ArgumentException("Value type is not primitive", "value");
+
+            // Not sure if booleans would be encoded correctly here (due to Marshal sizeof) - also not sure
+            // how IEC 61850 deals with booleans - as a result, booleans should likely be avoided.
+            // I wonder if compiler is smart enough to exclude this expression in imlementations since this
+            // is always false for non boolean types - where is my WHERE expression like "~bool"...
+            if (typeof(T) == typeof(bool))
+                throw new ArgumentOutOfRangeException("value", "Boolean encoding is currently not supported");
+
+            ushort length = (ushort)Marshal.SizeOf(typeof(T));
+
+            buffer[index++] = (byte)tag;
+            length.EncodeTagLength(buffer, ref index);
+            index += EndianOrder.BigEndian.CopyBytes(value, buffer, index);
+        }
+
+        /// <summary>
+        /// Encodes byte based sampled value tag.
+        /// </summary>
+        /// <param name="value">Value to encode.</param>
+        /// <param name="tag">Sampled value tag to encode.</param>
+        /// <param name="buffer">Buffer to hold encoded sampled value.</param>
+        /// <param name="index">Start index of buffer where tag will begin - will be auto-incremented.</param>
+        public static void EncodeTagValue(this byte value, SampledValueTag tag, byte[] buffer, ref int index)
+        {
+            const ushort length = 1;
+            buffer[index++] = (byte)tag;
+            length.EncodeTagLength(buffer, ref index);
+            buffer[index++] = value;
+        }
+
+        /// <summary>
+        /// Encodes string based sampled value tag.
+        /// </summary>
+        /// <param name="value">String to encode - null string will be encoded as empty string.</param>
+        /// <param name="tag">Sampled value tag to encode.</param>
+        /// <param name="buffer">Buffer to hold encoded sampled value.</param>
+        /// <param name="index">Start index of buffer where tag will begin - will be auto-incremented.</param>
+        public static void EncodeTagValue(this string value, SampledValueTag tag, byte[] buffer, ref int index)
+        {
+            if ((object)value == null)
+                value = "";
+
+            if (value.Length > ushort.MaxValue)
+                throw new ArgumentOutOfRangeException("value", "Current implementation will not encode a string larger than " + ushort.MaxValue);
+
+            ushort length = (ushort)value.Length;
+
+            buffer[index++] = (byte)tag;
+            length.EncodeTagLength(buffer, ref index);
+
+            if (length > 0)
+            {
+                byte[] bytes = Encoding.ASCII.GetBytes(value);
+                Buffer.BlockCopy(bytes, 0, buffer, index, bytes.Length);
+                index += bytes.Length;
+            }
+        }
+
+        /// <summary>
+        /// Gets decoded sample value tag length (currently limited to 16-bits).
         /// </summary>
         /// <param name="buffer">Buffer containing sampled value tag length.</param>
-        /// <param name="startIndex">Start index of buffer where tag length begins - will be auto-incremented.</param>
+        /// <param name="index">Start index of buffer where tag length begins - will be auto-incremented.</param>
         /// <returns>Decoded sample value tag length.</returns>
-        public static int GetTagLength(this byte[] buffer, ref int startIndex)
+        public static int ParseTagLength(this byte[] buffer, ref int index)
         {
             // See if high bit is set
-            if ((buffer[startIndex] & (byte)Bits.Bit07) > 0)
+            if ((buffer[index] & (byte)Bits.Bit07) > 0)
             {
-                // Odd attempt at 7-bit encoding? Seems like a waste of bits...
-                switch (buffer[startIndex++] & 0x7F)
+                // Odd attempt at 7-bit encoding? Seems like a waste of bits for the
+                // benefit of allowing variable length encoded 56-bit integers...
+                switch (buffer[index++] & 0x7F)
                 {
                     case 1:
-                        return buffer[startIndex++];
+                        return buffer[index++];
                     case 2:
-                        return ((buffer[startIndex++] & 0xFF) << 8) | (buffer[startIndex++] & 0xFF);
+                        return ((buffer[index++] & 0xFF) << 8) | (buffer[index++] & 0xFF);
                     default:
                         return 0;
                 }
             }
 
-            return buffer[startIndex++];
+            return buffer[index++];
+        }
+
+        /// <summary>
+        /// Encodes sample value tag length (currently limited to 16-bits).
+        /// </summary>
+        /// <param name="length">Sample value tag length.</param>
+        /// <param name="buffer">Buffer to hold encoded sampled value tag length.</param>
+        /// <param name="index">Start index of buffer where tag length encoding begins - will be auto-incremented.</param>
+        public static void EncodeTagLength(this ushort length, byte[] buffer, ref int index)
+        {
+            if (length > 0x7F)
+            {
+                if (length > 0xFF)
+                {
+                    // 16-bit length value
+                    buffer[index++] = 0x80 | 2;
+                    buffer[index++] = (byte)(length & 0xFF00);
+                    buffer[index++] = (byte)(length & 0x00FF);
+                }
+                else
+                {
+                    // 8-bit length value > 127
+                    buffer[index++] = 0x80 | 1;
+                    buffer[index++] = (byte)(length & 0xFF);
+                }
+            }
+            else
+            {
+                // 8-bit length value < 128
+                buffer[index++] = (byte)(length & 0xFF);
+            }
         }
     }
 }

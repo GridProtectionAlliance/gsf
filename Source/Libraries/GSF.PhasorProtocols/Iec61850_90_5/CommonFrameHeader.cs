@@ -28,7 +28,6 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Security.Cryptography;
 using GSF.Parsing;
-using GSF;
 
 namespace GSF.PhasorProtocols.Iec61850_90_5
 {
@@ -41,7 +40,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         #region [ Members ]
 
         /// <summary>Computes a Hash-based Message Authentication Code (HMAC) using the AES hash function.</summary>
-        private class AesHmac : HMAC
+        internal class AesHmac : HMAC
         {
             /// <summary>Initializes a new instance of the AesHmac class with the specified key data.</summary>
             /// <param name="key">The secret key for AesHmac encryption.</param>
@@ -56,7 +55,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         }
 
         /// <summary>Computes a Hash-based Message Authentication Code (HMAC) using the SHA256 hash function.</summary>
-        private class ShaHmac : HMAC
+        internal class ShaHmac : HMAC
         {
             /// <summary>Initializes a new instance of the ShaHmac class with the specified key data.</summary>
             /// <param name="key">The secret key for ShaHmac encryption.</param>
@@ -73,9 +72,14 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         // Constants
 
         /// <summary>
-        /// Total fixed length of <see cref="CommonFrameHeader"/>.
+        /// Total fixed length of <see cref="CommonFrameHeader"/> for IEEE C37.118 frames.
         /// </summary>
         public const ushort FixedLength = 14;
+
+        /// <summary>
+        /// Total fixed length of <see cref="CommonFrameHeader"/> for IEC 61850-90-5 data frames.
+        /// </summary>
+        public const ushort IECFixedLength = 49;
 
         // Fields
         private FrameType m_frameType;
@@ -84,13 +88,17 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         private ushort m_dataLength;
         private ushort m_headerLength;
         private uint m_spduLength;
+        private ushort m_asduLength;
         private int m_asduCount;
+        private uint m_configurationRevision;
         private bool m_simulatedData;
         private ushort m_applicationID;
         private ushort m_payloadSize;
         private ushort m_idCode;
+        private string m_msvID;
         private uint m_packetNumber;
-        private byte[] m_keyID;
+        private uint m_keyID;
+        private ConfigurationFrame m_configurationFrame;
         private SignatureAlgorithm m_signatureAlgorithm;
         private SecurityAlgorithm m_securityAlgorithm;
         private byte[] m_sourceHash;
@@ -117,13 +125,22 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         /// <param name="typeID">The IEC 61850-90-5 specific frame type of this frame.</param>
         /// <param name="idCode">The ID code of this frame.</param>
         /// <param name="timestamp">The timestamp of this frame.</param>
-        public CommonFrameHeader(FrameType typeID, ushort idCode, Ticks timestamp)
+        /// <param name="msvID">MSVID to use for this frame, if any.</param>
+        /// <param name="asduCount">ASDU count.</param>
+        /// <param name="configurationRevision">Configuration revision.</param>
+        public CommonFrameHeader(FrameType typeID, ushort idCode, Ticks timestamp, string msvID = null, int asduCount = 1, uint configurationRevision = 1)
         {
             m_frameType = typeID;
             m_idCode = idCode;
             m_timestamp = timestamp;
             m_version = 1;
             m_timebase = Common.Timebase;
+            m_msvID = msvID;
+            m_asduCount = asduCount;
+            m_configurationRevision = configurationRevision;
+
+            m_securityAlgorithm = Iec61850_90_5.SecurityAlgorithm.None;
+            m_signatureAlgorithm = Iec61850_90_5.SignatureAlgorithm.None;
         }
 
         /// <summary>
@@ -149,8 +166,14 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
             m_ignoreSampleSizeValidationFailures = ignoreSampleSizeValidationFailures;
             m_angleFormat = angleFormat;
 
+            // Get time base from configuration frame if available
+            if (configurationFrame != null)
+                m_timebase = configurationFrame.Timebase;
+            else
+                m_timebase = Common.Timebase;
+
             // See if frame is for a common IEEE C37.118 frame (e.g., for configuration or command)
-            if (buffer[startIndex] == GSF.PhasorProtocols.Common.SyncByte)
+            if (buffer[startIndex] == PhasorProtocols.Common.SyncByte)
             {
                 // Strip out frame type and version information...
                 m_frameType = (FrameType)buffer[startIndex + 1] & ~Iec61850_90_5.FrameType.VersionNumberMask;
@@ -165,13 +188,8 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
                 // Without timebase, the best timestamp you can get is down to the whole second
                 m_timestamp = (new UnixTimeTag((double)secondOfCentury)).ToDateTime().Ticks;
 
-                if (configurationFrame != null)
-                {
-                    // If config frame is available, frames have enough information for subsecond time resolution
-                    m_timebase = configurationFrame.Timebase;
-                    decimal fractionalSeconds = (fractionOfSecond & ~Common.TimeQualityFlagsMask) / (decimal)m_timebase;
-                    m_timestamp += (long)(fractionalSeconds * (decimal)Ticks.PerSecond);
-                }
+                decimal fractionalSeconds = (fractionOfSecond & ~Common.TimeQualityFlagsMask) / (decimal)m_timebase;
+                m_timestamp += (long)(fractionalSeconds * (decimal)Ticks.PerSecond);
 
                 m_timeQualityFlags = fractionOfSecond & Common.TimeQualityFlagsMask;
             }
@@ -227,7 +245,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
                                 m_signatureAlgorithm = (SignatureAlgorithm)buffer[index + 13];
 
                                 // Get current key ID
-                                m_keyID = buffer.BlockCopy(index + 14, Common.KeySize);
+                                m_keyID = EndianOrder.BigEndian.ToUInt32(buffer, index + 14);
 
                                 // Add signature calculation result length to total frame length
                                 switch (m_signatureAlgorithm)
@@ -380,12 +398,12 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
                 m_dataLength = info.GetUInt16("dataLength");
                 m_packetNumber = info.GetUInt32("packetNumber");
                 m_signatureAlgorithm = (SignatureAlgorithm)info.GetValue("signatureAlgorithm", typeof(Iec61850_90_5.SignatureAlgorithm));
-                m_securityAlgorithm = (SecurityAlgorithm)info.GetValue("m_securityAlgorithm", typeof(Iec61850_90_5.SecurityAlgorithm));
+                m_securityAlgorithm = (SecurityAlgorithm)info.GetValue("securityAlgorithm", typeof(Iec61850_90_5.SecurityAlgorithm));
                 m_asduCount = info.GetInt32("adsuCount");
                 m_simulatedData = info.GetBoolean("simulatedData");
                 m_applicationID = info.GetUInt16("applicationID");
                 m_payloadSize = info.GetUInt16("payloadSize");
-                m_keyID = (byte[])info.GetValue("keyID", typeof(byte[]));
+                m_keyID = info.GetUInt32("keyID");
             }
         }
 
@@ -468,15 +486,20 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         {
             get
             {
+                // If it's not an IEC 61850-90-5 data frame, then it's a C37.118 style frame
                 if (m_frameType != Iec61850_90_5.FrameType.DataFrame)
                     return FixedLength;
 
-                return m_headerLength;
+                // If calculated length is available, prefer that
+                if (m_headerLength > 0)
+                    return m_headerLength;
+
+                return IECFixedLength;
             }
         }
 
         /// <summary>
-        /// Gets packet number of this frame.
+        /// Gets or sets packet number of this frame.
         /// </summary>
         public uint PacketNumber
         {
@@ -484,16 +507,69 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
             {
                 return m_packetNumber;
             }
+            set
+            {
+                m_packetNumber = value;
+            }
         }
 
         /// <summary>
-        /// Gets number of ASDUs in this frame.
+        /// Gets or sets number of ASDUs in this frame.
         /// </summary>
         public int AsduCount
         {
             get
             {
                 return m_asduCount;
+            }
+            set
+            {
+                m_asduCount = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets configuration revision;
+        /// </summary>
+        public uint ConfigurationRevision
+        {
+            get
+            {
+                return m_configurationRevision;
+            }
+            set
+            {
+                m_configurationRevision = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets ASDU length in this frame.
+        /// </summary>
+        public ushort AsduLength
+        {
+            get
+            {
+                return m_asduLength;
+            }
+            set
+            {
+                m_asduLength = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets key ID - lookup into table of current keys.
+        /// </summary>
+        public uint KeyID
+        {
+            get
+            {
+                return m_keyID;
+            }
+            set
+            {
+                m_keyID = value;
             }
         }
 
@@ -543,6 +619,17 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
                 {
                     m_dataLength = value;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Gets SPDU length.
+        /// </summary>
+        public uint SpduLength
+        {
+            get
+            {
+                return m_spduLength;
             }
         }
 
@@ -760,6 +847,66 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         }
 
         /// <summary>
+        /// Gets or sets signature algorithm used by IEC61850-90-5 data frames.
+        /// </summary>
+        public SignatureAlgorithm SignatureAlgorithm
+        {
+            get
+            {
+                return m_signatureAlgorithm;
+            }
+            set
+            {
+                m_signatureAlgorithm = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets security algorithm used by IEC61850-90-5 data frames.
+        /// </summary>
+        public SecurityAlgorithm SecurityAlgorithm
+        {
+            get
+            {
+                return m_securityAlgorithm;
+            }
+            set
+            {
+                m_securityAlgorithm = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the MSVID to be used by IEC 61850-90-5 data frames.
+        /// </summary>
+        public string MsvID
+        {
+            get
+            {
+                return m_msvID;
+            }
+            set
+            {
+                m_msvID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets current configuration frame.
+        /// </summary>
+        public ConfigurationFrame ConfigurationFrame
+        {
+            get
+            {
+                return m_configurationFrame;
+            }
+            set
+            {
+                m_configurationFrame = value;
+            }
+        }
+
+        /// <summary>
         /// Gets the fundamental frame type of this frame.
         /// </summary>
         /// <remarks>
@@ -791,14 +938,97 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         {
             get
             {
-                byte[] buffer = new byte[FixedLength];
+                byte[] buffer;
+                int index;
 
-                buffer[0] = GSF.PhasorProtocols.Common.SyncByte;
-                buffer[1] = (byte)((byte)TypeID | Version);
-                EndianOrder.BigEndian.CopyBytes(FrameLength, buffer, 2);
-                EndianOrder.BigEndian.CopyBytes(IDCode, buffer, 4);
-                EndianOrder.BigEndian.CopyBytes(SecondOfCentury, buffer, 6);
-                EndianOrder.BigEndian.CopyBytes(FractionOfSecond | (int)TimeQualityFlags, buffer, 10);
+                if (m_frameType == Iec61850_90_5.FrameType.DataFrame)
+                {
+                    // Add two bytes to header length for CLTP tag encoding
+                    buffer = new byte[IECFixedLength];
+
+                    // Calculate header offsets
+                    ushort seqLen = (ushort)(m_asduLength * m_asduCount);
+                    ushort pduLen = (ushort)(seqLen + 7 + 4);
+
+                    // Calculate payload size
+                    m_payloadSize = (ushort)(pduLen + 4);
+
+                    // Calculate data length (payload length)
+                    m_dataLength = (ushort)(m_payloadSize + 2);
+
+                    // Calculate SPDU size
+                    m_spduLength = (uint)(m_payloadSize + Common.SessionHeaderSize);
+
+                    // Start encoding IEC61850-90-5 data frame header
+                    buffer[0] = 0x01; // LI - Transport Unit Data header len (variable part empty)
+                    buffer[1] = Common.CltpTag;
+                    buffer[2] = (byte)SessionType.SampledValues;
+                    buffer[3] = Common.SessionHeaderSize;
+                    buffer[4] = 0x80;
+                    buffer[5] = 0x16;
+                    index = 6;
+
+                    // Encode SPDU length
+                    index += EndianOrder.BigEndian.CopyBytes(m_spduLength, buffer, index);
+
+                    // Encode SPDU packet number
+                    index += EndianOrder.BigEndian.CopyBytes(m_packetNumber, buffer, index);
+
+                    // Encode SPDU version number (hard coded to version 1)
+                    index += EndianOrder.BigEndian.CopyBytes((ushort)1, buffer, index);
+
+                    // Encode time of current key
+                    UnixTimeTag time = new UnixTimeTag(DateTime.UtcNow.Ticks);
+                    index += EndianOrder.BigEndian.CopyBytes((uint)time.Value, buffer, index);
+
+                    // Encode time to next key (again, TBD once security is actually defined)
+                    index += EndianOrder.BigEndian.CopyBytes((ushort)100, buffer, index);
+
+                    // Encode security algorithm type
+                    buffer[index++] = (byte)m_securityAlgorithm;
+
+                    // Encode signature algorithm type
+                    buffer[index++] = (byte)m_signatureAlgorithm;
+
+                    // Encode current key ID
+                    index += EndianOrder.BigEndian.CopyBytes(m_keyID, buffer, index);
+
+                    // Encode payload length
+                    index += EndianOrder.BigEndian.CopyBytes((uint)m_dataLength, buffer, index);
+
+                    // Encode payload tag for sampled values
+                    buffer[index++] = 0x82;
+
+                    // Encode simulated data bit value
+                    buffer[index++] = (byte)(m_simulatedData ? 0x01 : 0x00);
+
+                    // Encode the application ID
+                    index += EndianOrder.BigEndian.CopyBytes(m_applicationID, buffer, index);
+
+                    // Encode ASDU payload size
+                    index += EndianOrder.BigEndian.CopyBytes(pduLen, buffer, index);
+
+                    // Encode SV PDU tag
+                    m_payloadSize.EncodeTagLength(SampledValueTag.SvPdu, buffer, ref index);
+
+                    // Encode number of ASDUs tag 
+                    ((byte)m_asduCount).EncodeTagValue(SampledValueTag.AsduCount, buffer, ref index);
+
+                    // Encode sequence of ASDU tag
+                    seqLen.EncodeTagLength(SampledValueTag.SequenceOfAsdu, buffer, ref index);
+                }
+                else
+                {
+                    // Handle IEEE C37.118 configuration frames
+                    buffer = new byte[FixedLength];
+
+                    buffer[0] = PhasorProtocols.Common.SyncByte;
+                    buffer[1] = (byte)((byte)TypeID | Version);
+                    EndianOrder.BigEndian.CopyBytes(FrameLength, buffer, 2);
+                    EndianOrder.BigEndian.CopyBytes(IDCode, buffer, 4);
+                    EndianOrder.BigEndian.CopyBytes(SecondOfCentury, buffer, 6);
+                    EndianOrder.BigEndian.CopyBytes(FractionOfSecond | (int)TimeQualityFlags, buffer, 10);
+                }
 
                 return buffer;
             }
@@ -831,7 +1061,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
                 attributes.Add("Leap Second State", "No leap second is currently pending");
 
             attributes.Add("Time Quality Indicator Code", (uint)TimeQualityIndicatorCode + ": " + TimeQualityIndicatorCode);
-            attributes.Add("Time Base", Timebase.ToString());
+            attributes.Add("Time Base", Timebase + (Timebase != Common.Timebase ? " - NON STANDARD" : ""));
 
             if (m_frameType != Iec61850_90_5.FrameType.DataFrame)
             {
@@ -842,18 +1072,30 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
                 attributes.Add("SPDU Length", m_spduLength.ToString());
                 attributes.Add("ASDU Payload Length", m_payloadSize.ToString());
                 attributes.Add("Packet Number", PacketNumber.ToString());
-                attributes.Add("Key ID", ByteEncoding.Hexadecimal.GetString(m_keyID, ' '));
+                attributes.Add("Key ID", m_keyID.ToString("X").PadLeft(8, '0'));
                 attributes.Add("Security Algorithm", (byte)m_securityAlgorithm + ": " + m_securityAlgorithm);
                 attributes.Add("Signature Algorithm", (byte)m_signatureAlgorithm + ": " + m_signatureAlgorithm);
-                attributes.Add("Parsed Signature Hash", ByteEncoding.Hexadecimal.GetString(m_sourceHash, ' '));
-                attributes.Add("Calculated Signature Hash", ByteEncoding.Hexadecimal.GetString(m_calculatedHash, ' '));
+
+                if ((object)m_sourceHash != null && m_sourceHash.Length > 0)
+                    attributes.Add("Parsed Signature Hash", ByteEncoding.Hexadecimal.GetString(m_sourceHash, ' '));
+                else
+                    attributes.Add("Parsed Signature Hash", "null");
+
+                if ((object)m_calculatedHash != null && m_calculatedHash.Length > 0)
+                    attributes.Add("Calculated Signature Hash", ByteEncoding.Hexadecimal.GetString(m_calculatedHash, ' '));
+                else
+                    attributes.Add("Calculated Signature Hash", "null");
+
                 attributes.Add("Ignoring Checksum Validation", IgnoreSignatureValidationFailures.ToString());
                 attributes.Add("Number of ASDUs", m_asduCount.ToString());
+                attributes.Add("ConfigurationRevision", m_configurationRevision.ToString());
                 attributes.Add("Simulated Data", m_simulatedData.ToString());
                 attributes.Add("Application ID", m_applicationID.ToString());
                 attributes.Add("Using ETR Configuration", UseETRConfiguration.ToString());
                 attributes.Add("Configuration Guessing Allowed", GuessConfiguration.ToString());
                 attributes.Add("Parsing Redundant ASDUs", ParseRedundantASDUs.ToString());
+                attributes.Add("Ignoring Signature Validation Errors", IgnoreSignatureValidationFailures.ToString());
+                attributes.Add("Ignoring Sample Size Validation Errors", IgnoreSampleSizeValidationFailures.ToString());
                 attributes.Add("Selected Angle Format", m_angleFormat.ToString());
             }
         }
@@ -883,7 +1125,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
                 info.AddValue("simulatedData", m_simulatedData);
                 info.AddValue("applicationID", m_applicationID);
                 info.AddValue("payloadSize", m_payloadSize);
-                info.AddValue("keyID", m_keyID, typeof(byte[]));
+                info.AddValue("keyID", m_keyID);
             }
         }
 
