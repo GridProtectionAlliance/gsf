@@ -554,7 +554,11 @@ namespace GSF.Security
             return role;
         }
 
-        private string GetLdapPath()
+        /// <summary>
+        /// Gets the LDAP path.
+        /// </summary>
+        /// <returns>The LDAP path.</returns>
+        protected virtual string GetLdapPath()
         {
             if (ConnectionString.StartsWith("LDAP://", StringComparison.InvariantCultureIgnoreCase) ||
                 ConnectionString.StartsWith("LDAPS://", StringComparison.InvariantCultureIgnoreCase))
