@@ -411,6 +411,7 @@ namespace TVA.Security
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
             settings.Add("DataProviderString", "Eval(systemSettings.DataProviderString)", "Configuration database ADO.NET data provider assembly type creation string to be used for connection to the backend security datastore.");
+            settings.Add("LdapPath", "", "Specifies the LDAP path used to initialize the security provider.");
         }
 
         /// <summary>
@@ -825,6 +826,18 @@ namespace TVA.Security
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Gets the LDAP path.
+        /// </summary>
+        /// <returns>The LDAP path.</returns>
+        protected override string GetLdapPath()
+        {
+            // Load connection settings from the system settings category				
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection configSettings = config.Settings[SettingsCategory];
+            return configSettings["LdapPath"].Value;
         }
 
         #endregion
