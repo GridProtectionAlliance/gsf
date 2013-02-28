@@ -826,6 +826,7 @@ namespace GSF.TimeSeries
                         configException = true;
                         DisplayStatusMessage("Failed to load database configuration due to exception: {0} Attempting to use last known good configuration.", UpdateType.Warning, ex.Message);
                         m_serviceHelper.ErrorLogger.Log(ex);
+                        configuration = null;
                     }
                     finally
                     {
@@ -858,6 +859,7 @@ namespace GSF.TimeSeries
                         configException = true;
                         DisplayStatusMessage("Failed to load webservice configuration due to exception: {0} Attempting to use last known good configuration.", UpdateType.Warning, ex.Message);
                         m_serviceHelper.ErrorLogger.Log(ex);
+                        configuration = null;
                     }
                     finally
                     {
@@ -1994,6 +1996,16 @@ namespace GSF.TimeSeries
                 helpMessage.AppendLine();
                 helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.Append(string.Format("       -{0}", m_configurationType).PadRight(20));
+                helpMessage.AppendFormat("Loads configuration from the {0}", m_configurationType);
+                helpMessage.AppendLine();
+                helpMessage.Append("       -BinaryCache".PadRight(20));
+                helpMessage.Append("Loads configuration from the latest cached binary file");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -XmlCache".PadRight(20));
+                helpMessage.Append("Loads configuration from the latest cached XML file");
+                helpMessage.AppendLine();
 
                 DisplayResponseMessage(requestInfo, helpMessage.ToString());
             }
@@ -2014,7 +2026,7 @@ namespace GSF.TimeSeries
                 else if (requestInfo.Request.Arguments.Exists("BinaryCache"))
                 {
                     DisplayStatusMessage("Loading system configuration...", UpdateType.Information);
-                    dataSource = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_connectionString, m_dataProviderString);
+                    dataSource = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile, m_dataProviderString);
 
                     // Update data source on all adapters in all collections
                     if ((object)dataSource != null)
@@ -2023,7 +2035,7 @@ namespace GSF.TimeSeries
                 else if (requestInfo.Request.Arguments.Exists("XmlCache"))
                 {
                     DisplayStatusMessage("Loading system configuration...", UpdateType.Information);
-                    dataSource = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_connectionString, m_dataProviderString);
+                    dataSource = GetConfigurationDataSet(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile, m_dataProviderString);
 
                     // Update data source on all adapters in all collections
                     if ((object)dataSource != null)
