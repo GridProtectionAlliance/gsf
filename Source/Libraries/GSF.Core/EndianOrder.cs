@@ -565,7 +565,7 @@ namespace GSF
         /// <typeparam name="T">Native value type to get bytes for.</typeparam>
         /// <exception cref="ArgumentException"><paramref name="value"/> type is not primitive.</exception>
         /// <exception cref="InvalidOperationException">Cannot get bytes for <paramref name="value"/> type.</exception>
-        public byte[] GetBytes<T>(T value) where T : struct
+        public byte[] GetBytes<T>(T value) where T : struct, IConvertible
         {
             if (!typeof(T).IsPrimitive)
                 throw new ArgumentException("Value type is not primitive", "value");
@@ -578,10 +578,6 @@ namespace GSF
                     return GetBytes(nativeValue.ToChar(null));
                 case TypeCode.Boolean:
                     return GetBytes(nativeValue.ToBoolean(null));
-                case TypeCode.SByte:
-                    return GetBytes(nativeValue.ToSByte(null));
-                case TypeCode.Byte:
-                    return GetBytes(nativeValue.ToByte(null));
                 case TypeCode.Int16:
                     return GetBytes(nativeValue.ToInt16(null));
                 case TypeCode.UInt16:
@@ -740,14 +736,60 @@ namespace GSF
         }
 
         /// <summary>
+        /// Copies the specified primitive type value as an array of bytes in the target endian-order to the destination array.
+        /// </summary>
+        /// <param name="value">The <see cref="Boolean"/> value to convert and copy.</param>
+        /// <param name="destinationArray">The destination buffer.</param>
+        /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+        /// <typeparam name="T">Native value type to get bytes for.</typeparam>
+        /// <exception cref="ArgumentException"><paramref name="value"/> type is not primitive.</exception>
+        /// <exception cref="InvalidOperationException">Cannot get bytes for <paramref name="value"/> type.</exception>
+        /// <returns>Length of bytes copied into array based on size of <typeparamref name="T"/>.</returns>
+        public int CopyBytes<T>(T value, byte[] destinationArray, int destinationIndex) where T : struct, IConvertible
+        {
+            if (!typeof(T).IsPrimitive)
+                throw new ArgumentException("Value type is not primitive", "value");
+
+            IConvertible nativeValue = (IConvertible)value;
+
+            switch (nativeValue.GetTypeCode())
+            {
+                case TypeCode.Char:
+                    return CopyBytes(nativeValue.ToChar(null), destinationArray, destinationIndex);
+                case TypeCode.Boolean:
+                    return CopyBytes(nativeValue.ToBoolean(null), destinationArray, destinationIndex);
+                case TypeCode.Int16:
+                    return CopyBytes(nativeValue.ToInt16(null), destinationArray, destinationIndex);
+                case TypeCode.UInt16:
+                    return CopyBytes(nativeValue.ToUInt16(null), destinationArray, destinationIndex);
+                case TypeCode.Int32:
+                    return CopyBytes(nativeValue.ToInt32(null), destinationArray, destinationIndex);
+                case TypeCode.UInt32:
+                    return CopyBytes(nativeValue.ToUInt32(null), destinationArray, destinationIndex);
+                case TypeCode.Int64:
+                    return CopyBytes(nativeValue.ToInt64(null), destinationArray, destinationIndex);
+                case TypeCode.UInt64:
+                    return CopyBytes(nativeValue.ToUInt64(null), destinationArray, destinationIndex);
+                case TypeCode.Single:
+                    return CopyBytes(nativeValue.ToSingle(null), destinationArray, destinationIndex);
+                case TypeCode.Double:
+                    return CopyBytes(nativeValue.ToDouble(null), destinationArray, destinationIndex);
+                default:
+                    throw new InvalidOperationException("Cannot copy bytes for value type " + nativeValue.GetTypeCode());
+            }
+        }
+
+        /// <summary>
         /// Copies the specified <see cref="Boolean"/> value as an array of 1 byte in the target endian-order to the destination array.
         /// </summary>
         /// <param name="value">The <see cref="Boolean"/> value to convert and copy.</param>
         /// <param name="destinationArray">The destination buffer.</param>
         /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
-        public void CopyBytes(bool value, byte[] destinationArray, int destinationIndex)
+        /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+        public int CopyBytes(bool value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 1);
+            return 1;
         }
 
         /// <summary>
@@ -756,9 +798,11 @@ namespace GSF
         /// <param name="value">The Unicode character value to convert and copy.</param>
         /// <param name="destinationArray">The destination buffer.</param>
         /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
-        public void CopyBytes(char value, byte[] destinationArray, int destinationIndex)
+        /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+        public int CopyBytes(char value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 2);
+            return 2;
         }
 
         /// <summary>
@@ -767,9 +811,11 @@ namespace GSF
         /// <param name="value">The number to convert and copy.</param>
         /// <param name="destinationArray">The destination buffer.</param>
         /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
-        public void CopyBytes(double value, byte[] destinationArray, int destinationIndex)
+        /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+        public int CopyBytes(double value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 8);
+            return 8;
         }
 
         /// <summary>
@@ -778,9 +824,11 @@ namespace GSF
         /// <param name="value">The number to convert and copy.</param>
         /// <param name="destinationArray">The destination buffer.</param>
         /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
-        public void CopyBytes(short value, byte[] destinationArray, int destinationIndex)
+        /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+        public int CopyBytes(short value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 2);
+            return 2;
         }
 
         /// <summary>
@@ -789,9 +837,11 @@ namespace GSF
         /// <param name="value">The number to convert and copy.</param>
         /// <param name="destinationArray">The destination buffer.</param>
         /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
-        public void CopyBytes(Int24 value, byte[] destinationArray, int destinationIndex)
+        /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+        public int CopyBytes(Int24 value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(Int24.GetBytes(value), 0, destinationArray, destinationIndex, 3);
+            return 3;
         }
 
         /// <summary>
@@ -800,9 +850,11 @@ namespace GSF
         /// <param name="value">The number to convert and copy.</param>
         /// <param name="destinationArray">The destination buffer.</param>
         /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
-        public void CopyBytes(int value, byte[] destinationArray, int destinationIndex)
+        /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+        public int CopyBytes(int value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 4);
+            return 4;
         }
 
         /// <summary>
@@ -811,9 +863,11 @@ namespace GSF
         /// <param name="value">The number to convert and copy.</param>
         /// <param name="destinationArray">The destination buffer.</param>
         /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
-        public void CopyBytes(long value, byte[] destinationArray, int destinationIndex)
+        /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+        public int CopyBytes(long value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 8);
+            return 8;
         }
 
         /// <summary>
@@ -822,9 +876,11 @@ namespace GSF
         /// <param name="value">The number to convert and copy.</param>
         /// <param name="destinationArray">The destination buffer.</param>
         /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
-        public void CopyBytes(float value, byte[] destinationArray, int destinationIndex)
+        /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+        public int CopyBytes(float value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 4);
+            return 4;
         }
 
         /// <summary>
@@ -833,10 +889,12 @@ namespace GSF
         /// <param name="value">The number to convert and copy.</param>
         /// <param name="destinationArray">The destination buffer.</param>
         /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+        /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         [CLSCompliant(false)]
-        public void CopyBytes(ushort value, byte[] destinationArray, int destinationIndex)
+        public int CopyBytes(ushort value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 2);
+            return 2;
         }
 
         /// <summary>
@@ -845,10 +903,12 @@ namespace GSF
         /// <param name="value">The number to convert and copy.</param>
         /// <param name="destinationArray">The destination buffer.</param>
         /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+        /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         [CLSCompliant(false)]
-        public void CopyBytes(UInt24 value, byte[] destinationArray, int destinationIndex)
+        public int CopyBytes(UInt24 value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(UInt24.GetBytes(value), 0, destinationArray, destinationIndex, 3);
+            return 3;
         }
 
         /// <summary>
@@ -857,10 +917,12 @@ namespace GSF
         /// <param name="value">The number to convert and copy.</param>
         /// <param name="destinationArray">The destination buffer.</param>
         /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+        /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         [CLSCompliant(false)]
-        public void CopyBytes(uint value, byte[] destinationArray, int destinationIndex)
+        public int CopyBytes(uint value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 4);
+            return 4;
         }
 
         /// <summary>
@@ -869,10 +931,12 @@ namespace GSF
         /// <param name="value">The number to convert and copy.</param>
         /// <param name="destinationArray">The destination buffer.</param>
         /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+        /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         [CLSCompliant(false)]
-        public void CopyBytes(ulong value, byte[] destinationArray, int destinationIndex)
+        public int CopyBytes(ulong value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 8);
+            return 8;
         }
 
         /// <summary>
@@ -881,9 +945,11 @@ namespace GSF
         /// <param name="value">The <see cref="Guid"/> to convert and copy.</param>
         /// <param name="destinationArray">The destination buffer.</param>
         /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
-        public void CopyBytes(Guid value, byte[] destinationArray, int destinationIndex)
+        /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+        public int CopyBytes(Guid value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(value.ToByteArray(), 0, destinationArray, destinationIndex, 16);
+            return 16;
         }
 
         #endregion
