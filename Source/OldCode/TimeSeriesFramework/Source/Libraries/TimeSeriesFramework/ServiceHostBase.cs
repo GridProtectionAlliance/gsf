@@ -674,11 +674,27 @@ namespace TimeSeriesFramework
 
             // Attempt to load (or reload) system configuration
             if (m_preferCachedConfiguration)
-                dataSource = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile, m_dataProviderString, true);
-            else
-                dataSource = GetConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString, false);
+            {
+                dataSource = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile, m_dataProviderString);
 
-            if (dataSource != null)
+                if ((object)dataSource == null)
+                    dataSource = GetConfigurationDataSet(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile, m_dataProviderString);
+
+                if ((object)dataSource == null)
+                    dataSource = GetConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString);
+            }
+            else
+            {
+                dataSource = GetConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString);
+
+                if ((object)dataSource == null)
+                    dataSource = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile, m_dataProviderString);
+
+                if ((object)dataSource == null)
+                    dataSource = GetConfigurationDataSet(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile, m_dataProviderString);
+            }
+
+            if ((object)dataSource != null)
             {
                 // Update data source on all adapters in all collections
                 m_iaonSession.DataSource = dataSource;
@@ -690,7 +706,7 @@ namespace TimeSeriesFramework
 
         // Load system configuration data set
         [SuppressMessage("Microsoft.Reliability", "CA2000")]
-        private DataSet GetConfigurationDataSet(ConfigurationType configType, string connectionString, string dataProviderString, bool isCachedConfiguration)
+        private DataSet GetConfigurationDataSet(ConfigurationType configType, string connectionString, string dataProviderString)
         {
             DataSet configuration = null;
             bool configException = false;
@@ -810,9 +826,7 @@ namespace TimeSeriesFramework
                         configException = true;
                         DisplayStatusMessage("Failed to load database configuration due to exception: {0} Attempting to use last known good configuration.", UpdateType.Warning, ex.Message);
                         m_serviceHelper.ErrorLogger.Log(ex);
-
-                        if (!m_preferCachedConfiguration)
-                            configuration = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile, null, true);
+                        configuration = null;
                     }
                     finally
                     {
@@ -845,9 +859,7 @@ namespace TimeSeriesFramework
                         configException = true;
                         DisplayStatusMessage("Failed to load webservice configuration due to exception: {0} Attempting to use last known good configuration.", UpdateType.Warning, ex.Message);
                         m_serviceHelper.ErrorLogger.Log(ex);
-
-                        if (!m_preferCachedConfiguration)
-                            configuration = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile, null, true);
+                        configuration = null;
                     }
                     finally
                     {
@@ -877,16 +889,6 @@ namespace TimeSeriesFramework
                         DisplayStatusMessage("Failed to load binary based configuration due to exception: {0}.", UpdateType.Alarm, ex.Message);
                         m_serviceHelper.ErrorLogger.Log(ex);
                         configuration = null;
-
-                        if (isCachedConfiguration)
-                        {
-                            configuration = GetConfigurationDataSet(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile, null, true);
-                        }
-                        else
-                        {
-                            if (!m_preferCachedConfiguration)
-                                configuration = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile, null, true);
-                        }
                     }
 
                     break;
@@ -907,17 +909,6 @@ namespace TimeSeriesFramework
                         DisplayStatusMessage("Failed to load XML based configuration due to exception: {0}.", UpdateType.Alarm, ex.Message);
                         m_serviceHelper.ErrorLogger.Log(ex);
                         configuration = null;
-
-                        if (!isCachedConfiguration)
-                        {
-                            if (!m_preferCachedConfiguration)
-                                configuration = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile, null, true);
-                        }
-                        else
-                        {
-                            if (m_preferCachedConfiguration)
-                                configuration = GetConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString, false);
-                        }
                     }
 
                     break;
@@ -2005,19 +1996,66 @@ namespace TimeSeriesFramework
                 helpMessage.AppendLine();
                 helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.Append(string.Format("       -{0}", m_configurationType).PadRight(20));
+                helpMessage.AppendFormat("Loads configuration from the {0}", m_configurationType);
+                helpMessage.AppendLine();
+                helpMessage.Append("       -BinaryCache".PadRight(20));
+                helpMessage.Append("Loads configuration from the latest cached binary file");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -XmlCache".PadRight(20));
+                helpMessage.Append("Loads configuration from the latest cached XML file");
+                helpMessage.AppendLine();
 
                 DisplayResponseMessage(requestInfo, helpMessage.ToString());
             }
             else
             {
-                if (!LoadSystemConfiguration())
+                DataSet dataSource = null;
+                bool systemConfigurationLoaded = false;
+
+                if (requestInfo.Request.Arguments.Exists(m_configurationType.ToString()))
                 {
-                    SendResponse(requestInfo, false, "System configuration failed to reload.");
+                    DisplayStatusMessage("Loading system configuration...", UpdateType.Information);
+                    dataSource = GetConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString);
+
+                    // Update data source on all adapters in all collections
+                    if ((object)dataSource != null)
+                        m_iaonSession.DataSource = dataSource;
+                }
+                else if (requestInfo.Request.Arguments.Exists("BinaryCache"))
+                {
+                    DisplayStatusMessage("Loading system configuration...", UpdateType.Information);
+                    dataSource = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile, m_dataProviderString);
+
+                    // Update data source on all adapters in all collections
+                    if ((object)dataSource != null)
+                        m_iaonSession.DataSource = dataSource;
+                }
+                else if (requestInfo.Request.Arguments.Exists("XmlCache"))
+                {
+                    DisplayStatusMessage("Loading system configuration...", UpdateType.Information);
+                    dataSource = GetConfigurationDataSet(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile, m_dataProviderString);
+
+                    // Update data source on all adapters in all collections
+                    if ((object)dataSource != null)
+                        m_iaonSession.DataSource = dataSource;
                 }
                 else
                 {
+                    // No specific reload command was issued;
+                    // load system configuration as normal
+                    systemConfigurationLoaded = LoadSystemConfiguration();
+                }
+
+                if (systemConfigurationLoaded || (object)dataSource != null)
+                {
                     m_iaonSession.AllAdapters.UpdateCollectionConfigurations();
                     SendResponse(requestInfo, true, "System configuration was successfully reloaded.");
+                }
+                else
+                {
+                    SendResponse(requestInfo, false, "System configuration failed to reload.");
                 }
 
                 // Spawn routing table calculation updates
