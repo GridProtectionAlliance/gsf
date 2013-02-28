@@ -561,6 +561,12 @@
             <param name="role">The user role to be translated.</param>
             <returns>The user role that the specified user <paramref name="role"/> translates to.</returns>
         </member>
+        <member name="M:TVA.Security.LdapSecurityProvider.GetLdapPath">
+            <summary>
+            Gets the LDAP path.
+            </summary>
+            <returns>The LDAP path.</returns>
+        </member>
         <member name="P:TVA.Security.LdapSecurityProvider.EnableOfflineCaching">
             <summary>
             Gets or sets a boolean value that indicates whether user information is to be cached for offline authentication.
@@ -690,6 +696,12 @@
             <param name="source">Source of the exception.</param>
             <param name="message">Detailed description of the exception.</param>
             <returns>true if logging was successful, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.AdoSecurityProvider.GetLdapPath">
+            <summary>
+            Gets the LDAP path.
+            </summary>
+            <returns>The LDAP path.</returns>
         </member>
         <member name="P:TVA.Security.AdoSecurityProvider.CanUpdateData">
             <summary>
