@@ -181,6 +181,16 @@ namespace PhasorProtocolAdapters
         private long m_latencyMeasurements;
         private int m_hashCode;
         private bool m_useAdjustedValue;
+
+        private long m_totalBytesSent;
+        private long m_lifetimeMeasurements;
+        private long m_minimumMeasurementsPerSecond;
+        private long m_maximumMeasurementsPerSecond;
+        private long m_totalMeasurementsPerSecond;
+        private long m_measurementsPerSecondCount;
+        private long m_measurementsInSecond;
+        private long m_lastSecondsSinceEpoch;
+
         private bool m_disposed;
 
         #endregion
@@ -710,6 +720,64 @@ namespace PhasorProtocolAdapters
             }
         }
 
+        /// <summary>
+        /// Gets the total number of bytes sent to clients of this output stream.
+        /// </summary>
+        public long TotalBytesSent
+        {
+            get
+            {
+                return m_totalBytesSent;
+            }
+        }
+
+        /// <summary>
+        /// Gets the total number of measurements processed through this output stream over the lifetime of the output stream.
+        /// </summary>
+        public long LifetimeMeasurements
+        {
+            get
+            {
+                return m_lifetimeMeasurements;
+            }
+        }
+
+        /// <summary>
+        /// Gets the minimum value of the measurements per second calculation.
+        /// </summary>
+        public long MinimumMeasurementsPerSecond
+        {
+            get
+            {
+                return m_minimumMeasurementsPerSecond;
+            }
+        }
+
+        /// <summary>
+        /// Gets the maximum value of the measurements per second calculation.
+        /// </summary>
+        public long MaximumMeasurementsPerSecond
+        {
+            get
+            {
+                return m_maximumMeasurementsPerSecond;
+            }
+        }
+
+        /// <summary>
+        /// Gets the average value of the measurements per second calculation.
+        /// </summary>
+        public long AverageMeasurementsPerSecond
+        {
+            get
+            {
+                if (m_measurementsPerSecondCount == 0L)
+                    return 0L;
+
+                return m_totalMeasurementsPerSecond / m_measurementsPerSecondCount;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -993,6 +1061,7 @@ namespace PhasorProtocolAdapters
 
             // Register with the statistics engine
             StatisticsEngine.Register(this, "OutputStream", "OS");
+            StatisticsEngine.Calculated += (sender, args) => ResetMeasurementsPerSecondCounters();
         }
 
         /// <summary>
@@ -1490,6 +1559,7 @@ namespace PhasorProtocolAdapters
 
                             image = m_configurationFrame.BinaryImage();
                             m_publishChannel.MulticastAsync(image, 0, image.Length);
+                            m_totalBytesSent += image.Length;
 
                             // Sleep for a moment between config frame and data frame transmissions
                             Thread.Sleep(1);
@@ -1510,6 +1580,7 @@ namespace PhasorProtocolAdapters
                 // Publish data frame binary image
                 image = dataFrame.BinaryImage();
                 m_publishChannel.MulticastAsync(image, 0, image.Length);
+                m_totalBytesSent += image.Length;
 
                 // Track latency statistics against system time - in order for these statistics
                 // to be useful, the local clock must be fairly accurate
@@ -1523,6 +1594,11 @@ namespace PhasorProtocolAdapters
 
                 m_totalLatency += latency;
                 m_latencyMeasurements++;
+
+                // Track measurement count and throughput statistics
+                int measurementCount = frame.Measurements.Count;
+                m_lifetimeMeasurements += measurementCount;
+                UpdateMeasurementsPerSecond(measurementCount);
             }
         }
 
@@ -1810,6 +1886,38 @@ namespace PhasorProtocolAdapters
                 m_hashCode = Guid.NewGuid().GetHashCode();
 
             return m_hashCode;
+        }
+
+        // Updates the measurements per second counters after receiving another set of measurements.
+        private void UpdateMeasurementsPerSecond(int measurementCount)
+        {
+            long secondsSinceEpoch = PrecisionTimer.UtcNow.Ticks / Ticks.PerSecond;
+
+            if (secondsSinceEpoch > m_lastSecondsSinceEpoch)
+            {
+                if (m_measurementsInSecond < m_minimumMeasurementsPerSecond || m_minimumMeasurementsPerSecond == 0L)
+                    m_minimumMeasurementsPerSecond = m_measurementsInSecond;
+
+                if (m_measurementsInSecond > m_maximumMeasurementsPerSecond || m_maximumMeasurementsPerSecond == 0L)
+                    m_maximumMeasurementsPerSecond = m_measurementsInSecond;
+
+                m_totalMeasurementsPerSecond += m_measurementsInSecond;
+                m_measurementsPerSecondCount++;
+                m_measurementsInSecond = 0L;
+
+                m_lastSecondsSinceEpoch = secondsSinceEpoch;
+            }
+
+            m_measurementsInSecond += measurementCount;
+        }
+
+        // Resets the measurements per second counters after reading the values from the last calculation interval.
+        private void ResetMeasurementsPerSecondCounters()
+        {
+            m_minimumMeasurementsPerSecond = 0L;
+            m_maximumMeasurementsPerSecond = 0L;
+            m_totalMeasurementsPerSecond = 0L;
+            m_measurementsPerSecondCount = 0L;
         }
 
         #region [ Data Channel Event Handlers ]

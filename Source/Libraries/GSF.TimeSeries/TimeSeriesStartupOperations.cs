@@ -183,30 +183,41 @@ namespace GSF.TimeSeries
                                                 "Average number of IPv4 datagrams received by this process per second."
                                               };
 
-            string[] SubscriberStatNames = { "Subscriber Connected", "Subscriber Authenticated", "Processed Measurements", "Total Bytes Received", "Authorized Signal Count", "Unauthorized Signal Count" };
+            string[] SubscriberStatNames = { "Subscriber Connected", "Subscriber Authenticated", "Processed Measurements", "Total Bytes Received", "Authorized Signal Count", "Unauthorized Signal Count", "Lifetime Measurements", "Lifetime Bytes Received", "Minimum Measurements Per Second", "Maximum Measurements Per Second", "Average Measurements Per Second" };
 
             string[] SubscriberStatDescriptions = { "Boolean value representing if the subscriber was continually connected during last reporting interval.",
                                                     "Boolean value representing if the subscriber was authenticated to the publisher during last reporting interval.",
                                                     "Number of processed measurements reported by the subscriber during last reporting interval.",
                                                     "Number of bytes received from subscriber during last reporting interval.",
                                                     "Number of signals authorized to the subscriber by the publisher.",
-                                                    "Number of signals denied to the subscriber by the publisher."
+                                                    "Number of signals denied to the subscriber by the publisher.",
+                                                    "Number of processed measurements reported by the subscriber during the lifetime of the subscriber.",
+                                                    "Number of bytes received from subscriber during the lifetime of the subscriber.",
+                                                    "The minimum number of measurements received per second during the last reporting interval.",
+                                                    "The maximum number of measurements received per second during the last reporting interval.",
+                                                    "The average number of measurements received per second during the last reporting interval."
                                                   };
 
-            string[] SubscriberStatMethodSuffix = { "Connected", "Authenticated", "ProcessedMeasurements", "TotalBytesReceived", "AuthorizedCount", "UnauthorizedCount" };
-            string[] SubscriberStatTypes = { "System.Boolean", "System.Boolean", "System.Int32", "System.Int32", "System.Int32", "System.Int32" };
-            string[] SubscriberStatFormats = { "{0}", "{0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}" };
+            string[] SubscriberStatMethodSuffix = { "Connected", "Authenticated", "ProcessedMeasurements", "TotalBytesReceived", "AuthorizedCount", "UnauthorizedCount", "LifetimeMeasurements", "LifetimeBytesReceived", "MinimumMeasurementsPerSecond", "MaximumMeasurementsPerSecond", "AverageMeasurementsPerSecond" };
+            string[] SubscriberStatTypes = { "System.Boolean", "System.Boolean", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int64", "System.Int64", "System.Int32", "System.Int32", "System.Int32" };
+            string[] SubscriberStatFormats = { "{0}", "{0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}" };
 
-            string[] PublisherStatNames = { "Publisher Connected", "Connected Clients", "Processed Measurements" };
+            string[] PublisherStatNames = { "Publisher Connected", "Connected Clients", "Processed Measurements", "Total Bytes Sent", "Lifetime Measurements", "Lifetime Bytes Sent", "Minimum Measurements Per Second", "Maximum Measurements Per Second", "Average Measurements Per Second" };
 
             string[] PublisherStatDescriptions = { "Boolean value representing if the publisher was continually connected during last reporting interval.",
                                                    "Number of clients connected to the command channel of the publisher during last reporting interval.",
-                                                   "Number of processed measurements reported by the publisher during last reporting interval."
+                                                   "Number of processed measurements reported by the publisher during last reporting interval.",
+                                                   "Number of bytes sent by the publisher during the last reporting interval.",
+                                                   "Number of processed measurements reported by the publisher during the lifetime of the publisher.",
+                                                   "Number of bytes sent by the publisher during the lifetime of the publisher.",
+                                                   "The minimum number of measurements sent per second during the last reporting interval.",
+                                                   "The maximum number of measurements sent per second during the last reporting interval.",
+                                                   "The average number of measurements sent per second during the last reporting interval."
                                                  };
 
-            string[] PublisherStatMethodSuffix = { "Connected", "ConnectedClientCount", "ProcessedMeasurements" };
-            string[] PublisherStatTypes = { "System.Boolean", "System.Int32", "System.Int32" };
-            string[] PublisherStatFormats = { "{0}", "{0:N0}", "{0:N0}" };
+            string[] PublisherStatMethodSuffix = { "Connected", "ConnectedClientCount", "ProcessedMeasurements", "TotalBytesSent", "LifetimeMeasurements", "LifetimeBytesSent", "MinimumMeasurementsPerSecond", "MaximumMeasurementsPerSecond", "AverageMeasurementsPerSecond" };
+            string[] PublisherStatTypes = { "System.Boolean", "System.Int32", "System.Int32", "System.Int32", "System.Int64", "System.Int64", "System.Int32", "System.Int32", "System.Int32" };
+            string[] PublisherStatFormats = { "{0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}" };
 
             // Parameterized query string for inserting statistic measurements
             string statMeasurementInsertQuery = ParameterizedQueryString(connection.GetType(), StatMeasurementInsertFormat, "historianID", "pointTag", "signalTypeID", "signalReference", "description");
@@ -371,8 +382,6 @@ namespace GSF.TimeSeries
 
             foreach (DataRow publisher in connection.RetrieveData(s_adapterType, string.Format(PublisherRowsFormat, nodeIDQueryString)).Rows)
             {
-                adapterID = publisher.ConvertField<int>("ID");
-                adapterSourceID = Convert.ToInt32(connection.ExecuteScalar(string.Format(RuntimeSourceIDFormat, adapterID)));
                 adapterName = publisher.Field<string>("AdapterName");
 
                 for (int i = 0; i < PublisherStatNames.Length; i++)

@@ -215,6 +215,15 @@ namespace PhasorProtocolAdapters
         private double m_lagTime;
         private double m_leadTime;
         private long m_timeResolution;
+
+        private long m_lifetimeMeasurements;
+        private long m_minimumMeasurementsPerSecond;
+        private long m_maximumMeasurementsPerSecond;
+        private long m_totalMeasurementsPerSecond;
+        private long m_measurementsPerSecondCount;
+        private long m_measurementsInSecond;
+        private long m_lastSecondsSinceEpoch;
+
         private bool m_disposed;
 
         #endregion
@@ -818,6 +827,67 @@ namespace PhasorProtocolAdapters
             }
         }
 
+        /// <summary>
+        /// Gets total data packet bytes received during this session.
+        /// </summary>
+        public long TotalBytesReceived
+        {
+            get
+            {
+                if ((object)m_frameParser != null)
+                    return m_frameParser.TotalBytesReceived;
+
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// Gets the total number of measurements processed through this data publisher over the lifetime of the publisher.
+        /// </summary>
+        public long LifetimeMeasurements
+        {
+            get
+            {
+                return m_lifetimeMeasurements;
+            }
+        }
+
+        /// <summary>
+        /// Gets the minimum value of the measurements per second calculation.
+        /// </summary>
+        public long MinimumMeasurementsPerSecond
+        {
+            get
+            {
+                return m_minimumMeasurementsPerSecond;
+            }
+        }
+
+        /// <summary>
+        /// Gets the maximum value of the measurements per second calculation.
+        /// </summary>
+        public long MaximumMeasurementsPerSecond
+        {
+            get
+            {
+                return m_maximumMeasurementsPerSecond;
+            }
+        }
+
+        /// <summary>
+        /// Gets the average value of the measurements per second calculation.
+        /// </summary>
+        public long AverageMeasurementsPerSecond
+        {
+            get
+            {
+                if (m_measurementsPerSecondCount == 0L)
+                    return 0L;
+
+                return m_totalMeasurementsPerSecond / m_measurementsPerSecondCount;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -1060,6 +1130,7 @@ namespace PhasorProtocolAdapters
             // Register with the statistics engine
             StatisticsEngine.Register(this, "InputStream", "IS");
             StatisticsEngine.Calculated += (sender, args) => ResetLatencyCounters();
+            StatisticsEngine.Calculated += (sender, args) => ResetMeasurementsPerSecondCounters();
         }
 
         // Load device list for this mapper connection
@@ -1748,6 +1819,10 @@ namespace PhasorProtocolAdapters
 
             // Provide real-time measurements where needed
             OnNewMeasurements(mappedMeasurements);
+
+            int measurementCount = mappedMeasurements.Count;
+            m_lifetimeMeasurements += measurementCount;
+            UpdateMeasurementsPerSecond(measurementCount);
         }
 
         /// <summary>
@@ -1826,6 +1901,38 @@ namespace PhasorProtocolAdapters
                 m_hashCode = Guid.NewGuid().GetHashCode();
 
             return m_hashCode;
+        }
+
+        // Updates the measurements per second counters after receiving another set of measurements.
+        private void UpdateMeasurementsPerSecond(int measurementCount)
+        {
+            long secondsSinceEpoch = PrecisionTimer.UtcNow.Ticks / Ticks.PerSecond;
+
+            if (secondsSinceEpoch > m_lastSecondsSinceEpoch)
+            {
+                if (m_measurementsInSecond < m_minimumMeasurementsPerSecond || m_minimumMeasurementsPerSecond == 0L)
+                    m_minimumMeasurementsPerSecond = m_measurementsInSecond;
+
+                if (m_measurementsInSecond > m_maximumMeasurementsPerSecond || m_maximumMeasurementsPerSecond == 0L)
+                    m_maximumMeasurementsPerSecond = m_measurementsInSecond;
+
+                m_totalMeasurementsPerSecond += m_measurementsInSecond;
+                m_measurementsPerSecondCount++;
+                m_measurementsInSecond = 0L;
+
+                m_lastSecondsSinceEpoch = secondsSinceEpoch;
+            }
+
+            m_measurementsInSecond += measurementCount;
+        }
+
+        // Resets the measurements per second counters after reading the values from the last calculation interval.
+        private void ResetMeasurementsPerSecondCounters()
+        {
+            m_minimumMeasurementsPerSecond = 0L;
+            m_maximumMeasurementsPerSecond = 0L;
+            m_totalMeasurementsPerSecond = 0L;
+            m_measurementsPerSecondCount = 0L;
         }
 
         // Primary data source connection has terminated, engage backup connection

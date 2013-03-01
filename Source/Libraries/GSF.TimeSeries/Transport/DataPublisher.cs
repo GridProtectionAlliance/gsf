@@ -398,7 +398,7 @@ namespace GSF.TimeSeries.Transport
 
         // Nested Types
 
-        private class LatestMeasurementCache : FacileActionAdapterBase
+        private sealed class LatestMeasurementCache : FacileActionAdapterBase
         {
             public LatestMeasurementCache(string connectionString)
             {
@@ -514,7 +514,6 @@ namespace GSF.TimeSeries.Transport
         private System.Timers.Timer m_commandChannelRestartTimer;
         private System.Timers.Timer m_cipherKeyRotationTimer;
         private RoutingTables m_routingTables;
-        private IAdapterCollection m_parent;
         private string m_metadataTables;
         private string m_dependencies;
         private SecurityMode m_securityMode;
@@ -522,6 +521,16 @@ namespace GSF.TimeSeries.Transport
         private bool m_sharedDatabase;
         private bool m_allowSynchronizedSubscription;
         private bool m_useBaseTimeOffsets;
+
+        private long m_totalBytesSent;
+        private long m_lifetimeMeasurements;
+        private long m_minimumMeasurementsPerSecond;
+        private long m_maximumMeasurementsPerSecond;
+        private long m_totalMeasurementsPerSecond;
+        private long m_measurementsPerSecondCount;
+        private long m_measurementsInSecond;
+        private long m_lastSecondsSinceEpoch;
+
         private bool m_disposed;
 
         #endregion
@@ -944,6 +953,64 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
+        /// <summary>
+        /// Gets the total number of bytes sent to clients of this data publisher.
+        /// </summary>
+        public long TotalBytesSent
+        {
+            get
+            {
+                return m_totalBytesSent;
+            }
+        }
+
+        /// <summary>
+        /// Gets the total number of measurements processed through this data publisher over the lifetime of the publisher.
+        /// </summary>
+        public long LifetimeMeasurements
+        {
+            get
+            {
+                return m_lifetimeMeasurements;
+            }
+        }
+
+        /// <summary>
+        /// Gets the minimum value of the measurements per second calculation.
+        /// </summary>
+        public long MinimumMeasurementsPerSecond
+        {
+            get
+            {
+                return m_minimumMeasurementsPerSecond;
+            }
+        }
+
+        /// <summary>
+        /// Gets the maximum value of the measurements per second calculation.
+        /// </summary>
+        public long MaximumMeasurementsPerSecond
+        {
+            get
+            {
+                return m_maximumMeasurementsPerSecond;
+            }
+        }
+
+        /// <summary>
+        /// Gets the average value of the measurements per second calculation.
+        /// </summary>
+        public long AverageMeasurementsPerSecond
+        {
+            get
+            {
+                if (m_measurementsPerSecondCount == 0L)
+                    return 0L;
+
+                return m_totalMeasurementsPerSecond / m_measurementsPerSecondCount;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -1113,6 +1180,7 @@ namespace GSF.TimeSeries.Transport
 
             // Register publisher with the statistics engine
             StatisticsEngine.Register(this, "Publisher", "PUB");
+            StatisticsEngine.Calculated += (sender, args) => ResetMeasurementsPerSecondCounters();
 
             Initialized = true;
         }
@@ -1123,10 +1191,16 @@ namespace GSF.TimeSeries.Transport
         /// <param name="measurements">Measurements to queue for processing.</param>
         public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
+            int measurementCount;
+
             if (this.ProcessMeasurementFilter)
                 base.QueueMeasurementsForProcessing(measurements);
             else
                 m_routingTables.RoutedMeasurementsHandler(measurements);
+
+            measurementCount = measurements.Count();
+            m_lifetimeMeasurements += measurementCount;
+            UpdateMeasurementsPerSecond(measurementCount);
         }
 
         /// <summary>
@@ -1158,19 +1232,6 @@ namespace GSF.TimeSeries.Transport
 
             if ((object)m_commandChannel != null)
                 m_commandChannel.Stop();
-        }
-
-        /// <summary>
-        /// Assigns the reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="DataPublisher"/>, if any.
-        /// </summary>
-        /// <param name="parent">Parent adapter collection.</param>
-        protected override void AssignParentCollection(IAdapterCollection parent)
-        {
-            // Get a local reference to the parent collection
-            m_parent = parent;
-
-            // Pass reference along to base class
-            base.AssignParentCollection(parent);
         }
 
         /// <summary>
@@ -1301,6 +1362,16 @@ namespace GSF.TimeSeries.Transport
         public virtual Tuple<Guid, bool, string> GetSubscriberStatus(Guid subscriberID)
         {
             return new Tuple<Guid, bool, string>(subscriberID, GetConnectionProperty(subscriberID, cc => cc.IsConnected), GetConnectionProperty(subscriberID, cc => cc.SubscriberInfo));
+        }
+
+        /// <summary>
+        /// Resets the counters for the lifetime statistics without interrupting the adapter's operations.
+        /// </summary>
+        [AdapterCommand("Resets the counters for the lifetime statistics without interrupting the adapter's operations.")]
+        public virtual void ResetLifetimeCounters()
+        {
+            m_lifetimeMeasurements = 0L;
+            m_totalBytesSent = 0L;
         }
 
         /// <summary>
@@ -1764,6 +1835,7 @@ namespace GSF.TimeSeries.Transport
                         else
                             publishChannel.SendToAsync(clientID, responseData, 0, responseData.Length);
 
+                        m_totalBytesSent += responseData.Length;
                         success = true;
                     }
                 }
@@ -2674,6 +2746,38 @@ namespace GSF.TimeSeries.Transport
             }
 
             return serializedMetadata;
+        }
+
+        // Updates the measurements per second counters after receiving another set of measurements.
+        private void UpdateMeasurementsPerSecond(int measurementCount)
+        {
+            long secondsSinceEpoch = PrecisionTimer.UtcNow.Ticks / Ticks.PerSecond;
+
+            if (secondsSinceEpoch > m_lastSecondsSinceEpoch)
+            {
+                if (m_measurementsInSecond < m_minimumMeasurementsPerSecond || m_minimumMeasurementsPerSecond == 0L)
+                    m_minimumMeasurementsPerSecond = m_measurementsInSecond;
+
+                if (m_measurementsInSecond > m_maximumMeasurementsPerSecond || m_maximumMeasurementsPerSecond == 0L)
+                    m_maximumMeasurementsPerSecond = m_measurementsInSecond;
+
+                m_totalMeasurementsPerSecond += m_measurementsInSecond;
+                m_measurementsPerSecondCount++;
+                m_measurementsInSecond = 0L;
+
+                m_lastSecondsSinceEpoch = secondsSinceEpoch;
+            }
+
+            m_measurementsInSecond += measurementCount;
+        }
+
+        // Resets the measurements per second counters after reading the values from the last calculation interval.
+        private void ResetMeasurementsPerSecondCounters()
+        {
+            m_minimumMeasurementsPerSecond = 0L;
+            m_maximumMeasurementsPerSecond = 0L;
+            m_totalMeasurementsPerSecond = 0L;
+            m_measurementsPerSecondCount = 0L;
         }
 
         // Bubble up processing complete notifications from subscriptions

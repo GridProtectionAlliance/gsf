@@ -204,6 +204,15 @@ namespace GSF.TimeSeries.Transport
         private bool m_internal;
         private OperationalModes m_operationalModes;
         private Encoding m_encoding;
+
+        private long m_lifetimeMeasurements;
+        private long m_minimumMeasurementsPerSecond;
+        private long m_maximumMeasurementsPerSecond;
+        private long m_totalMeasurementsPerSecond;
+        private long m_measurementsPerSecondCount;
+        private long m_measurementsInSecond;
+        private long m_lastSecondsSinceEpoch;
+
         private bool m_disposed;
 
         #endregion
@@ -574,6 +583,53 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
+        /// <summary>
+        /// Gets the total number of measurements processed through this data publisher over the lifetime of the publisher.
+        /// </summary>
+        public long LifetimeMeasurements
+        {
+            get
+            {
+                return m_lifetimeMeasurements;
+            }
+        }
+
+        /// <summary>
+        /// Gets the minimum value of the measurements per second calculation.
+        /// </summary>
+        public long MinimumMeasurementsPerSecond
+        {
+            get
+            {
+                return m_minimumMeasurementsPerSecond;
+            }
+        }
+
+        /// <summary>
+        /// Gets the maximum value of the measurements per second calculation.
+        /// </summary>
+        public long MaximumMeasurementsPerSecond
+        {
+            get
+            {
+                return m_maximumMeasurementsPerSecond;
+            }
+        }
+
+        /// <summary>
+        /// Gets the average value of the measurements per second calculation.
+        /// </summary>
+        public long AverageMeasurementsPerSecond
+        {
+            get
+            {
+                if (m_measurementsPerSecondCount == 0L)
+                    return 0L;
+
+                return m_totalMeasurementsPerSecond / m_measurementsPerSecondCount;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -774,6 +830,7 @@ namespace GSF.TimeSeries.Transport
 
             // Register subscriber with the statistics engine
             StatisticsEngine.Register(this, "Subscriber", "SUB");
+            StatisticsEngine.Calculated += (sender, args) => ResetMeasurementsPerSecondCounters();
 
             Initialized = true;
         }
@@ -1752,10 +1809,16 @@ namespace GSF.TimeSeries.Transport
                                 m_localConcentrator.SortMeasurements(measurements);
                             else
                                 OnNewMeasurements(measurements);
+
+                            int measurementCount = measurements.Count();
+                            m_lifetimeMeasurements += measurementCount;
+                            UpdateMeasurementsPerSecond(measurementCount);
                             break;
                         case ServerResponse.BufferBlock:
                             // Buffer block received - wrap as a buffer block measurement and expose back to consumer
                             OnNewMeasurements(new IMeasurement[] { new BufferBlockMeasurement(buffer, responseIndex, responseLength) });
+                            m_lifetimeMeasurements += 1;
+                            UpdateMeasurementsPerSecond(1);
                             break;
                         case ServerResponse.DataStartTime:
                             // Raise data start time event
@@ -2473,6 +2536,38 @@ namespace GSF.TimeSeries.Transport
 
             // Reset bytes received bytes being monitored
             m_monitoredBytesReceived = 0L;
+        }
+
+        // Updates the measurements per second counters after receiving another set of measurements.
+        private void UpdateMeasurementsPerSecond(int measurementCount)
+        {
+            long secondsSinceEpoch = PrecisionTimer.UtcNow.Ticks / Ticks.PerSecond;
+
+            if (secondsSinceEpoch > m_lastSecondsSinceEpoch)
+            {
+                if (m_measurementsInSecond < m_minimumMeasurementsPerSecond || m_minimumMeasurementsPerSecond == 0L)
+                    m_minimumMeasurementsPerSecond = m_measurementsInSecond;
+
+                if (m_measurementsInSecond > m_maximumMeasurementsPerSecond || m_maximumMeasurementsPerSecond == 0L)
+                    m_maximumMeasurementsPerSecond = m_measurementsInSecond;
+
+                m_totalMeasurementsPerSecond += m_measurementsInSecond;
+                m_measurementsPerSecondCount++;
+                m_measurementsInSecond = 0L;
+
+                m_lastSecondsSinceEpoch = secondsSinceEpoch;
+            }
+
+            m_measurementsInSecond += measurementCount;
+        }
+
+        // Resets the measurements per second counters after reading the values from the last calculation interval.
+        private void ResetMeasurementsPerSecondCounters()
+        {
+            m_minimumMeasurementsPerSecond = 0L;
+            m_maximumMeasurementsPerSecond = 0L;
+            m_totalMeasurementsPerSecond = 0L;
+            m_measurementsPerSecondCount = 0L;
         }
 
         #region [ Command Channel Event Handlers ]

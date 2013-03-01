@@ -98,6 +98,61 @@ namespace GSF.TimeSeries.Statistics
             return statistic;
         }
 
+        private static double GetSubscriberStatistc_LifetimeMeasurements(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            DataSubscriber subscriber = source as DataSubscriber;
+
+            if ((object)subscriber != null)
+                statistic = subscriber.LifetimeMeasurements;
+
+            return statistic;
+        }
+
+        private static double GetSubscriberStatistic_MinimumMeasurementRate(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            DataSubscriber subscriber = source as DataSubscriber;
+
+            if ((object)subscriber != null)
+                statistic = subscriber.MinimumMeasurementsPerSecond;
+
+            return statistic;
+        }
+
+        private static double GetSubscriberStatistic_MaximumMeasurementRate(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            DataSubscriber subscriber = source as DataSubscriber;
+
+            if ((object)subscriber != null)
+                statistic = subscriber.MaximumMeasurementsPerSecond;
+
+            return statistic;
+        }
+
+        private static double GetSubscriberStatistic_AverageMeasurementRate(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            DataSubscriber subscriber = source as DataSubscriber;
+
+            if ((object)subscriber != null)
+                statistic = subscriber.AverageMeasurementsPerSecond;
+
+            return statistic;
+        }
+
+        private static double GetSubscriberStatistic_LifetimeBytesReceived(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            DataSubscriber subscriber = source as DataSubscriber;
+
+            if ((object)subscriber != null)
+                statistic = subscriber.TotalBytesReceived;
+
+            return statistic;
+        }
+
         #endregion
 
         #region [ Publisher Statistics ]
@@ -131,6 +186,77 @@ namespace GSF.TimeSeries.Statistics
 
             if ((object)publisher != null)
                 statistic = s_statisticValueCache.GetDifference(publisher, publisher.ProcessedMeasurements, "ProcessedMeasurements");
+
+            return statistic;
+        }
+
+        private static double GetPublisherStatistic_TotalBytesSent(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            DataPublisher publisher = source as DataPublisher;
+
+            if ((object)publisher != null)
+            {
+                statistic = s_statisticValueCache.GetDifference(publisher, publisher.TotalBytesSent, "TotalBytesSent");
+
+                if (statistic < 0.0D)
+                    statistic = publisher.TotalBytesSent;
+            }
+
+            return statistic;
+        }
+
+        private static double GetPublisherStatistic_LifetimeMeasurements(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            DataPublisher publisher = source as DataPublisher;
+
+            if ((object)publisher != null)
+                statistic = publisher.LifetimeMeasurements;
+
+            return statistic;
+        }
+
+        private static double GetPublisherStatistic_MinimumMeasurementsPerSecond(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            DataPublisher publisher = source as DataPublisher;
+
+            if ((object)publisher != null)
+                statistic = publisher.MinimumMeasurementsPerSecond;
+
+            return statistic;
+        }
+
+        private static double GetPublisherStatistic_MaximumMeasurementsPerSecond(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            DataPublisher publisher = source as DataPublisher;
+
+            if ((object)publisher != null)
+                statistic = publisher.MaximumMeasurementsPerSecond;
+
+            return statistic;
+        }
+
+        private static double GetPublisherStatistic_AverageMeasurementsPerSecond(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            DataPublisher publisher = source as DataPublisher;
+
+            if ((object)publisher != null)
+                statistic = publisher.AverageMeasurementsPerSecond;
+
+            return statistic;
+        }
+
+        private static double GetPublisherStatistic_LifetimeBytesSent(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            DataPublisher publisher = source as DataPublisher;
+
+            if ((object)publisher != null)
+                statistic = publisher.TotalBytesSent;
 
             return statistic;
         }
