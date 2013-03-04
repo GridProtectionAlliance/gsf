@@ -98,7 +98,7 @@ namespace GSF.TimeSeries.Statistics
             return statistic;
         }
 
-        private static double GetSubscriberStatistc_LifetimeMeasurements(object source, string arguments)
+        private static double GetSubscriberStatistic_LifetimeMeasurements(object source, string arguments)
         {
             double statistic = 0.0D;
             DataSubscriber subscriber = source as DataSubscriber;
@@ -109,7 +109,7 @@ namespace GSF.TimeSeries.Statistics
             return statistic;
         }
 
-        private static double GetSubscriberStatistic_MinimumMeasurementRate(object source, string arguments)
+        private static double GetSubscriberStatistic_MinimumMeasurementsPerSecond(object source, string arguments)
         {
             double statistic = 0.0D;
             DataSubscriber subscriber = source as DataSubscriber;
@@ -120,7 +120,7 @@ namespace GSF.TimeSeries.Statistics
             return statistic;
         }
 
-        private static double GetSubscriberStatistic_MaximumMeasurementRate(object source, string arguments)
+        private static double GetSubscriberStatistic_MaximumMeasurementsPerSecond(object source, string arguments)
         {
             double statistic = 0.0D;
             DataSubscriber subscriber = source as DataSubscriber;
@@ -131,7 +131,7 @@ namespace GSF.TimeSeries.Statistics
             return statistic;
         }
 
-        private static double GetSubscriberStatistic_AverageMeasurementRate(object source, string arguments)
+        private static double GetSubscriberStatistic_AverageMeasurementsPerSecond(object source, string arguments)
         {
             double statistic = 0.0D;
             DataSubscriber subscriber = source as DataSubscriber;
