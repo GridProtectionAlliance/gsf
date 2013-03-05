@@ -3697,6 +3697,14 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
+        /// Resets the value for the <see cref="TotalBytesReceived"/> statistic.
+        /// </summary>
+        public void ResetTotalBytesReceived()
+        {
+            m_totalBytesReceived = 0L;
+        }
+
+        /// <summary>
         /// Raises the <see cref="ParsingException"/> event.
         /// </summary>
         /// <param name="ex">Exception to send to <see cref="ParsingException"/> event.</param>

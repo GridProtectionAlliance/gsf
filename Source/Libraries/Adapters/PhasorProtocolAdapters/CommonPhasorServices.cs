@@ -1417,7 +1417,12 @@ namespace PhasorProtocolAdapters
             PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
             if ((object)inputStream != null)
+            {
                 statistic = s_statisticValueCache.GetDifference(source, inputStream.TotalBytesReceived, "TotalBytesReceived");
+
+                if (statistic < 0.0D)
+                    statistic = inputStream.TotalBytesReceived;
+            }
 
             return statistic;
         }
@@ -1754,7 +1759,12 @@ namespace PhasorProtocolAdapters
             PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
             if ((object)outputStream != null)
+            {
                 statistic = s_statisticValueCache.GetDifference(outputStream, outputStream.TotalBytesSent, "TotalBytesSent");
+
+                if (statistic < 0.0D)
+                    statistic = outputStream.TotalBytesSent;
+            }
 
             return statistic;
         }

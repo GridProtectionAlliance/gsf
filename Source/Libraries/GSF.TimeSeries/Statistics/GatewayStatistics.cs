@@ -71,7 +71,12 @@ namespace GSF.TimeSeries.Statistics
             DataSubscriber subscriber = source as DataSubscriber;
 
             if ((object)subscriber != null)
+            {
                 statistic = s_statisticValueCache.GetDifference(subscriber, subscriber.TotalBytesReceived, "TotalBytesReceived");
+
+                if (statistic < 0.0D)
+                    statistic = subscriber.TotalBytesReceived;
+            }
 
             return statistic;
         }

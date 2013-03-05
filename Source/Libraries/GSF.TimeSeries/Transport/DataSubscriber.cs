@@ -1511,6 +1511,16 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Resets the counters for the lifetime statistics without interrupting the adapter's operations.
+        /// </summary>
+        [AdapterCommand("Resets the counters for the lifetime statistics without interrupting the adapter's operations.")]
+        public virtual void ResetLifetimeCounters()
+        {
+            m_lifetimeMeasurements = 0L;
+            m_totalBytesReceived = 0L;
+        }
+
+        /// <summary>
         /// Sends a server command to the publisher connection.
         /// </summary>
         /// <param name="commandCode"><see cref="ServerCommand"/> to send.</param>

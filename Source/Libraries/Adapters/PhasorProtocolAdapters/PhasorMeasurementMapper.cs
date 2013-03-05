@@ -1411,6 +1411,18 @@ namespace PhasorProtocolAdapters
         }
 
         /// <summary>
+        /// Resets the counters for the lifetime statistics without interrupting the adapter's operations.
+        /// </summary>
+        [AdapterCommand("Resets the counters for the lifetime statistics without interrupting the adapter's operations.")]
+        public virtual void ResetLifetimeCounters()
+        {
+            m_lifetimeMeasurements = 0L;
+
+            if ((object)m_frameParser != null)
+                m_frameParser.ResetTotalBytesReceived();
+        }
+
+        /// <summary>
         /// Resets counters related to latency calculations.
         /// </summary>
         public void ResetLatencyCounters()

@@ -1395,6 +1395,16 @@ namespace PhasorProtocolAdapters
         }
 
         /// <summary>
+        /// Resets the counters for the lifetime statistics without interrupting the adapter's operations.
+        /// </summary>
+        [AdapterCommand("Resets the counters for the lifetime statistics without interrupting the adapter's operations.")]
+        public virtual void ResetLifetimeCounters()
+        {
+            m_lifetimeMeasurements = 0L;
+            m_totalBytesSent = 0L;
+        }
+
+        /// <summary>
         /// Queues a single measurement for processing.
         /// </summary>
         /// <param name="measurement">Measurement to queue for processing.</param>
