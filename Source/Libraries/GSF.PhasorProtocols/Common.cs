@@ -123,13 +123,9 @@ namespace GSF.PhasorProtocols
             IConfigurationFrame configFrame = null;
             SoapFormatter xmlSerializer = new SoapFormatter();
 
-            // TODO: When project is renamed to "PhasorProtocols.dll", uncomment the following:
-            //string xmlFile = Encoding.Default.GetString(configStream.ReadStream());            
-            //xmlFile = xmlFile.Replace("GSF.Phasors", "PhasorProtocols");
-            //xmlFile = xmlFile.Replace("PhasorProtocols", "PhasorProtocols");
-
             xmlSerializer.AssemblyFormat = FormatterAssemblyStyle.Simple;
             xmlSerializer.TypeFormat = FormatterTypeStyle.TypesWhenNeeded;
+            xmlSerializer.Binder = Serialization.LegacyBinder;
 
             //configFrame = xmlSerializer.Deserialize(new MemoryStream(Encoding.Default.GetBytes(xmlFile))) as IConfigurationFrame;
             configFrame = xmlSerializer.Deserialize(configStream) as IConfigurationFrame;
