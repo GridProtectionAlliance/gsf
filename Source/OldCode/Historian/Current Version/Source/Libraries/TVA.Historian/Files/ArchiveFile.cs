@@ -1499,26 +1499,29 @@ namespace TVA.Historian.Files
                     m_conserveMemoryTimer.Start();
                 }
 
-                // Start preparing the list of historic files.
-                m_buildHistoricFileListThread = new Thread(BuildHistoricFileList);
-                m_buildHistoricFileListThread.Priority = ThreadPriority.Lowest;
-                m_buildHistoricFileListThread.Start();
-
-                // Start file watchers to monitor file system changes.
-                if (m_monitorNewArchiveFiles)
+                if (m_fileType == ArchiveFileType.Active)
                 {
-                    if (m_currentLocationFileWatcher != null)
-                    {
-                        m_currentLocationFileWatcher.Filter = HistoricFilesSearchPattern;
-                        m_currentLocationFileWatcher.Path = FilePath.GetDirectoryName(m_fileName);
-                        m_currentLocationFileWatcher.EnableRaisingEvents = true;
-                    }
+                    // Start preparing the list of historic files.
+                    m_buildHistoricFileListThread = new Thread(BuildHistoricFileList);
+                    m_buildHistoricFileListThread.Priority = ThreadPriority.Lowest;
+                    m_buildHistoricFileListThread.Start();
 
-                    if (Directory.Exists(m_archiveOffloadLocation) && m_offloadLocationFileWatcher != null)
+                    // Start file watchers to monitor file system changes.
+                    if (m_monitorNewArchiveFiles)
                     {
-                        m_offloadLocationFileWatcher.Filter = HistoricFilesSearchPattern;
-                        m_offloadLocationFileWatcher.Path = m_archiveOffloadLocation;
-                        m_offloadLocationFileWatcher.EnableRaisingEvents = true;
+                        if (m_currentLocationFileWatcher != null)
+                        {
+                            m_currentLocationFileWatcher.Filter = HistoricFilesSearchPattern;
+                            m_currentLocationFileWatcher.Path = FilePath.GetDirectoryName(m_fileName);
+                            m_currentLocationFileWatcher.EnableRaisingEvents = true;
+                        }
+
+                        if (Directory.Exists(m_archiveOffloadLocation) && m_offloadLocationFileWatcher != null)
+                        {
+                            m_offloadLocationFileWatcher.Filter = HistoricFilesSearchPattern;
+                            m_offloadLocationFileWatcher.Path = m_archiveOffloadLocation;
+                            m_offloadLocationFileWatcher.EnableRaisingEvents = true;
+                        }
                     }
                 }
             }
@@ -2469,10 +2472,13 @@ namespace TVA.Historian.Files
         internal void CloseStream()
         {
             m_fat = null;
+
             if (m_fileStream != null)
             {
                 lock (m_fileStream)
                 {
+                    m_fileStream.Flush();
+                    m_fileStream.Close();
                     m_fileStream.Dispose();
                 }
                 m_fileStream = null;
