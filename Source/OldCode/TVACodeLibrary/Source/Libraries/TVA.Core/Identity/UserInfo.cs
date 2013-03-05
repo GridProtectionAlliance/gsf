@@ -78,6 +78,8 @@
 //       Added Mono implementation exception regions.
 //  11/23/2011 - J. Ritchie Carroll
 //       Modified to support new life cycle interface requirements (i.e., Diposed event).
+//  03/05/2013 - Joe France
+//      Prefer the lastlogontimestamp property over .lastLogon property
 //
 //*******************************************************************************************************
 
@@ -703,8 +705,10 @@ namespace TVA.Identity
                     {
                         if (m_isWinNT)
                             return DateTime.Parse(GetUserProperty("lastLogin"));
-
-                        return Convert.ToDateTime(GetUserProperty("lastLogon"));
+                        else if (m_userEntry.Properties.Contains("lastlogontimestamp"))
+                            return DateTime.FromFileTime(ConvertToLong(m_userEntry.Properties["lastlogontimestamp"].Value));
+                        else
+                            return DateTime.MinValue;
                     }
                     catch
                     {
