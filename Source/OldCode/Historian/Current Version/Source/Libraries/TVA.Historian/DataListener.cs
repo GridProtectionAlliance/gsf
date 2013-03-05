@@ -288,7 +288,7 @@ namespace TVA.Historian
             m_tcpServer.ReceiveClientDataComplete += ServerSocket_ReceiveClientDataComplete;
 
             m_dataInitClient = new TcpClient();
-            m_dataInitClient.ConnectionString = "Server={0}:1003";
+            m_dataInitClient.ConnectionString = "Server={0}:1003; interface=0.0.0.0";
             m_dataInitClient.PayloadAware = true;
             m_dataInitClient.MaxConnectionAttempts = 10;
             m_dataInitClient.ReceiveDataComplete += DataInitClient_ReceiveDataComplete;
@@ -489,7 +489,7 @@ namespace TVA.Historian
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the settings of <see cref="DataListener"/> are to be saved to the config file.
         /// </summary>
-        [Category("Persistance"),
+        [Category("Persistence"),
         DefaultValue(DefaultPersistSettings),
         Description("Indicates whether the settings of DataListener are to be saved to the config file.")]
         public bool PersistSettings
@@ -508,7 +508,7 @@ namespace TVA.Historian
         /// Gets or sets the category under which the settings of <see cref="DataListener"/> are to be saved to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
-        [Category("Persistance"),
+        [Category("Persistence"),
         DefaultValue(DefaultSettingsCategory),
         Description("Category under which the settings of DataListener are to be saved to the config file if the PersistSettings property is set to true.")]
         public string SettingsCategory
@@ -830,22 +830,22 @@ namespace TVA.Historian
                 // Start-up the appropriate communication component that'll get the raw data.
                 if (Protocol == TransportProtocol.Udp)
                 {
-                    m_udpClient.ConnectionString = string.Format("Port={0}", Port);
-                    m_udpClient.Connect(); // Start the connection cycle - try indefinately.
+                    m_udpClient.ConnectionString = string.Format("Port={0}; interface=0.0.0.0", Port);
+                    m_udpClient.Connect(); // Start the connection cycle - try indefinitely.
                 }
                 else
                 {
                     if (m_connectToServer)
                     {
                         // TCP connection - going out to the server for connection.
-                        m_tcpClient.ConnectionString = string.Format("Server={0}:{1}", Server, Port);
-                        m_tcpClient.Connect(); // Start the connection cycle - try indefinately.
+                        m_tcpClient.ConnectionString = string.Format("Server={0}:{1}; interface=0.0.0.0", Server, Port);
+                        m_tcpClient.Connect(); // Start the connection cycle - try indefinitely.
                     }
                     else
                     {
                         // TCP connection - client coming in for connection.
-                        m_tcpServer.ConfigurationString = string.Format("Port={0}", Port);
-                        m_tcpServer.Start(); // Start the connection cycle - try indefinately.
+                        m_tcpServer.ConfigurationString = string.Format("Port={0}; interface=0.0.0.0", Port);
+                        m_tcpServer.Start(); // Start the connection cycle - try indefinitely.
                         OnSocketConnecting();
                     }
                 }
