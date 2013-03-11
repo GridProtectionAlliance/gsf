@@ -1192,7 +1192,7 @@ namespace GSF.TimeSeries.Transport
                 m_metadataTables = setting;
 
             // See if a user defined compression strength has been provided
-            if (settings.TryGetValue("strength", out setting) && int.TryParse(setting, out strength))
+            if (settings.TryGetValue("compressionStrength", out setting) && int.TryParse(setting, out strength))
                 CompressionStrength = strength;
 
             // Check flag to see if payload compression is allowed
