@@ -25,9 +25,9 @@
 //
 //******************************************************************************************************
 
-using GSF.Parsing;
 using System;
 using System.Text;
+using GSF.Parsing;
 
 namespace GSF.TimeSeries.Transport
 {
@@ -40,7 +40,7 @@ namespace GSF.TimeSeries.Transport
     /// at their full resolution and no attempt is made to optimize the binary image for
     /// purposes of size reduction.
     /// </remarks>
-    public class SerializableMeasurement : Measurement, ISupportBinaryImage
+    public class SerializableMeasurement : Measurement, IBinaryMeasurement
     {
         #region [ Members ]
 

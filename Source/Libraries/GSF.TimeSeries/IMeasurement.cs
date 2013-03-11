@@ -26,7 +26,9 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 
 namespace GSF.TimeSeries
@@ -131,11 +133,11 @@ namespace GSF.TimeSeries
         /// </summary>
         FutureTimeAlarm = (uint)Bits.Bit19,
         /// <summary>
-        /// Defines upsampled state.
+        /// Defines up-sampled state.
         /// </summary>
         UpSampled = (uint)Bits.Bit20,
         /// <summary>
-        /// Defines downsampled state.
+        /// Defines down-sampled state.
         /// </summary>
         DownSampled = (uint)Bits.Bit21,
         /// <summary>
@@ -297,6 +299,9 @@ namespace GSF.TimeSeries
     /// </remarks>
     public static class IMeasurementExtensions
     {
+        private static readonly ConcurrentDictionary<string, int> s_signalTypeIDs = new ConcurrentDictionary<string, int>();
+        private static readonly ConcurrentDictionary<Guid, int> s_signalTypeIDCache = new ConcurrentDictionary<Guid, int>();
+
         /// <summary>
         /// Returns <c>true</c> if <see cref="MeasurementStateFlags.BadData"/> is not set.
         /// </summary>
@@ -361,6 +366,33 @@ namespace GSF.TimeSeries
                 return new MeasurementKey[0];
 
             return measurements.Select(m => m.Key).ToArray();
+        }
+
+        /// <summary>
+        /// Gets a unique (run-time only) signal type ID for the given <paramref name="measurement"/> useful for sorting.
+        /// </summary>
+        /// <param name="measurement"><see cref="IMeasurement"/> to obtain signal type for.</param>
+        /// <param name="dataSource"><see cref="DataSet"/> that contains measurement metadata.</param>
+        /// <returns>Unique (run-time only) signal type ID for the given <paramref name="measurement"/>.</returns>
+        public static int GetSignalType(this IMeasurement measurement, DataSet dataSource)
+        {
+            // This uses string hash code over something like item count + 1 to generate a unique run-time ID of the signal type since chances of a hash code collision
+            // over a small set of signal types is much smaller than the possibility of duplicates due to possible race conditions when using item count + 1
+            return s_signalTypeIDCache.GetOrAdd(measurement.ID, signalID => s_signalTypeIDs.GetOrAdd(LookupSignalType(signalID, dataSource), signalType => signalType.GetHashCode()));
+        }
+
+        // Lookup signal type for given measurement ID
+        private static string LookupSignalType(Guid signalID, DataSet dataSource)
+        {
+            try
+            {
+                DataRow[] filteredRows = dataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalID = '{0}'", signalID.ToString()));
+                return filteredRows.Length > 0 ? filteredRows[0]["SignalType"].ToString().ToUpper().Trim() : "NONE";
+            }
+            catch
+            {
+                return "NONE";
+            }
         }
     }
 }

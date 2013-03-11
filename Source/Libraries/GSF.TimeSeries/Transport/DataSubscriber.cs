@@ -1755,6 +1755,7 @@ namespace GSF.TimeSeries.Transport
 
                             bool synchronizedMeasurements = ((byte)(flags & DataPacketFlags.Synchronized) > 0);
                             bool compactMeasurementFormat = ((byte)(flags & DataPacketFlags.Compact) > 0);
+                            bool compressedPayload = ((byte)(flags & DataPacketFlags.Compressed) > 0);
                             int cipherIndex = (flags & DataPacketFlags.CipherIndex) > 0 ? 1 : 0;
 
                             // Decrypt data packet payload if keys are available
@@ -1780,29 +1781,9 @@ namespace GSF.TimeSeries.Transport
                             count = EndianOrder.BigEndian.ToInt32(buffer, responseIndex);
                             responseIndex += 4;
 
-                            // Deserialize measurements
-                            for (int i = 0; i < count; i++)
+                            if (compressedPayload)
                             {
-                                if (!compactMeasurementFormat)
-                                {
-                                    // Deserialize full measurement format
-                                    SerializableMeasurement measurement = new SerializableMeasurement(m_encoding);
-                                    responseIndex += measurement.ParseBinaryImage(buffer, responseIndex, responseLength - responseIndex);
-                                    measurements.Add(measurement);
-                                }
-                                else if ((object)m_signalIndexCache != null)
-                                {
-                                    // Deserialize compact measurement format
-                                    CompactMeasurement measurement = new CompactMeasurement(m_signalIndexCache, m_includeTime, m_baseTimeOffsets, m_timeIndex, m_useMillisecondResolution);
-                                    responseIndex += measurement.ParseBinaryImage(buffer, responseIndex, responseLength - responseIndex);
-
-                                    // Apply timestamp from frame if not included in transmission
-                                    if (!measurement.IncludeTime)
-                                        measurement.Timestamp = timestamp;
-
-                                    measurements.Add(measurement);
-                                }
-                                else if (m_lastMissingCacheWarning + MissingCacheWarningInterval < now)
+                                if ((object)m_signalIndexCache == null && m_lastMissingCacheWarning + MissingCacheWarningInterval < now)
                                 {
                                     if (m_lastMissingCacheWarning != 0L)
                                     {
@@ -1811,6 +1792,54 @@ namespace GSF.TimeSeries.Transport
                                     }
 
                                     m_lastMissingCacheWarning = now;
+                                }
+                                else
+                                {
+                                    try
+                                    {
+                                        // Decompress compact measurements from payload
+                                        measurements.AddRange(buffer.DecompressPayload(responseIndex, responseLength, count, m_includeTime, flags));
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        OnProcessException(new InvalidOperationException("WARNING: Decompression failure: " + ex.Message, ex));
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // Deserialize measurements
+                                for (int i = 0; i < count; i++)
+                                {
+                                    if (!compactMeasurementFormat)
+                                    {
+                                        // Deserialize full measurement format
+                                        SerializableMeasurement measurement = new SerializableMeasurement(m_encoding);
+                                        responseIndex += measurement.ParseBinaryImage(buffer, responseIndex, responseLength - responseIndex);
+                                        measurements.Add(measurement);
+                                    }
+                                    else if ((object)m_signalIndexCache != null)
+                                    {
+                                        // Deserialize compact measurement format
+                                        CompactMeasurement measurement = new CompactMeasurement(m_signalIndexCache, m_includeTime, m_baseTimeOffsets, m_timeIndex, m_useMillisecondResolution);
+                                        responseIndex += measurement.ParseBinaryImage(buffer, responseIndex, responseLength - responseIndex);
+
+                                        // Apply timestamp from frame if not included in transmission
+                                        if (!measurement.IncludeTime)
+                                            measurement.Timestamp = timestamp;
+
+                                        measurements.Add(measurement);
+                                    }
+                                    else if (m_lastMissingCacheWarning + MissingCacheWarningInterval < now)
+                                    {
+                                        if (m_lastMissingCacheWarning != 0L)
+                                        {
+                                            // Warning message for missing signal index cache
+                                            OnStatusMessage("WARNING: Signal index cache has not arrived. No compact measurements can be parsed.");
+                                        }
+
+                                        m_lastMissingCacheWarning = now;
+                                    }
                                 }
                             }
 
@@ -1942,7 +1971,7 @@ namespace GSF.TimeSeries.Transport
                 }
 
                 // Start unsynchronized subscription
-#pragma warning disable 0618
+                #pragma warning disable 0618
                 UnsynchronizedSubscribe(true, false, filterExpression.ToString(), dataChannel);
             }
             else
@@ -2415,6 +2444,8 @@ namespace GSF.TimeSeries.Transport
             {
                 if (ConnectionEstablished != null)
                     ConnectionEstablished(this, EventArgs.Empty);
+
+                m_lastMissingCacheWarning = 0L;
             }
             catch (Exception ex)
             {

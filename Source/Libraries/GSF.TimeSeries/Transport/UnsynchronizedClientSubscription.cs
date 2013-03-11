@@ -59,7 +59,9 @@ namespace GSF.TimeSeries.Transport
         private readonly Guid m_subscriberID;
         private DataPublisher m_parent;
         private string m_hostName;
-        private bool m_useCompactMeasurementFormat;
+        private volatile byte m_compressionStrength;
+        private volatile bool m_usePayloadCompression;
+        private volatile bool m_useCompactMeasurementFormat;
         private long m_lastPublishTime;
         private string m_requestedInputFilter;
         private double m_publishInterval;
@@ -154,6 +156,45 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Gets or sets flag that determines if payload compression should be enabled in data packets of this <see cref="UnsynchronizedClientSubscription"/>.
+        /// </summary>
+        public bool UsePayloadCompression
+        {
+            get
+            {
+                return m_usePayloadCompression;
+            }
+            set
+            {
+                m_usePayloadCompression = value;
+
+                if (m_usePayloadCompression)
+                    m_useCompactMeasurementFormat = true;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the compression strength value to use when <see cref="UsePayloadCompression"/> is <c>true</c> for this <see cref="UnsynchronizedClientSubscription"/>.
+        /// </summary>
+        public int CompressionStrength
+        {
+            get
+            {
+                return m_compressionStrength;
+            }
+            set
+            {
+                if (value < 0)
+                    value = 0;
+
+                if (value > 31)
+                    value = 31;
+
+                m_compressionStrength = (byte)value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="UnsynchronizedClientSubscription"/>.
         /// </summary>
         public bool UseCompactMeasurementFormat
@@ -164,7 +205,7 @@ namespace GSF.TimeSeries.Transport
             }
             set
             {
-                m_useCompactMeasurementFormat = value;
+                m_useCompactMeasurementFormat = value || m_usePayloadCompression;
             }
         }
 
@@ -459,11 +500,7 @@ namespace GSF.TimeSeries.Transport
 
                 lock (this)
                 {
-                    foreach (IMeasurement measurement in measurements)
-                    {
-                        if (IsInputMeasurement(measurement.Key))
-                            filteredMeasurements.Add(measurement);
-                    }
+                    filteredMeasurements.AddRange(measurements.Where(measurement => IsInputMeasurement(measurement.Key)));
                 }
 
                 measurements = filteredMeasurements;
@@ -504,13 +541,26 @@ namespace GSF.TimeSeries.Transport
 
                     // Publish latest data values...
                     if ((object)m_processQueue != null)
-                        m_processQueue.Enqueue(currentMeasurements);
+                    {
+                        // Order measurements by signal type for better compression when enabled
+                        if (m_usePayloadCompression)
+                            m_processQueue.Enqueue(currentMeasurements.OrderBy(measurement => measurement.GetSignalType(DataSource)));
+                        else
+                            m_processQueue.Enqueue(currentMeasurements);
+                    }
                 }
             }
             else
             {
                 // Publish unsynchronized on data receipt otherwise...
-                m_processQueue.Enqueue(measurements);
+                if ((object)m_processQueue != null)
+                {
+                    // Order measurements by signal type for better compression when enabled
+                    if (m_usePayloadCompression)
+                        m_processQueue.Enqueue(measurements.OrderBy(measurement => measurement.GetSignalType(DataSource)));
+                    else
+                        m_processQueue.Enqueue(measurements);
+                }
             }
         }
 
@@ -519,13 +569,17 @@ namespace GSF.TimeSeries.Transport
             if ((object)m_parent == null || m_disposed)
                 return;
 
-            List<ISupportBinaryImage> packet = new List<ISupportBinaryImage>();
-            bool useCompactMeasurementFormat = m_useCompactMeasurementFormat;
+            // Includes data packet flags and measurement count
+            const int PacketHeaderSize = DataPublisher.ClientResponseHeaderSize + 5;
+
+            List<IBinaryMeasurement> packet = new List<IBinaryMeasurement>();
+            bool usePayloadCompression = m_usePayloadCompression;
+            bool useCompactMeasurementFormat = m_useCompactMeasurementFormat || usePayloadCompression;
             BufferBlockMeasurement bufferBlockMeasurement;
-            ISupportBinaryImage binaryMeasurement;
+            IBinaryMeasurement binaryMeasurement;
             byte[] bufferBlock;
             int binaryLength;
-            int packetSize = 5;
+            int packetSize = PacketHeaderSize;
 
             // If a set of base times has not yet been initialized, initialize a set by rotating
             if (!m_initializedBaseTimeOffsets)
@@ -563,9 +617,9 @@ namespace GSF.TimeSeries.Transport
                     // packet size, process the current packet and start a new packet.
                     if (packetSize + binaryLength > DataPublisher.MaxPacketSize)
                     {
-                        ProcessBinaryMeasurements(packet, useCompactMeasurementFormat);
+                        ProcessBinaryMeasurements(packet, useCompactMeasurementFormat, usePayloadCompression);
                         packet.Clear();
-                        packetSize = 5;
+                        packetSize = PacketHeaderSize;
                     }
 
                     // Add the current measurement to the packet.
@@ -576,10 +630,10 @@ namespace GSF.TimeSeries.Transport
 
             // Process the remaining measurements.
             if (packet.Count > 0)
-                ProcessBinaryMeasurements(packet, useCompactMeasurementFormat);
+                ProcessBinaryMeasurements(packet, useCompactMeasurementFormat, usePayloadCompression);
         }
 
-        private void ProcessBinaryMeasurements(IEnumerable<ISupportBinaryImage> measurements, bool useCompactMeasurementFormat)
+        private void ProcessBinaryMeasurements(IEnumerable<IBinaryMeasurement> measurements, bool useCompactMeasurementFormat, bool usePayloadCompression)
         {
             MemoryStream data = new MemoryStream();
 
@@ -597,10 +651,21 @@ namespace GSF.TimeSeries.Transport
             // Serialize total number of measurement values to follow
             data.Write(EndianOrder.BigEndian.GetBytes(measurements.Count()), 0, 4);
 
-            // Serialize measurements to data buffer
-            foreach (ISupportBinaryImage measurement in measurements)
+            // Attempt compression when requested - encoding of compressed buffer only happens if size would be smaller than normal serialization
+            if (!usePayloadCompression || !measurements.Cast<CompactMeasurement>().CompressPayload(data, m_compressionStrength, m_includeTime, ref flags))
             {
-                measurement.CopyBinaryImageToStream(data);
+                // Serialize measurements to data buffer
+                foreach (IBinaryMeasurement measurement in measurements)
+                {
+                    measurement.CopyBinaryImageToStream(data);
+                }
+            }
+
+            // Update data packet flags if it has updated compression flags
+            if ((flags & DataPacketFlags.Compressed) > 0)
+            {
+                data.Seek(0, SeekOrigin.Begin);
+                data.WriteByte((byte)flags);
             }
 
             // Publish data packet to client

@@ -287,7 +287,7 @@ namespace PhasorProtocolAdapters
         #region [ Methods ]
 
         /// <summary>
-        /// Intializes <see cref="CalculatedMeasurementBase"/>.
+        /// Initializes <see cref="CalculatedMeasurementBase"/>.
         /// </summary>
         public override void Initialize()
         {
