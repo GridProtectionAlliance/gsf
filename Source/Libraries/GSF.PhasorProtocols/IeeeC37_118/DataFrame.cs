@@ -303,6 +303,23 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
+        /// Parses the binary image.
+        /// </summary>
+        /// <param name="buffer">Binary image to parse.</param>
+        /// <param name="startIndex">Start index into <paramref name="buffer"/> to begin parsing.</param>
+        /// <param name="length">Length of valid data within <paramref name="buffer"/>.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        /// <remarks>
+        /// This method is overriden to ensure that the return value is the frame length
+        /// defined in the header of the frame rather than the number of bytes parsed.
+        /// </remarks>
+        public override int ParseBinaryImage(byte[] buffer, int startIndex, int length)
+        {
+            base.ParseBinaryImage(buffer, startIndex, length);
+            return State.ParsedBinaryLength;
+        }
+
+        /// <summary>
         /// Calculates checksum of given <paramref name="buffer"/>.
         /// </summary>
         /// <param name="buffer">Buffer image over which to calculate checksum.</param>
