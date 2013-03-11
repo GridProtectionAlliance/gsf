@@ -293,6 +293,27 @@ using TVA.Configuration;
 namespace TVA.Communication
 {
     /// <summary>
+    /// Defines modes by which the UDP server will identify its clients when receiving messages.
+    /// </summary>
+    public enum ClientIdentificationMode
+    {
+        /// <summary>
+        /// Identify clients by their IP address.
+        /// </summary>
+        IP,
+
+        /// <summary>
+        /// Identify clients by the port they are bound to.
+        /// </summary>
+        Port,
+
+        /// <summary>
+        /// Identify clients by both their IP address and the port they are bound to.
+        /// </summary>
+        EndPoint
+    }
+
+    /// <summary>
     /// Represents a UDP-based communication server.
     /// </summary>
     /// <remarks>
@@ -407,6 +428,11 @@ namespace TVA.Communication
         // Constants
 
         /// <summary>
+        /// Specifies the default value for the <see cref="ClientIdentificationMode"/> property.
+        /// </summary>
+        public const ClientIdentificationMode DefaultClientIdentificationMode = ClientIdentificationMode.EndPoint;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="AllowDualStackSocket"/> property.
         /// </summary>
         public const bool DefaultAllowDualStackSocket = true;
@@ -430,6 +456,7 @@ namespace TVA.Communication
         private TransportProvider<Socket> m_udpServer;
         private SocketAsyncEventArgs m_receiveArgs;
         private ConcurrentDictionary<Guid, UdpClientInfo> m_clientInfoLookup;
+        private ClientIdentificationMode m_clientIdentificationMode;
         private IPStack m_ipStack;
         private bool m_allowDualStackSocket;
         private int m_maxSendQueueSize;
@@ -457,6 +484,7 @@ namespace TVA.Communication
         public UdpServer(string configString)
             : base(TransportProtocol.Udp, configString)
         {
+            m_clientIdentificationMode = DefaultClientIdentificationMode;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_maxSendQueueSize = DefaultMaxSendQueueSize;
             m_clientInfoLookup = new ConcurrentDictionary<Guid, UdpClientInfo>();
@@ -479,6 +507,24 @@ namespace TVA.Communication
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the mode by which the UDP server will identify its clients when receiving messages.
+        /// </summary>
+        [Category("Settings"),
+        DefaultValue(DefaultClientIdentificationMode),
+        Description("Mode by which the UDP server will identify its clients when receiving messages.")]
+        public ClientIdentificationMode ClientIdentificationMode
+        {
+            get
+            {
+                return m_clientIdentificationMode;
+            }
+            set
+            {
+                m_clientIdentificationMode = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets a boolean value that determines if dual-mode socket is allowed when endpoint address is IPv6.
@@ -619,11 +665,13 @@ namespace TVA.Communication
         public override void SaveSettings()
         {
             base.SaveSettings();
+
             if (PersistSettings)
             {
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                settings["IdentifyClientsBy", true].Update(m_clientIdentificationMode);
                 settings["AllowDualStackSocket", true].Update(m_allowDualStackSocket);
                 settings["MaxSendQueueSize", true].Update(m_maxSendQueueSize);
                 config.Save();
@@ -641,8 +689,10 @@ namespace TVA.Communication
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                settings.Add("IdentifyClienstBy", m_clientIdentificationMode, "Specifies how to identify clients when receiving data. Can be IP, Port, or EndPoint.");
                 settings.Add("AllowDualStackSocket", m_allowDualStackSocket, "True if dual-mode socket is allowed when IP address is IPv6, otherwise False.");
                 settings.Add("MaxSendQueueSize", m_maxSendQueueSize, "The maximum size of the send queue before payloads are dumped from the queue.");
+                ClientIdentificationMode = settings["IdentifyClientsBy"].ValueAs(m_clientIdentificationMode);
                 AllowDualStackSocket = settings["AllowDualStackSocket"].ValueAs(m_allowDualStackSocket);
                 MaxSendQueueSize = settings["MaxSendQueueSize"].ValueAs(m_maxSendQueueSize);
             }
@@ -681,11 +731,16 @@ namespace TVA.Communication
         {
             if (CurrentState == ServerState.NotRunning)
             {
+                ClientIdentificationMode clientIdentificationMode;
                 int maxSendQueueSize;
 
                 // Initialize if uninitialized
                 if (!Initialized)
                     Initialize();
+
+                // Overwrite config file if client identification mode exists in connection string.
+                if (m_configData.ContainsKey("identifyClientsBy") && Enum.TryParse(m_configData["identifyClientsBy"], true, out clientIdentificationMode))
+                    m_clientIdentificationMode = clientIdentificationMode;
 
                 // Overwrite config file if max send queue size exists in connection string.
                 if (m_configData.ContainsKey("maxSendQueueSize") && int.TryParse(m_configData["maxSendQueueSize"], out maxSendQueueSize))
@@ -1166,6 +1221,7 @@ namespace TVA.Communication
         /// </summary>
         private void ProcessReceive(SocketAsyncEventArgs args)
         {
+            TransportProvider<EndPoint> client;
             Guid clientID = default(Guid);
 
             try
@@ -1178,16 +1234,14 @@ namespace TVA.Communication
                 m_udpServer.BytesReceived = args.BytesTransferred;
 
                 // Search connected clients for a client connected to the end-point from where this data is received.
-                foreach (TransportProvider<EndPoint> client in m_clientInfoLookup.Values.Select(clientInfo => clientInfo.Client))
+                client = IdentifyClient(args.RemoteEndPoint);
+
+                if ((object)client != null)
                 {
-                    if (client.Provider.Equals(args.RemoteEndPoint))
-                    {
-                        // Found a match, notify of data.
-                        clientID = client.ID;
-                        client.Statistics.UpdateBytesReceived(args.BytesTransferred);
-                        OnReceiveClientDataComplete(client.ID, m_udpServer.ReceiveBuffer, m_udpServer.BytesReceived);
-                        break;
-                    }
+                    // Notify client of data.
+                    clientID = client.ID;
+                    client.Statistics.UpdateBytesReceived(args.BytesTransferred);
+                    OnReceiveClientDataComplete(client.ID, m_udpServer.ReceiveBuffer, m_udpServer.BytesReceived);
                 }
 
                 // Resume receive operation on the server socket.
@@ -1197,6 +1251,46 @@ namespace TVA.Communication
             {
                 OnReceiveClientDataException(clientID, ex);
             }
+        }
+
+        private TransportProvider<EndPoint> IdentifyClient(EndPoint remoteEndPoint)
+        {
+            IPEndPoint remoteIPEndPoint = remoteEndPoint as IPEndPoint;
+            IPEndPoint clientIPEndPoint;
+
+            foreach (TransportProvider<EndPoint> client in m_clientInfoLookup.Values.Select(clientInfo => clientInfo.Client))
+            {
+                clientIPEndPoint = client.Provider as IPEndPoint;
+
+                switch (m_clientIdentificationMode)
+                {
+                    case ClientIdentificationMode.IP:
+                        if ((object)remoteIPEndPoint != null && (object)clientIPEndPoint != null)
+                        {
+                            if (remoteIPEndPoint.Address.Equals(clientIPEndPoint.Address))
+                                return client;
+                        }
+
+                        break;
+
+                    case ClientIdentificationMode.Port:
+                        if ((object)remoteIPEndPoint != null && (object)clientIPEndPoint != null)
+                        {
+                            if (remoteIPEndPoint.Port == clientIPEndPoint.Port)
+                                return client;
+                        }
+
+                        break;
+
+                    case ClientIdentificationMode.EndPoint:
+                        if (remoteEndPoint.Equals(client.Provider))
+                            return client;
+
+                        break;
+                }
+            }
+
+            return null;
         }
 
         #endregion
