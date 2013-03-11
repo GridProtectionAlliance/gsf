@@ -23,11 +23,12 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.Text;
 using GSF;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Transport;
-using System;
-using System.Collections.Generic;
 
 namespace DataSubscriberTest
 {
@@ -43,6 +44,8 @@ namespace DataSubscriberTest
         static System.Timers.Timer timer = new System.Timers.Timer(10000);
         static object displayLock = new object();
 
+        private const int MeasurementCount = 200;
+
         static void Main(string[] args)
         {
             // Attach to subscriber events
@@ -52,24 +55,32 @@ namespace DataSubscriberTest
             subscriber.ConnectionTerminated += subscriber_ConnectionTerminated;
             subscriber.NewMeasurements += subscriber_NewMeasurements;
 
+            StringBuilder connectionString = new StringBuilder();
+
+            // Define connection string
+            for (int i = 1; i <= MeasurementCount; i++)
+            {
+                connectionString.AppendFormat("DEVARCHIVE:{0};", i);
+            }
+
             // Set up subscription info objects
             remotelySynchronizedInfo.LagTime = 0.5D;
             remotelySynchronizedInfo.LeadTime = 1.0D;
-            remotelySynchronizedInfo.FilterExpression = "DEVARCHIVE:1;DEVARCHIVE:2";
+            remotelySynchronizedInfo.FilterExpression = connectionString.ToString();
 
             locallySynchronizedInfo.LagTime = 0.5D;
             locallySynchronizedInfo.LeadTime = 1.0D;
-            locallySynchronizedInfo.FilterExpression = "DEVARCHIVE:1;DEVARCHIVE:2";
+            locallySynchronizedInfo.FilterExpression = connectionString.ToString();
 
-            unsynchronizedInfo.FilterExpression = "DEVARCHIVE:1;DEVARCHIVE:2";
+            unsynchronizedInfo.FilterExpression = connectionString.ToString();
 
             throttledInfo.LagTime = 5.0D;
             throttledInfo.LeadTime = 1.0D;
-            throttledInfo.FilterExpression = "DEVARCHIVE:1;DEVARCHIVE:2";
+            throttledInfo.FilterExpression = connectionString.ToString();
 
             // Initialize subscriber
             subscriber.ConnectionString = "server=localhost:6177";
-            //subscriber.OperationalModes |= OperationalModes.UseCommonSerializationFormat | OperationalModes.CompressMetadata | OperationalModes.CompressSignalIndexCache;
+            subscriber.OperationalModes |= OperationalModes.UseCommonSerializationFormat | OperationalModes.CompressMetadata | OperationalModes.CompressSignalIndexCache | OperationalModes.CompressPayloadData;
             subscriber.Initialize();
 
             // Start subscriber connection cycle

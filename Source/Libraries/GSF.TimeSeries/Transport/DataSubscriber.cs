@@ -1652,7 +1652,7 @@ namespace GSF.TimeSeries.Transport
                     ServerResponse responseCode = (ServerResponse)buffer[0];
                     ServerCommand commandCode = (ServerCommand)buffer[1];
                     int responseLength = EndianOrder.BigEndian.ToInt32(buffer, 2);
-                    int responseIndex = 6;
+                    int responseIndex = DataPublisher.ClientResponseHeaderSize;
                     bool solicited = false;
                     byte[][][] keyIVs;
 
@@ -1798,7 +1798,7 @@ namespace GSF.TimeSeries.Transport
                                     try
                                     {
                                         // Decompress compact measurements from payload
-                                        measurements.AddRange(buffer.DecompressPayload(responseIndex, responseLength, count, m_includeTime, flags));
+                                        measurements.AddRange(buffer.DecompressPayload(m_signalIndexCache, responseIndex, responseLength - responseIndex + DataPublisher.ClientResponseHeaderSize, count, m_includeTime, flags));
                                     }
                                     catch (Exception ex)
                                     {
@@ -1971,7 +1971,7 @@ namespace GSF.TimeSeries.Transport
                 }
 
                 // Start unsynchronized subscription
-                #pragma warning disable 0618
+#pragma warning disable 0618
                 UnsynchronizedSubscribe(true, false, filterExpression.ToString(), dataChannel);
             }
             else

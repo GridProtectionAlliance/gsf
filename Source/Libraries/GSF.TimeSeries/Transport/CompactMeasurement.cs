@@ -350,9 +350,9 @@ namespace GSF.TimeSeries.Transport
             set
             {
                 // Decode compact state flags
-                CompactMeasurementStateFlags flags = (CompactMeasurementStateFlags)value;               
-                StateFlags = flags.MapToFullFlags();               
-                m_timeIndex = (flags & CompactMeasurementStateFlags.TimeIndex) > 0 ? 1 : 0;                
+                CompactMeasurementStateFlags flags = (CompactMeasurementStateFlags)value;
+                StateFlags = flags.MapToFullFlags();
+                m_timeIndex = (flags & CompactMeasurementStateFlags.TimeIndex) > 0 ? 1 : 0;
                 m_usingBaseTimeOffset = (flags & CompactMeasurementStateFlags.BaseTimeOffset) > 0;
             }
         }
@@ -548,11 +548,11 @@ namespace GSF.TimeSeries.Transport
         /// than normal serialized size.
         /// </para>
         /// <para>
-        /// As an optimization this function uses a compression method that is uses pointers to native structures, as such the
-        /// endian order decoding and encoding of the values will always be in the native-endian order of the operating system.
-        /// This will be an important consideration when writing a endian order neutral payload decompressor. To help with this
-        /// the endian order used during encoding is marked in the data flags. As an important note, actual measurements to are
-        /// consistently encoded in big-endian order prior to buffer compression in native-endian order.
+        /// As an optimization this function uses a compression method that uses pointers to native structures, as such the
+        /// endian order encoding of the compressed data will always be in the native-endian order of the operating system.
+        /// This will be an important consideration when writing a endian order neutral payload decompressor. To help with
+        /// this the actual endian order used during compression is marked in the data flags. However, measurements values
+        /// are consistently encoded in big-endian order prior to buffer compression.
         /// </para>
         /// </remarks>
         public static bool CompressPayload(this IEnumerable<CompactMeasurement> compactMeasurements, MemoryStream destination, byte compressionStrength, bool includeTime, ref DataPacketFlags flags)
@@ -667,20 +667,22 @@ namespace GSF.TimeSeries.Transport
         /// Decompresses <see cref="CompactMeasurement"/> values from the given <paramref name="source"/> buffer.
         /// </summary>
         /// <param name="source">Buffer with compressed <see cref="CompactMeasurement"/> payload.</param>
+        /// <param name="signalIndexCache">Current <see cref="SignalIndexCache"/>.</param>
         /// <param name="index">Index into buffer where compressed payload begins.</param>
         /// <param name="length">Length of all data within <paramref name="source"/> buffer.</param>
         /// <param name="measurementCount">Number of compressed measurements in the payload.</param>
         /// <param name="includeTime">Flag that determines if timestamps as included in the payload.</param>
         /// <param name="flags">Current <see cref="DataPacketFlags"/>.</param>
         /// <returns>Decompressed <see cref="CompactMeasurement"/> values from the given <paramref name="source"/> buffer.</returns>
-        public static CompactMeasurement[] DecompressPayload(this byte[] source, int index, int length, int measurementCount, bool includeTime, DataPacketFlags flags)
+        public static CompactMeasurement[] DecompressPayload(this byte[] source, SignalIndexCache signalIndexCache, int index, int dataLength, int measurementCount, bool includeTime, DataPacketFlags flags)
         {
             CompactMeasurement[] measurements = new CompactMeasurement[measurementCount];
             byte[] buffer = null;
 
             try
             {
-                int dataLength = length - index;
+                // Actual data length has to take into account response byte and in-response-to server command byte in the payload header
+                //int dataLength = length - index - 2;
                 int bufferLength = PatternDecompressor.MaximumSizeDecompressed(dataLength);
 
                 // Copy source data into a decompression buffer
@@ -690,8 +692,8 @@ namespace GSF.TimeSeries.Transport
                 // Check that OS endian-order matches endian-order of compressed data
                 if (!(BitConverter.IsLittleEndian && (flags & DataPacketFlags.LittleEndianCompression) > 0))
                 {
-                    // TODO: Set a flag, e.g., decompressAs, to pass into pattern decompressor so it
-                    // can be modified to decompress a payload that is not in non-native order
+                    // TODO: Set a flag, e.g., Endianness decompressAs, to pass into pattern decompressor so it
+                    // can be modified to decompress a payload that is non-native Endian order
                     throw new NotImplementedException("Cannot currently decompress payload that is not in native endian-order.");
                 }
 
@@ -706,7 +708,10 @@ namespace GSF.TimeSeries.Transport
                 // Decode ID pairs
                 for (int i = 0; i < measurementCount; i++)
                 {
-                    measurements[i].RuntimeID = EndianOrder.BigEndian.ToUInt16(buffer, index);
+                    measurements[i] = new CompactMeasurement(signalIndexCache, includeTime)
+                    {
+                        RuntimeID = EndianOrder.BigEndian.ToUInt16(buffer, index)
+                    };
                     index += 2;
                 }
 

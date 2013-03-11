@@ -23,12 +23,12 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Transport;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using GSF;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Transport;
 
 namespace DataPublisherTest
 {
@@ -37,6 +37,8 @@ namespace DataPublisherTest
         static DataPublisher publisher = new DataPublisher();
         static Ticks lastDisplayTime;
         static object displayLock = new object();
+
+        private const int MeasurementCount = 200;
 
         static void Main(string[] args)
         {
@@ -48,6 +50,8 @@ namespace DataPublisherTest
             // Initialize publisher
             publisher.Name = "dataPublisher";
             publisher.UseBaseTimeOffsets = true;
+            publisher.AllowPayloadCompression = true;
+            publisher.AllowSynchronizedSubscription = true;
             publisher.Initialize();
 
             // Start publisher
@@ -106,7 +110,7 @@ namespace DataPublisherTest
 
                 Measurement measurement;
 
-                for (int i = 1; i < 11; i++)
+                for (int i = 1; i <= MeasurementCount; i++)
                 {
                     measurement = new Measurement()
                     {

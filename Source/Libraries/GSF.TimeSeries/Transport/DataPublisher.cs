@@ -536,7 +536,10 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Size of client response header in bytes.
         /// </summary>
-        public const int ClientResponseHeaderSize = 2;
+        /// <remarks>
+        /// Header consists of response byte, in-response-to server command byte, 4-byte int representing payload length.
+        /// </remarks>
+        public const int ClientResponseHeaderSize = 6;
 
         // Length of random salt prefix
         internal const int CipherSaltLength = 8;
@@ -2479,7 +2482,6 @@ namespace GSF.TimeSeries.Transport
                             // Make sure adapter is started
                             subscription.Start();
 
-                            // TODO: Add a flag to the database to allow payload encryption to be subscriber specific instead of global to publisher...
                             // Send new or updated cipher keys
                             if (connection.Authenticated && m_encryptPayload)
                                 connection.RotateCipherKeys();
