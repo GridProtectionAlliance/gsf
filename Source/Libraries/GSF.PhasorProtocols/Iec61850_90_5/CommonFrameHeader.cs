@@ -228,7 +228,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
                             m_spduLength = EndianOrder.BigEndian.ToUInt32(buffer, index);
                             index += 4;
 
-                            // Add SPDU length to total frame length (updated as of 10/3/2012 to accomodate extra 6 bytes)
+                            // Add SPDU length to total frame length (updated as of 10/3/2012 to accommodate extra 6 bytes)
                             frameLength += (int)m_spduLength + 8;
 
                             // Make sure full frame of data is available - cannot calculate full frame length needed for check sum

@@ -29,7 +29,6 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using GSF.Parsing;
-using GSF;
 
 namespace GSF.PhasorProtocols.IeeeC37_118
 {
@@ -103,7 +102,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
 
             if (configurationFrame != null)
             {
-                // If config frame is available, frames have enough information for subsecond time resolution
+                // If config frame is available, frames have enough information for sub-second time resolution
                 m_timebase = configurationFrame.Timebase;
                 decimal fractionalSeconds = (fractionOfSecond & ~Common.TimeQualityFlagsMask) / (decimal)m_timebase;
                 m_timestamp += (long)(fractionalSeconds * (decimal)Ticks.PerSecond);

@@ -449,7 +449,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
                 m_configurationRevision.EncodeTagValue(SampledValueTag.ConfRev, asduImage, ref index);
 
                 // Encode timestamp
-                ulong timestamp = Word.MakeQword(header.SecondOfCentury, (uint)(header.FractionOfSecond | (int)header.TimeQualityFlags));
+                ulong timestamp = Word.MakeQword(header.SecondOfCentury, (uint)(header.FractionOfSecond << 8 | (int)header.TimeQualityFlags));
                 timestamp.EncodeTagValue(SampledValueTag.RefrTm, asduImage, ref index);
 
                 // Defaulting sample synchronization state to true - not sure what value this has
@@ -619,7 +619,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
                     m_stationName = "IEC61850Dataset";
                 }
 
-                //// Dataset name has been removed as per implemenation agreement
+                //// Dataset name has been removed as per implementation agreement
                 //// Parse dataset name
                 //m_dataSet = buffer.ParseStringTag(SampledValueTag.Dataset, ref index);
 
@@ -640,19 +640,19 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
                     throw new InvalidOperationException(string.Format("Unexpected length for \"{0}\" tag: {1}", SampledValueTag.RefrTm, tagLength));
 
                 uint secondOfCentury = EndianOrder.BigEndian.ToUInt32(buffer, index);
-                uint fractionOfSecond = EndianOrder.BigEndian.ToUInt32(buffer, index + 4);
-                index += 8;
+                UInt24 fractionOfSecond = EndianOrder.BigEndian.ToUInt24(buffer, index + 4);
+                index += 7;
 
                 // Get whole seconds of timestamp
                 long timestamp = (new UnixTimeTag((double)secondOfCentury)).ToDateTime().Ticks;
 
                 // Add fraction seconds of timestamp
-                decimal fractionalSeconds = (fractionOfSecond & ~Common.TimeQualityFlagsMask) / (decimal)header.Timebase;
+                decimal fractionalSeconds = fractionOfSecond / (decimal)header.Timebase;
                 timestamp += (long)(fractionalSeconds * (decimal)Ticks.PerSecond);
 
                 // Apply parsed timestamp to common header
                 header.Timestamp = timestamp;
-                header.TimeQualityFlags = (TimeQualityFlags)(fractionOfSecond & Common.TimeQualityFlagsMask);
+                header.TimeQualityFlags = (TimeQualityFlags)buffer[index++];
 
                 // Parse sample synchronization state
                 SampleSynchronization = buffer.ParseByteTag(SampledValueTag.SmpSynch, ref index);
