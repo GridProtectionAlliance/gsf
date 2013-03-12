@@ -163,9 +163,14 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <remarks>
         /// This event is expected to only be raised when an input adapter has been designed to process
-        /// a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+        /// a finite amount of data, e.g., reading a historical range of data during temporal processing.
         /// </remarks>
         public new event EventHandler<EventArgs<string>> ProcessingComplete;
+
+        /// <summary>
+        /// Defines default value for <see cref="DataSubscriber.OperationalModes"/>.
+        /// </summary>
+        public const OperationalModes DefaultOperationalModes = OperationalModes.CompressMetadata | OperationalModes.CompressSignalIndexCache | OperationalModes.CompressPayloadData | OperationalModes.UseCommonSerializationFormat;
 
         // Fields
         private IClient m_commandChannel;
@@ -226,6 +231,7 @@ namespace GSF.TimeSeries.Transport
         {
             m_requests = new List<ServerCommand>();
             m_encoding = Encoding.Unicode;
+            m_operationalModes = DefaultOperationalModes;
             DataLossInterval = 10.0D;
         }
 
@@ -264,7 +270,7 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if <see cref="DataSubscriber"/> should attempt to autoconnection to <see cref="DataPublisher"/> using defined connection settings.
+        /// Gets or sets flag that determines if <see cref="DataSubscriber"/> should attempt to auto-connection to <see cref="DataPublisher"/> using defined connection settings.
         /// </summary>
         public bool AutoConnect
         {
@@ -414,7 +420,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <remarks>
         /// With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
-        /// basically a delay, or timer interval, overwhich to process data. A value of -1 means to use the default processing
+        /// basically a delay, or timer interval, over which to process data. A value of -1 means to use the default processing
         /// interval while a value of 0 means to process data as fast as possible.
         /// </remarks>
         public override int ProcessingInterval
@@ -715,9 +721,9 @@ namespace GSF.TimeSeries.Transport
             if (settings.TryGetValue("internal", out setting))
                 m_internal = setting.ParseBoolean();
 
-            // Check if we should be using the alternate binary format for communications with the publisher
-            if (settings.TryGetValue("operationalModes", out setting))
-                m_operationalModes = (OperationalModes)uint.Parse(setting);
+            // See if user has opted for different operational modes
+            if (!(settings.TryGetValue("operationalModes", out setting) && Enum.TryParse(setting, true, out m_operationalModes)))
+                m_operationalModes = DefaultOperationalModes;
 
             // Check if user wants to request that publisher use millisecond resolution to conserve bandwidth
             if (settings.TryGetValue("useMillisecondResolution", out setting))
@@ -1033,8 +1039,8 @@ namespace GSF.TimeSeries.Transport
             if (!string.IsNullOrWhiteSpace(info.ExtraConnectionStringParameters))
                 connectionString.AppendFormat("{0};", info.ExtraConnectionStringParameters);
 
-            // Make sure not to monitor for data loss any faster than downsample time on throttled connections - additionally
-            // you will want to make sure data stream monitor is twice lagtime to allow time for initial points to arrive.
+            // Make sure not to monitor for data loss any faster than down-sample time on throttled connections - additionally
+            // you will want to make sure data stream monitor is twice lag-time to allow time for initial points to arrive.
             if (info.Throttled && (object)m_dataStreamMonitor != null && m_dataStreamMonitor.Interval / 1000.0D < info.LagTime)
                 m_dataStreamMonitor.Interval = 2.0D * info.LagTime * 1000.0D;
 
@@ -1049,8 +1055,8 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>true</c> for bandwidth conservation.</param>
         /// <param name="framesPerSecond">The desired number of data frames per second.</param>
-        /// <param name="lagTime">Allowed past time deviation tolerance, in seconds (can be subsecond).</param>
-        /// <param name="leadTime">Allowed future time deviation tolerance, in seconds (can be subsecond).</param>
+        /// <param name="lagTime">Allowed past time deviation tolerance, in seconds (can be sub-second).</param>
+        /// <param name="leadTime">Allowed future time deviation tolerance, in seconds (can be sub-second).</param>
         /// <param name="filterExpression">Filtering expression that defines the measurements that are being subscribed.</param>
         /// <param name="dataChannel">Desired UDP return data channel connection string to use for data packet transmission. Set to <c>null</c> to use TCP channel for data transmission.</param>
         /// <param name="useLocalClockAsRealTime">Boolean value that determines whether or not to use the local clock time as real-time.</param>
@@ -1058,7 +1064,7 @@ namespace GSF.TimeSeries.Transport
         /// <param name="allowSortsByArrival"> Gets or sets flag that determines whether or not to allow incoming measurements with bad timestamps to be sorted by arrival time.</param>
         /// <param name="timeResolution">Gets or sets the maximum time resolution, in ticks, to use when sorting measurements by timestamps into their proper destination frame.</param>
         /// <param name="allowPreemptivePublishing">Gets or sets flag that allows system to preemptively publish frames assuming all expected measurements have arrived.</param>
-        /// <param name="downsamplingMethod">Gets the total number of downsampled measurements processed by the concentrator.</param>
+        /// <param name="downsamplingMethod">Gets the total number of down-sampled measurements processed by the concentrator.</param>
         /// <param name="startTime">Defines a relative or exact start time for the temporal constraint to use for historical playback.</param>
         /// <param name="stopTime">Defines a relative or exact stop time for the temporal constraint to use for historical playback.</param>
         /// <param name="constraintParameters">Defines any temporal parameters related to the constraint to use for historical playback.</param>
@@ -1068,13 +1074,13 @@ namespace GSF.TimeSeries.Transport
         /// <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// <para>
-        /// When the <paramref name="startTime"/> or <paramref name="stopTime"/> temporal processing contraints are defined (i.e., not <c>null</c>), this
+        /// When the <paramref name="startTime"/> or <paramref name="stopTime"/> temporal processing constraints are defined (i.e., not <c>null</c>), this
         /// specifies the start and stop time over which the subscriber session will process data. Passing in <c>null</c> for the <paramref name="startTime"/>
         /// and <paramref name="stopTime"/> specifies the the subscriber session will process data in standard, i.e., real-time, operation.
         /// </para>
         /// <para>
         /// With the exception of the values of -1 and 0, the <paramref name="processingInterval"/> value specifies the desired historical playback data
-        /// processing interval in milliseconds. This is basically a delay, or timer interval, overwhich to process data. Setting this value to -1 means
+        /// processing interval in milliseconds. This is basically a delay, or timer interval, over which to process data. Setting this value to -1 means
         /// to use the default processing interval while setting the value to 0 means to process data as fast as possible.
         /// </para>
         /// <para>
@@ -1153,8 +1159,8 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>true</c> for bandwidth conservation.</param>
         /// <param name="framesPerSecond">The desired number of data frames per second.</param>
-        /// <param name="lagTime">Allowed past time deviation tolerance, in seconds (can be subsecond).</param>
-        /// <param name="leadTime">Allowed future time deviation tolerance, in seconds (can be subsecond).</param>
+        /// <param name="lagTime">Allowed past time deviation tolerance, in seconds (can be sub-second).</param>
+        /// <param name="leadTime">Allowed future time deviation tolerance, in seconds (can be sub-second).</param>
         /// <param name="filterExpression">Filtering expression that defines the measurements that are being subscribed.</param>
         /// <param name="dataChannel">Desired UDP return data channel connection string to use for data packet transmission. Set to <c>null</c> to use TCP channel for data transmission.</param>
         /// <param name="useLocalClockAsRealTime">Boolean value that determines whether or not to use the local clock time as real-time.</param>
@@ -1162,7 +1168,7 @@ namespace GSF.TimeSeries.Transport
         /// <param name="allowSortsByArrival"> Gets or sets flag that determines whether or not to allow incoming measurements with bad timestamps to be sorted by arrival time.</param>
         /// <param name="timeResolution">Gets or sets the maximum time resolution, in ticks, to use when sorting measurements by timestamps into their proper destination frame.</param>
         /// <param name="allowPreemptivePublishing">Gets or sets flag that allows system to preemptively publish frames assuming all expected measurements have arrived.</param>
-        /// <param name="downsamplingMethod">Gets the total number of downsampled measurements processed by the concentrator.</param>
+        /// <param name="downsamplingMethod">Gets the total number of down-sampled measurements processed by the concentrator.</param>
         /// <param name="startTime">Defines a relative or exact start time for the temporal constraint to use for historical playback.</param>
         /// <param name="stopTime">Defines a relative or exact stop time for the temporal constraint to use for historical playback.</param>
         /// <param name="constraintParameters">Defines any temporal parameters related to the constraint to use for historical playback.</param>
@@ -1172,13 +1178,13 @@ namespace GSF.TimeSeries.Transport
         /// <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// <para>
-        /// When the <paramref name="startTime"/> or <paramref name="stopTime"/> temporal processing contraints are defined (i.e., not <c>null</c>), this
+        /// When the <paramref name="startTime"/> or <paramref name="stopTime"/> temporal processing constraints are defined (i.e., not <c>null</c>), this
         /// specifies the start and stop time over which the subscriber session will process data. Passing in <c>null</c> for the <paramref name="startTime"/>
         /// and <paramref name="stopTime"/> specifies the the subscriber session will process data in standard, i.e., real-time, operation.
         /// </para>
         /// <para>
         /// With the exception of the values of -1 and 0, the <paramref name="processingInterval"/> value specifies the desired historical playback data
-        /// processing interval in milliseconds. This is basically a delay, or timer interval, overwhich to process data. Setting this value to -1 means
+        /// processing interval in milliseconds. This is basically a delay, or timer interval, over which to process data. Setting this value to -1 means
         /// to use the default processing interval while setting the value to 0 means to process data as fast as possible.
         /// </para>
         /// <para>
@@ -1294,8 +1300,8 @@ namespace GSF.TimeSeries.Transport
         /// <param name="filterExpression">Filtering expression that defines the measurements that are being subscribed.</param>
         /// <param name="dataChannel">Desired UDP return data channel connection string to use for data packet transmission. Set to <c>null</c> to use TCP channel for data transmission.</param>
         /// <param name="includeTime">Boolean value that determines if time is a necessary component in streaming data.</param>
-        /// <param name="lagTime">When <paramref name="throttled"/> is <c>true</c>, defines the data transmission speed in seconds (can be subsecond).</param>
-        /// <param name="leadTime">When <paramref name="throttled"/> is <c>true</c>, defines the allowed time deviation tolerance to real-time in seconds (can be subsecond).</param>
+        /// <param name="lagTime">When <paramref name="throttled"/> is <c>true</c>, defines the data transmission speed in seconds (can be sub-second).</param>
+        /// <param name="leadTime">When <paramref name="throttled"/> is <c>true</c>, defines the allowed time deviation tolerance to real-time in seconds (can be sub-second).</param>
         /// <param name="useLocalClockAsRealTime">When <paramref name="throttled"/> is <c>true</c>, defines boolean value that determines whether or not to use the local clock time as real-time. Set to <c>false</c> to use latest received measurement timestamp as real-time.</param>
         /// <param name="startTime">Defines a relative or exact start time for the temporal constraint to use for historical playback.</param>
         /// <param name="stopTime">Defines a relative or exact stop time for the temporal constraint to use for historical playback.</param>
@@ -1306,13 +1312,13 @@ namespace GSF.TimeSeries.Transport
         /// <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// <para>
-        /// When the <paramref name="startTime"/> or <paramref name="stopTime"/> temporal processing contraints are defined (i.e., not <c>null</c>), this
+        /// When the <paramref name="startTime"/> or <paramref name="stopTime"/> temporal processing constraints are defined (i.e., not <c>null</c>), this
         /// specifies the start and stop time over which the subscriber session will process data. Passing in <c>null</c> for the <paramref name="startTime"/>
         /// and <paramref name="stopTime"/> specifies the the subscriber session will process data in standard, i.e., real-time, operation.
         /// </para>
         /// <para>
         /// With the exception of the values of -1 and 0, the <paramref name="processingInterval"/> value specifies the desired historical playback data
-        /// processing interval in milliseconds. This is basically a delay, or timer interval, overwhich to process data. Setting this value to -1 means
+        /// processing interval in milliseconds. This is basically a delay, or timer interval, over which to process data. Setting this value to -1 means
         /// to use the default processing interval while setting the value to 0 means to process data as fast as possible.
         /// </para>
         /// <para>
@@ -1379,8 +1385,8 @@ namespace GSF.TimeSeries.Transport
                 connectionString.AppendFormat("; waitHandleTimeout={0}", waitHandleTimeout);
             }
 
-            // Make sure not to monitor for data loss any faster than downsample time on throttled connections - additionally
-            // you will want to make sure data stream monitor is twice lagtime to allow time for initial points to arrive.
+            // Make sure not to monitor for data loss any faster than down-sample time on throttled connections - additionally
+            // you will want to make sure data stream monitor is twice lag-time to allow time for initial points to arrive.
             if (throttled && (object)m_dataStreamMonitor != null && m_dataStreamMonitor.Interval / 1000.0D < lagTime)
                 m_dataStreamMonitor.Interval = 2.0D * lagTime * 1000.0D;
 
@@ -1427,7 +1433,7 @@ namespace GSF.TimeSeries.Transport
                     // Assign data channel client reference and attach to needed events
                     this.DataChannel = dataChannel;
 
-                    // Setup subcription packet
+                    // Setup subscription packet
                     MemoryStream buffer = new MemoryStream();
                     DataPacketFlags flags = DataPacketFlags.NoFlags;
                     byte[] bytes;
@@ -2038,7 +2044,7 @@ namespace GSF.TimeSeries.Transport
                         {
                             Guid uniqueID = Guid.Parse(row.Field<object>("UniqueID").ToString()); // adoDatabase.Guid(row, "UniqueID"); // row.Field<Guid>("UniqueID");
 
-                            // Track unique device guid's in this meta-data session, we'll need to remove any old associated devices that no longer exist
+                            // Track unique device Guids in this meta-data session, we'll need to remove any old associated devices that no longer exist
                             uniqueIDs.Add(uniqueID);
 
                             // We will synchronize metadata only if the source owns this device and it's not defined as a concentrator (these should normally be filtered by publisher - but we check just in case).
@@ -2056,7 +2062,7 @@ namespace GSF.TimeSeries.Transport
                                     connection.ExecuteNonQuery(insertSql, database.Guid(m_nodeID), parentID, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), m_gatewayProtocolID,
                                         m_internal == true ? (object)DBNull.Value : string.IsNullOrEmpty(row.Field<string>("ParentAcronym")) ? sourcePrefix + row.Field<string>("Acronym") : sourcePrefix + row.Field<string>("ParentAcronym"));
 
-                                    // Guids are normally auto-generated during insert - after insertion update the guid so that it matches the source data. Most of the database
+                                    // Guids are normally auto-generated during insert - after insertion update the Guid so that it matches the source data. Most of the database
                                     // scripts have triggers that support properly assigning the Guid during an insert, but this code ensures the Guid will always get assigned.
                                     updateSql = database.ParameterizedQueryString("UPDATE Device SET UniqueID = {0} WHERE Acronym = {1}", "uniqueID", "acronym");
                                     connection.ExecuteNonQuery(updateSql, database.Guid(uniqueID), sourcePrefix + row.Field<string>("Acronym"));
@@ -2066,15 +2072,15 @@ namespace GSF.TimeSeries.Transport
                                     // Update existing device record
                                     if (m_internal)
                                     {
-                                        // Gateway is assuming ownership of the device records when the "interal" flag is true - this means the device's measurements can be forwarded to another party.
+                                        // Gateway is assuming ownership of the device records when the "internal" flag is true - this means the device's measurements can be forwarded to another party.
                                         // From a device record perspective, ownership is inferred by setting 'OriginalSource' to null.
                                         updateSql = database.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1}, OriginalSource = {2}, ProtocolID = {3} WHERE UniqueID = {4}", "acronym", "name", "originalSource", "protocolID", "uniqueID");
                                         connection.ExecuteNonQuery(updateSql, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), (object)DBNull.Value, m_gatewayProtocolID, database.Guid(uniqueID));
                                     }
                                     else
                                     {
-                                        // When gateway doesn't own device records (i.e., the "interal" flag is false), this means the device's measurements can only be consumed locally. From a device
-                                        // record perspective this means the 'OriginalSource' field is set to the acronym of the PDC or PMU that generated the source measurments. This field allows a
+                                        // When gateway doesn't own device records (i.e., the "internal" flag is false), this means the device's measurements can only be consumed locally. From a device
+                                        // record perspective this means the 'OriginalSource' field is set to the acronym of the PDC or PMU that generated the source measurements. This field allows a
                                         // mirrored source restriction to be implemented later to ensure all devices in an output protocol came from the same original source connection.
                                         updateSql = database.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1}, ProtocolID = {2} WHERE UniqueID = {3}", "acronym", "name", "protocolID", "uniqueID");
                                         connection.ExecuteNonQuery(updateSql, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), m_gatewayProtocolID, database.Guid(uniqueID));
@@ -2128,7 +2134,7 @@ namespace GSF.TimeSeries.Transport
                                     string pointTag = sourcePrefix + row.Field<string>("PointTag") ?? string.Empty;
                                     Guid signalID = Guid.Parse(row.Field<object>("SignalID").ToString()); // adoDatabase.Guid(row, "SignalID");  // row.Field<Guid>("SignalID");
 
-                                    // Track unique measurement signal guid's in this meta-data session, we'll need to remove any old associated measurements that no longer exist
+                                    // Track unique measurement signal Guids in this meta-data session, we'll need to remove any old associated measurements that no longer exist
                                     signalIDs.Add(signalID);
 
                                     // Define query to determine if this measurement is already defined (this should always be based on the unique signal ID Guid)
@@ -2140,7 +2146,7 @@ namespace GSF.TimeSeries.Transport
                                         insertSql = database.ParameterizedQueryString("INSERT INTO Measurement (DeviceID, PointTag, SignalTypeID, SignalReference, Description, Internal, Subscribed, Enabled) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, 0, 1)", "deviceID", "pointTag", "signalTypeID", "signalReference", "description", "internal");
                                         connection.ExecuteNonQuery(insertSql, 30, deviceID, pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, database.Bool(m_internal));
 
-                                        // Guids are normally auto-generated during insert - after insertion update the guid so that it matches the source data. Most of the database
+                                        // Guids are normally auto-generated during insert - after insertion update the Guid so that it matches the source data. Most of the database
                                         // scripts have triggers that support properly assigning the Guid during an insert, but this code ensures the Guid will always get assigned.
                                         updateSql = database.ParameterizedQueryString("UPDATE Measurement SET SignalID = {0} WHERE PointTag = {1}", "signalID", "pointTag");
                                         connection.ExecuteNonQuery(updateSql, database.Guid(signalID), pointTag);
@@ -2424,7 +2430,7 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                // We handle synchronization on a seperate thread since this process may be lengthy
+                // We handle synchronization on a separate thread since this process may be lengthy
                 if (m_synchronizeMetadata)
                     ThreadPool.QueueUserWorkItem(SynchronizeMetadata, e.Argument);
             }
@@ -2569,7 +2575,7 @@ namespace GSF.TimeSeries.Transport
         {
             if (m_monitoredBytesReceived == 0)
             {
-                // If we've received no data in the last timespan, we restart connect cycle...
+                // If we've received no data in the last time-span, we restart connect cycle...
                 m_dataStreamMonitor.Enabled = false;
                 OnStatusMessage("\r\nNo data received in {0} seconds, restarting connect cycle...\r\n", (m_dataStreamMonitor.Interval / 1000.0D).ToString("0.0"));
                 ThreadPool.QueueUserWorkItem(state => Restart());
@@ -2627,7 +2633,7 @@ namespace GSF.TimeSeries.Transport
             // Notify input adapter base that asynchronous connection succeeded
             OnConnected();
 
-            // Notify consumer that connection was sucessfully established
+            // Notify consumer that connection was successfully established
             OnConnectionEstablished();
 
             OnStatusMessage("Data subscriber command channel connection to publisher was established.");
