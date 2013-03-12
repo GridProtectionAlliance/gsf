@@ -2080,6 +2080,26 @@
             Client connection is terminated.
             </summary>
         </member>
+        <member name="T:TVA.Communication.ClientIdentificationMode">
+            <summary>
+            Defines modes by which the UDP server will identify its clients when receiving messages.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.ClientIdentificationMode.IP">
+            <summary>
+            Identify clients by their IP address.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.ClientIdentificationMode.Port">
+            <summary>
+            Identify clients by the port they are bound to.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.ClientIdentificationMode.EndPoint">
+            <summary>
+            Identify clients by both their IP address and the port they are bound to.
+            </summary>
+        </member>
         <member name="T:TVA.Communication.UdpServer">
             <summary>
             Represents a UDP-based communication server.
@@ -2940,6 +2960,11 @@
             whether the server has been initialized.
             </summary>
         </member>
+        <member name="F:TVA.Communication.UdpServer.DefaultClientIdentificationMode">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Communication.UdpServer.ClientIdentificationMode"/> property.
+            </summary>
+        </member>
         <member name="F:TVA.Communication.UdpServer.DefaultAllowDualStackSocket">
             <summary>
             Specifies the default value for the <see cref="P:TVA.Communication.UdpServer.AllowDualStackSocket"/> property.
@@ -3087,6 +3112,11 @@
         <member name="M:TVA.Communication.UdpServer.ProcessReceive(System.Net.Sockets.SocketAsyncEventArgs)">
             <summary>
             Callback method for asynchronous receive operation of payload data from any endpoint.
+            </summary>
+        </member>
+        <member name="P:TVA.Communication.UdpServer.ClientIdentificationMode">
+            <summary>
+            Gets or sets the mode by which the UDP server will identify its clients when receiving messages.
             </summary>
         </member>
         <member name="P:TVA.Communication.UdpServer.AllowDualStackSocket">

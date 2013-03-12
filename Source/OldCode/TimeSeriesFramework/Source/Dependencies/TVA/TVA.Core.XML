@@ -12735,12 +12735,19 @@
             This method always returns <c>null</c> under Mono deployments.
             </remarks>
         </member>
-        <member name="M:TVA.Identity.UserInfo.GetUserProperty(System.String)">
+        <member name="M:TVA.Identity.UserInfo.GetUserPropertyValue(System.String)">
             <summary>
             Returns the value for specified active directory property.
             </summary>
             <param name="propertyName">Name of the active directory property whose value is to be retrieved.</param>
-            <returns>Value for the specified active directory property.</returns>
+            <returns><see cref="T:System.DirectoryServices.PropertyValueCollection"/> for the specified active directory property.</returns>
+        </member>
+        <member name="M:TVA.Identity.UserInfo.GetUserPropertyValueAsString(System.String)">
+            <summary>
+            Returns the value for specified active directory property.
+            </summary>
+            <param name="propertyName">Name of the active directory property whose value is to be retrieved.</param>
+            <returns><see cref="T:System.String"/> value for the specified active directory property.</returns>
         </member>
         <member name="M:TVA.Identity.UserInfo.AuthenticateUser(System.String,System.String,System.String)">
              <summary>
@@ -12883,6 +12890,13 @@
              }
              </code>
              </example>
+        </member>
+        <member name="M:TVA.Identity.UserInfo.GetUserProperty(System.String)">
+            <summary>
+            Returns the value for specified active directory property.
+            </summary>
+            <param name="propertyName">Name of the active directory property whose value is to be retrieved.</param>
+            <returns><see cref="T:System.String"/> value for the specified active directory property.</returns>
         </member>
         <member name="E:TVA.Identity.UserInfo.Disposed">
             <summary>
