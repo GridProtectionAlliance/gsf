@@ -704,7 +704,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         {
             buffer[index++] = (byte)tag;
             buffer[index++] = 0x80 | 2;
-            buffer[index++] = (byte)(length & 0xFF00);
+            buffer[index++] = (byte)((length & 0xFF00) >> 8);
             buffer[index++] = (byte)(length & 0x00FF);
         }
         /// <summary>
@@ -817,7 +817,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
                 {
                     // 16-bit length value
                     buffer[index++] = 0x80 | 2;
-                    buffer[index++] = (byte)(length & 0xFF00);
+                    buffer[index++] = (byte)((length & 0xFF00) >> 8);
                     buffer[index++] = (byte)(length & 0x00FF);
                 }
                 else
