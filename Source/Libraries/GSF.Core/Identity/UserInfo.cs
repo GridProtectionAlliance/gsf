@@ -87,6 +87,14 @@
 //       Modified to support new life cycle interface requirements (i.e., Diposed event).
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  03/05/2013 - Joe France
+//      Prefer the lastlogontimestamp property over lastLogon property.
+//  03/06/2013 - Pinal C. Patel
+//       Added new GetUserPropertyValue() and GetUserPropertyValueAsString() methods to replace old
+//       GetUserProperty() method and marked GetUserPropertyValue() as obsolete.
+//       Updated LastLogon to revert using lastLogon property instead of lastLogonTimestamp since it is
+//       updated less frequestly and fixed the parsing logic for it since the return value is a large
+//       integer.
 //
 //******************************************************************************************************
 
@@ -476,9 +484,9 @@ namespace GSF.Identity
                     try
                     {
                         if (m_isWinNT)
-                            return DateTime.Parse(GetUserProperty("lastLogin"));
+                            return DateTime.Parse(GetUserPropertyValueAsString("lastLogin"));
 
-                        return Convert.ToDateTime(GetUserProperty("lastLogon"));
+                        return DateTime.FromFileTime(ConvertToLong(GetUserPropertyValue("lastLogon").Value));
                     }
                     catch
                     {
@@ -503,7 +511,7 @@ namespace GSF.Identity
                     {
                         if (m_isWinNT)
                         {
-                            string profilePath = GetUserProperty("profile");
+                            string profilePath = GetUserPropertyValueAsString("profile");
 
                             if (string.IsNullOrEmpty(profilePath) || !Directory.Exists(profilePath))
                             {
@@ -522,7 +530,7 @@ namespace GSF.Identity
                             return Directory.GetCreationTime(profilePath);
                         }
                         else
-                            return Convert.ToDateTime(GetUserProperty("whenCreated"));
+                            return Convert.ToDateTime(GetUserPropertyValueAsString("whenCreated"));
                     }
                     catch
                     {
@@ -555,10 +563,10 @@ namespace GSF.Identity
                             if (maxPasswordTicksAge >= 0)
                             {
                                 // WinNT properties are in seconds, not ticks
-                                long passwordAge = long.Parse(GetUserProperty("passwordAge"));
+                                long passwordAge = long.Parse(GetUserPropertyValueAsString("passwordAge"));
                                 long maxPasswordAge = (long)maxPasswordTicksAge.ToSeconds();
 
-                                if (passwordAge > maxPasswordAge || GetUserProperty("passwordExpired").ParseBoolean())
+                                if (passwordAge > maxPasswordAge || GetUserPropertyValueAsString("passwordExpired").ParseBoolean())
                                 {
                                     // User must change password on next logon.
                                     passwordChangeDate = DateTime.UtcNow;
@@ -572,7 +580,7 @@ namespace GSF.Identity
                         }
                         else
                         {
-                            long passwordSetOn = ConvertToLong(m_userEntry.Properties["pwdLastSet"].Value);
+                            long passwordSetOn = ConvertToLong(GetUserPropertyValue("pwdLastSet").Value);
 
                             if (passwordSetOn == 0)
                             {
@@ -610,9 +618,9 @@ namespace GSF.Identity
                 if (m_enabled && m_userAccountControl == -1)
                 {
                     if (m_isWinNT)
-                        m_userAccountControl = int.Parse(GetUserProperty("userFlags"));
+                        m_userAccountControl = int.Parse(GetUserPropertyValueAsString("userFlags"));
                     else
-                        m_userAccountControl = int.Parse(GetUserProperty("userAccountControl"));
+                        m_userAccountControl = int.Parse(GetUserPropertyValueAsString("userAccountControl"));
                 }
 
                 return m_userAccountControl;
@@ -676,7 +684,7 @@ namespace GSF.Identity
 
                     if (m_isWinNT)
                     {
-                        maxAgePropertyValue = GetUserProperty("maxPasswordAge");
+                        maxAgePropertyValue = GetUserPropertyValueAsString("maxPasswordAge");
                     }
                     else
                     {
@@ -773,7 +781,7 @@ namespace GSF.Identity
                 if (m_isWinNT)
                     return GetNameElements(DisplayName)[0];
 
-                return GetUserProperty("givenName");
+                return GetUserPropertyValueAsString("givenName");
             }
         }
 
@@ -788,7 +796,7 @@ namespace GSF.Identity
                 if (m_isWinNT)
                     return GetNameElements(DisplayName)[1];
 
-                return GetUserProperty("sn");
+                return GetUserPropertyValueAsString("sn");
             }
         }
 
@@ -802,15 +810,15 @@ namespace GSF.Identity
             {
                 if (m_isWinNT)
                 {
-                    string name = GetUserProperty("fullName");
+                    string name = GetUserPropertyValueAsString("fullName");
 
                     if (string.IsNullOrEmpty(name))
-                        name = GetUserProperty("Name");
+                        name = GetUserPropertyValueAsString("Name");
 
                     return name;
                 }
 
-                return GetUserProperty("displayName");
+                return GetUserPropertyValueAsString("displayName");
             }
         }
 
@@ -822,7 +830,7 @@ namespace GSF.Identity
         {
             get
             {
-                return GetUserProperty("initials");
+                return GetUserPropertyValueAsString("initials");
             }
         }
 
@@ -863,7 +871,7 @@ namespace GSF.Identity
         {
             get
             {
-                return GetUserProperty("mail");
+                return GetUserPropertyValueAsString("mail");
             }
         }
 
@@ -875,7 +883,7 @@ namespace GSF.Identity
         {
             get
             {
-                return GetUserProperty("wWWHomePage");
+                return GetUserPropertyValueAsString("wWWHomePage");
             }
         }
 
@@ -887,7 +895,7 @@ namespace GSF.Identity
         {
             get
             {
-                return GetUserProperty("description");
+                return GetUserPropertyValueAsString("description");
             }
         }
 
@@ -899,7 +907,7 @@ namespace GSF.Identity
         {
             get
             {
-                return GetUserProperty("telephoneNumber");
+                return GetUserPropertyValueAsString("telephoneNumber");
             }
         }
 
@@ -911,7 +919,7 @@ namespace GSF.Identity
         {
             get
             {
-                return GetUserProperty("title");
+                return GetUserPropertyValueAsString("title");
             }
         }
 
@@ -923,7 +931,7 @@ namespace GSF.Identity
         {
             get
             {
-                return GetUserProperty("company");
+                return GetUserPropertyValueAsString("company");
             }
         }
 
@@ -935,7 +943,7 @@ namespace GSF.Identity
         {
             get
             {
-                return GetUserProperty("physicalDeliveryOfficeName");
+                return GetUserPropertyValueAsString("physicalDeliveryOfficeName");
             }
         }
 
@@ -947,7 +955,7 @@ namespace GSF.Identity
         {
             get
             {
-                return GetUserProperty("department");
+                return GetUserPropertyValueAsString("department");
             }
         }
 
@@ -959,7 +967,7 @@ namespace GSF.Identity
         {
             get
             {
-                return GetUserProperty("l");
+                return GetUserPropertyValueAsString("l");
             }
         }
 
@@ -971,7 +979,7 @@ namespace GSF.Identity
         {
             get
             {
-                return GetUserProperty("streetAddress");
+                return GetUserPropertyValueAsString("streetAddress");
             }
         }
 
@@ -1308,8 +1316,8 @@ namespace GSF.Identity
         /// Returns the value for specified active directory property.
         /// </summary>
         /// <param name="propertyName">Name of the active directory property whose value is to be retrieved.</param>
-        /// <returns>Value for the specified active directory property.</returns>
-        public string GetUserProperty(string propertyName)
+        /// <returns><see cref="PropertyValueCollection"/> for the specified active directory property.</returns>
+        public PropertyValueCollection GetUserPropertyValue(string propertyName)
         {
             WindowsImpersonationContext currentContext = null;
 
@@ -1320,7 +1328,7 @@ namespace GSF.Identity
 
                 // Quit if disabled
                 if (!m_enabled)
-                    return string.Empty;
+                    return null;
 
                 if ((object)m_userEntry != null)
                 {
@@ -1328,22 +1336,36 @@ namespace GSF.Identity
                     currentContext = ImpersonatePrivilegedAccount();
 
                     // Return requested Active Directory property value
-                    return m_userEntry.Properties[propertyName][0].ToString().Replace("  ", " ").Trim();
+                    return m_userEntry.Properties[propertyName];
                 }
                 else
                 {
-                    return string.Empty;
+                    return null;
                 }
             }
             catch
             {
-                return string.Empty;
+                return null;
             }
             finally
             {
                 // Undo impersonation if it was performed
                 EndImpersonation(currentContext);
             }
+        }
+
+        /// <summary>
+        /// Returns the value for specified active directory property.
+        /// </summary>
+        /// <param name="propertyName">Name of the active directory property whose value is to be retrieved.</param>
+        /// <returns><see cref="String"/> value for the specified active directory property.</returns>
+        public string GetUserPropertyValueAsString(string propertyName)
+        {
+            PropertyValueCollection value = GetUserPropertyValue(propertyName);
+            if (value != null && value.Count > 0)
+                return value[0].ToString().Replace("  ", " ").Trim();
+            else
+                return string.Empty;
         }
 
         private DirectorySearcher CreateDirectorySearcher()
@@ -1725,6 +1747,21 @@ namespace GSF.Identity
                 }
 #endif
             }
+        }
+
+        #endregion
+
+        #region [ Obsolete ]
+
+        /// <summary>
+        /// Returns the value for specified active directory property.
+        /// </summary>
+        /// <param name="propertyName">Name of the active directory property whose value is to be retrieved.</param>
+        /// <returns><see cref="String"/> value for the specified active directory property.</returns>
+        [Obsolete("GetUserPropertyValueAsString replaces GetUserProperty", true)]
+        public string GetUserProperty(string propertyName)
+        {
+            return GetUserPropertyValueAsString(propertyName);
         }
 
         #endregion

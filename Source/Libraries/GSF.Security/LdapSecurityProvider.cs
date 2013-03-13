@@ -30,6 +30,10 @@
 //       Made offline caching of user data for authentication purpose optional and turned on by default.
 //  12/20/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  03/08/2013 - Pinal C. Patel
+//       Modified to enabled persistence on UserInfo only temporarily prior to calling Initialize() to 
+//       load privileged user credentials if specified. This is to prevent any accidental updates to the 
+//       config file when object gets disposed which would cause a web application to restart. 
 //
 //******************************************************************************************************
 
@@ -390,7 +394,10 @@ namespace GSF.Security
                 else
                     user = new UserInfo(UserData.Username, ldapPath);
 
+                // Use privileged user credentials from config file if present.
                 user.PersistSettings = true;
+                user.Initialize();
+                user.PersistSettings = false;
 
                 // Attempt to determine if user exists (this will initialize user object if not initialized already)
                 UserData.IsDefined = user.Exists;
