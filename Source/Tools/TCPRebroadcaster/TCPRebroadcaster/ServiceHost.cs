@@ -93,6 +93,7 @@ namespace TCPRebroadcaster
                 target.ConnectionAttempt += TargetClient_ConnectionAttempt;
                 target.ConnectionEstablished += TargetClient_ConnectionEstablished;
                 target.ConnectionTerminated += TargetClient_ConnectionTerminated;
+                target.ReceiveDataException += TargetClient_ReceiveDataException;
                 target.ConnectAsync();
                 m_serviceHelper.ServiceComponents.Add(target);
             }
@@ -122,6 +123,7 @@ namespace TCPRebroadcaster
                 target.ConnectionAttempt -= TargetClient_ConnectionAttempt;
                 target.ConnectionEstablished -= TargetClient_ConnectionEstablished;
                 target.ConnectionTerminated -= TargetClient_ConnectionTerminated;
+                target.ReceiveDataException -= TargetClient_ReceiveDataException;
                 target.Dispose();
             }
         }
@@ -194,6 +196,14 @@ namespace TCPRebroadcaster
 
             m_serviceHelper.UpdateStatus(UpdateType.Information, "[TARGET] Connection to {0} terminated\r\n\r\n", endpoint.ServerUri);
             endpoint.ConnectAsync();
+        }
+
+        private void TargetClient_ReceiveDataException(object sender, EventArgs<Exception> e)
+        {
+            TcpClient endpoint = (TcpClient)sender;
+
+            m_serviceHelper.ErrorLogger.Log(e.Argument);
+            m_serviceHelper.UpdateStatus(UpdateType.Information, "[TARGET] Error receving data in {0} - {1}\r\n\r\n", endpoint.ServerUri, e.Argument.Message);
         }
 
         #endregion
