@@ -570,56 +570,21 @@ namespace GSF.TimeSeries.Transport
                 int sizeToBeat = measurementCount * measurements[0].BinaryLength;
                 int index = 0;
 
-                // Encode ID pairs
-                for (int i = 0; i < measurementCount; i += 2)
+                // Encode compact state flags and runtime IDs together --
+                // Together these are three bytes, so we pad with a zero byte.
+                // The zero byte and state flags are considered to be more compressible
+                // than the runtime ID, so these are stored in the higher order bytes.
+                for (int i = 0; i < measurementCount; i++)
                 {
-                    if (i + 1 < measurementCount)
-                    {
-                        index += EndianOrder.BigEndian.CopyBytes(measurements[i].RuntimeID, buffer, index);
-                        index += EndianOrder.BigEndian.CopyBytes(measurements[i + 1].RuntimeID, buffer, index);
-                    }
-                    else
-                    {
-                        index += EndianOrder.BigEndian.CopyBytes(measurements[i].RuntimeID, buffer, index);
-                        index += 2; // Keep ID pairs aligned on a double-word boundary
-                    }
-                }
-
-                // Encode compact state flags - four at a time
-                for (int i = 0; i < measurementCount; i += 4)
-                {
-                    if (i + 3 < measurementCount)
-                    {
-                        buffer[index++] = measurements[i].CompactStateFlags;
-                        buffer[index++] = measurements[i + 1].CompactStateFlags;
-                        buffer[index++] = measurements[i + 2].CompactStateFlags;
-                        buffer[index++] = measurements[i + 3].CompactStateFlags;
-                    }
-                    else if (i + 2 < measurementCount)
-                    {
-                        buffer[index++] = measurements[i].CompactStateFlags;
-                        buffer[index++] = measurements[i + 1].CompactStateFlags;
-                        buffer[index++] = measurements[i + 2].CompactStateFlags;
-                        index++; // Keep state flags aligned on a double-word boundary
-                    }
-                    else if (i + 1 < measurementCount)
-                    {
-                        buffer[index++] = measurements[i].CompactStateFlags;
-                        buffer[index++] = measurements[i + 1].CompactStateFlags;
-                        index += 2; // Keep state flags aligned on a double-word boundary
-                    }
-                    else
-                    {
-                        buffer[index++] = measurements[i].CompactStateFlags;
-                        index += 3; // Keep state flags aligned on a double-word boundary
-                    }
+                    uint value = ((uint)measurements[i].CompactStateFlags << 16) | measurements[i].RuntimeID;
+                    index += NativeEndianOrder.Default.CopyBytes(value, buffer, index);
                 }
 
                 // Encode values
                 for (int i = 0; i < measurementCount; i++)
                 {
                     // Encode using adjusted value (accounts for adder and multiplier)
-                    index += EndianOrder.BigEndian.CopyBytes((float)measurements[i].AdjustedValue, buffer, index);
+                    index += NativeEndianOrder.Default.CopyBytes((float)measurements[i].AdjustedValue, buffer, index);
                 }
 
                 if (includeTime)
@@ -628,7 +593,7 @@ namespace GSF.TimeSeries.Transport
                     for (int i = 0; i < measurementCount; i++)
                     {
                         // Since large majority of 8-byte tick values will be repeated, they should compress well
-                        index += EndianOrder.BigEndian.CopyBytes((long)measurements[i].Timestamp, buffer, index);
+                        index += NativeEndianOrder.Default.CopyBytes((long)measurements[i].Timestamp, buffer, index);
                     }
                 }
 
@@ -669,7 +634,7 @@ namespace GSF.TimeSeries.Transport
         /// <param name="source">Buffer with compressed <see cref="CompactMeasurement"/> payload.</param>
         /// <param name="signalIndexCache">Current <see cref="SignalIndexCache"/>.</param>
         /// <param name="index">Index into buffer where compressed payload begins.</param>
-        /// <param name="length">Length of all data within <paramref name="source"/> buffer.</param>
+        /// <param name="dataLength">Length of all data within <paramref name="source"/> buffer.</param>
         /// <param name="measurementCount">Number of compressed measurements in the payload.</param>
         /// <param name="includeTime">Flag that determines if timestamps as included in the payload.</param>
         /// <param name="flags">Current <see cref="DataPacketFlags"/>.</param>
@@ -705,35 +670,24 @@ namespace GSF.TimeSeries.Transport
 
                 index = 0;
 
-                // Decode ID pairs
+                // Decode ID and state flags
                 for (int i = 0; i < measurementCount; i++)
                 {
+                    uint value = NativeEndianOrder.Default.ToUInt32(buffer, index);
+
                     measurements[i] = new CompactMeasurement(signalIndexCache, includeTime)
                     {
-                        RuntimeID = EndianOrder.BigEndian.ToUInt16(buffer, index)
+                        CompactStateFlags = (byte)(value >> 16),
+                        RuntimeID = (ushort)value
                     };
-                    index += 2;
+
+                    index += 4;
                 }
-
-                // Pass through any uneven double-word alignment
-                index += measurementCount % 2 * 2;
-
-                // Decode compact state flags
-                for (int i = 0; i < measurementCount; i++)
-                {
-                    measurements[i].CompactStateFlags = buffer[index++];
-                }
-
-                // Pass through any uneven double-word alignment
-                int remainder = measurementCount % 4;
-
-                if (remainder > 0)
-                    index += 4 - remainder;
 
                 // Decode values
                 for (int i = 0; i < measurementCount; i++)
                 {
-                    measurements[i].Value = EndianOrder.BigEndian.ToSingle(buffer, index);
+                    measurements[i].Value = NativeEndianOrder.Default.ToSingle(buffer, index);
                     index += 4;
                 }
 
@@ -742,7 +696,7 @@ namespace GSF.TimeSeries.Transport
                     // Decode timestamps
                     for (int i = 0; i < measurementCount; i++)
                     {
-                        measurements[i].Timestamp = EndianOrder.BigEndian.ToInt64(buffer, index);
+                        measurements[i].Timestamp = NativeEndianOrder.Default.ToInt64(buffer, index);
                         index += 8;
                     }
                 }
