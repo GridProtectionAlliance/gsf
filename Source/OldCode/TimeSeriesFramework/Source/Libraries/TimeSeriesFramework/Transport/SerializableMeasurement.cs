@@ -39,7 +39,7 @@ namespace TimeSeriesFramework.Transport
     /// at their full resolution and no attempt is made to optimize the binary image for
     /// purposes of size reduction.
     /// </remarks>
-    public class SerializableMeasurement : Measurement, ISupportBinaryImage
+    public class SerializableMeasurement : Measurement, IBinaryMeasurement
     {
         #region [ Members ]
 

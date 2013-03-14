@@ -240,6 +240,20 @@ namespace TimeSeriesFramework.Transport
         /// </remarks>
         CipherIndex = (byte)Bits.Bit02,
         /// <summary>
+        /// Determines if data packet payload is compressed.
+        /// </summary>
+        /// <remarks>
+        /// Bit set = payload compressed, bit clear = payload normal.
+        /// </remarks>
+        Compressed = (byte)Bits.Bit03,
+        /// <summary>
+        /// Determines if the compressed data payload is in little-endian order.
+        /// </summary>
+        /// <remarks>
+        /// Bit set = little-endian order compression, bit clear = big-endian order compression.
+        /// </remarks>
+        LittleEndianCompression = (byte)Bits.Bit04,
+        /// <summary>
         /// No flags set.
         /// </summary>
         /// <remarks>
@@ -289,6 +303,13 @@ namespace TimeSeriesFramework.Transport
         /// Bit set = common serialization format, bit clear = .NET serialization format
         /// </remarks>
         UseCommonSerializationFormat = (uint)Bits.Bit24,
+        /// <summary>
+        /// Determines whether payload data is compressed when exchanging between publisher and subscriber.
+        /// </summary>
+        /// <remarks>
+        /// Bit set = compress, bit clear = no compression
+        /// </remarks>
+        CompressPayloadData = (uint)Bits.Bit29,
         /// <summary>
         /// Determines whether the signal index cache is compressed when exchanging between publisher and subscriber.
         /// </summary>
@@ -437,6 +458,16 @@ namespace TimeSeriesFramework.Transport
         public const bool DefaultSharedDatabase = false;
 
         /// <summary>
+        /// Default value for <see cref="AllowPayloadCompression"/>.
+        /// </summary>
+        public const bool DefaultAllowPayloadCompression = true;
+
+        /// <summary>
+        /// Default value for <see cref="CompressionStrength"/>.
+        /// </summary>
+        public const int DefaultCompressionStrength = 31;
+
+        /// <summary>
         /// Default value for <see cref="AllowSynchronizedSubscription"/>.
         /// </summary>
         public const bool DefaultAllowSynchronizedSubscription = true;
@@ -459,8 +490,18 @@ namespace TimeSeriesFramework.Transport
             "SELECT Internal, DeviceAcronym, DeviceName, SignalAcronym, ID, SignalID, PointTag, SignalReference, Description, Enabled FROM MeasurementDetail WHERE Internal <> 0;" +
             "SELECT DeviceAcronym, Label, Type, Phase, SourceIndex FROM PhasorDetail";
 
-        // Maximum packet size before software fragmentation of UDP payload
-        internal const int MaxPacketSize = ushort.MaxValue / 2;
+        /// <summary>
+        /// Maximum packet size before software fragmentation of payload.
+        /// </summary>
+        public const int MaxPacketSize = ushort.MaxValue / 2;
+
+        /// <summary>
+        /// Size of client response header in bytes.
+        /// </summary>
+        /// <remarks>
+        /// Header consists of response byte, in-response-to server command byte, 4-byte int representing payload length.
+        /// </remarks>
+        public const int ClientResponseHeaderSize = 6;
 
         // Length of random salt prefix
         internal const int CipherSaltLength = 8;
@@ -474,12 +515,13 @@ namespace TimeSeriesFramework.Transport
         private System.Timers.Timer m_commandChannelRestartTimer;
         private System.Timers.Timer m_cipherKeyRotationTimer;
         private RoutingTables m_routingTables;
-        private IAdapterCollection m_parent;
         private string m_metadataTables;
         private string m_dependencies;
         private bool m_requireAuthentication;
         private bool m_encryptPayload;
         private bool m_sharedDatabase;
+        private int m_compressionStrength;
+        private bool m_allowPayloadCompression;
         private bool m_allowSynchronizedSubscription;
         private bool m_useBaseTimeOffsets;
         private bool m_disposed;
@@ -514,6 +556,8 @@ namespace TimeSeriesFramework.Transport
             m_requireAuthentication = DefaultRequireAuthentication;
             m_encryptPayload = DefaultEncryptPayload;
             m_sharedDatabase = DefaultSharedDatabase;
+            m_compressionStrength = DefaultCompressionStrength;
+            m_allowPayloadCompression = DefaultAllowPayloadCompression;
             m_allowSynchronizedSubscription = DefaultAllowSynchronizedSubscription;
             m_useBaseTimeOffsets = DefaultUseBaseTimeOffsets;
             m_metadataTables = DefaultMetadataTables;
@@ -612,10 +656,52 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
-        /// Gets or sets flag that indicates if this publisher will allow synchronized subscriptions.
+        /// Gets or sets flag that indicates if this publisher will allow payload compression when requested by subscribers.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define the flag that indicates if this publisher will allow synchronized subscriptions."),
+        Description("Define the flag that indicates if this publisher will allow payload compression when requested by subscribers."),
+        DefaultValue(DefaultAllowPayloadCompression)]
+        public bool AllowPayloadCompression
+        {
+            get
+            {
+                return m_allowPayloadCompression;
+            }
+            set
+            {
+                m_allowPayloadCompression = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the compression strength value to use when compressing data for subscribers.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the compression strength value to use when compressing data for subscribers. Valid values are from 0 to 31: lower numbers provide faster compression times and higher numbers provide better compression ratios."),
+        DefaultValue(DefaultCompressionStrength)]
+        public int CompressionStrength
+        {
+            get
+            {
+                return m_compressionStrength;
+            }
+            set
+            {
+                if (value < 0)
+                    value = 0;
+
+                if (value > 31)
+                    value = 31;
+
+                m_compressionStrength = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that indicates if this publisher will allow synchronized subscriptions when requested by subscribers.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the flag that indicates if this publisher will allow synchronized subscriptions when requested by subscribers."),
         DefaultValue(DefaultAllowSynchronizedSubscription)]
         public bool AllowSynchronizedSubscription
         {
@@ -961,6 +1047,7 @@ namespace TimeSeriesFramework.Transport
             Dictionary<string, string> settings = Settings;
             string setting;
             double period;
+            int strength;
 
             // Setup data publishing server with or without required authentication 
             if (settings.TryGetValue("requireAuthentication", out setting))
@@ -978,6 +1065,14 @@ namespace TimeSeriesFramework.Transport
             // Extract custom metadata table expressions if provided
             if (settings.TryGetValue("metadataTables", out setting) && !string.IsNullOrWhiteSpace(setting))
                 m_metadataTables = setting;
+
+            // See if a user defined compression strength has been provided
+            if (settings.TryGetValue("compressionStrength", out setting) && int.TryParse(setting, out strength))
+                CompressionStrength = strength;
+
+            // Check flag to see if payload compression is allowed
+            if (settings.TryGetValue("allowPayloadCompression", out setting))
+                m_allowPayloadCompression = setting.ParseBoolean();
 
             // Check flag to see if synchronized subscriptions are allowed
             if (settings.TryGetValue("allowSynchronizedSubscription", out setting))
@@ -1079,7 +1174,6 @@ namespace TimeSeriesFramework.Transport
         protected override void AssignParentCollection(IAdapterCollection parent)
         {
             // Get a local reference to the parent collection
-            m_parent = parent;
 
             // Pass reference along to base class
             base.AssignParentCollection(parent);
@@ -1994,6 +2088,7 @@ namespace TimeSeriesFramework.Transport
                     }
                     else
                     {
+                        bool usePayloadCompression = m_allowPayloadCompression && ((connection.OperationalModes & OperationalModes.CompressPayloadData) > 0);
                         bool useCompactMeasurementFormat = ((byte)(flags & DataPacketFlags.Compact) > 0);
                         bool addSubscription = false;
 
@@ -2110,6 +2205,10 @@ namespace TimeSeriesFramework.Transport
                             IServer publicationChannel;
                             m_clientPublicationChannels.TryRemove(clientID, out publicationChannel);
 
+                            // Update payload compression state and strength
+                            subscription.UsePayloadCompression = usePayloadCompression;
+                            subscription.CompressionStrength = m_compressionStrength;
+
                             // Update measurement serialization format type
                             subscription.UseCompactMeasurementFormat = useCompactMeasurementFormat;
 
@@ -2151,7 +2250,6 @@ namespace TimeSeriesFramework.Transport
                             // Make sure adapter is started
                             subscription.Start();
 
-                            // TODO: Add a flag to the database to allow payload encryption to be subsciber specific instead of global to publisher...
                             // Send new or updated cipher keys
                             if (connection.Authenticated && m_encryptPayload)
                                 connection.RotateCipherKeys();

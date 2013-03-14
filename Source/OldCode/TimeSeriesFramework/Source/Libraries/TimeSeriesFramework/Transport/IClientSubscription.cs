@@ -80,6 +80,24 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
+        /// Gets or sets flag that determines if payload compression should be enabled in data packets of this <see cref="IClientSubscription"/>.
+        /// </summary>
+        bool UsePayloadCompression
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the compression strength value to use when <see cref="UsePayloadCompression"/> is <c>true</c> for this <see cref="IClientSubscription"/>.
+        /// </summary>
+        int CompressionStrength
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="IClientSubscription"/>.
         /// </summary>
         bool UseCompactMeasurementFormat

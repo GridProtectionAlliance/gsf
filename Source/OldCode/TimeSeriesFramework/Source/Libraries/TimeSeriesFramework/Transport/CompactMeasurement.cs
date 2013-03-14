@@ -26,7 +26,11 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using TVA;
+using TVA.IO.Compression;
 using TVA.Parsing;
 
 namespace TimeSeriesFramework.Transport
@@ -161,7 +165,7 @@ namespace TimeSeriesFramework.Transport
     /// serialized and every attempt is made to optimize the binary image for purposes of size
     /// reduction.
     /// </remarks>
-    public class CompactMeasurement : Measurement, ISupportBinaryImage
+    public class CompactMeasurement : Measurement, IBinaryMeasurement
     {
         #region [ Members ]
 
@@ -302,6 +306,80 @@ namespace TimeSeriesFramework.Transport
             }
         }
 
+        /// <summary>
+        /// Gets offset compressed millisecond-resolution 2-byte timestamp.
+        /// </summary>
+        public ushort TimestampC2
+        {
+            get
+            {
+                return (ushort)((Timestamp - m_baseTimeOffsets[m_timeIndex]).ToMilliseconds());
+            }
+        }
+
+        /// <summary>
+        /// Gets offset compressed tick-resolution 4-byte timestamp.
+        /// </summary>
+        public uint TimestampC4
+        {
+            get
+            {
+                return (uint)((long)Timestamp - m_baseTimeOffsets[m_timeIndex]);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets byte level compact state flags with encoded time index and base time offset bits.
+        /// </summary>
+        public byte CompactStateFlags
+        {
+            get
+            {
+                // Encode compact state flags
+                CompactMeasurementStateFlags flags = StateFlags.MapToCompactFlags();
+
+                if (m_timeIndex != 0)
+                    flags |= CompactMeasurementStateFlags.TimeIndex;
+
+                if (m_usingBaseTimeOffset)
+                    flags |= CompactMeasurementStateFlags.BaseTimeOffset;
+
+                return (byte)flags;
+            }
+            set
+            {
+                // Decode compact state flags
+                CompactMeasurementStateFlags flags = (CompactMeasurementStateFlags)value;
+                StateFlags = flags.MapToFullFlags();
+                m_timeIndex = (flags & CompactMeasurementStateFlags.TimeIndex) > 0 ? 1 : 0;
+                m_usingBaseTimeOffset = (flags & CompactMeasurementStateFlags.BaseTimeOffset) > 0;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the 2-byte run-time signal index for this measurement.
+        /// </summary>
+        public ushort RuntimeID
+        {
+            get
+            {
+                return m_signalIndexCache.GetSignalIndex(ID);
+            }
+            set
+            {
+                // Attempt to restore signal identification
+                Tuple<Guid, string, uint> tuple;
+
+                if (m_signalIndexCache.Reference.TryGetValue(value, out tuple))
+                {
+                    ID = tuple.Item1;
+                    Key = new MeasurementKey(tuple.Item1, tuple.Item3, tuple.Item2);
+                }
+                else
+                    throw new InvalidOperationException("Failed to find associated signal identification for runtime ID " + value);
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -326,28 +404,14 @@ namespace TimeSeriesFramework.Transport
             if (length < 1)
                 throw new InvalidOperationException("Not enough buffer available to deserialize measurement.");
 
-            // Decode flags
-            CompactMeasurementStateFlags flags = (CompactMeasurementStateFlags)buffer[startIndex];
-            StateFlags = flags.MapToFullFlags();
-            m_timeIndex = (flags & CompactMeasurementStateFlags.TimeIndex) > 0 ? 1 : 0;
-            m_usingBaseTimeOffset = (flags & CompactMeasurementStateFlags.BaseTimeOffset) > 0;
+            int index = startIndex;
 
-            int index = startIndex + 1;
+            // Decode state flags
+            CompactStateFlags = buffer[index++];
 
             // Decode runtime ID
-            ushort id = EndianOrder.BigEndian.ToUInt16(buffer, index);
+            RuntimeID = EndianOrder.BigEndian.ToUInt16(buffer, index);
             index += 2;
-
-            // Restore signal identification
-            Tuple<Guid, string, uint> tuple;
-
-            if (m_signalIndexCache.Reference.TryGetValue(id, out tuple))
-            {
-                ID = tuple.Item1;
-                Key = new MeasurementKey(tuple.Item1, tuple.Item3, tuple.Item2);
-            }
-            else
-                throw new InvalidOperationException("Failed to find associated signal identification for runtime ID " + id);
 
             // Decode value
             Value = EndianOrder.BigEndian.ToSingle(buffer, index);
@@ -419,26 +483,14 @@ namespace TimeSeriesFramework.Transport
 
             buffer.ValidateParameters(startIndex, length);
 
-            // Encode compact state flags
-            CompactMeasurementStateFlags flags = StateFlags.MapToCompactFlags();
-
-            if (m_timeIndex != 0)
-                flags |= CompactMeasurementStateFlags.TimeIndex;
-
-            if (m_usingBaseTimeOffset)
-                flags |= CompactMeasurementStateFlags.BaseTimeOffset;
-
-            // Added flags to beginning of buffer
-            buffer[startIndex++] = (byte)flags;
+            // Added encoded compact state flags to beginning of buffer
+            buffer[startIndex++] = CompactStateFlags;
 
             // Encode runtime ID
-            EndianOrder.BigEndian.CopyBytes(m_signalIndexCache.GetSignalIndex(ID), buffer, startIndex);
+            startIndex += EndianOrder.BigEndian.CopyBytes(RuntimeID, buffer, startIndex);
 
-            startIndex += 2;
-
-            // Encode adjusted value (accounts for adder and multipler)
-            EndianOrder.BigEndian.CopyBytes((float)AdjustedValue, buffer, startIndex);
-            startIndex += 4;
+            // Encode adjusted value (accounts for adder and multiplier)
+            startIndex += EndianOrder.BigEndian.CopyBytes((float)AdjustedValue, buffer, startIndex);
 
             if (m_includeTime)
             {
@@ -447,12 +499,12 @@ namespace TimeSeriesFramework.Transport
                     if (m_useMillisecondResolution)
                     {
                         // Encode 2-byte millisecond offset timestamp
-                        EndianOrder.BigEndian.CopyBytes((ushort)(Timestamp - m_baseTimeOffsets[m_timeIndex]).ToMilliseconds(), buffer, startIndex);
+                        EndianOrder.BigEndian.CopyBytes(TimestampC2, buffer, startIndex);
                     }
                     else
                     {
                         // Encode 4-byte ticks offset timestamp
-                        EndianOrder.BigEndian.CopyBytes((uint)((long)Timestamp - m_baseTimeOffsets[m_timeIndex]), buffer, startIndex);
+                        EndianOrder.BigEndian.CopyBytes(TimestampC4, buffer, startIndex);
                     }
                 }
                 else
@@ -473,6 +525,188 @@ namespace TimeSeriesFramework.Transport
         private static readonly long[] s_emptyBaseTimeOffsets = new long[] { 0, 0 };
 
         #endregion
+    }
 
+    /// <summary>
+    /// Defines extension functions related to <see cref="CompactMeasurement"/>.
+    /// </summary>
+    public static class CompactMeasurementExtensions
+    {
+        /// <summary>
+        /// Attempts to compress payload of <see cref="CompactMeasurement"/> values onto the <paramref name="destination"/> stream.
+        /// </summary>
+        /// <param name="compactMeasurements">Payload of <see cref="CompactMeasurement"/> values.</param>
+        /// <param name="destination">Memory based <paramref name="destination"/> stream to hold compressed payload.</param>
+        /// <param name="compressionStrength">Compression strength to use.</param>
+        /// <param name="includeTime">Flag that determines if time should be included in the compressed payload.</param>
+        /// <param name="flags">Current <see cref="DataPacketFlags"/>.</param>
+        /// <returns><c>true</c> if payload was compressed and encoded onto <paramref name="destination"/> stream; otherwise <c>false</c>.</returns>
+        /// <remarks>
+        /// <para>
+        /// Compressed payload will only be encoded onto <paramref name="destination"/> stream if compressed size would be smaller
+        /// than normal serialized size.
+        /// </para>
+        /// <para>
+        /// As an optimization this function uses a compression method that uses pointers to native structures, as such the
+        /// endian order encoding of the compressed data will always be in the native-endian order of the operating system.
+        /// This will be an important consideration when writing a endian order neutral payload decompressor. To help with
+        /// this the actual endian order used during compression is marked in the data flags. However, measurements values
+        /// are consistently encoded in big-endian order prior to buffer compression.
+        /// </para>
+        /// </remarks>
+        public static bool CompressPayload(this IEnumerable<CompactMeasurement> compactMeasurements, MemoryStream destination, byte compressionStrength, bool includeTime, ref DataPacketFlags flags)
+        {
+            byte[] buffer = null;
+
+            try
+            {
+                // Get a buffer that is larger than we'll need
+                buffer = BufferPool.TakeBuffer(ushort.MaxValue);
+
+                // Go ahead an enumerate all the measurements - this will cast all values to compact measurements
+                CompactMeasurement[] measurements = compactMeasurements.ToArray();
+                int measurementCount = measurements.Length;
+                int sizeToBeat = measurementCount * measurements[0].BinaryLength;
+                int index = 0;
+
+                // Encode compact state flags and runtime IDs together --
+                // Together these are three bytes, so we pad with a zero byte.
+                // The zero byte and state flags are considered to be more compressible
+                // than the runtime ID, so these are stored in the higher order bytes.
+                for (int i = 0; i < measurementCount; i++)
+                {
+                    uint value = ((uint)measurements[i].CompactStateFlags << 16) | measurements[i].RuntimeID;
+                    index += NativeEndianOrder.Default.CopyBytes(value, buffer, index);
+                }
+
+                // Encode values
+                for (int i = 0; i < measurementCount; i++)
+                {
+                    // Encode using adjusted value (accounts for adder and multiplier)
+                    index += NativeEndianOrder.Default.CopyBytes((float)measurements[i].AdjustedValue, buffer, index);
+                }
+
+                if (includeTime)
+                {
+                    // Encode timestamps
+                    for (int i = 0; i < measurementCount; i++)
+                    {
+                        // Since large majority of 8-byte tick values will be repeated, they should compress well
+                        index += NativeEndianOrder.Default.CopyBytes((long)measurements[i].Timestamp, buffer, index);
+                    }
+                }
+
+                // Attempt to compress buffer
+                int compressedSize = PatternCompressor.CompressBuffer(buffer, 0, index, ushort.MaxValue, compressionStrength);
+
+                // Only encode compressed buffer if compression actually helped payload size
+                if (compressedSize <= sizeToBeat)
+                {
+                    // Set payload compression flag
+                    flags |= DataPacketFlags.Compressed;
+
+                    // Make sure decompressor knows original endian encoding order
+                    if (BitConverter.IsLittleEndian)
+                        flags |= DataPacketFlags.LittleEndianCompression;
+                    else
+                        flags &= ~DataPacketFlags.LittleEndianCompression;
+
+                    // Copy compressed payload onto destination stream
+                    destination.Write(buffer, 0, compressedSize);
+                    return true;
+                }
+
+                // Clear payload compression flag
+                flags &= ~DataPacketFlags.Compressed;
+                return false;
+            }
+            finally
+            {
+                if ((object)buffer != null)
+                    BufferPool.ReturnBuffer(buffer);
+            }
+        }
+
+        /// <summary>
+        /// Decompresses <see cref="CompactMeasurement"/> values from the given <paramref name="source"/> buffer.
+        /// </summary>
+        /// <param name="source">Buffer with compressed <see cref="CompactMeasurement"/> payload.</param>
+        /// <param name="signalIndexCache">Current <see cref="SignalIndexCache"/>.</param>
+        /// <param name="index">Index into buffer where compressed payload begins.</param>
+        /// <param name="dataLength">Length of all data within <paramref name="source"/> buffer.</param>
+        /// <param name="measurementCount">Number of compressed measurements in the payload.</param>
+        /// <param name="includeTime">Flag that determines if timestamps as included in the payload.</param>
+        /// <param name="flags">Current <see cref="DataPacketFlags"/>.</param>
+        /// <returns>Decompressed <see cref="CompactMeasurement"/> values from the given <paramref name="source"/> buffer.</returns>
+        public static CompactMeasurement[] DecompressPayload(this byte[] source, SignalIndexCache signalIndexCache, int index, int dataLength, int measurementCount, bool includeTime, DataPacketFlags flags)
+        {
+            CompactMeasurement[] measurements = new CompactMeasurement[measurementCount];
+            byte[] buffer = null;
+
+            try
+            {
+                // Actual data length has to take into account response byte and in-response-to server command byte in the payload header
+                //int dataLength = length - index - 2;
+                int bufferLength = PatternDecompressor.MaximumSizeDecompressed(dataLength);
+
+                // Copy source data into a decompression buffer
+                buffer = BufferPool.TakeBuffer(bufferLength);
+                Buffer.BlockCopy(source, index, buffer, 0, dataLength);
+
+                // Check that OS endian-order matches endian-order of compressed data
+                if (!(BitConverter.IsLittleEndian && (flags & DataPacketFlags.LittleEndianCompression) > 0))
+                {
+                    // TODO: Set a flag, e.g., Endianness decompressAs, to pass into pattern decompressor so it
+                    // can be modified to decompress a payload that is non-native Endian order
+                    throw new NotImplementedException("Cannot currently decompress payload that is not in native endian-order.");
+                }
+
+                // Attempt to decompress buffer
+                int uncompressedSize = PatternDecompressor.DecompressBuffer(buffer, 0, dataLength, bufferLength);
+
+                if (uncompressedSize == 0)
+                    throw new InvalidOperationException("Failed to decompress payload buffer - possible data corruption.");
+
+                index = 0;
+
+                // Decode ID and state flags
+                for (int i = 0; i < measurementCount; i++)
+                {
+                    uint value = NativeEndianOrder.Default.ToUInt32(buffer, index);
+
+                    measurements[i] = new CompactMeasurement(signalIndexCache, includeTime)
+                    {
+                        CompactStateFlags = (byte)(value >> 16),
+                        RuntimeID = (ushort)value
+                    };
+
+                    index += 4;
+                }
+
+                // Decode values
+                for (int i = 0; i < measurementCount; i++)
+                {
+                    measurements[i].Value = NativeEndianOrder.Default.ToSingle(buffer, index);
+                    index += 4;
+                }
+
+                if (includeTime)
+                {
+                    // Decode timestamps
+                    for (int i = 0; i < measurementCount; i++)
+                    {
+                        measurements[i].Timestamp = NativeEndianOrder.Default.ToInt64(buffer, index);
+                        index += 8;
+                    }
+                }
+            }
+            finally
+            {
+                if ((object)buffer != null)
+                    BufferPool.ReturnBuffer(buffer);
+            }
+
+            return measurements;
+        }
     }
 }
