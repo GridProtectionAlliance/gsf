@@ -1872,12 +1872,12 @@
         </member>
         <member name="F:TimeSeriesFramework.MeasurementStateFlags.UpSampled">
             <summary>
-            Defines upsampled state.
+            Defines up-sampled state.
             </summary>
         </member>
         <member name="F:TimeSeriesFramework.MeasurementStateFlags.DownSampled">
             <summary>
-            Defines downsampled state.
+            Defines down-sampled state.
             </summary>
         </member>
         <member name="F:TimeSeriesFramework.MeasurementStateFlags.DiscardedValue">
@@ -2094,6 +2094,14 @@
             </summary>
             <param name="measurements"><see cref="T:TimeSeriesFramework.IMeasurement"/> enumeration to convert.</param>
             <returns><see cref="T:TimeSeriesFramework.MeasurementKey"/> values of the <see cref="T:TimeSeriesFramework.IMeasurement"/> enumeration.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.IMeasurementExtensions.GetSignalType(TimeSeriesFramework.IMeasurement,System.Data.DataSet)">
+            <summary>
+            Gets a unique (run-time only) signal type ID for the given <paramref name="measurement"/> useful for sorting.
+            </summary>
+            <param name="measurement"><see cref="T:TimeSeriesFramework.IMeasurement"/> to obtain signal type for.</param>
+            <param name="dataSource"><see cref="T:System.Data.DataSet"/> that contains measurement metadata.</param>
+            <returns>Unique (run-time only) signal type ID for the given <paramref name="measurement"/>.</returns>
         </member>
         <member name="T:TimeSeriesFramework.ImmediateMeasurements">
             <summary>
@@ -6430,6 +6438,22 @@
             Bit set = use odd cipher index (i.e., 1), bit clear = use even cipher index (i.e., 0).
             </remarks>
         </member>
+        <member name="F:TimeSeriesFramework.Transport.DataPacketFlags.Compressed">
+            <summary>
+            Determines if data packet payload is compressed.
+            </summary>
+            <remarks>
+            Bit set = payload compressed, bit clear = payload normal.
+            </remarks>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.DataPacketFlags.LittleEndianCompression">
+            <summary>
+            Determines if the compressed data payload is in little-endian order.
+            </summary>
+            <remarks>
+            Bit set = little-endian order compression, bit clear = big-endian order compression.
+            </remarks>
+        </member>
         <member name="F:TimeSeriesFramework.Transport.DataPacketFlags.NoFlags">
             <summary>
             No flags set.
@@ -6480,6 +6504,14 @@
             </summary>
             <remarks>
             Bit set = common serialization format, bit clear = .NET serialization format
+            </remarks>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.OperationalModes.CompressPayloadData">
+            <summary>
+            Determines whether payload data is compressed when exchanging between publisher and subscriber.
+            </summary>
+            <remarks>
+            Bit set = compress, bit clear = no compression
             </remarks>
         </member>
         <member name="F:TimeSeriesFramework.Transport.OperationalModes.CompressSignalIndexCache">
@@ -6568,6 +6600,16 @@
             Default value for <see cref="P:TimeSeriesFramework.Transport.DataPublisher.SharedDatabase"/>.
             </summary>
         </member>
+        <member name="F:TimeSeriesFramework.Transport.DataPublisher.DefaultAllowPayloadCompression">
+            <summary>
+            Default value for <see cref="P:TimeSeriesFramework.Transport.DataPublisher.AllowPayloadCompression"/>.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.DataPublisher.DefaultCompressionStrength">
+            <summary>
+            Default value for <see cref="P:TimeSeriesFramework.Transport.DataPublisher.CompressionStrength"/>.
+            </summary>
+        </member>
         <member name="F:TimeSeriesFramework.Transport.DataPublisher.DefaultAllowSynchronizedSubscription">
             <summary>
             Default value for <see cref="P:TimeSeriesFramework.Transport.DataPublisher.AllowSynchronizedSubscription"/>.
@@ -6587,6 +6629,19 @@
             <summary>
             Default value for <see cref="P:TimeSeriesFramework.Transport.DataPublisher.MetadataTables"/>.
             </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.DataPublisher.MaxPacketSize">
+            <summary>
+            Maximum packet size before software fragmentation of payload.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.DataPublisher.ClientResponseHeaderSize">
+            <summary>
+            Size of client response header in bytes.
+            </summary>
+            <remarks>
+            Header consists of response byte, in-response-to server command byte, 4-byte int representing payload length.
+            </remarks>
         </member>
         <member name="M:TimeSeriesFramework.Transport.DataPublisher.#ctor">
             <summary>
@@ -6823,9 +6878,19 @@
             data that this node subscribed to from another node in a shared database.
             </summary>
         </member>
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.AllowPayloadCompression">
+            <summary>
+            Gets or sets flag that indicates if this publisher will allow payload compression when requested by subscribers.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.CompressionStrength">
+            <summary>
+            Gets or sets the compression strength value to use when compressing data for subscribers.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Transport.DataPublisher.AllowSynchronizedSubscription">
             <summary>
-            Gets or sets flag that indicates if this publisher will allow synchronized subscriptions.
+            Gets or sets flag that indicates if this publisher will allow synchronized subscriptions when requested by subscribers.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.DataPublisher.UseBaseTimeOffsets">
@@ -6907,6 +6972,11 @@
             Represents a data subscribing client that will connect to a data publisher for a data subscription.
             </summary>
         </member>
+        <member name="F:TimeSeriesFramework.Transport.DataSubscriber.DefaultOperationalModes">
+            <summary>
+            Defines default value for <see cref="P:TimeSeriesFramework.Transport.DataSubscriber.OperationalModes"/>.
+            </summary>
+        </member>
         <member name="M:TimeSeriesFramework.Transport.DataSubscriber.#ctor">
             <summary>
             Creates a new <see cref="T:TimeSeriesFramework.Transport.DataSubscriber"/>.
@@ -6958,8 +7028,8 @@
             </summary>
             <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>true</c> for bandwidth conservation.</param>
             <param name="framesPerSecond">The desired number of data frames per second.</param>
-            <param name="lagTime">Allowed past time deviation tolerance, in seconds (can be subsecond).</param>
-            <param name="leadTime">Allowed future time deviation tolerance, in seconds (can be subsecond).</param>
+            <param name="lagTime">Allowed past time deviation tolerance, in seconds (can be sub-second).</param>
+            <param name="leadTime">Allowed future time deviation tolerance, in seconds (can be sub-second).</param>
             <param name="filterExpression">Filtering expression that defines the measurements that are being subscribed.</param>
             <param name="dataChannel">Desired UDP return data channel connection string to use for data packet transmission. Set to <c>null</c> to use TCP channel for data transmission.</param>
             <param name="useLocalClockAsRealTime">Boolean value that determines whether or not to use the local clock time as real-time.</param>
@@ -6967,7 +7037,7 @@
             <param name="allowSortsByArrival"> Gets or sets flag that determines whether or not to allow incoming measurements with bad timestamps to be sorted by arrival time.</param>
             <param name="timeResolution">Gets or sets the maximum time resolution, in ticks, to use when sorting measurements by timestamps into their proper destination frame.</param>
             <param name="allowPreemptivePublishing">Gets or sets flag that allows system to preemptively publish frames assuming all expected measurements have arrived.</param>
-            <param name="downsamplingMethod">Gets the total number of downsampled measurements processed by the concentrator.</param>
+            <param name="downsamplingMethod">Gets the total number of down-sampled measurements processed by the concentrator.</param>
             <param name="startTime">Defines a relative or exact start time for the temporal constraint to use for historical playback.</param>
             <param name="stopTime">Defines a relative or exact stop time for the temporal constraint to use for historical playback.</param>
             <param name="constraintParameters">Defines any temporal parameters related to the constraint to use for historical playback.</param>
@@ -6977,13 +7047,13 @@
             <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
             <remarks>
             <para>
-            When the <paramref name="startTime"/> or <paramref name="stopTime"/> temporal processing contraints are defined (i.e., not <c>null</c>), this
+            When the <paramref name="startTime"/> or <paramref name="stopTime"/> temporal processing constraints are defined (i.e., not <c>null</c>), this
             specifies the start and stop time over which the subscriber session will process data. Passing in <c>null</c> for the <paramref name="startTime"/>
             and <paramref name="stopTime"/> specifies the the subscriber session will process data in standard, i.e., real-time, operation.
             </para>
             <para>
             With the exception of the values of -1 and 0, the <paramref name="processingInterval"/> value specifies the desired historical playback data
-            processing interval in milliseconds. This is basically a delay, or timer interval, overwhich to process data. Setting this value to -1 means
+            processing interval in milliseconds. This is basically a delay, or timer interval, over which to process data. Setting this value to -1 means
             to use the default processing interval while setting the value to 0 means to process data as fast as possible.
             </para>
             <para>
@@ -7028,8 +7098,8 @@
             </summary>
             <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>true</c> for bandwidth conservation.</param>
             <param name="framesPerSecond">The desired number of data frames per second.</param>
-            <param name="lagTime">Allowed past time deviation tolerance, in seconds (can be subsecond).</param>
-            <param name="leadTime">Allowed future time deviation tolerance, in seconds (can be subsecond).</param>
+            <param name="lagTime">Allowed past time deviation tolerance, in seconds (can be sub-second).</param>
+            <param name="leadTime">Allowed future time deviation tolerance, in seconds (can be sub-second).</param>
             <param name="filterExpression">Filtering expression that defines the measurements that are being subscribed.</param>
             <param name="dataChannel">Desired UDP return data channel connection string to use for data packet transmission. Set to <c>null</c> to use TCP channel for data transmission.</param>
             <param name="useLocalClockAsRealTime">Boolean value that determines whether or not to use the local clock time as real-time.</param>
@@ -7037,7 +7107,7 @@
             <param name="allowSortsByArrival"> Gets or sets flag that determines whether or not to allow incoming measurements with bad timestamps to be sorted by arrival time.</param>
             <param name="timeResolution">Gets or sets the maximum time resolution, in ticks, to use when sorting measurements by timestamps into their proper destination frame.</param>
             <param name="allowPreemptivePublishing">Gets or sets flag that allows system to preemptively publish frames assuming all expected measurements have arrived.</param>
-            <param name="downsamplingMethod">Gets the total number of downsampled measurements processed by the concentrator.</param>
+            <param name="downsamplingMethod">Gets the total number of down-sampled measurements processed by the concentrator.</param>
             <param name="startTime">Defines a relative or exact start time for the temporal constraint to use for historical playback.</param>
             <param name="stopTime">Defines a relative or exact stop time for the temporal constraint to use for historical playback.</param>
             <param name="constraintParameters">Defines any temporal parameters related to the constraint to use for historical playback.</param>
@@ -7047,13 +7117,13 @@
             <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
             <remarks>
             <para>
-            When the <paramref name="startTime"/> or <paramref name="stopTime"/> temporal processing contraints are defined (i.e., not <c>null</c>), this
+            When the <paramref name="startTime"/> or <paramref name="stopTime"/> temporal processing constraints are defined (i.e., not <c>null</c>), this
             specifies the start and stop time over which the subscriber session will process data. Passing in <c>null</c> for the <paramref name="startTime"/>
             and <paramref name="stopTime"/> specifies the the subscriber session will process data in standard, i.e., real-time, operation.
             </para>
             <para>
             With the exception of the values of -1 and 0, the <paramref name="processingInterval"/> value specifies the desired historical playback data
-            processing interval in milliseconds. This is basically a delay, or timer interval, overwhich to process data. Setting this value to -1 means
+            processing interval in milliseconds. This is basically a delay, or timer interval, over which to process data. Setting this value to -1 means
             to use the default processing interval while setting the value to 0 means to process data as fast as possible.
             </para>
             <para>
@@ -7101,8 +7171,8 @@
             <param name="filterExpression">Filtering expression that defines the measurements that are being subscribed.</param>
             <param name="dataChannel">Desired UDP return data channel connection string to use for data packet transmission. Set to <c>null</c> to use TCP channel for data transmission.</param>
             <param name="includeTime">Boolean value that determines if time is a necessary component in streaming data.</param>
-            <param name="lagTime">When <paramref name="throttled"/> is <c>true</c>, defines the data transmission speed in seconds (can be subsecond).</param>
-            <param name="leadTime">When <paramref name="throttled"/> is <c>true</c>, defines the allowed time deviation tolerance to real-time in seconds (can be subsecond).</param>
+            <param name="lagTime">When <paramref name="throttled"/> is <c>true</c>, defines the data transmission speed in seconds (can be sub-second).</param>
+            <param name="leadTime">When <paramref name="throttled"/> is <c>true</c>, defines the allowed time deviation tolerance to real-time in seconds (can be sub-second).</param>
             <param name="useLocalClockAsRealTime">When <paramref name="throttled"/> is <c>true</c>, defines boolean value that determines whether or not to use the local clock time as real-time. Set to <c>false</c> to use latest received measurement timestamp as real-time.</param>
             <param name="startTime">Defines a relative or exact start time for the temporal constraint to use for historical playback.</param>
             <param name="stopTime">Defines a relative or exact stop time for the temporal constraint to use for historical playback.</param>
@@ -7113,13 +7183,13 @@
             <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
             <remarks>
             <para>
-            When the <paramref name="startTime"/> or <paramref name="stopTime"/> temporal processing contraints are defined (i.e., not <c>null</c>), this
+            When the <paramref name="startTime"/> or <paramref name="stopTime"/> temporal processing constraints are defined (i.e., not <c>null</c>), this
             specifies the start and stop time over which the subscriber session will process data. Passing in <c>null</c> for the <paramref name="startTime"/>
             and <paramref name="stopTime"/> specifies the the subscriber session will process data in standard, i.e., real-time, operation.
             </para>
             <para>
             With the exception of the values of -1 and 0, the <paramref name="processingInterval"/> value specifies the desired historical playback data
-            processing interval in milliseconds. This is basically a delay, or timer interval, overwhich to process data. Setting this value to -1 means
+            processing interval in milliseconds. This is basically a delay, or timer interval, over which to process data. Setting this value to -1 means
             to use the default processing interval while setting the value to 0 means to process data as fast as possible.
             </para>
             <para>
@@ -7300,7 +7370,7 @@
             </summary>
             <remarks>
             This event is expected to only be raised when an input adapter has been designed to process
-            a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+            a finite amount of data, e.g., reading a historical range of data during temporal processing.
             </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Transport.DataSubscriber.RequireAuthentication">
@@ -7360,7 +7430,7 @@
             </summary>
             <remarks>
             With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
-            basically a delay, or timer interval, overwhich to process data. A value of -1 means to use the default processing
+            basically a delay, or timer interval, over which to process data. A value of -1 means to use the default processing
             interval while a value of 0 means to process data as fast as possible.
             </remarks>
         </member>
@@ -7451,6 +7521,11 @@
         <member name="P:TimeSeriesFramework.DebugHostBase.ServiceClientName">
             <summary>
             Gets the executable name of the service client that can remotely access the time-series framework service.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.Transport.IBinaryMeasurement">
+            <summary>
+            Defines a <see cref="T:TimeSeriesFramework.IMeasurement"/> that supports <see cref="T:TVA.Parsing.ISupportBinaryImage"/>.
             </summary>
         </member>
         <member name="T:TimeSeriesFramework.Transport.SerializableMeasurement">
@@ -8236,6 +8311,68 @@
             Gets the length of the <see cref="T:TimeSeriesFramework.Transport.CompactMeasurement"/>.
             </summary>
         </member>
+        <member name="P:TimeSeriesFramework.Transport.CompactMeasurement.TimestampC2">
+            <summary>
+            Gets offset compressed millisecond-resolution 2-byte timestamp.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.CompactMeasurement.TimestampC4">
+            <summary>
+            Gets offset compressed tick-resolution 4-byte timestamp.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.CompactMeasurement.CompactStateFlags">
+            <summary>
+            Gets or sets byte level compact state flags with encoded time index and base time offset bits.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.CompactMeasurement.RuntimeID">
+            <summary>
+            Gets or sets the 2-byte run-time signal index for this measurement.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.Transport.CompactMeasurementExtensions">
+            <summary>
+            Defines extension functions related to <see cref="T:TimeSeriesFramework.Transport.CompactMeasurement"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.CompactMeasurementExtensions.CompressPayload(System.Collections.Generic.IEnumerable{TimeSeriesFramework.Transport.CompactMeasurement},System.IO.MemoryStream,System.Byte,System.Boolean,TimeSeriesFramework.Transport.DataPacketFlags@)">
+            <summary>
+            Attempts to compress payload of <see cref="T:TimeSeriesFramework.Transport.CompactMeasurement"/> values onto the <paramref name="destination"/> stream.
+            </summary>
+            <param name="compactMeasurements">Payload of <see cref="T:TimeSeriesFramework.Transport.CompactMeasurement"/> values.</param>
+            <param name="destination">Memory based <paramref name="destination"/> stream to hold compressed payload.</param>
+            <param name="compressionStrength">Compression strength to use.</param>
+            <param name="includeTime">Flag that determines if time should be included in the compressed payload.</param>
+            <param name="flags">Current <see cref="T:TimeSeriesFramework.Transport.DataPacketFlags"/>.</param>
+            <returns><c>true</c> if payload was compressed and encoded onto <paramref name="destination"/> stream; otherwise <c>false</c>.</returns>
+            <remarks>
+            <para>
+            Compressed payload will only be encoded onto <paramref name="destination"/> stream if compressed size would be smaller
+            than normal serialized size.
+            </para>
+            <para>
+            As an optimization this function uses a compression method that uses pointers to native structures, as such the
+            endian order encoding of the compressed data will always be in the native-endian order of the operating system.
+            This will be an important consideration when writing a endian order neutral payload decompressor. To help with
+            this the actual endian order used during compression is marked in the data flags. However, measurements values
+            are consistently encoded in big-endian order prior to buffer compression.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.CompactMeasurementExtensions.DecompressPayload(System.Byte[],TimeSeriesFramework.Transport.SignalIndexCache,System.Int32,System.Int32,System.Int32,System.Boolean,TimeSeriesFramework.Transport.DataPacketFlags)">
+            <summary>
+            Decompresses <see cref="T:TimeSeriesFramework.Transport.CompactMeasurement"/> values from the given <paramref name="source"/> buffer.
+            </summary>
+            <param name="source">Buffer with compressed <see cref="T:TimeSeriesFramework.Transport.CompactMeasurement"/> payload.</param>
+            <param name="signalIndexCache">Current <see cref="T:TimeSeriesFramework.Transport.SignalIndexCache"/>.</param>
+            <param name="index">Index into buffer where compressed payload begins.</param>
+            <param name="dataLength">Length of all data within <paramref name="source"/> buffer.</param>
+            <param name="measurementCount">Number of compressed measurements in the payload.</param>
+            <param name="includeTime">Flag that determines if timestamps as included in the payload.</param>
+            <param name="flags">Current <see cref="T:TimeSeriesFramework.Transport.DataPacketFlags"/>.</param>
+            <returns>Decompressed <see cref="T:TimeSeriesFramework.Transport.CompactMeasurement"/> values from the given <paramref name="source"/> buffer.</returns>
+        </member>
         <member name="T:TimeSeriesFramework.Transport.IClientSubscription">
             <summary>
             Represents a common set of interfaces for a client adapter subscription to the <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/>.
@@ -8287,6 +8424,16 @@
         <member name="P:TimeSeriesFramework.Transport.IClientSubscription.RequestedInputFilter">
             <summary>
             Gets the input filter requested by the subscriber when establishing this <see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.IClientSubscription.UsePayloadCompression">
+            <summary>
+            Gets or sets flag that determines if payload compression should be enabled in data packets of this <see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.IClientSubscription.CompressionStrength">
+            <summary>
+            Gets or sets the compression strength value to use when <see cref="P:TimeSeriesFramework.Transport.IClientSubscription.UsePayloadCompression"/> is <c>true</c> for this <see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/>.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.IClientSubscription.UseCompactMeasurementFormat">
@@ -8789,6 +8936,16 @@
             Gets the input filter requested by the subscriber when establishing this <see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/>.
             </summary>
         </member>
+        <member name="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.UsePayloadCompression">
+            <summary>
+            Gets or sets flag that determines if payload compression should be enabled in data packets of this <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.CompressionStrength">
+            <summary>
+            Gets or sets the compression strength value to use when <see cref="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.UsePayloadCompression"/> is <c>true</c> for this <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/>.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Transport.SynchronizedClientSubscription.UseCompactMeasurementFormat">
             <summary>
             Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="T:TimeSeriesFramework.Transport.SynchronizedClientSubscription"/>.
@@ -8944,6 +9101,16 @@
         <member name="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.RequestedInputFilter">
             <summary>
             Gets the input filter requested by the subscriber when establishing this <see cref="T:TimeSeriesFramework.Transport.IClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.UsePayloadCompression">
+            <summary>
+            Gets or sets flag that determines if payload compression should be enabled in data packets of this <see cref="T:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.CompressionStrength">
+            <summary>
+            Gets or sets the compression strength value to use when <see cref="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.UsePayloadCompression"/> is <c>true</c> for this <see cref="T:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription"/>.
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.UnsynchronizedClientSubscription.UseCompactMeasurementFormat">
