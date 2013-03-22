@@ -166,11 +166,8 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
             m_ignoreSampleSizeValidationFailures = ignoreSampleSizeValidationFailures;
             m_angleFormat = angleFormat;
 
-            // Get time base from configuration frame if available
-            if (configurationFrame != null)
-                m_timebase = configurationFrame.Timebase;
-            else
-                m_timebase = Common.Timebase;
+            // Ignore the time base from configuration frame if available.  The timebase is not adjustable for 61850.
+            m_timebase = Common.Timebase;
 
             // See if frame is for a common IEEE C37.118 frame (e.g., for configuration or command)
             if (buffer[startIndex] == PhasorProtocols.Common.SyncByte)
