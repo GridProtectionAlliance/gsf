@@ -27,6 +27,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using GSF;
 using GSF.IO;
 
@@ -200,13 +201,15 @@ namespace Comtrade
                 throw new FileNotFoundException(string.Format("Specified COMTRADE data file \"{0}\" was not found, cannot open files.", m_fileName));
 
             // Get all data files in the collection
+            const string fileRegex = @"(?:\.dat|\.d\d\d)$";
             string directory = FilePath.GetDirectoryName(m_fileName);
             string rootFileName = FilePath.GetFileNameWithoutExtension(m_fileName);
             string extension = FilePath.GetExtension(m_fileName).Substring(0, 2) + "*";
-            string[] fileNames = FilePath.GetFileList(Path.Combine(directory, rootFileName + extension));
 
-            // Make sure to process files in order
-            Array.Sort(fileNames, StringComparer.InvariantCultureIgnoreCase);
+            string[] fileNames = FilePath.GetFileList(Path.Combine(directory, rootFileName + extension))
+                .Where(fileName => Regex.IsMatch(fileName, fileRegex))
+                .OrderBy(fileName => fileName, StringComparer.InvariantCultureIgnoreCase)
+                .ToArray();
 
             // Create a new file stream for each file
             m_fileStreams = new FileStream[fileNames.Length];
