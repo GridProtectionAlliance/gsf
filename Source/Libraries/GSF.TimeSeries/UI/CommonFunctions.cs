@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO.Ports;
 using System.Net;
 using System.Threading;
@@ -35,6 +36,7 @@ using System.Windows.Documents;
 using System.Windows.Media;
 using GSF.Communication;
 using GSF.Data;
+using GSF.IO;
 using GSF.Security;
 using GSF.TimeSeries.UI.DataModels;
 
@@ -705,6 +707,32 @@ namespace GSF.TimeSeries.UI
             }
 
             return minMaxPointIDs;
+        }
+
+        /// <summary>
+        /// Logs an event to the Windows event log.
+        /// </summary>
+        /// <param name="message">The message to write to the log.</param>
+        /// <param name="eventID">The application-specific identifier for the event.</param>
+        /// <param name="eventType">The type of the event.</param>
+        public static void LogEvent(string message, int eventID, EventLogEntryType eventType = EventLogEntryType.Information)
+        {
+            try
+            {
+                ISecurityProvider securityProvider = SecurityProviderCache.CurrentProvider;
+                string applicationName;
+
+                if ((object)securityProvider != null)
+                    applicationName = securityProvider.ApplicationName;
+                else
+                    applicationName = FilePath.GetFileNameWithoutExtension(AppDomain.CurrentDomain.FriendlyName);
+
+                EventLog.WriteEntry(applicationName, message, eventType, eventID);
+            }
+            catch (Exception ex)
+            {
+                LogException(null, "LogEvent", new Exception(string.Format("Failed to write message {0} to event log: {1}", message, ex.Message), ex));
+            }
         }
 
         /// <summary>
