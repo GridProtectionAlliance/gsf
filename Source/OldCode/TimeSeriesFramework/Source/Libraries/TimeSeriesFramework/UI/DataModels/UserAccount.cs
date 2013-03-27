@@ -35,6 +35,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using TVA;
 using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
@@ -440,6 +441,8 @@ namespace TimeSeriesFramework.UI.DataModels
                         userAccount.Password.ToNotNull(), userAccount.FirstName.ToNotNull(), userAccount.LastName.ToNotNull(), database.CurrentNodeID(),
                         userAccount.Phone.ToNotNull(), userAccount.Email.ToNotNull(), database.Bool(userAccount.LockedOut), database.Bool(userAccount.UseADAuthentication),
                         changePasswordOn, CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+
+                    CommonFunctions.LogEvent(string.Format("New user \"{0}\" created successfully.", userAccount.Name), 2);
                 }
                 else
                 {
@@ -452,6 +455,8 @@ namespace TimeSeriesFramework.UI.DataModels
                             userAccount.Password.ToNotNull(), userAccount.FirstName.ToNotNull(), userAccount.LastName.ToNotNull(), database.Guid(userAccount.DefaultNodeID),
                             userAccount.Phone.ToNotNull(), userAccount.Email.ToNotNull(), database.Bool(userAccount.LockedOut), database.Bool(userAccount.UseADAuthentication),
                             changePasswordOn, CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(userAccount.ID));
+
+                    CommonFunctions.LogEvent(string.Format("Information about user \"{0}\" updated successfully.", userAccount.Name), 3);
                 }
 
                 return "User account information saved successfully";
@@ -472,15 +477,23 @@ namespace TimeSeriesFramework.UI.DataModels
         public static string Delete(AdoDataConnection database, Guid userAccountID)
         {
             bool createdConnection = false;
+            string userName;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
 
+                // Get the name of the user to be deleted
+                userName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM UserAccount WHERE ID = {0}", "userAccountID"), DefaultTimeout, database.Guid(userAccountID)).ToNonNullString();
+
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
+                // Delete the user from the database
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM UserAccount WHERE ID = {0}", "userAccountID"), DefaultTimeout, database.Guid(userAccountID));
+
+                // Write to the event log
+                CommonFunctions.LogEvent(string.Format("User \"{0}\" deleted successfully.", userName), 2);
 
                 return "User account deleted successfully";
             }

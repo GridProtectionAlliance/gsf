@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using TVA;
 using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
@@ -439,9 +440,11 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
                 foreach (Guid id in usersToBeAdded)
                 {
+                    string userName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM UserAccount WHERE ID = {0}", "userAccountID"), DefaultTimeout, database.Guid(id)).ToNonNullString();
+                    string roleName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM ApplicationRole WHERE ID = {0}", "applicationRoleID"), DefaultTimeout, database.Guid(roleID)).ToNonNullString();
                     string query = database.ParameterizedQueryString("INSERT INTO ApplicationRoleUserAccount (ApplicationRoleID, UserAccountID) VALUES ({0}, {1})", "roleID", "userID");
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout,
-                        database.Guid(roleID), database.Guid(id));
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.Guid(roleID), database.Guid(id));
+                    CommonFunctions.LogEvent(string.Format("User \"{0}\" added to role \"{1}\".", userName, roleName), 4);
                 }
 
                 return "User accounts added to role successfully";
@@ -468,9 +471,11 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
                 foreach (Guid id in usersToBeDeleted)
                 {
+                    string userName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM UserAccount WHERE ID = {0}", "userAccountID"), DefaultTimeout, database.Guid(id)).ToNonNullString();
+                    string roleName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM ApplicationRole WHERE ID = {0}", "applicationRoleID"), DefaultTimeout, database.Guid(roleID)).ToNonNullString();
                     string query = database.ParameterizedQueryString("DELETE FROM ApplicationRoleUserAccount WHERE ApplicationRoleID = {0} AND UserAccountID = {1}", "roleID", "userID");
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout,
-                        database.Guid(roleID), database.Guid(id));
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.Guid(roleID), database.Guid(id));
+                    CommonFunctions.LogEvent(string.Format("User \"{0}\" removed from role \"{1}\".", userName, roleName), 5);
                 }
 
                 return "User accounts deleted from role successfully";
@@ -497,9 +502,11 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
                 foreach (Guid id in groupsToBeAdded)
                 {
+                    string groupName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM SecurityGroup WHERE ID = {0}", "securityGroupID"), DefaultTimeout, database.Guid(id)).ToNonNullString();
+                    string roleName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM ApplicationRole WHERE ID = {0}", "applicationRoleID"), DefaultTimeout, database.Guid(roleID)).ToNonNullString();
                     string query = database.ParameterizedQueryString("INSERT INTO ApplicationRoleSecurityGroup (ApplicationRoleID, SecurityGroupID) Values ({0}, {1})", "roleID", "groupID");
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout,
-                        database.Guid(roleID), database.Guid(id));
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.Guid(roleID), database.Guid(id));
+                    CommonFunctions.LogEvent(string.Format("Group \"{0}\" added to role \"{1}\".", groupName, roleName), 4);
                 }
 
                 return "Security groups added to role successfully";
@@ -526,9 +533,11 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
                 foreach (Guid id in groupsToBeDeleted)
                 {
+                    string groupName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM SecurityGroup WHERE ID = {0}", "securityGroupID"), DefaultTimeout, database.Guid(id)).ToNonNullString();
+                    string roleName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM ApplicationRole WHERE ID = {0}", "applicationRoleID"), DefaultTimeout, database.Guid(roleID)).ToNonNullString();
                     string query = database.ParameterizedQueryString("DELETE FROM ApplicationRoleSecurityGroup WHERE ApplicationRoleID = {0} AND SecurityGroupID = {1}", "roleID", "groupID");
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout,
-                        database.Guid(roleID), database.Guid(id));
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.Guid(roleID), database.Guid(id));
+                    CommonFunctions.LogEvent(string.Format("Group \"{0}\" removed from role \"{1}\".", groupName, roleName), 5);
                 }
 
                 return "Security groups deleted from role successfully";
