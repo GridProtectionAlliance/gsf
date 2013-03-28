@@ -442,7 +442,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         userAccount.Phone.ToNotNull(), userAccount.Email.ToNotNull(), database.Bool(userAccount.LockedOut), database.Bool(userAccount.UseADAuthentication),
                         changePasswordOn, CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
 
-                    CommonFunctions.LogEvent(string.Format("New user \"{0}\" created successfully.", userAccount.Name), 2);
+                    CommonFunctions.LogEvent(string.Format("New user \"{0}\" created successfully by user \"{1}\".", userAccount.Name, CommonFunctions.CurrentUser), 2);
                 }
                 else
                 {
@@ -456,7 +456,7 @@ namespace TimeSeriesFramework.UI.DataModels
                             userAccount.Phone.ToNotNull(), userAccount.Email.ToNotNull(), database.Bool(userAccount.LockedOut), database.Bool(userAccount.UseADAuthentication),
                             changePasswordOn, CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(userAccount.ID));
 
-                    CommonFunctions.LogEvent(string.Format("Information about user \"{0}\" updated successfully.", userAccount.Name), 3);
+                    CommonFunctions.LogEvent(string.Format("Information about user \"{0}\" updated successfully by user \"{1}\".", userAccount.Name, CommonFunctions.CurrentUser), 3);
                 }
 
                 return "User account information saved successfully";
@@ -493,7 +493,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM UserAccount WHERE ID = {0}", "userAccountID"), DefaultTimeout, database.Guid(userAccountID));
 
                 // Write to the event log
-                CommonFunctions.LogEvent(string.Format("User \"{0}\" deleted successfully.", userName), 2);
+                CommonFunctions.LogEvent(string.Format("User \"{0}\" deleted successfully by user \"{1}\".", userName, CommonFunctions.CurrentUser), 2);
 
                 return "User account deleted successfully";
             }

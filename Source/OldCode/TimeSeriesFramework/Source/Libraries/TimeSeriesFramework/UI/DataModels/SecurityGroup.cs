@@ -35,6 +35,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using TVA;
 using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
@@ -329,14 +330,19 @@ namespace TimeSeriesFramework.UI.DataModels
         {
             bool createdConnection = false;
             string query;
+            string userName;
+            string securityGroupName;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
                 foreach (Guid id in usersToBeAdded)
                 {
+                    userName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM UserAccount WHERE ID = {0}", "userID"), id).ToNonNullString();
+                    securityGroupName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM SecurityGroup WHERE ID = {0}", "securityGroupID"), groupID).ToNonNullString();
                     query = database.ParameterizedQueryString("INSERT INTO SecurityGroupUserAccount (SecurityGroupID, UserAccountID) VALUES ({0}, {1})", "groupID", "userID");
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.Guid(groupID), database.Guid(id));
+                    CommonFunctions.LogEvent(string.Format("User \"{0}\" successfully added to security group \"{1}\" by user \"{2}\".", userName, securityGroupName, CommonFunctions.CurrentUser), 8);
                 }
 
                 return "User accounts added to group successfully";
@@ -359,14 +365,19 @@ namespace TimeSeriesFramework.UI.DataModels
         {
             bool createdConnection = false;
             string query;
+            string userName;
+            string securityGroupName;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
                 foreach (Guid id in usersToBeDeleted)
                 {
+                    userName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM UserAccount WHERE ID = {0}", "userID"), id).ToNonNullString();
+                    securityGroupName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM SecurityGroup WHERE ID = {0}", "securityGroupID"), groupID).ToNonNullString();
                     query = database.ParameterizedQueryString("DELETE FROM SecurityGroupUserAccount WHERE SecurityGroupID = {0} AND UserAccountID = {1}", "groupID", "userID");
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.Guid(groupID), database.Guid(id));
+                    CommonFunctions.LogEvent(string.Format("User \"{0}\" successfully removed from security group \"{1}\" by user \"{2}\".", userName, securityGroupName, CommonFunctions.CurrentUser), 9);
                 }
 
                 return "User accounts deleted from group successfully";
@@ -433,6 +444,8 @@ namespace TimeSeriesFramework.UI.DataModels
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, securityGroup.Name, securityGroup.Description.ToNotNull(),
                         CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+
+                    CommonFunctions.LogEvent(string.Format("Security group \"{0}\" created successfully by user \"{1}\".", securityGroup.Name, CommonFunctions.CurrentUser), 6);
                 }
                 else
                 {
@@ -441,6 +454,8 @@ namespace TimeSeriesFramework.UI.DataModels
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, securityGroup.Name, securityGroup.Description.ToNotNull(),
                         CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(securityGroup.ID));
+
+                    CommonFunctions.LogEvent(string.Format("Information about security group \"{0}\" updated successfully by user \"{1}\".", securityGroup.Name, CommonFunctions.CurrentUser), 7);
                 }
 
                 return "Security group information saved successfully";
@@ -461,15 +476,23 @@ namespace TimeSeriesFramework.UI.DataModels
         public static string Delete(AdoDataConnection database, Guid securityGroupID)
         {
             bool createdConnection = false;
+            string securityGroupName;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
 
+                // Get the name of the security group to be deleted
+                securityGroupName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM SecurityGroup WHERE ID = {0}", "userAccountID"), DefaultTimeout, database.Guid(securityGroupID)).ToNonNullString();
+
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
+                // Delete the security group from the database
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM SecurityGroup WHERE ID = {0}", "securityGroupID"), DefaultTimeout, database.Guid(securityGroupID));
+
+                // Write to the event log
+                CommonFunctions.LogEvent(string.Format("Security group \"{0}\" deleted successfully by user \"{1}\".", securityGroupName, CommonFunctions.CurrentUser), 2);
 
                 return "Security group deleted successfully";
             }
