@@ -556,11 +556,7 @@ namespace TimeSeriesFramework.UI
         {
             get
             {
-                if (CurrentItem == null)
-                    return false;
-                else
-
-                    return (!IsNewRecord && (object)CommonFunctions.CurrentPrincipal != null && CommonFunctions.CurrentPrincipal.IsInRole("Administrator, Editor"));
+                return ((object)CommonFunctions.CurrentPrincipal == null || CommonFunctions.CurrentPrincipal.IsInRole("Administrator, Editor"));
             }
         }
 
