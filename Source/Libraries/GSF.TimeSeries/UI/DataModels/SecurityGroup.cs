@@ -493,7 +493,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM SecurityGroup WHERE ID = {0}", "securityGroupID"), DefaultTimeout, database.Guid(securityGroupID));
 
                 // Write to the event log
-                CommonFunctions.LogEvent(string.Format("Security group \"{0}\" deleted successfully by user \"{1}\".", securityGroupName, CommonFunctions.CurrentUser), 2);
+                CommonFunctions.LogEvent(string.Format("Security group \"{0}\" deleted successfully by user \"{1}\".", securityGroupName, CommonFunctions.CurrentUser), 13);
 
                 return "Security group deleted successfully";
             }
