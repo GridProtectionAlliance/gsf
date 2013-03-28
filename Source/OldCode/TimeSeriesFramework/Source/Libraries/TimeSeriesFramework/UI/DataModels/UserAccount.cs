@@ -493,7 +493,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM UserAccount WHERE ID = {0}", "userAccountID"), DefaultTimeout, database.Guid(userAccountID));
 
                 // Write to the event log
-                CommonFunctions.LogEvent(string.Format("User \"{0}\" deleted successfully by user \"{1}\".", userName, CommonFunctions.CurrentUser), 2);
+                CommonFunctions.LogEvent(string.Format("User \"{0}\" deleted successfully by user \"{1}\".", userName, CommonFunctions.CurrentUser), 12);
 
                 return "User account deleted successfully";
             }
