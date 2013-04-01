@@ -3044,6 +3044,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public void Start()
         {
+            IConfigurationFrame configurationFrame = m_configurationFrame;
+
             // Stop parser if it is already running - thus calling start after already started will have the effect
             // of "restarting" the parsing engine...
             Stop();
@@ -3075,6 +3077,7 @@ namespace GSF.PhasorProtocols
 
                 // Establish protocol specific frame parser
                 InitializeFrameParser(settings);
+                ConfigurationFrame = configurationFrame;
 
                 if (settings.TryGetValue("commandChannel", out setting))
                 {
