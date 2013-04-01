@@ -387,13 +387,15 @@ namespace TimeSeriesFramework.Statistics
                 serverTime = DateTime.UtcNow;
 
                 foreach (StatisticSource source in sources)
-                {
-                    // Send calculated statistics into the system
-                    OnNewMeasurements(CalculateStatistics(statistics, serverTime, source));
-                }
+                    calculatedStatistics.AddRange(CalculateStatistics(statistics, serverTime, source));
 
+                // Send calculated statistics into the system
+                OnNewMeasurements(calculatedStatistics);
+
+                // Notify that statistics have been calculated
                 OnCalculated();
 
+                // Update value used when displaying short status
                 m_lastStatisticCalculationCount = calculatedStatistics.Count;
             }
             catch (Exception ex)
