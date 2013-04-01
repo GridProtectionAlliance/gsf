@@ -35,6 +35,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Runtime;
@@ -511,7 +512,7 @@ namespace GSF.TimeSeries
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("Invoke", "Invokes a command for specified adapter", InvokeRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ListCommands", "Displays possible commands for specified adapter", ListCommandsRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("Initialize", "Initializes specified adapter or collection", InitializeRequestHandler));
-            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReloadConfig", "Manually reloads the system configuration", ReloadConfigRequstHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReloadConfig", "Manually reloads the system configuration", ReloadConfigRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("UpdateConfigFile", "Updates an option in the configuration file", UpdateConfigFileRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("Authenticate", "Authenticates network shares for health and status exports", AuthenticateRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("Restart", "Attempts to restart the host service", RestartServiceHandler));
@@ -742,7 +743,7 @@ namespace GSF.TimeSeries
                         adapterType = assembly.GetType(adapterTypeName);
 
                         connection = (IDbConnection)Activator.CreateInstance(connectionType);
-                        connection.ConnectionString = m_connectionString;
+                        connection.ConnectionString = connectionString;
                         connection.Open();
 
                         DisplayStatusMessage("Database configuration connection opened.", UpdateType.Information);
@@ -912,6 +913,191 @@ namespace GSF.TimeSeries
                     }
 
                     break;
+            }
+
+            if (!configException)
+            {
+                elapsedTime = (PrecisionTimer.UtcNow.Ticks - startTime).ToSeconds();
+                DisplayStatusMessage("{0} configuration load process completed in {1}...", UpdateType.Information, configType, elapsedTime < 0.01D ? "less than a second" : elapsedTime.ToString("0.00") + " seconds");
+            }
+
+            return configuration;
+        }
+
+        private DataSet GetAugmentedConfigurationDataSet(ConfigurationType configType, string connectionString, string dataProviderString)
+        {
+            DataSet configuration = null;
+            bool configException = false;
+            Ticks startTime = PrecisionTimer.UtcNow.Ticks;
+            double elapsedTime;
+
+            IDbConnection connection = null;
+            Dictionary<string, string> settings;
+            string assemblyName, connectionTypeName, adapterTypeName;
+            Assembly assembly;
+            Type connectionType, adapterType;
+            DataTable entities, source, destination;
+
+            if (configType != ConfigurationType.Database)
+                throw new InvalidOperationException("Configuration augmentation only supported for database configurations.");
+
+            try
+            {
+                // Attempt to load configuration from a database connection
+                settings = dataProviderString.ParseKeyValuePairs();
+                assemblyName = settings["AssemblyName"].ToNonNullString();
+                connectionTypeName = settings["ConnectionType"].ToNonNullString();
+                adapterTypeName = settings["AdapterType"].ToNonNullString();
+
+                if (string.IsNullOrWhiteSpace(connectionTypeName))
+                    throw new InvalidOperationException("Database connection type was not defined.");
+
+                if (string.IsNullOrWhiteSpace(adapterTypeName))
+                    throw new InvalidOperationException("Database adapter type was not defined.");
+
+                assembly = Assembly.Load(new AssemblyName(assemblyName));
+                connectionType = assembly.GetType(connectionTypeName);
+                adapterType = assembly.GetType(adapterTypeName);
+
+                connection = (IDbConnection)Activator.CreateInstance(connectionType);
+                connection.ConnectionString = connectionString;
+                connection.Open();
+
+                DisplayStatusMessage("Database configuration connection opened.", UpdateType.Information);
+
+                configuration = m_iaonSession.DataSource.Copy();
+
+                // Load configuration entities defined in database
+                entities = connection.RetrieveData(adapterType, "SELECT * FROM ConfigurationEntity WHERE Enabled <> 0 ORDER BY LoadOrder");
+                entities.TableName = "ConfigurationEntity";
+
+                // Add configuration entities table to system configuration for reference
+                configuration.Tables.Remove("ConfigurationEntity");
+                configuration.Tables.Add(entities.Copy());
+
+                Ticks operationStartTime;
+                double operationElapsedTime;
+
+                // Add each configuration entity to the system configuration
+                foreach (DataRow entityRow in entities.Rows)
+                {
+                    source = null;
+                    destination = null;
+
+                    operationStartTime = PrecisionTimer.UtcNow.Ticks;
+
+                    // Attempt to query for updated
+                    if (configuration.Tables.Contains(entityRow["RuntimeName"].ToString()))
+                    {
+                        destination = configuration.Tables[entityRow["RuntimeName"].ToString()];
+
+                        if (destination.Columns.Contains("UpdatedOn"))
+                        {
+                            IEnumerable<object> column = destination.Rows.Cast<DataRow>().Select(row => row["UpdatedOn"]);
+
+                            object maxValue = null;
+                            DateTime maxTimeOfLastUpdate = DateTime.MinValue;
+                            DateTime timeOfLastUpdate;
+
+                            foreach (object value in column)
+                            {
+                                if (value == null)
+                                    continue;
+
+                                timeOfLastUpdate = (value as DateTime?) ?? DateTime.Parse(value.ToString());
+
+                                if (maxValue == null || timeOfLastUpdate > maxTimeOfLastUpdate)
+                                {
+                                    maxTimeOfLastUpdate = timeOfLastUpdate;
+                                    maxValue = value;
+                                }
+                            }
+
+                            if (maxValue != null)
+                            {
+                                string param = (adapterType.Name == "OracleDataAdapter") ? ":updatedOn" : "@updatedOn";
+                                string query = string.Format("SELECT * FROM {0} WHERE NodeID = {1} AND UpdatedOn > {2}", entityRow["SourceName"].ToString(), m_nodeIDQueryString, param);
+                                source = connection.RetrieveData(adapterType, query, DataExtensions.DefaultTimeoutDuration, maxValue);
+                            }
+                        }
+                    }
+
+                    if ((object)source == null)
+                    {
+                        // Load configuration entity data filtered by node ID
+                        source = connection.RetrieveData(adapterType, string.Format("SELECT * FROM {0} WHERE NodeID={1}", entityRow["SourceName"].ToString(), m_nodeIDQueryString));
+
+                        // Clone data source
+                        destination = source.Clone();
+
+                        // Update table name as defined in configuration entity
+                        source.TableName = entityRow["RuntimeName"].ToString();
+
+                        // Remove old data table from the system configuration
+                        if (configuration.Tables.Contains(source.TableName))
+                            configuration.Tables.Remove(source.TableName);
+
+                        // Add entity configuration data to system configuration
+                        configuration.Tables.Add(destination);
+                    }
+
+                    operationElapsedTime = (PrecisionTimer.UtcNow.Ticks - operationStartTime).ToSeconds();
+                    DisplayStatusMessage("Loaded {0} row{1} from \"{2}\" in {3}...", UpdateType.Information, source.Rows.Count, source.Rows.Count == 1 ? "" : "s", source.TableName, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds");
+
+                    operationStartTime = PrecisionTimer.UtcNow.Ticks;
+
+                    // Get destination column collection
+                    DataColumnCollection columns = destination.Columns;
+
+                    // Remove redundant node ID column
+                    if (columns.Contains("NodeID"))
+                        columns.Remove("NodeID");
+
+                    // Pre-cache column index translation after removal of NodeID column to speed data copy
+                    Dictionary<int, int> columnIndex = new Dictionary<int, int>();
+
+                    foreach (DataColumn column in columns)
+                    {
+                        columnIndex[column.Ordinal] = source.Columns[column.ColumnName].Ordinal;
+                    }
+
+                    // Manually copy-in each row into table
+                    foreach (DataRow sourceRow in source.Rows)
+                    {
+                        DataRow newRow = destination.NewRow();
+
+                        // Copy each column of data in the current row
+                        for (int x = 0; x < columns.Count; x++)
+                        {
+                            newRow[x] = sourceRow[columnIndex[x]];
+                        }
+
+                        // Add new row to destination table
+                        destination.Rows.Add(newRow);
+                    }
+
+                    operationElapsedTime = (PrecisionTimer.UtcNow.Ticks - operationStartTime).ToSeconds();
+
+                    DisplayStatusMessage("{0} configuration pre-cache completed in {1}.", UpdateType.Information, source.TableName, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds");
+                }
+
+                DisplayStatusMessage("Database configuration successfully loaded.", UpdateType.Information);
+
+                CacheCurrentConfiguration(configuration);
+            }
+            catch (Exception ex)
+            {
+                configException = true;
+                DisplayStatusMessage("Failed to load database configuration due to exception: {0} Attempting to use last known good configuration.", UpdateType.Warning, ex.Message);
+                m_serviceHelper.ErrorLogger.Log(ex);
+                configuration = null;
+            }
+            finally
+            {
+                if (connection != null)
+                    connection.Dispose();
+
+                DisplayStatusMessage("Database configuration connection closed.", UpdateType.Information);
             }
 
             if (!configException)
@@ -1978,7 +2164,7 @@ namespace GSF.TimeSeries
         /// Manually reloads system configuration.
         /// </summary>
         /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
-        protected virtual void ReloadConfigRequstHandler(ClientRequestInfo requestInfo)
+        protected virtual void ReloadConfigRequestHandler(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
@@ -2056,6 +2242,56 @@ namespace GSF.TimeSeries
                 else
                 {
                     SendResponse(requestInfo, false, "System configuration failed to reload.");
+                }
+
+                // Spawn routing table calculation updates
+                m_iaonSession.RecalculateRoutingTables();
+            }
+        }
+
+        /// <summary>
+        /// Manually reloads system configuration.
+        /// </summary>
+        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
+        protected virtual void AugmentConfigRequestHandler(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Manually reloads system configuration.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       ReloadConfig [Options]");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+
+                DisplayResponseMessage(requestInfo, helpMessage.ToString());
+            }
+            else
+            {
+                DataSet dataSource = null;
+
+                DisplayStatusMessage("Loading system configuration...", UpdateType.Information);
+                dataSource = GetAugmentedConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString);
+
+                if ((object)dataSource != null)
+                {
+                    // Update data source on all adapters in all collections
+                    m_iaonSession.DataSource = dataSource;
+                    m_iaonSession.AllAdapters.UpdateCollectionConfigurations();
+                    SendResponse(requestInfo, true, "System configuration was successfully augmented.");
+                }
+                else
+                {
+                    SendResponse(requestInfo, false, "System configuration failed to augment.");
                 }
 
                 // Spawn routing table calculation updates

@@ -436,6 +436,8 @@ namespace GSF.TimeSeries.Transport
             int binaryLength;
             int packetSize = PacketHeaderSize;
 
+            long publishTime;
+
             foreach (IMeasurement measurement in frame.Measurements.Values)
             {
                 bufferBlockMeasurement = measurement as BufferBlockMeasurement;
@@ -476,6 +478,10 @@ namespace GSF.TimeSeries.Transport
             // Process the remaining measurements.
             if (packet.Count > 0)
                 ProcessBinaryMeasurements(packet, frameLevelTimestamp, useCompactMeasurementFormat, usePayloadCompression);
+
+            // Update latency statistics
+            publishTime = PrecisionTimer.UtcNow.Ticks;
+            m_parent.UpdateLatencyStatistics(frame.Measurements.Values.Select(m => (long)(publishTime - m.Timestamp)));
         }
 
         private void ProcessBinaryMeasurements(IEnumerable<IBinaryMeasurement> measurements, long frameLevelTimestamp, bool useCompactMeasurementFormat, bool usePayloadCompression)

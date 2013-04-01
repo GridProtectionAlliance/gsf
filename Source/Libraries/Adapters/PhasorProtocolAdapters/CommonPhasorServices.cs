@@ -1481,6 +1481,39 @@ namespace PhasorProtocolAdapters
             return statistic;
         }
 
+        private static double GetInputStreamStatistic_LifetimeMinimumLatency(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
+
+            if ((object)inputStream != null)
+                statistic = inputStream.LifetimeMinimumLatency;
+
+            return statistic;
+        }
+
+        private static double GetInputStreamStatistic_LifetimeMaximumLatency(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
+
+            if ((object)inputStream != null)
+                statistic = inputStream.LifetimeMaximumLatency;
+
+            return statistic;
+        }
+
+        private static double GetInputStreamStatistic_LifetimeAverageLatency(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
+
+            if ((object)inputStream != null)
+                statistic = inputStream.LifetimeAverageLatency;
+
+            return statistic;
+        }
+
         #endregion
 
         #region [ OutputStream Statistic Calculators ]
@@ -1819,6 +1852,61 @@ namespace PhasorProtocolAdapters
 
             if ((object)outputStream != null)
                 statistic = outputStream.TotalBytesSent;
+
+            return statistic;
+        }
+
+        private static double GetOutputStreamStatistic_LifetimeMinimumLatency(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
+
+            if ((object)outputStream != null)
+                statistic = outputStream.LifetimeMinimumLatency;
+
+            return statistic;
+        }
+
+        private static double GetOutputStreamStatistic_LifetimeMaximumLatency(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
+
+            if ((object)outputStream != null)
+                statistic = outputStream.LifetimeMaximumLatency;
+
+            return statistic;
+        }
+
+        private static double GetOutputStreamStatistic_LifetimeAverageLatency(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
+
+            if ((object)outputStream != null)
+                statistic = outputStream.LifetimeAverageLatency;
+
+            return statistic;
+        }
+
+        private static double GetOutputStreamStatistic_LifetimeDiscardedMeasurements(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
+
+            if ((object)outputStream != null)
+                statistic = outputStream.DiscardedMeasurements;
+
+            return statistic;
+        }
+
+        private static double GetOutputStreamStatistic_LifetimeDownsampledMeasurements(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
+
+            if ((object)outputStream != null)
+                statistic = outputStream.DownsampledMeasurements;
 
             return statistic;
         }

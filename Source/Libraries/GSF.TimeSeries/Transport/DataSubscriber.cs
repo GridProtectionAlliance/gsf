@@ -217,6 +217,10 @@ namespace GSF.TimeSeries.Transport
         private long m_measurementsPerSecondCount;
         private long m_measurementsInSecond;
         private long m_lastSecondsSinceEpoch;
+        private long m_lifetimeTotalLatency;
+        private long m_lifetimeMinimumLatency;
+        private long m_lifetimeMaximumLatency;
+        private long m_lifetimeLatencyMeasurements;
 
         private bool m_disposed;
 
@@ -590,7 +594,7 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
-        /// Gets the total number of measurements processed through this data publisher over the lifetime of the publisher.
+        /// Gets the total number of measurements processed through this data publisher over the lifetime of the subscriber.
         /// </summary>
         public long LifetimeMeasurements
         {
@@ -633,6 +637,42 @@ namespace GSF.TimeSeries.Transport
                     return 0L;
 
                 return m_totalMeasurementsPerSecond / m_measurementsPerSecondCount;
+            }
+        }
+
+        /// <summary>
+        /// Gets the minimum latency calculated over the full lifetime of the subscriber.
+        /// </summary>
+        public int LifetimeMinimumLatency
+        {
+            get
+            {
+                return (int)Ticks.ToMilliseconds(m_lifetimeMinimumLatency);
+            }
+        }
+
+        /// <summary>
+        /// Gets the maximum latency calculated over the full lifetime of the subscriber.
+        /// </summary>
+        public int LifetimeMaximumLatency
+        {
+            get
+            {
+                return (int)Ticks.ToMilliseconds(m_lifetimeMaximumLatency);
+            }
+        }
+
+        /// <summary>
+        /// Gets the average latency calculated over the full lifetime of the subscriber.
+        /// </summary>
+        public int LifetimeAverageLatency
+        {
+            get
+            {
+                if (m_lifetimeLatencyMeasurements == 0)
+                    return -1;
+
+                return (int)Ticks.ToMilliseconds(m_lifetimeTotalLatency / m_lifetimeLatencyMeasurements);
             }
         }
 
@@ -1524,6 +1564,10 @@ namespace GSF.TimeSeries.Transport
         {
             m_lifetimeMeasurements = 0L;
             m_totalBytesReceived = 0L;
+            m_lifetimeTotalLatency = 0L;
+            m_lifetimeMinimumLatency = 0L;
+            m_lifetimeMaximumLatency = 0L;
+            m_lifetimeLatencyMeasurements = 0L;
         }
 
         /// <summary>
@@ -1855,9 +1899,24 @@ namespace GSF.TimeSeries.Transport
                             else
                                 OnNewMeasurements(measurements);
 
+                            // Gather statistics on received data
+                            long timeReceived = PrecisionTimer.UtcNow.Ticks;
                             int measurementCount = measurements.Count();
+
                             m_lifetimeMeasurements += measurementCount;
                             UpdateMeasurementsPerSecond(measurementCount);
+
+                            foreach (long latency in measurements.Select(m => timeReceived - m.Timestamp))
+                            {
+                                if (m_lifetimeMinimumLatency > latency || m_lifetimeMinimumLatency == 0)
+                                    m_lifetimeMinimumLatency = latency;
+
+                                if (m_lifetimeMaximumLatency < latency || m_lifetimeMaximumLatency == 0)
+                                    m_lifetimeMaximumLatency = latency;
+
+                                m_lifetimeTotalLatency += latency;
+                                m_lifetimeLatencyMeasurements++;
+                            }
                             break;
                         case ServerResponse.BufferBlock:
                             // Buffer block received - wrap as a buffer block measurement and expose back to consumer

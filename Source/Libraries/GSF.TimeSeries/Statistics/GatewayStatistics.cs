@@ -158,6 +158,39 @@ namespace GSF.TimeSeries.Statistics
             return statistic;
         }
 
+        private static double GetSubscriberStatistic_LifetimeMinimumLatency(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            DataSubscriber subscriber = source as DataSubscriber;
+
+            if ((object)subscriber != null)
+                statistic = subscriber.LifetimeMinimumLatency;
+
+            return statistic;
+        }
+
+        private static double GetSubscriberStatistic_LifetimeMaximumLatency(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            DataSubscriber subscriber = source as DataSubscriber;
+
+            if ((object)subscriber != null)
+                statistic = subscriber.LifetimeMaximumLatency;
+
+            return statistic;
+        }
+
+        private static double GetSubscriberStatistic_LifetimeAverageLatency(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            DataSubscriber subscriber = source as DataSubscriber;
+
+            if ((object)subscriber != null)
+                statistic = subscriber.LifetimeAverageLatency;
+
+            return statistic;
+        }
+
         #endregion
 
         #region [ Publisher Statistics ]
@@ -262,6 +295,39 @@ namespace GSF.TimeSeries.Statistics
 
             if ((object)publisher != null)
                 statistic = publisher.TotalBytesSent;
+
+            return statistic;
+        }
+
+        private static double GetPublisherStatistic_LifetimeMinimumLatency(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            DataPublisher publisher = source as DataPublisher;
+
+            if ((object)publisher != null)
+                statistic = publisher.LifetimeMinimumLatency;
+
+            return statistic;
+        }
+
+        private static double GetPublisherStatistic_LifetimeMaximumLatency(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            DataPublisher publisher = source as DataPublisher;
+
+            if ((object)publisher != null)
+                statistic = publisher.LifetimeMaximumLatency;
+
+            return statistic;
+        }
+
+        private static double GetPublisherStatistic_LifetimeAverageLatency(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            DataPublisher publisher = source as DataPublisher;
+
+            if ((object)publisher != null)
+                statistic = publisher.LifetimeAverageLatency;
 
             return statistic;
         }

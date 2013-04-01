@@ -517,7 +517,7 @@ namespace GSF.TimeSeries.Transport
                 base.QueueMeasurementsForProcessing(measurements);
                 publishInterval = (m_publishInterval > 0) ? m_publishInterval : LagTime;
 
-                if (DateTime.UtcNow.Ticks > m_lastPublishTime + Ticks.FromSeconds(publishInterval))
+                if (PrecisionTimer.UtcNow.Ticks > m_lastPublishTime + Ticks.FromSeconds(publishInterval))
                 {
                     List<IMeasurement> currentMeasurements = new List<IMeasurement>();
                     Measurement newMeasurement;
@@ -631,6 +631,9 @@ namespace GSF.TimeSeries.Transport
             // Process the remaining measurements.
             if (packet.Count > 0)
                 ProcessBinaryMeasurements(packet, useCompactMeasurementFormat, usePayloadCompression);
+
+            // Update latency statistics
+            m_parent.UpdateLatencyStatistics(measurements.Select(m => (long)(m_lastPublishTime - m.Timestamp)));
         }
 
         private void ProcessBinaryMeasurements(IEnumerable<IBinaryMeasurement> measurements, bool useCompactMeasurementFormat, bool usePayloadCompression)
@@ -673,7 +676,7 @@ namespace GSF.TimeSeries.Transport
                 m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, data.ToArray());
 
             // Track last publication time
-            m_lastPublishTime = DateTime.UtcNow.Ticks;
+            m_lastPublishTime = PrecisionTimer.UtcNow.Ticks;
         }
 
         // Rotates base time offsets
