@@ -3077,7 +3077,9 @@ namespace GSF.PhasorProtocols
 
                 // Establish protocol specific frame parser
                 InitializeFrameParser(settings);
-                ConfigurationFrame = configurationFrame;
+
+                if ((object)configurationFrame != null)
+                    ConfigurationFrame = configurationFrame;
 
                 if (settings.TryGetValue("commandChannel", out setting))
                 {
