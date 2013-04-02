@@ -19,7 +19,7 @@
 //  05/18/2009 - J. Ritchie Carroll
 //       Generated original version of source code.
 //  03/21/2010 - J. Ritchie Carroll
-//       Added new connection string settings to accomodate new MultiProtocolFrameParser properties.
+//       Added new connection string settings to accommodate new MultiProtocolFrameParser properties.
 //  12/04/2012 - J. Ritchie Carroll
 //       Migrated to PhasorProtocolAdapters project.
 //  12/13/2012 - Starlynn Danyelle Gilliam
@@ -198,7 +198,7 @@ namespace PhasorProtocolAdapters
         private long m_totalLatency;
         private long m_minimumLatency;
         private long m_maximumLatency;
-        private long m_latencyMeasurements;
+        private long m_latencyFrames;
         private long m_connectionAttempts;
         private long m_configurationChanges;
         private long m_totalDataFrames;
@@ -226,7 +226,7 @@ namespace PhasorProtocolAdapters
         private long m_lifetimeTotalLatency;
         private long m_lifetimeMinimumLatency;
         private long m_lifetimeMaximumLatency;
-        private long m_lifetimeLatencyMeasurements;
+        private long m_lifetimeLatencyFrames;
 
         private bool m_disposed;
 
@@ -471,10 +471,10 @@ namespace PhasorProtocolAdapters
         {
             get
             {
-                if (m_latencyMeasurements == 0)
+                if (m_latencyFrames == 0)
                     return -1;
 
-                return (int)Ticks.ToMilliseconds(m_totalLatency / m_latencyMeasurements);
+                return (int)Ticks.ToMilliseconds(m_totalLatency / m_latencyFrames);
             }
         }
 
@@ -704,11 +704,11 @@ namespace PhasorProtocolAdapters
 
                 status.AppendFormat("       Out of order frames: {0}", m_outOfOrderFrames);
                 status.AppendLine();
-                status.AppendFormat("           Minimum latency: {0}ms over {1} tests", MinimumLatency, m_latencyMeasurements);
+                status.AppendFormat("           Minimum latency: {0}ms over {1} tests", MinimumLatency, m_latencyFrames);
                 status.AppendLine();
-                status.AppendFormat("           Maximum latency: {0}ms over {1} tests", MaximumLatency, m_latencyMeasurements);
+                status.AppendFormat("           Maximum latency: {0}ms over {1} tests", MaximumLatency, m_latencyFrames);
                 status.AppendLine();
-                status.AppendFormat("           Average latency: {0}ms over {1} tests", AverageLatency, m_latencyMeasurements);
+                status.AppendFormat("           Average latency: {0}ms over {1} tests", AverageLatency, m_latencyFrames);
                 status.AppendLine();
 
                 if ((object)m_frameParser != null)
@@ -921,10 +921,10 @@ namespace PhasorProtocolAdapters
         {
             get
             {
-                if (m_lifetimeLatencyMeasurements == 0)
+                if (m_lifetimeLatencyFrames == 0)
                     return -1;
 
-                return (int)Ticks.ToMilliseconds(m_lifetimeTotalLatency / m_lifetimeLatencyMeasurements);
+                return (int)Ticks.ToMilliseconds(m_lifetimeTotalLatency / m_lifetimeLatencyFrames);
             }
         }
 
@@ -980,7 +980,7 @@ namespace PhasorProtocolAdapters
         }
 
         /// <summary>
-        /// Intializes <see cref="PhasorMeasurementMapper"/>.
+        /// Initializes <see cref="PhasorMeasurementMapper"/>.
         /// </summary>
         public override void Initialize()
         {
@@ -1460,7 +1460,7 @@ namespace PhasorProtocolAdapters
             m_lifetimeTotalLatency = 0L;
             m_lifetimeMinimumLatency = 0L;
             m_lifetimeMaximumLatency = 0L;
-            m_lifetimeLatencyMeasurements = 0L;
+            m_lifetimeLatencyFrames = 0L;
 
             if ((object)m_frameParser != null)
                 m_frameParser.ResetTotalBytesReceived();
@@ -1474,7 +1474,7 @@ namespace PhasorProtocolAdapters
             m_minimumLatency = 0;
             m_maximumLatency = 0;
             m_totalLatency = 0;
-            m_latencyMeasurements = 0;
+            m_latencyFrames = 0;
         }
 
         /// <summary>
@@ -1708,7 +1708,7 @@ namespace PhasorProtocolAdapters
             // Coming into this function the parsed measurement value will only have a "value" and a "timestamp";
             // the measurement will not yet be associated with an actual historian measurement ID as the measurement
             // will have come directly out of the parsed phasor protocol data frame.  We take the generated signal
-            // reference and use that to lookup the actual historian measurement ID, source, adder and multipler.
+            // reference and use that to lookup the actual historian measurement ID, source, adder and multiplier.
             IMeasurement definedMeasurement;
 
             // Lookup signal reference in defined measurement list
@@ -1718,7 +1718,7 @@ namespace PhasorProtocolAdapters
                 parsedMeasurement.ID = definedMeasurement.ID;
                 parsedMeasurement.Key = definedMeasurement.Key;
                 parsedMeasurement.Adder = definedMeasurement.Adder;              // Allows for run-time additive measurement value adjustments
-                parsedMeasurement.Multiplier = definedMeasurement.Multiplier;    // Allows for run-time mulplicative measurement value adjustments
+                parsedMeasurement.Multiplier = definedMeasurement.Multiplier;    // Allows for run-time multiplicative measurement value adjustments
 
                 // Add the updated measurement value to the destination measurement collection
                 mappedMeasurements.Add(parsedMeasurement);
@@ -1773,7 +1773,7 @@ namespace PhasorProtocolAdapters
                 m_maximumLatency = latency;
 
             m_totalLatency += latency;
-            m_latencyMeasurements++;
+            m_latencyFrames++;
 
             if (m_lifetimeMinimumLatency > latency || m_lifetimeMinimumLatency == 0)
                 m_lifetimeMinimumLatency = latency;
@@ -1782,7 +1782,7 @@ namespace PhasorProtocolAdapters
                 m_lifetimeMaximumLatency = latency;
 
             m_lifetimeTotalLatency += latency;
-            m_lifetimeLatencyMeasurements++;
+            m_lifetimeLatencyFrames++;
 
             // Loop through each parsed device in the data frame
             foreach (IDataCell parsedDevice in frame.Cells)
@@ -2146,7 +2146,7 @@ namespace PhasorProtocolAdapters
         {
             if (m_bytesReceived == 0 && (m_frameParser.DeviceSupportsCommands || m_frameParser.ConnectionIsMulticast || m_frameParser.ConnectionIsListener))
             {
-                // If we've received no data in the last timespan, we restart connect cycle...
+                // If we've received no data in the last time-span, we restart connect cycle...
                 m_dataStreamMonitor.Enabled = false;
                 OnStatusMessage("\r\nNo data received in {0} seconds, restarting connect cycle...\r\n", (m_dataStreamMonitor.Interval / 1000.0D).ToString("0.0"));
                 Start();
