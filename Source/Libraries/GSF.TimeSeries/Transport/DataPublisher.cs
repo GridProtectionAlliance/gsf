@@ -1852,7 +1852,7 @@ namespace GSF.TimeSeries.Transport
             SslPolicyErrors validPolicyErrors;
             X509ChainStatusFlags validChainFlags;
 
-            string certificateFile;
+            string remoteCertificateFile;
             X509Certificate certificate;
 
             if ((object)m_certificateChecker == null)
@@ -1864,7 +1864,7 @@ namespace GSF.TimeSeries.Transport
             foreach (DataRow subscriber in DataSource.Tables["Subscribers"].Select("Enabled <> 0"))
             {
                 policy = new CertificatePolicy();
-                certificateFile = subscriber["CertificateFile"].ToNonNullString();
+                remoteCertificateFile = subscriber["RemoteCertificateFile"].ToNonNullString();
 
                 if (Enum.TryParse(subscriber["ValidPolicyErrors"].ToNonNullString(), out validPolicyErrors))
                     policy.ValidPolicyErrors = validPolicyErrors;
@@ -1872,9 +1872,9 @@ namespace GSF.TimeSeries.Transport
                 if (Enum.TryParse(subscriber["ValidChainFlags"].ToNonNullString(), out validChainFlags))
                     policy.ValidChainFlags = validChainFlags;
 
-                if (File.Exists(certificateFile))
+                if (File.Exists(remoteCertificateFile))
                 {
-                    certificate = new X509Certificate2(certificateFile);
+                    certificate = new X509Certificate2(remoteCertificateFile);
                     m_certificateChecker.Trust(certificate, policy);
                     m_subscriberIdentities.Add(certificate, subscriber);
                 }
