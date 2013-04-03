@@ -4,51 +4,32 @@
         <name>TVA.Security</name>
     </assembly>
     <members>
-        <member name="T:TVA.Security.AdoSecurityProvider">
+        <member name="T:TVA.Security.RestrictAccessAttribute">
             <summary>
-            Represents an <see cref="T:TVA.Security.ISecurityProvider"/> that uses ADO.NET data source (SQL Server, MySQL, Microsoft Access etc) for its
-            backend datastore and authenticates internal users against Active Directory and external users against the database.
+            Represents an <see cref="T:System.Attribute"/> that can be used restrict access to a class when using role-based security.
             </summary>
-            <example>
-            Required config file entries:
-            <code>
-            <![CDATA[
-            <?xml version="1.0"?>
-            <configuration>
-              <configSections>
-                <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
-              </configSections>
-              <categorizedSettings>
-                <securityProvider>
-                  <add name="ConnectionString" value="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\ProgramData\openPDC\openPDC1.mdb" 
-                    description="Configuration database connection string" encrypted="false"/>
-                  <add name="DataProviderString" value="AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089};ConnectionType=System.Data.OleDb.OleDbConnection;AdapterType=System.Data.OleDb.OleDbDataAdapter" 
-                    description="Configuration database ADO.NET data provider assembly type creation string" encrypted="false"/>    
-                  <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured." encrypted="false" />    
-                  <add name="ProviderType" value="TVA.Security.AdoSecurityProvider, TVA.Security"
-                    description="The type to be used for enforcing security." encrypted="false" />
-                  <add name="IncludedResources" value="*=*" description="Semicolon delimited list of resources to be secured along with role names."
-                    encrypted="false" />
-                  <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
-                    encrypted="false" />    
-                  <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
-                    encrypted="false" />
-                  <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
-                    encrypted="false" />
-                </securityProvider>
-                <activeDirectory>
-                  <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
-                    encrypted="false" />
-                  <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
-                    encrypted="false" />
-                  <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
-                    encrypted="true" />
-                </activeDirectory>
-              </categorizedSettings>
-            </configuration>
-            ]]>
-            </code>
-            </example>
+        </member>
+        <member name="M:TVA.Security.RestrictAccessAttribute.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Security.RestrictAccessAttribute"/> class.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.RestrictAccessAttribute.#ctor(System.String[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Security.RestrictAccessAttribute"/> class.
+            </summary>
+            <param name="roles">List of either roles the current thread principal must have in order to have access.</param>
+        </member>
+        <member name="M:TVA.Security.RestrictAccessAttribute.CheckAccess">
+            <summary>
+            Checks if the current thread principal has at least one of the <see cref="P:TVA.Security.RestrictAccessAttribute.Roles"/> in order to have access.
+            </summary>
+            <returns>true if the current thread principal has access, otherwise false.</returns>
+        </member>
+        <member name="P:TVA.Security.RestrictAccessAttribute.Roles">
+            <summary>
+            Gets or sets the list of either roles the current thread principal must have in order to have access.
+            </summary>
         </member>
         <member name="T:TVA.Security.LdapSecurityProvider">
             <summary>
@@ -606,6 +587,52 @@
             Gets the original <see cref="P:TVA.Security.LdapSecurityProvider.WindowsPrincipal"/> of the user if the user exists in Active Directory.
             </summary>
         </member>
+        <member name="T:TVA.Security.AdoSecurityProvider">
+            <summary>
+            Represents an <see cref="T:TVA.Security.ISecurityProvider"/> that uses ADO.NET data source (SQL Server, MySQL, Microsoft Access etc) for its
+            backend datastore and authenticates internal users against Active Directory and external users against the database.
+            </summary>
+            <example>
+            Required config file entries:
+            <code>
+            <![CDATA[
+            <?xml version="1.0"?>
+            <configuration>
+              <configSections>
+                <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+              </configSections>
+              <categorizedSettings>
+                <securityProvider>
+                  <add name="ConnectionString" value="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\ProgramData\openPDC\openPDC1.mdb" 
+                    description="Configuration database connection string" encrypted="false"/>
+                  <add name="DataProviderString" value="AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089};ConnectionType=System.Data.OleDb.OleDbConnection;AdapterType=System.Data.OleDb.OleDbDataAdapter" 
+                    description="Configuration database ADO.NET data provider assembly type creation string" encrypted="false"/>    
+                  <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured." encrypted="false" />    
+                  <add name="ProviderType" value="TVA.Security.AdoSecurityProvider, TVA.Security"
+                    description="The type to be used for enforcing security." encrypted="false" />
+                  <add name="IncludedResources" value="*=*" description="Semicolon delimited list of resources to be secured along with role names."
+                    encrypted="false" />
+                  <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
+                    encrypted="false" />    
+                  <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
+                    encrypted="false" />
+                  <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
+                    encrypted="false" />
+                </securityProvider>
+                <activeDirectory>
+                  <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
+                    encrypted="false" />
+                  <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
+                    encrypted="false" />
+                  <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
+                    encrypted="true" />
+                </activeDirectory>
+              </categorizedSettings>
+            </configuration>
+            ]]>
+            </code>
+            </example>
+        </member>
         <member name="F:TVA.Security.AdoSecurityProvider.ProviderID">
             <summary>
             Defines the provider ID for the <see cref="T:TVA.Security.AdoSecurityProvider"/>.
@@ -686,96 +713,102 @@
             Gets last exception reported by the <see cref="T:TVA.Security.AdoSecurityProvider"/>.
             </summary>
         </member>
-        <member name="T:TVA.Security.RestrictAccessAttribute">
+        <member name="T:TVA.Security.UserDataCache">
             <summary>
-            Represents an <see cref="T:System.Attribute"/> that can be used restrict access to a class when using role-based security.
+            Represents a secured interprocess cache for a <see cref="T:System.Collections.Generic.Dictionary`2"/> of serialized <see cref="T:TVA.Security.UserData"/>.
             </summary>
         </member>
-        <member name="M:TVA.Security.RestrictAccessAttribute.#ctor">
+        <member name="M:TVA.Security.UserDataCache.#ctor(System.Int32)">
             <summary>
-            Initializes a new instance of the <see cref="T:TVA.Security.RestrictAccessAttribute"/> class.
+            Creates a new instance of the <see cref="T:TVA.Security.UserDataCache"/>.
+            </summary>
+            <param name="providerID">Unique provider ID used to distinguish cached user data that may be different based on provider.</param>
+        </member>
+        <member name="M:TVA.Security.UserDataCache.#ctor(System.Int32,System.Int32)">
+            <summary>
+            Creates a new instance of the <see cref="T:TVA.Security.UserDataCache"/> with the specified number of <paramref name="maximumConcurrentLocks"/>.
+            </summary>
+            <param name="maximumConcurrentLocks">Maximum concurrent reader locks to allow.</param>
+            <param name="providerID">Unique provider ID used to distinguish cached user data that may be different based on provider.</param>
+        </member>
+        <member name="M:TVA.Security.UserDataCache.TryGetUserData(System.String,TVA.Security.UserData@)">
+            <summary>
+            Attempts to retrieve <see cref="T:TVA.Security.UserData"/> for given <paramref name="loginID"/>.
+            </summary>
+            <param name="loginID">Login ID of associated <see cref="T:TVA.Security.UserData"/> to retrieve.</param>
+            <param name="userData">Reference to <see cref="T:TVA.Security.UserData"/> object to populate if found.</param>
+            <returns><c>true</c> if <see cref="T:TVA.Security.UserData"/> for given <paramref name="loginID"/> was retrieved; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="M:TVA.Security.UserDataCache.SaveUserData(System.String,TVA.Security.UserData)">
+            <summary>
+            Serializes the <paramref name="userData"/> for the given <paramref name="loginID"/> into the <see cref="T:TVA.Security.UserDataCache"/>.
+            </summary>
+            <param name="loginID">Login ID of associated <see cref="T:TVA.Security.UserData"/> to retrieve.</param>
+            <param name="userData">Reference to <see cref="T:TVA.Security.UserData"/> object to serialize into <see cref="T:TVA.Security.UserDataCache"/>.</param>
+            <remarks>
+            <para>
+            This will add an entry into the user data cache for <paramref name="loginID"/> if it doesn't exist;
+            otherwise existing entry will be updated.
+            </para>
+            <para>
+            Updates are automatically queued up for serialization so user does not need to call <see cref="M:TVA.Security.UserDataCache.Save"/>.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:TVA.Security.UserDataCache.Save">
+            <summary>
+            Initiates interprocess synchronized save of user data cache.
             </summary>
         </member>
-        <member name="M:TVA.Security.RestrictAccessAttribute.#ctor(System.String[])">
+        <member name="M:TVA.Security.UserDataCache.SaveFileData(System.IO.FileStream,System.Byte[])">
             <summary>
-            Initializes a new instance of the <see cref="T:TVA.Security.RestrictAccessAttribute"/> class.
+            Handles serialization of file to disk; virtual method allows customization (e.g., pre-save encryption and/or data merge).
             </summary>
-            <param name="roles">List of either roles the current thread principal must have in order to have access.</param>
+            <param name="fileStream"><see cref="T:System.IO.FileStream"/> used to serialize data.</param>
+            <param name="fileData">File data to be serialized.</param>
+            <remarks>
+            Consumers overriding this method should not directly call <see cref="P:TVA.IO.InterprocessCache.FileData"/> property to avoid potential dead-locks.
+            </remarks>
         </member>
-        <member name="M:TVA.Security.RestrictAccessAttribute.CheckAccess">
+        <member name="M:TVA.Security.UserDataCache.LoadFileData(System.IO.FileStream)">
             <summary>
-            Checks if the current thread principal has at least one of the <see cref="P:TVA.Security.RestrictAccessAttribute.Roles"/> in order to have access.
+            Handles deserialization of file from disk; virtual method allows customization (e.g., pre-load decryption and/or data merge).
             </summary>
-            <returns>true if the current thread principal has access, otherwise false.</returns>
+            <param name="fileStream"><see cref="T:System.IO.FileStream"/> used to deserialize data.</param>
+            <returns>Deserialized file data.</returns>
+            <remarks>
+            Consumers overriding this method should not directly call <see cref="P:TVA.IO.InterprocessCache.FileData"/> property to avoid potential dead-locks.
+            </remarks>
         </member>
-        <member name="P:TVA.Security.RestrictAccessAttribute.Roles">
+        <member name="M:TVA.Security.UserDataCache.HashLoginID(System.String)">
             <summary>
-            Gets or sets the list of either roles the current thread principal must have in order to have access.
+            Calculates the hash of the <paramref name="loginID"/> used as the key for the user data cache.
             </summary>
+            <param name="loginID">Login ID to hash.</param>
+            <returns>The Base64 encoded calculated SHA-2 hash of the <paramref name="loginID"/> used as the key for the user data cache.</returns>
+            <remarks>
+            For added security, a hash of the <paramref name="loginID"/> is used as the key for <see cref="T:TVA.Security.UserData"/> in the
+            user data cache instead of the actual <paramref name="loginID"/>. This method allows the
+            consumer to properly calculate this hash when directly using the user data cache.
+            </remarks>
         </member>
-        <member name="T:TVA.Security.NamespaceDoc">
+        <member name="M:TVA.Security.UserDataCache.GetCurrentCache(System.Int32)">
             <summary>
-            Contains fundamental classes that define the security framework for role-based security.
+            Loads the <see cref="T:TVA.Security.UserDataCache"/> for the current local user.
             </summary>
+            <param name="providerID">Unique security provider ID used to distinguish cached user data that may be different based on provider.</param>
+            <returns>Loaded instance of the <see cref="T:TVA.Security.UserDataCache"/>.</returns>
         </member>
-        <member name="T:TVA.Security.SecurityIdentity">
+        <member name="P:TVA.Security.UserDataCache.Item(System.String)">
             <summary>
-            A class that implements <see cref="T:System.Security.Principal.IIdentity"/> interface to facilitate custom role-based security.
+            Gets or sets <see cref="T:TVA.Security.UserData"/> for given <paramref name="loginID"/>.
             </summary>
-            <seealso cref="T:TVA.Security.SecurityPrincipal"/>
-            <seealso cref="T:TVA.Security.ISecurityProvider"/>
+            <param name="loginID">Login ID of associated <see cref="T:TVA.Security.UserData"/> to load or save.</param>
+            <returns>Reference to <see cref="T:TVA.Security.UserData"/> for given <paramref name="loginID"/> if found; otherwise <c>null</c>.</returns>
         </member>
-        <member name="M:TVA.Security.SecurityIdentity.#ctor(TVA.Security.ISecurityProvider)">
+        <member name="P:TVA.Security.UserDataCache.ProviderID">
             <summary>
-            Initializes a new instance of the <see cref="T:TVA.Security.SecurityIdentity"/> class.
-            </summary>
-            <param name="provider">An <see cref="T:TVA.Security.ISecurityProvider"/> of the user.</param>
-            <exception cref="T:System.ArgumentNullException">Value specified for <paramref name="provider"/> is null.</exception>
-        </member>
-        <member name="P:TVA.Security.SecurityIdentity.AuthenticationType">
-            <summary>
-            Gets the type of authentication used to identify the user.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.SecurityIdentity.IsAuthenticated">
-            <summary>
-            Gets a boolean value that indicates whether the user has been authenticated.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.SecurityIdentity.Name">
-            <summary>
-            Gets the user's login name.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.SecurityIdentity.Provider">
-            <summary>
-            Gets the <see cref="T:TVA.Security.ISecurityProvider"/> of the user.
-            </summary>
-        </member>
-        <member name="T:TVA.Security.SecurityPrincipal">
-            <summary>
-            A class that implements <see cref="T:System.Security.Principal.IPrincipal"/> interface to facilitate custom role-based security.
-            </summary>
-            <seealso cref="T:TVA.Security.SecurityIdentity"/>
-            <seealso cref="T:TVA.Security.ISecurityProvider"/>
-        </member>
-        <member name="M:TVA.Security.SecurityPrincipal.#ctor(TVA.Security.SecurityIdentity)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Security.SecurityPrincipal"/> class.
-            </summary>
-            <param name="identity">An <see cref="T:TVA.Security.SecurityIdentity"/> object.</param>
-            <exception cref="T:System.ArgumentNullException">Value specified for <paramref name="identity"/> is null.</exception>
-        </member>
-        <member name="M:TVA.Security.SecurityPrincipal.IsInRole(System.String)">
-            <summary>
-            Determines whether the user is a member of either of the specified <paramref name="roles"/>.
-            </summary>
-            <param name="roles">Comma seperated list of roles to check.</param>
-            <returns>true if the user is a member of either of the specified <paramref name="roles"/>, otherwise false.</returns>
-        </member>
-        <member name="P:TVA.Security.SecurityPrincipal.Identity">
-            <summary>
-            Gets the <see cref="T:TVA.Security.SecurityIdentity"/> object of the user.
+            Gets ot sets unique provider ID used to distinguish cached user data that may be different based on provider.
             </summary>
         </member>
         <member name="T:TVA.Security.SecurityProviderCache">
@@ -878,6 +911,11 @@
             <param name="recipient">Email address of the notification recipient.</param>
             <param name="subject">Subject of the notification.</param>
             <param name="body">Content of the notification.</param>
+        </member>
+        <member name="T:TVA.Security.NamespaceDoc">
+            <summary>
+            Contains fundamental classes that define the security framework for role-based security.
+            </summary>
         </member>
         <member name="T:TVA.Security.UserData">
             <summary>
@@ -995,102 +1033,64 @@
             Gets a read-only list of all the roles assigned to the user.
             </summary>
         </member>
-        <member name="T:TVA.Security.UserDataCache">
+        <member name="T:TVA.Security.SecurityPrincipal">
             <summary>
-            Represents a secured interprocess cache for a <see cref="T:System.Collections.Generic.Dictionary`2"/> of serialized <see cref="T:TVA.Security.UserData"/>.
+            A class that implements <see cref="T:System.Security.Principal.IPrincipal"/> interface to facilitate custom role-based security.
+            </summary>
+            <seealso cref="T:TVA.Security.SecurityIdentity"/>
+            <seealso cref="T:TVA.Security.ISecurityProvider"/>
+        </member>
+        <member name="M:TVA.Security.SecurityPrincipal.#ctor(TVA.Security.SecurityIdentity)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Security.SecurityPrincipal"/> class.
+            </summary>
+            <param name="identity">An <see cref="T:TVA.Security.SecurityIdentity"/> object.</param>
+            <exception cref="T:System.ArgumentNullException">Value specified for <paramref name="identity"/> is null.</exception>
+        </member>
+        <member name="M:TVA.Security.SecurityPrincipal.IsInRole(System.String)">
+            <summary>
+            Determines whether the user is a member of either of the specified <paramref name="roles"/>.
+            </summary>
+            <param name="roles">Comma seperated list of roles to check.</param>
+            <returns>true if the user is a member of either of the specified <paramref name="roles"/>, otherwise false.</returns>
+        </member>
+        <member name="P:TVA.Security.SecurityPrincipal.Identity">
+            <summary>
+            Gets the <see cref="T:TVA.Security.SecurityIdentity"/> object of the user.
             </summary>
         </member>
-        <member name="M:TVA.Security.UserDataCache.#ctor(System.Int32)">
+        <member name="T:TVA.Security.SecurityIdentity">
             <summary>
-            Creates a new instance of the <see cref="T:TVA.Security.UserDataCache"/>.
+            A class that implements <see cref="T:System.Security.Principal.IIdentity"/> interface to facilitate custom role-based security.
             </summary>
-            <param name="providerID">Unique provider ID used to distinguish cached user data that may be different based on provider.</param>
+            <seealso cref="T:TVA.Security.SecurityPrincipal"/>
+            <seealso cref="T:TVA.Security.ISecurityProvider"/>
         </member>
-        <member name="M:TVA.Security.UserDataCache.#ctor(System.Int32,System.Int32)">
+        <member name="M:TVA.Security.SecurityIdentity.#ctor(TVA.Security.ISecurityProvider)">
             <summary>
-            Creates a new instance of the <see cref="T:TVA.Security.UserDataCache"/> with the specified number of <paramref name="maximumConcurrentLocks"/>.
+            Initializes a new instance of the <see cref="T:TVA.Security.SecurityIdentity"/> class.
             </summary>
-            <param name="maximumConcurrentLocks">Maximum concurrent reader locks to allow.</param>
-            <param name="providerID">Unique provider ID used to distinguish cached user data that may be different based on provider.</param>
+            <param name="provider">An <see cref="T:TVA.Security.ISecurityProvider"/> of the user.</param>
+            <exception cref="T:System.ArgumentNullException">Value specified for <paramref name="provider"/> is null.</exception>
         </member>
-        <member name="M:TVA.Security.UserDataCache.TryGetUserData(System.String,TVA.Security.UserData@)">
+        <member name="P:TVA.Security.SecurityIdentity.AuthenticationType">
             <summary>
-            Attempts to retrieve <see cref="T:TVA.Security.UserData"/> for given <paramref name="loginID"/>.
-            </summary>
-            <param name="loginID">Login ID of associated <see cref="T:TVA.Security.UserData"/> to retrieve.</param>
-            <param name="userData">Reference to <see cref="T:TVA.Security.UserData"/> object to populate if found.</param>
-            <returns><c>true</c> if <see cref="T:TVA.Security.UserData"/> for given <paramref name="loginID"/> was retrieved; otherwise <c>false</c>.</returns>
-        </member>
-        <member name="M:TVA.Security.UserDataCache.SaveUserData(System.String,TVA.Security.UserData)">
-            <summary>
-            Serializes the <paramref name="userData"/> for the given <paramref name="loginID"/> into the <see cref="T:TVA.Security.UserDataCache"/>.
-            </summary>
-            <param name="loginID">Login ID of associated <see cref="T:TVA.Security.UserData"/> to retrieve.</param>
-            <param name="userData">Reference to <see cref="T:TVA.Security.UserData"/> object to serialize into <see cref="T:TVA.Security.UserDataCache"/>.</param>
-            <remarks>
-            <para>
-            This will add an entry into the user data cache for <paramref name="loginID"/> if it doesn't exist;
-            otherwise existing entry will be updated.
-            </para>
-            <para>
-            Updates are automatically queued up for serialization so user does not need to call <see cref="M:TVA.Security.UserDataCache.Save"/>.
-            </para>
-            </remarks>
-        </member>
-        <member name="M:TVA.Security.UserDataCache.Save">
-            <summary>
-            Initiates interprocess synchronized save of user data cache.
+            Gets the type of authentication used to identify the user.
             </summary>
         </member>
-        <member name="M:TVA.Security.UserDataCache.SaveFileData(System.IO.FileStream,System.Byte[])">
+        <member name="P:TVA.Security.SecurityIdentity.IsAuthenticated">
             <summary>
-            Handles serialization of file to disk; virtual method allows customization (e.g., pre-save encryption and/or data merge).
+            Gets a boolean value that indicates whether the user has been authenticated.
             </summary>
-            <param name="fileStream"><see cref="T:System.IO.FileStream"/> used to serialize data.</param>
-            <param name="fileData">File data to be serialized.</param>
-            <remarks>
-            Consumers overriding this method should not directly call <see cref="P:TVA.IO.InterprocessCache.FileData"/> property to avoid potential dead-locks.
-            </remarks>
         </member>
-        <member name="M:TVA.Security.UserDataCache.LoadFileData(System.IO.FileStream)">
+        <member name="P:TVA.Security.SecurityIdentity.Name">
             <summary>
-            Handles deserialization of file from disk; virtual method allows customization (e.g., pre-load decryption and/or data merge).
+            Gets the user's login name.
             </summary>
-            <param name="fileStream"><see cref="T:System.IO.FileStream"/> used to deserialize data.</param>
-            <returns>Deserialized file data.</returns>
-            <remarks>
-            Consumers overriding this method should not directly call <see cref="P:TVA.IO.InterprocessCache.FileData"/> property to avoid potential dead-locks.
-            </remarks>
         </member>
-        <member name="M:TVA.Security.UserDataCache.HashLoginID(System.String)">
+        <member name="P:TVA.Security.SecurityIdentity.Provider">
             <summary>
-            Calculates the hash of the <paramref name="loginID"/> used as the key for the user data cache.
-            </summary>
-            <param name="loginID">Login ID to hash.</param>
-            <returns>The Base64 encoded calculated SHA-2 hash of the <paramref name="loginID"/> used as the key for the user data cache.</returns>
-            <remarks>
-            For added security, a hash of the <paramref name="loginID"/> is used as the key for <see cref="T:TVA.Security.UserData"/> in the
-            user data cache instead of the actual <paramref name="loginID"/>. This method allows the
-            consumer to properly calculate this hash when directly using the user data cache.
-            </remarks>
-        </member>
-        <member name="M:TVA.Security.UserDataCache.GetCurrentCache(System.Int32)">
-            <summary>
-            Loads the <see cref="T:TVA.Security.UserDataCache"/> for the current local user.
-            </summary>
-            <param name="providerID">Unique security provider ID used to distinguish cached user data that may be different based on provider.</param>
-            <returns>Loaded instance of the <see cref="T:TVA.Security.UserDataCache"/>.</returns>
-        </member>
-        <member name="P:TVA.Security.UserDataCache.Item(System.String)">
-            <summary>
-            Gets or sets <see cref="T:TVA.Security.UserData"/> for given <paramref name="loginID"/>.
-            </summary>
-            <param name="loginID">Login ID of associated <see cref="T:TVA.Security.UserData"/> to load or save.</param>
-            <returns>Reference to <see cref="T:TVA.Security.UserData"/> for given <paramref name="loginID"/> if found; otherwise <c>null</c>.</returns>
-        </member>
-        <member name="P:TVA.Security.UserDataCache.ProviderID">
-            <summary>
-            Gets ot sets unique provider ID used to distinguish cached user data that may be different based on provider.
+            Gets the <see cref="T:TVA.Security.ISecurityProvider"/> of the user.
             </summary>
         </member>
     </members>
