@@ -75,7 +75,6 @@ namespace HistorianView
             // Fields
             private MetadataRecord m_metadata;
             private bool m_export;
-            private bool m_display;
 
             #endregion
 
@@ -96,7 +95,7 @@ namespace HistorianView
 
             /// <summary>
             /// Determines whether the measurement represented by this metadata record
-            /// should be exported to CSV by the Historian Data Viewer.
+            /// should be exported to CSV or displayed on the graph by the Historian Data Viewer.
             /// </summary>
             public bool Export
             {
@@ -108,23 +107,6 @@ namespace HistorianView
                 {
                     m_export = value;
                     OnPropertyChanged("Export");
-                }
-            }
-
-            /// <summary>
-            /// Determines whether the measurement represented by this metadata record
-            /// should be displayed on the Historian Data Viewer graph.
-            /// </summary>
-            public bool Display
-            {
-                get
-                {
-                    return m_display;
-                }
-                set
-                {
-                    m_display = value;
-                    OnPropertyChanged("Display");
                 }
             }
 
@@ -547,11 +529,7 @@ namespace HistorianView
                     XmlElement metadataElement = metadataElements.SingleOrDefault(element => element.Attributes["historianId"].Value == record.GetMetadata().HistorianID.ToString() && element.Attributes["archivePath"].Value == reader.FileName);
 
                     if (metadataElement != null)
-                    {
                         record.Export = bool.Parse(metadataElement.Attributes["export"].Value);
-                        record.Display = bool.Parse(metadataElement.Attributes["display"].Value);
-
-                    }
 
                     m_metadata.Add(record);
                 }
@@ -584,7 +562,7 @@ namespace HistorianView
         //a fix for this error has been added.
         private void SaveCurrentSession(string filePath)
         {
-            string[] attributeNames = { "archivePath", "historianId", "export", "display" };
+            string[] attributeNames = { "archivePath", "historianId", "export" };
             XmlDocument doc = new XmlDocument();
             XmlElement root = doc.CreateElement("historianDataViewer");
             XmlAttribute startTime = doc.CreateAttribute("startTime");
@@ -609,9 +587,9 @@ namespace HistorianView
 
                     if (wrapper != null)//svk_5/25/12//condition to ensure that an null referenced object is not accessed
                     {
-                        if (wrapper.Export || wrapper.Display)
+                        if (wrapper.Export)
                         {
-                            string[] attributeValues = { reader.FileName, record.HistorianID.ToString(), wrapper.Export.ToString(), wrapper.Display.ToString() };
+                            string[] attributeValues = { reader.FileName, record.HistorianID.ToString(), wrapper.Export.ToString() };
                             XmlElement metadataElement = doc.CreateElement("metadata");
 
                             for (int i = 0; i < attributeNames.Length; i++)
@@ -684,11 +662,10 @@ namespace HistorianView
 
             m_dataGrid.ItemsSource = m_metadata.Where(metadata => !string.IsNullOrEmpty(metadata.Name))
                 .Select(metadata => new Tuple<MetadataWrapper, bool>(metadata, SearchProperties(metadata, m_tokens)))
-                .Where(tuple => tuple.Item1.Export || tuple.Item1.Display || tuple.Item2)
-                .OrderBy(tuple => tuple.Item1.PointNumber)
-                .OrderBy(tuple => tuple.Item1.Export)
-                .OrderBy(tuple => tuple.Item1.Display)
+                .Where(tuple => tuple.Item1.Export || tuple.Item2)
                 .OrderByDescending(tuple => tuple.Item2)
+                .ThenBy(tuple => tuple.Item1.Export)
+                .ThenBy(tuple => tuple.Item1.PointNumber)
                 .Select(tuple => tuple.Item1)
                 .ToList();
         }
@@ -745,7 +722,7 @@ namespace HistorianView
                             wrapper => m_archiveReaders.Single(archive => archive.MetadataFile.Read().Any(record => wrapper.GetMetadata() == record))
                         );
 
-                    Dictionary<string, List<string>> data = new Dictionary<string, List<string>>();
+                    Dictionary<TimeTag, List<string[]>> data = new Dictionary<TimeTag, List<string[]>>();
                     List<double> averages = new List<double>();
                     List<double> maximums = new List<double>();
                     List<double> minimums = new List<double>();
@@ -759,22 +736,38 @@ namespace HistorianView
 
                         foreach (IDataPoint point in metadata[wrapper].ReadData(wrapper.GetMetadata().HistorianID, GetStartTime(), GetEndTime()))
                         {
-                            string time = point.Time.ToString();
-                            List<string> valueList;
+                            TimeTag time = point.Time;
+                            List<string[]> rowList;
+                            string[] row;
+                            int rowIndex;
 
-                            // Get or create the value list that stores values to be exported to the CSV file.
-                            if (!data.TryGetValue(time, out valueList))
+                            // Get or create the list of rows for the timetag of the current point.
+                            if (!data.TryGetValue(time, out rowList))
                             {
-                                valueList = new List<string>();
-                                data.Add(time, valueList);
+                                rowList = new List<string[]>();
+                                data.Add(time, rowList);
                             }
 
-                            // Pad with empty strings to align this value with the proper column.
-                            while (valueList.Count < index)
-                                valueList.Add(string.Empty);
+                            // Attempt to add the value of the current point to an existing list.
+                            for (rowIndex = 0; rowIndex < rowList.Count; rowIndex++)
+                            {
+                                row = rowList[rowIndex];
 
-                            // Add the value to the list of values.
-                            valueList.Add(point.Value.ToString());
+                                if (row[index] == null)
+                                {
+                                    row[index] = point.Value.ToString();
+                                    break;
+                                }
+                            }
+
+                            // If all rows were already occupied with
+                            // a value for this point, add a new row.
+                            if (rowIndex >= rowList.Count)
+                            {
+                                row = new string[metadata.Count];
+                                row[index] = point.Value.ToString();
+                                rowList.Add(row);
+                            }
 
                             // Determine if this is the new minimum value.
                             if (!(point.Value >= min))
@@ -853,20 +846,25 @@ namespace HistorianView
                     line.Clear();
 
                     // Write data to the CSV file.
-                    foreach (string time in data.Keys)
+                    foreach (KeyValuePair<TimeTag, List<string[]>> pair in data.OrderBy(p => p.Key))
                     {
-                        line.Append(time);
-                        line.Append(',');
+                        TimeTag time = pair.Key;
 
-                        foreach (string value in data[time])
+                        foreach (string[] row in pair.Value)
                         {
-                            line.Append(value);
+                            line.Append(time);
                             line.Append(',');
-                        }
 
-                        line.Remove(line.Length - 1, 1);
-                        writer.WriteLine(line.ToString());
-                        line.Clear();
+                            foreach (string value in row)
+                            {
+                                line.Append(value ?? double.NaN.ToString());
+                                line.Append(',');
+                            }
+
+                            line.Remove(line.Length - 1, 1);
+                            writer.WriteLine(line.ToString());
+                            line.Clear();
+                        }
                     }
                 }
                 finally
