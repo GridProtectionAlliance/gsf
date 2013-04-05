@@ -1059,8 +1059,9 @@ namespace GSF.Communication
         /// </summary>
         private void ProcessReceive(SocketAsyncEventArgs args)
         {
-            TransportProvider<EndPoint> client;
             Guid clientID = default(Guid);
+            TransportProvider<EndPoint> client;
+            UdpClientInfo clientInfo;
 
             try
             {
@@ -1076,7 +1077,12 @@ namespace GSF.Communication
 
                 // If the client's endpoint has changed, update the lookup list
                 if (m_dynamicClientEndPoints && (object)client != null && !client.Provider.Equals(args.RemoteEndPoint))
+                {
                     client.Provider = args.RemoteEndPoint;
+
+                    if (m_clientInfoLookup.TryGetValue(client.ID, out clientInfo))
+                        clientInfo.SendArgs.RemoteEndPoint = client.Provider;
+                }
 
                 // If we do not have a static clients list, and if the client could not be found
                 // or if the client's endpoint has changed, update the clients list dynamically.
