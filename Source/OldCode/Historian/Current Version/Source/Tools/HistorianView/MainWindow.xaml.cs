@@ -694,7 +694,7 @@ namespace HistorianView
             if (TrySetChartInterval(chartIntervalErrorMessage))
             {
                 SetChartResolution();
-                m_chartWindow.VisiblePoints = m_metadata.Where(wrapper => wrapper.Display).Select(wrapper => wrapper.GetMetadata()).ToList();
+                m_chartWindow.VisiblePoints = m_metadata.Where(wrapper => wrapper.Export).Select(wrapper => wrapper.GetMetadata()).ToList();
                 m_chartWindow.UpdateChart();
                 m_chartWindow.Show();
                 m_chartWindow.Focus();
