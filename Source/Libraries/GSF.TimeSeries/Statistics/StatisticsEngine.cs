@@ -446,7 +446,7 @@ namespace GSF.TimeSeries.Statistics
                 signalReference = measurement["SignalReference"].ToString();
 
                 // Find the statistic corresponding to the current measurement
-                statistic = m_statistics.FirstOrDefault(stat => (source.SourceCategory == stat.Source) && (signalReference == string.Format("{0}!{1}-ST{2}", source.SourceName, source.SourceAcronym, stat.Index)));
+                statistic = statistics.FirstOrDefault(stat => (source.SourceCategory == stat.Source) && (signalReference == string.Format("{0}!{1}-ST{2}", source.SourceName, source.SourceAcronym, stat.Index)));
 
                 if ((object)statistic != null)
                 {
