@@ -670,8 +670,10 @@ namespace GSF.TimeSeries
         private bool LoadSystemConfiguration()
         {
             DataSet dataSource;
+            bool loadedFromCache;
 
             DisplayStatusMessage("Loading system configuration...", UpdateType.Information);
+            loadedFromCache = m_preferCachedConfiguration;
 
             // Attempt to load (or reload) system configuration
             if (m_preferCachedConfiguration)
@@ -682,14 +684,20 @@ namespace GSF.TimeSeries
                     dataSource = GetConfigurationDataSet(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile, m_dataProviderString);
 
                 if ((object)dataSource == null)
+                {
+                    loadedFromCache = false;
                     dataSource = GetConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString);
+                }
             }
             else
             {
                 dataSource = GetConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString);
 
                 if ((object)dataSource == null)
+                {
+                    loadedFromCache = true;
                     dataSource = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile, m_dataProviderString);
+                }
 
                 if ((object)dataSource == null)
                     dataSource = GetConfigurationDataSet(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile, m_dataProviderString);
@@ -699,6 +707,11 @@ namespace GSF.TimeSeries
             {
                 // Update data source on all adapters in all collections
                 m_iaonSession.DataSource = dataSource;
+
+                // Cache the configuration if it wasn't already loaded from a cache
+                if (!loadedFromCache)
+                    CacheCurrentConfiguration(dataSource);
+
                 return true;
             }
 
@@ -819,8 +832,6 @@ namespace GSF.TimeSeries
                         }
 
                         DisplayStatusMessage("Database configuration successfully loaded.", UpdateType.Information);
-
-                        CacheCurrentConfiguration(configuration);
                     }
                     catch (Exception ex)
                     {
@@ -852,8 +863,6 @@ namespace GSF.TimeSeries
                         configuration.ReadXml(response);
 
                         DisplayStatusMessage("Webservice configuration successfully loaded.", UpdateType.Information);
-
-                        CacheCurrentConfiguration(configuration);
                     }
                     catch (Exception ex)
                     {
@@ -1082,8 +1091,6 @@ namespace GSF.TimeSeries
                 }
 
                 DisplayStatusMessage("Database configuration successfully loaded.", UpdateType.Information);
-
-                CacheCurrentConfiguration(configuration);
             }
             catch (Exception ex)
             {
@@ -2288,6 +2295,9 @@ namespace GSF.TimeSeries
                     m_iaonSession.DataSource = dataSource;
                     m_iaonSession.AllAdapters.UpdateCollectionConfigurations();
                     SendResponse(requestInfo, true, "System configuration was successfully augmented.");
+
+                    // Cache current configuration
+                    CacheCurrentConfiguration(dataSource);
                 }
                 else
                 {
