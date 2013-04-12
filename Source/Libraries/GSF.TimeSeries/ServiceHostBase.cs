@@ -1237,7 +1237,6 @@ namespace GSF.TimeSeries
             try
             {
                 DataSet configuration = state as DataSet;
-                bool cacheSuccessful = false;
 
                 if ((object)configuration != null)
                 {
@@ -1260,7 +1259,6 @@ namespace GSF.TimeSeries
                         }
 
                         DisplayStatusMessage("Successfully cached current configuration to binary.", UpdateType.Information);
-                        cacheSuccessful = true;
                     }
                     catch (Exception ex)
                     {
@@ -1280,19 +1278,11 @@ namespace GSF.TimeSeries
                         configuration.WriteXml(m_cachedXmlConfigurationFile, XmlWriteMode.WriteSchema);
                         
                         DisplayStatusMessage("Successfully cached current configuration to XML.", UpdateType.Information);
-                        cacheSuccessful = true;
                     }
                     catch (Exception ex)
                     {
                         DisplayStatusMessage("Failed to cache last known configuration due to exception: {0}", UpdateType.Alarm, ex.Message);
                         m_serviceHelper.ErrorLogger.Log(ex);
-                    }
-
-                    if (!cacheSuccessful)
-                    {
-                        // Both attempts to cache failed; attempt to retry
-                        DisplayStatusMessage("Retrying attempt to cache last known configuration...", UpdateType.Information);
-                        ThreadPool.QueueUserWorkItem(QueueConfigurationCache, Interlocked.CompareExchange(ref m_latestConfiguration, null, null));
                     }
                 }
             }
