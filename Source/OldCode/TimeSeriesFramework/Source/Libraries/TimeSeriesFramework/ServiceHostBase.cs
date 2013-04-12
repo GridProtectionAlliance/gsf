@@ -669,8 +669,10 @@ namespace TimeSeriesFramework
         private bool LoadSystemConfiguration()
         {
             DataSet dataSource;
+            bool loadedFromCache;
 
             DisplayStatusMessage("Loading system configuration...", UpdateType.Information);
+            loadedFromCache = m_preferCachedConfiguration;
 
             // Attempt to load (or reload) system configuration
             if (m_preferCachedConfiguration)
@@ -681,14 +683,20 @@ namespace TimeSeriesFramework
                     dataSource = GetConfigurationDataSet(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile, m_dataProviderString);
 
                 if ((object)dataSource == null)
+                {
+                    loadedFromCache = false;
                     dataSource = GetConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString);
+                }
             }
             else
             {
                 dataSource = GetConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString);
 
                 if ((object)dataSource == null)
+                {
+                    loadedFromCache = true;
                     dataSource = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile, m_dataProviderString);
+                }
 
                 if ((object)dataSource == null)
                     dataSource = GetConfigurationDataSet(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile, m_dataProviderString);
@@ -698,6 +706,11 @@ namespace TimeSeriesFramework
             {
                 // Update data source on all adapters in all collections
                 m_iaonSession.DataSource = dataSource;
+
+                // Cache the configuration if it wasn't already loaded from a cache
+                if (!loadedFromCache)
+                    CacheCurrentConfiguration(dataSource);
+
                 return true;
             }
 
@@ -818,8 +831,6 @@ namespace TimeSeriesFramework
                         }
 
                         DisplayStatusMessage("Database configuration successfully loaded.", UpdateType.Information);
-
-                        CacheCurrentConfiguration(configuration);
                     }
                     catch (Exception ex)
                     {
@@ -851,8 +862,6 @@ namespace TimeSeriesFramework
                         configuration.ReadXml(response);
 
                         DisplayStatusMessage("Webservice configuration successfully loaded.", UpdateType.Information);
-
-                        CacheCurrentConfiguration(configuration);
                     }
                     catch (Exception ex)
                     {
