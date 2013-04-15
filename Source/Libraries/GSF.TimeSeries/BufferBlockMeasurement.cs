@@ -85,16 +85,26 @@ namespace GSF.TimeSeries
         #region [ Properties ]
 
         /// <summary>
-        /// Cached buffer image;
+        /// Cached buffer image.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Copy data from this buffer onto your own buffer - this buffer is from the buffer pool
-        /// and will be returned back to the pool by this class.
+        /// Use the <see cref="Length"/> property to determine the valid number of bytes in the
+        /// buffer. The actual length of the <see cref="Buffer"/> byte array may exceed the value
+        /// of <see cref="Length"/>, however any bytes in the buffer beyond <see cref="Length"/>
+        /// are considered unavailable and accessing these bytes may result in an exception.
+        /// </para>
+        /// <para>
+        /// Do not cache <see cref="Buffer"/> for your own use, copy data from this buffer onto
+        /// your own buffer as this buffer is from the buffer pool and will be returned back to
+        /// the pool by this class.
         /// </para>
         /// <para>
         /// Set <see cref="Buffer"/> property to <c>null</c> when operations on buffer are complete
         /// to return buffer to pool and unregister measurement instance from the finalizer queue.
+        /// If measurement has multiple destinations, it is recommended that queue and notify be
+        /// implemented so that final user of <see cref="BufferBlockMeasurement"/> instance can
+        /// return buffer back to the buffer pool.
         /// </para>
         /// </remarks>
         public byte[] Buffer
@@ -107,8 +117,8 @@ namespace GSF.TimeSeries
             {
                 if ((object)value == null)
                     ReturnBufferToPool();
-
-                throw new InvalidOperationException("Cannot override internal buffer. Set property to null to return buffer to pool.");
+                else
+                    throw new InvalidOperationException("Cannot override internal buffer. Set property to null to return buffer to pool.");
             }
         }
 
@@ -127,6 +137,7 @@ namespace GSF.TimeSeries
 
         #region [ Methods ]
 
+        // Return local buffer back to the buffer pool
         private void ReturnBufferToPool(bool destructorCall = false)
         {
             if (!destructorCall)
