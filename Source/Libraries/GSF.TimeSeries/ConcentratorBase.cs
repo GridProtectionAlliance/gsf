@@ -1976,8 +1976,10 @@ namespace GSF.TimeSeries
 
                 if (discardMeasurement)
                 {
+                    // This flag only make sense if there is one action adapter, so it is no longer auto-assigned
+                    //measurement.StateFlags |= MeasurementStateFlags.DiscardedValue;
+
                     // This measurement was marked to be discarded.
-                    measurement.StateFlags |= MeasurementStateFlags.DiscardedValue;
                     Interlocked.Exchange(ref m_lastDiscardedMeasurement, measurement);
                     Interlocked.Exchange(ref m_lastDiscardedMeasurementLatency, RealTime - m_lastDiscardedMeasurement.Timestamp);
 
