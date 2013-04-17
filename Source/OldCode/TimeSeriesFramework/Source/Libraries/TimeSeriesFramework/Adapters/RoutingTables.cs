@@ -1070,7 +1070,7 @@ namespace TimeSeriesFramework.Adapters
                 foreach (Queue<DependencyMeasurement> measurementQueue in pair.Value.Values)
                 {
                     // Determine the number of measurements in this queue which have timed out
-                    timedOutMeasurements = measurementQueue.TakeWhile(depMeasurement => (now - depMeasurement.Measurement.Timestamp) > adapter.DependencyTimeout).Count();
+                    timedOutMeasurements = measurementQueue.TakeWhile(depMeasurement => (now - depMeasurement.Measurement.ReceivedTimestamp) > adapter.DependencyTimeout).Count();
 
                     // If there are any measurements that have timed out, get the collection
                     // of notified measurements for that adapter so we can put them in it
