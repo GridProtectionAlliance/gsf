@@ -54,11 +54,11 @@ namespace GSF.Data
         /// </summary>
         Decimal,
         /// <summary>
-        /// 64-dit double precision floating point numeric data type, <see cref="Double"/>.
+        /// 64-bit double precision floating point numeric data type, <see cref="Double"/>.
         /// </summary>
         Double,
         /// <summary>
-        /// Unisgned 128-bit Guid integer data type, <see cref="Guid"/>.
+        /// Unsigned 128-bit Guid integer data type, <see cref="Guid"/>.
         /// </summary>
         Guid,
         /// <summary>
@@ -86,7 +86,7 @@ namespace GSF.Data
         /// </summary>
         String,
         /// <summary>
-        /// Timespan data type, <see cref="TimeSpan"/>.
+        /// Time-span data type, <see cref="TimeSpan"/>.
         /// </summary>
         TimeSpan,
         /// <summary>
@@ -120,24 +120,24 @@ namespace GSF.Data
         private readonly static Type[] s_supportedDataTypes = new[]
         {
             // This must match DataType enum order
-	        typeof(bool),
+            typeof(bool),
             typeof(byte),
-	        typeof(char),
-	        typeof(DateTime),
-	        typeof(decimal),
-	        typeof(double),
-	        typeof(Guid),
-	        typeof(short),
-	        typeof(int),
-	        typeof(long),
-	        typeof(sbyte),
-	        typeof(float),
-	        typeof(string),
-	        typeof(TimeSpan),
-	        typeof(ushort),
-	        typeof(uint),
-	        typeof(ulong),
-	        typeof(byte[]),
+            typeof(char),
+            typeof(DateTime),
+            typeof(decimal),
+            typeof(double),
+            typeof(Guid),
+            typeof(short),
+            typeof(int),
+            typeof(long),
+            typeof(sbyte),
+            typeof(float),
+            typeof(string),
+            typeof(TimeSpan),
+            typeof(ushort),
+            typeof(uint),
+            typeof(ulong),
+            typeof(byte[]),
             typeof(object)
         };
 
@@ -145,7 +145,7 @@ namespace GSF.Data
         /// Serializes a <see cref="DataSet"/> to a destination <see cref="Stream"/>.
         /// </summary>
         /// <param name="source"><see cref="DataSet"/> to serialize.</param>
-        /// <param name="destination"><see cref="Stream"/> to seralize <see cref="DataSet"/> on.</param>
+        /// <param name="destination"><see cref="Stream"/> to serialize <see cref="DataSet"/> on.</param>
         public static void SerializeToStream(this DataSet source, Stream destination)
         {
             if ((object)source == null)
@@ -187,7 +187,7 @@ namespace GSF.Data
                         output.Write(column.ColumnName);
                         output.Write((byte)dataType);
 
-                        // Track data types and column indicies in parallel lists for faster DataRow serialization
+                        // Track data types and column indices in parallel lists for faster DataRow serialization
                         columnIndices.Add(column.Ordinal);
                         columnDataTypes.Add(dataType);
                     }
@@ -273,7 +273,7 @@ namespace GSF.Data
                                 }
 
                                 break;
-                         }
+                        }
                     }
                 }
             }

@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
@@ -29,15 +30,12 @@ using GSF.Data;
 using GSF.IO;
 using GSF.Units;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 
 namespace GSF.Core.Tests
 {
     [TestClass()]
     public class DataSetSerializationTest
     {
-        // This method will Determines if the specified UTC time is valid or not, by comparing it to the system clock time
-        // and returns boolean variable as false for valid case and test will pass.
         [TestMethod]
         public void DataSetSerialization_ValidCase()
         {
@@ -46,7 +44,7 @@ namespace GSF.Core.Tests
             //Act
             StringBuilder results = new StringBuilder();
             Ticks stopTime, startTime;
-            
+
             DataSet sourceDataSet = new DataSet("source");
             DataTable table = sourceDataSet.Tables.Add("table1");
 
@@ -68,10 +66,10 @@ namespace GSF.Core.Tests
                     row[0] = new string((char)Security.Cryptography.Random.Int16Between(32, 128), Security.Cryptography.Random.Int16Between(5, 30));
                 else
                     row[0] = DBNull.Value;
-                
+
                 row[1] = Security.Cryptography.Random.Int32;
                 row[2] = Security.Cryptography.Random.Boolean;
-                
+
                 if (Security.Cryptography.Random.Boolean || Security.Cryptography.Random.Boolean)
                     row[3] = Guid.NewGuid();
                 else
@@ -224,7 +222,7 @@ namespace GSF.Core.Tests
             stopTime = PrecisionTimer.UtcNow.Ticks;
             results.AppendFormat("Dataset validation time: {0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
             results.AppendLine();
-            
+
             FileInfo xmlFile = new FileInfo(xmlFileName);
             FileInfo binFile = new FileInfo(fileName);
 
