@@ -986,7 +986,14 @@ namespace TVA.Identity
 
                         foreach (byte[] sid in m_userEntry.Properties["TokenGroups"])
                         {
-                            groups.Add(new SecurityIdentifier(sid, 0).Translate(typeof(NTAccount)).ToString());
+                            try
+                            {
+                                groups.Add(new SecurityIdentifier(sid, 0).Translate(typeof(NTAccount)).ToString());
+                            }
+                            catch
+                            {
+                                // Ignoring group SID's that fail to translate to an active AD group, for whatever reason
+                            }
                         }
                     }
                 }
