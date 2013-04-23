@@ -522,7 +522,7 @@ namespace GSF.TimeSeries.Adapters
                     if (typeof(IActionAdapter).IsAssignableFrom(typeof(T)))
                         return this.Cast<IActionAdapter>().Where(item => item.RequestedOutputMeasurementKeys != null).SelectMany(item => item.RequestedOutputMeasurementKeys).Distinct().ToArray();
 
-                    if (typeof(IOutputAdapter).IsAssignableFrom(typeof(T)))
+                    if (typeof(IInputAdapter).IsAssignableFrom(typeof(T)))
                         return this.Cast<IInputAdapter>().Where(item => item.RequestedOutputMeasurementKeys != null).SelectMany(item => item.RequestedOutputMeasurementKeys).Distinct().ToArray();
                 }
 
