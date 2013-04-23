@@ -22,7 +22,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -125,8 +124,7 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Constructs a new instance of the <see cref="AdapterCollectionBase{T}"/>.
         /// </summary>
-        /// <param name="waitHandles">Wait handle dictionary.</param>
-        protected AdapterCollectionBase(ConcurrentDictionary<string, AutoResetEvent> waitHandles)
+        protected AdapterCollectionBase()
         {
             m_name = this.GetType().Name;
             m_settings = new Dictionary<string, string>();
@@ -489,10 +487,10 @@ namespace TimeSeriesFramework.Adapters
                 // Otherwise return cumulative results of all child adapters
                 lock (this)
                 {
-                    if (typeof(T) is IActionAdapter)
+                    if (typeof(IActionAdapter).IsAssignableFrom(typeof(T)))
                         return this.Cast<IActionAdapter>().Where(item => item.RequestedInputMeasurementKeys != null).SelectMany(item => item.RequestedInputMeasurementKeys).Distinct().ToArray();
 
-                    if (typeof(T) is IOutputAdapter)
+                    if (typeof(IOutputAdapter).IsAssignableFrom(typeof(T)))
                         return this.Cast<IOutputAdapter>().Where(item => item.RequestedInputMeasurementKeys != null).SelectMany(item => item.RequestedInputMeasurementKeys).Distinct().ToArray();
                 }
 
@@ -518,10 +516,10 @@ namespace TimeSeriesFramework.Adapters
                 // Otherwise return cumulative results of all child adapters
                 lock (this)
                 {
-                    if (typeof(T) is IActionAdapter)
+                    if (typeof(IActionAdapter).IsAssignableFrom(typeof(T)))
                         return this.Cast<IActionAdapter>().Where(item => item.RequestedOutputMeasurementKeys != null).SelectMany(item => item.RequestedOutputMeasurementKeys).Distinct().ToArray();
 
-                    if (typeof(T) is IInputAdapter)
+                    if (typeof(IInputAdapter).IsAssignableFrom(typeof(T)))
                         return this.Cast<IInputAdapter>().Where(item => item.RequestedOutputMeasurementKeys != null).SelectMany(item => item.RequestedOutputMeasurementKeys).Distinct().ToArray();
                 }
 

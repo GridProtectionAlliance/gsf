@@ -534,17 +534,6 @@ namespace TimeSeriesFramework.Transport
         /// Creates a new <see cref="DataPublisher"/>.
         /// </summary>
         public DataPublisher()
-            : this(null)
-        {
-            // When collection is spawned as an adapter, it needs a parameterless constructor
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="DataPublisher"/>.
-        /// </summary>
-        /// <param name="waitHandles">Wait handle dictionary.</param>
-        public DataPublisher(ConcurrentDictionary<string, AutoResetEvent> waitHandles)
-            : base(waitHandles)
         {
             base.Name = "Data Publisher Collection";
             base.DataMember = "[internal]";

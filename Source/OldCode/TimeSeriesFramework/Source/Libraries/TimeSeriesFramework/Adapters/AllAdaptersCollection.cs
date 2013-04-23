@@ -45,17 +45,6 @@ namespace TimeSeriesFramework.Adapters
         /// Creates a new <see cref="AllAdaptersCollection"/>.
         /// </summary>
         public AllAdaptersCollection()
-            : this(null)
-        {
-            // When collection is spawned as an adapter, it needs a parameterless constructor
-        }
-
-        /// <summary>
-        /// Constructs a new instance of the <see cref="AllAdaptersCollection"/>.
-        /// </summary>
-        /// <param name="waitHandles">Wait handle dictionary.</param>
-        public AllAdaptersCollection(ConcurrentDictionary<string, AutoResetEvent> waitHandles)
-            : base(waitHandles)
         {
             base.Name = "All Adapters Collection";
         }
