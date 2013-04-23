@@ -104,6 +104,17 @@ namespace GSF.TimeSeries.UI
         /// </param>
         protected DataModelBase(bool loadDefaults, bool requireEntityPropertyAttribute)
         {
+            Action<PropertyInfo> propertyAction = property =>
+            {
+                object defaultValue = DeriveDefaultValue(property.Name, property.GetValue(this, null));
+
+                if (!Common.IsDefaultValue(defaultValue))
+                    property.SetValue(this, defaultValue, null);
+
+                OnPropertyChanged(property.Name);
+
+            };
+
             m_propertyErrors = new ConcurrentDictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
             m_memberAccessBindingFlags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly;
             m_requireEntityPropertyAttribute = requireEntityPropertyAttribute;
@@ -111,16 +122,7 @@ namespace GSF.TimeSeries.UI
             if (loadDefaults)
             {
                 // Load all default values for properties
-                ExecuteActionForProperties(property =>
-                {
-                    object defaultValue = DeriveDefaultValue(property.Name, property.GetValue(this, null));
-
-                    if (!Common.IsDefaultValue(defaultValue))
-                        property.SetValue(this, defaultValue, null);
-
-                    OnPropertyChanged(property.Name);
-
-                }, BindingFlags.SetProperty);
+                ExecuteActionForProperties(propertyAction, property => (object)property.GetGetMethod() != null && (object)property.GetSetMethod() != null);
             }
         }
 
@@ -318,16 +320,21 @@ namespace GSF.TimeSeries.UI
         /// Executes specified action over all public dervied class properties.
         /// </summary>
         /// <param name="propertyAction">Action to execute for all properties.</param>
-        /// <param name="isGetOrSet"><see cref="BindingFlags.GetProperty"/> or <see cref="BindingFlags.SetProperty"/>.</param>
+        /// <param name="propertyFilter">Filter used to select which properties to execute the action.</param>
         [EditorBrowsable(EditorBrowsableState.Advanced)]
-        protected void ExecuteActionForProperties(Action<PropertyInfo> propertyAction, BindingFlags isGetOrSet)
+        protected void ExecuteActionForProperties(Action<PropertyInfo> propertyAction, Func<PropertyInfo, bool> propertyFilter)
         {
+            PropertyInfo[] members = GetType()
+                .GetProperties(m_memberAccessBindingFlags)
+                .Where(propertyFilter)
+                .ToArray();
+
             ExecuteActionForMembers(property =>
             {
                 // Make sure only non-indexer properties are used for settings
                 if (property.GetIndexParameters().Length == 0)
                     propertyAction(property);
-            }, GetType().GetProperties(m_memberAccessBindingFlags | isGetOrSet));
+            }, members);
         }
 
         // Execute specified action over specified members
