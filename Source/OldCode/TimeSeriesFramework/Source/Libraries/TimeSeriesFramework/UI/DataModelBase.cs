@@ -87,12 +87,7 @@ namespace TimeSeriesFramework.UI
         /// </param>
         protected DataModelBase(bool requireEntityPropertyAttribute)
         {
-            m_propertyErrors = new ConcurrentDictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
-            m_memberAccessBindingFlags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly;
-            m_requireEntityPropertyAttribute = requireEntityPropertyAttribute;
-
-            // Load all default values for properties
-            ExecuteActionForProperties(property =>
+            Action<PropertyInfo> propertyAction = property =>
             {
                 object defaultValue = DeriveDefaultValue(property.Name, property.GetValue(this, null));
 
@@ -101,7 +96,14 @@ namespace TimeSeriesFramework.UI
 
                 OnPropertyChanged(property.Name);
 
-            }, BindingFlags.SetProperty);
+            };
+
+            m_propertyErrors = new ConcurrentDictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            m_memberAccessBindingFlags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly;
+            m_requireEntityPropertyAttribute = requireEntityPropertyAttribute;
+
+            // Load all default values for properties
+            ExecuteActionForProperties(propertyAction, property => (object)property.GetGetMethod() != null && (object)property.GetSetMethod() != null);
         }
 
         #endregion
@@ -296,16 +298,21 @@ namespace TimeSeriesFramework.UI
         /// Executes specified action over all public dervied class properties.
         /// </summary>
         /// <param name="propertyAction">Action to execute for all properties.</param>
-        /// <param name="isGetOrSet"><see cref="BindingFlags.GetProperty"/> or <see cref="BindingFlags.SetProperty"/>.</param>
+        /// <param name="propertyFilter">Filter used to select which properties to execute the action.</param>
         [EditorBrowsable(EditorBrowsableState.Advanced)]
-        protected void ExecuteActionForProperties(Action<PropertyInfo> propertyAction, BindingFlags isGetOrSet)
+        protected void ExecuteActionForProperties(Action<PropertyInfo> propertyAction, Func<PropertyInfo, bool> propertyFilter)
         {
+            PropertyInfo[] members = GetType()
+                .GetProperties()
+                .Where(propertyFilter)
+                .ToArray();
+
             ExecuteActionForMembers(property =>
             {
                 // Make sure only non-indexer properties are used for settings
                 if (property.GetIndexParameters().Length == 0)
                     propertyAction(property);
-            }, GetType().GetProperties(m_memberAccessBindingFlags | isGetOrSet));
+            }, members);
         }
 
         // Execute specified action over specified members
