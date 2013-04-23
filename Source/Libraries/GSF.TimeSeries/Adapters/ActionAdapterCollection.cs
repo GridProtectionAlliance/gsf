@@ -73,20 +73,9 @@ namespace GSF.TimeSeries.Adapters
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="ActionAdapterCollection"/>.
-        /// </summary>
-        public ActionAdapterCollection()
-            : this(null)
-        {
-            // When collection is spawned as an adapter, it needs a parameterless constructor
-        }
-
-        /// <summary>
         /// Constructs a new instance of the <see cref="ActionAdapterCollection"/>.
         /// </summary>
-        /// <param name="waitHandles">Wait handle dictionary.</param>
-        public ActionAdapterCollection(ConcurrentDictionary<string, AutoResetEvent> waitHandles)
-            : base(waitHandles)
+        public ActionAdapterCollection()
         {
             base.Name = "Action Adapter Collection";
             base.DataMember = "ActionAdapters";

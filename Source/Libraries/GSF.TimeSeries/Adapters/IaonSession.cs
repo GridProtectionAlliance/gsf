@@ -121,7 +121,6 @@ namespace GSF.TimeSeries.Adapters
         private InputAdapterCollection m_inputAdapters;
         private ActionAdapterCollection m_actionAdapters;
         private OutputAdapterCollection m_outputAdapters;
-        private ConcurrentDictionary<string, AutoResetEvent> m_waitHandles;
         private ConcurrentDictionary<object, string> m_derivedNameCache;
         private MeasurementKey[] m_inputMeasurementKeysRestriction;
         private bool m_useMeasurementRouting;
@@ -162,9 +161,6 @@ namespace GSF.TimeSeries.Adapters
             m_measurementDumpingThreshold = thresholdSettings["MeasurementDumpingThreshold"].ValueAsInt32();
             m_defaultSampleSizeWarningThreshold = thresholdSettings["DefaultSampleSizeWarningThreshold"].ValueAsInt32();
 
-            // Create a common wait handle dictionary for all adapters in this session
-            m_waitHandles = new ConcurrentDictionary<string, AutoResetEvent>(StringComparer.InvariantCultureIgnoreCase);
-
             // Create a cache for derived adapter names
             m_derivedNameCache = new ConcurrentDictionary<object, string>();
 
@@ -173,7 +169,7 @@ namespace GSF.TimeSeries.Adapters
             m_routingTables.ProcessException += m_routingTables_ProcessException;
 
             // Create a collection to manage all input, action and output adapter collections as a unit
-            m_allAdapters = new AllAdaptersCollection(m_waitHandles);
+            m_allAdapters = new AllAdaptersCollection();
 
             // Attach to common adapter events
             m_allAdapters.StatusMessage += StatusMessageHandler;
@@ -183,7 +179,7 @@ namespace GSF.TimeSeries.Adapters
             m_allAdapters.Disposed += DisposedHandler;
 
             // Create input adapters collection
-            m_inputAdapters = new InputAdapterCollection(m_waitHandles);
+            m_inputAdapters = new InputAdapterCollection();
 
             if (m_useMeasurementRouting)
                 m_inputAdapters.NewMeasurements += m_routingTables.RoutedMeasurementsHandler;
@@ -194,7 +190,7 @@ namespace GSF.TimeSeries.Adapters
             m_inputAdapters.ProcessingComplete += ProcessingCompleteHandler;
 
             // Create action adapters collection
-            m_actionAdapters = new ActionAdapterCollection(m_waitHandles);
+            m_actionAdapters = new ActionAdapterCollection();
 
             if (m_useMeasurementRouting)
                 m_actionAdapters.NewMeasurements += m_routingTables.RoutedMeasurementsHandler;
@@ -206,7 +202,7 @@ namespace GSF.TimeSeries.Adapters
             m_actionAdapters.Notify += m_routingTables.NotifyHandler;
 
             // Create output adapters collection
-            m_outputAdapters = new OutputAdapterCollection(m_waitHandles);
+            m_outputAdapters = new OutputAdapterCollection();
             m_outputAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
             m_outputAdapters.UnprocessedMeasurements += UnprocessedMeasurementsHandler;
             m_outputAdapters.Notify += m_routingTables.NotifyHandler;
@@ -517,19 +513,6 @@ namespace GSF.TimeSeries.Adapters
                             m_routingTables.Dispose();
                         }
                         m_routingTables = null;
-
-                        // Dispose of wait handle dictionary
-                        if (m_waitHandles != null)
-                        {
-                            foreach (AutoResetEvent waitHandle in m_waitHandles.Values)
-                            {
-                                if (waitHandle != null)
-                                    waitHandle.Dispose();
-                            }
-
-                            m_waitHandles.Clear();
-                        }
-                        m_waitHandles = null;
 
                         if ((object)dataSource != null)
                             dataSource.Dispose();

@@ -61,17 +61,6 @@ namespace GSF.TimeSeries.Adapters
         /// Creates a new <see cref="OutputAdapterCollection"/>.
         /// </summary>
         public OutputAdapterCollection()
-            : this(null)
-        {
-            // When collection is spawned as an adapter, it needs a parameterless constructor
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="OutputAdapterCollection"/>.
-        /// </summary>
-        /// <param name="waitHandles">Wait handle dictionary.</param>
-        public OutputAdapterCollection(ConcurrentDictionary<string, AutoResetEvent> waitHandles)
-            : base(waitHandles)
         {
             base.Name = "Output Adapter Collection";
             base.DataMember = "OutputAdapters";
