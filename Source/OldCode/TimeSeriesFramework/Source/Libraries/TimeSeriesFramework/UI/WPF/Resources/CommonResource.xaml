@@ -410,6 +410,7 @@
     <conv:RoleBasedVisibilityConverter x:Key="RoleBasedVisibilityConverter" />
     <conv:StringToStatusColorConverter x:Key="StringToStatusColorConverter" />
     <conv:StringToBooleanConverter x:Key="StringToBooleanConverter"/>
+    <conv:IndexToBooleanConverter x:Key="IndexToBooleanConverter"/>
     
     <ControlTemplate x:Key="HyperlinkStyleButtonTemplate" TargetType="Button">
         <TextBlock Text="{TemplateBinding Content}" TextDecorations="Underline" Cursor="Hand" 
