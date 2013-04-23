@@ -62,6 +62,7 @@
     <Compile Include="Binding\DataOperation.cs" />
     <Compile Include="Binding\GridButtonCommand.cs" />
     <Compile Include="CommonFunctions.cs" />
+    <Compile Include="Converters\IndexToBooleanConverter.cs" />
     <Compile Include="Converters\DictionaryToKeyValuePairConverter.cs" />
     <Compile Include="Converters\NotConverter.cs" />
     <Compile Include="Converters\ObjectToVisibilityConverter.cs" />
