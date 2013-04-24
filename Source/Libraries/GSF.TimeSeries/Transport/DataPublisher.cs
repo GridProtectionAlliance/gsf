@@ -53,6 +53,7 @@ using System.Xml;
 using GSF.Communication;
 using GSF.Configuration;
 using GSF.Data;
+using GSF.IO;
 using GSF.Net.Security;
 using GSF.Security.Cryptography;
 using GSF.TimeSeries.Adapters;
@@ -162,7 +163,14 @@ namespace GSF.TimeSeries.Transport
         /// As soon as connection is established, requests that server set operational
         /// modes that affect how the subscriber and publisher will communicate.
         /// </remarks>
-        DefineOperationalModes = 0x06
+        DefineOperationalModes = 0x06,
+        /// <summary>
+        /// Confirm receipt of a notification.
+        /// </summary>
+        /// <remarks>
+        /// This message is sent in response to <see cref="ServerResponse.Notify"/>.
+        /// </remarks>
+        ConfirmNotification = 0x07
     }
 
     /// <summary>
@@ -236,6 +244,13 @@ namespace GSF.TimeSeries.Transport
         /// Unsolicited response informs client that a raw buffer block follows.
         /// </remarks>
         BufferBlock = 0x88,
+        /// <summary>
+        /// Notify response.
+        /// </summary>
+        /// <remarks>
+        /// Unsolicited response provides a notification message to the client.
+        /// </remarks>
+        Notify = 0x89,
         /// <summary>
         /// No operation keep-alive ping.
         /// </summary>
@@ -552,6 +567,8 @@ namespace GSF.TimeSeries.Transport
         private ConcurrentDictionary<Guid, ClientConnection> m_clientConnections;
         private ConcurrentDictionary<Guid, IServer> m_clientPublicationChannels;
         private ConcurrentDictionary<MeasurementKey, Guid> m_signalIDCache;
+        private Dictionary<Guid, Dictionary<int, string>> m_clientNotifications;
+        private object m_clientNotificationsLock;
         private System.Timers.Timer m_commandChannelRestartTimer;
         private System.Timers.Timer m_cipherKeyRotationTimer;
         private RoutingTables m_routingTables;
@@ -596,6 +613,8 @@ namespace GSF.TimeSeries.Transport
             m_clientConnections = new ConcurrentDictionary<Guid, ClientConnection>();
             m_clientPublicationChannels = new ConcurrentDictionary<Guid, IServer>();
             m_signalIDCache = new ConcurrentDictionary<MeasurementKey, Guid>();
+            m_clientNotifications = new Dictionary<Guid, Dictionary<int, string>>();
+            m_clientNotificationsLock = new object();
             m_securityMode = DefaultSecurityMode;
             m_encryptPayload = DefaultEncryptPayload;
             m_sharedDatabase = DefaultSharedDatabase;
@@ -879,6 +898,7 @@ namespace GSF.TimeSeries.Transport
                 base.DataSource = value;
 
                 UpdateRights();
+                UpdateClientNotifications();
                 UpdateLatestMeasurementCache();
                 UpdateCertificateChecker();
             }
@@ -1504,6 +1524,27 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Sends a notification to all subscribers.
+        /// </summary>
+        /// <param name="message">The message to be sent.</param>
+        [AdapterCommand("Sends a notification to all subscribers.")]
+        public virtual void SendNotification(string message)
+        {
+            string notification = string.Format("[{0}] {1}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), message);
+
+            lock (m_clientNotificationsLock)
+            {
+                foreach (Dictionary<int, string> notifications in m_clientNotifications.Values)
+                    notifications.Add(notification.GetHashCode(), notification);
+
+                SerializeClientNotifications();
+                SendAllNotifications();
+            }
+
+            OnStatusMessage("Sent notification: {0}", message);
+        }
+
+        /// <summary>
         /// Updates signal index cache based on input measurement keys.
         /// </summary>
         /// <param name="clientID">Client ID of connection over which to update signal index cache.</param>
@@ -1595,6 +1636,106 @@ namespace GSF.TimeSeries.Transport
             }
 
             m_routingTables.CalculateRoutingTables(null);
+        }
+
+        private void UpdateClientNotifications()
+        {
+            Guid subscriberID;
+
+            lock (m_clientNotificationsLock)
+            {
+                m_clientNotifications.Clear();
+
+                foreach (DataRow row in DataSource.Tables["Subscribers"].Rows)
+                {
+                    if (Guid.TryParse(row["ID"].ToNonNullString(), out subscriberID))
+                        m_clientNotifications.Add(subscriberID, new Dictionary<int, string>());
+                }
+
+                DeserializeClientNotifications();
+            }
+        }
+
+        private void SerializeClientNotifications()
+        {
+            string notificationsFileName = FilePath.GetAbsolutePath(string.Format("{0}Notifications.txt", Name));
+
+            // Delete existing file for reserialization
+            if (File.Exists(notificationsFileName))
+                File.Delete(notificationsFileName);
+
+            using (FileStream fileStream = File.OpenWrite(notificationsFileName))
+            using (TextWriter writer = new StreamWriter(fileStream))
+            {
+                foreach (KeyValuePair<Guid, Dictionary<int, string>> pair in m_clientNotifications)
+                {
+                    foreach (string notification in pair.Value.Values)
+                        writer.WriteLine("{0},{1}", pair.Key, notification);
+                }
+            }
+        }
+
+        private void DeserializeClientNotifications()
+        {
+            string notificationsFileName = FilePath.GetAbsolutePath(string.Format("{0}Notifications.txt", Name));
+            Dictionary<int, string> notifications;
+            string notification;
+            Guid subscriberID;
+
+            if (File.Exists(notificationsFileName))
+            {
+                using (FileStream fileStream = File.OpenRead(notificationsFileName))
+                using (TextReader reader = new StreamReader(fileStream))
+                {
+                    string line = reader.ReadLine();
+
+                    while ((object)line != null)
+                    {
+                        int separatorIndex = line.IndexOf(',');
+
+                        if (Guid.TryParse(line.Substring(0, separatorIndex), out subscriberID))
+                        {
+                            if (m_clientNotifications.TryGetValue(subscriberID, out notifications))
+                            {
+                                notification = line.Substring(separatorIndex + 1);
+                                notifications.Add(notification.GetHashCode(), notification);
+                            }
+                        }
+
+                        line = reader.ReadLine();
+                    }
+                }
+            }
+        }
+
+        private void SendAllNotifications()
+        {
+            foreach (ClientConnection connection in m_clientConnections.Values)
+                SendNotifications(connection);
+        }
+
+        private void SendNotifications(ClientConnection connection)
+        {
+            Dictionary<int, string> notifications;
+            byte[] hash;
+            byte[] message;
+
+            using (MemoryStream buffer = new MemoryStream())
+            {
+                if (m_clientNotifications.TryGetValue(connection.SubscriberID, out notifications))
+                {
+                    foreach (KeyValuePair<int, string> pair in notifications)
+                    {
+                        hash = EndianOrder.BigEndian.GetBytes(pair.Key);
+                        message = connection.Encoding.GetBytes(pair.Value);
+
+                        buffer.Write(hash, 0, hash.Length);
+                        buffer.Write(message, 0, message.Length);
+                        SendClientResponse(connection.ClientID, ServerResponse.Notify, ServerCommand.Subscribe, buffer.ToArray());
+                        buffer.Position = 0;
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -2308,6 +2449,7 @@ namespace GSF.TimeSeries.Transport
                                     message = string.Format("Registered subscriber \"{0}\" {1} was successfully authenticated.", connection.SubscriberName, connection.ConnectionID);
                                     SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.Authenticate, message);
                                     OnStatusMessage(message);
+                                    SendNotifications(connection);
                                 }
                                 else
                                 {
@@ -2771,6 +2913,42 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
+        // Handle confirmation of receipt of notification
+        private void HandleConfirmNotification(ClientConnection connection, byte[] buffer, int startIndex, int length)
+        {
+            int hash = EndianOrder.BigEndian.ToInt32(buffer, startIndex);
+            Dictionary<int, string> notifications;
+            string notification;
+
+            if (length >= 4)
+            {
+                lock (m_clientNotificationsLock)
+                {
+                    if (m_clientNotifications.TryGetValue(connection.SubscriberID, out notifications))
+                    {
+                        if (notifications.TryGetValue(hash, out notification))
+                        {
+                            notifications.Remove(hash);
+                            OnStatusMessage("Subscriber {0} confirmed receipt of notification: {1}.", connection.ConnectionID, notification);
+                            SerializeClientNotifications();
+                        }
+                        else
+                        {
+                            OnStatusMessage("Confirmation for unknown notification received from client {0}.", connection.ConnectionID);
+                        }
+                    }
+                    else
+                    {
+                        OnStatusMessage("Unsolicited confirmation of notification received.");
+                    }
+                }
+            }
+            else
+            {
+                OnStatusMessage("Malformed notification confirmation received.");
+            }
+        }
+
         private byte[] SerializeSignalIndexCache(Guid clientID, SignalIndexCache signalIndexCache)
         {
             byte[] serializedSignalIndexCache = null;
@@ -3023,6 +3201,10 @@ namespace GSF.TimeSeries.Transport
                                 // Handle request to define operational modes
                                 HandleDefineOperationalModes(connection, buffer, index, length);
                                 break;
+                            case ServerCommand.ConfirmNotification:
+                                // Handle confirmation of receipt of notification
+                                HandleConfirmNotification(connection, buffer, index, length);
+                                break;
                         }
                     }
                     else
@@ -3052,6 +3234,9 @@ namespace GSF.TimeSeries.Transport
             m_clientConnections[clientID] = connection;
 
             OnStatusMessage("Client connected to command channel.");
+
+            if (!RequireAuthentication || connection.Authenticated)
+                SendNotifications(connection);
         }
 
         private void m_commandChannel_ClientDisconnected(object sender, EventArgs<Guid> e)

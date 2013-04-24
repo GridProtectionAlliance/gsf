@@ -2005,6 +2005,16 @@ namespace GSF.TimeSeries.Transport
 
                             OnStatusMessage("Successfully established new cipher keys for data packet transmissions.");
                             break;
+                        case ServerResponse.Notify:
+                            // Skip the 4-byte hash
+                            string message = m_encoding.GetString(buffer, responseIndex + 4, responseLength - 4);
+
+                            // Display notification
+                            OnStatusMessage("NOTIFICATION: {0}", message);
+
+                            // Send confirmation of receipt of the notification
+                            SendServerCommand(ServerCommand.ConfirmNotification, buffer.BlockCopy(responseIndex, 4));
+                            break;
                     }
                 }
                 catch (Exception ex)
