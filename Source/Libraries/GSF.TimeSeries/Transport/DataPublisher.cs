@@ -2449,7 +2449,12 @@ namespace GSF.TimeSeries.Transport
                                     message = string.Format("Registered subscriber \"{0}\" {1} was successfully authenticated.", connection.SubscriberName, connection.ConnectionID);
                                     SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.Authenticate, message);
                                     OnStatusMessage(message);
-                                    SendNotifications(connection);
+
+                                    lock (m_clientNotificationsLock)
+                                    {
+                                        // Send any queued notifications to authenticated client
+                                        SendNotifications(connection);
+                                    }
                                 }
                                 else
                                 {
@@ -3235,8 +3240,14 @@ namespace GSF.TimeSeries.Transport
 
             OnStatusMessage("Client connected to command channel.");
 
-            if (!RequireAuthentication || connection.Authenticated)
-                SendNotifications(connection);
+            if (connection.Authenticated)
+            {
+                lock (m_clientNotificationsLock)
+                {
+                    // Send any queued notifications to authenticated client
+                    SendNotifications(connection);
+                }
+            }
         }
 
         private void m_commandChannel_ClientDisconnected(object sender, EventArgs<Guid> e)
