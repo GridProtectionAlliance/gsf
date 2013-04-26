@@ -63,6 +63,14 @@ namespace GSF.TimeSeries.Transport
         private volatile bool m_useCompactMeasurementFormat;
         private volatile bool m_startTimeSent;
         private IaonSession m_iaonSession;
+
+        private List<byte[]> m_bufferBlockCache;
+        private object m_bufferBlockCacheLock;
+        private uint m_bufferBlockSequenceNumber;
+        private uint m_expectedBufferBlockConfirmationNumber;
+        private System.Timers.Timer m_bufferBlockRetransmissionTimer;
+        private double m_bufferBlockRetransmissionTimeout;
+
         private bool m_disposed;
 
         #endregion
@@ -87,6 +95,9 @@ namespace GSF.TimeSeries.Transport
             {
                 SubscriberID = subscriberID
             };
+
+            m_bufferBlockCache = new List<byte[]>();
+            m_bufferBlockCacheLock = new object();
         }
 
         #endregion
@@ -343,11 +354,23 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public override void Initialize()
         {
+            string setting;
+
             base.Initialize();
             base.UsePrecisionTimer = false;
 
             if (!Settings.TryGetValue("inputMeasurementKeys", out m_requestedInputFilter))
                 m_requestedInputFilter = null;
+
+            if (Settings.TryGetValue("bufferBlockRetransmissionTimeout", out setting))
+                m_bufferBlockRetransmissionTimeout = double.Parse(setting);
+            else
+                m_bufferBlockRetransmissionTimeout = 5.0D;
+
+            m_bufferBlockRetransmissionTimer = new System.Timers.Timer();
+            m_bufferBlockRetransmissionTimer.AutoReset = false;
+            m_bufferBlockRetransmissionTimer.Interval = m_bufferBlockRetransmissionTimeout;
+            m_bufferBlockRetransmissionTimer.Elapsed += BufferBlockRetransmissionTimer_Elapsed;
 
             // Handle temporal session initialization
             if (this.TemporalConstraintIsDefined())
@@ -413,6 +436,60 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Handles the confirmation message received from the
+        /// subscriber to indicate that a buffer block was received.
+        /// </summary>
+        /// <param name="sequenceNumber">The sequence number of the buffer block.</param>
+        /// <returns>A list of buffer block sequence numbers for blocks that need to be retransmitted.</returns>
+        public void ConfirmBufferBlock(uint sequenceNumber)
+        {
+            int sequenceIndex;
+            int removalCount;
+
+            // We are still receiving confirmations,
+            // so stop the retransmission timer
+            m_bufferBlockRetransmissionTimer.Stop();
+
+            lock (m_bufferBlockCacheLock)
+            {
+                // Find the buffer block's location in the cache
+                sequenceIndex = (int)(sequenceNumber - m_expectedBufferBlockConfirmationNumber);
+
+                if (sequenceIndex >= 0 && sequenceIndex < m_bufferBlockCache.Count && (object)m_bufferBlockCache[sequenceIndex] != null)
+                {
+                    // Remove the confirmed block from the cache
+                    m_bufferBlockCache[sequenceIndex] = null;
+
+                    if (sequenceNumber == m_expectedBufferBlockConfirmationNumber)
+                    {
+                        // Get the number of elements to trim from the start of the cache
+                        removalCount = m_bufferBlockCache.TakeWhile(m => (object)m == null).Count();
+
+                        // Trim the cache
+                        m_bufferBlockCache.RemoveRange(0, removalCount);
+
+                        // Increase the expected confirmation number
+                        m_expectedBufferBlockConfirmationNumber += (uint)removalCount;
+                    }
+                    else
+                    {
+                        // Retransmit if confirmations are received out of order
+                        for (int i = 0; i < sequenceIndex; i++)
+                        {
+                            if ((object)m_bufferBlockCache[i] != null)
+                                m_parent.SendClientResponse(m_clientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, m_bufferBlockCache[i]);
+                        }
+                    }
+                }
+
+                // If there are any objects lingering in the
+                // cache, start the retransmission timer
+                if (m_bufferBlockCache.Count > 0)
+                    m_bufferBlockRetransmissionTimer.Start();
+            }
+        }
+
+        /// <summary>
         /// Publish <see cref="IFrame"/> of time-aligned collection of <see cref="IMeasurement"/> values that arrived within the
         /// concentrator's defined <see cref="ConcentratorBase.LagTime"/>.
         /// </summary>
@@ -444,10 +521,31 @@ namespace GSF.TimeSeries.Transport
 
                 if ((object)bufferBlockMeasurement != null)
                 {
+                    // Still sending buffer block measurements to client; we are expecting
+                    // confirmations which will indicate whether retransmission is necessary,
+                    // so we will restart the retransmission timer
+                    m_bufferBlockRetransmissionTimer.Stop();
+
                     // Handle buffer block measurements as a special case - this can be any kind of data,
                     // measurement subscriber will need to know how to interpret buffer
-                    bufferBlock = bufferBlockMeasurement.Buffer.BlockCopy(0, bufferBlockMeasurement.Length);
+                    bufferBlock = new byte[4 + bufferBlockMeasurement.Length];
+
+                    // Prepend sequence number
+                    EndianOrder.BigEndian.CopyBytes(m_bufferBlockSequenceNumber, bufferBlock, 0);
+                    m_bufferBlockSequenceNumber++;
+
+                    // Append measurement data and send
+                    Buffer.BlockCopy(bufferBlockMeasurement.Buffer, 0, bufferBlock, 4, bufferBlockMeasurement.Length);
                     m_parent.SendClientResponse(m_clientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, bufferBlock);
+
+                    lock (m_bufferBlockCacheLock)
+                    {
+                        // Cache buffer block for retransmission
+                        m_bufferBlockCache.Add(bufferBlock);
+                    }
+
+                    // Start the retransmission timer in case we never receive a confirmation
+                    m_bufferBlockRetransmissionTimer.Start();
                 }
                 else
                 {
@@ -523,6 +621,22 @@ namespace GSF.TimeSeries.Transport
             // Publish data packet to client
             if (m_parent != null)
                 m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, data.ToArray());
+        }
+
+        // Retransmits all buffer blocks for which confirmation has not yet been received
+        private void BufferBlockRetransmissionTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs elapsedEventArgs)
+        {
+            lock (m_bufferBlockCacheLock)
+            {
+                foreach (byte[] bufferBlock in m_bufferBlockCache)
+                {
+                    if ((object)bufferBlock != null)
+                        m_parent.SendClientResponse(m_clientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, bufferBlock);
+                }
+            }
+
+            // Restart the retransmission timer
+            m_bufferBlockRetransmissionTimer.Start();
         }
 
         // Explicitly implement status message event bubbler to satisfy IClientSubscription interface

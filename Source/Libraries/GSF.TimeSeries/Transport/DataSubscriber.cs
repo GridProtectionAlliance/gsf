@@ -210,6 +210,10 @@ namespace GSF.TimeSeries.Transport
         private OperationalModes m_operationalModes;
         private Encoding m_encoding;
 
+        private List<BufferBlockMeasurement> m_bufferBlockCache;
+        private object m_bufferBlockCacheLock;
+        private uint m_expectedBufferBlockSequenceNumber;
+
         private long m_lifetimeMeasurements;
         private long m_minimumMeasurementsPerSecond;
         private long m_maximumMeasurementsPerSecond;
@@ -237,6 +241,9 @@ namespace GSF.TimeSeries.Transport
             m_encoding = Encoding.Unicode;
             m_operationalModes = DefaultOperationalModes;
             DataLossInterval = 10.0D;
+
+            m_bufferBlockCache = new List<BufferBlockMeasurement>();
+            m_bufferBlockCacheLock = new object();
         }
 
         #endregion
@@ -1920,7 +1927,58 @@ namespace GSF.TimeSeries.Transport
                             break;
                         case ServerResponse.BufferBlock:
                             // Buffer block received - wrap as a buffer block measurement and expose back to consumer
-                            OnNewMeasurements(new IMeasurement[] { new BufferBlockMeasurement(buffer, responseIndex, responseLength) });
+                            uint sequenceNumber = EndianOrder.BigEndian.ToUInt32(buffer, responseIndex);
+                            int cacheIndex = (int)(sequenceNumber - m_expectedBufferBlockSequenceNumber);
+                            BufferBlockMeasurement bufferBlockMeasurement;
+
+                            // Check if this buffer block has already been processed (e.g., mistaken retransmission due to timeout)
+                            if (cacheIndex >= 0 && (cacheIndex >= m_bufferBlockCache.Count || (object)m_bufferBlockCache[cacheIndex] == null))
+                            {
+                                // Send confirmation that buffer block is received
+                                SendServerCommand(ServerCommand.ConfirmBufferBlock, buffer.BlockCopy(responseIndex, 4));
+
+                                // Skip the sequence number when creating the buffer block measurement
+                                bufferBlockMeasurement = new BufferBlockMeasurement(buffer, 4 + responseIndex, responseLength - 4);
+
+                                // Determine if this is the next buffer block in the sequence
+                                if (sequenceNumber == m_expectedBufferBlockSequenceNumber)
+                                {
+                                    List<IMeasurement> bufferBlockMeasurements = new List<IMeasurement>();
+                                    int i;
+
+                                    // Add the buffer block measurement to the list of measurements to be published
+                                    bufferBlockMeasurements.Add(bufferBlockMeasurement);
+                                    m_expectedBufferBlockSequenceNumber++;
+
+                                    // Add cached buffer block measurements to the list of measurements to be published
+                                    for (i = 1; i < m_bufferBlockCache.Count; i++)
+                                    {
+                                        if ((object)m_bufferBlockCache[i] == null)
+                                            break;
+
+                                        bufferBlockMeasurements.Add(m_bufferBlockCache[i]);
+                                        m_expectedBufferBlockSequenceNumber++;
+                                    }
+
+                                    // Remove published measurements from the buffer block queue
+                                    if (m_bufferBlockCache.Count > 0)
+                                        m_bufferBlockCache.RemoveRange(0, i);
+
+                                    // Publish measurements
+                                    OnNewMeasurements(bufferBlockMeasurements);
+                                }
+                                else
+                                {
+                                    // Ensure that the list has at least as many
+                                    // elements as it needs to cache this measurement
+                                    for (int i = m_bufferBlockCache.Count; i <= cacheIndex; i++)
+                                        m_bufferBlockCache.Add(null);
+
+                                    // Insert this buffer block into the proper location in the list
+                                    m_bufferBlockCache[cacheIndex] = bufferBlockMeasurement;
+                                }
+                            }
+
                             m_lifetimeMeasurements += 1;
                             UpdateMeasurementsPerSecond(1);
                             break;

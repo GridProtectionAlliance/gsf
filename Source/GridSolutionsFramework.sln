@@ -215,9 +215,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigurationCacher", "Tool
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PIAdapters", "Libraries\Adapters\PIAdapters\PIAdapters.csproj", "{8BDA86DB-B944-4880-9D97-E4FF04577C03}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileAdapters", "Libraries\Adapters\FileAdapters\FileAdapters.csproj", "{08F5CCE4-10C4-477C-B5C9-37F7D49748BC}"
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 65
+		SccNumberOfProjects = 66
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs07
 		SccLocalPath0 = .
@@ -477,6 +479,10 @@ Global
 		SccProjectTopLevelParentUniqueName64 = GridSolutionsFramework.sln
 		SccProjectName64 = Libraries/Adapters/PIAdapters
 		SccLocalPath64 = Libraries\\Adapters\\PIAdapters
+		SccProjectUniqueName65 = Libraries\\Adapters\\FileAdapters\\FileAdapters.csproj
+		SccProjectTopLevelParentUniqueName65 = GridSolutionsFramework.sln
+		SccProjectName65 = Libraries/Adapters/FileAdapters
+		SccLocalPath65 = Libraries\\Adapters\\FileAdapters
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = GSF.Core.Tests.vsmdi
@@ -1162,6 +1168,17 @@ Global
 		{8BDA86DB-B944-4880-9D97-E4FF04577C03}.Mono|x86.ActiveCfg = Release|Any CPU
 		{8BDA86DB-B944-4880-9D97-E4FF04577C03}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8BDA86DB-B944-4880-9D97-E4FF04577C03}.Release|x86.ActiveCfg = Release|Any CPU
+		{08F5CCE4-10C4-477C-B5C9-37F7D49748BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08F5CCE4-10C4-477C-B5C9-37F7D49748BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08F5CCE4-10C4-477C-B5C9-37F7D49748BC}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{08F5CCE4-10C4-477C-B5C9-37F7D49748BC}.Debug|x86.Build.0 = Debug|Any CPU
+		{08F5CCE4-10C4-477C-B5C9-37F7D49748BC}.Mono|Any CPU.ActiveCfg = Release|Any CPU
+		{08F5CCE4-10C4-477C-B5C9-37F7D49748BC}.Mono|Any CPU.Build.0 = Release|Any CPU
+		{08F5CCE4-10C4-477C-B5C9-37F7D49748BC}.Mono|x86.ActiveCfg = Release|Any CPU
+		{08F5CCE4-10C4-477C-B5C9-37F7D49748BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08F5CCE4-10C4-477C-B5C9-37F7D49748BC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08F5CCE4-10C4-477C-B5C9-37F7D49748BC}.Release|x86.ActiveCfg = Release|Any CPU
+		{08F5CCE4-10C4-477C-B5C9-37F7D49748BC}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1237,6 +1254,7 @@ Global
 		{B74CF4DA-2972-489B-AF08-419560EE57EF} = {2E8D7CE0-8816-4893-848B-05E2A38FE898}
 		{C4F3C41D-D76A-4283-8732-681B67B7AD74} = {2E8D7CE0-8816-4893-848B-05E2A38FE898}
 		{8BDA86DB-B944-4880-9D97-E4FF04577C03} = {2E8D7CE0-8816-4893-848B-05E2A38FE898}
+		{08F5CCE4-10C4-477C-B5C9-37F7D49748BC} = {2E8D7CE0-8816-4893-848B-05E2A38FE898}
 		{62B8EC34-3208-4A64-9292-DB32C0A2F02A} = {00B924AB-0DC8-4826-8A63-3263E39C2EBF}
 		{7C825A52-3ADB-40BD-8D49-1519A4D534A1} = {0C19430B-01AC-4184-ACDA-6DE690649CD8}
 		{4508009C-7011-4981-B35F-594F42CC0D1F} = {0C19430B-01AC-4184-ACDA-6DE690649CD8}

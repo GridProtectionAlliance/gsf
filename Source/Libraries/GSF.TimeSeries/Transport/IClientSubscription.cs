@@ -125,6 +125,14 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Handles the confirmation message received from the
+        /// subscriber to indicate that a buffer block was received.
+        /// </summary>
+        /// <param name="sequenceNumber">The sequence number of the buffer block.</param>
+        /// <returns>A list of buffer block sequence numbers for blocks that need to be retransmitted.</returns>
+        void ConfirmBufferBlock(uint sequenceNumber);
+
+        /// <summary>
         /// Explicitly raises the <see cref="IAdapter.StatusMessage"/> event.
         /// </summary>
         /// <param name="status">New status message.</param>

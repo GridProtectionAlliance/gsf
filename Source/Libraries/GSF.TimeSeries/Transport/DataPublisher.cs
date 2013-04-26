@@ -170,7 +170,14 @@ namespace GSF.TimeSeries.Transport
         /// <remarks>
         /// This message is sent in response to <see cref="ServerResponse.Notify"/>.
         /// </remarks>
-        ConfirmNotification = 0x07
+        ConfirmNotification = 0x07,
+        /// <summary>
+        /// Confirm receipt of a buffer block measurement.
+        /// </summary>
+        /// <remarks>
+        /// This message is sent in response to <see cref="ServerResponse.BufferBlock"/>.
+        /// </remarks>
+        ConfirmBufferBlock = 0x08
     }
 
     /// <summary>
@@ -2954,6 +2961,17 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
+        private void HandleConfirmBufferBlock(ClientConnection connection, byte[] buffer, int startIndex, int length)
+        {
+            uint sequenceNumber;
+
+            if (length >= 4)
+            {
+                sequenceNumber = EndianOrder.BigEndian.ToUInt32(buffer, startIndex);
+                connection.Subscription.ConfirmBufferBlock(sequenceNumber);
+            }
+        }
+
         private byte[] SerializeSignalIndexCache(Guid clientID, SignalIndexCache signalIndexCache)
         {
             byte[] serializedSignalIndexCache = null;
@@ -3209,6 +3227,10 @@ namespace GSF.TimeSeries.Transport
                             case ServerCommand.ConfirmNotification:
                                 // Handle confirmation of receipt of notification
                                 HandleConfirmNotification(connection, buffer, index, length);
+                                break;
+                            case ServerCommand.ConfirmBufferBlock:
+                                // Handle confirmation of receipt of a buffer block
+                                HandleConfirmBufferBlock(connection, buffer, index, length);
                                 break;
                         }
                     }
