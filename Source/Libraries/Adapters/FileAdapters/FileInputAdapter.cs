@@ -245,12 +245,12 @@ namespace FileAdapters
 
             m_watchTimer = new Timer();
             m_watchTimer.AutoReset = false;
-            m_watchTimer.Interval = m_watchInterval;
+            m_watchTimer.Interval = m_watchInterval * 1000.0D;
             m_watchTimer.Elapsed += WatchTimer_Elapsed;
 
             m_processTimer = new Timer();
             m_processTimer.AutoReset = false;
-            m_processTimer.Interval = m_processInterval;
+            m_processTimer.Interval = m_processInterval * 1000.0D;
             m_processTimer.Elapsed += ProcessTimer_Elapsed;
         }
 
