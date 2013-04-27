@@ -44,6 +44,8 @@ namespace FileAdapters
         private long m_activeFileSize;
         private long m_bytesWritten;
 
+        private bool m_disposed;
+
         #endregion
 
         #region [ Properties ]
@@ -109,6 +111,9 @@ namespace FileAdapters
                 throw new ArgumentException(string.Format(errorMessage, "outputDirectory"));
 
             m_outputDirectory = FilePath.GetAbsolutePath(setting);
+
+            if (!Directory.Exists(m_outputDirectory))
+                Directory.CreateDirectory(m_outputDirectory);
         }
 
         /// <summary>
@@ -199,6 +204,33 @@ namespace FileAdapters
                     m_activeFileStream.Dispose();
                     m_activeFileStream = null;
                     m_bytesWritten = 0L;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="FileOutputAdapter"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        if ((object)m_activeFileStream != null)
+                        {
+                            m_activeFileStream.Dispose();
+                            m_activeFileStream = null;
+                        }
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
                 }
             }
         }

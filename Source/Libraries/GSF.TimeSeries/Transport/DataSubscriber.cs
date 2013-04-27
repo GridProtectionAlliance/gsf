@@ -1935,6 +1935,8 @@ namespace GSF.TimeSeries.Transport
                             uint sequenceNumber = EndianOrder.BigEndian.ToUInt32(buffer, responseIndex);
                             int cacheIndex = (int)(sequenceNumber - m_expectedBufferBlockSequenceNumber);
                             BufferBlockMeasurement bufferBlockMeasurement;
+                            Tuple<Guid, string, uint> measurementKey;
+                            ushort signalIndex;
 
                             // Check if this buffer block has already been processed (e.g., mistaken retransmission due to timeout)
                             if (cacheIndex >= 0 && (cacheIndex >= m_bufferBlockCache.Count || (object)m_bufferBlockCache[cacheIndex] == null))
@@ -1942,8 +1944,18 @@ namespace GSF.TimeSeries.Transport
                                 // Send confirmation that buffer block is received
                                 SendServerCommand(ServerCommand.ConfirmBufferBlock, buffer.BlockCopy(responseIndex, 4));
 
-                                // Skip the sequence number when creating the buffer block measurement
-                                bufferBlockMeasurement = new BufferBlockMeasurement(buffer, 4 + responseIndex, responseLength - 4);
+                                // Get measurement key from signal index cache
+                                signalIndex = EndianOrder.BigEndian.ToUInt16(buffer, responseIndex + 4);
+
+                                if (!m_signalIndexCache.Reference.TryGetValue(signalIndex, out measurementKey))
+                                    throw new InvalidOperationException("Failed to find associated signal identification for runtime ID " + signalIndex);
+
+                                // Skip the sequence number and signal index when creating the buffer block measurement
+                                bufferBlockMeasurement = new BufferBlockMeasurement(buffer, responseIndex + 6, responseLength - 6)
+                                {
+                                    ID = measurementKey.Item1,
+                                    Key = new MeasurementKey(measurementKey.Item1, measurementKey.Item3, measurementKey.Item2)
+                                };
 
                                 // Determine if this is the next buffer block in the sequence
                                 if (sequenceNumber == m_expectedBufferBlockSequenceNumber)

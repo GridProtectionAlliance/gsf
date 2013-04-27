@@ -61,6 +61,8 @@ namespace FileAdapters
         private Timer m_processTimer;
         private byte[] m_buffer;
 
+        private bool m_disposed;
+
         #endregion
 
         #region [ Constructors ]
@@ -238,6 +240,9 @@ namespace FileAdapters
             if (!settings.TryGetValue("processInterval", out setting) || !double.TryParse(setting, out m_processInterval))
                 m_processInterval = DefaultProcessInterval;
 
+            if (!Directory.Exists(m_watchDirectory))
+                Directory.CreateDirectory(m_watchDirectory);
+
             m_watchTimer = new Timer();
             m_watchTimer.AutoReset = false;
             m_watchTimer.Interval = m_watchInterval;
@@ -287,6 +292,12 @@ namespace FileAdapters
         {
             m_watchTimer.Stop();
             m_processTimer.Stop();
+
+            if ((object)m_activeFileStream != null)
+            {
+                m_activeFileStream.Dispose();
+                m_activeFileStream = null;
+            }
         }
 
         // Scans the watch folder for new files to transfer
@@ -323,7 +334,7 @@ namespace FileAdapters
                     m_buffer[0] = 0;
 
                     // Read a block into memory
-                    bytesRead = 1 + m_activeFileStream.Read(m_buffer, 1, m_blockSize);
+                    bytesRead = 1 + m_activeFileStream.Read(m_buffer, 1, m_blockSize - 1);
 
                     if (bytesRead == 1)
                     {
@@ -385,6 +396,33 @@ namespace FileAdapters
         private void OnNewMeasurement(IMeasurement measurement)
         {
             OnNewMeasurements(new IMeasurement[] { measurement });
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="FileInputAdapter"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        if ((object)m_activeFileStream != null)
+                        {
+                            m_activeFileStream.Dispose();
+                            m_activeFileStream = null;
+                        }
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
+                }
+            }
         }
 
         #endregion
