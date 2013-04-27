@@ -168,6 +168,11 @@ namespace GSF.TimeSeries.Transport
         public new event EventHandler<EventArgs<string>> ProcessingComplete;
 
         /// <summary>
+        /// Occurs when a notification has been received from the <see cref="DataPublisher"/>.
+        /// </summary>
+        public event EventHandler<EventArgs<string>> NotificationReceived;
+
+        /// <summary>
         /// Defines default value for <see cref="DataSubscriber.OperationalModes"/>.
         /// </summary>
         public const OperationalModes DefaultOperationalModes = OperationalModes.CompressMetadata | OperationalModes.CompressSignalIndexCache | OperationalModes.CompressPayloadData | OperationalModes.UseCommonSerializationFormat;
@@ -2069,6 +2074,7 @@ namespace GSF.TimeSeries.Transport
 
                             // Display notification
                             OnStatusMessage("NOTIFICATION: {0}", message);
+                            OnNotificationReceived(message);
 
                             // Send confirmation of receipt of the notification
                             SendServerCommand(ServerCommand.ConfirmNotification, buffer.BlockCopy(responseIndex, 4));
@@ -2676,6 +2682,12 @@ namespace GSF.TimeSeries.Transport
                 // We protect our code from consumer thrown exceptions
                 OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ProcessingComplete event: {0}", ex.Message), ex));
             }
+        }
+
+        protected void OnNotificationReceived(string message)
+        {
+            if ((object)NotificationReceived != null)
+                NotificationReceived(this, new EventArgs<string>(message));
         }
 
         /// <summary>

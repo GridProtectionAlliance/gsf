@@ -1537,7 +1537,7 @@ namespace GSF.TimeSeries.Transport
         [AdapterCommand("Sends a notification to all subscribers.")]
         public virtual void SendNotification(string message)
         {
-            string notification = string.Format("[{0}] {1}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), message);
+            string notification = string.Format("[{0}] {1}", PrecisionTimer.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"), message);
 
             lock (m_clientNotificationsLock)
             {
