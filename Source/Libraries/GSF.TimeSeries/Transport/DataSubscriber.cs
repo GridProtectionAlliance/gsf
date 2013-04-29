@@ -1640,6 +1640,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         protected override void AttemptConnection()
         {
+            m_expectedBufferBlockSequenceNumber = 0u;
             m_commandChannelConnectionAttempts = 0;
             m_dataChannelConnectionAttempts = 0;
             m_commandChannel.ConnectAsync();

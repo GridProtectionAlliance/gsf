@@ -40,6 +40,12 @@ namespace GSF.TimeSeries.Transport
     public interface IClientSubscription : IActionAdapter
     {
         /// <summary>
+        /// Indicates that a buffer block needed to be retransmitted because
+        /// it was previously sent, but no confirmation was received.
+        /// </summary>
+        event EventHandler BufferBlockRetransmission;
+
+        /// <summary>
         /// Indicates to the host that processing for an input adapter (via temporal session) has completed.
         /// </summary>
         /// <remarks>

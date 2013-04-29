@@ -262,7 +262,7 @@ namespace FileAdapters
         public override string GetShortStatus(int maxLength)
         {
             if ((object)m_activeFileStream != null)
-                return string.Format("Currently reading from file {0}", m_unprocessedFiles.Peek()).CenterText(maxLength);
+                return string.Format("Currently reading from file {0}", Path.GetFileName(m_unprocessedFiles.Peek())).CenterText(maxLength);
 
             return string.Format("{0} files processed by {1}", m_processedFiles.Count, Name).CenterText(maxLength);
         }
@@ -338,6 +338,9 @@ namespace FileAdapters
 
                     if (bytesRead == 1)
                     {
+                        // Notify that processing is done for the current file
+                        OnStatusMessage("Done processing file {0}.", Path.GetFileName(m_unprocessedFiles.Peek()));
+
                         // Delete the now-processed file
                         m_activeFileStream.Dispose();
                         m_activeFileStream = null;
@@ -351,6 +354,9 @@ namespace FileAdapters
 
                 if ((object)m_activeFileStream == null && m_unprocessedFiles.Count > 0)
                 {
+                    // Notify that processing has started for a new file
+                    OnStatusMessage("Now processing file {0}...", Path.GetFileName(m_unprocessedFiles.Peek()));
+
                     // Get info about the next file to process
                     fileInfo = new FileInfo(m_unprocessedFiles.Peek());
 

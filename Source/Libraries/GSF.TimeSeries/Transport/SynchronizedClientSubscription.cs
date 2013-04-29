@@ -43,6 +43,12 @@ namespace GSF.TimeSeries.Transport
         // Events
 
         /// <summary>
+        /// Indicates that a buffer block needed to be retransmitted because
+        /// it was previously sent, but no confirmation was received.
+        /// </summary>
+        public event EventHandler BufferBlockRetransmission;
+
+        /// <summary>
         /// Indicates to the host that processing for an input adapter (via temporal session) has completed.
         /// </summary>
         /// <remarks>
@@ -369,7 +375,7 @@ namespace GSF.TimeSeries.Transport
 
             m_bufferBlockRetransmissionTimer = new System.Timers.Timer();
             m_bufferBlockRetransmissionTimer.AutoReset = false;
-            m_bufferBlockRetransmissionTimer.Interval = m_bufferBlockRetransmissionTimeout;
+            m_bufferBlockRetransmissionTimer.Interval = m_bufferBlockRetransmissionTimeout * 1000.0D;
             m_bufferBlockRetransmissionTimer.Elapsed += BufferBlockRetransmissionTimer_Elapsed;
 
             // Handle temporal session initialization
@@ -477,7 +483,10 @@ namespace GSF.TimeSeries.Transport
                         for (int i = 0; i < sequenceIndex; i++)
                         {
                             if ((object)m_bufferBlockCache[i] != null)
+                            {
                                 m_parent.SendClientResponse(m_clientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, m_bufferBlockCache[i]);
+                                OnBufferBlockRetransmission();
+                            }
                         }
                     }
                 }
@@ -631,12 +640,21 @@ namespace GSF.TimeSeries.Transport
                 foreach (byte[] bufferBlock in m_bufferBlockCache)
                 {
                     if ((object)bufferBlock != null)
+                    {
                         m_parent.SendClientResponse(m_clientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, bufferBlock);
+                        OnBufferBlockRetransmission();
+                    }
                 }
             }
 
             // Restart the retransmission timer
             m_bufferBlockRetransmissionTimer.Start();
+        }
+
+        private void OnBufferBlockRetransmission()
+        {
+            if ((object)BufferBlockRetransmission != null)
+                BufferBlockRetransmission(this, EventArgs.Empty);
         }
 
         // Explicitly implement status message event bubbler to satisfy IClientSubscription interface

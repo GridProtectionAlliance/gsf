@@ -601,6 +601,7 @@ namespace GSF.TimeSeries.Transport
         private long m_lifetimeMinimumLatency;
         private long m_lifetimeMaximumLatency;
         private long m_lifetimeLatencyMeasurements;
+        private long m_bufferBlockRetransmissions;
 
         private bool m_disposed;
 
@@ -927,6 +928,8 @@ namespace GSF.TimeSeries.Transport
                     status.Append(m_commandChannel.Status);
 
                 status.Append(base.Status);
+                status.AppendFormat("  Buffer block retransmits: {0}", m_bufferBlockRetransmissions);
+                status.AppendLine();
 
                 return status.ToString();
             }
@@ -1057,6 +1060,17 @@ namespace GSF.TimeSeries.Transport
             get
             {
                 return m_commandChannel.Enabled;
+            }
+        }
+
+        /// <summary>
+        /// Gets the total number of buffer block retransmissions on all subscriptions over the lifetime of the publisher.
+        /// </summary>
+        public long BufferBlockRetransmissions
+        {
+            get
+            {
+                return m_bufferBlockRetransmissions;
             }
         }
 
@@ -2666,6 +2680,7 @@ namespace GSF.TimeSeries.Transport
                                 }
 
                                 // Attach to processing completed notification
+                                subscription.BufferBlockRetransmission += subscription_BufferBlockRetransmission;
                                 subscription.ProcessingComplete += subscription_ProcessingComplete;
                             }
                             else
@@ -2770,7 +2785,10 @@ namespace GSF.TimeSeries.Transport
 
             // Detach from processing completed notification
             if ((object)connection.Subscription != null)
+            {
+                connection.Subscription.BufferBlockRetransmission -= subscription_BufferBlockRetransmission;
                 connection.Subscription.ProcessingComplete -= subscription_ProcessingComplete;
+            }
 
             connection.Subscription = null;
             connection.IsSubscribed = false;
@@ -3131,6 +3149,11 @@ namespace GSF.TimeSeries.Transport
             m_maximumMeasurementsPerSecond = 0L;
             m_totalMeasurementsPerSecond = 0L;
             m_measurementsPerSecondCount = 0L;
+        }
+
+        private void subscription_BufferBlockRetransmission(object sender, EventArgs eventArgs)
+        {
+            m_bufferBlockRetransmissions++;
         }
 
         // Bubble up processing complete notifications from subscriptions

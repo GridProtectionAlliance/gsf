@@ -124,7 +124,7 @@ namespace FileAdapters
         public override string GetShortStatus(int maxLength)
         {
             if ((object)m_activeFileStream != null)
-                return string.Format("Currently writing to file {0}", m_activeFileStream.Name).CenterText(maxLength);
+                return string.Format("Currently writing to file {0}", Path.GetFileName(m_activeFileStream.Name)).CenterText(maxLength);
 
             return string.Format("{0} files written by {1}", FilePath.GetFileList(Path.Combine(m_outputDirectory, "*")).Length, Name).CenterText(maxLength);
         }
@@ -178,6 +178,9 @@ namespace FileAdapters
                 string fileName = Encoding.Unicode.GetString(bufferBlock, 5, fileNameByteLength);
                 long fileSize = EndianOrder.BigEndian.ToInt64(bufferBlock, 5 + fileNameByteLength);
 
+                // Notify of new file creation
+                OnStatusMessage("Now writing to file {0}...", fileName);
+
                 // Create new file
                 using (FileStream activeFileStream = m_activeFileStream)
                     m_activeFileStream = File.Create(Path.Combine(m_outputDirectory, fileName));
@@ -201,6 +204,7 @@ namespace FileAdapters
                 // we've written all bytes to the file
                 if (m_bytesWritten >= m_activeFileSize)
                 {
+                    OnStatusMessage("Finished writing to file {0}.", Path.GetFileName(m_activeFileStream.Name));
                     m_activeFileStream.Dispose();
                     m_activeFileStream = null;
                     m_bytesWritten = 0L;
