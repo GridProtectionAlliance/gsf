@@ -30,12 +30,12 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
 using GSF;
 using GSF.Historian;
 using GSF.Historian.Files;
 using GSF.IO;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 
 namespace HistorianAdapters
 {
@@ -59,6 +59,7 @@ namespace HistorianAdapters
         private long m_publicationInterval;
         private long m_publicationTime;
         private bool m_simulateTimestamp;
+        private bool m_autoRepeat;
         private bool m_disposed;
 
         #endregion
@@ -182,6 +183,24 @@ namespace HistorianAdapters
         }
 
         /// <summary>
+        /// Gets or sets value that determines if the input data should be replayed repeatedly.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define if the input data should be replayed repeatedly."),
+        DefaultValue(false)]
+        public bool AutoRepeat
+        {
+            get
+            {
+                return m_autoRepeat;
+            }
+            set
+            {
+                m_autoRepeat = value;
+            }
+        }
+
+        /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
         public override bool SupportsTemporalProcessing
@@ -243,6 +262,7 @@ namespace HistorianAdapters
                 status.AppendFormat("             Instance name: {0}\r\n", m_instanceName);
                 status.AppendFormat("          Archive location: {0}\r\n", FilePath.TrimFileName(m_archiveLocation, 51));
                 status.AppendFormat("      Publication interval: {0}\r\n", m_publicationInterval);
+                status.AppendFormat("               Auto-repeat: {0}\r\n", m_autoRepeat);
 
                 if (m_archiveFile != null)
                     status.Append(m_archiveFile.Status);
@@ -313,6 +333,9 @@ namespace HistorianAdapters
 
             if (settings.TryGetValue("simulateTimestamp", out setting))
                 m_simulateTimestamp = setting.ParseBoolean();
+
+            if (settings.TryGetValue("autoRepeat", out setting))
+                m_autoRepeat = setting.ParseBoolean();
 
             // Define output measurements this input adapter can support based on the instance name
             OutputSourceIDs = new string[] { m_instanceName };
@@ -512,7 +535,12 @@ namespace HistorianAdapters
                         {
                             // Finished reading all available data
                             m_readTimer.Enabled = false;
-                            OnProcessingComplete();
+
+                            if (m_autoRepeat)
+                                ThreadPool.QueueUserWorkItem(StartDataReader);
+                            else
+                                OnProcessingComplete();
+
                             break;
                         }
                     }
