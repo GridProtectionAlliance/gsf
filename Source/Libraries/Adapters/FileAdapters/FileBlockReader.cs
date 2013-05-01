@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  FileInputAdapter.cs - Gbtc
+//  FileBlockReader.cs - Gbtc
 //
 //  Copyright © 2013, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -90,8 +90,8 @@ namespace FileAdapters
         private double m_blockSizeAdjustment;
         private double m_processIntervalAdjustment;
 
-        private List<string> m_processedFiles;
-        private Queue<string> m_unprocessedFiles;
+        private readonly List<string> m_processedFiles;
+        private readonly Queue<string> m_unprocessedFiles;
         private FileStream m_activeFileStream;
         private Timer m_watchTimer;
         private Timer m_processTimer;
@@ -263,7 +263,7 @@ namespace FileAdapters
         /// </summary>
         [ConnectionStringParameter,
         DefaultValue(DefaultBlockSizeAdjustment),
-        Description("Defines the perentage by which to adjust the buffer size when throttling buffer blocks.")]
+        Description("Defines the percentage by which to adjust the buffer size when throttling buffer blocks.")]
         public double BlockSizeAdjustment
         {
             get
@@ -282,7 +282,7 @@ namespace FileAdapters
         /// </summary>
         [ConnectionStringParameter,
         DefaultValue(DefaultBlockSizeAdjustment),
-        Description("Defines the perentage by which to adjust the process interval when throttling buffer blocks.")]
+        Description("Defines the percentage by which to adjust the process interval when throttling buffer blocks.")]
         public double ProcessIntervalAdjustment
         {
             get
@@ -561,7 +561,7 @@ namespace FileAdapters
                     Encoding.Unicode.GetBytes(fileInfo.Name, 0, fileInfo.Name.Length, buffer, 5);
                     EndianOrder.BigEndian.CopyBytes(fileInfo.Length, buffer, 5 + fileNameByteLength);
                     bytesRead = 1 + 4 + fileNameByteLength + 8;
-                    
+
                     // Wait for lock to open the file
                     FilePath.WaitForReadLock(fileInfo.FullName);
 
@@ -580,7 +580,7 @@ namespace FileAdapters
                         Timestamp = PrecisionTimer.UtcNow.Ticks
                     });
                 }
-                
+
                 // Done reading, so start the timer for another read
                 if ((object)m_processTimer != null)
                     m_processTimer.Start();

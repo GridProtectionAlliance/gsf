@@ -50,7 +50,7 @@ using GSF.Identity;
 namespace GSF.Security
 {
     /// <summary>
-    /// Represents an <see cref="ISecurityProvider"/> that uses Active Directory for its backend datastore and credential authentication.
+    /// Represents an <see cref="ISecurityProvider"/> that uses Active Directory for its backend data store and credential authentication.
     /// </summary>
     /// <remarks>
     /// A <a href="http://en.wikipedia.org/wiki/Security_Identifier" target="_blank">Security Identifier</a> can also be specified in 
@@ -70,7 +70,7 @@ namespace GSF.Security
     ///       <add name="ApplicationName" value="" description="Name of the application being secured as defined in the backend security datastore."
     ///         encrypted="false" />
     ///       <add name="ConnectionString" value="LDAP://DC=COMPANY,DC=COM"
-    ///         description="Connection string to be used for connection to the backend security datastore."
+    ///         description="Connection string to be used for connection to the backend security data store."
     ///         encrypted="false" />
     ///       <add name="ProviderType" value="GSF.Security.LdapSecurityProvider, GSF.Security"
     ///         description="The type to be used for enforcing security." encrypted="false" />
@@ -151,8 +151,8 @@ namespace GSF.Security
         /// Initializes a new instance of the <see cref="LdapSecurityProvider"/> class.
         /// </summary>
         /// <param name="username">Name that uniquely identifies the user.</param>
-        /// <param name="canRefreshData">true if the security provider can refresh <see cref="UserData"/> from the backend datastore, otherwise false.</param>
-        /// <param name="canUpdateData">true if the security provider can update <see cref="UserData"/> in the backend datastore, otherwise false.</param>
+        /// <param name="canRefreshData">true if the security provider can refresh <see cref="UserData"/> from the backend data store, otherwise false.</param>
+        /// <param name="canUpdateData">true if the security provider can update <see cref="UserData"/> in the backend data store, otherwise false.</param>
         /// <param name="canResetPassword">true if the security provider can reset user password, otherwise false.</param>
         /// <param name="canChangePassword">true if the security provider can change user password, otherwise false.</param>
         protected LdapSecurityProvider(string username, bool canRefreshData, bool canUpdateData, bool canResetPassword, bool canChangePassword)
@@ -234,7 +234,7 @@ namespace GSF.Security
         #region [ Not Supported ]
 
         /// <summary>
-        /// Updates the <see cref="UserData"/> in the backend datastore.
+        /// Updates the <see cref="UserData"/> in the backend data store.
         /// </summary>
         /// <returns>true if <see cref="UserData"/> is updated, otherwise false.</returns>
         /// <exception cref="NotSupportedException">Always</exception>
@@ -244,7 +244,7 @@ namespace GSF.Security
         }
 
         /// <summary>
-        /// Resets user password in the backend datastore.
+        /// Resets user password in the backend data store.
         /// </summary>
         /// <param name="securityAnswer">Answer to the user's security question.</param>
         /// <returns>true if the password is reset, otherwise false.</returns>
@@ -327,7 +327,7 @@ namespace GSF.Security
         }
 
         /// <summary>
-        /// Refreshes the <see cref="UserData"/> from the backend datastore.
+        /// Refreshes the <see cref="UserData"/> from the backend data store.
         /// </summary>
         /// <returns>true if <see cref="SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
         public override bool RefreshData()
@@ -353,7 +353,7 @@ namespace GSF.Security
         }
 
         /// <summary>
-        /// Refreshes the <see cref="UserData"/> from the backend datastore loading user groups into desired collection.
+        /// Refreshes the <see cref="UserData"/> from the backend data store loading user groups into desired collection.
         /// </summary>
         /// <param name="groupCollection">Target collection for user groups.</param>
         /// <param name="providerID">Unique provider ID used to distinguish cached user data that may be different based on provider.</param>
@@ -380,9 +380,13 @@ namespace GSF.Security
                     userDataCache = UserDataCache.GetCurrentCache(providerID);
                     userDataCache.RetryDelayInterval = m_cacheRetryDelayInterval;
                     userDataCache.MaximumRetryAttempts = m_cacheMaximumRetryAttempts;
-                    // TODO: Reload on change is disabled for now by default to eliminate GC handle leaks, if .NET fixes bug http://support.microsoft.com/kb/2628838
-                    // then this can be safely reenabled. For now this will prevent automatic runtime reloading of user data cached by another application.
+#if DNF45
+                    userDataCache.ReloadOnChange = true;
+#else
+                    // Reload on change is disabled to eliminate GC handle leaks on .NET 4.0, this prevents
+                    // automatic runtime reloading of user data cached by another application.
                     userDataCache.ReloadOnChange = false;
+#endif
                     userDataCache.AutoSave = true;
                     userDataCache.Load();
                 }
@@ -394,10 +398,8 @@ namespace GSF.Security
                 else
                     user = new UserInfo(UserData.Username, ldapPath);
 
-                // Use privileged user credentials from config file if present.
+                // Make sure to load privileged user credentials from config file if present.
                 user.PersistSettings = true;
-                user.Initialize();
-                user.PersistSettings = false;
 
                 // Attempt to determine if user exists (this will initialize user object if not initialized already)
                 UserData.IsDefined = user.Exists;
@@ -472,7 +474,10 @@ namespace GSF.Security
             finally
             {
                 if (user != null)
+                {
+                    user.PersistSettings = false;
                     user.Dispose();
+                }
 
                 if (userDataCache != null)
                     userDataCache.Dispose();

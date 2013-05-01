@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  FileOutputAdapter.cs - Gbtc
+//  FileBlockWriter.cs - Gbtc
 //
 //  Copyright © 2013, Grid Protection Alliance.  All Rights Reserved.
 //

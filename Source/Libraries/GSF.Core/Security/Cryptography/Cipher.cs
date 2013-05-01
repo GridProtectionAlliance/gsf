@@ -63,16 +63,16 @@
 //
 //******************************************************************************************************
 
-using GSF.Collections;
-using GSF.Configuration;
-using GSF.IO;
-using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using GSF.Collections;
+using GSF.Configuration;
+using GSF.IO;
+using Microsoft.Win32;
 
 namespace GSF.Security.Cryptography
 {
@@ -121,7 +121,7 @@ namespace GSF.Security.Cryptography
         private const string CryptoServicesSettingsCategory = "CryptographyServices";
 
         /// <summary>
-        /// Represents an interprocess serializable cryptographic key and initialization vector cache.
+        /// Represents an inter-process serializable cryptographic key and initialization vector cache.
         /// </summary>
         private class KeyIVCache : InterprocessCache
         {
@@ -459,7 +459,13 @@ namespace GSF.Security.Cryptography
                 RetryDelayInterval = retryDelayInterval,
                 MaximumRetryAttempts = maximumRetryAttempts,
                 ManagedEncryption = s_managedEncryption,
-                ReloadOnChange = false,
+#if DNF45
+                ReloadOnChange = true,
+#else
+                    // Reload on change is disabled to eliminate GC handle leaks on .NET 4.0, this prevents
+                    // automatic runtime reloading of key/iv data cached by another application.
+                    ReloadOnChange = false,
+#endif
                 AutoSave = false
             };
 
@@ -502,9 +508,13 @@ namespace GSF.Security.Cryptography
                     FileName = userCacheFileName,
                     RetryDelayInterval = retryDelayInterval,
                     MaximumRetryAttempts = maximumRetryAttempts,
-                    // TODO: Reload on change is disabled for now by default to eliminate GC handle leaks, if .NET fixes bug http://support.microsoft.com/kb/2628838
-                    // then this can be safely reenabled. For now this will prevent automatic runtime reloading of keys cached by another application.
+#if DNF45
+                    ReloadOnChange = true,
+#else
+                    // Reload on change is disabled to eliminate GC handle leaks on .NET 4.0, this prevents
+                    // automatic runtime reloading of key/iv data cached by another application.
                     ReloadOnChange = false,
+#endif
                     AutoSave = true
                 };
 
