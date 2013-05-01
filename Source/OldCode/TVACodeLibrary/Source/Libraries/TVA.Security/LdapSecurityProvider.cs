@@ -620,10 +620,8 @@ namespace TVA.Security
                 else
                     user = new UserInfo(UserData.Username, ldapPath);
 
-                // Use privileged user credentials from config file if present.
+                // Make sure to load privileged user credentials from config file if present.
                 user.PersistSettings = true;
-                user.Initialize();
-                user.PersistSettings = false;
 
                 // Attempt to determine if user exists (this will initialize user object if not initialized already)
                 UserData.IsDefined = user.Exists;
@@ -698,7 +696,10 @@ namespace TVA.Security
             finally
             {
                 if (user != null)
+                {
+                    user.PersistSettings = false;
                     user.Dispose();
+                }
 
                 if (userDataCache != null)
                     userDataCache.Dispose();
