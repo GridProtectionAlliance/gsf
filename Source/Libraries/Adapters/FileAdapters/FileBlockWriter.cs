@@ -33,7 +33,11 @@ using GSF.TimeSeries.Adapters;
 
 namespace FileAdapters
 {
-    public class FileOutputAdapter : OutputAdapterBase
+    /// <summary>
+    /// Output adapter that receives blocks of data as measurements and writes them to a file.
+    /// </summary>
+    [Description("FileBlockWriter: Receives buffer block measurements and writes them to files.")]
+    public class FileBlockWriter : OutputAdapterBase
     {
         #region [ Members ]
 
@@ -68,7 +72,7 @@ namespace FileAdapters
         }
 
         /// <summary>
-        /// Gets the flag that determines if measurements sent to this <see cref="FileOutputAdapter"/> are destined for archival.
+        /// Gets the flag that determines if measurements sent to this <see cref="FileBlockWriter"/> are destined for archival.
         /// </summary>
         public override bool OutputIsForArchive
         {
@@ -94,7 +98,7 @@ namespace FileAdapters
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes <see cref="FileOutputAdapter"/>.
+        /// Initializes <see cref="FileBlockWriter"/>.
         /// </summary>
         public override void Initialize()
         {
@@ -117,7 +121,7 @@ namespace FileAdapters
         }
 
         /// <summary>
-        /// Gets a short one-line status of this <see cref="FileOutputAdapter"/>.
+        /// Gets a short one-line status of this <see cref="FileBlockWriter"/>.
         /// </summary>
         /// <param name="maxLength">Maximum number of available characters for display.</param>
         /// <returns>A short one-line summary of the current status of this <see cref="AdapterBase"/>.</returns>
@@ -213,7 +217,7 @@ namespace FileAdapters
         }
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="FileOutputAdapter"/> object and optionally releases the managed resources.
+        /// Releases the unmanaged resources used by the <see cref="FileBlockWriter"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)

@@ -45,8 +45,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FileInputAdapter.cs" />
-    <Compile Include="FileOutputAdapter.cs" />
+    <Compile Include="FileBlockReader.cs" />
+    <Compile Include="FileBlockWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

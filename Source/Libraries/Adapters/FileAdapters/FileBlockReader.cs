@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Timers;
 using GSF;
@@ -35,17 +36,49 @@ using GSF.TimeSeries.Adapters;
 namespace FileAdapters
 {
     /// <summary>
-    /// Input adapter that reads blocks of data into buffers and publishes them as measurements.
+    /// Action adapter that reads blocks of data into buffers and publishes them as measurements.
     /// </summary>
-    public class FileInputAdapter : InputAdapterBase
+    [Description("FileBlockReader: Reads blocks of data from files and publishes them as buffer block measurements.")]
+    public class FileBlockReader : FacileActionAdapterBase
     {
         #region [ Members ]
 
         // Constants
+
+        /// <summary>
+        /// Default value for <see cref="FilePattern"/>.
+        /// </summary>
         public const string DefaultFilePattern = "*";
+
+        /// <summary>
+        /// Default value for <see cref="BlockSize"/>.
+        /// </summary>
         public const int DefaultBlockSize = 16384;
+
+        /// <summary>
+        /// Default value for <see cref="WatchInterval"/>.
+        /// </summary>
         public const double DefaultWatchInterval = 5.0D;
+
+        /// <summary>
+        /// Default value for <see cref="ProcessInterval"/>.
+        /// </summary>
         public const double DefaultProcessInterval = 1.0D;
+
+        /// <summary>
+        /// Default value for <see cref="RetransmissionThreshold"/>.
+        /// </summary>
+        public const double DefaultRetransmissionThreshold = 25.0D;
+
+        /// <summary>
+        /// Default value for <see cref="BlockSizeAdjustment"/>.
+        /// </summary>
+        public const double DefaultBlockSizeAdjustment = 5.0D;
+
+        /// <summary>
+        /// Default value for <see cref="ProcessIntervalAdjustment"/>.
+        /// </summary>
+        public const double DefaultProcessIntervalAdjustment = 5.0D;
 
         // Fields
         private string m_watchDirectory;
@@ -53,6 +86,9 @@ namespace FileAdapters
         private int m_blockSize;
         private double m_watchInterval;
         private double m_processInterval;
+        private double m_retransmissionThreshold;
+        private double m_blockSizeAdjustment;
+        private double m_processIntervalAdjustment;
 
         private List<string> m_processedFiles;
         private Queue<string> m_unprocessedFiles;
@@ -60,6 +96,9 @@ namespace FileAdapters
         private Timer m_watchTimer;
         private Timer m_processTimer;
         private byte[] m_buffer;
+        private long m_bufferBlocksSent;
+        private long m_bufferBlocksSentLastAdjustment;
+        private int m_throttleMultiplier;
 
         private bool m_disposed;
 
@@ -68,9 +107,9 @@ namespace FileAdapters
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new instance of the <see cref="FileInputAdapter"/> class.
+        /// Creates a new instance of the <see cref="FileBlockReader"/> class.
         /// </summary>
-        public FileInputAdapter()
+        public FileBlockReader()
         {
             m_filePattern = DefaultFilePattern;
             BlockSize = DefaultBlockSize;
@@ -120,6 +159,24 @@ namespace FileAdapters
         }
 
         /// <summary>
+        /// Gets or sets the statistic that defines the number of buffer block retransmissions in the system.
+        /// </summary>
+        [ConnectionStringParameter,
+        DefaultValue(null),
+        Description("Determines the statistic that defines the number of buffer block retransmissions in the system.")]
+        public string RetransmissionStat
+        {
+            get
+            {
+                return InputMeasurementKeys.First().ToString();
+            }
+            set
+            {
+                InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, value).Take(1).ToArray();
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the size of each block of data that is read from the file.
         /// </summary>
         [ConnectionStringParameter,
@@ -134,7 +191,7 @@ namespace FileAdapters
             set
             {
                 m_blockSize = value;
-                m_buffer = new byte[m_blockSize];
+                m_buffer = new byte[AdjustedBlockSize];
             }
         }
 
@@ -153,6 +210,9 @@ namespace FileAdapters
             set
             {
                 m_watchInterval = value;
+
+                if ((object)m_watchTimer != null)
+                    m_watchTimer.Interval = value * 1000.0D;
             }
         }
 
@@ -171,6 +231,67 @@ namespace FileAdapters
             set
             {
                 m_processInterval = value;
+
+                if ((object)m_processTimer != null)
+                    m_processTimer.Interval = AdjustedProcessInterval * 1000.0D;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the percentage of buffer blocks that can be retransmitted
+        /// during a reporting interval before the <see cref="FileBlockReader"/>
+        /// begins throttling its buffer blocks.
+        /// </summary>
+        [ConnectionStringParameter,
+        DefaultValue(DefaultRetransmissionThreshold),
+        Description("Defines the percentage of buffer blocks that can be retransmitted before throttling begins.")]
+        public double RetransmissionThreshold
+        {
+            get
+            {
+                return m_retransmissionThreshold;
+            }
+            set
+            {
+                m_retransmissionThreshold = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the percentage of adjustment to be applied
+        /// to the buffer size when throttling buffer blocks.
+        /// </summary>
+        [ConnectionStringParameter,
+        DefaultValue(DefaultBlockSizeAdjustment),
+        Description("Defines the perentage by which to adjust the buffer size when throttling buffer blocks.")]
+        public double BlockSizeAdjustment
+        {
+            get
+            {
+                return m_blockSizeAdjustment;
+            }
+            set
+            {
+                m_blockSizeAdjustment = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the percentage of adjustment to be applied
+        /// to the process interval when throttling buffer blocks.
+        /// </summary>
+        [ConnectionStringParameter,
+        DefaultValue(DefaultBlockSizeAdjustment),
+        Description("Defines the perentage by which to adjust the process interval when throttling buffer blocks.")]
+        public double ProcessIntervalAdjustment
+        {
+            get
+            {
+                return m_processIntervalAdjustment;
+            }
+            set
+            {
+                m_processIntervalAdjustment = value;
             }
         }
 
@@ -186,13 +307,26 @@ namespace FileAdapters
         }
 
         /// <summary>
-        /// Gets flag that determines if the data input connects asynchronously.
+        /// Gets the block size after making adjustments for throttling.
         /// </summary>
-        protected override bool UseAsyncConnect
+        private int AdjustedBlockSize
         {
             get
             {
-                return false;
+                double blockSizeAdjustment = m_blockSize * (m_blockSizeAdjustment * 0.01);
+                return m_blockSize - (int)(m_throttleMultiplier * blockSizeAdjustment);
+            }
+        }
+
+        /// <summary>
+        /// Gets the process interval after making adjustments for throttling.
+        /// </summary>
+        private double AdjustedProcessInterval
+        {
+            get
+            {
+                double processIntervalAdjustment = m_processInterval * (m_processIntervalAdjustment * 0.01);
+                return m_processInterval + (m_throttleMultiplier * processIntervalAdjustment);
             }
         }
 
@@ -201,7 +335,7 @@ namespace FileAdapters
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes <see cref="FileInputAdapter"/>.
+        /// Initializes <see cref="FileBlockReader"/>.
         /// </summary>
         public override void Initialize()
         {
@@ -229,6 +363,11 @@ namespace FileAdapters
             if (!settings.TryGetValue("filePattern", out m_filePattern))
                 m_filePattern = DefaultFilePattern;
 
+            if (settings.TryGetValue("retransmissionStat", out setting))
+                RetransmissionStat = setting;
+            else
+                RetransmissionStat = string.Empty;
+
             if (settings.TryGetValue("blockSize", out setting) && int.TryParse(setting, out blockSize))
                 BlockSize = blockSize;
             else
@@ -239,6 +378,15 @@ namespace FileAdapters
 
             if (!settings.TryGetValue("processInterval", out setting) || !double.TryParse(setting, out m_processInterval))
                 m_processInterval = DefaultProcessInterval;
+
+            if (!settings.TryGetValue("retransmissionThreshold", out setting) || !double.TryParse(setting, out m_retransmissionThreshold))
+                m_retransmissionThreshold = DefaultRetransmissionThreshold;
+
+            if (!settings.TryGetValue("blockSizeAdjustment", out setting) || !double.TryParse(setting, out m_blockSizeAdjustment))
+                m_blockSizeAdjustment = DefaultBlockSizeAdjustment;
+
+            if (!settings.TryGetValue("processIntervalAdjustment", out setting) || !double.TryParse(setting, out m_processIntervalAdjustment))
+                m_processIntervalAdjustment = DefaultProcessIntervalAdjustment;
 
             if (!Directory.Exists(m_watchDirectory))
                 Directory.CreateDirectory(m_watchDirectory);
@@ -255,10 +403,10 @@ namespace FileAdapters
         }
 
         /// <summary>
-        /// Gets a short one-line status of this <see cref="FileInputAdapter"/>.
+        /// Gets a short one-line status of this <see cref="FileBlockReader"/>.
         /// </summary>
         /// <param name="maxLength">Maximum number of available characters for display.</param>
-        /// <returns>A short one-line summary of the current status of this <see cref="FileInputAdapter"/>.</returns>
+        /// <returns>A short one-line summary of the current status of this <see cref="FileBlockReader"/>.</returns>
         public override string GetShortStatus(int maxLength)
         {
             if ((object)m_activeFileStream != null)
@@ -277,18 +425,19 @@ namespace FileAdapters
         }
 
         /// <summary>
-        /// Attempts to connect to data input source.
+        /// Starts the <see cref="FileBlockReader"/> or restarts it if it is already running.
         /// </summary>
-        protected override void AttemptConnection()
+        public override void Start()
         {
+            base.Start();
             m_watchTimer.Start();
             m_processTimer.Start();
         }
 
         /// <summary>
-        /// Attempts to disconnect from data input source.
-        /// </summary>
-        protected override void AttemptDisconnection()
+        /// Stops the <see cref="FileBlockReader"/>.
+        /// </summary>		
+        public override void Stop()
         {
             m_watchTimer.Stop();
             m_processTimer.Stop();
@@ -298,6 +447,47 @@ namespace FileAdapters
                 m_activeFileStream.Dispose();
                 m_activeFileStream = null;
             }
+
+            base.Stop();
+        }
+
+        /// <summary>
+        /// Queues a collection of measurements for processing.
+        /// </summary>
+        /// <param name="measurements">Measurements to queue for processing.</param>
+        public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
+        {
+            base.QueueMeasurementsForProcessing(measurements);
+            ManageThrottleAdjustments((int)measurements.Last().Value);
+        }
+
+        // Determines how to adjust the process interval and block size based on the
+        // number of retransmissions during the last statistic reporting interval
+        private void ManageThrottleAdjustments(int retransmissions)
+        {
+            long bufferBlocksSent = m_bufferBlocksSent;
+            int throttleMultiplier = m_throttleMultiplier;
+            int bufferBlocksSentSinceLastAdjustment = (int)(bufferBlocksSent - m_bufferBlocksSentLastAdjustment);
+
+            // Adjust the throttle multiplier based on the number of retransmissions
+            if (retransmissions >= bufferBlocksSentSinceLastAdjustment * (m_retransmissionThreshold * 0.01))
+                m_throttleMultiplier++;
+            else if (retransmissions < bufferBlocksSentSinceLastAdjustment * (m_retransmissionThreshold * 0.005))
+                m_throttleMultiplier--;
+
+            // Throttle multiplier cannot be less than 0
+            if (m_throttleMultiplier < 0)
+                m_throttleMultiplier = 0;
+
+            // If the throttle multiplier changed, update the block size and process interval
+            if (throttleMultiplier != m_throttleMultiplier)
+            {
+                m_buffer = new byte[AdjustedBlockSize];
+                m_processTimer.Interval = AdjustedProcessInterval * 1000.0D;
+            }
+
+            // Keep track of the buffer blocks sent for the next time we make adjustments
+            m_bufferBlocksSentLastAdjustment = bufferBlocksSent;
         }
 
         // Scans the watch folder for new files to transfer
@@ -321,6 +511,7 @@ namespace FileAdapters
         // Reads the next block from the active file
         private void ProcessTimer_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
         {
+            byte[] buffer = m_buffer;
             int bytesRead = 0;
             int fileNameByteLength;
             FileInfo fileInfo;
@@ -331,10 +522,10 @@ namespace FileAdapters
                 {
                     // Set first byte to 0 to indicate that
                     // this is not the beginning of a file
-                    m_buffer[0] = 0;
+                    buffer[0] = 0;
 
                     // Read a block into memory
-                    bytesRead = 1 + m_activeFileStream.Read(m_buffer, 1, m_blockSize - 1);
+                    bytesRead = 1 + m_activeFileStream.Read(buffer, 1, buffer.Length - 1);
 
                     if (bytesRead == 1)
                     {
@@ -362,13 +553,13 @@ namespace FileAdapters
 
                     // Set first byte to 1 to indicate that
                     // this is the beginning of a file
-                    m_buffer[0] = 1;
+                    buffer[0] = 1;
 
                     // Copy file info into the buffer
                     fileNameByteLength = Encoding.Unicode.GetByteCount(fileInfo.Name);
-                    EndianOrder.BigEndian.CopyBytes(fileNameByteLength, m_buffer, 1);
-                    Encoding.Unicode.GetBytes(fileInfo.Name, 0, fileInfo.Name.Length, m_buffer, 5);
-                    EndianOrder.BigEndian.CopyBytes(fileInfo.Length, m_buffer, 5 + fileNameByteLength);
+                    EndianOrder.BigEndian.CopyBytes(fileNameByteLength, buffer, 1);
+                    Encoding.Unicode.GetBytes(fileInfo.Name, 0, fileInfo.Name.Length, buffer, 5);
+                    EndianOrder.BigEndian.CopyBytes(fileInfo.Length, buffer, 5 + fileNameByteLength);
                     bytesRead = 1 + 4 + fileNameByteLength + 8;
                     
                     // Wait for lock to open the file
@@ -376,13 +567,13 @@ namespace FileAdapters
 
                     // Open file and read
                     m_activeFileStream = fileInfo.OpenRead();
-                    bytesRead += m_activeFileStream.Read(m_buffer, bytesRead, m_blockSize - bytesRead);
+                    bytesRead += m_activeFileStream.Read(buffer, bytesRead, buffer.Length - bytesRead);
                 }
 
                 if ((object)m_activeFileStream != null)
                 {
                     // Publish next block of file data
-                    OnNewMeasurement(new BufferBlockMeasurement(m_buffer, 0, bytesRead)
+                    OnNewMeasurement(new BufferBlockMeasurement(buffer, 0, bytesRead)
                     {
                         ID = OutputMeasurements[0].ID,
                         Key = OutputMeasurements[0].Key,
@@ -402,10 +593,11 @@ namespace FileAdapters
         private void OnNewMeasurement(IMeasurement measurement)
         {
             OnNewMeasurements(new IMeasurement[] { measurement });
+            m_bufferBlocksSent++;
         }
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="FileInputAdapter"/> object and optionally releases the managed resources.
+        /// Releases the unmanaged resources used by the <see cref="FileBlockReader"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
@@ -420,6 +612,20 @@ namespace FileAdapters
                         {
                             m_activeFileStream.Dispose();
                             m_activeFileStream = null;
+                        }
+
+                        if ((object)m_watchTimer != null)
+                        {
+                            m_watchTimer.Stop();
+                            m_watchTimer.Dispose();
+                            m_watchTimer = null;
+                        }
+
+                        if ((object)m_processTimer != null)
+                        {
+                            m_processTimer.Stop();
+                            m_processTimer.Dispose();
+                            m_processTimer = null;
                         }
                     }
                 }
