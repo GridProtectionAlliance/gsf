@@ -3620,11 +3620,10 @@
             ID column type should be integer based, all other column types are expected to be string based.
             </remarks>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.#ctor(System.Collections.Concurrent.ConcurrentDictionary{System.String,System.Threading.AutoResetEvent})">
+        <member name="M:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.#ctor">
             <summary>
             Constructs a new instance of the <see cref="T:TimeSeriesFramework.Adapters.AdapterCollectionBase`1"/>.
             </summary>
-            <param name="waitHandles">Wait handle dictionary.</param>
         </member>
         <member name="M:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.Finalize">
             <summary>
@@ -4101,12 +4100,6 @@
             <summary>
             Creates a new <see cref="T:TimeSeriesFramework.Adapters.ActionAdapterCollection"/>.
             </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.ActionAdapterCollection.#ctor(System.Collections.Concurrent.ConcurrentDictionary{System.String,System.Threading.AutoResetEvent})">
-            <summary>
-            Constructs a new instance of the <see cref="T:TimeSeriesFramework.Adapters.ActionAdapterCollection"/>.
-            </summary>
-            <param name="waitHandles">Wait handle dictionary.</param>
         </member>
         <member name="M:TimeSeriesFramework.Adapters.ActionAdapterCollection.Initialize">
             <summary>
@@ -4791,12 +4784,6 @@
             Creates a new <see cref="T:TimeSeriesFramework.Adapters.AllAdaptersCollection"/>.
             </summary>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.AllAdaptersCollection.#ctor(System.Collections.Concurrent.ConcurrentDictionary{System.String,System.Threading.AutoResetEvent})">
-            <summary>
-            Constructs a new instance of the <see cref="T:TimeSeriesFramework.Adapters.AllAdaptersCollection"/>.
-            </summary>
-            <param name="waitHandles">Wait handle dictionary.</param>
-        </member>
         <member name="M:TimeSeriesFramework.Adapters.AllAdaptersCollection.Initialize">
             <summary>
             Initializes each <see cref="T:TimeSeriesFramework.Adapters.IAdapterCollection"/> implementation in this <see cref="T:TimeSeriesFramework.Adapters.AllAdaptersCollection"/>.
@@ -5284,12 +5271,6 @@
             Creates a new <see cref="T:TimeSeriesFramework.Adapters.InputAdapterCollection"/>.
             </summary>
         </member>
-        <member name="M:TimeSeriesFramework.Adapters.InputAdapterCollection.#ctor(System.Collections.Concurrent.ConcurrentDictionary{System.String,System.Threading.AutoResetEvent})">
-            <summary>
-            Creates a new <see cref="T:TimeSeriesFramework.Adapters.InputAdapterCollection"/>.
-            </summary>
-            <param name="waitHandles">Wait handle dictionary.</param>
-        </member>
         <member name="M:TimeSeriesFramework.Adapters.InputAdapterCollection.OnNewMeasurements(System.Collections.Generic.ICollection{TimeSeriesFramework.IMeasurement})">
             <summary>
             Raises the <see cref="E:TimeSeriesFramework.Adapters.InputAdapterCollection.NewMeasurements"/> event.
@@ -5673,12 +5654,6 @@
             <summary>
             Creates a new <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterCollection"/>.
             </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterCollection.#ctor(System.Collections.Concurrent.ConcurrentDictionary{System.String,System.Threading.AutoResetEvent})">
-            <summary>
-            Creates a new <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterCollection"/>.
-            </summary>
-            <param name="waitHandles">Wait handle dictionary.</param>
         </member>
         <member name="M:TimeSeriesFramework.Adapters.OutputAdapterCollection.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
             <summary>
@@ -6647,12 +6622,6 @@
             <summary>
             Creates a new <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/>.
             </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.Transport.DataPublisher.#ctor(System.Collections.Concurrent.ConcurrentDictionary{System.String,System.Threading.AutoResetEvent})">
-            <summary>
-            Creates a new <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/>.
-            </summary>
-            <param name="waitHandles">Wait handle dictionary.</param>
         </member>
         <member name="M:TimeSeriesFramework.Transport.DataPublisher.Finalize">
             <summary>
