@@ -26,11 +26,8 @@ namespace GSF.FuzzyStrings
     public enum FuzzyStringComparisonTolerance
     {
         Strong,
-
         Normal,
-
         Weak,
-
         Manual
     }
 }

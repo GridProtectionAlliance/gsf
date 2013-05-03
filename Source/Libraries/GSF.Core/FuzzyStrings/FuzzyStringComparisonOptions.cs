@@ -21,34 +21,25 @@
 //
 //******************************************************************************************************
 
+using System;
+
 namespace GSF.FuzzyStrings
 {
-    public enum FuzzyStringComparisonOptions
+    [Flags]
+    public enum FuzzyStringComparisonOptions : int
     {
-        UseHammingDistance,
-
-        UseJaccardDistance,
-
-        UseJaroDistance,
-
-        UseJaroWinklerDistance,
-
-        UseLevenshteinDistance,
-
-        UseLongestCommonSubsequence,
-
-        UseLongestCommonSubstring,
-
-        UseNormalizedLevenshteinDistance,
-
-        UseOverlapCoefficient,
-
-        UseRatcliffObershelpSimilarity,
-
-        UseSorensenDiceDistance,
-
-        UseTanimotoCoefficient,
-
-        CaseSensitive
+        UseHammingDistance = (int)Bits.Bit00,
+        UseJaccardDistance = (int)Bits.Bit01,
+        UseJaroDistance = (int)Bits.Bit02,
+        UseJaroWinklerDistance = (int)Bits.Bit03,
+        UseLevenshteinDistance = (int)Bits.Bit04,
+        UseLongestCommonSubsequence = (int)Bits.Bit05,
+        UseLongestCommonSubstring = (int)Bits.Bit06,
+        UseNormalizedLevenshteinDistance = (int)Bits.Bit07,
+        UseOverlapCoefficient = (int)Bits.Bit08,
+        UseRatcliffObershelpSimilarity = (int)Bits.Bit09,
+        UseSorensenDiceDistance = (int)Bits.Bit10,
+        UseTanimotoCoefficient = (int)Bits.Bit11,
+        CaseSensitive = (int)Bits.Bit12
     }
 }
