@@ -78,6 +78,8 @@
 //       Removed overloads for ParseKeyValuePairs and JoinKeyValuePairs using optional parameters.
 //  08/02/2011 - Pinal C. Patel
 //       Added RemoveInvalidFileNameCharacters() and ReplaceInvalidFileNameCharacters() methods.
+//  10/17/2012 - F Russell Robertson
+//       Added QuoteWrap() method.
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
 //
@@ -747,6 +749,32 @@ namespace GSF
         public static string ReplaceInvalidFileNameCharacters(this string value, char replacementCharacter)
         {
             return value.ReplaceCharacters(replacementCharacter, c => Array.IndexOf(Path.GetInvalidFileNameChars(), c) >= 0);
+        }
+
+        /// <summary>
+        /// Wraps <paramref name="value"/> in the <paramref name="quoteChar"/>.
+        /// </summary>
+        /// <param name="value">Input string to process</param>
+        /// <param name="quoteChar">The char to wrap <paramref name="value"/></param>
+        /// <returns><paramref name="value"/> wrapped in <paramref name="quoteChar"/></returns>
+        public static string QuoteWrap(this string value, char quoteChar = '\"')
+        {
+            if (string.IsNullOrEmpty(value))
+                return "";
+
+            if (quoteChar == 0)
+                return value;
+
+            if (value[0] != quoteChar)
+                value = string.Concat(quoteChar, value);
+
+            if (value[value.Length - 1] != quoteChar)
+                value = string.Concat(value, quoteChar);
+
+            if (!value.StartsWith(quoteChar.ToString()))
+                value = string.Concat(quoteChar, value);
+
+            return value;
         }
 
         /// <summary>

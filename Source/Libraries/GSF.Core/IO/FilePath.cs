@@ -641,6 +641,101 @@ namespace GSF.IO
         }
 
         /// <summary>
+        /// Gets a unique file path for the given file by checking for name collisions and
+        /// adding a sequence number to the end of the file name if there is a collision.
+        /// </summary>
+        /// <param name="originalFilePath">The path to the original file before adding the sequence number.</param>
+        /// <returns>The unique path to the file.</returns>
+        /// <remarks>
+        /// This method is designed to handle the case where the user wishes to create a file in a folder
+        /// with a given name when there is a possibility that the name is already taken. Using this method,
+        /// it is possible to create files with names in the following format:
+        /// 
+        /// <ul>
+        ///     <li>File.ext</li>
+        ///     <li>File (1).ext</li>
+        ///     <li>File (2).ext</li>
+        ///     <li>...</li>
+        /// </ul>
+        /// 
+        /// This method uses a linear search to find a unique file name, so it is suitable for situations where
+        /// there are a small number of collisions for each file name. This will detect and fill gaps that can
+        /// occur when files are deleted (for instance, if "File (1).ext" were deleted from the list above).
+        /// </remarks>
+        public static string GetUniqueFilePath(string originalFilePath)
+        {
+            string uniqueFilePath = GetAbsolutePath(originalFilePath);
+            string directory = GetDirectoryName(uniqueFilePath);
+            string originalFileRoot = GetFileNameWithoutExtension(uniqueFilePath);
+            string fileExtension = GetExtension(uniqueFilePath);
+            int i = 1;
+
+            while (File.Exists(uniqueFilePath))
+            {
+                uniqueFilePath = Path.Combine(directory, string.Format("{0} ({1}){2}", originalFileRoot, i, fileExtension));
+                i++;
+            }
+
+            return uniqueFilePath;
+        }
+
+        /// <summary>
+        /// Gets a unique file path for the given file by checking for name collisions and
+        /// adding a sequence number to the end of the file name if there is a collision.
+        /// </summary>
+        /// <param name="originalFilePath">The path to the original file before adding the sequence number.</param>
+        /// <returns>The unique path to the file.</returns>
+        /// <remarks>
+        /// This method is designed to handle the case where the user wishes to create a file in a folder
+        /// with a given name when there is a possibility that the name is already taken. Using this method,
+        /// it is possible to create files with names in the following format:
+        /// 
+        /// <ul>
+        ///     <li>File.ext</li>
+        ///     <li>File (1).ext</li>
+        ///     <li>File (2).ext</li>
+        ///     <li>...</li>
+        /// </ul>
+        /// 
+        /// This method uses a binary search to find a unique file name, so it is suitable for situations where
+        /// a large number of files will be created with the same file name, and the next unique file name needs
+        /// to be found relatively quickly. It will not always detect gaps in the sequence numbers that can occur
+        /// when files are deleted (for instance, if "File (1).ext" were deleted from the list above).
+        /// </remarks>
+        public static string GetUniqueFilePathWithBinarySearch(string originalFilePath)
+        {
+            string uniqueFilePath = GetAbsolutePath(originalFilePath);
+            string directory = GetDirectoryName(uniqueFilePath);
+            string originalFileRoot = GetFileNameWithoutExtension(uniqueFilePath);
+            string fileExtension = GetExtension(uniqueFilePath);
+
+            int i = 1;
+            int j = 1;
+            int k = 1;
+
+            while (File.Exists(uniqueFilePath))
+            {
+                uniqueFilePath = Path.Combine(directory, string.Format("{0} ({1}){2}", originalFileRoot, i, fileExtension));
+                j = k;
+                k = i;
+                i *= 2;
+            }
+
+            while (j < k)
+            {
+                i = (j + k) / 2;
+                uniqueFilePath = Path.Combine(directory, string.Format("{0} ({1}){2}", originalFileRoot, i, fileExtension));
+
+                if (File.Exists(uniqueFilePath))
+                    j = i + 1;
+                else
+                    k = i;
+            }
+
+            return Path.Combine(directory, string.Format("{0} ({1}){2}", originalFileRoot, k, fileExtension));
+        }
+
+        /// <summary>
         /// Waits for the default duration (5 seconds) for read access on a file.
         /// </summary>
         /// <param name="fileName">The name of the file to wait for to obtain read access.</param>
