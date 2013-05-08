@@ -37,6 +37,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Security;
 using System.Text.RegularExpressions;
+using System.Threading;
 using GSF.Configuration;
 using GSF.Data;
 
@@ -343,6 +344,9 @@ namespace GSF.Security
                         }
                     }
 
+                    // Cache last user roles
+                    ThreadPool.QueueUserWorkItem(CacheLastUserRole);
+
                     return true;
                 }
             }
@@ -612,6 +616,73 @@ namespace GSF.Security
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection configSettings = config.Settings[SettingsCategory];
             return configSettings["LdapPath"].Value;
+        }
+
+        // Cache last user role and monitor for changes
+        private void CacheLastUserRole(object state)
+        {
+            try
+            {
+                // Using an interprocess cache for user roles
+                UserRoleCache userRoleCache = UserRoleCache.GetCurrentCache();
+                string cachedRole, currentRole;
+
+                // Attempt to retrieve cached user role
+                cachedRole = userRoleCache[UserData.Username];
+
+                // Determine current role with maximum rights for user
+                string[] roles = UserData.Roles.ToArray();
+
+                // Technically a user can be granted multiple roles, pick the highest ordered role
+                if (roles.Contains("Administrator", StringComparer.InvariantCultureIgnoreCase))
+                    currentRole = "Administrator";
+                else if (roles.Contains("Editor", StringComparer.InvariantCultureIgnoreCase))
+                    currentRole = "Editor";
+                else
+                    currentRole = "Viewer";
+
+                bool roleChanged = false;
+                string message;
+                EventLogEntryType entryType;
+
+                if (string.IsNullOrEmpty(cachedRole))
+                {
+                    // New user access granted
+                    message = string.Format("New user \"{0}\" granted access with role \"{1}\".", UserData.Username, currentRole);
+                    entryType = EventLogEntryType.Information;
+                    roleChanged = true;
+                }
+                else if (string.Compare(cachedRole, currentRole, true) != 0)
+                {
+                    // User role access changed
+                    message = string.Format("Existing user \"{0}\" granted access with new role \"{1}\" - role assignment is different from last login, was \"{2}\".", UserData.Username, currentRole, cachedRole);
+                    entryType = EventLogEntryType.Warning;
+                    roleChanged = true;
+                }
+                else
+                {
+                    message = string.Format("Existing user \"{0}\" granted access with role \"{1}\" - role assignment is the same as last login.", UserData.Username, currentRole);
+                    entryType = EventLogEntryType.SuccessAudit;
+                }
+
+                // Log granted role access to event log
+                try
+                {
+                    EventLog.WriteEntry(ApplicationName, message, entryType, 0);
+                }
+                catch (Exception ex)
+                {
+                    LogError(ex.Source, ex.ToString());
+                }
+
+                // If role has changed, update cache
+                if (roleChanged)
+                    userRoleCache[UserData.Username] = currentRole;
+            }
+            catch (Exception ex)
+            {
+                LogError(ex.Source, ex.ToString());
+            }
         }
 
         #endregion

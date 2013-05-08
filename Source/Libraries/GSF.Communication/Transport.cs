@@ -44,6 +44,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 
@@ -250,6 +251,24 @@ namespace GSF.Communication
                     throw new NotSupportedException("Communications library does not support socket creation for protocol " + protocol);
             }
             return socket;
+        }
+
+        /// <summary>
+        /// Determines if an IP address (or DNS name) is a local IP address.
+        /// </summary>
+        /// <param name="hostNameOrAddress">DNS name or IP address to test.</param>
+        /// <returns><c>true</c> if <paramref name="hostNameOrAddress"/> is a local IP address; otherwise <c>false</c>.</returns>
+        /// <exception cref="SocketException">An error is encountered when resolving <paramref name="hostNameOrAddress"/>.</exception>
+        /// <exception cref="ArgumentException"><paramref name="hostNameOrAddress"/> is an invalid IP address.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">The length of <paramref name="hostNameOrAddress"/> is greater than 255 characters.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="hostNameOrAddress"/> is null.</exception>
+        public static bool IsLocalAddress(string hostNameOrAddress)
+        {
+            IPAddress[] hostIPs = Dns.GetHostAddresses(hostNameOrAddress);
+            IEnumerable<IPAddress> localIPs = Dns.GetHostAddresses("localhost").Concat(Dns.GetHostAddresses(Dns.GetHostName()));
+
+            // Check to see if entered host name corresponds to a local IP address
+            return hostIPs.Any(localIPs.Contains);
         }
 
         /// <summary>

@@ -518,6 +518,7 @@ namespace GSF.TimeSeries
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("Restart", "Attempts to restart the host service", RestartServiceHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("RefreshRoutes", "Spawns request to recalculate routing tables", RefreshRoutesRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("TemporalSupport", "Detemines if any adapters support temporal processing", TemporalSupportRequestHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("LogEvent", "Logs remote event log entries.", LogEventRequestHandler, false));
 
             try
             {
@@ -1242,7 +1243,7 @@ namespace GSF.TimeSeries
                 {
                     // Create backups of binary configurations
                     BackupConfiguration(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile);
-                    
+
                     // Create backups of XML configurations
                     BackupConfiguration(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile);
 
@@ -1276,7 +1277,7 @@ namespace GSF.TimeSeries
 
                         // Cache XML serialized version of data set
                         configuration.WriteXml(m_cachedXmlConfigurationFile, XmlWriteMode.WriteSchema);
-                        
+
                         DisplayStatusMessage("Successfully cached current configuration to XML.", UpdateType.Information);
                     }
                     catch (Exception ex)
@@ -2066,6 +2067,73 @@ namespace GSF.TimeSeries
                     {
                         SendResponse(requestInfo, false, "Failed to load system configuration.");
                     }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sends remote entry for logging.
+        /// </summary>
+        /// <param name="requestInfo"></param>
+        protected virtual void LogEventRequestHandler(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Logs remote entry to event log.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       LogEvent [Options]");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -Message=\"Event Message\"".PadRight(20));
+                helpMessage.Append("Specifies message for event log entry (required)");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -Type=[Error|Warning|Information|...]".PadRight(20));
+                helpMessage.Append("Specifies EventLogEntryType setting (optional)");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -ID=0".PadRight(20));
+                helpMessage.Append("Specifies application event log ID (optional)");
+                helpMessage.AppendLine();
+
+                DisplayResponseMessage(requestInfo, helpMessage.ToString());
+            }
+            else
+            {
+                if (requestInfo.Request.Arguments.Exists("Message"))
+                {
+                    try
+                    {
+                        string message = requestInfo.Request.Arguments["Message"];
+                        string type, id;
+                        EventLogEntryType entryType;
+                        ushort eventID;
+
+                        if (!(requestInfo.Request.Arguments.TryGetValue("Type", out type) && Enum.TryParse(type, out entryType)))
+                            entryType = EventLogEntryType.Information;
+
+                        if (!(requestInfo.Request.Arguments.TryGetValue("ID", out id) && ushort.TryParse(id, out eventID)))
+                            eventID = 0;
+
+                        EventLog.WriteEntry(ServiceName, message, entryType, eventID);
+                        SendResponse(requestInfo, true, "Successfully wrote event log entry.");
+                    }
+                    catch (Exception ex)
+                    {
+                        SendResponse(requestInfo, false, "Failed to write event log entry: {0}", ex.Message);
+                    }
+                }
+                else
+                {
+                    SendResponse(requestInfo, false, "Failed to write event log entry: required \"message\" parameter was not specified.");
                 }
             }
         }

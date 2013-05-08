@@ -34,14 +34,14 @@
 //
 //******************************************************************************************************
 
-using GSF.Collections;
-using GSF.IO;
-using GSF.Security.Cryptography;
-using GSF.Threading;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
+using GSF.Collections;
+using GSF.IO;
+using GSF.Security.Cryptography;
+using GSF.Threading;
 
 namespace GSF.Security
 {
@@ -54,7 +54,7 @@ namespace GSF.Security
 
         // Constants
 
-        // Default key and initialization vector cache file name
+        // Default user AD group data cache file name
         private const string DefaultCacheFileName = "UserDataCache.bin";
 
         // Fields

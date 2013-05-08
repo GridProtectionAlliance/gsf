@@ -37,12 +37,12 @@
 //
 //******************************************************************************************************
 
-using GSF.Collections;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using GSF.Collections;
 
 namespace GSF.Console
 {
@@ -327,9 +327,10 @@ namespace GSF.Console
         /// </summary>
         /// <param name="argument">The argument whose value is to be retrieved.</param>
         /// <param name="value">Value associated with the specified argument if it exists in the command-line command, otherwise null.</param>
-        public virtual void TryGetValue(string argument, out string value)
+        /// <returns><c>true</c> if argument existed and was returned; otherwise <c>false</c>.</returns>
+        public virtual bool TryGetValue(string argument, out string value)
         {
-            m_arguments.TryGetValue(argument, out value);
+            return m_arguments.TryGetValue(argument, out value);
         }
 
         /// <summary>

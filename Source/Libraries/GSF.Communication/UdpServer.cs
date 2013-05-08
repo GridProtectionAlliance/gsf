@@ -367,11 +367,11 @@ namespace GSF.Communication
         /// Gets the <see cref="Socket"/> object for the <see cref="UdpServer"/>.
         /// </summary>
         [Browsable(false)]
-        public TransportProvider<Socket> Server
+        public Socket Server
         {
             get
             {
-                return m_udpServer;
+                return m_udpServer.Provider;
             }
         }
 
@@ -1138,7 +1138,7 @@ namespace GSF.Communication
                     case ClientIdentificationMode.EndPoint:
                         if (remoteEndPoint.Equals(client.Provider))
                             return client;
-                        
+
                         break;
                 }
             }

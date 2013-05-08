@@ -23,9 +23,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
-using GSF.IO;
-using GSF.Net.Security;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -37,6 +34,9 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using System.Threading;
+using GSF.Configuration;
+using GSF.IO;
+using GSF.Net.Security;
 
 namespace GSF.Communication
 {
@@ -55,7 +55,7 @@ namespace GSF.Communication
             public int Offset;
             public int Length;
             public ManualResetEventSlim WaitHandle;
-        }   
+        }
 
         // Constants
 
@@ -241,14 +241,14 @@ namespace GSF.Communication
         }
 
         /// <summary>
-        /// Gets the <see cref="TransportProvider{Socket}"/> object for the <see cref="TcpClient"/>.
+        /// Gets the <see cref="Socket"/> object for the <see cref="TcpClient"/>.
         /// </summary>
         [Browsable(false)]
-        public TransportProvider<SslStream> Client
+        public Socket Client
         {
             get
             {
-                return m_sslClient;
+                return m_socket;
             }
         }
 

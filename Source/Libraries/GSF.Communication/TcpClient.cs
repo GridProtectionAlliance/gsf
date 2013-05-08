@@ -72,8 +72,9 @@ namespace GSF.Communication
     /// Represents a TCP-based communication client.
     /// </summary>
     /// <remarks>
-    /// The <see cref="TcpClient.Client"/> socket can be bound to a specified interface on a machine with multiple interfaces by 
-    /// specifying the interface in the <see cref="ClientBase.ConnectionString"/> (Example: "Server=localhost:8888; Interface=127.0.0.1")
+    /// The socket can be bound to a specified interface on a machine with multiple interfaces by 
+    /// specifying the IP of the interface in the <see cref="ClientBase.ConnectionString"/>
+    /// (Example: "Server=localhost:8888; Interface=192.168.1.15")
     /// </remarks>
     /// <example>
     /// This example shows how to use the <see cref="TcpClient"/> component:
@@ -354,14 +355,14 @@ namespace GSF.Communication
         }
 
         /// <summary>
-        /// Gets the <see cref="TransportProvider{Socket}"/> object for the <see cref="TcpClient"/>.
+        /// Gets the <see cref="Socket"/> object for the <see cref="TcpClient"/>.
         /// </summary>
         [Browsable(false)]
-        public TransportProvider<Socket> Client
+        public Socket Client
         {
             get
             {
-                return m_tcpClient;
+                return m_tcpClient.Provider;
             }
         }
 

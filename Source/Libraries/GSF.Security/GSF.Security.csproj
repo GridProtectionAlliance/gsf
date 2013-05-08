@@ -107,6 +107,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AdoSecurityProvider.cs" />
+    <Compile Include="UserRoleCache.cs" />
     <Compile Include="LdapSecurityProvider.cs" />
     <Compile Include="RestrictAccessAttribute.cs" />
     <Compile Include="ISecurityProvider.cs" />

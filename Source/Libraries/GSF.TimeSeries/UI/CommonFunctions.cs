@@ -572,7 +572,7 @@ namespace GSF.TimeSeries.UI
             }
             catch (Exception ex)
             {
-                 Application.Current.MainWindow.Dispatcher.BeginInvoke(Popup, "The IP address is not Valid,Please Re-check your IP address." + ex.Message + Environment.NewLine, " Exception:", MessageBoxImage.Error);
+                Application.Current.MainWindow.Dispatcher.BeginInvoke(Popup, "The IP address is not Valid,Please Re-check your IP address." + ex.Message + Environment.NewLine, " Exception:", MessageBoxImage.Error);
             }
         }
 
@@ -715,6 +715,7 @@ namespace GSF.TimeSeries.UI
         /// <param name="message">The message to write to the log.</param>
         /// <param name="eventID">The application-specific identifier for the event.</param>
         /// <param name="eventType">The type of the event.</param>
+        /// <remarks>This will also send a command to log the event on the remote machine if needed.</remarks>
         public static void LogEvent(string message, int eventID, EventLogEntryType eventType = EventLogEntryType.Information)
         {
             try
@@ -728,10 +729,60 @@ namespace GSF.TimeSeries.UI
                     applicationName = FilePath.GetFileNameWithoutExtension(AppDomain.CurrentDomain.FriendlyName);
 
                 EventLog.WriteEntry(applicationName, message, eventType, eventID);
+
+                // Queue event for remote logging
+                ThreadPool.QueueUserWorkItem(LogEventRemotely, new Tuple<string, EventLogEntryType, int>(message, eventType, eventID));
             }
             catch (Exception ex)
             {
-                LogException(null, "LogEvent", new Exception(string.Format("Failed to write message {0} to event log: {1}", message, ex.Message), ex));
+                LogException(null, "LogEvent", new InvalidOperationException(string.Format("Failed to write message \"{0}\" to event log: {1}", message, ex.Message), ex));
+            }
+        }
+
+        // Send event to be logged on remote machine if manager is not running on local machine
+        private static void LogEventRemotely(object state)
+        {
+            // Make sure service client and remoting client are defined
+            if ((object)s_windowsServiceClient != null && (object)s_windowsServiceClient.Helper != null && (object)s_windowsServiceClient.Helper.RemotingClient != null)
+            {
+                try
+                {
+                    // Client base may be a normal TCP client or a TLS client - so we check for this
+                    ClientBase client = s_windowsServiceClient.Helper.RemotingClient;
+                    TcpClient remotingClient = client as TcpClient;
+                    TlsClient secureRemotingClient = client as TlsClient;
+                    string remotingAddress = null;
+
+                    // Get remote client address for remoting client (console) connection
+                    if ((object)remotingClient != null)
+                        remotingAddress = ((IPEndPoint)remotingClient.Client.RemoteEndPoint).Address.ToString();
+                    else if ((object)secureRemotingClient != null)
+                        remotingAddress = ((IPEndPoint)secureRemotingClient.Client.RemoteEndPoint).Address.ToString();
+
+                    // If this is not a local address - we will also send event to be logged on the server
+                    if (!string.IsNullOrEmpty(remotingAddress) && !Transport.IsLocalAddress(remotingAddress))
+                    {
+                        string message = "";
+                        EventLogEntryType eventType;
+                        int eventID;
+
+                        Tuple<string, EventLogEntryType, int> parameters = state as Tuple<string, EventLogEntryType, int>;
+
+                        if ((object)parameters != null)
+                        {
+                            message = parameters.Item1;
+                            eventType = parameters.Item2;
+                            eventID = parameters.Item3;
+
+                            string command = string.Format("LogEvent -Message=\"{0}\" -Type={1} -ID={2}", message.Replace('"', '\''), eventType, eventID);
+                            SendCommandToService(command);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogException(null, "RemoteLogEvent", new InvalidOperationException(string.Format("Failed to send message to remote event log: {0}", ex.Message), ex));
+                }
             }
         }
 

@@ -340,14 +340,14 @@ namespace GSF.Communication
         }
 
         /// <summary>
-        /// Gets the <see cref="TransportProvider{Socket}"/> object for the <see cref="UdpClient"/>.
+        /// Gets the <see cref="Socket"/> object for the <see cref="UdpClient"/>.
         /// </summary>
         [Browsable(false)]
-        public TransportProvider<Socket> Client
+        public Socket Client
         {
             get
             {
-                return m_udpClient;
+                return m_udpClient.Provider;
             }
         }
 
